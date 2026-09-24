@@ -234,6 +234,7 @@ from .targeting import (
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
+    GameEvent,
     batched_attackers,
     event_subject_power,
     is_ability,
@@ -10298,6 +10299,48 @@ def return_ability_targets_to_battlefield(game: "Game", stack_object: "StackObje
             game.put_onto_battlefield(target, controller.username)
 
 
+#: "Choose target `<X>`[ with `<filter>`]. Return the chosen card to the
+#: battlefield." - Too Evil to Stay Dead's own shape: the target is fixed at
+#: announcement (CR 601.2c) by a bare "Choose ..." sentence with no verb of
+#: its own (`machines/targeting.profile_for_text` already reads "target
+#: `<X>`" as an ordinary requirement whether or not a verb follows it in the
+#: same sentence), and "the chosen card" (CR 400.7's anaphora back to what
+#: was targeted) is a second, separate sentence naming the actual
+#: instruction. `Teamwork`'s own "If this spell was cast using teamwork,
+#: instead choose ..." rider (`machines/teamwork.teamwork_instead_target_
+#: text`) changes only the announced target restriction, read entirely at
+#: announcement - by the time this clause resolves there is nothing left to
+#: branch on, so one reader covers both the teamwork and non-teamwork casts.
+_CHOOSE_TARGET_RETURN_CHOSEN_CARD_RE = re.compile(
+    r"^choose (?P<phrase>[^.]*\btarget\b[^.]*)\.\s*"
+    # An optional CR 601.2c "instead choose ..." rider (Too Evil to Stay
+    # Dead's own teamwork sentence, `machines/teamwork.teamwork_instead_
+    # target_text`) sits between the base choice and the resolution
+    # instruction - already spent entirely at announcement, so it is only
+    # skipped over here, never re-read.
+    r"(?:if [^.]+, instead choose [^.]*\btarget\b[^.]*\.\s*)?"
+    r"return the chosen card to the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_choose_target_return_chosen_card_clause(effect_text: str) -> Effect | None:
+    """`_CHOOSE_TARGET_RETURN_CHOSEN_CARD_RE`'s shape - see the banner above.
+
+    `return_ability_targets_to_battlefield` already reads whatever this
+    spell still legally targets (CR 608.2b) straight off `game.
+    resolve_targets`, so nothing here needs "the chosen card" resolved by
+    hand - the anaphor and "target `<X>`" mean the identical object.
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CHOOSE_TARGET_RETURN_CHOSEN_CARD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), battlefield_only=False):
+        return None
+    return return_ability_targets_to_battlefield
+
+
 def tap_ability_targets(game: "Game", stack_object: "StackObject") -> None:
     """Tap each permanent this still legally targets (CR 701.26a)."""
     for target in game.resolve_targets(stack_object):
@@ -12705,6 +12748,44 @@ def _parse_untap_trigger_subject_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "untap it and scry `<n>`." - S.H.I.E.L.D. Spy Kit's own "Whenever
+#: equipped creature attacks alone, untap it and scry 1." The identical
+#: "it" anaphor `_UNTAP_TRIGGER_SUBJECT_RE` reads alone above, joined to
+#: CR 701.22a's scry by the printed "and" - read as its own combined clause
+#: rather than through the general clause splitter, because the untap half
+#: needs the trigger's own event subject (`AbilityOnStack`), not a spell,
+#: which is not a shape `parse_mixed_effect`'s ordinary "X and Y" pairing
+#: reaches for.
+_UNTAP_TRIGGER_SUBJECT_AND_SCRY_RE = re.compile(
+    rf"^untap it and scry (?P<n>{COUNT})\.?$", re.IGNORECASE
+)
+
+
+def _parse_untap_trigger_subject_and_scry_clause(text: str) -> AbilityEffect | None:
+    """`_UNTAP_TRIGGER_SUBJECT_AND_SCRY_RE`'s shape - see the banner above."""
+    match = _UNTAP_TRIGGER_SUBJECT_AND_SCRY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is not None and event.subject_id is not None:
+            subject = game.find_by_id(event.subject_id)
+            if subject is not None and subject.zone is Zone.BATTLEFIELD:
+                subject.untap(exert_applies=False)
+        game.scry(
+            game.controller_of(ability),
+            count,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+
+    return effect
+
+
 #: "put `<n>` `<kind>` counter(s) on that `<noun>`[ for each `<expr>`]." -
 #: CR 400.7 anaphora back to the trigger's own condition subject
 #: (`GameEvent.subject_id`), the identical referent `_parse_untap_trigger_
@@ -14361,6 +14442,68 @@ _DAMAGE_TARGET_KICKED_INSTEAD_RE = re.compile(
 )
 
 
+#: "`<source>` deals N damage to target creature. If `<condition>`, it also
+#: deals M damage to that creature's controller." - Repulsor Blast's own
+#: teamwork rider (`machines/teamwork.py`). Not `_CONDITION_INSTEAD_RE`'s
+#: shape: "also" is CR 608.2c's additive reading (the rider adds to the base
+#: instruction rather than replacing it, the same "also" `_RIDER_ALSO_RE`
+#: strips for `_parse_conditional_referent_clause`), and the rider's own
+#: object - "that creature's **controller**" - is a player derived from the
+#: base clause's own already-resolved target, not the target itself, which
+#: `_parse_referent_object_clause`'s "referent" shapes do not read. Read by
+#: `condition_is_readable`/`Game.condition_holds` generically, the same as
+#: every other printed condition, not pinned to "cast using teamwork".
+_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
+    r"^.*\bdeals? (?P<n>\d+) damage to (?P<phrase>.*?target creature.*?)\.\s*"
+    r"if (?P<condition>[^,]+), it also deals (?P<extra_n>\d+) damage to "
+    r"that creature'?s controller\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Effect | None:
+    """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape."""
+    from ..models.game import condition_is_readable
+
+    whole = _strip_non_effect_preamble(effect_text).strip()
+    match = _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    condition_text = match.group("condition").strip()
+    if not condition_is_readable(condition_text):
+        return None
+    base_amount = int(match.group("n"))
+    extra_amount = int(match.group("extra_n"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        held = game.condition_holds(controller, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=spell.id, source_name=spell.card.name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState):
+                continue
+            # CR 608.2h: "that creature's controller" is read from last
+            # known information if the base damage already killed it, so
+            # the controller is captured before the base damage - not
+            # re-derived, and never re-gated on the target's zone - after.
+            controller_of_target = game.controller_of(target)
+            game.deal_damage(target, base_amount, source=spell)
+            if held:
+                game.deal_damage(
+                    game.player(controller_of_target.username), extra_amount, source=spell
+                )
+
+    return effect
+
+
 def _parse_damage_target_kicked_instead_clause(effect_text: str) -> Effect | None:
     """`_DAMAGE_TARGET_KICKED_INSTEAD_RE`'s shape, or `None` if this is not it."""
     whole = _strip_non_effect_preamble(effect_text).strip()
@@ -15044,6 +15187,115 @@ def _parse_look_top_n_may_battlefield_creature_bonus_clause(text: str) -> Effect
             for state in rest:
                 controller.move(state, Zone.LIBRARY)
             game.shuffles_performed += 1
+
+    return effect
+
+
+#: Earth's Mightiest Heroes: "Reveal the top eight cards of your library. You
+#: may put a creature card from among them onto the battlefield. If this
+#: spell was cast using teamwork, put any number of creature cards from
+#: among them onto the battlefield instead. Put the rest into your
+#: graveyard." - `_LOOK_TOP_N_MAY_BATTLEFIELD_CREATURE_BONUS_RE`'s own
+#: shape (reveal instead of look, graveyard instead of library-bottom for
+#: the rest), widened with `machines/teamwork.py`'s own CR 118.8b "if this
+#: spell was cast using teamwork" branch: an unconditional single optional
+#: pick (CR 608.2d) that becomes an unconditional CR 107.1c "any number"
+#: pick once the condition holds, read generically through `condition_is_
+#: readable`/`Game.condition_holds`, the same as every other printed
+#: condition, not pinned to Teamwork alone.
+_REVEAL_TOP_N_MAY_BATTLEFIELD_CREATURE_TEAMWORK_RE = re.compile(
+    rf"^reveal the top (?P<n>{COUNT}) cards? of your library\. "
+    r"you may put a creature card from among them onto the battlefield\. "
+    r"if (?P<condition>[^,]+), put any number of creature cards from among them "
+    r"onto the battlefield instead\. "
+    r"put the rest into your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_reveal_top_n_may_battlefield_creature_teamwork_clause(text: str) -> Effect | None:
+    """`_REVEAL_TOP_N_MAY_BATTLEFIELD_CREATURE_TEAMWORK_RE`'s shape - see
+    above. CR 701.20a: every one of the revealed cards is recorded through
+    `Game.reveal` while still in the library, before any of them move.
+    Whichever revealed creatures are not put onto the battlefield go to the
+    graveyard (CR 608.2c's own "the rest", read off what is still left of
+    `revealed` once the put-onto-battlefield half has run, not only the
+    creatures - Reality Smasher's own "put the rest into your graveyard"
+    twin already reads "the rest" as every card the earlier pick did not
+    take, creature or not)."""
+    from ..models.game import condition_is_readable
+
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _REVEAL_TOP_N_MAY_BATTLEFIELD_CREATURE_TEAMWORK_RE.fullmatch(whole)
+    if match is None:
+        return None
+    n = parse_count(match.group("n"))
+    if n is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not condition_is_readable(condition_text):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        revealed = list(controller.library[:n])
+        for state in revealed:
+            game.reveal(state, source=spell.name)
+        creatures = [state for state in revealed if state.is_creature]
+        held = game.condition_holds(controller.username, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=spell.id, source_name=spell.card.name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        chosen: list[CardState] = []
+        if creatures and held:
+            # CR 107.1c: "any number" is zero to every candidate, no
+            # separate "may" gate in front of it.
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="put any number of creature cards from among them onto the battlefield",
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                    amount=len(creatures),
+                    exact=False,
+                    cards=tuple(state.id for state in creatures),
+                )
+            )
+            by_id = {state.id: state for state in creatures}
+            chosen = [by_id[card_id] for card_id in chosen_ids]
+        elif creatures and game.may(
+            controller,
+            "put a creature card from among them onto the battlefield",
+            source=spell.name,
+            source_id=source_id_of(spell),
+            cards=creatures,
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose a creature card to put onto the battlefield",
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                    amount=1,
+                    exact=True,
+                    cards=tuple(state.id for state in creatures),
+                    default_cards=(creatures[0].id,),
+                )
+            )
+            by_id = {state.id: state for state in creatures}
+            chosen = [by_id[chosen_ids[0]]]
+        chosen_ids_set = {state.id for state in chosen}
+        for state in chosen:
+            game.put_onto_battlefield(state, controller.username)
+        for state in revealed:
+            if state.id not in chosen_ids_set:
+                game.put_into_graveyard(state)
 
     return effect
 
@@ -16266,6 +16518,15 @@ _TARGET_CANT_BE_BLOCKED_RE = re.compile(
     r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn\.?$", re.IGNORECASE
 )
 
+#: "`<target phrase>` can't block this turn." (CR 509.1b) - Hawkeye, Master
+#: Marksman's own "Net" mode: "Target creature can't block this turn." The
+#: mirror restriction of `_TARGET_CANT_BE_BLOCKED_RE` just above - denying a
+#: block rather than granting evasion from one - read and granted the
+#: identical way.
+_TARGET_CANT_BLOCK_RE = re.compile(
+    r"^(?P<phrase>(?:another )?target .+) can'?t block this turn\.?$", re.IGNORECASE
+)
+
 #: "`<target phrase>` phases out." (CR 702.26b) - Teferi, Master of Time's
 #: "Target creature you don't control phases out.", Haystack's "Target
 #: creature you control phases out.". The restriction is whatever
@@ -16346,6 +16607,30 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
                 )
 
         return cant_be_blocked_targets
+
+    if match := _TARGET_CANT_BLOCK_RE.fullmatch(clause):
+        # CR 509.1b's mirror restriction - see `_TARGET_CANT_BLOCK_RE`'s own
+        # banner.
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+
+        def cant_block_targets(game: "Game", stack_object: "StackObject") -> None:
+            effects = game.continuous_effects
+            for target in game.resolve_targets(stack_object):
+                if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                    continue
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{target.name} can't block this turn",
+                        layer=Layer.ABILITY,
+                        timestamp=effects.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability("This creature can't block."),
+                    )
+                )
+
+        return cant_block_targets
 
     if match := _TARGET_PHASES_OUT_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -17611,7 +17896,18 @@ def _parse_target_player_token_mode(text: str) -> Effect | None:
         words = words[1:]
     if not words:
         return None
-    definition = _token_definition_from_words(" ".join(words), match.group("tail"))
+    tail = match.group("tail")
+    if tail is not None:
+        # `_TARGET_PLAYER_TOKEN_RE`'s own `tail` group is DOTALL-greedy to
+        # the end of the (already sentence-split) mode text, so a tail with
+        # no further sentence after it - Atlantis Attacks' own "... token
+        # with hexproof." - keeps the sentence's closing full stop, which
+        # `_token_definition_from_words` (built for `_parse_token_clause`'s
+        # own already-stripped tail) does not expect and refuses. Stripped
+        # here the same way `_parse_token_clause` starts from `text.strip()`
+        # with no trailing punctuation of its own to begin with.
+        tail = tail.strip().rstrip(".").strip() or None
+    definition = _token_definition_from_words(" ".join(words), tail)
     if definition is None:
         return None
 
@@ -22336,6 +22632,61 @@ def _parse_self_pump_for_each_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Target creature you control that's attacking alone gets `<P>`/`<T>`
+#: until end of turn. You gain `<N>` life." - Crowd of True Believers' own
+#: `{T}:` ability. `machines/targeting.py`'s own `TargetRequirement.must_be_
+#: attacking_alone` already recognises the "that's attacking alone" subject
+#: at announcement (CR 601.2c) and rechecks it on resolution (CR 608.2b,
+#: `game.resolve_targets`); this reads only the two resolution sentences,
+#: building the pump directly (CR 611.2, sublayer 7c) the same way `_parse_
+#: self_pump_for_each_clause` does above, rather than through `machines/
+#: layers.py`'s printed-sentence grammar, whose own hand-rolled `_SUBJECT`
+#: pattern has no "that's attacking alone" clause to admit - a targeting
+#: restriction, not a layer-effect shape, and this file's own job to read
+#: once `machines/targeting.py` already vetted it.
+_TARGET_ATTACKING_ALONE_PUMP_GAIN_LIFE_RE = re.compile(
+    r"^(?P<phrase>target [^.]*\battacking alone\b[^.]*) "
+    r"gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn\.\s*"
+    r"you gain (?P<life>\d+) life\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_attacking_alone_pump_gain_life_clause(text: str) -> AbilityEffect | None:
+    """`_TARGET_ATTACKING_ALONE_PUMP_GAIN_LIFE_RE`'s shape - see the banner
+    above."""
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _TARGET_ATTACKING_ALONE_PUMP_GAIN_LIFE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+    life = int(match.group("life"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        store = continuous_effects(game)
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{target.name}: gets {power:+d}/{toughness:+d} until end of turn",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=ability.source_id,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        game.gain_life(game.controller_of(ability), life)
+
+    return effect
+
+
 #: "Whenever `<this>` attacks, `<pronoun>` deals damage equal to `<count>`
 #: to any target[/to each opponent]." - Smaug the Magnificent's own
 #: "Whenever Smaug attacks, he deals damage equal to the number of
@@ -22719,6 +23070,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     it_gains_quoted_ability = _parse_it_gains_quoted_ability_clause(effect_text)
     if it_gains_quoted_ability is not None:
         return it_gains_quoted_ability
+    target_attacking_alone_pump_gain_life = _parse_target_attacking_alone_pump_gain_life_clause(
+        effect_text
+    )
+    if target_attacking_alone_pump_gain_life is not None:
+        return target_attacking_alone_pump_gain_life
     # S22's whole-text readers: each names its own object ("exiled with this
     # creature", "that card" after an exile, "them" after a count), so none
     # of them may be cut apart by the clause splitter below.
@@ -22848,6 +23204,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if conditional_remove_counter_from_self is not None:
         return conditional_remove_counter_from_self
+    reflexive_sacrifice_or_discard = _parse_reflexive_sacrifice_or_discard_clause(effect_text)
+    if reflexive_sacrifice_or_discard is not None:
+        return reflexive_sacrifice_or_discard
     reflexive_sacrifice = _parse_reflexive_sacrifice_clause(effect_text)
     if reflexive_sacrifice is not None:
         return reflexive_sacrifice
@@ -22868,6 +23227,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_pay_mana = _parse_reflexive_pay_mana_clause(effect_text)
     if reflexive_pay_mana is not None:
         return reflexive_pay_mana
+    reflexive_may_tap_self = _parse_reflexive_may_tap_self_clause(effect_text)
+    if reflexive_may_tap_self is not None:
+        return reflexive_may_tap_self
+    reflexive_pay_up_to_n_times_choose_modes = (
+        _parse_reflexive_pay_up_to_n_times_choose_modes_clause(effect_text)
+    )
+    if reflexive_pay_up_to_n_times_choose_modes is not None:
+        return reflexive_pay_up_to_n_times_choose_modes
     may_pay_mana_if_you_do = _parse_may_pay_mana_if_you_do_clause(effect_text)
     if may_pay_mana_if_you_do is not None:
         return may_pay_mana_if_you_do
@@ -23085,6 +23452,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     untap_trigger_subject = _parse_untap_trigger_subject_clause(effect_text)
     if untap_trigger_subject is not None:
         return untap_trigger_subject
+    untap_trigger_subject_and_scry = _parse_untap_trigger_subject_and_scry_clause(effect_text)
+    if untap_trigger_subject_and_scry is not None:
+        return untap_trigger_subject_and_scry
+    attached_subject_gains_keywords_until = _parse_attached_subject_gains_keywords_until_clause(
+        effect_text
+    )
+    if attached_subject_gains_keywords_until is not None:
+        return attached_subject_gains_keywords_until
     return_a_land_you_control = _parse_return_a_land_you_control_clause(effect_text)
     if return_a_land_you_control is not None:
         return return_a_land_you_control
@@ -26198,6 +26573,19 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     damage_target_kicked_instead = _parse_damage_target_kicked_instead_clause(effect_text)
     if damage_target_kicked_instead is not None:
         return damage_target_kicked_instead
+    damage_target_also_damages_controller = _parse_damage_target_also_damages_controller_clause(
+        effect_text
+    )
+    if damage_target_also_damages_controller is not None:
+        return damage_target_also_damages_controller
+    choose_target_return_chosen_card = _parse_choose_target_return_chosen_card_clause(effect_text)
+    if choose_target_return_chosen_card is not None:
+        return choose_target_return_chosen_card
+    reveal_top_n_may_battlefield_creature_teamwork = (
+        _parse_reveal_top_n_may_battlefield_creature_teamwork_clause(effect_text)
+    )
+    if reveal_top_n_may_battlefield_creature_teamwork is not None:
+        return reveal_top_n_may_battlefield_creature_teamwork
     damage_then_empower_if_excess = _parse_damage_then_empower_if_excess_clause(effect_text)
     if damage_then_empower_if_excess is not None:
         return damage_then_empower_if_excess
@@ -31220,6 +31608,296 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
             source_name=source_name,
             callback=ReflexiveConsequence(),
         )
+
+    return effect
+
+
+#: "you may tap him/her/it. When you do, `<consequence>`." - Spider-Man, To
+#: the Rescue's own ETB rider: "No One Dies! — When Spider-Man enters, you
+#: may tap him. When you do, another target nonattacking creature you
+#: control gains indestructible until end of turn." CR 118.12's reflexive
+#: "may [cost]. When you do, [consequence]" shape `_parse_reflexive_pay_
+#: mana_clause` already reads for a mana payment, with CR 701.26a's tap
+#: standing in for the cost instead - the pronoun is read literally rather
+#: than relying on `legendary_self_pronoun_normalized`'s own mid-sentence
+#: rewrite to have already run first (this is tried ahead of that fallback,
+#: the same "raw text first" order every dispatcher in this module keeps),
+#: so "him"/"her" match here whichever legendary character the card is
+#: printed on, alongside the ordinary self-referential "it"/"itself".
+_REFLEXIVE_MAY_TAP_SELF_RE = re.compile(
+    r"^you may tap (?:him|her|it|itself|them|themselves)\.\s*when you do,\s*"
+    r"(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_may_tap_self_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MAY_TAP_SELF_RE`'s shape - see the banner above. An
+    already-tapped source, or one that has since left the battlefield,
+    cannot pay the cost (CR 118.3), so the "may" is never even offered and
+    the reflexive consequence never triggers - the identical "cost stays
+    paid, consequence conditional" shape `_parse_reflexive_pay_mana_clause`
+    already reads for a mana cost, with `game.may` standing in for `Game.
+    may_pay_mana_cost`'s own CR 608.2g payment question."""
+    match = _REFLEXIVE_MAY_TAP_SELF_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    consequence_text = match.group("consequence").strip()
+    if parse_mixed_effect(consequence_text) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD or source.tapped:
+            return  # CR 118.3: an impossible cost is simply not paid.
+        player = game.controller_of(ability)
+        if not game.may(
+            player,
+            f"tap {source.name}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        source.tap()
+        # CR 701.26a: tapping the permanent is the event - the same
+        # `BECOMES_TAPPED` `GameEvent` `machines/cost.py`'s own tap
+        # component emits for every other cost-tap in this engine.
+        game.emit(
+            GameEvent(
+                event=TriggerEvent.BECOMES_TAPPED,
+                subject_id=source.id,
+                subject_name=source.name,
+                subject_controller=source.controller,
+                subject_card=source.card,
+                player=source.controller,
+            )
+        )
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+#: "you may sacrifice `<restriction>` or discard `<quality>`. When you do,
+#: `<consequence>`." - Bullseye, Death Dealer's own "you may sacrifice an
+#: artifact or discard a nonland card. When you do, Bullseye deals 2 damage
+#: to any target." CR 118.8b's own optional cost, with CR 601.2b's "[cost]
+#: or [cost]" choice of which resource pays it (the same disjunction
+#: `machines/casting.py`'s own `_OR_PAY_TAIL` reads for a mandatory
+#: additional cost) standing in for `_REFLEXIVE_MAY_SACRIFICE_RE`'s single
+#: restriction. Offered as two sequential CR 608.2d "may" questions - first
+#: whether to sacrifice (only when a legal permanent exists), then, only if
+#: that was declined, whether to discard instead - rather than one combined
+#: question, since neither `Decision` nor any existing `DecisionKind` names
+#: a choice between two differently-shaped actions; an unscripted player
+#: still reaches the reflexive consequence exactly the same way either
+#: branch is taken, and the two questions are also what a human at a real
+#: table is actually asked one at a time ("do you want to sacrifice an
+#: artifact? ... no? do you want to discard instead?").
+_REFLEXIVE_MAY_SACRIFICE_OR_DISCARD_RE = re.compile(
+    r"^you may sacrifice (?P<restriction>[^.]+?) or discard an? (?P<quality>[a-z]+) card\.\s*"
+    r"when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_sacrifice_or_discard_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MAY_SACRIFICE_OR_DISCARD_RE`'s shape - see the banner
+    above."""
+    match = _REFLEXIVE_MAY_SACRIFICE_OR_DISCARD_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    restriction = _sacrifice_restriction(match.group("restriction"))
+    if restriction is None:
+        return None
+    quality_matcher = _nonland_or_typed_card_matcher(match.group("quality"))
+    if quality_matcher is None:
+        return None
+    consequence_text = match.group("consequence").strip()
+    if reflexive_consequence_effect(_carry_count(consequence_text, 1, x=False)) is None:
+        return None
+    sacrifice_prompt = f"sacrifice {match.group('restriction').strip()}"
+    discard_prompt = f"discard {match.group('quality').strip()} card"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        sacrificed: list[CardState] = []
+        discarded: list[CardState] = []
+        candidates = restriction.candidates(game, player, source_id)
+        if _sacrifice_is_payable(restriction.quantity, candidates) and game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=sacrifice_prompt,
+                source=source_name,
+                affirmative_is_legal=True,
+                source_id=source_id_of(ability),
+            )
+        ):
+            sacrificed = _choose_permanents_to_sacrifice(
+                game,
+                player,
+                restriction,
+                candidates,
+                source_name=source_name,
+                source_id=source_id_of(ability),
+            )
+            for permanent in sacrificed:
+                game.sacrifice(permanent)
+        if not sacrificed:
+            hand_matches = [card for card in player.hand if quality_matcher(card)]
+            if hand_matches and game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt=discard_prompt,
+                    source=source_name,
+                    affirmative_is_legal=True,
+                    source_id=source_id_of(ability),
+                )
+            ):
+                discarded = _discard_cards(
+                    game,
+                    player,
+                    1,
+                    source_name,
+                    source_id=source_id_of(ability),
+                    predicate=quality_matcher,
+                )
+        if not sacrificed and not discarded:
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+#: "you may pay `<mana>` up to `<N>` times. When you do, choose up to that
+#: many — • `<Label>` — `<effect>` • ..." - Hawkeye, Master Marksman's own
+#: "Trick Arrows — Whenever Hawkeye becomes tapped, you may pay {1} up to
+#: three times. When you do, choose up to that many — • Net — ... •
+#: Explosive — ... • Boomerang — ...". CR 603.12's reflexive shape, repeated
+#: (`_REFLEXIVE_MAY_PAY_MANA_RE`'s single-payment twin) - each of the up to
+#: `<N>` payments is its own CR 118.12 "you may pay" question, and "choose
+#: up to that many" reads the running total straight off how many of those
+#: questions came back yes, the same CR 603.2c "that many" anaphora
+#: `_COUNTER_ON_TRIGGER_SUBJECT_RE`'s own "for each" already resolves at
+#: resolution rather than at parse time. Each bulleted option is its own
+#: labelled clause ("Net — Target creature can't block this turn.") - the
+#: label is CR 207.2c's ability-word convention applied to one bullet
+#: instead of a whole ability, carrying no rules meaning of its own, so it
+#: is stripped before the bullet's own effect is read.
+_REFLEXIVE_PAY_UP_TO_N_TIMES_CHOOSE_MODES_RE = re.compile(
+    r"^you may pay (?P<mana>(?:\{[^}]+\})+) up to (?P<times>[a-z]+) times\.\s*"
+    r"when you do, choose up to that many\s*[—-]\s*(?P<bullets>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+_REFLEXIVE_MODE_BULLET_RE = re.compile(
+    r"^(?P<label>[A-Za-z][A-Za-z' ]*?)\s*[—-]\s*(?P<effect>.+)$", re.DOTALL
+)
+
+
+def _parse_reflexive_pay_up_to_n_times_choose_modes_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_PAY_UP_TO_N_TIMES_CHOOSE_MODES_RE`'s shape - see the
+    banner above. Each mode may be chosen at most once (no "you may choose
+    the same mode more than once" is printed), up to however many of the
+    repeated payments actually happened."""
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _REFLEXIVE_PAY_UP_TO_N_TIMES_CHOOSE_MODES_RE.fullmatch(whole)
+    if match is None:
+        return None
+    try:
+        cost = ManaCost.parse(match.group("mana"))
+    except ValueError:
+        return None
+    times = parse_count(match.group("times"))
+    if times is None or times < 1:
+        return None
+    bullet_texts = [part.strip() for part in match.group("bullets").split("•") if part.strip()]
+    if len(bullet_texts) < 2:
+        return None
+    modes: list[str] = []
+    for bullet in bullet_texts:
+        bullet_match = _REFLEXIVE_MODE_BULLET_RE.fullmatch(bullet.strip().rstrip("."))
+        if bullet_match is None:
+            return None
+        mode_text = bullet_match.group("effect").strip()
+        # Read once here purely to fail the whole ability closed (CR 608.2c)
+        # on an unreadable mode before any payment happens - the real run,
+        # per chosen mode, goes through `create_reflexive_trigger` below
+        # instead, so each pick announces and resolves its own targets
+        # (CR 603.3d) rather than sharing the *triggering* ability's, which
+        # were fixed (and may have been none at all) long before this many
+        # payments were even known.
+        if parse_mixed_effect(mode_text) is None:
+            return None
+        modes.append(mode_text)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = 0
+        for _ in range(times):
+            if not game.may_pay_mana_cost(
+                player, cost, source=source_name, source_id=source_id_of(ability)
+            ):
+                break
+            paid += 1
+        if paid <= 0:
+            return
+        remaining = list(modes)
+        for _ in range(min(paid, len(modes))):
+            if not remaining:
+                break
+            if not game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt="choose another mode",
+                    source=source_name,
+                    affirmative_is_legal=True,
+                    source_id=source_id_of(ability),
+                )
+            ):
+                break
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_MODE,
+                    player=player.username,
+                    prompt="choose a mode",
+                    source=source_name,
+                    options=tuple(remaining),
+                    source_id=source_id_of(ability),
+                )
+            )
+            assert isinstance(answer, str)
+            picked = answer if answer in remaining else remaining[0]
+            remaining.remove(picked)
+            # CR 603.12/603.3d: each chosen mode is its own reflexive
+            # triggered ability, announcing and resolving its own targets
+            # separately - not run inline against the ability that created
+            # it, whose own targets (if any) were fixed long before any of
+            # this was known.
+            game.create_reflexive_trigger(
+                text=picked,
+                controller=player.username,
+                source_id=ability.source_id,
+                source_name=source_name,
+                callback=ReflexiveConsequence(),
+            )
 
     return effect
 
@@ -39835,7 +40513,7 @@ _TRAILING_TARGET_PHRASE_RE = re.compile(
 #: trailing shape.
 _TARGET_PHRASE_ANYWHERE_RE = re.compile(
     r"\b(?P<phrase>any target|(?:up to [^,.]+ )?target [^,.]+?)"
-    r"(?=[,.]|\s+(?:gets?|gains?|becomes?|loses?|deals?|has|have|is|are)\b|$)",
+    r"(?=[,.]|\s+(?:gets?|gains?|becomes?|loses?|deals?|has|have|is|are|unless)\b|$)",
     re.IGNORECASE,
 )
 
@@ -51384,6 +52062,55 @@ def _grant_keywords_to(
                 modification=grant_ability(keyword),
             )
         )
+
+
+#: "equipped creature|enchanted creature `<gains/gain>` `<keywords>` until
+#: end of turn." - Super Speed's own "When this Aura enters, enchanted
+#: creature gains first strike until end of turn." CR 303.4b/303.4m's
+#: "enchanted [object]"/CR 301.5a's "equipped creature" is the attached
+#: permanent (`source.attached_to`), not a target the ability's own printed
+#: text never names one of (CR 115.1 has nothing to check here) - the
+#: identical anaphor `_UNTAP_TRIGGER_SUBJECT_RE` and this file's other
+#: attachment readers already resolve off `CardState.attached_to`, applied
+#: here to a one-shot keyword grant instead of an untap or a static line.
+_ATTACHED_SUBJECT_GAINS_KEYWORDS_UNTIL_RE = re.compile(
+    r"^(?:equipped creature|enchanted creature) gains? (?P<keywords>[a-z][a-z, ]*?) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attached_subject_gains_keywords_until_clause(text: str) -> AbilityEffect | None:
+    """`_ATTACHED_SUBJECT_GAINS_KEYWORDS_UNTIL_RE`'s shape - see the banner
+    above. A permanent with nothing attached to it (an Aura/Equipment that
+    somehow resolves this trigger unattached, or one already unattached by
+    the time it does) grants nothing - CR 303.4b: there is no "enchanted
+    creature"/"equipped creature" to name."""
+    match = _ATTACHED_SUBJECT_GAINS_KEYWORDS_UNTIL_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.attached_to is None:
+            return
+        attached = game.find_by_id(source.attached_to)
+        if attached is None or attached.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(ability).username
+        _grant_keywords_to(
+            game,
+            attached,
+            list(keywords),
+            "until end of turn",
+            controller=controller,
+            source_name=ability.source_name,
+        )
+
+    return effect
 
 
 def _parse_put_then_grant_then_delayed_whole_text(

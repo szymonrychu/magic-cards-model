@@ -1033,3 +1033,28 @@ def test_a_snapshot_written_before_treasure_mana_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TREASURE_MANA}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before `CastRecord.cast_using_teamwork`/`Game.
+#: became_tapped_count_this_turn` (C02-T2, Teamwork).
+_SCHEMA_VERSION_BEFORE_TEAMWORK = 73
+
+
+def test_the_teamwork_bump_moved_the_version_past_seventy_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_TEAMWORK
+
+
+def test_a_snapshot_written_before_teamwork_is_refused() -> None:
+    """A version-73 dump is refused rather than decoded as current: its cast
+    records carry no `cast_using_teamwork`, so "if this spell was cast using
+    teamwork" would read false for a spell that was, and it has no per-turn
+    tap count for Captain America, Living Legend's own "first time ... this
+    turn" intervening if to read at all."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_TEAMWORK
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_TEAMWORK}",
+    ):
+        Game.model_validate(dumped)

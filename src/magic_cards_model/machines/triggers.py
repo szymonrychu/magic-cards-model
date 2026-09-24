@@ -393,6 +393,17 @@ class GameEvent(EngineModel):
     the other way round, which is what separates Ragavan's trigger from the
     same creature taking a Lightning Bolt."""
 
+    tapped_for_teamwork: bool = False
+    """For a `BECOMES_TAPPED` event, whether the tap paid a `machines/
+    teamwork.py` Teamwork cost specifically - Agent Maria Hill's own
+    "Whenever Agent Maria Hill becomes tapped **to pay a teamwork cost**,
+    ..." asks about the *reason* she was tapped, not merely that she was,
+    the same way "deals **combat** damage" narrows `combat` above rather
+    than matching any damage event. Set by `machines/cost.CostComponent.
+    pay`'s own `ComponentKind.TAP` branch off `minimum_total_power is not
+    None` - the field `pay_teamwork` alone ever sets - so an equip cost, a
+    convoke tap, or any other ordinary tap cost leaves this `False`."""
+
     step: Step | None = None
 
     counter_kind: str | None = None
@@ -1533,6 +1544,27 @@ def _required_subtype(condition: str) -> tuple[str, ...] | None:
 #: has (Lightning Coils' "a nontoken creature", Archangel Avacyn's own
 #: non-Angel qualifier read separately by `_excluded_subtype_absent`) still
 #: matches: a lone word is a list of one.
+#: Magda, Brazen Outlaw's own "Whenever a Dwarf you control becomes tapped,
+#: ..." - the identical subtype-subject shape `_DYING_SUBTYPE` reads for a
+#: DIES condition, read here for BECOMES_TAPPED's own verb ending instead
+#: (CR 701.26a).
+_BECOMES_TAPPED_SUBTYPE = re.compile(
+    r"^(?:an?|another|one or more) (?:nontoken )?"
+    r"(?P<subtype>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
+    r" you control becomes tapped\b"
+)
+
+
+def _required_becomes_tapped_subtype(condition: str) -> tuple[str, ...] | None:
+    """The subtype(s) `_BECOMES_TAPPED_SUBTYPE` names, or `None` - the
+    BECOMES_TAPPED twin of `_required_dying_subtype`, read the same
+    `_parse_subtype_list` way for a comma/or list."""
+    match = _BECOMES_TAPPED_SUBTYPE.match(condition)
+    if match is None:
+        return None
+    return _parse_subtype_list(match.group("subtype"))
+
+
 _DYING_SUBTYPE = re.compile(
     r"^(?:an?|another|one or more) (?:nontoken )?"
     r"(?P<subtype>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
@@ -2538,6 +2570,12 @@ def condition_matches(
         # "a creature you control attacks alone").
         if "a player alone" not in lowered and "alone" in lowered and not event.attacking_alone:
             return False
+        if "equipped" in lowered:
+            # S.H.I.E.L.D. Spy Kit's own "Whenever equipped creature attacks
+            # alone, ..." - the attacker has to be the one this Equipment is
+            # attached to (CR 301.5a), not merely any lone attacker the
+            # controller happens to have.
+            return event.subject_id is not None and event.subject_id == source.attached_to
         defended = _ATTACKS_YOU_RE.search(lowered)
         if defended is not None:
             return _attacks_you_holds(
@@ -2922,7 +2960,41 @@ def condition_matches(
         ) and _types_match(event.subject_types, condition)
 
     if ability.event in (TriggerEvent.BECOMES_TAPPED, TriggerEvent.BECOMES_UNTAPPED):
-        return mine and event.subject_id == source.id
+        if "equipped" in lowered:
+            # Hawkeye's Bow's own "Whenever equipped creature becomes
+            # tapped, ..." - the same CR 301.5a "equipped creature" look-up
+            # `TAPPED_FOR_MANA`'s own "enchanted [land]" branch already
+            # reads below, generalised to CR 703.4h's own Equipment case.
+            return event.subject_id is not None and event.subject_id == source.attached_to
+        if mine:
+            if "teamwork cost" in lowered:
+                # Agent Maria Hill's own "becomes tapped to pay a teamwork
+                # cost" - narrower than a plain self-referential tap (CR
+                # 400.7): the event has to be the specific reason named,
+                # not merely that she became tapped at all.
+                return event.subject_id == source.id and event.tapped_for_teamwork
+            return event.subject_id == source.id
+        # Captain America, Living Legend's own "a creature you control
+        # becomes tapped[ during your turn]" - not self-referential at all
+        # (CR 700.7 only reads "this creature"/the source's own name as
+        # itself), so any creature the controller controls matches, gated
+        # the ordinary "you control" way (`_controller_clause_holds`) and,
+        # when the condition adds it, by whose turn it is right now
+        # (`turn.active_player`, the same "during your turn" idiom read
+        # elsewhere in this module).
+        if not (
+            _controller_clause_holds(condition, controller, event.subject_controller)
+            and _types_match(event.subject_types, condition)
+            and _subtype_matches(
+                event.subject_subtypes, _required_becomes_tapped_subtype(condition)
+            )
+        ):
+            return False
+        if "during your turn" in lowered or "during their turn" in lowered:
+            turn = game.turn
+            if turn is None or turn.active_player != controller:
+                return False
+        return True
 
     if ability.event is TriggerEvent.BECOMES_MONSTROUS:
         # CR 701.37a. Every printing in the pool - Polukranos, World Eater;
@@ -4184,6 +4256,21 @@ def _first_spell_this_turn_holds(
 #: form.
 _KICKED_CLAUSE = re.compile(r"^it was kicked$")
 
+#: `machines/teamwork.py`'s own intervening *if*, the same shape as
+#: `_KICKED_CLAUSE` for a card whose "If this spell was cast using
+#: teamwork" rider is written as a trailing intervening if instead of a
+#: leading "If ..." sentence - none in this pool yet, but the reader is
+#: general rather than tied to the one shape the pool happens to print.
+_CAST_USING_TEAMWORK_CLAUSE = re.compile(r"^this spell was cast using teamwork$")
+
+#: Captain America, Living Legend's own "if it's the first time that
+#: creature has become tapped this turn" - `abilities._parse_triggered`
+#: splits this off as `intervening_if` the ordinary CR 603.4 way, since the
+#: sentence is written as a plain "Whenever ..., if ..., ..." trigger.
+_FIRST_TIME_TAPPED_THIS_TURN_CLAUSE = re.compile(
+    r"^it'?s the first time (?:that creature|it) has become tapped this turn$"
+)
+
 #: CR 702.56a's own intervening *if*, written out by
 #: `machines/keywords._replicate_ability` - "a replicate cost was paid for it".
 _REPLICATE_CLAUSE = re.compile(r"^a replicate cost was paid for it$")
@@ -4647,6 +4734,29 @@ def intervening_if_holds(
         if record is None:
             return _fail_closed(game, ability, source)
         return record.kicked > 0
+
+    if _CAST_USING_TEAMWORK_CLAUSE.match(clause):
+        # `machines/teamwork.py`'s own additional cost - the identical shape
+        # `_KICKED_CLAUSE` reads just above, off `CastRecord.cast_using_
+        # teamwork` instead of `.kicked`.
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.cast_using_teamwork
+
+    if _FIRST_TIME_TAPPED_THIS_TURN_CLAUSE.match(clause):
+        # Captain America, Living Legend's own "if it's the first time that
+        # creature has become tapped this turn" - CR 701.26a's tap action,
+        # counted per permanent per turn on `Game.became_tapped_count_this_
+        # turn` (incremented once, at `Game.emit`'s own single write site,
+        # so it can never drift from the `BECOMES_TAPPED` event this
+        # ability's own trigger condition is watching). "That creature" is
+        # the trigger event's own subject (CR 603.2's "the tapped object"),
+        # not the ability's source - a controller with several creatures
+        # tapping in one turn tracks each of them separately.
+        if event is None or event.subject_id is None:
+            return _fail_closed(game, ability, source)
+        return game.became_tapped_count_this_turn.get(event.subject_id, 0) == 1
 
     if _REPLICATE_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)

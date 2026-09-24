@@ -2294,14 +2294,40 @@ def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: 
 #: sentence - Hydro-Man, Fluid Felon's "he gets +1/+1 until end of turn."
 _LEGENDARY_SELF_PRONOUN_RE = re.compile(r"^(?:he|she) (?=\w)", re.IGNORECASE)
 
+#: The same self-reference, mid-sentence and in object position - Agent
+#: Maria Hill's own "... put a +1/+1 counter on her and draw a card."
+#: CR 201.5c's rule is the identical one `_LEGENDARY_SELF_PRONOUN_RE` already
+#: reads for the leading subject case: Oracle text spells a legend's own
+#: gendered pronoun only for the legend it is printed on, in any
+#: grammatical position, so "him"/"her"/"himself"/"herself" are read the
+#: same way "he"/"she" already are - word-bounded, so "here"/"heron" are
+#: never mistaken for the pronoun "her" inside them. Rewritten to "it"/
+#: "itself" rather than `_LEGENDARY_SELF_PRONOUN_RE`'s own "this permanent":
+#: an object-position anaphor is exactly what every other self-referential
+#: "it" in this pool already reads (a trigger's own subject, CR 400.7), and
+#: rewriting to a second, longer phrase mid-sentence would only ask every
+#: object-pronoun-aware parser (`_parse_counter_on_it_trigger_subject_
+#: clause` and its siblings) to recognise a phrase they do not print for
+#: any other card.
+_LEGENDARY_SELF_OBJECT_PRONOUN_RE = re.compile(r"\b(?:him|her)(self)?\b", re.IGNORECASE)
+
 
 def legendary_self_pronoun_normalized(sentence: str) -> str:
-    """`sentence` with a leading "he"/"she" rewritten to CR 700.7's "this
-    permanent". Called only for a legendary card's own triggered or activated
-    ability: Oracle text uses "he"/"she" only for the legend it is printed
-    on, the same self-reference CR 201.5c's shortened name makes (Hydro-Man,
-    Fluid Felon's "if Hydro-Man is a creature, he gets +1/+1")."""
-    return _LEGENDARY_SELF_PRONOUN_RE.sub("this permanent ", sentence, count=1)
+    """`sentence` with a legend's own gendered pronoun rewritten to its
+    neuter, self-referential form - a leading subject "he"/"she" to CR
+    700.7's "this permanent" (`_LEGENDARY_SELF_PRONOUN_RE`), and any
+    mid-sentence object "him"/"her"/"himself"/"herself" to the "it"/"itself"
+    every other self-referential object pronoun in this pool already reads
+    (`_LEGENDARY_SELF_OBJECT_PRONOUN_RE`). Called only for a legendary
+    card's own triggered or activated ability: Oracle text uses these
+    pronouns only for the legend it is printed on, the same self-reference
+    CR 201.5c's shortened name makes (Hydro-Man, Fluid Felon's "if Hydro-Man
+    is a creature, he gets +1/+1"; Agent Maria Hill's own "... put a +1/+1
+    counter on her and draw a card.")."""
+    normalized = _LEGENDARY_SELF_PRONOUN_RE.sub("this permanent ", sentence, count=1)
+    return _LEGENDARY_SELF_OBJECT_PRONOUN_RE.sub(
+        lambda match: "itself" if match.group(1) else "it", normalized
+    )
 
 
 def layer_readable_sentences(
@@ -2599,7 +2625,21 @@ def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | Non
 #: never consults this module's own `Ability` classification, but fatal for
 #: a triggered one, whose `abilities_triggered_by`/`intervening_if_holds`
 #: only ever see a `TriggeredAbility`.
-_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?)\s+—\s+(?=\S)")
+#:
+#: An optional trailing "!"/"?" is the same story, one punctuation mark
+#: over: Spider-Man, To the Rescue's own "No One Dies! — When Spider-Man
+#: enters, ..." carries the exclamation point as part of its own printed
+#: ability word (a Marvel Super Heroes convention this pool's older
+#: ability words never used), and the plain [A-Za-z'\- ] class refused to
+#: match past it at all - not merely leaving the mark in `text`, but
+#: failing the whole match, so `ability_word` stayed unset and the
+#: untouched "No One Dies! — When ..." line never started with
+#: "When"/"Whenever" either, falling through to `StaticAbility` the
+#: identical fatal way the digit case above already documents. The mark
+#: is captured inside the ability-word group (dropped along with the rest
+#: of it once `text` is sliced past `word_match.end()`), never left for
+#: `_parse_triggered` to trip over.
+_ABILITY_WORD = re.compile(r"^([A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?[!?]?)\s+—\s+(?=\S)")
 
 #: CR 603.1's three words, at the start of the line.
 _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)
@@ -2612,7 +2652,6 @@ _MANA_SHAPED = re.compile(r"^(?:\{[^{}]+\}\s*)+$|^\d+$|^X$")
 #: The base effect is the first sentence; anything after it (an "instead"
 #: clause, a spend restriction) is captured as `rest` rather than discarded.
 #: Previously anchored to the *whole* effect with `[^.]+`, which cannot cross a
-#: full stop - Urza's Power Plant's `{T}: Add {C}. If you control ...` has a
 #: second sentence, so that anchoring made `mana=None` for every conditional
 #: mana ability, and CR 605.1a's "could add mana" criterion failed, sending it
 #: to the stack instead of resolving immediately (CR 605.3b).

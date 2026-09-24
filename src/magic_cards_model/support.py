@@ -2361,6 +2361,13 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
             # simulates a whole combat to derive these two flags from.
             attacking_alone=ability.event is TriggerEvent.ATTACKS,
             attacking_player_alone=ability.event is TriggerEvent.ATTACKS,
+            # Agent Maria Hill's own "becomes tapped to pay a teamwork
+            # cost" (`GameEvent.tapped_for_teamwork`) - the same reasoning
+            # as the two flags above: this synthetic probe never pays a
+            # real cost to derive the flag from, so a `BECOMES_TAPPED`
+            # occurrence is tried as though it always were one, the one way
+            # the condition could ever be satisfied at all.
+            tapped_for_teamwork=ability.event is TriggerEvent.BECOMES_TAPPED,
         )
 
     for host in source_variants:
@@ -2369,15 +2376,22 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
         # against each tapped variant of the literal host object, not a twin.
         if condition_matches(game, ability, host, controller, event_for(host)):
             return True
-    # CR 303.4b/303.4m: "enchanted [object]" reads `source.attached_to`
-    # (Ferocity of the Hunt's own "When enchanted creature dies, ..."),
-    # which nothing above ever sets - bound here, one candidate at a time, so
-    # a DIES condition naming "enchanted" is tried the one way it can
-    # actually be satisfied: the dying subject really is what this Aura is
-    # attached to.
-    enchanted_dies = ability.event is TriggerEvent.DIES and "enchanted" in ability.condition.lower()
+    # CR 303.4b/303.4m/CR 301.5a: "enchanted [object]"/"equipped creature"
+    # reads `source.attached_to` (Ferocity of the Hunt's own "When enchanted
+    # creature dies, ...", Hawkeye's Bow's "Whenever equipped creature
+    # becomes tapped, ...", S.H.I.E.L.D. Spy Kit's "Whenever equipped
+    # creature attacks alone, ..."), which nothing above ever sets - bound
+    # here, one candidate at a time, so a condition naming either word is
+    # tried the one way it can actually be satisfied: the subject really is
+    # what this Aura/Equipment is attached to. Not narrowed to DIES any
+    # more: BECOMES_TAPPED and ATTACKS both print this exact "equipped
+    # creature" subject too, and `attached_to` means the identical thing to
+    # `condition_matches` regardless of which event asks.
+    attached_condition = "enchanted" in ability.condition.lower() or (
+        "equipped" in ability.condition.lower()
+    )
     for subject in states:
-        if enchanted_dies:
+        if attached_condition:
             # `attached_to` is read off `attachment` (CR 301.5a) - not a
             # plain field of its own.
             source.attachment = TargetRef.to_card(subject)

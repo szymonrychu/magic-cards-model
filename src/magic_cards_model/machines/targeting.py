@@ -365,6 +365,20 @@ class TargetRequirement(EngineModel):
     Empty means the text asked for neither. More than one is a disjunction:
     "target attacking or blocking creature" takes either.
     """
+    excluded_combat_states: SortedFrozenSet[CombatState] = frozenset()
+    """Which of attacking and blocking this target must NOT be in (CR
+    508.1k, 509.1g) - "another target **nonattacking** creature you
+    control" (Spider-Man, To the Rescue's own ETB rider). The negation of
+    `combat_states` just above, the same "non-" convention `excluded_types`/
+    `excluded_supertypes`/`excluded_colors` already read for other
+    adjectives."""
+    must_be_attacking_alone: bool = False
+    """"target creature you control that's attacking alone" (Crowd of True
+    Believers). CR 506.5's own live "alone" state - true only while this
+    creature is the whole of its own attacking party this combat - read the
+    same way `combat_states` reads "attacking"/"blocking" off `Game.combat`,
+    not a per-turn historical fact the way `must_have_attacked_this_turn`
+    below is."""
     must_have_attacked_this_turn: bool = False
     """"target creature that attacked this turn" (Hexhaven Dueling Arena).
     Unlike `combat_states`' live "is this creature currently attacking",
@@ -894,6 +908,9 @@ class TargetRequirement(EngineModel):
         combat = self._rejects_combat_state(target, game)
         if combat is not None:
             return combat
+        alone = self._rejects_attacking_alone(target, game)
+        if alone is not None:
+            return alone
         attacked = self._rejects_attacked_this_turn(target, game)
         if attacked is not None:
             return attacked
@@ -1029,9 +1046,18 @@ class TargetRequirement(EngineModel):
         combat rather than on the permanent. No game means no answer, and an
         unanswerable restriction is not enforced.
         """
+        combat = getattr(game, "combat", None)
+        if self.excluded_combat_states and combat is not None:
+            is_attacking = combat.attack_by(target.id) is not None
+            is_blocking = combat.attack_blocked_by(target.id) is not None
+            if CombatState.ATTACKING in self.excluded_combat_states and is_attacking:
+                return (
+                    f"{self.phrase} needs a nonattacking creature, and {target.name} is attacking"
+                )
+            if CombatState.BLOCKING in self.excluded_combat_states and is_blocking:
+                return f"{self.phrase} needs a nonblocking creature, and {target.name} is blocking"
         if not self.combat_states:
             return None
-        combat = getattr(game, "combat", None)
         if combat is None:
             return None
         if CombatState.ATTACKING in self.combat_states and combat.attack_by(target.id) is not None:
@@ -1041,6 +1067,22 @@ class TargetRequirement(EngineModel):
             return None
         wanted = " or ".join(sorted(state.value for state in self.combat_states))
         return f"{self.phrase} needs a creature that is {wanted}, and {target.name} is not"
+
+    def _rejects_attacking_alone(self, target: CardState, game: Any) -> str | None:
+        """CR 506.5: is this creature attacking, and is it the *only* one
+        attacking this combat - the same "alone" `machines/triggers.py`
+        reads off `GameEvent.attacking_alone` for a trigger's own condition,
+        asked here of a target's *current* state instead of a past event.
+        No game, no combat to ask: fails open the same way `_rejects_
+        combat_state` does."""
+        if not self.must_be_attacking_alone:
+            return None
+        combat = getattr(game, "combat", None)
+        if combat is None:
+            return None
+        if combat.attack_by(target.id) is not None and len(combat.attacker_ids) == 1:
+            return None
+        return f"{self.phrase} needs a creature attacking alone, and {target.name} is not"
 
     def _rejects_attacked_this_turn(self, target: CardState, game: Any) -> str | None:
         """ "target creature that attacked this turn" - a per-turn historical
@@ -3757,6 +3799,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     required_keyword, rest = _extract_required_keyword(rest)
 
+    attacking_alone, rest = _extract_attacking_alone(rest)
+
     attacked_this_turn, rest = _extract_attacked_this_turn(rest)
 
     entered_this_turn, rest = _extract_entered_this_turn(rest)
@@ -3913,6 +3957,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         color_count=color_count,
         historic=adjectives.historic,
         combat_states=frozenset(adjectives.combat_states),
+        excluded_combat_states=frozenset(adjectives.excluded_combat_states),
+        must_be_attacking_alone=attacking_alone,
         must_have_attacked_this_turn=attacked_this_turn,
         must_have_entered_this_turn=entered_this_turn,
         alternatives=compound_alternatives,
@@ -3989,6 +4035,7 @@ class _Adjectives:
         self.excluded_colors: set[Color] = set()
         self.excluded_subtypes: set[str] = set()
         self.combat_states: set[CombatState] = set()
+        self.excluded_combat_states: set[CombatState] = set()
         self.must_be_tapped: bool | None = None
         self.must_be_token: bool | None = None
         self.color_count: str | None = None
@@ -4009,6 +4056,8 @@ class _Adjectives:
             self.must_be_tapped = _TAPPED_ADJECTIVES[word]
         elif word in _COMBAT_ADJECTIVES:
             self.combat_states.add(_COMBAT_ADJECTIVES[word])
+        elif (excluded_combat := _negated_combat_state(word)) is not None:
+            self.excluded_combat_states.add(excluded_combat)
         elif word == "token":
             self.must_be_token = True
         elif word == "nontoken":
@@ -4047,6 +4096,16 @@ def _negated_type(word: str) -> Type | None:
     if not word.startswith("non") or len(word) <= 3:
         return None
     return _TYPE_NOUNS.get(word[3:].lstrip("-"))
+
+
+def _negated_combat_state(word: str) -> CombatState | None:
+    """The combat state a "non-" adjective rules out, if it is one -
+    "nonattacking" (Spider-Man, To the Rescue), "nonblocking" - read the
+    identical way `_negated_type`/`_negated_supertype` already are, against
+    `_COMBAT_ADJECTIVES` rather than `_TYPE_NOUNS`/`_SUPERTYPE_NOUNS`."""
+    if not word.startswith("non") or len(word) <= 3:
+        return None
+    return _COMBAT_ADJECTIVES.get(word[3:].lstrip("-"))
 
 
 def _negated_supertype(word: str) -> Supertype | None:
@@ -4614,6 +4673,24 @@ def _extract_attacked_this_turn(rest: str) -> tuple[bool, str]:
     """Read a trailing "that attacked this turn" clause out of `rest`, or
     leave it untouched when there is none."""
     match = _ATTACKED_THIS_TURN_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature you control that's attacking alone" (Crowd of True
+#: Believers) - the identical trailing-relative-clause shape `_ATTACKED_
+#: THIS_TURN_RE` already reads, for CR 506.5's live "alone" state instead of
+#: a per-turn historical fact. "That's"/"that is"/"who's"/"who is" all
+#: introduce it; every printing in the pool uses the contraction, but the
+#: full form costs nothing extra to accept.
+_ATTACKING_ALONE_RE = re.compile(r"\bthat'?s attacking alone\b", re.IGNORECASE)
+
+
+def _extract_attacking_alone(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that's attacking alone" clause out of `rest`, or
+    leave it untouched when there is none."""
+    match = _ATTACKING_ALONE_RE.search(rest)
     if match is None:
         return False, rest
     return True, (rest[: match.start()] + rest[match.end() :]).strip()
