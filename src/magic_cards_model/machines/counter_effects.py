@@ -654,10 +654,474 @@ def _remove_one_counter(
     return True
 
 
+#: "create a `<Predefined>` token or a `<Predefined>` token" (Ant-Man's Army,
+#: Tireless Provisioner) - CR 111.10's predefined tokens, one of the two, the
+#: controller's choice as it resolves (CR 608.2d).
+_CREATE_ONE_TOKEN_OR_ANOTHER_RE = re.compile(
+    r"^(?i:create an?) (?P<first>[A-Z][\w'-]*) (?i:token or an?) (?P<second>[A-Z][\w'-]*)"
+    r" (?i:token)\.?$"
+)
+
+
+def _create_one_token_or_another(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.token import PREDEFINED
+    from . import effects
+    from .decisions import Decision, DecisionKind, source_id_of
+
+    match = _CREATE_ONE_TOKEN_OR_ANOTHER_RE.fullmatch(text)
+    if match is None:
+        return None
+    options = (match.group("first"), match.group("second"))
+    if any(option not in PREDEFINED for option in options):
+        return None
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        controller = game.controller_of(stack_object).username
+        answer = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_MODE,
+                player=controller,
+                prompt="choose which token to create",
+                source=stack_object.name,
+                source_id=source_id_of(stack_object),
+                options=options,
+            )
+        )
+        chosen = answer if answer in options else options[0]
+        effects.create_tokens(game, PREDEFINED[chosen], controller, 1)
+
+    return effect
+
+
+#: "`<effect>` if there are N or more `<quality>` cards in your graveyard.
+#: Otherwise, `<effect>`." (HYDRA Troopers) - CR 608.2c: one condition, read
+#: as it resolves, choosing between two instructions.
+_IF_GRAVEYARD_COUNT_OTHERWISE_RE = re.compile(
+    r"^(?P<first>.+?) if there are (?P<n>[\w-]+) or more (?P<quality>[a-z ]+?) cards in your "
+    r"graveyard\. otherwise, (?P<second>.+)$",
+    re.IGNORECASE,
+)
+
+
+def _sentence(text: str) -> str:
+    text = text.strip()
+    text = text[:1].upper() + text[1:]
+    return text if text.endswith(".") else text + "."
+
+
+def _resolution_clause(text: str, *, for_spell: bool):  # noqa: ANN202
+    """`text` read by `machines/effects`' own whole-text dispatcher for the
+    same kind of object, or `None` for unread or notice-only text."""
+    from . import effects
+
+    parsed = (
+        effects._spell_effect_or_notice(_sentence(text))
+        if for_spell
+        else effects._ability_effect_or_notice(_sentence(text))
+    )
+    if parsed is None or effects._is_notice_only(parsed):
+        return None
+    return parsed
+
+
+def _if_graveyard_count_otherwise(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..numbers import parse_count
+    from . import effects
+
+    match = _IF_GRAVEYARD_COUNT_OTHERWISE_RE.fullmatch(text)
+    if match is None:
+        return None
+    threshold = parse_count(match.group("n"), article=False)
+    counter = effects.count_expression(
+        f"the number of {match.group('quality')} cards in your graveyard"
+    )
+    first = _resolution_clause(match.group("first"), for_spell=for_spell)
+    second = _resolution_clause(match.group("second"), for_spell=for_spell)
+    if threshold is None or counter is None or first is None or second is None:
+        return None
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        controller = game.controller_of(stack_object).username
+        if counter(game, controller) >= threshold:
+            first(game, stack_object)
+        else:
+            second(game, stack_object)
+
+    return effect
+
+
+#: "Target player investigates. `<rest>`" (Panther Pounce) - CR 701.16a's
+#: Clue for the targeted player, then the rest of the spell against its own
+#: (card) targets.
+_TARGET_PLAYER_INVESTIGATES_RE = re.compile(
+    r"^target (?P<who>player|opponent) investigates\.(?: (?P<rest>.+))?$", re.IGNORECASE
+)
+
+
+def _target_player_investigates(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.player import Player
+    from . import effects
+
+    match = _TARGET_PLAYER_INVESTIGATES_RE.fullmatch(text)
+    if match is None:
+        return None
+    rest = None
+    if match.group("rest"):
+        rest = _resolution_clause(match.group("rest"), for_spell=for_spell)
+        if rest is None:
+            return None
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        player = next(
+            (t for t in game.resolve_targets(stack_object) if isinstance(t, Player)), None
+        )
+        if player is not None:
+            effects.investigate(game, player.username, 1)
+        if rest is not None:
+            rest(game, stack_object)
+
+    return effect
+
+
+#: "Target player gains N life, then searches their library for a[n]
+#: `<quality>` card, puts it onto the battlefield [tapped]/into their hand,
+#: then shuffles. `<rest>`" (Restorative Technique) - the targeted player
+#: gains the life (CR 119.3) and does the searching (CR 701.23a).
+_TARGET_PLAYER_GAINS_THEN_SEARCHES_RE = re.compile(
+    r"^target player gains (?P<n>[\w-]+) life, then searches their library for "
+    r"(?:an? )?(?P<quality>.+?) card, puts it (?P<dest>onto the battlefield(?P<tapped> tapped)?"
+    r"|into their hand), then shuffles\.(?: (?P<rest>.+))?$",
+    re.IGNORECASE,
+)
+
+
+def _target_player_gains_then_searches(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.player import Player
+    from ..models.zone import Zone
+    from ..numbers import parse_count
+    from . import effects
+    from .decisions import source_id_of
+
+    match = _TARGET_PLAYER_GAINS_THEN_SEARCHES_RE.fullmatch(text)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    quality = match.group("quality")
+    if amount is None or not effects._search_quality_is_readable(quality):
+        return None
+    matches = effects._quality_matcher(quality)
+    to_battlefield = match.group("dest").lower().startswith("onto")
+    tapped = match.group("tapped") is not None
+    rest = None
+    if match.group("rest"):
+        rest = _resolution_clause(match.group("rest"), for_spell=for_spell)
+        if rest is None:
+            return None
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        controller = game.controller_of(stack_object).username
+        player = next(
+            (t for t in game.resolve_targets(stack_object) if isinstance(t, Player)), None
+        )
+        if player is not None:
+            game.gain_life(player, amount)
+            game.search_and_put(
+                player,
+                matches,
+                destination=Zone.BATTLEFIELD if to_battlefield else Zone.HAND,
+                count=1,
+                tapped=tapped,
+                source=stack_object.name,
+                source_id=source_id_of(stack_object),
+                caused_by=controller,
+            )
+        if rest is not None:
+            rest(game, stack_object)
+
+    return effect
+
+
+#: "[You may] search your library and/or graveyard for a[n] `<quality>` card
+#: [with no abilities] [with mana value N or less][, reveal it,] [and] put it
+#: onto the battlefield [tapped] / into your hand [with N additional `<kind>`
+#: counters on it]. [If N is M or greater, it gains `<keywords>` until end of
+#: turn.] If you search your library this way, shuffle." (Vision Quest,
+#: Fang-Druid Summoner) - CR 701.23a's search of two zones, one of them
+#: optional ("and/or"), with the shuffle owed only for the library.
+_SEARCH_LIBRARY_AND_OR_GRAVEYARD_RE = re.compile(
+    r"^(?P<may>you may )?search your library and/or graveyard for (?:an? )?(?P<quality>.+?) card"
+    r"(?P<no_abilities> with no abilities)?"
+    r"(?: with mana value (?P<mv>x|\d+) or less)?"
+    r"(?:,? reveal it,)?(?: and)? put it "
+    r"(?P<dest>onto the battlefield(?P<tapped> tapped)?|into your hand)"
+    r"(?: with (?P<counters>x|[\w-]+) additional (?P<kind>[+-]1/[+-]1|[a-z]+) counters? on it)?\."
+    r"(?: if (?P<cond_x>x|\d+) is (?P<min>\d+) or greater, it gains (?P<keywords>[a-z ,]+?)"
+    r" until end of turn\.)?"
+    r" if you search your library this way, shuffle\.?$",
+    re.IGNORECASE,
+)
+
+
+def _announced_x(game: Game, stack_object) -> int:  # noqa: ANN001
+    """CR 107.3a's X: a spell's from its cast record, an ability's own."""
+    from ..models.card_state import CardState
+
+    if isinstance(stack_object, CardState):
+        return game.cast_record(stack_object).x_value
+    return getattr(stack_object, "x_value", None) or 0
+
+
+def _card_quality(quality: str):  # noqa: ANN202 - Callable[[CardState], bool] | None
+    """A search's stated quality as a card predicate: "artifact creature" is
+    both card types at once (CR 205.2a's card types, every one the type line
+    prints), anything else `machines/effects`' own search-quality reader."""
+    from . import effects
+
+    words = quality.lower().split()
+    types = [_CARD_TYPE_WORDS.get(word) for word in words]
+    if len(words) > 1 and all(types):
+        wanted = frozenset(t for t in types if t is not None)
+        return lambda state: wanted <= set(state.types)
+    if not effects._search_quality_is_readable(quality):
+        return None
+    return effects._quality_matcher(quality)
+
+
+def _search_library_and_or_graveyard(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.zone import Zone
+    from ..numbers import parse_count
+    from . import effects
+    from .decisions import Decision, DecisionKind, source_id_of
+    from .layers import ContinuousEffect, Duration, Layer, grant_ability, only_this_incarnation
+
+    match = _SEARCH_LIBRARY_AND_OR_GRAVEYARD_RE.fullmatch(text)
+    if match is None:
+        return None
+    quality = match.group("quality")
+    matches_quality = _card_quality(quality)
+    if matches_quality is None:
+        return None
+    no_abilities = match.group("no_abilities") is not None
+
+    def number(word: str | None, x: int) -> int | None:
+        if word is None:
+            return None
+        return x if word.lower() == "x" else parse_count(word)
+
+    for word in (match.group("mv"), match.group("counters"), match.group("cond_x")):
+        if word is not None and word.lower() != "x" and parse_count(word) is None:
+            return None
+    keywords = None
+    if match.group("keywords"):
+        keywords = effects.split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+    to_battlefield = match.group("dest").lower().startswith("onto")
+    tapped = match.group("tapped") is not None
+    kind = (match.group("kind") or "+1/+1").lower()
+    optional = match.group("may") is not None
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        player = game.controller_of(stack_object)
+        source = stack_object.name
+        source_id = source_id_of(stack_object)
+        x = _announced_x(game, stack_object)
+        ceiling = number(match.group("mv"), x)
+
+        def qualifies(state: CardState) -> bool:
+            if not matches_quality(state):
+                return False
+            if no_abilities and (state.oracle_text or "").strip():
+                return False
+            return ceiling is None or state.mana_value <= ceiling
+
+        if optional and not game.may(
+            player,
+            f"search your library and/or graveyard for {quality}",
+            source=source,
+            source_id=source_id,
+        ):
+            return
+        searched_library = game.may(
+            player, "search your library too", source=source, source_id=source_id
+        )
+        candidates = [card for card in player.graveyard if qualifies(card)]
+        if searched_library:
+            candidates += [card for card in player.library if qualifies(card)]
+        found = None
+        if candidates:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose up to one {quality} card",
+                    source=source,
+                    source_id=source_id,
+                    amount=1,
+                    cards=tuple(card.id for card in candidates),
+                    card_labels=tuple(card.name for card in candidates),
+                    exact=False,
+                )
+            )
+            wanted = next(iter(chosen_ids or ()), None)
+            pick = next((card for card in candidates if card.id == wanted), None)
+            if pick is not None:
+                taken = game.search_library(
+                    player,
+                    lambda state, pick_id=pick.id: state.id == pick_id,
+                    count=1,
+                    shuffle=False,
+                    source=source,
+                    source_id=source_id,
+                    zone=pick.zone,
+                    caused_by=player.username,
+                )
+                found = taken[0] if taken else None
+        if found is not None:
+            if match.group(0).lower().find("reveal it") != -1:
+                game.reveal(found, source=source)
+            if to_battlefield:
+                permanent = game.put_onto_battlefield(found, player.username, tapped=tapped)
+                counters = number(match.group("counters"), x)
+                if counters and permanent.zone is Zone.BATTLEFIELD:
+                    game.add_counters(permanent, kind, counters)
+                condition = number(match.group("cond_x"), x)
+                if (
+                    keywords
+                    and permanent.zone is Zone.BATTLEFIELD
+                    and condition is not None
+                    and condition >= int(match.group("min"))
+                ):
+                    for keyword in keywords:
+                        game.continuous_effects.add(
+                            ContinuousEffect(
+                                description=f"{source}: {permanent.name} gains {keyword}",
+                                layer=Layer.ABILITY,
+                                timestamp=game.continuous_effects.tick(),
+                                duration=Duration.UNTIL_END_OF_TURN,
+                                source_id=getattr(stack_object, "source_id", None),
+                                selector=only_this_incarnation(
+                                    permanent, permanent.zone_change_stamp
+                                ),
+                                modification=grant_ability(keyword),
+                            ),
+                            game,
+                        )
+            else:
+                player.add(found, Zone.HAND)
+        if searched_library:
+            game.shuffle_library(player)
+
+    return effect
+
+
+#: "choose up to that many target `<description>`" - Heroic Feast's own
+#: target count, fixed by the triggering event as the ability goes on the
+#: stack (CR 601.2c via CR 603.3d).
+_UP_TO_THAT_MANY_TARGET_RE = re.compile(r"\bup to that many (?=target\b)", re.IGNORECASE)
+
+
+def event_count_target_text(text: str, event: GameEvent | None) -> str:
+    """`text` with "up to that many target" written as the event's own count,
+    for `machines/targeting.profile_for_text` to read - or `text` unchanged
+    when there is no count to write in."""
+    if event is None or event.amount is None or not _UP_TO_THAT_MANY_TARGET_RE.search(text):
+        return text
+    return _UP_TO_THAT_MANY_TARGET_RE.sub(f"up to {event.amount} ", text)
+
+
+#: "choose up to that many/N target `<description>`. Put a[n]/N `<kind>`
+#: counter[s] on each of them." (Heroic Feast) - CR 122.1's counters on every
+#: chosen target still legal as it resolves (CR 608.2b).
+_CHOOSE_TARGETS_PUT_COUNTER_ON_EACH_RE = re.compile(
+    r"^choose (?:up to )?(?:that many|[\w-]+) target [^.]+\. "
+    r"put (?P<n>an?|[\w-]+) (?P<kind>[+-]1/[+-]1|[a-z]+) counters? on each of them\.?$",
+    re.IGNORECASE,
+)
+
+
+def _choose_targets_put_counter_on_each(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..numbers import parse_count
+
+    match = _CHOOSE_TARGETS_PUT_COUNTER_ON_EACH_RE.fullmatch(text)
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    kind = match.group("kind").lower()
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        for permanent in game.resolve_card_targets(stack_object):
+            game.add_counters(permanent, kind, amount)
+
+    return effect
+
+
+#: "create `<token>`. Put a[n]/N `<kind>` counter[s] on it for each `<kind>`
+#: counter on this `<type>`, then put a[n]/N `<kind>` counter[s] on this
+#: `<type>`." (Alien Invasion) - "it" is the token just created (CR 608.2c's
+#: order: the count is read before the source's own counter is added).
+_CREATE_THEN_COUNTERS_PER_SOURCE_COUNTER_RE = re.compile(
+    r"^(?P<create>create .+?)\s+put (?P<n>an?|[\w-]+) (?P<kind>[+-]1/[+-]1|[a-z]+) counters? on "
+    r"it for each (?P<each>[a-z+/-]+ counters? on this [a-z]+), then put (?P<m>an?|[\w-]+) "
+    r"(?P<kind2>[+-]1/[+-]1|[a-z]+) counters? on this [a-z]+\.?$",
+    re.IGNORECASE,
+)
+
+
+def _create_then_counters_per_source_counter(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.token import is_token
+    from ..models.zone import Zone
+    from ..numbers import parse_count
+    from . import effects
+    from .decisions import source_id_of
+
+    if for_spell:
+        return None
+    match = _CREATE_THEN_COUNTERS_PER_SOURCE_COUNTER_RE.fullmatch(text)
+    if match is None:
+        return None
+    create = effects._parse_token_clause(match.group("create"), for_spell=False)
+    per = parse_count(match.group("n"))
+    multiplier = effects._for_each_multiplier(match.group("each"))
+    own = parse_count(match.group("m"))
+    if create is None or per is None or multiplier is None or own is None:
+        return None
+    kind = match.group("kind").lower()
+    own_kind = match.group("kind2").lower()
+
+    def effect(game: Game, ability) -> None:  # noqa: ANN001
+        controller = game.controller_of(ability).username
+        before = {permanent.id for permanent in game.battlefield}
+        create(game, ability)
+        created = [
+            permanent
+            for permanent in game.battlefield
+            if permanent.id not in before and is_token(permanent)
+        ]
+        count = multiplier(game, controller, source_id_of(ability))
+        for token in created:
+            if per * count > 0:
+                game.add_counters(token, kind, per * count)
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            game.add_counters(source, own_kind, own)
+
+    return effect
+
+
 _WHOLE_TEXT_READERS = (
     lambda text, *, for_spell: _each_kind_another_counter(text),
     _create_that_many_tokens,
     _remove_a_counter_if_you_do,
+    _create_one_token_or_another,
+    _if_graveyard_count_otherwise,
+    _target_player_investigates,
+    _target_player_gains_then_searches,
+    _search_library_and_or_graveyard,
+    _choose_targets_put_counter_on_each,
+    _create_then_counters_per_source_counter,
 )
 
 

@@ -119,6 +119,7 @@ from ..machines.cost import (
     untap_cost,
     why_payer_cannot_use,
 )
+from ..machines.counter_effects import event_count_target_text
 from ..machines.decisions import (
     CardSplit,
     Decision,
@@ -8586,30 +8587,7 @@ class Game(EngineModel):
             # rather than applied to every triggered event, so a cast
             # spell's own X never bleeds into an unrelated attack/dies
             # trigger's bare "X" (CR 107.3f territory, not this rule).
-            effect_text = ability.ability.effect
-            if (
-                ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
-                and effect_text
-                and re.search(r"\bX\b", effect_text)
-            ):
-                # Ajani's Anguish's own "it deals X damage to any target."
-                # `cast_record_of` is already CR 400.7d's bridge (its own
-                # docstring), keyed by `zone_change_stamp`, which a spell
-                # resolving into a permanent carries across that exact zone
-                # change.
-                #
-                # Scoped to a spell whose *own* mana cost carried {X}
-                # (CR 107.3a): Craterhoof Behemoth's and Yuriko's own ETB
-                # triggers define X in their own text instead ("where X is
-                # the number of creatures you control", CR 107.3f), which
-                # CR 107.3m does not touch at all - substituting the cast
-                # record's own default `x_value=0` into that text would
-                # silently overwrite the real, ability-defined X with zero.
-                source = ability.source(self)
-                if source is not None and "{X}" in (source.mana_cost or ""):
-                    record = self.cast_record_of(source)
-                    if record is not None:
-                        effect_text = substitute_x(effect_text, record.x_value)
+            effect_text = self._etb_x_effect_text(ability)
             # CR 701.37c: "If a permanent's ability instructs a player to
             # 'monstrosity X,' other abilities of that permanent may also
             # refer to X. The value of X in those abilities is equal to the
@@ -9080,9 +9058,9 @@ class Game(EngineModel):
         )
         placed: list[AbilityOnStack] = []
         for ability in ordered:
-            modal = modal_trigger_profile(
-                ability.ability.effect if isinstance(ability.ability, TriggeredAbility) else None
-            )
+            # CR 107.3m: The Ruinous Wrecking Crew's "choose up to X -" counts
+            # the X its spell was cast with - 0 when it was never cast.
+            modal = modal_trigger_profile(self._etb_x_effect_text(ability, uncast_x=0))
             if modal is not None:
                 # CR 603.3c: the mode is announced as the ability is put on the
                 # stack, then CR 603.3d/CR 700.2c's targets for the chosen
@@ -9110,6 +9088,48 @@ class Game(EngineModel):
             self.trigger_targets.pop(ability.source_name, None)
             self.trigger_targets.pop(ability.source_name.split("//")[0].strip(), None)
         return placed
+
+    def _etb_x_effect_text(
+        self, ability: AbilityOnStack, *, uncast_x: int | None = None
+    ) -> str | None:
+        """A triggered ability's effect text with CR 107.3m's X written in:
+        "If an object's enters-the-battlefield triggered ability ... refers
+        to X, and the spell that became that object as it resolved had a value
+        of X chosen for any of its costs, the value of X for that ability is
+        the same as the value of X for that spell."
+
+        Ajani's Anguish's own "it deals X damage to any target." `cast_record_
+        of` is already CR 400.7d's bridge (its own docstring), keyed by
+        `zone_change_stamp`, which a spell resolving into a permanent carries
+        across that exact zone change.
+
+        Scoped to a spell whose *own* mana cost carried {X} (CR 107.3a):
+        Craterhoof Behemoth's and Yuriko's own ETB triggers define X in their
+        own text instead ("where X is the number of creatures you control", CR
+        107.3f), which CR 107.3m does not touch at all - substituting the cast
+        record's own default `x_value=0` into that text would silently
+        overwrite the real, ability-defined X with zero.
+
+        `uncast_x` is the X written in when no spell became the permanent (it
+        was put onto the battlefield): `None` leaves the text alone, the
+        resolution side's long-standing behaviour.
+        """
+        if not isinstance(ability.ability, TriggeredAbility):
+            return None
+        effect_text = ability.ability.effect
+        if (
+            ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
+            and effect_text
+            and re.search(r"\bX\b", effect_text)
+        ):
+            source = ability.source(self)
+            if source is not None and "{X}" in (source.mana_cost or ""):
+                record = self.cast_record_of(source)
+                if record is not None:
+                    effect_text = substitute_x(effect_text, record.x_value)
+                elif uncast_x is not None:
+                    effect_text = substitute_x(effect_text, uncast_x)
+        return effect_text
 
     def _announce_trigger_modes(self, ability: AbilityOnStack, modal: ModalProfile) -> bool:
         """Choose a modal triggered ability's modes and their targets as it goes
@@ -9169,7 +9189,9 @@ class Game(EngineModel):
             if answer == NO_FURTHER_MODES:
                 break
             chosen.append(next((m for m in remaining if m.text == answer), remaining[0]))
-        if len(chosen) < minimum:
+        if len(chosen) < minimum or not chosen:
+            # CR 700.2b: "If no mode is chosen, the ability is removed from
+            # the stack" - "choose up to X -" allows choosing none.
             return False
         if exclusive and source_state is not None and chosen:
             source_state.chosen_modal_options = source_state.chosen_modal_options + tuple(
@@ -9387,6 +9409,10 @@ class Game(EngineModel):
             consequence = reflexive_consequence_text(text)
             if consequence is not None:
                 text = consequence
+        # Heroic Feast's "choose up to that many target creatures": CR 601.2c
+        # (via CR 603.3d) fixes the number as it goes on the stack, and "that
+        # many" is what the triggering event carried.
+        text = event_count_target_text(text, ability.event)
         profile = profile_for_text(text).for_event_player(_that_player_of(ability))
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
@@ -13002,7 +13028,13 @@ class Game(EngineModel):
         # gained - a gain replaced to zero never happened (CR 603.2g).
         if event.amount > 0:
             player.gain_life(event.amount)
-            self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
+            # The amount travels too: Heroic Feast's "choose up to that many
+            # target creatures" counts the life this event gained (CR 119.9).
+            self.emit(
+                GameEvent(
+                    event=TriggerEvent.GAINS_LIFE, player=player.username, amount=event.amount
+                )
+            )
         return player.life
 
     def lose_life(self, player: Player | str, amount: int) -> int:

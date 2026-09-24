@@ -327,3 +327,293 @@ def test_terrasymbiosis_draws_that_many_once_each_turn():
     _resolve_pending(scenario)
 
     assert len(scenario.player("alice").hand) == hand_before + 2
+
+
+# -- The Thing, Ben Grimm: "Whenever one or more Heroes you control deal damage
+# to a player, put two +1/+1 counters on The Thing." ---------------------------
+#
+# CR 510.2's combat damage is dealt simultaneously - one event per player per
+# step (CR 603.2c) - and noncombat damage is its own event. A Hero is a
+# creature type (CR 205.3m).
+
+THING = "The Thing, Ben Grimm"
+
+
+def _thing_board(*alice: str, bob: tuple[str, ...] = ()) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", battlefield=[THING, *alice], library=["Forest"] * 5)
+        .player("bob", battlefield=list(bob), library=["Forest"] * 5)
+    )
+
+
+def _attack(scenario, *attackers) -> None:
+    for attacker in attackers:
+        attacker.summoning_sick = False
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(*attackers)
+    scenario.advance()
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _resolve_pending(scenario)
+
+
+def test_the_thing_grows_when_a_hero_deals_combat_damage_to_a_player():
+    scenario = _thing_board("Kid Loki").build()
+    thing = scenario.creature(THING, "alice")
+    loki = scenario.creature("Kid Loki", "alice")
+
+    _attack(scenario, loki)
+
+    assert thing.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_two_heroes_in_one_combat_damage_step_are_one_trigger():
+    """The Thing is a Hero too: it and Kid Loki connecting together is one
+    event (CR 603.2c), two counters, not four."""
+    scenario = _thing_board("Kid Loki").build()
+    thing = scenario.creature(THING, "alice")
+    loki = scenario.creature("Kid Loki", "alice")
+
+    _attack(scenario, thing, loki)
+
+    assert thing.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_a_non_hero_dealing_damage_does_nothing():
+    scenario = _thing_board("Grizzly Bears").build()
+    thing = scenario.creature(THING, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    _attack(scenario, bears)
+
+    assert thing.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_noncombat_damage_from_a_hero_counts():
+    """ "deal damage", not "combat damage": a Hero's noncombat damage to a
+    player is the event too (CR 120.1)."""
+    scenario = _thing_board("Kid Loki").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    thing = scenario.creature(THING, "alice")
+    loki = scenario.creature("Kid Loki", "alice")
+
+    scenario.game.deal_damage(scenario.player("bob"), 1, source=loki)
+    _resolve_pending(scenario)
+
+    assert thing.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_damage_to_a_creature_does_not_count():
+    scenario = _thing_board("Kid Loki", bob=("Grizzly Bears",)).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    thing = scenario.creature(THING, "alice")
+    loki = scenario.creature("Kid Loki", "alice")
+
+    scenario.game.deal_damage(scenario.creature("Grizzly Bears", "bob"), 1, source=loki)
+    _resolve_pending(scenario)
+
+    assert thing.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_an_opponents_hero_does_not_count():
+    """ "Heroes you control" - bob's Kid Loki hitting alice is not it."""
+    scenario = _thing_board(bob=("Kid Loki",)).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    thing = scenario.creature(THING, "alice")
+    theirs = scenario.creature("Kid Loki", "bob")
+
+    scenario.game.deal_damage(scenario.player("alice"), 1, source=theirs)
+    _resolve_pending(scenario)
+
+    assert thing.counter_count(Counter.PLUS_ONE) == 0
+
+
+# -- Wakandan Royal Guard: "put a +1/+1 counter on target creature. If that
+# creature is another Hero, put two +1/+1 counters on it instead." -----------
+#
+# CR 614.1a: "instead" - a Hero gets two, never one plus two. Elder Cathar's
+# "If that creature is a Human, put two +1/+1 counters on it instead." is the
+# older printing of the same reader (tests/scenarios/test_counter_or_more_if_
+# subtype.py); "another" is what this one adds - the Guard is a Hero itself.
+
+GUARD = "Wakandan Royal Guard"
+
+
+def _guard_enters(scenario, target) -> None:
+    scenario.choose_trigger_targets(GUARD, [target])
+    scenario.put_onto_battlefield(GUARD, "alice")
+    _resolve_pending(scenario)
+
+
+def _guard_board(*alice: str) -> Scenario:
+    return Scenario().player("alice", hand=[GUARD], battlefield=list(alice)).player("bob")
+
+
+def test_the_guard_puts_two_counters_on_another_hero():
+    scenario = _guard_board("Kid Loki").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    loki = scenario.creature("Kid Loki", "alice")
+
+    _guard_enters(scenario, loki)
+
+    assert loki.counter_count(Counter.PLUS_ONE) == 2
+
+
+def test_the_guard_puts_one_counter_on_a_non_hero():
+    scenario = _guard_board("Grizzly Bears").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    _guard_enters(scenario, bears)
+
+    assert bears.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_the_guard_on_itself_is_not_another_hero():
+    scenario = _guard_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    guard = scenario.put_onto_battlefield(GUARD, "alice")
+    scenario.choose_trigger_targets(GUARD, [guard])
+    _resolve_pending(scenario)
+
+    assert guard.counter_count(Counter.PLUS_ONE) == 1
+
+
+# -- Heroic Feast: "Whenever you gain life, choose up to that many target
+# creatures you control. Put a +1/+1 counter on each of them." ---------------
+#
+# CR 601.2c (via CR 603.3d): the number of targets is fixed as the ability goes
+# on the stack - "that many" is the life the event gained (CR 119.9).
+
+FEAST = "Heroic Feast"
+
+
+def test_heroic_feast_grows_up_to_that_many_creatures():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[FEAST, "Grizzly Bears", "Kid Loki", "Knight of Wundagore"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    loki = scenario.creature("Kid Loki", "alice")
+    scenario.will_choose_targets(bears, loki, username="alice")
+
+    scenario.game.gain_life("alice", 2)
+    _resolve_pending(scenario)
+
+    assert bears.counter_count(Counter.PLUS_ONE) == 1
+    assert loki.counter_count(Counter.PLUS_ONE) == 1
+    assert scenario.creature("Knight of Wundagore", "alice").counter_count(Counter.PLUS_ONE) == 1, (
+        "Knight of Wundagore's own trigger: a counter on another creature"
+    )
+
+
+def test_heroic_feast_caps_the_targets_at_the_life_gained():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=[FEAST, "Grizzly Bears", "Kid Loki"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(bears, username="alice")
+
+    scenario.game.gain_life("alice", 1)
+    scenario.game.put_triggers_on_stack()
+
+    (question,) = [q for q in scenario.questions_asked() if q.kind.name == "CHOOSE_TARGETS"]
+    assert question.target_maximum == 1
+
+
+def test_heroic_feast_may_choose_no_creature():
+    scenario = Scenario().player("alice", battlefield=[FEAST, "Grizzly Bears"]).player("bob")
+    scenario = scenario.build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.will_choose_targets(username="alice")
+
+    scenario.game.gain_life("alice", 3)
+    _resolve_pending(scenario)
+
+    assert bears.counter_count(Counter.PLUS_ONE) == 0
+
+
+def test_heroic_feast_ignores_an_opponents_life_gain():
+    scenario = Scenario().player("alice", battlefield=[FEAST, "Grizzly Bears"]).player("bob")
+    scenario = scenario.build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.game.gain_life("bob", 3)
+
+    assert scenario.pending_triggers == []
+
+
+def test_heroic_feast_enters_with_a_food():
+    scenario = Scenario().player("alice", hand=[FEAST]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.put_onto_battlefield(FEAST, "alice")
+    _resolve_pending(scenario)
+
+    assert "Food Token" in _names(scenario, "alice")
+
+
+# -- Alien Invasion: "At the beginning of combat on your turn, create a 1/1 red
+# Alien creature token with haste and "This token attacks each combat if
+# able." Put a +1/+1 counter on it for each invasion counter on this
+# enchantment, then put an invasion counter on this enchantment." ------------
+
+INVASION = "Alien Invasion"
+
+
+def _to_combat(scenario) -> None:
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.advance()
+    _resolve_pending(scenario)
+
+
+def _aliens(scenario) -> list:
+    return [p for p in scenario.game.battlefield if p.name == "Alien Token"]
+
+
+def test_the_first_alien_has_no_counters_and_the_enchantment_gets_one():
+    scenario = Scenario().player("alice", battlefield=[INVASION]).player("bob").build()
+    invasion = next(p for p in scenario.game.battlefield if p.name == INVASION)
+
+    _to_combat(scenario)
+
+    (alien,) = _aliens(scenario)
+    assert alien.counter_count(Counter.PLUS_ONE) == 0
+    assert invasion.counter_count("invasion") == 1
+    assert (alien.power, alien.toughness) == (1, 1)
+    assert has_keyword(alien, Keyword.HASTE, scenario.game)
+
+
+def test_each_alien_counts_the_invasion_counters_already_there():
+    """CR 608.2c: counted before the new invasion counter is put on."""
+    scenario = Scenario().player("alice", battlefield=[INVASION]).player("bob").build()
+    invasion = next(p for p in scenario.game.battlefield if p.name == INVASION)
+    invasion.add_counters("invasion", 2)
+
+    _to_combat(scenario)
+
+    (alien,) = _aliens(scenario)
+    assert alien.counter_count(Counter.PLUS_ONE) == 2
+    assert invasion.counter_count("invasion") == 3
+
+
+def test_the_alien_attacks_each_combat_if_able():
+    """CR 508.1d: its granted "This token attacks each combat if able." - the
+    declaration the turn structure makes for alice has it attacking."""
+    scenario = Scenario().player("alice", battlefield=[INVASION]).player("bob").build()
+    _to_combat(scenario)
+    (alien,) = _aliens(scenario)
+
+    scenario.advance()
+
+    assert scenario.step is Step.DECLARE_ATTACKERS
+    assert scenario.attackers() == [alien]

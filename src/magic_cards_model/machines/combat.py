@@ -2401,7 +2401,10 @@ def _attack_requirement_match(line: str, name: str) -> "re.Match[str] | None":
     if match is None:
         return None
     subject = (match.group("subject") or "").strip().lower()
-    if subject not in ("", "this creature", "this permanent", name.lower()):
+    # "This token attacks each combat if able." - the quoted ability Alien
+    # Invasion's Alien tokens are created with, a token's own text naming
+    # itself "this token".
+    if subject not in ("", "this creature", "this permanent", "this token", name.lower()):
         return None
     return match
 

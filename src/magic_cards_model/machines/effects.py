@@ -17873,7 +17873,7 @@ def modal_trigger_profile(effect_text: str | None) -> ModalProfile | None:
     profile = modal_profile_from_text(text)
     if profile is None or not profile.understood or not profile.modes:
         return None
-    if profile.allowed_range()[0] < 1 or any(mode.cost is not None for mode in profile.modes):
+    if any(mode.cost is not None for mode in profile.modes):
         return None
     return profile
 
@@ -21544,7 +21544,10 @@ def _get_emblem(game: "Game", player: Player, text: str, source: str) -> None:
 _COUNTERS_MORE_IF_SUBTYPE_RE = re.compile(
     rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
     r"(?P<subject>equipped creature|enchanted creature|target [^.]+?)\.\s*"
-    r"if (?:equipped creature|enchanted creature|that creature|it) is an? "
+    # Wakandan Royal Guard's "If that creature is another Hero" - "another"
+    # (any Hero but the ability's own source) in place of the article.
+    r"if (?:equipped creature|enchanted creature|that creature|it) is "
+    r"(?:an? |(?P<another>another ))"
     rf"(?P<subtype>[a-z]+), put (?P<m>{COUNT}) (?:(?:\+1/\+1|-1/-1|[a-z]+) )?counters? "
     r"on it instead\.?$",
     re.IGNORECASE,
@@ -21560,6 +21563,7 @@ def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
     subtype = _bare_subtype_word(match.group("subtype"))
     subject = match.group("subject").lower()
     attached = subject in ("equipped creature", "enchanted creature")
+    another = match.group("another") is not None
     if base is None or more is None or subtype is None:
         return None
     if not attached and not _targets_understood(match.group("subject")):
@@ -21580,7 +21584,8 @@ def _parse_counters_more_if_subtype_clause(text: str) -> AbilityEffect | None:
         if creature is None or creature.zone is not Zone.BATTLEFIELD:
             return
         subtypes = {word.lower() for word in game.characteristics_of(creature).subtypes}
-        game.add_counters(creature, kind, more if subtype in subtypes else base)
+        qualifies = subtype in subtypes and not (another and creature.id == ability.source_id)
+        game.add_counters(creature, kind, more if qualifies else base)
 
     return effect
 
