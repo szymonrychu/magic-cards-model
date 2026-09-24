@@ -32563,7 +32563,10 @@ _NAMED_EQUIPMENT_TOKEN_RE = re.compile(
     r"(?P<name>[A-Z][\w' -]*?) with "
     r"[\"“‘'](?P<ability>[^\"”’']+)[\"”’'] "
     r"and equip (?P<cost>(?:\{[^}]+\})+)\.?"
-    r"(?P<attach> when you do, attach it to target creature you control\.?)?$",
+    r"(?P<attach> when you do, attach it to target creature you control\.?)?"
+    # U.S.Agent, John Walker's "... and equip {2}. Attach it to U.S.Agent." -
+    # the token attached to the ability's own source (CR 701.3a), no target.
+    r"(?P<attach_self> attach it to this (?:creature|permanent)\.?)?$",
     re.IGNORECASE,
 )
 
@@ -32584,11 +32587,16 @@ def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
     ability = match.group("ability").strip()
     cost = match.group("cost").strip()
     has_reflexive_attach = match.group("attach") is not None
+    attaches_to_source = match.group("attach_self") is not None
     definition = TokenDefinition(
         types=(Type.ARTIFACT,),
         subtypes=("Equipment",),
         name=name,
-        rules_text=f"{ability}\nEquip {cost}",
+        # The quoted ability is a whole sentence of the token's text (CR
+        # 111.3); Oracle drops its full stop inside the "with "..." and equip"
+        # list, and without it the static line is no sentence the layer
+        # system reads - the bonus never applied.
+        rules_text=f"{ability if ability.endswith('.') else ability + '.'}\nEquip {cost}",
     )
 
     def effect(game: "Game", ability_on_stack: AbilityOnStack) -> None:
@@ -32597,6 +32605,11 @@ def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
         if not created:
             return
         token = created[0]
+        if attaches_to_source:
+            source = ability_on_stack.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD:
+                attach_permanent(game, token, source)
+            return
         if not has_reflexive_attach:
             return
         reflexive_text = "When you do, attach it to target creature you control."
@@ -52793,6 +52806,182 @@ def _parse_attach_target_equipment_to_self(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "attach it to target creature you control. That creature gains
+#: indestructible until end of turn." (Stolen Stark Tech), "... Untap that
+#: creature." (Super Suit, Galadhrim Bow), "... That creature gains first
+#: strike until end of turn." (Quick-Draw Dagger) - CR 701.3a's attach of
+#: the source onto its announced target, then a rider whose "that creature"
+#: is the same target (CR 608.2c: one instruction, read in order). The
+#: rider is read as the targeted sentence it restates, so it acts on exactly
+#: the object the attach did.
+_ATTACH_SELF_THEN_THAT_CREATURE_RE = re.compile(
+    r"^(?P<attach>attach (?:it|this (?:aura|equipment)) to target [^.]+)\.\s*"
+    r"(?P<rider>(?:that creature \S.*|untap that creature\.?))$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_attach_self_then_that_creature(text: str) -> AbilityEffect | None:
+    """`_ATTACH_SELF_THEN_THAT_CREATURE_RE`'s shape, or `None`."""
+    match = _ATTACH_SELF_THEN_THAT_CREATURE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    attach = _attach_self_to_target_effect(match.group("attach"))
+    rider_text = re.sub(
+        r"\bthat creature\b",
+        lambda m: "Target creature" if m.start() == 0 else "target creature",
+        match.group("rider").strip(),
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    rider = parse_mixed_effect(rider_text)
+    if attach is None or rider is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        attach(game, ability)
+        rider(game, ability)
+
+    return effect
+
+
+#: "you may put an artifact card from your hand onto the battlefield. If it's
+#: an Equipment, attach it to The Invincible Iron Man." (Tony Stark // The
+#: Invincible Iron Man, the name already "this permanent") - CR 608.2d's
+#: optional choice of a card of one type from hand put onto the battlefield,
+#: then CR 701.3a's attach of that permanent onto the source when it has the
+#: named subtype as it now exists (CR 613.5).
+_PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE = re.compile(
+    r"^you may put an? (?P<type>[a-z]+) card from your hand onto the battlefield\. "
+    r"if it's an? (?P<subtype>[A-Za-z]+), attach it to this (?:creature|permanent)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_type_from_hand_attach_if_subtype(text: str) -> AbilityEffect | None:
+    """`_PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE`'s shape, or `None`."""
+    match = _PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    card_type = next((kind for kind in Type if kind.value == match.group("type").lower()), None)
+    subtype = canonical_subtype(match.group("subtype"))
+    if card_type is None or subtype is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        candidates = [state for state in player.hand if card_type in state.types]
+        if not candidates or not game.may(
+            player,
+            f"put {with_indefinite_article(card_type.value)} card from your hand onto the "
+            "battlefield",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose {with_indefinite_article(card_type.value)} card to put "
+                    "onto the battlefield",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = {state.id: state for state in candidates}[chosen_ids[0]]
+        permanent = game.put_onto_battlefield(chosen, player.username)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return
+        if subtype not in {word.lower() for word in game.characteristics_of(permanent).subtypes}:
+            return
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            attach_permanent(game, permanent, source)
+
+    return effect
+
+
+#: "Return this card from your graveyard to the battlefield with a finality
+#: counter on him. Then you may attach an Equipment you control to him."
+#: (Winter Soldier, Icy Assassin) - the graveyard return the plain sentence
+#: already reads (CR 122.1g's finality counter; Balustrade Wurm's "... on
+#: it."), then CR 608.2d's optional choice of an Equipment its controller
+#: controls, attached (CR 701.3a) to the card as the permanent it became.
+_RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE = re.compile(
+    r"^(?P<returning>return this card from your graveyard to the battlefield[^.]*)\. "
+    r"then you may attach an equipment you control to (?:it|him|her)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _may_attach_equipment_to(game: "Game", host: CardState, stack_object: "StackObject") -> None:
+    """CR 608.2d: offer the controller one Equipment they control to attach
+    to `host` - nothing is asked when there is none to offer."""
+    controller = game.controller_of(stack_object)
+    candidates = [
+        permanent
+        for permanent in game.permanents_controlled_by(controller.username)
+        if "Equipment" in game.characteristics_of(permanent).subtypes
+    ]
+    if not candidates or host.zone is not Zone.BATTLEFIELD:
+        return
+    source_name = (
+        stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+    )
+    if not game.may(
+        controller,
+        f"attach an Equipment you control to {host.name}",
+        source=source_name,
+        source_id=source_id_of(stack_object),
+    ):
+        return
+    chosen = candidates[0]
+    if len(candidates) > 1:
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose an Equipment you control to attach",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                amount=1,
+                cards=tuple(permanent.id for permanent in candidates),
+                card_labels=tuple(permanent.name for permanent in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = {permanent.id: permanent for permanent in candidates}[chosen_ids[0]]
+    attach_permanent(game, chosen, host)
+
+
+def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | None:
+    """`_RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE`'s shape, or `None`."""
+    match = _RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    returning_text = re.sub(
+        r"\bon (?:him|her)\b", "on it", match.group("returning"), flags=re.IGNORECASE
+    )
+    returning = parse_mixed_effect(f"{returning_text}.")
+    if returning is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        returning(game, ability)
+        returned = ability.source(game)
+        if returned is not None and returned.zone is Zone.BATTLEFIELD:
+            _may_attach_equipment_to(game, returned, ability)
+
+    return effect
+
+
 def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffect | None:
     """The readers above, tried in turn on a resolving ability's whole text -
     `_ability_effect_or_notice` asks this first."""
@@ -52805,6 +52994,9 @@ def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffec
         _parse_target_player_creates_token,
         _parse_transform_it,
         _parse_attach_target_equipment_to_self,
+        _parse_attach_self_then_that_creature,
+        _parse_put_type_from_hand_attach_if_subtype,
+        _parse_return_self_then_may_attach_equipment,
     ):
         found = reader(effect_text)
         if found is not None:

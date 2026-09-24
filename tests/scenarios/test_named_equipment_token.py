@@ -34,7 +34,7 @@ def test_iron_hills_blacksmith_creates_a_named_equipment_token_unattached():
     assert axe.attached_to is None
     assert "Equipment" in axe.subtypes
     assert has_equip(axe.card)
-    assert axe.oracle_text.splitlines()[0] == "Equipped creature gets +1/+0"
+    assert axe.oracle_text.splitlines()[0] == "Equipped creature gets +1/+0."
 
 
 def test_iron_hills_blacksmiths_axe_token_can_be_equipped():
@@ -68,6 +68,7 @@ def test_iron_hills_blacksmiths_axe_token_can_be_equipped():
     scenario.pass_until_resolved()
 
     assert axe.attached_to == bears.id
+    assert scenario.game.power_of(bears) == 3, "the Axe's own +1/+0 applies"
 
 
 def test_dain_ironfoot_creates_the_token_then_attaches_it_to_target_creature():
@@ -111,4 +112,4 @@ def test_blacksmiths_talent_creates_the_same_shaped_named_equipment_token():
     created = [state for state in scenario.game.battlefield if state.id not in before]
     sword = next(state for state in created if state.name == "Sword")
     assert has_equip(sword.card)
-    assert sword.oracle_text.splitlines()[0] == "Equipped creature gets +1/+1"
+    assert sword.oracle_text.splitlines()[0] == "Equipped creature gets +1/+1."
