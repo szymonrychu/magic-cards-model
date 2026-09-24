@@ -21386,6 +21386,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if for_each_opponent_destroy is not None:
         return for_each_opponent_destroy
+    for_each_opponent_exile = _parse_for_each_opponent_exile_clause(effect_text, for_spell=False)
+    if for_each_opponent_exile is not None:
+        return for_each_opponent_exile
     for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
         effect_text, for_spell=False
     )
@@ -41136,6 +41139,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     for_each_opponent_destroy = _parse_for_each_opponent_destroy_clause(clause, for_spell=for_spell)
     if for_each_opponent_destroy is not None:
         return for_each_opponent_destroy  # type: ignore[return-value]
+    for_each_opponent_exile = _parse_for_each_opponent_exile_clause(clause, for_spell=for_spell)
+    if for_each_opponent_exile is not None:
+        return for_each_opponent_exile  # type: ignore[return-value]
     for_each_opponent_return_to_hand = _parse_for_each_opponent_return_to_hand_clause(
         clause, for_spell=for_spell
     )
@@ -48323,5 +48329,68 @@ def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | Non
                     until_end_of_turn=False,
                     condition=condition,
                 )
+
+    return effect
+
+
+#: "For each opponent, exile up to one target `<X>` that player controls[
+#: until this `<type>` leaves the battlefield| and that player gains life
+#: equal to its power]." - Celebrate the Mountain-king's and Haytham Kenway's
+#: "until" form (CR 610.3) and Luminate Primordial's life rider. The
+#: per-opponent target is `machines/targeting._FOR_EACH_OPPONENT_TARGET_RE`'s
+#: (one "up to one" target per opponent, CR 115.6, distinct controllers).
+_FOR_EACH_OPPONENT_EXILE_RE = re.compile(
+    r"^for each opponent, exile up to one target (?P<desc>.+?) that player controls"
+    r"(?:(?P<until> until this (?:permanent|enchantment|artifact|creature|planeswalker) leaves "
+    r"the battlefield)|(?P<life> and that player gains life equal to its power))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_for_each_opponent_exile_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_FOR_EACH_OPPONENT_EXILE_RE`'s shape.
+
+    The "until" form is ability-only, like `_parse_exile_until_leaves_
+    battlefield_clause`: it watches its own source leave (CR 610.3), and CR
+    610.3b moves nothing when the source already left after the ability
+    triggered. Each exiled card returns under its owner's control (CR
+    610.3c) through `_watch_for_departure_and_return_exiled_card`. The life
+    rider's "that player" is the exiled permanent's controller as it left,
+    and "its power" its last known power (CR 608.2h).
+    """
+    match = _FOR_EACH_OPPONENT_EXILE_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    until = match.group("until") is not None
+    if until and for_spell:
+        return None
+    phrase = _for_each_opponent_target_phrase(match.group("desc"))
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+    gains_life = match.group("life") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        source: CardState | None = None
+        if until:
+            assert isinstance(stack_object, AbilityOnStack)
+            source = stack_object.source(game)
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return  # CR 610.3b: the source already left; nothing moves.
+        for target in targets:
+            former_controller = game.controller_of(target).username
+            power = game.characteristics_of(target).power or 0
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token refused the move.
+            if source is not None:
+                _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
+            if gains_life and power > 0:
+                game.gain_life(game.player(former_controller), power)
 
     return effect
