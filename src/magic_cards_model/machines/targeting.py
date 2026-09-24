@@ -109,8 +109,9 @@ from ..models.zone import Zone
 from ..numbers import parse_count
 from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
-from .abilities import AbilityKind, keyword_abilities
+from .abilities import AbilityKind, TriggeredAbility, keyword_abilities, parse_abilities
 from .combat import has_keyword
+from .keywords import keyword_triggered_abilities
 from .layers import BASIC_LAND_TYPES, CLOSED_SUBTYPE_LISTS
 from .modes import Mode, modal_profile, mode_rules_text
 
@@ -2706,6 +2707,45 @@ def profile_for_text(text: str) -> TargetingProfile:
     if for_each_opponent is not None:
         return for_each_opponent
     return _parse(_REMINDER.sub("", text), spell_only=False)
+
+
+def targeting_trigger_text(card: Card) -> str | None:
+    """The first printed triggered ability on `card` whose own words target
+    something, or `None` when it has none.
+
+    A spell can have `targeting_profile(card).max_targets == 0` - no target
+    of its own - and still print a triggered ability that targets: Ulamog,
+    the Ceaseless Hunger's cast trigger ("When you cast this spell, exile two
+    target permanents.") and Ravenous Chupacabra's enters-the-battlefield
+    trigger ("When this creature enters, destroy target creature an opponent
+    controls.") are both this shape. CR 115.1d: that ability's own target(s)
+    "are chosen as the ability is put on the stack; see rule 603.3d" - a
+    separate CR 601.2c-shaped announcement from the spell's, made later, once
+    the trigger is actually on the stack (CR 603.3/603.3d). `Casting.
+    _check_targets` asks this so it can refuse inline targets offered at cast
+    time with that real reason instead of the bare "too many targets" CR
+    601.2c already gives a spell with no targets of its own.
+
+    Reads exactly the abilities `Game.why_cannot_target_with_trigger` reads:
+    every printed `TriggeredAbility` (`parse_abilities` - the parser this
+    module already asks about via `targeting_profile`'s `_spell_text` cut),
+    plus CR 702's keyword-shorthand triggers (`keyword_triggered_abilities`;
+    "Partner with" is the pool's example), each asked through this module's
+    own `profile_for_text` - the same reading `why_cannot_target_with_trigger`
+    checks a scripted target against, so "has a targeting trigger" here means
+    exactly what "the trigger would accept a target" means there. A trigger
+    that parses but requires none (a plain "when you cast this spell, draw a
+    card" cantrip clause) is not a targeting trigger and is skipped; a card
+    printing several targeting triggers returns the first one.
+    """
+    printed = [
+        ability for ability in parse_abilities(card) if isinstance(ability, TriggeredAbility)
+    ] + keyword_triggered_abilities(card)
+    for ability in printed:
+        profile = profile_for_text(ability.text)
+        if profile.understood and profile.requirements:
+            return ability.text
+    return None
 
 
 #: CR 207.2c's ability word, or CR 207.2d's flavor word, as Scryfall prints
