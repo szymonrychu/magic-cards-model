@@ -3411,7 +3411,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 73
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 74
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3431,6 +3431,13 @@ class Game(EngineModel):
     #: (pack tactics, C01 integration).
     #: 73: `ManaPool` gained `treasure` and `CastRecord` gained
     #: `treasure_mana_spent` (mana from a Treasure, C01 integration).
+    #: 74: `CardState` gained `chosen_modal_options_this_turn` (The Vision's
+    #: own per-turn "choose one that hasn't been chosen this turn -", a
+    #: sibling of `chosen_modal_options` reset every cleanup step rather than
+    #: never) and `machines.delayed.StaticPrisonReturn` gained `return_zone`
+    #: (Cloak and Dagger, Entwined's own CR 610.2 exile-until-departure can
+    #: take a card from a hand, not only a permanent from the battlefield,
+    #: so its CR 610.3 return needs to remember which) (C02-T7).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -5567,6 +5574,14 @@ class Game(EngineModel):
                     for grant in player.targeting_grants
                     if grant.duration is not Duration.UNTIL_END_OF_TURN
                 ]
+            # CR 514.2's same sentence, for The Vision's own "choose one that
+            # hasn't been chosen this turn -": the per-turn half of
+            # `CardState.chosen_modal_options_this_turn` ends here so next
+            # turn's trigger offers every mode again. Gollum, Riddle
+            # Master's unqualified `chosen_modal_options` is a different
+            # field precisely so this reset never touches it.
+            for permanent in self.battlefield:
+                permanent.chosen_modal_options_this_turn = ()
             return discarded
 
     def remove_all_damage(self) -> None:
@@ -9112,10 +9127,16 @@ class Game(EngineModel):
         stack with none chosen (CR 700.2b) rather than repeating one.
         """
         legal = [mode for mode in modal.modes if self._trigger_mode_is_legal(ability, mode)]
-        exclusive = "hasn't been chosen" in modal.instruction.lower()
+        instruction_lower = modal.instruction.lower()
+        exclusive_this_turn = "hasn't been chosen this turn" in instruction_lower
+        exclusive = exclusive_this_turn or "hasn't been chosen" in instruction_lower
         source_state = ability.source(self) if exclusive else None
         if exclusive and source_state is not None:
-            already = source_state.chosen_modal_options
+            already = (
+                source_state.chosen_modal_options_this_turn
+                if exclusive_this_turn
+                else source_state.chosen_modal_options
+            )
             legal = [mode for mode in legal if mode.text not in already]
         # CR 603.3c: a "choose N instead" condition is checked as the ability
         # is put on the stack, the same moment its modes are announced.
@@ -9150,9 +9171,15 @@ class Game(EngineModel):
         if len(chosen) < minimum:
             return False
         if exclusive and source_state is not None and chosen:
-            source_state.chosen_modal_options = source_state.chosen_modal_options + tuple(
-                mode.text for mode in chosen
-            )
+            if exclusive_this_turn:
+                source_state.chosen_modal_options_this_turn = (
+                    source_state.chosen_modal_options_this_turn
+                    + tuple(mode.text for mode in chosen)
+                )
+            else:
+                source_state.chosen_modal_options = source_state.chosen_modal_options + tuple(
+                    mode.text for mode in chosen
+                )
         slices: list[list[TargetRef]] = []
         scripted = self.trigger_targets.get(ability.source_name)
         for mode in chosen:

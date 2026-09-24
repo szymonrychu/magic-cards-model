@@ -1183,6 +1183,17 @@ class CardState(EngineModel):
     reset clause at all.
     """
 
+    chosen_modal_options_this_turn: tuple[str, ...] = ()
+    """The same "modes tracked per object" memory as `chosen_modal_options`,
+    for the printed clause's other wording - The Vision's "choose one that
+    hasn't been chosen **this turn** -". A card printed with the "this turn"
+    qualifier resets every cleanup step (`Game.cleanup_step`, CR 514.2's
+    "'until end of turn' and 'this turn' effects end"); Gollum's own
+    unqualified "hasn't been chosen" never resets, which is why that memory
+    stays a separate field rather than sharing this one under a duration
+    flag - clearing this field at cleanup must never touch Gollum's.
+    """
+
     spliced_text: tuple[str, ...] = ()
     """Rules text added to this *spell* by a splice ability (CR 702.47c).
 

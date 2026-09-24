@@ -20,6 +20,18 @@ library, from a static ability (task C02-T7):
   the pool's existing "look/reveal the top card, if it's a `<quality>`,
   `<put it somewhere>`" readers, with an arbitrary trailing effect (a draw)
   instead of a "put" destination, and no "otherwise" branch at all.
+- **Rick Jones, Destined Sidekick - VERIFY ONLY** (C01-T8's own reader):
+  "`{3}`, `{T}`: Mill four cards. You may put a Hero or enchantment card
+  from among those cards into your hand." `_MILL_THEN_MAY_TAKE_FROM_MILLED_
+  RE` already read "from among **them**"; this task widened its alternation
+  to also accept "from among **those cards**", the phrasing Rick Jones's own
+  reminder text uses, with no other change to the reader or its effect.
+
+Every rule cited here was looked up with `mise run rules:find` in the
+session that wrote this file:
+
+- **CR 701.31a** - to mill a card is to move it from the top of a library
+  to a graveyard (Rick Jones' own {T} ability).
 
 Every rule cited here was looked up with `mise run rules:find` in the
 session that wrote this file:
@@ -213,3 +225,41 @@ def test_iron_lad_draws_nothing_when_the_revealed_top_card_is_not_an_artifact():
     alice = scenario.player("alice")
     assert forest.zone is Zone.LIBRARY
     assert alice.hand == []
+
+
+# -- Rick Jones, Destined Sidekick (verify only) -----------------------------
+
+
+def test_rick_jones_mills_four_and_takes_an_enchantment_from_among_them():
+    """VERIFY ONLY (C01-T8's own reader): confirms `_MILL_THEN_MAY_TAKE_FROM_
+    MILLED_RE`'s "those cards" widening reads Rick Jones' own reminder-text
+    phrasing with no other change to the reader or its effect."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Rick Jones, Destined Sidekick", "Forest", "Forest", "Forest"],
+            library=["Alpine Moon", "Mountain", "Island", "Swamp"],
+            hand=[],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    moon = scenario.find("Alpine Moon", Zone.LIBRARY, "alice")
+    mountain = scenario.find("Mountain", Zone.LIBRARY, "alice")
+    island = scenario.find("Island", Zone.LIBRARY, "alice")
+    swamp = scenario.find("Swamp", Zone.LIBRARY, "alice")
+
+    rick_jones = scenario.creature("Rick Jones, Destined Sidekick", "alice")
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest")
+    scenario.will_take_the_may(True)
+    scenario.will_choose_cards(moon, source="Rick Jones, Destined Sidekick")
+    scenario.activate(rick_jones, *sources)
+    scenario.resolve_top()
+
+    alice = scenario.player("alice")
+    assert moon.zone is Zone.HAND
+    assert mountain.zone is Zone.GRAVEYARD
+    assert island.zone is Zone.GRAVEYARD
+    assert swamp.zone is Zone.GRAVEYARD
+    assert [state.name for state in alice.hand] == ["Alpine Moon"]

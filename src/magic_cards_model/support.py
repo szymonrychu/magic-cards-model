@@ -95,6 +95,7 @@ from magic_cards_model.machines.effects import (
     _parse_explores_clause,
     _parse_explores_then_conditional_mass_destroy,
     _parse_goad_clause,
+    _parse_mode_with_shared_verb_fallback,
     _parse_monstrosity_clause,
     _parse_recruit_clause,
     _parse_referent_object_clause,
@@ -1902,7 +1903,11 @@ def _modal_category(printing: Card) -> str:
     modal = modal_profile(printing)
     if modal is None or not modal.understood or not modal.modes:
         return SILENT
-    if all(parse_mode_effect(mode, 0) is not None for mode in modal.modes):
+    if all(
+        parse_mode_effect(mode, 0) is not None
+        or _parse_mode_with_shared_verb_fallback(mode, modal.instruction) is not None
+        for mode in modal.modes
+    ):
         return HANDLED
     return NOTICE
 

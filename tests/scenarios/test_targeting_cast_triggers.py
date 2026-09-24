@@ -53,7 +53,17 @@
 - **The Vision** - "Whenever you cast a noncreature spell, choose one that
   hasn't been chosen this turn -" (three quoted modes). Already `handled`
   before this task touched anything (C01-T6's own per-object `chosen_modal_
-  options` reader, reused as-is) - verified here, not rebuilt.
+  options` reader, built against Gollum, Riddle Master's *unqualified*
+  "hasn't been chosen"), but the "this turn" qualifier had no reset at all -
+  a real bug, not a verified-clean shape; see `test_modes_not_chosen_this_
+  turn.py`, this task's own dedicated file, for the fix
+  (`CardState.chosen_modal_options_this_turn`, reset every cleanup step) and
+  its proof. The "Solar Beam" bullet's own "`<Name>` gains double strike
+  until end of turn." also needed `_SELF_KEYWORD_GRANT_UNTIL_EOT_RE` widened
+  to accept `_self_normalized_effect_text`'s "this permanent" alongside the
+  bare-trigger "it" it already read, and wiring into `_parse_mixed_clause`
+  (it was only reachable from a whole-ability-text dispatcher before, never
+  from a modal bullet's own per-clause one).
 
 Every rule cited here was looked up with `mise run rules:find` in the
 session that wrote this file:
@@ -207,6 +217,28 @@ def test_ms_marvel_draws_a_card_when_a_spell_targets_her_own_creature():
     scenario.cast_and_resolve("Giant Growth", forest, targets=[bears])
 
     assert "Island" in [state.name for state in scenario.player("alice").hand]
+
+
+def test_ms_marvel_grants_her_controller_no_maximum_hand_size():
+    """Ms. Marvel's own static "You have no maximum hand size." - the
+    already-proven generic reader (`test_no_maximum_hand_size.py`'s own
+    Reliquary Tower proof), read off a second printing."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Ms. Marvel, Kamala Khan"],
+            hand=["Forest"] * 9,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+
+    assert alice.has_no_maximum_hand_size
+    scenario.game.cleanup_step()
+
+    assert len(alice.hand) == 9
 
 
 # -- Speedball, New Warrior -------------------------------------------------
