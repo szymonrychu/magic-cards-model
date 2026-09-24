@@ -19,8 +19,6 @@ the session that wrote this file.
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.layers import LayerNotice
-from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -170,23 +168,19 @@ def test_a_triggered_abilitys_own_pump_reaches_the_layer_engine_with_no_row():
     )
 
 
-def test_tower_above_leads_with_its_duration_and_still_fails_closed_with_a_notice():
+def test_tower_above_leads_with_its_duration_and_is_read():
     """Tower Above: "Until end of turn, target creature gets +4/+4 and gains
     trample, wither, and \"When this creature attacks, target creature blocks
     it this turn if able.\""
 
     The duration opens the sentence rather than trailing it -
     `_LOOKS_LIKE_LAYER_EFFECT_RE` used to anchor on the *subject* coming
-    first, so this text failed even the loose "does this look like our
-    territory" check and produced neither an effect nor a `LayerNotice`: a
-    cast Tower Above did nothing, indistinguishable from a card with no text
-    at all. `_normalize_duration_first` reads the duration regardless of
-    where it sits (CR 611.2a states it "as stated by the spell or ability",
-    with no rule pinning its position), so the sentence is now recognised -
-    but the granted keywords are still not one of `_KNOWN_KEYWORDS`'s single
-    words (a bare "trample, wither, and \"...\"" is not this wave's territory
-    at all), so it fails closed with a notice rather than silently applying
-    only part of what is printed.
+    first, so this text once produced neither an effect nor a `LayerNotice`.
+    `_normalize_duration_first` reads the duration regardless of where it
+    sits (CR 611.2a states it "as stated by the spell or ability", with no
+    rule pinning its position), and `_PUMP_AND_QUOTED_GRANT_RE` now reads the
+    quoted ability as one more grant, so the whole sentence applies - the
+    granted trigger itself is `test_quoted_trigger_grant_pump.py`'s subject.
     """
     scenario = (
         Scenario()
@@ -211,15 +205,9 @@ def test_tower_above_leads_with_its_duration_and_still_fails_closed_with_a_notic
     # words print it) precisely so this second "target creature" is never
     # read as a second instance the caster must announce for; before that fix
     # this cast legally needed two targets for one printed "target creature".
-    tower_above = scenario.cast_and_resolve("Tower Above", *forests, targets=[bears])
+    scenario.cast_and_resolve("Tower Above", *forests, targets=[bears])
 
     board = scenario.game.continuous_effects.board(scenario.game.battlefield)
-    assert board.of(bears).power_toughness == (2, 2), "nothing applied - the printed 2/2 stands"
-    notices = scenario.game.continuous_effects.layer_notices
-    assert notices == [
-        LayerNotice(
-            source_id=tower_above.id,
-            source_name="Tower Above",
-            text=card("Tower Above").oracle_text,
-        )
-    ]
+    assert board.of(bears).power_toughness == (6, 6)
+    assert scenario.game.continuous_effects.layer_notices == []
+    assert scenario.game.layer_remainder_notices == []

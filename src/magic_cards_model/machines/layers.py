@@ -3102,6 +3102,24 @@ _PUMP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "[Subject] gets +N/+N and gains [<keyword>[, <keyword>],[ and]] "<ability>"
+#: until end of turn." - Tower Above's "Until end of turn, target creature gets
+#: +4/+4 and gains trample, wither, and "When this creature attacks, target
+#: creature blocks it this turn if able."" and Dreadmaw's Ire's "... target
+#: attacking creature gets +2/+2 and gains trample and "Whenever this creature
+#: deals combat damage to a player, ..."" (both read duration-first, normalised
+#: before this is tried). `_PUMP_RE`'s own sentence with a quoted ability as
+#: the last granted item: CR 113.10's "gains" adds the whole quoted ability,
+#: in layer 6 (CR 613.1f) beside each keyword, while the pump is sublayer 7c
+#: (CR 613.4c). A sibling rather than a widening of `_PUMP_RE`, whose keyword
+#: group is a bare word list and must never swallow a quote.
+_PUMP_AND_QUOTED_GRANT_RE = re.compile(
+    rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and gains "
+    r"(?:(?P<keywords>[a-z][a-z ,]*?),? and )?"
+    r'"(?P<granted>[^"]+)" until end of turn\.?$',
+    re.IGNORECASE,
+)
+
 #: "that creature's power" - Xenagos, God of Revels' own X definition, read
 #: per target off `CardState.power` (CR 613.5's computed value) at the
 #: moment this ability resolves (CR 611.2c fixes the magnitude then, so this
@@ -3975,6 +3993,27 @@ _LANDS_KEYWORD_GRANT_RE = re.compile(
 #: creature (CR 613.4).
 _BASE_PT_SET_RE = re.compile(
     rf"^{_SUBJECT} has base power and toughness (?P<power>\d+)/(?P<toughness>\d+)"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "[Subject] has base power and toughness N/N and becomes a[n] <creature
+#: type(s)> in addition to its other types until end of turn." (Minsc, Beloved
+#: Ranger's {X} ability, X already substituted) and its group twin "Creatures
+#: you control have base power and toughness N/N and gain all creature types
+#: until end of turn." (Mirror Entity) - `_BASE_PT_SET_RE`'s sublayer 7b set
+#: (CR 613.4b) with a layer 4 rider (CR 613.1d) from the same instruction
+#: (CR 613.6). The rider only ever *adds*: "in addition to its other types"
+#: keeps every prior type (CR 205.1b), and "all creature types" is additive
+#: the same way changeling's "every creature type" is. Read after
+#: `_normalize_duration_first`. A group subject reaches the builder already
+#: resolved to its fixed set of creatures (CR 611.2c) by `machines/effects.py`'s
+#: mass-pump path, so the builder only ever sees `targets`.
+_BASE_PT_SET_AND_TYPE_RE = re.compile(
+    rf"^(?:{_SUBJECT} has|creatures you control have) base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+) and "
+    r"(?:becomes? an? (?P<subtypes>[A-Za-z][A-Za-z' ]*?) in addition to (?:its|their) other types"
+    r"|(?P<every>gains? all creature types))"
     r" until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -5853,6 +5892,62 @@ def _base_pt_set_builder(power: int, toughness: int) -> EffectBuilder:
             )
             for target in targets
         ]
+
+    return builder
+
+
+def _base_pt_set_and_type_builder(
+    power: int, toughness: int, subtypes: Sequence[str], *, every_creature_type: bool
+) -> EffectBuilder:
+    """`_BASE_PT_SET_AND_TYPE_RE`'s shape: per target, one layer 4 addition -
+    each named creature type (CR 205.1b) or every creature type - and one
+    sublayer 7b set (CR 613.4b), all from one resolution and so sharing its
+    one timestamp (CR 613.7b), until end of turn, fixed to the objects the
+    caller resolved (CR 611.2c). A later set in 7b wins by timestamp
+    (CR 613.7); any 7c pump or counter still applies on top (CR 613.4c)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        effects: list[ContinuousEffect] = []
+        for target in targets:
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            parts: list[tuple[str, Layer, Sublayer | None, Modification]] = []
+            if every_creature_type:
+                parts.append(("gains all creature types", Layer.TYPE, None, AddEveryCreatureType()))
+            parts.extend(
+                (
+                    f"becomes a {subtype} in addition to its other types",
+                    Layer.TYPE,
+                    None,
+                    add_subtype(subtype),
+                )
+                for subtype in subtypes
+            )
+            parts.append(
+                (
+                    f"has base P/T {power}/{toughness}",
+                    Layer.POWER_TOUGHNESS,
+                    Sublayer.SET,
+                    set_power_toughness(power, toughness),
+                )
+            )
+            effects.extend(
+                ContinuousEffect(
+                    description=f"{source.name}: {target.name} {what}",
+                    layer=layer,
+                    sublayer=sublayer,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=modification,
+                )
+                for what, layer, sublayer, modification in parts
+            )
+        return effects
 
     return builder
 
@@ -8822,6 +8917,18 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, granted)
         power, toughness = int(power_raw), int(toughness_raw)
         return _pump_and_keyword_builder(power, toughness, granted, until_next_turn=until_next_turn)
+    if match := _PUMP_AND_QUOTED_GRANT_RE.fullmatch(sentence):
+        granted_keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            granted_keywords = validated
+        return _pump_and_keyword_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            [*granted_keywords, match.group("granted").strip()],
+        )
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and\s+", match.group("qualifier"))
         card_types = [_card_type_word(word) for word in words]
@@ -8981,6 +9088,19 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _BASE_PT_SET_RE.fullmatch(sentence):
         return _base_pt_set_builder(int(match.group("power")), int(match.group("toughness")))
+    if match := _BASE_PT_SET_AND_TYPE_RE.fullmatch(sentence):
+        subtypes: list[str] = []
+        if match.group("subtypes") is not None:
+            read = _creature_type_words(match.group("subtypes"))
+            if read is None:
+                return None
+            subtypes = read
+        return _base_pt_set_and_type_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            subtypes,
+            every_creature_type=match.group("every") is not None,
+        )
     if match := _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE.fullmatch(sentence):
         extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
         if extra_type is None:

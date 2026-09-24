@@ -4281,3 +4281,21 @@ numbers verified with `mise run rules:find`: 101.2, 109.5, 111.1, 115.4,
 | "Destroy all `<qualifier>` with power/toughness N or greater/less" (CR 208.1) | `effects._MASS_POWER_TOUGHNESS_RE` in `_parse_mass_destroy_predicate` | Elspeth, Sun's Champion -3 | The Battle of Bywater | `test_mass_effect_qualifiers.py` |
 | "create `<token>` for each `<count>`", count read once at resolution | `effects._TOKEN_FOR_EACH_TAIL_RE` in `_parse_token_clause` | - | The Battle of Bywater | `test_mass_effect_qualifiers.py` |
 | "Whenever this creature is dealt damage, it deals that much damage to any [other] target[. If a player is dealt damage this way, they can't gain life for the rest of the game.]" | `effects._parse_damage_that_much_clause` (trigger condition was already `triggers.condition_matches`'s passive "is dealt") | Screaming Nemesis | Boros Reckoner | `test_dealt_damage_redirection.py` |
+
+## S27: resolution layer effects II - base P/T with a type change, {X} base P/T, quoted trigger grants
+
+Startling Development, Minsc, Beloved Ranger and Tower Above failed closed
+with a notice. Every clause of all three now sweeps `handled`. CR numbers
+verified with `mise run rules:find`: 107.3a, 113.10, 205.1a, 205.1b, 400.7,
+509.1c, 602.5d, 608.2b, 611.2a, 611.2c, 613.1d, 613.1e, 613.1f, 613.4b,
+613.4c, 613.6, 613.7, 613.7b, 702.29a, 702.80a, 702.96a, 704.5f.
+
+| Mechanic | Rules | How | Tests |
+|---|---|---|---|
+| "Until end of turn, target creature becomes a `<colour>` `<creature type>` with base power and toughness N/N." beside a keyword line (Cycling) | CR 613.1d, 613.1e, 613.4b, 205.1a, 613.6, 702.29a | The sentence was already read by `layers._BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE` (layer 4 set, layer 5 set, 7b set, one timestamp, abilities kept). The gap was the card's own "Cycling {1}" line, which `effects._compose_layer_effect_with_remainder` recorded as an unread `LayerRemainderNotice`; `_is_resolution_neutral_keyword_line` now drops keyword lines from the remainder, except overload (CR 702.96a rewrites the resolving text). Startling Development; the template proven on Serpentine Ambush | `scenarios/test_becomes_base_pt_and_type.py` |
+| "`<subject>` has base power and toughness N/N and becomes a[n] `<creature type>` in addition to its other types until end of turn" and "Creatures you control have base power and toughness N/N and gain all creature types until end of turn", with N from an activation's {X} | CR 613.4b, 613.1d, 205.1b, 613.7, 613.4c, 107.3a, 611.2c | `layers._BASE_PT_SET_AND_TYPE_RE` / `_base_pt_set_and_type_builder`: a 7b set plus a layer 4 `add_subtype` (or `AddEveryCreatureType`), one timestamp; a later set wins by timestamp, counters and pumps still apply in 7c. The group subject is fixed at resolution by the existing mass-pump path (`effects._run_mass_pump`). Minsc, Beloved Ranger; proven on Mirror Entity | `scenarios/test_becomes_base_pt_and_type.py` |
+| "Until end of turn, target creature gets +N/+N and gains [`<keyword>`, ...,] and "`<triggered ability>`"." | CR 113.10, 613.1f, 613.4c, 613.7b, 509.1c, 702.80a | `layers._PUMP_AND_QUOTED_GRANT_RE` feeds `_pump_and_keyword_builder` with the quoted ability as one more layer 6 grant; the granted trigger is found by `triggers.triggered_abilities_on` through `added_ability_lines`. Tower Above's "When this creature attacks, target creature blocks it this turn if able." forces the block (existing `_parse_target_blocks_self_if_able_clause`); its {2/G} hybrid cost is paid with green or six generic. Proven on Dreadmaw's Ire (attacking-creature target, combat-damage trigger with its own target) | `scenarios/test_quoted_trigger_grant_pump.py` |
+
+`sweep_pool.py --effects` before/after: notice 4 -> 1 on the legal-card
+list (the three listed cards left it), silent unchanged at 26; no card moved
+into silent or notice.

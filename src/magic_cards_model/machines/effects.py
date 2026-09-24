@@ -17115,6 +17115,27 @@ def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> Tar
     )
 
 
+#: CR 702.96a: overload is the keyword line printed beside a spell's own
+#: resolution text that *rewrites* that text ("change its text by replacing
+#: all instances of the word 'target' with the word 'each'"), so it is never
+#: dropped as resolution-neutral below - the spell does something different
+#: when it is used.
+_TEXT_CHANGING_KEYWORD_LINE_RE = re.compile(r"^overload\b", re.IGNORECASE)
+
+
+def _is_resolution_neutral_keyword_line(sentence: str) -> bool:
+    """Whether `sentence` is a keyword-ability line printed beside a spell's
+    resolution text rather than part of it - Startling Development's own
+    "Cycling {1}" (CR 702.29a: an activated ability that works from the
+    hand, never an instruction of the resolving spell). `_plain_resolution_
+    sentences` keeps such a line as a sentence of its own, and
+    `_compose_layer_effect_with_remainder` would otherwise record it as an
+    unread remainder of a spell whose every instruction it applied."""
+    return _is_keyword_ability_line(sentence) and not _TEXT_CHANGING_KEYWORD_LINE_RE.match(
+        sentence.strip()
+    )
+
+
 def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
     """A whole resolving spell's own effect text, when some sentence of it is
     a CR 611.2 layer shape (`_is_layer_effect_text`) but the text as a whole
@@ -17140,7 +17161,10 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
         return create_continuous_effect if is_resolution_layer_effect_text(effect_text) else None
     sentences = _plain_resolution_sentences(effect_text)
     remainder = [
-        sentence for sentence in sentences if not is_genuine_resolution_layer_sentence(sentence)
+        sentence
+        for sentence in sentences
+        if not is_genuine_resolution_layer_sentence(sentence)
+        and not _is_resolution_neutral_keyword_line(sentence)
     ]
     if remainder and any(_looks_like_embedded_ability_line(sentence) for sentence in remainder):
         # `effect_text` is not one clean resolution paragraph at all - it is
