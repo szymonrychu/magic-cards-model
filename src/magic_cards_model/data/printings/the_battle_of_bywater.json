@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "9bae7a4d-9117-43c5-a048-80a0ddadc034",
+  "oracle_id": "a94c191d-a938-458e-bc1b-2f44fd8873a3",
+  "multiverse_ids": [
+    616832
+  ],
+  "mtgo_id": 111914,
+  "arena_id": 84694,
+  "tcgplayer_id": 499328,
+  "cardmarket_id": 716262,
+  "name": "The Battle of Bywater",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/9bae7a4d-9117-43c5-a048-80a0ddadc034",
+  "scryfall_uri": "https://scryfall.com/card/ltr/2/the-battle-of-bywater?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:18:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.jpg?1783916337",
+    "normal": "https://cards.scryfall.io/normal/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.jpg?1783916337",
+    "large": "https://cards.scryfall.io/large/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.jpg?1783916337",
+    "png": "https://cards.scryfall.io/png/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.png?1783916337",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.jpg?1783916337",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.jpg?1783916337",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.webp?1783916337",
+    "grid": "https://cards.scryfall.io/grid/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.webp?1783916337",
+    "display": "https://cards.scryfall.io/display/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.webp?1783916337",
+    "art": "https://cards.scryfall.io/art/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.webp?1783916337",
+    "crop": "https://cards.scryfall.io/crop/front/9/b/9bae7a4d-9117-43c5-a048-80a0ddadc034.webp?1783916337"
+  },
+  "mana_cost": "{1}{W}{W}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Destroy all creatures with power 3 or greater. Then create a Food token for each creature you control. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Food"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "4a029bdc-92e3-4d85-8af5-e33429a5f017",
+      "component": "token",
+      "name": "Food",
+      "type_line": "Token Artifact \u2014 Food",
+      "uri": "https://api.scryfall.com/cards/4a029bdc-92e3-4d85-8af5-e33429a5f017"
+    },
+    {
+      "object": "related_card",
+      "id": "27c57721-547a-405e-931a-bdc6e1950df3",
+      "component": "combo_piece",
+      "name": "The Battle of Bywater",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/27c57721-547a-405e-931a-bdc6e1950df3"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9bae7a4d-9117-43c5-a048-80a0ddadc034/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa94c191d-a938-458e-bc1b-2f44fd8873a3&unique=prints",
+  "collector_number": "2",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "The Tooks marched in with Pippin at their head. Merry now had enough sturdy Hobbitry to deal with the ruffians.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tomas Duchek",
+  "artist_ids": [
+    "ceb3ce65-efa6-4bcc-b2a3-33e83a047528"
+  ],
+  "illustration_id": "bfe1ef3d-fae2-4376-a869-97820812cece",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 1838,
+  "penny_rank": 3823,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/1839333853",
+    "previewed_at": "2023-06-06"
+  },
+  "prices": {
+    "usd": "2.97",
+    "usd_foil": "4.06",
+    "usd_etched": null,
+    "eur": "2.49",
+    "eur_foil": "2.80",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=616832&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BBattle%2Bof%2BBywater",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BBattle%2Bof%2BBywater",
+    "edhrec": "https://edhrec.com/route/?cc=The+Battle+of+Bywater"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F499328%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=716262&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/111914?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

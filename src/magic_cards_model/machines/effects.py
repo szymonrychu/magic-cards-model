@@ -3898,48 +3898,87 @@ def _parse_damage_that_player_clause(text: str, *, for_spell: bool) -> AbilityEf
     return effect
 
 
-#: "`<source>` deals N damage to each creature except for tokens you
-#: control." - Ajani Unrelenting's own `-3`. CR 119.3's mass, non-targeted
-#: damage (`_DAMAGE_EACH_CREATURE_RE`'s own shape) with one exclusion
-#: clause; the real, off-set printing Flame Sweep reads the identical
-#: "deals N damage to each creature except for `<X>`" grammar with a
-#: different exclusion ("creatures you control with flying") - proving the
-#: surrounding template, though this reader's own exclusion stays scoped to
-#: "tokens you control" (CR 111.1's token-ness plus CR 108.3's control),
-#: the shape this stream's own card actually prints.
-_DAMAGE_EACH_CREATURE_EXCEPT_TOKENS_YOU_CONTROL_RE = re.compile(
-    rf".*\bdeals? (?P<n>{COUNT}) damage to each creature except for tokens you control\.?$",
+#: "<it/this creature> deals that much damage to <target phrase>.[ If a
+#: player is dealt damage this way, <consequence>.]" - Boros Reckoner's and
+#: Spitemare's "Whenever this creature is dealt damage, it deals that much
+#: damage to any target.", and Screaming Nemesis's "... to any other target.
+#: If a player is dealt damage this way, they can't gain life for the rest of
+#: the game." "That much" points back at the triggering event's own amount
+#: (`that_many`) - for a damage event, the damage actually dealt once
+#: prevention has applied (CR 615.6: prevented damage never happens). The
+#: prefix cannot cross a period, so an earlier instruction's own "that much"
+#: (Divine Deflection's prevented amount) is never read as this one's; the
+#: phrase is `_read_phrase`'s, which reads CR 115.4's "any other target" as
+#: excluding the source.
+_DAMAGE_THAT_MUCH_RE = re.compile(
+    r"^(?:[^.\"“”'‘’]|(?<=\w)['’](?=\w))*?\bdeals? that much damage to "
+    r"(?P<phrase>any (?:other )?target|[^.]*?\btargets?\b[^.]*?)\."
+    r"(?:\s*if a player is dealt damage this way,\s*(?P<rider>[^.]+?)\.?)?$",
+    re.IGNORECASE,
+)
+
+#: A target phrase narrowed by the triggering event's own player ("that
+#: player controls", "they control") rather than by the ability's controller.
+_EVENT_RELATIVE_TARGET_RE = re.compile(
+    r"\bthat (?:player|opponent)\b|\bthey\b|\btheir\b", re.IGNORECASE
+)
+
+#: "they can't gain life for the rest of the game" - the player half of
+#: `_DAMAGE_THAT_MUCH_RE`'s rider: CR 119.7's prohibition with CR 611.2a's
+#: stated duration, recorded as `Player.cannot_gain_life` on each player the
+#: damage actually reached.
+_CANT_GAIN_LIFE_REST_OF_GAME_RE = re.compile(
+    r"^(?:they|that player) can(?:'|’|no)?t gain life for the rest of the game$",
     re.IGNORECASE,
 )
 
 
-def _parse_damage_each_creature_except_tokens_you_control_clause(
-    text: str, *, for_spell: bool
-) -> AbilityEffect | None:
-    """`_DAMAGE_EACH_CREATURE_EXCEPT_TOKENS_YOU_CONTROL_RE`'s shape; see the
-    banner above.
+def _parse_damage_that_much_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_DAMAGE_THAT_MUCH_RE`'s shape; see the banner above.
+
+    Ability-only: "that much" points back at a triggering event, which a
+    spell never has. The amount is read when the ability resolves, and a
+    trigger with no event amount to read fails closed with a notice
+    (`_that_many_or_notice`) rather than dealing a guessed number. The
+    source deals the damage as it last existed (CR 608.2h), so the ability
+    still resolves after the damage that triggered it killed the creature.
+    "If a player is dealt damage this way" is read off what `Game.deal_damage`
+    reports actually landed, so a player whose damage was all prevented is
+    not dealt damage this way.
     """
-    match = _DAMAGE_EACH_CREATURE_EXCEPT_TOKENS_YOU_CONTROL_RE.fullmatch(text.strip())
+    if for_spell:
+        return None
+    match = _DAMAGE_THAT_MUCH_RE.fullmatch(text.strip())
     if match is None:
         return None
-    amount = parse_count(match.group("n"))
-    if amount is None:
+    phrase = match.group("phrase")
+    if _EVENT_RELATIVE_TARGET_RE.search(phrase) is not None:
+        # Questing Beast's "target planeswalker that player controls" is
+        # restricted by the triggering event, which the target reader cannot
+        # express - it would offer every planeswalker, so it stays unread.
         return None
+    if not _targets_understood(phrase, allow_player_targets=True):
+        return None
+    rider = match.group("rider")
+    if rider is not None and _CANT_GAIN_LIFE_REST_OF_GAME_RE.fullmatch(rider.strip()) is None:
+        return None
+    locks_life_gain = rider is not None
 
-    def effect(game: "Game", stack_object: "StackObject") -> None:
-        controller = game.controller_of(stack_object)
-        source = (
-            stack_object
-            if isinstance(stack_object, CardState)
-            else stack_object.source_or_last_known(game)  # type: ignore[union-attr]
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        amount = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.name,
+            stack_object=ability,
         )
-        board = game.computed_board()
-        for permanent in list(game.battlefield):
-            if Type.CREATURE not in board.of(permanent).types:
-                continue
-            if permanent.token and game.controller_of(permanent).username == controller.username:
-                continue
-            game.deal_damage(permanent, amount, source=source)
+        if amount is None or amount <= 0:
+            return
+        source = ability.source_or_last_known(game)
+        for target in game.resolve_targets(ability):
+            dealt = game.deal_damage(target, amount, source=source)
+            if locks_life_gain and isinstance(target, Player) and dealt > 0:
+                target.cannot_gain_life = True
 
     return effect
 
@@ -15722,6 +15761,26 @@ def _token_definition_from_words(desc: str, tail: str | None) -> TokenDefinition
 _X_OVER_X_RE = re.compile(r"\bx/x\b", re.IGNORECASE)
 
 
+#: A token clause's own trailing " for each `<count>`" - unquoted, so a
+#: granted ability's quoted "for each" inside a token's tail is never read as
+#: the creation count.
+_TOKEN_FOR_EACH_TAIL_RE = re.compile(r"\s+for each (?P<each>[^.\"“”]+?)\.?$", re.IGNORECASE)
+
+
+def _token_clause_for_each(
+    template: TargetedClause, multiplier: Callable[["Game", str], int]
+) -> TargetedClause:
+    """Run `template` once per unit `multiplier` counts, the count taken once
+    before any token is created (CR 608.2h)."""
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        times = multiplier(game, game.controller_of(stack_object).username)
+        for _ in range(max(times, 0)):
+            template(game, stack_object)
+
+    return effect
+
+
 def _x_sized_token_clause(zero_sized: str, size_reader: AmountReader) -> TargetedClause:
     """A token clause whose "X/X" is only known as it resolves: the clause is
     read again with the size written in, then run."""
@@ -15775,6 +15834,19 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         if template is None:
             return None
         return _x_sized_token_clause(_X_OVER_X_RE.sub("0/0", sized), size_reader)
+
+    # "Create a Food token for each creature you control." (The Battle of
+    # Bywater): CR 608.2c's multiplier, the count read once as the clause is
+    # applied (CR 608.2h) through the same `count_expression` a damage
+    # clause's "for each" tail uses - so it sees the board as an earlier
+    # instruction of the same spell left it.
+    for_each = _TOKEN_FOR_EACH_TAIL_RE.search(clause)
+    if for_each is not None:
+        multiplier = count_expression(for_each.group("each"))
+        template = _parse_token_clause(clause[: for_each.start()], for_spell=for_spell)
+        if multiplier is None or template is None:
+            return None
+        return _token_clause_for_each(template, multiplier)
 
     match = _TOKEN_CLAUSE_RE.fullmatch(clause)
     if match is None:
@@ -19935,11 +20007,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     damage_that_player = _parse_damage_that_player_clause(effect_text, for_spell=False)
     if damage_that_player is not None:
         return damage_that_player
-    damage_each_creature_except_tokens = (
-        _parse_damage_each_creature_except_tokens_you_control_clause(effect_text, for_spell=False)
-    )
-    if damage_each_creature_except_tokens is not None:
-        return damage_each_creature_except_tokens
+    damage_that_much = _parse_damage_that_much_clause(effect_text, for_spell=False)
+    if damage_that_much is not None:
+        return damage_that_much
     may_discard_or_sacrifice = _parse_may_discard_or_sacrifice_if_you_do_clause(
         effect_text, for_spell=False
     )
@@ -20698,6 +20768,17 @@ _MASS_MANA_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "<qualifier> with power N or greater" / "... toughness N or less" - CR
+#: 208.1's numbers compared against a printed constant: Elspeth, Sun's
+#: Champion's -3 ("Destroy all creatures with power 4 or greater") and The
+#: Battle of Bywater's "power 3 or greater". Read off the computed board
+#: (CR 613.1) as the effect is applied (CR 608.2h), so a counter or a pump
+#: in response is seen; an object with no power at all never matches.
+_MASS_POWER_TOUGHNESS_RE = re.compile(
+    r"^(?P<inner>.+?) with (?P<stat>power|toughness) (?P<n>\d+) or (?P<dir>less|greater)$",
+    re.IGNORECASE,
+)
+
 #: "the number of <kind> counters on this <noun>" - Engineered Explosives's
 #: own self-referential right-hand side: "Destroy each nonland permanent
 #: with mana value equal to the number of charge counters on this artifact."
@@ -20871,6 +20952,15 @@ def _parse_mass_destroy_predicate(
     (game, candidate permanent, this clause's own source).
     """
     text = rest.strip()
+    stat_comparison: Callable[[Characteristics], bool] | None = None
+    stat_match = _MASS_POWER_TOUGHNESS_RE.fullmatch(text)
+    if stat_match is not None:
+        stat_comparison = _mass_stat_comparison(
+            stat_match.group("stat").lower(),
+            int(stat_match.group("n")),
+            at_least=stat_match.group("dir").lower() == "greater",
+        )
+        text = stat_match.group("inner").strip()
     mv_comparison = None
     mv_match = _MASS_MANA_VALUE_RE.fullmatch(text)
     if mv_match is not None:
@@ -20893,9 +20983,28 @@ def _parse_mass_destroy_predicate(
             return False
         if counter_kind is not None and chars.counters.get(counter_kind, 0) > 0:
             return False
+        if stat_comparison is not None and not stat_comparison(chars):
+            return False
         return mv_comparison is None or mv_comparison(game, chars, source)
 
     return predicate
+
+
+def _mass_stat_comparison(
+    stat: str, bound: int, *, at_least: bool
+) -> Callable[[Characteristics], bool]:
+    """`_MASS_POWER_TOUGHNESS_RE`'s comparison: the computed power or
+    toughness (CR 208.1, CR 613.1) against a printed bound, "or greater"
+    inclusive upward and "or less" inclusive downward. `None` - an object with
+    no such number - matches neither direction."""
+
+    def compare(chars: Characteristics) -> bool:
+        value = chars.power if stat == "power" else chars.toughness
+        if value is None:
+            return False
+        return value >= bound if at_least else value <= bound
+
+    return compare
 
 
 def _destroy_matching(
@@ -21649,6 +21758,109 @@ def _parse_damage_group_filter(
     return type_predicate
 
 
+#: A group predicate that also needs the resolving object's controller - CR
+#: 109.5's "you" - for a "you control" / "your opponents control" qualifier:
+#: `(game, permanent, controller username) -> bool`.
+GroupPredicate = Callable[["Game", CardState, str], bool]
+
+#: "<group> except for <group>" - Flame Sweep's "each creature except for
+#: creatures you control with flying", Ajani Unrelenting's "each creature
+#: except for tokens you control": the first group, less every member of the
+#: second.
+_DAMAGE_GROUP_EXCEPT_RE = re.compile(r"^(?P<base>.+?) except for (?P<excluded>.+)$", re.IGNORECASE)
+
+#: A controller qualifier (CR 109.5) on a group, with an optional keyword
+#: qualifier printed after it: "creatures you control with flying" (Flame
+#: Sweep) as well as the keyword-first "creature with flying your opponents
+#: control" (Sagittars' Volley), which reaches this with the keyword still
+#: inside `group`.
+_GROUP_CONTROLLER_RE = re.compile(
+    r"^(?P<group>.+?) (?P<whose>you control|your opponents control|you don(?:'|\u2019)t control)"
+    r"(?: (?P<sense>with|without) (?P<keyword>[a-z]+(?: [a-z]+)?))?$",
+    re.IGNORECASE,
+)
+
+#: "non-<Subtype> <group>" - Fiery Cannonade's "each non-Pirate creature": a
+#: CR 205.3m creature type negated, hyphenated the way Oracle text prints a
+#: subtype negation (a card-type negation is unhyphenated, "nonartifact", and
+#: is `_parse_mass_type_qualifier`'s own).
+_GROUP_NON_SUBTYPE_RE = re.compile(
+    r"^non-(?P<subtype>[a-z]+(?:-[a-z]+)*) (?P<group>.+)$", re.IGNORECASE
+)
+
+
+def _parse_damage_group_phrase(phrase: str) -> GroupPredicate | None:
+    """A mass-damage group (CR 115.10a, no target) with any of its printed
+    qualifiers, read off the computed board (CR 613.5) at the moment the
+    effect is applied (CR 608.2h):
+
+    - "<group> except for <group>" - every member of the first that is not a
+      member of the second;
+    - a controller qualifier, "you control" / "your opponents control" /
+      "you don't control" (CR 109.5), with an optional keyword after it;
+    - "non-<Subtype>" ahead of the group (CR 205.3m);
+    - "token(s)" as the group (CR 111.1);
+    - otherwise `_parse_damage_group_filter`'s type and keyword grammar.
+
+    `None` for anything else, so an unread qualifier fails the clause rather
+    than widening the damage to creatures the card never named.
+    """
+    text = phrase.strip()
+    except_match = _DAMAGE_GROUP_EXCEPT_RE.fullmatch(text)
+    if except_match is not None:
+        base = _parse_damage_group_phrase(except_match.group("base"))
+        excluded = _parse_damage_group_phrase(except_match.group("excluded"))
+        if base is None or excluded is None:
+            return None
+
+        def except_predicate(game: "Game", permanent: CardState, controller: str) -> bool:
+            return base(game, permanent, controller) and not excluded(game, permanent, controller)
+
+        return except_predicate
+
+    whose: str | None = None
+    controller_match = _GROUP_CONTROLLER_RE.fullmatch(text)
+    if controller_match is not None:
+        whose = controller_match.group("whose").lower()
+        text = controller_match.group("group").strip()
+        if controller_match.group("sense") is not None:
+            text = f"{text} {controller_match.group('sense')} {controller_match.group('keyword')}"
+
+    excluded_subtype: str | None = None
+    subtype_match = _GROUP_NON_SUBTYPE_RE.fullmatch(text)
+    if subtype_match is not None:
+        excluded_subtype = subtype_match.group("subtype").lower()
+        if excluded_subtype not in subtype_vocabulary():
+            return None
+        text = subtype_match.group("group").strip()
+
+    member: Callable[[Game, CardState], bool] | None
+    if text.lower() in {"token", "tokens"}:
+
+        def member(game: "Game", permanent: CardState) -> bool:
+            return permanent.token
+
+    else:
+        member = _parse_damage_group_filter(text)
+        if member is None:
+            return None
+    in_group = member
+
+    def predicate(game: "Game", permanent: CardState, controller: str) -> bool:
+        if not in_group(game, permanent):
+            return False
+        if excluded_subtype is not None and excluded_subtype in {
+            subtype.lower() for subtype in game.characteristics_of(permanent).subtypes
+        }:
+            return False
+        if whose is None:
+            return True
+        opponent_names = {opponent.username for opponent in _opponents(game, controller)}
+        return _controlled_by_whose(permanent, whose, controller, opponent_names)
+
+    return predicate
+
+
 #: The keywords a "with <keyword>" / "without <keyword>" damage filter is
 #: allowed to name. Deliberately a short list of evasion and combat keywords
 #: whose presence `machines/combat.has_keyword` genuinely answers off the
@@ -21764,7 +21976,7 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
 
         return controller_scoped_effect
 
-    predicate = _parse_damage_group_filter(phrase)
+    predicate = _parse_damage_group_phrase(phrase)
     if predicate is None:
         return None
 
@@ -21774,11 +21986,14 @@ def _parse_damage_each_filtered_clause(clause: str) -> TargetedClause | None:
             if isinstance(stack_object, CardState)
             else stack_object.source_or_last_known(game)
         )
-        amount = max(amount_of(game, game.controller_of(stack_object).username), 0)
+        controller = game.controller_of(stack_object).username
+        amount = max(amount_of(game, controller), 0)
         if amount <= 0:
             return
         recipients = [
-            permanent for permanent in list(game.battlefield) if predicate(game, permanent)
+            permanent
+            for permanent in list(game.battlefield)
+            if predicate(game, permanent, controller)
         ]
         for permanent in recipients:
             if permanent.zone is Zone.BATTLEFIELD:

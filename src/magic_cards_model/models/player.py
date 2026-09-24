@@ -154,13 +154,15 @@ class Player(EngineModel):
     or prevent it - the gain simply does not occur, and nothing downstream
     (CR 119.9's "whenever a player gains life", say) sees an event.
 
-    Two shapes of card set it, and neither can reach it yet: Screaming
-    Nemesis's "they can't gain life for the rest of the game" is a one-shot
-    effect with an unbounded duration, and Leyline of Punishment's "Players
-    can't gain life." is a static ability whose continuous effect would set it
-    on every player while the Leyline is on the battlefield. The first needs a
-    row in `machines/effects.py`, the second one in `machines/layers.py`; both
-    are `xfail`ed in `tests/scenarios/test_life_gain_prohibition.py`."""
+    This field is the prohibition an effect *records on the player*, which
+    is what "for the rest of the game" asks for (CR 611.2a: the stated
+    duration, not tied to any source on the battlefield): Screaming Nemesis's
+    "If a player is dealt damage this way, they can't gain life for the rest
+    of the game" sets it (`machines/effects._parse_damage_that_much_clause`),
+    and it is persisted game state, so it survives an encode/decode round
+    trip. A static prohibition that ends with its source - Leyline of
+    Punishment's "Players can't gain life." - is not mirrored here; it is
+    read fresh off the battlefield by `Game.life_gain_prohibited`."""
 
     cannot_lose_life: bool = False
     """Whether an effect says this player can't lose life (CR 101.2, as above).
