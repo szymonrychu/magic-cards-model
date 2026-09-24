@@ -3348,8 +3348,11 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         return TriggerEvent.TURNED_FACE_UP
     # CR 701.9a. Checked ahead of "cast"/"sacrific" below, neither of which
     # this phrase contains, again only for grouping with the other
-    # special-action-shaped conditions above.
-    if re.search(r"\bdiscards? (?:a card|one or more cards|this card)\b", lowered):
+    # special-action-shaped conditions above. "another card" is CR 702.29d's
+    # "cycles or discards another card" (Curator of Mysteries, Archfiend of
+    # Ifnir): cycling's cost is itself a discard (CR 702.29a), so the one
+    # discard event is the whole condition and a cycled card counts once.
+    if re.search(r"\bdiscards? (?:a card|another card|one or more cards|this card)\b", lowered):
         return TriggerEvent.DISCARDS_A_CARD
     # CR 701.22a/701.25a, watched together - see `TriggerEvent.SCRY_OR_
     # SURVEIL`'s own docstring. Checked ahead of nothing in particular; the

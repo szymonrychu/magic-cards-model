@@ -1201,10 +1201,10 @@ class CardState(EngineModel):
     {C}.'" (Urza's Saga, chapter I). CR 611.1: a continuous effect lasts "for
     a fixed or indefinite period", and CR 611.2a's own default for a
     resolution effect that states no duration is indefinite rather than
-    until end of turn - and since nothing else in the pool ever removes a
-    granted ability, that default is modelled by simply never clearing this
-    tuple, not by a continuous effect that has to be reapplied every board
-    computation.
+    until end of turn - modelled by keeping the line here, not by a
+    continuous effect that has to be reapplied every board computation,
+    until CR 400.7 ends the object: `move_to` empties it on every zone
+    change except a permanent spell becoming a permanent (CR 400.7a).
 
     Kept apart from `Card.oracle_text` (the printing, which never changes)
     and from the layer engine's own `Characteristics.
@@ -1326,6 +1326,15 @@ class CardState(EngineModel):
     off-battlefield grant (`off_battlefield_characteristics`) is already
     gone - a Grist coming in from exile is not a "creature [that] would
     enter". Never persisted: it only spans one call."""
+    _granted_as_it_left: tuple[str, ...] = PrivateAttr(default=())
+    """`granted_ability_texts` as this object last left the battlefield,
+    which `move_to` has just emptied (CR 400.7). CR 603.10a: a
+    leaves-the-battlefield ability looks back in time, so a granted one -
+    Thief of Existence's own rider - still triggers on the move that ended
+    it; `machines/triggers.triggered_abilities_on` reads this for a source
+    off the battlefield. Reset on every move, so it only ever describes the
+    move just made. Never persisted: the departure event is raised and its
+    triggers found within that same move."""
 
     def bind_to_game(self, game: Any) -> None:
         """Tell this object which game computes its characteristics (CR 613.5).
@@ -2459,6 +2468,11 @@ class CardState(EngineModel):
         mana_value = None if computed is None else computed.mana_value
         self.last_known_mana_value = None if mana_value == self.mana_value else mana_value
 
+    @property
+    def granted_as_it_left(self) -> tuple[str, ...]:
+        """See `_granted_as_it_left`."""
+        return self._granted_as_it_left
+
     def move_to(self, zone: Zone) -> None:
         """Move to another zone, resetting the state a card loses on the way.
 
@@ -2495,17 +2509,22 @@ class CardState(EngineModel):
             self.last_known_keywords = None
         self.zone_change_stamp = new_id()
         self.zone = zone
-        if origin is Zone.EXILE and zone is not Zone.EXILE:
-            # CR 400.7: a suspend granted to a card in exile (Delay, Suspend)
-            # was granted to *that* object, and the card that leaves exile -
-            # cast off its last time counter, or moved any other way - is a
-            # new one. CR 702.62a's abilities function only in exile anyway,
-            # so dropping the line here is what keeps a card that is later
-            # exiled with time counters by something else from wrongly still
-            # "having suspend" (CR 702.62b).
-            self.granted_ability_texts = tuple(
-                line for line in self.granted_ability_texts if not _is_suspend_line(line)
-            )
+        self._granted_as_it_left = ()
+        if origin is not zone and not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
+            if origin is Zone.BATTLEFIELD:
+                self._granted_as_it_left = self.granted_ability_texts
+            # CR 400.7: a grant was given to *that* object, and the card that
+            # moves is a new one - a bounced or blinked Thief of Existence
+            # comes back without its cast trigger's rider, and a suspend
+            # granted in exile (Delay, Suspend) does not survive leaving
+            # exile, so a card later exiled with time counters by something
+            # else does not wrongly still "have suspend" (CR 702.62b). The
+            # one move that keeps them is CR 400.7a/400.7b's permanent spell
+            # becoming a permanent. A static grant is re-stated by the next
+            # `machines/layers.sync_granted_ability_texts` sweep, and a
+            # leaves-the-battlefield trigger has already been collected by
+            # the time this runs (CR 603.10a looks back).
+            self.granted_ability_texts = ()
         if zone is not origin and not (origin is Zone.STACK and zone is Zone.BATTLEFIELD):
             # CR 702.103b carries bestowed across exactly one zone change:
             # "the permanent it becomes as it resolves will be a bestowed Aura

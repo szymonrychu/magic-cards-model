@@ -4723,3 +4723,30 @@ and Skewer the Critics now sweep `handled`. CR numbers verified with
 
 Proof printings added: Light Up the Stage, Skewer the Critics, Rix Maadi
 Reveler, Hopeful Eidolon.
+
+## C00-T8: silent triggered abilities - cycle-or-discard, Enduring return, reveal-put, becomes-target counter, cast-trigger exile rider
+
+Curator of Mysteries, Enduring Innocence, Matter Reshaper, Reality Smasher
+and Thief of Existence were silent; every clause of each now sweeps
+`handled`. CR numbers verified with `mise run rules:find`: 102.3, 113.6,
+113.10, 115.1, 118.3, 118.12, 118.12a, 202.3, 205.1a, 303.4f, 400.7, 400.7a,
+514.1, 514.3a, 601.2c, 601.2i, 603.2, 603.2c, 603.2g, 603.4, 603.10a, 608.2b,
+609.3, 611.2a, 613.1d, 700.4, 701.6a, 701.9a, 701.9b, 701.20a, 702.5a,
+702.29a, 702.29d, 704.5f, 704.5g.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "Whenever you cycle or discard another card" - CR 702.29d: filed under the discard event (cycling's cost is a discard, CR 702.29a), so a cycled card triggers it once; "another" skips the source itself | `abilities._trigger_event` (discard regex), `triggers.condition_matches` (`DISCARDS_A_CARD`) | Curator of Mysteries | Archfiend of Ifnir | `test_cycle_or_discard_trigger.py` |
+| per-card discard conditions ("discard a card", "discard another card") trigger once per card one discard instruction moves (CR 603.2c); "one or more cards" stays once per instruction; the cleanup discard (CR 514.1) counts | `triggers.discard_occurrences`, `triggers_for` | Curator of Mysteries | Archfiend of Ifnir | `test_cycle_or_discard_trigger.py` |
+| "put N `<kind>` counters on each `<group>` your opponents control / an opponent controls" (CR 102.3) | `effects._COUNTER_EACH_GROUP_RE` (`whose`), `_parse_put_counters_on_group_clause` | - | Archfiend of Ifnir | `test_cycle_or_discard_trigger.py` |
+| intervening if "it was a `<card type>`" on a leaves-the-battlefield trigger - look-back (CR 603.10a) at the event's own `subject_types`, else `last_known_types`; the returned enchantment dying again (CR 700.4) is refused (CR 603.4) | `triggers._self_was_a_type_holds` | Enduring Innocence | Enduring Curiosity | `test_dies_return_as_enchantment.py` |
+| "return it to the battlefield under its owner's control. It's an `<type>`." - the card types are set (CR 205.1a, layer 4 CR 613.1d), subtypes of no remaining type dropped, the effect in place before the enters event is announced (`Game.entering_together`), keyed on the returned incarnation (CR 400.7); nothing returns once the card left the graveyard | `effects._parse_return_self_as_type_clause` (whole text) | Enduring Innocence | Enduring Curiosity | `test_dies_return_as_enchantment.py` |
+| "one or more *other* creatures ... enter" no longer triggers off the source's own entry | `triggers.condition_matches` (`ENTERS_THE_BATTLEFIELD`) | Enduring Innocence | - | `test_dies_return_as_enchantment.py` |
+| "reveal the top card of your library. You may put that card onto the battlefield if it's a `<kind>` card[ with mana value N or less/greater]. Otherwise, put that card into your hand." - "Otherwise" also takes a declined "you may" (CR 118.12); mana value per CR 202.3 | `effects._LOOK_TOP_CARD_MAY_PUT_IF_RE`, `_parse_look_top_card_conditional_clause` | Matter Reshaper | Skyward Eye Prophets (the "If it's a ..." shape through the same reader) | `test_dies_reveal_put_permanent.py` |
+| an Aura put onto the battlefield by that reader enchants what its controller chooses as it enters (CR 303.4f, CR 702.5a); with nothing legal it cannot enter and the other arm takes it | `effects._aura_host_for_entry` | Matter Reshaper | Aid from the Cowl | `test_dies_reveal_put_permanent.py` |
+| "counter that spell[ or ability] unless its controller `<pays {N} / discards a card / ...>`" on a becomes-target trigger - ward's printed twin, the cost offered to the targeting object's controller through `Game.may_pay_unless_cost` (CR 118.12a, CR 118.3), unpaid it is countered (CR 701.6a) | `effects._parse_counter_targeting_object_unless_clause` (whole text) | Reality Smasher | Frost Titan | `test_becomes_target_counter_unless_discard.py` |
+| "`<targeted instruction>`. If you do, this `<noun>` gains "`<ability>`"." - the grant (CR 113.10) goes to the same object that triggered, still on the stack or battlefield, and survives the spell becoming a permanent (CR 400.7a) and no other zone change (CR 400.7: `CardState.move_to` empties `granted_ability_texts`, keeping the set it left the battlefield with for that move's own leaves trigger, CR 603.10a); "If you do" is whether the instruction moved a target; an illegal target resolves nothing (CR 608.2b) | `effects._parse_targeted_then_self_gains_clause` (whole text) | Thief of Existence | - (the only legal printing of the rider, oracle search 2026-09-24) | `test_cast_trigger_exile_permanent.py` |
+
+Proof printings added: Archfiend of Ifnir, Enduring Curiosity, Frost Titan,
+Aid from the Cowl. The behavioural sweep's becomes-target driver now also has
+the opponent cast the probe spell, for "a spell an opponent controls".

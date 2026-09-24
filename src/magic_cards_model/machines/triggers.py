@@ -2234,7 +2234,9 @@ def condition_matches(
                 return True
             condition = either.group("other")
             lowered = condition.lower()
-        if "another" in lowered and event.subject_id == source.id:
+        # "another creature" and Enduring Innocence's plural "one or more
+        # other creatures" both exclude the source's own entry.
+        if re.search(r"\b(?:another|other)\b", lowered) and event.subject_id == source.id:
             return False
         if _LEGENDARY_WORD.search(lowered):
             # CR 205.4a: "legendary" is a supertype, read off the computed
@@ -2844,7 +2846,9 @@ def condition_matches(
         # `event.player` is who did the discarding, `_controller_clause_
         # holds`'s "you " prefix already reads "you discard" the same way
         # every other "you [verb]" condition does.
-        return _controller_clause_holds(condition, controller, event.player)
+        if not _controller_clause_holds(condition, controller, event.player):
+            return False
+        return discard_occurrences(ability, source, event) > 0
 
     if ability.event is TriggerEvent.LORE_COUNTERS_ADDED:
         # CR 107.15a: always self-referential (a chapter symbol is never
@@ -4176,6 +4180,35 @@ def _self_is_a_creature_holds(game: "Game", clause: str, source: CardState) -> b
     return game.condition_holds(controller_of_source(game, source), clause, source)
 
 
+#: The Enduring cycle's "if it was a creature" on its own death trigger - a
+#: past-tense type check on the source as it left the battlefield.
+_SELF_WAS_A_TYPE = re.compile(
+    r"^it was an? (?P<type>artifact|battle|creature|enchantment|land|planeswalker)$"
+)
+
+
+def _self_was_a_type_holds(clause: str, source: CardState, event: GameEvent | None) -> bool | None:
+    """ "if it was a `<card type>`" on a leaves-the-battlefield trigger of the
+    source itself, or `None` for any other clause.
+
+    CR 603.10a: a leaves-the-battlefield ability looks back in time, so the
+    answer is the permanent's types as it last existed on the battlefield -
+    the event's own look-back snapshot (`GameEvent.subject_types`, taken
+    before the move) when the event is the source's own departure, and
+    otherwise the `last_known_types` the move recorded. CR 700.4's "dies" is
+    any permanent put into a graveyard from the battlefield, so the Enduring
+    cycle's returned enchantment dying again is the same event, refused here.
+    """
+    match = _SELF_WAS_A_TYPE.fullmatch(clause)
+    if match is None:
+        return None
+    wanted = Type(match.group("type"))
+    if event is not None and event.subject_id == source.id and event.subject_types is not None:
+        return wanted in event.subject_types
+    types = source.last_known_types if source.last_known_types is not None else source.types
+    return wanted in types
+
+
 def _you_control_a_holds(game: "Game", clause: str, source: CardState) -> bool | None:
     """Birthing Ritual's own intervening if: "if you control a creature" -
     the "you control a(n) `<quality>`" board fact `Game.condition_holds`
@@ -4549,6 +4582,10 @@ def intervening_if_holds(
     self_is_a_creature = _self_is_a_creature_holds(game, clause, source)
     if self_is_a_creature is not None:
         return self_is_a_creature
+
+    self_was_a_type = _self_was_a_type_holds(clause, source, event)
+    if self_was_a_type is not None:
+        return self_was_a_type
 
     entered_or_cast_from_graveyard = _entered_or_cast_from_graveyard_holds(
         game, clause, source, event
@@ -5702,7 +5739,12 @@ def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbi
     # CR 400.7b / CR 611.3d: an ability granted to this object is had by
     # this object, so it is asked here alongside the card's own printed
     # ones. Never *instead* of them - a grant adds.
-    granted = granted_triggered_abilities_of(source.granted_ability_texts)
+    # CR 603.10a: a source that has just left the battlefield looks back at
+    # what it was granted as it left - `CardState.move_to` has emptied the
+    # live tuple (CR 400.7).
+    granted = granted_triggered_abilities_of(
+        (*source.granted_ability_texts, *source.granted_as_it_left)
+    )
     # CR 613.5 / CR 707.2: a permanent whose computed ability text has been
     # rewritten by a layer 1 copy effect has the *copied* object's triggers
     # and not its own, so the printed card is the wrong thing to read.
@@ -6010,6 +6052,29 @@ def batched_combat_damage_sources(
     return found
 
 
+#: CR 603.2c's "one event contains multiple occurrences" for a discard: "you
+#: discard a card" (and CR 702.29d's "cycle or discard [another] card") is
+#: about each card, so one instruction discarding two cards is two
+#: occurrences. "one or more cards" is the batch itself and stays one.
+_PER_CARD_DISCARD_CONDITION = re.compile(r"\bdiscards? (?P<which>a card|another card)\b")
+
+
+def discard_occurrences(ability: TriggeredAbility, source: CardState, event: GameEvent) -> int:
+    """How many times a `DISCARDS_A_CARD` trigger fires off `event` (CR
+    603.2c): once per discarded card for a per-card condition - never
+    counting the source itself for "another card" (Curator of Mysteries,
+    Archfiend of Ifnir) - and once for anything else. A cycled card is one
+    discard, so CR 702.29d's "cycles or discards" counts it once."""
+    if ability.event is not TriggerEvent.DISCARDS_A_CARD:
+        return 1
+    match = _PER_CARD_DISCARD_CONDITION.search(ability.condition.lower())
+    if match is None or not event.discarded_ids:
+        return 1
+    if match.group("which") == "another card":
+        return sum(1 for card_id in event.discarded_ids if card_id != source.id)
+    return len(event.discarded_ids)
+
+
 def _event_for(
     game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent
 ) -> GameEvent:
@@ -6061,6 +6126,10 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             event=_event_for(game, ability, controller, event),
         )
         triggered.append(on_stack)
+        # CR 603.2c: one discard instruction of several cards is several
+        # occurrences of a per-card "discard a card" condition.
+        for _ in range(discard_occurrences(ability, source, event) - 1):
+            triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
         # CR 603.2d: "determine how many times it should trigger, then
         # trigger it that many times" - Panharmonicon. Each extra time is a
         # separate ability on the stack in its own right, with its own id.
