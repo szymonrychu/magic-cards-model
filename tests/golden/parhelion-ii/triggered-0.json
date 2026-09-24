@@ -67,7 +67,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["combat", "continuous_effects"],
+    "fields_changed": ["combat", "continuous_effects", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {},

@@ -829,12 +829,47 @@ class GroupAttackRestriction:
     bound_expression: str | None = None
     #: "can't attack you": only attacks on the restriction's controller.
     only_attacks_on_controller: bool = False
+    #: "Creatures with flying can't attack you ..." (Storm, Windrider;
+    #: Sandwurm Convergence): only creatures that have this keyword.
+    keyword: str | None = None
+    #: "... or planeswalkers you control" (Sandwurm Convergence): attacks on
+    #: the controller's planeswalkers are refused too.
+    also_planeswalkers: bool = False
+    #: "... or block creatures you control" (Storm, Windrider): the same
+    #: creatures can't block the controller's creatures (CR 509.1b).
+    blocks_creatures_you_control: bool = False
+
+
+#: "Creatures with flying can't attack you or block creatures you control."
+#: (Storm, Windrider); "Creatures with flying can't attack you or
+#: planeswalkers you control." (Sandwurm Convergence) - the group picked out
+#: by a keyword it has (CR 702) rather than by power, with an optional
+#: planeswalker scope (CR 508.1c) and an optional block restriction on the
+#: same group (CR 509.1b).
+_KEYWORD_GROUP_CANT_ATTACK_RE = re.compile(
+    r"creatures with (?P<keyword>[a-z]+(?: [a-z]+)?) can't attack you"
+    r"(?P<planeswalkers> or planeswalkers you control)?"
+    r"(?P<block> or block creatures you control)?\.?",
+    re.IGNORECASE,
+)
 
 
 def parse_group_attack_restriction(sentence: str) -> GroupAttackRestriction | None:
     """Read one static sentence into a `GroupAttackRestriction`, or None when
     it is not that template or its comparison cannot be evaluated."""
     text = sentence.strip()
+    keyword_group = _KEYWORD_GROUP_CANT_ATTACK_RE.fullmatch(text)
+    if keyword_group is not None:
+        keyword = keyword_group.group("keyword").lower()
+        if keyword not in {member.value.lower() for member in Keyword}:
+            return None
+        return GroupAttackRestriction(
+            sentence=text,
+            only_attacks_on_controller=True,
+            keyword=keyword,
+            also_planeswalkers=keyword_group.group("planeswalkers") is not None,
+            blocks_creatures_you_control=keyword_group.group("block") is not None,
+        )
     match = _GROUP_CANT_ATTACK_RE.fullmatch(text)
     if match is None:
         return None
@@ -923,7 +958,15 @@ def group_attack_restriction_refusal(
                 continue
             for restriction in _static_group_attack_restrictions(ability):
                 if restriction.only_attacks_on_controller and not (
-                    defender.is_player and defender.username == controller
+                    (defender.is_player and defender.username == controller)
+                    or (
+                        restriction.also_planeswalkers
+                        and _is_planeswalker_controlled_by(game, defender, controller)
+                    )
+                ):
+                    continue
+                if restriction.keyword is not None and not has_keyword(
+                    creature, restriction.keyword, game
                 ):
                     continue
                 detail = ""
@@ -949,6 +992,49 @@ def group_attack_restriction_refusal(
                 return (
                     f"{creature.name} can't attack{target}: {source.name} "
                     f'says "{restriction.sentence}"{detail} (CR 508.1c)'
+                )
+    return None
+
+
+def _is_planeswalker_controlled_by(
+    game: "Game", defender: TargetRef, controller: str | None
+) -> bool:
+    """Whether `defender` is a planeswalker `controller` controls (CR 306)."""
+    if defender.is_player or defender.card_id is None:
+        return False
+    permanent = game.find_by_id(defender.card_id)
+    if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+        return False
+    chars = game.characteristics_of(permanent)
+    return Type.PLANESWALKER in chars.types and chars.controller == controller
+
+
+def group_block_restriction_refusal(
+    game: "Game", blocker: CardState, attacker: CardState
+) -> str | None:
+    """Why a battlefield permanent's "creatures with `<keyword>` can't ...
+    block creatures you control" stops this block, or None (CR 509.1b) -
+    Storm, Windrider's second half. "You" is the restricting permanent's
+    controller (CR 109.5); read off the computed board when asked (CR
+    613.5)."""
+    board = game.computed_board()
+    attacker_controller = board.of(attacker).controller
+    for source in game.battlefield:
+        source_characteristics = board.of(source)
+        controller = source_characteristics.controller
+        if controller != attacker_controller:
+            continue
+        for ability in source_characteristics.abilities:
+            if "can't attack" not in ability.lower():
+                continue
+            for restriction in _static_group_attack_restrictions(ability):
+                if not restriction.blocks_creatures_you_control or restriction.keyword is None:
+                    continue
+                if not has_keyword(blocker, restriction.keyword, game):
+                    continue
+                return (
+                    f"{blocker.name} can't block {attacker.name}: {source.name} "
+                    f'says "{restriction.sentence}" (CR 509.1b)'
                 )
     return None
 
@@ -1188,15 +1274,41 @@ def _computed_ability_sentences(state: CardState, game: "Game | None") -> list[s
         characteristics = game.characteristics_of(state)
         if characteristics is not None:
             return [
-                sentence
+                strip_ability_word(sentence)
                 for ability in characteristics.abilities
                 for sentence in layer_readable_sentences(ability)
             ]
-    return layer_readable_sentences(state.oracle_text)
+    return [
+        strip_ability_word(sentence) for sentence in layer_readable_sentences(state.oracle_text)
+    ]
+
+
+#: An ability word or flavor word label in front of a sentence - "Intangibility
+#: - Ghost can't be blocked." (Ghost, Spectral Saboteur). CR 207.2c: an ability
+#: word "has no special rules meaning", so a restriction reader reads the
+#: sentence behind it.
+_ABILITY_WORD_LABEL_RE = re.compile(r"^[A-Z][^.\u2014]*? \u2014 (?P<rest>\S.*)$")
+
+
+def strip_ability_word(sentence: str) -> str:
+    """`sentence` with a leading ability-word label removed (CR 207.2c)."""
+    match = _ABILITY_WORD_LABEL_RE.match(sentence.strip())
+    return match.group("rest") if match else sentence
 
 
 #: The Mindskinner: "The Mindskinner can't be blocked." - unconditional.
 _CANT_BE_BLOCKED_RE = re.compile(r"can't be blocked\.?$", re.IGNORECASE)
+
+#: Stature, Size Shifter: "Stature can't be blocked if her power is 1 or
+#: less."; Thieves' Tools' grant, "This creature can't be blocked as long as
+#: its power is 3 or less." - the plain restriction (CR 509.1a) that applies
+#: only while the attacker's own power, as the layer system leaves it (CR
+#: 613.5), is at or under the printed number.
+_CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE = re.compile(
+    r"can't be blocked (?:if|as long as) (?:its|his|her|their) power is (?P<power>\d+) or "
+    r"less\.?$",
+    re.IGNORECASE,
+)
 
 #: Questing Beast: "Questing Beast can't be blocked by creatures with power 2
 #: or less." - the one qualified shape read; other qualifiers (a colour, a
@@ -1412,6 +1524,15 @@ def evasion_restriction_refusal(
                     "(CR 509.1a)"
                 )
             continue
+        if match := _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE.search(sentence):
+            ceiling = int(match.group("power"))
+            attacker_power = game.power_of(attacker)
+            if attacker_power is not None and attacker_power <= ceiling:
+                return (
+                    f"{attacker.name} can't be blocked while its power is {ceiling} or less, "
+                    f"and its power is {attacker_power} (CR 509.1a)"
+                )
+            continue
         if match := _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence):
             threshold = int(match.group("power"))
             blocker_power = game.power_of(blocker)
@@ -1548,6 +1669,7 @@ def looks_like_unparsed_evasion_restriction(
             continue
         if (
             _CANT_BE_BLOCKED_RE.search(sentence) is None
+            and _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence) is None
             and _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence) is None
@@ -1570,6 +1692,7 @@ def _reads_evasion_sentence(sentence: str) -> bool:
         shape.search(sentence) is not None
         for shape in (
             _CANT_BE_BLOCKED_RE,
+            _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE,
             _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE,
             _CANT_BE_BLOCKED_BY_GREATER_POWER_RE,
             _CANT_BE_BLOCKED_BY_TOKENS_RE,
@@ -1591,7 +1714,7 @@ def reads_self_combat_restriction_line(line: str, name: str) -> bool:
     """
     subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
     own = re.compile(rf"^(?:{subjects}) can't (?:be blocked|block)\b", re.IGNORECASE)
-    sentences = layer_readable_sentences(line)
+    sentences = [strip_ability_word(sentence) for sentence in layer_readable_sentences(line)]
     if not sentences:
         return False
     for sentence in sentences:
@@ -1870,6 +1993,10 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
                 text=attacker.oracle_text,
             )
         )
+
+    group_restriction = group_block_restriction_refusal(game, blocker, attacker)
+    if group_restriction is not None:
+        return group_restriction
 
     self_restriction = self_block_restriction_refusal(
         game, blocker, attacker

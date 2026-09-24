@@ -46,7 +46,7 @@
         "source": "Ifrit, Warden of Inferno"
       }
     ],
-    "fields_changed": ["permanents_left_battlefield_this_turn"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Clive, Ifrit's Dominant@alice#1": {

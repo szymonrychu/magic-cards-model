@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "delayed_triggers"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts"],
     "notices": {},
     "objects": {
       "Boommobile@alice#1": {

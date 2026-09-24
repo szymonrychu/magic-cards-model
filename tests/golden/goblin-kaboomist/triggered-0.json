@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["coin_flips_performed", "continuous_effects"],
+    "fields_changed": ["coin_flips_performed", "continuous_effects", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {},

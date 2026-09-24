@@ -159,6 +159,7 @@ from .delayed import (
     ReflexiveDamageEqualToSubjectPowerConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
+    ReflexiveWhenYouDoConsequence,
     ReturnEachExiledToBattlefieldUnderOwner,
     ReturnExiledCardAndAddCounters,
     ReturnRiderCounter,
@@ -182,6 +183,7 @@ from .layers import (
     Characteristics,
     ContinuousEffect,
     ContinuousEffects,
+    CreaturesControlledByWhereToughnessExceedsPower,
     Duration,
     HasCounter,
     Layer,
@@ -1578,6 +1580,17 @@ _OBJECT_COUNTER_COUNT_RE = re.compile(
 )
 
 
+#: "the number of Equipment attached to him" (Whiplash, Vengeful Engineer;
+#: Shagrat, Loot Bearer's "... attached to Shagrat", its name already
+#: "this permanent") - a count of one subtype attached to the object the
+#: expression is evaluated for (CR 301.5a: an Equipment is attached to the
+#: creature it equips), read as the effect applies (CR 608.2h).
+_OBJECT_ATTACHED_COUNT_RE = re.compile(
+    r"^the number of (?P<subtype>[A-Za-z]+) attached to (?:it|him|her|this [a-z]+)$",
+    re.IGNORECASE,
+)
+
+
 #: The "and"/"or"/comma-joined card-type list `machines/replacement.
 #: _COUNTER_FOR_EACH`'s own "for each `<types>` card(s)/spell(s) ..." tail
 #: names - "instant and sorcery", Murktide Regent's and Ral, Leyline
@@ -1655,6 +1668,25 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
+    if match := _OBJECT_ATTACHED_COUNT_RE.fullmatch(text):
+        attached_subtype = canonical_subtype(match.group("subtype"))
+        if attached_subtype is None:
+            return None
+
+        def read_attached_count(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            if obj is None:
+                return 0
+            board = game.computed_board()
+            return sum(
+                1
+                for permanent in game.battlefield
+                if permanent.attached_to == obj.id
+                and attached_subtype in {word.lower() for word in board.of(permanent).subtypes}
+            )
+
+        return read_attached_count
     if match := _AMOUNT_TWICE_RE.fullmatch(text):
         inner = _amount_term(match.group("term"))
         if inner is None:
@@ -2187,6 +2219,52 @@ _MASS_COLOR_FILTER_RE = re.compile(
 #: parser once "X" is replaced by a literal number.
 _WHERE_X_IS_RE = re.compile(r",?\s*where x is (?P<expr>.+?)\.?$", re.IGNORECASE)
 
+#: "each other Hero you control gets +X/+X until end of turn" (Captain
+#: America, Wings of Freedom), "each other creature you control gets ..."
+#: (Wild Beastmaster) - the singular "each" subject of a one-shot group pump,
+#: a creature type (CR 205.3m) or plain "creature", fixed once as the effect
+#: begins (CR 611.2c).
+_MASS_EACH_SUBJECT_RE = re.compile(
+    r"^[Ee]ach (?P<other>other )?(?P<noun>creature|[A-Z][a-z]+) "
+    r"(?P<whose>you control|your opponents control) gets\b"
+)
+
+#: "this creature's power" / "this permanent's toughness" (a card's own name
+#: already rewritten, CR 201.5) - the source's own characteristic as the
+#: ability resolves (CR 608.2h), or as it last existed on the battlefield
+#: if it has left.
+_SOURCE_CHARACTERISTIC_RE = re.compile(
+    r"^this (?:creature|permanent)'?s (?P<characteristic>power|toughness)$", re.IGNORECASE
+)
+
+
+def _source_characteristic(game: "Game", source: CardState | None, characteristic: str) -> int:
+    """The source's power or toughness now, or its last known value (CR
+    608.2h) once it has left the battlefield; never below 0 as a magnitude."""
+    if source is None:
+        return 0
+    if source.zone is Zone.BATTLEFIELD:
+        value = game.power_of(source) if characteristic == "power" else game.toughness_of(source)
+    else:
+        value = (
+            source.last_known_power if characteristic == "power" else source.last_known_toughness
+        )
+    return max(value or 0, 0)
+
+
+def _source_characteristic_magnitude(expr: str) -> "MassPumpMagnitude | None":
+    """`_SOURCE_CHARACTERISTIC_RE` as a mass pump's magnitude reader."""
+    match = _SOURCE_CHARACTERISTIC_RE.fullmatch(expr.strip().rstrip("."))
+    if match is None:
+        return None
+    characteristic = match.group("characteristic").lower()
+
+    def read(game: "Game", controller: str, source_id: str | None) -> int:
+        source = game.find_by_id(UUID(source_id)) if source_id else None
+        return _source_characteristic(game, source, characteristic)
+
+    return read
+
 
 def _mass_creature_group_targets(
     game: "Game", controller: str, source_id: UUID, text: str
@@ -2202,6 +2280,28 @@ def _mass_creature_group_targets(
     here. `None` if `text`'s subject is none of the three - the caller's
     ordinary target resolution stays in charge for everything else.
     """
+    each_match = _MASS_EACH_SUBJECT_RE.match(text.strip())
+    if each_match is not None:
+        noun = each_match.group("noun")
+        wanted_subtype = None if noun == "creature" else canonical_subtype(noun)
+        if noun != "creature" and wanted_subtype is None:
+            return None
+        base = (
+            creatures_controlled_by(controller)
+            if each_match.group("whose") == "you control"
+            else creatures_controlled_by_opponents_of(controller)
+        )
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base(board.of(permanent), board.characteristics)
+            and not (each_match.group("other") and permanent.id == source_id)
+            and (
+                wanted_subtype is None
+                or wanted_subtype in {word.lower() for word in board.of(permanent).subtypes}
+            )
+        ]
     subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(text.strip())
     if subtype_match is not None:
         # History of Benalia's "Knights you control" - CR 205.3m's subtype
@@ -2368,7 +2468,11 @@ def _parse_mass_pump_clause(
     # belongs to the quoted-grant reader, not here.
     if duration_first := _MASS_PUMP_DURATION_FIRST_RE.fullmatch(text):
         text = f"{duration_first.group('rest')} until end of turn."
-    if _MASS_SUBJECT_RE.match(text) is None and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None:
+    if (
+        _MASS_SUBJECT_RE.match(text) is None
+        and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None
+        and _MASS_EACH_SUBJECT_RE.match(text) is None
+    ):
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
         return None
@@ -2377,9 +2481,13 @@ def _parse_mass_pump_clause(
     magnitude_expr: MassPumpMagnitude | None
     if where_match is not None:
         counted = count_expression(where_match.group("expr"))
-        if counted is None:
+        own = _source_characteristic_magnitude(where_match.group("expr"))
+        if counted is None and own is None:
             return None
-        magnitude_expr = lambda game, controller, _source_id: counted(game, controller)  # noqa: E731
+        if counted is not None:
+            magnitude_expr = lambda game, controller, _source_id: counted(game, controller)  # noqa: E731
+        else:
+            magnitude_expr = own
         template = text[: where_match.start()].rstrip(", ").rstrip(".") + "."
         if "+x/+x" not in template.lower():
             return None
@@ -2423,7 +2531,14 @@ def _mass_pump_parseable(literal: str) -> str:
     subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(literal.strip())
     power_filter_match = _MASS_POWER_FILTER_RE.match(literal.strip())
     color_filter_match = _MASS_COLOR_FILTER_RE.match(literal.strip())
-    if color_filter_match is not None:
+    each_match = _MASS_EACH_SUBJECT_RE.match(literal.strip())
+    if each_match is not None:
+        # The group (and its "other") is already `targets`; the layer parser
+        # only needs the plural group shape.
+        parseable = (
+            f"creatures {each_match.group('whose')} get" + literal.strip()[each_match.end() :]
+        )
+    elif color_filter_match is not None:
         # The colour filter, like the power filter below, is already applied
         # to `targets`; `machines/layers.py` only needs the group shape.
         parseable = "all creatures" + literal.strip()[color_filter_match.end() :]
@@ -2615,6 +2730,37 @@ def _event_subject_characteristic_expr(
     return read
 
 
+#: "its power"/"its toughness" on a sentence whose own subject is the
+#: source - Armored Armadillo's "This creature gets +X/+0 until end of turn,
+#: where X is its toughness." (CR 700.7's "this creature" is what "its"
+#: points back to).
+_SELF_SUBJECT_SENTENCE_RE = re.compile(r"^this (?:creature|permanent)\b", re.IGNORECASE)
+_ITS_CHARACTERISTIC_RE = re.compile(r"^its (?P<characteristic>power|toughness)$", re.IGNORECASE)
+
+
+def _source_characteristic_expr(
+    expr: str, template: str
+) -> Callable[["Game", "AbilityOnStack"], int] | None:
+    """ "this creature's power" (Brambleguard Captain; War Machine, Legacy of
+    Iron's own name already rewritten to "this permanent", CR 201.5) - the
+    *source's* characteristic, not the target's - and "its toughness" when
+    the pumped subject is the source itself (Armored Armadillo). Read once as
+    the ability resolves (CR 608.2h), off the last known value if the source
+    has left the battlefield."""
+    stripped = expr.strip().rstrip(".")
+    match = _SOURCE_CHARACTERISTIC_RE.fullmatch(stripped)
+    if match is None and _SELF_SUBJECT_SENTENCE_RE.match(template.strip()):
+        match = _ITS_CHARACTERISTIC_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    characteristic = match.group("characteristic").lower()
+
+    def read(game: "Game", ability: "AbilityOnStack") -> int:
+        return _source_characteristic(game, ability.source(game), characteristic)
+
+    return read
+
+
 def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | None:
     """A continuous-effect sentence whose power and toughness are an X the
     ability defines in its own words - Jolrael, Voice of Zhalfir's symmetric
@@ -2649,15 +2795,16 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     match = _WHERE_X_IS_INLINE_RE.search(text)
     if match is None:
         return None
+    template = (text[: match.start()] + text[match.end() :]).strip()
     controller_magnitude_expr = count_expression(match.group("expr"))
     event_magnitude_expr = (
         None
         if controller_magnitude_expr is not None
         else _event_subject_characteristic_expr(match.group("expr"))
+        or _source_characteristic_expr(match.group("expr"), template)
     )
     if controller_magnitude_expr is None and event_magnitude_expr is None:
         return None
-    template = (text[: match.start()] + text[match.end() :]).strip()
     if not _X_TOKEN_RE.search(template):
         return None
     if parsed_layer_effects(_X_TOKEN_RE.sub("1", template)) is None:
@@ -17782,6 +17929,11 @@ def _parse_token_tail(tail: str | None) -> tuple[tuple[str, ...], str | None] | 
         if lowered in _TOKEN_KEYWORDS:
             keywords.append(part.title())
             continue
+        if re.fullmatch(r"protection from (?:white|blue|black|red|green)", lowered):
+            # CR 702.16a's protection from a colour - Hunted Horror's
+            # Centaurs, "with protection from black".
+            keywords.append(part[:1].upper() + part[1:].lower())
+            continue
         leveled = re.fullmatch(r"(?P<word>[a-z]+) (?P<n>\d+)", lowered)
         if leveled is not None and leveled.group("word") in _LEVELED_TOKEN_KEYWORDS:
             keywords.append(f"{leveled.group('word').title()} {leveled.group('n')}")
@@ -23463,7 +23615,14 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     # you control") - tried second, since `count_expression`'s own
     # "the number of ... power ..." phrasings (none in the pool) would
     # otherwise never get a chance to match first.
-    magnitude = amount_expression(expr) if counted is None else None
+    # Red Hulk's reflexive "... equal to the number of +1/+1 counters on him"
+    # - an amount read off the dealer itself (CR 608.2h), not a count of
+    # something its controller controls.
+    magnitude = (
+        amount_expression(re.sub(r"\bon (?:him|her)\b", "on it", expr, flags=re.IGNORECASE))
+        if counted is None
+        else None
+    )
     if counted is None and magnitude is None:
         return None
     recipient = match.group("recipient").lower()
@@ -23477,8 +23636,7 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
             amount = counted(game, ability.controller)
         else:
             assert magnitude is not None
-            obj = ability.source(game)
-            amount = magnitude(game, ability.controller, obj, ability.x_value)
+            amount = magnitude(game, ability.controller, source, ability.x_value)
         if amount <= 0:
             return
         if each_opponent:
@@ -23764,6 +23922,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
+    source_relative = _source_relative_whole_text_ability_effect(effect_text)
+    if source_relative is not None:
+        return source_relative
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
@@ -27472,6 +27633,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     exile_all_creatures_then_hand_refill = _parse_exile_all_creatures_then_hand_refill_clause(whole)
     if exile_all_creatures_then_hand_refill is not None:
         return exile_all_creatures_then_hand_refill
+    source_relative = _source_relative_whole_text_spell_effect(whole)
+    if source_relative is not None:
+        return source_relative
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
     if dealt_damage_this_way is not None:
         return dealt_damage_this_way
@@ -34159,7 +34323,10 @@ _NAMED_EQUIPMENT_TOKEN_RE = re.compile(
     r"(?P<name>[A-Z][\w' -]*?) with "
     r"[\"“‘'](?P<ability>[^\"”’']+)[\"”’'] "
     r"and equip (?P<cost>(?:\{[^}]+\})+)\.?"
-    r"(?P<attach> when you do, attach it to target creature you control\.?)?$",
+    r"(?P<attach> when you do, attach it to target creature you control\.?)?"
+    # U.S.Agent, John Walker's "... and equip {2}. Attach it to U.S.Agent." -
+    # the token attached to the ability's own source (CR 701.3a), no target.
+    r"(?P<attach_self> attach it to this (?:creature|permanent)\.?)?$",
     re.IGNORECASE,
 )
 
@@ -34180,11 +34347,16 @@ def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
     ability = match.group("ability").strip()
     cost = match.group("cost").strip()
     has_reflexive_attach = match.group("attach") is not None
+    attaches_to_source = match.group("attach_self") is not None
     definition = TokenDefinition(
         types=(Type.ARTIFACT,),
         subtypes=("Equipment",),
         name=name,
-        rules_text=f"{ability}\nEquip {cost}",
+        # The quoted ability is a whole sentence of the token's text (CR
+        # 111.3); Oracle drops its full stop inside the "with "..." and equip"
+        # list, and without it the static line is no sentence the layer
+        # system reads - the bonus never applied.
+        rules_text=f"{ability if ability.endswith('.') else ability + '.'}\nEquip {cost}",
     )
 
     def effect(game: "Game", ability_on_stack: AbilityOnStack) -> None:
@@ -34193,6 +34365,11 @@ def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
         if not created:
             return
         token = created[0]
+        if attaches_to_source:
+            source = ability_on_stack.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD:
+                attach_permanent(game, token, source)
+            return
         if not has_reflexive_attach:
             return
         reflexive_text = "When you do, attach it to target creature you control."
@@ -49823,6 +50000,17 @@ def trigger_effect_for(
             if substituted is not None:
                 return substituted
         raw = _ability_effect_or_notice(effect_text)
+        if raw is create_continuous_effect_of_ability:
+            # The generic layer fallback reads the sentence's *shape* only and
+            # fails closed at resolution on anything it cannot size - War
+            # Machine, Legacy of Iron's "where X is War Machine's power" is
+            # readable once CR 201.5's own name is "this permanent", so the
+            # normalized text gets its say before the fallback wins.
+            normalized_first = _ability_effect_or_notice(
+                _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
+            )
+            if normalized_first is not None:
+                raw = normalized_first
         if raw is not None:
             # The literal printed name is what some parsers are *reading
             # for* - `_parse_may_exile_self_then_return_clause`'s own CR
@@ -55860,3 +56048,755 @@ def _parse_target_fights_other_target_clause(
         _fight(game, first, second)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# Whole-text readers for source-relative combat and token effects
+# --------------------------------------------------------------------------
+#
+# Each shape below is read off a resolving ability's (or spell's) whole,
+# unsplit text, ahead of `split_effect_clauses`: every one of them is a single
+# CR 608.2c instruction whose parts share a referent or an X that a clause-by-
+# clause read would cut apart.
+
+#: "`<target phrase>` gains `<keywords>` until end of turn and can't be
+#: blocked this turn[. `<rest>`]" - Pym Particles' "Target creature gains
+#: vigilance until end of turn and can't be blocked this turn. Draw a card.",
+#: Break Through the Line's "Target creature with power 2 or less gains haste
+#: until end of turn and can't be blocked this turn." One subject, two
+#: predicates: a layer 6 keyword grant (CR 613.1f) and CR 509.1a's evasion
+#: restriction granted as the self-referential sentence `machines/combat.py`
+#: enforces, both ending at cleanup (CR 514.2, CR 611.2a).
+_GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE = re.compile(
+    r"^(?P<phrase>target .+?) gains (?P<keywords>[a-z][a-z ,]*?) until end of turn "
+    r"and can'?t be blocked this turn(?:\.\s*(?P<rest>.*))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _gains_and_cant_be_blocked_this_turn(
+    text: str, rest_parser: Callable[[str], object]
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE`'s shape, with any following
+    instruction read by `rest_parser` and run after it (CR 608.2c)."""
+    match = _GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+    rest_text = (match.group("rest") or "").strip()
+    rest = rest_parser(rest_text) if rest_text else None
+    if rest_text and rest is None:
+        return None
+    grants = [*keywords, "This creature can't be blocked."]
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        effects = game.continuous_effects
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            timestamp = effects.tick()
+            for grant in grants:
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{target.name} has {grant} this turn",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=grant_ability(grant),
+                    )
+                )
+        if rest is not None:
+            rest(game, stack_object)  # type: ignore[operator]
+
+    return effect
+
+
+#: "each opponent loses X life and you gain X life, where X is `<expr>`." -
+#: Whiplash, Vengeful Engineer's "... where X is the number of Equipment
+#: attached to him." One X for both halves, read once as the ability resolves
+#: (CR 608.2h) against the ability's own source (CR 113.7).
+_EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE = re.compile(
+    r"^each opponent loses x life and you gain x life, where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_opponent_loses_x_you_gain_x(text: str) -> AbilityEffect | None:
+    """`_EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE`'s drain: each opponent loses X
+    (CR 119.3) and the controller gains X (CR 119.4)."""
+    match = _EACH_OPPONENT_LOSES_X_YOU_GAIN_X_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        amount = reader(game, controller.username, ability.source_or_last_known(game), 0)
+        if amount <= 0:
+            return
+        for opponent in _opponents(game, controller.username):
+            game.lose_life(opponent, amount)
+        game.gain_life(controller, amount)
+
+    return effect
+
+
+#: "draw a card if her power is 4 or greater." (Viv Vision, Teen
+#: Synthezoid's attack trigger); "draw a card if its power is 3 or greater.
+#: Otherwise, put two +1/+1 counters on it." (Tribute to the World Tree) - a
+#: draw gated on one creature's power as the ability resolves (CR 608.2h),
+#: with an optional "Otherwise" instruction for the false case. A legend's
+#: own pronoun ("his"/"her") and "this creature's" name the source; "its"
+#: names the creature the trigger's event is about (CR 603.2), which for a
+#: self trigger is the source anyway.
+_DRAW_IF_POWER_AT_LEAST_RE = re.compile(
+    rf"^draw (?P<n>{COUNT}) cards? if (?P<whose>its|his|her|this (?:creature|permanent)'s) "
+    r"power is (?P<threshold>\d+) or greater\.?(?:\s*otherwise,\s*(?P<otherwise>.+))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_draw_if_power_at_least(text: str) -> AbilityEffect | None:
+    """`_DRAW_IF_POWER_AT_LEAST_RE`'s shape, or `None`."""
+    match = _DRAW_IF_POWER_AT_LEAST_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if not count:
+        return None
+    threshold = int(match.group("threshold"))
+    otherwise_text = match.group("otherwise")
+    otherwise = parse_mixed_effect(otherwise_text) if otherwise_text else None
+    if otherwise_text and otherwise is None:
+        return None
+    reads_event_subject = match.group("whose").lower() == "its"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        subject = None
+        if reads_event_subject and ability.event is not None and ability.event.subject_id:
+            subject = game.find_by_id(ability.event.subject_id)
+        if subject is None:
+            subject = ability.source_or_last_known(game)
+        if _source_characteristic(game, subject, "power") >= threshold:
+            game.draw_cards(game.controller_of(ability).username, count)
+        elif otherwise is not None:
+            otherwise(game, ability)
+
+    return effect
+
+
+#: "target opponent creates The Void, a legendary 5/5 black Horror Villain
+#: creature token with flying, indestructible, and "The Void attacks each
+#: combat if able."" (The Sentry, Golden Guardian); "target opponent creates
+#: two 3/3 green Centaur creature tokens with protection from black." (Hunted
+#: Horror) - CR 111.2: the player the instruction names creates the token, so
+#: that player owns and controls it. The token phrase is read by the same
+#: named (CR 111.4 appositive) and counted token readers "create" already
+#: uses.
+_TARGET_PLAYER_CREATES_RE = re.compile(
+    r"^target (?:player|opponent) creates? (?P<phrase>.+)$", re.IGNORECASE | re.DOTALL
+)
+
+
+def _parse_target_player_creates_token(text: str) -> AbilityEffect | None:
+    """`_TARGET_PLAYER_CREATES_RE`'s shape, or `None`."""
+    match = _TARGET_PLAYER_CREATES_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    phrase = match.group("phrase").strip()
+    if "copy of" in phrase.lower():
+        return None
+    if phrase.endswith(".") and not phrase.endswith(('."', ".”")):
+        phrase = phrase[:-1].rstrip()
+    definition: TokenDefinition | None = None
+    count = 1
+    tapped = False
+    named = _NAMED_TOKEN_CLAUSE_RE.fullmatch(f"create {phrase}")
+    if named is not None and named.group("name")[:1].isupper():
+        definition = _parse_generic_token_descriptor(
+            named.group("desc").strip().split(), named.group("tail")
+        )
+        if definition is None:
+            return None
+        definition = definition.model_copy(update={"name": named.group("name").strip()})
+    else:
+        counted = _TARGET_PLAYER_TOKEN_RE.fullmatch(
+            _fold_following_token_grant(f"target player creates {phrase}")
+        )
+        if counted is None:
+            return None
+        count = parse_count(counted.group("n")) or 0
+        words = counted.group("desc").strip().split()
+        tapped = bool(words) and words[0].lower() == "tapped"
+        if tapped:
+            words = words[1:]
+        if not words or not count:
+            return None
+        definition = _token_definition_from_words(" ".join(words), counted.group("tail"))
+        if definition is None:
+            return None
+    token = definition
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for target in game.resolve_targets(ability):
+            if isinstance(target, Player):
+                create_tokens(game, token, target.username, count, tapped=tapped)
+
+    return effect
+
+
+#: "transform it." as a triggered ability's whole effect - Avacynian
+#: Missionaries' "At the beginning of your end step, if this creature is
+#: equipped, transform it.", Uninvited Geist's "When this creature deals
+#: combat damage to a player, transform it." The only antecedent is the
+#: source the trigger condition names, so "it" is CR 701.27a's
+#: self-referential transform.
+_TRANSFORM_IT_RE = re.compile(r"^transform it\.?$", re.IGNORECASE)
+
+
+def _parse_transform_it(text: str) -> AbilityEffect | None:
+    """`_TRANSFORM_IT_RE`, as the source's own transform; an event about some
+    other object leaves "it" unresolved here, so nothing transforms."""
+    if _TRANSFORM_IT_RE.fullmatch(text.strip()) is None:
+        return None
+    transform_self = parse_mixed_effect("Transform this creature.")
+    if transform_self is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        subject = None if event is None else event.subject_id
+        if subject is not None and subject != ability.source_id:
+            return
+        transform_self(game, ability)
+
+    return effect
+
+
+#: "attach up to one target Equipment to it. Then `<rest>`" - Shagrat, Loot
+#: Bearer's attack trigger, "it" being the attacking source itself (its
+#: name, and so its pronoun, already the ability's own subject). CR 701.3a's
+#: attach of a targeted Equipment (CR 115.6's "up to one" may choose none)
+#: onto the source, then the rest of the instruction in order (CR 608.2c).
+_ATTACH_TARGET_EQUIPMENT_TO_SELF_RE = re.compile(
+    r"^attach (?:up to one )?target equipment(?: you control)? to "
+    r"(?:it|him|her|this creature|this permanent)\.(?:\s*(?P<rest>.+))?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_attach_target_equipment_to_self(text: str) -> AbilityEffect | None:
+    """`_ATTACH_TARGET_EQUIPMENT_TO_SELF_RE`'s shape, or `None`."""
+    match = _ATTACH_TARGET_EQUIPMENT_TO_SELF_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    rest_text = (match.group("rest") or "").strip()
+    rest = parse_mixed_effect(rest_text) if rest_text else None
+    if rest_text and rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            for target in game.resolve_targets(ability):
+                if isinstance(target, CardState):
+                    attach_permanent(game, target, source)
+        if rest is not None:
+            rest(game, ability)
+
+    return effect
+
+
+#: "attach it to target creature you control. That creature gains
+#: indestructible until end of turn." (Stolen Stark Tech), "... Untap that
+#: creature." (Super Suit, Galadhrim Bow), "... That creature gains first
+#: strike until end of turn." (Quick-Draw Dagger) - CR 701.3a's attach of
+#: the source onto its announced target, then a rider whose "that creature"
+#: is the same target (CR 608.2c: one instruction, read in order). The
+#: rider is read as the targeted sentence it restates, so it acts on exactly
+#: the object the attach did.
+_ATTACH_SELF_THEN_THAT_CREATURE_RE = re.compile(
+    r"^(?P<attach>attach (?:it|this (?:aura|equipment)) to target [^.]+)\.\s*"
+    r"(?P<rider>(?:that creature \S.*|untap that creature\.?))$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_attach_self_then_that_creature(text: str) -> AbilityEffect | None:
+    """`_ATTACH_SELF_THEN_THAT_CREATURE_RE`'s shape, or `None`."""
+    match = _ATTACH_SELF_THEN_THAT_CREATURE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    attach = _attach_self_to_target_effect(match.group("attach"))
+    rider_text = re.sub(
+        r"\bthat creature\b",
+        lambda m: "Target creature" if m.start() == 0 else "target creature",
+        match.group("rider").strip(),
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    rider = parse_mixed_effect(rider_text)
+    if attach is None or rider is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        attach(game, ability)
+        rider(game, ability)
+
+    return effect
+
+
+#: "you may put an artifact card from your hand onto the battlefield. If it's
+#: an Equipment, attach it to The Invincible Iron Man." (Tony Stark // The
+#: Invincible Iron Man, the name already "this permanent") - CR 608.2d's
+#: optional choice of a card of one type from hand put onto the battlefield,
+#: then CR 701.3a's attach of that permanent onto the source when it has the
+#: named subtype as it now exists (CR 613.5).
+_PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE = re.compile(
+    r"^you may put an? (?P<type>[a-z]+) card from your hand onto the battlefield\. "
+    r"if it's an? (?P<subtype>[A-Za-z]+), attach it to this (?:creature|permanent)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_type_from_hand_attach_if_subtype(text: str) -> AbilityEffect | None:
+    """`_PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE`'s shape, or `None`."""
+    match = _PUT_TYPE_FROM_HAND_ATTACH_IF_SUBTYPE_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    card_type = next((kind for kind in Type if kind.value == match.group("type").lower()), None)
+    subtype = canonical_subtype(match.group("subtype"))
+    if card_type is None or subtype is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        candidates = [state for state in player.hand if card_type in state.types]
+        if not candidates or not game.may(
+            player,
+            f"put {with_indefinite_article(card_type.value)} card from your hand onto the "
+            "battlefield",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"choose {with_indefinite_article(card_type.value)} card to put "
+                    "onto the battlefield",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = {state.id: state for state in candidates}[chosen_ids[0]]
+        permanent = game.put_onto_battlefield(chosen, player.username)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return
+        if subtype not in {word.lower() for word in game.characteristics_of(permanent).subtypes}:
+            return
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            attach_permanent(game, permanent, source)
+
+    return effect
+
+
+#: "Return this card from your graveyard to the battlefield with a finality
+#: counter on him. Then you may attach an Equipment you control to him."
+#: (Winter Soldier, Icy Assassin) - the graveyard return the plain sentence
+#: already reads (CR 122.1h's finality counter; Balustrade Wurm's "... on
+#: it."), then CR 608.2d's optional choice of an Equipment its controller
+#: controls, attached (CR 701.3a) to the card as the permanent it became.
+_RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE = re.compile(
+    r"^(?P<returning>return this card from your graveyard to the battlefield[^.]*)\. "
+    r"then you may attach an equipment you control to (?:it|him|her)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _may_attach_equipment_to(game: "Game", host: CardState, stack_object: "StackObject") -> None:
+    """CR 608.2d: offer the controller one Equipment they control to attach
+    to `host` - nothing is asked when there is none to offer."""
+    controller = game.controller_of(stack_object)
+    candidates = [
+        permanent
+        for permanent in game.permanents_controlled_by(controller.username)
+        if "Equipment" in game.characteristics_of(permanent).subtypes
+    ]
+    if not candidates or host.zone is not Zone.BATTLEFIELD:
+        return
+    source_name = (
+        stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+    )
+    if not game.may(
+        controller,
+        f"attach an Equipment you control to {host.name}",
+        source=source_name,
+        source_id=source_id_of(stack_object),
+    ):
+        return
+    chosen = candidates[0]
+    if len(candidates) > 1:
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose an Equipment you control to attach",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                amount=1,
+                cards=tuple(permanent.id for permanent in candidates),
+                card_labels=tuple(permanent.name for permanent in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = {permanent.id: permanent for permanent in candidates}[chosen_ids[0]]
+    attach_permanent(game, chosen, host)
+
+
+def _parse_return_self_then_may_attach_equipment(text: str) -> AbilityEffect | None:
+    """`_RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE`'s shape, or `None`."""
+    match = _RETURN_SELF_THEN_MAY_ATTACH_EQUIPMENT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    returning_text = re.sub(
+        r"\bon (?:him|her)\b", "on it", match.group("returning"), flags=re.IGNORECASE
+    )
+    returning = parse_mixed_effect(f"{returning_text}.")
+    if returning is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        returning(game, ability)
+        returned = ability.source(game)
+        if returned is not None and returned.zone is Zone.BATTLEFIELD:
+            _may_attach_equipment_to(game, returned, ability)
+
+    return effect
+
+
+#: "put a +1/+1 counter on him. If he's attacking, untap him and there is
+#: an additional combat phase after this phase." (Bruce Banner // The
+#: Incredible Hulk's enrage) and "put a +1/+1 counter on him. When you do,
+#: he deals damage equal to the number of +1/+1 counters on him to any other
+#: target." (Red Hulk's) - a counter on the source (CR 122.1), then either a
+#: rider gated on the source attacking right now (CR 508.1k) or CR 603.12's
+#: reflexive trigger, created only if the counter really was put.
+_SELF_COUNTER_THEN_RIDER_RE = re.compile(
+    r"^put an? \+1/\+1 counter on (?:it|him|her|this (?:creature|permanent))\.\s*"
+    r"(?:(?P<if_attacking>if (?:it's|he's|she's|this creature is) attacking, (?P<rider>.+))"
+    r"|when you do, (?P<reflexive>.+))$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: "untap him and there is an additional combat phase after this phase." -
+#: CR 701.26b's untap of the source and CR 500.8's additional combat phase.
+_UNTAP_SELF_AND_ADDITIONAL_COMBAT_RE = re.compile(
+    r"^untap (?:it|him|her|this creature) and there is an additional combat phase "
+    r"after this phase\.?$",
+    re.IGNORECASE,
+)
+_LEGEND_PRONOUN_RE = re.compile(r"\b(?:he|she|him|her)\b", re.IGNORECASE)
+
+
+def _untap_self_and_additional_combat(text: str) -> AbilityEffect | None:
+    """`_UNTAP_SELF_AND_ADDITIONAL_COMBAT_RE`'s shape, or `None`."""
+    if _UNTAP_SELF_AND_ADDITIONAL_COMBAT_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.untap()
+        assert game.turn is not None
+        game.turn.insert_extra_phase(COMBAT_PHASE_STEPS)
+
+    return effect
+
+
+def _parse_self_counter_then_rider(text: str) -> AbilityEffect | None:
+    """`_SELF_COUNTER_THEN_RIDER_RE`'s shape, or `None`."""
+    match = _SELF_COUNTER_THEN_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    put_counter = parse_mixed_effect("Put a +1/+1 counter on this creature.")
+    if put_counter is None:
+        return None
+    if match.group("if_attacking") is not None:
+        rider_text = match.group("rider")
+        rider = _untap_self_and_additional_combat(rider_text) or parse_mixed_effect(
+            _LEGEND_PRONOUN_RE.sub("it", rider_text)
+        )
+        if rider is None:
+            return None
+
+        def attacking_rider(game: "Game", ability: AbilityOnStack) -> None:
+            put_counter(game, ability)
+            source = ability.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD and game.is_attacking(source):
+                rider(game, ability)  # type: ignore[misc]
+
+        return attacking_rider
+    reflexive_effect = _LEGEND_PRONOUN_RE.sub(
+        lambda m: "it" if m.group(0).lower() in ("he", "she", "him", "her") else m.group(0),
+        match.group("reflexive").strip(),
+    )
+    reflexive_effect = reflexive_effect[:1].upper() + reflexive_effect[1:]
+    if reflexive_consequence_effect(reflexive_effect) is None:
+        return None
+    reflexive_text = f"When you do, {reflexive_effect[:1].lower()}{reflexive_effect[1:]}"
+
+    def counter_then_reflexive(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        before = source.counter_count(Counter.PLUS_ONE)
+        put_counter(game, ability)
+        if source.zone is not Zone.BATTLEFIELD or source.counter_count(Counter.PLUS_ONE) <= before:
+            return
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            callback=ReflexiveWhenYouDoConsequence(),
+        )
+
+    return counter_then_reflexive
+
+
+#: "you may pay {W/B}. If you do, each opponent loses 1 life and you gain
+#: life equal to the total life lost this way." - extort's own effect (CR
+#: 702.101a, `machines/keywords._extort_ability`). CR 118.12's optional
+#: payment, then each opponent loses N (CR 119.3) and the controller gains
+#: exactly what was lost in total (a player who can't lose life loses none,
+#: so adds none).
+_MAY_PAY_THEN_DRAIN_TOTAL_RE = re.compile(
+    rf"^you may pay (?P<mana>(?:\{{[^}}]+\}})+)\.\s*if you do,\s*each opponent loses "
+    rf"(?P<n>{COUNT}) life and you gain life equal to the total life lost this way\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_may_pay_then_drain_total(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_THEN_DRAIN_TOTAL_RE`'s shape, or `None`."""
+    match = _MAY_PAY_THEN_DRAIN_TOTAL_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    cost = ManaCost.parse(match.group("mana"))
+    amount = parse_count(match.group("n"))
+    if not amount:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        if not game.may_pay_mana_cost(
+            player, cost, source=ability.source_name, source_id=source_id_of(ability)
+        ):
+            return
+        lost = 0
+        for opponent in _opponents(game, player.username):
+            before = opponent.life
+            game.lose_life(opponent, amount)
+            lost += max(before - opponent.life, 0)
+        if lost:
+            game.gain_life(player, lost)
+
+    return effect
+
+
+#: "until end of turn, creatures you control with toughness greater than
+#: their power assign combat damage equal to their toughness rather than
+#: their power." (The Kingpin of Crime's paid rider); "Until end of turn,
+#: target creature you control assigns combat damage equal to its toughness
+#: rather than its power." (Bill the Pony) - CR 510.1a's "equal to its power"
+#: replaced for the group or target, for CR 611.2a's stated duration. The
+#: group form modifies the rules of the game rather than any characteristic,
+#: so it is not fixed when it begins (CR 611.2c): the live
+#: `CreaturesControlledByWhereToughnessExceedsPower` selector judges each
+#: creature as it assigns.
+_UNTIL_EOT_ASSIGNS_TOUGHNESS_RE = re.compile(
+    r"^until end of turn,\s*(?:(?P<group>creatures you control(?P<exceeds> with toughness "
+    r"greater than their power)?) assign|(?P<target>target creature you control) assigns) "
+    r"combat damage equal to (?:its|their) toughness rather than (?:its|their) power\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_until_eot_assigns_toughness(text: str) -> AbilityEffect | None:
+    """`_UNTIL_EOT_ASSIGNS_TOUGHNESS_RE`'s shape, or `None`."""
+    match = _UNTIL_EOT_ASSIGNS_TOUGHNESS_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    group = match.group("group") is not None
+    exceeds = match.group("exceeds") is not None
+    grant = grant_ability(combat_rules.ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        store = game.continuous_effects
+        if group:
+            store.add(
+                ContinuousEffect(
+                    description=f"{ability.source_name}: assigns combat damage equal to "
+                    "toughness this turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=ability.source_id,
+                    selector=(
+                        CreaturesControlledByWhereToughnessExceedsPower(username=ability.controller)
+                        if exceeds
+                        else creatures_controlled_by(ability.controller)
+                    ),
+                    modification=grant,
+                )
+            )
+            return
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=f"{target.name} assigns combat damage equal to its toughness",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    source_id=ability.source_id,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=grant,
+                )
+            )
+
+    return effect
+
+
+#: "you may pay 2 life. If you do, `<rest>`" (The Kingpin of Crime) - CR
+#: 119.4's optional life payment, and the rest only if it was paid (CR
+#: 118.12), for a rest one of the readers here reads.
+_MAY_PAY_LIFE_THEN_RE = re.compile(
+    rf"^you may pay (?P<n>{COUNT}) life\.\s*if you do,\s*(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_pay_life_then_rider(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_LIFE_THEN_RE` over `_parse_until_eot_assigns_toughness`."""
+    match = _MAY_PAY_LIFE_THEN_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    rest = _parse_until_eot_assigns_toughness(match.group("rest"))
+    if not amount or rest is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if game.may_pay_life(
+            game.controller_of(ability),
+            amount,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            rest(game, ability)
+
+    return effect
+
+
+#: "those creatures gain flying until end of turn." after "Whenever you cast
+#: a spell that targets one or more creatures" (Storm, Windrider) - "those
+#: creatures" are the triggering spell's own targets that are creatures
+#: (CR 601.2c), each granted the keywords for CR 611.2a's duration. Any
+#: other trigger's "those creatures" is left to the batched-attack reader.
+_THOSE_CREATURES_GAIN_RE = re.compile(
+    r"^those creatures gain (?P<keywords>[a-z][a-z ,]*?) until end of turn\.?$", re.IGNORECASE
+)
+
+
+def _parse_cast_spell_targets_gain(text: str) -> AbilityEffect | None:
+    """`_THOSE_CREATURES_GAIN_RE` for a cast trigger, or `None`."""
+    match = _THOSE_CREATURES_GAIN_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    keywords = split_and_validate_keywords(match.group("keywords"))
+    batched = _parse_batched_attack_group_pump_clause(text)
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.event is not TriggerEvent.CAST_SPELL:
+            if batched is not None:
+                batched(game, ability)
+            return
+        spell = game.find_by_id(event.subject_id) if event.subject_id else None
+        if spell is None:
+            return
+        store = game.continuous_effects
+        for target_ref in spell.targets:
+            if target_ref.is_player or target_ref.card_id is None:
+                continue
+            creature = game.find_by_id(target_ref.card_id)
+            if creature is None or creature.zone is not Zone.BATTLEFIELD:
+                continue
+            if not game.characteristics_of(creature).is_creature:
+                continue
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{ability.source_name}: {creature.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        source_id=ability.source_id,
+                        selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return effect
+
+
+def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffect | None:
+    """The readers above, tried in turn on a resolving ability's whole text -
+    `_ability_effect_or_notice` asks this first."""
+    evasion = _gains_and_cant_be_blocked_this_turn(effect_text, parse_mixed_effect)
+    if evasion is not None:
+        return evasion
+    for reader in (
+        _parse_each_opponent_loses_x_you_gain_x,
+        _parse_draw_if_power_at_least,
+        _parse_target_player_creates_token,
+        _parse_transform_it,
+        _parse_attach_target_equipment_to_self,
+        _parse_attach_self_then_that_creature,
+        _parse_put_type_from_hand_attach_if_subtype,
+        _parse_return_self_then_may_attach_equipment,
+        _parse_self_counter_then_rider,
+        _parse_may_pay_then_drain_total,
+        _parse_until_eot_assigns_toughness,
+        _parse_may_pay_life_then_rider,
+        _parse_cast_spell_targets_gain,
+    ):
+        found = reader(effect_text)
+        if found is not None:
+            return found
+    return None
+
+
+def _source_relative_whole_text_spell_effect(effect_text: str) -> Effect | None:
+    """The spell-side twin, for `_spell_effect_or_notice`: Pym Particles'
+    shared-subject evasion rider."""
+    return _gains_and_cant_be_blocked_this_turn(effect_text, parse_mixed_effect_for_spell)

@@ -298,6 +298,12 @@ class Characteristics(EngineModel):
     #: which is what makes the effect (and the selector inside it) safe to
     #: serialize. `only_this_incarnation` is the reader.
     zone_change_stamp: UUID | None = None
+    #: `CardState.attached_to` as of this computation - what this object is
+    #: attached to (CR 701.3a), or `None`. Not a characteristic either;
+    #: carried for the same reason as `counters` and `is_token`, so a `Count`
+    #: can answer "for each Equipment attached to it" (Winter Soldier, Icy
+    #: Assassin; Loxodon Punisher) off the board it is handed.
+    attached_to: UUID | None = None
 
     @property
     def is_creature(self) -> bool:
@@ -462,12 +468,17 @@ class CountPermanentsControlledBy(CountBase):
     kind: Literal["permanents_controlled_by"] = "permanents_controlled_by"
     username: str | None = None
     card_type: Type
+    #: "for each *other* artifact you control" (Iron Man, Master of Machines):
+    #: the object being modified (`chars`) is left out of its own count.
+    excludes_self: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
         return sum(
             1
             for other in board.values()
-            if self.card_type in other.types and other.controller == self.username
+            if self.card_type in other.types
+            and other.controller == self.username
+            and not (self.excludes_self and other.card_id == chars.card_id)
         )
 
 
@@ -562,12 +573,38 @@ class CountPermanentsWithSubtypeControlledBy(CountBase):
     kind: Literal["permanents_with_subtype_controlled_by"] = "permanents_with_subtype_controlled_by"
     username: str | None = None
     subtype: str
+    #: "for each *other* Cat you control" (Pride Sovereign) - see
+    #: `CountPermanentsControlledBy.excludes_self`.
+    excludes_self: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> int:
         return sum(
             1
             for other in board.values()
             if other.controller == self.username
+            and any(word.lower() == self.subtype for word in other.subtypes)
+            and not (self.excludes_self and other.card_id == chars.card_id)
+        )
+
+
+class CountAttachedWithSubtype(CountBase):
+    """How many permanents with one subtype are attached to the asking object
+    itself - "for each Equipment attached to it" (Loxodon Punisher; Winter
+    Soldier, Icy Assassin's "attached to him"). CR 301.5: an Equipment is
+    attached to the creature it equips; the subtype is read off the board as
+    layer 4 left it (CR 613.1d) and the link off `Characteristics.
+    attached_to`, so an Equipment that stops being one, or is unattached,
+    stops counting on the next computation (CR 613.5). `subtype` is stored
+    lowercased."""
+
+    kind: Literal["attached_with_subtype"] = "attached_with_subtype"
+    subtype: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        return sum(
+            1
+            for other in board.values()
+            if other.attached_to == chars.card_id
             and any(word.lower() == self.subtype for word in other.subtypes)
         )
 
@@ -664,6 +701,7 @@ Count = Annotated[
     | CountCreaturesWithSubtypesControlledBy
     | CountBasicLandTypesAmongLandsControlledBy
     | CountPermanentsWithSubtypeControlledBy
+    | CountAttachedWithSubtype
     | CountColorsAmongControlledBy,
     Field(discriminator="kind"),
 ]
@@ -1254,6 +1292,28 @@ class PermanentsControlledByWithCounters(SelectorBase):
         return any(count > 0 for count in chars.counters.values())
 
 
+class AttackingTokensControlledBy(SelectorBase):
+    """ "Attacking [creature] tokens you control" (Okoye, Dora Milaje
+    Leader's first strike, Starry-Eyed Skyrider's flying) - CR 508.1k's
+    attacking status is not a characteristic and never reaches the board, so
+    the attacking ids are read off `LayerContext.attacking` when the effect is
+    built, and the builder is rebuilt on every computation (CR 613.5): a token
+    stops being selected the moment it is removed from combat."""
+
+    kind: Literal["attacking_tokens_controlled_by"] = "attacking_tokens_controlled_by"
+    username: str | None = None
+    attacking_ids: tuple[UUID, ...] = ()
+    creatures_only: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.is_token
+            and chars.controller == self.username
+            and chars.card_id in self.attacking_ids
+            and (not self.creatures_only or chars.is_creature)
+        )
+
+
 class WithChangeling(SelectorBase):
     """Every object that has changeling as layer 4 finds it (CR 702.73a).
 
@@ -1302,6 +1362,7 @@ Selector = Annotated[
     | CreaturesControlledByWithSubtype
     | CreaturesControlledByWithColor
     | PermanentsControlledByWithCounters
+    | AttackingTokensControlledBy
     | WithChangeling,
     Field(discriminator="kind"),
 ]
@@ -2123,6 +2184,7 @@ def printed_characteristics(
             counters=on_the_permanent,
             is_token=state.token,
             zone_change_stamp=state.zone_change_stamp,
+            attached_to=state.attached_to,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
     # characteristics of the face that is up - the front face by default
@@ -2165,6 +2227,7 @@ def printed_characteristics(
         counters=on_the_permanent,
         is_token=state.token,
         zone_change_stamp=state.zone_change_stamp,
+        attached_to=state.attached_to,
     )
 
 
@@ -3617,7 +3680,9 @@ def _singular_subtype_word(word: str) -> str | None:
 ControlledCountFactory = Callable[[str | None], "Count"]
 
 
-def _controlled_count_factory(qualifier: str) -> ControlledCountFactory | None:
+def _controlled_count_factory(
+    qualifier: str, *, excludes_self: bool = False
+) -> ControlledCountFactory | None:
     """ "artifacts" / "Deserts" / "Islands" - the `<qualifier>` of "for each
     `<qualifier>` you control" or "the number of `<qualifier>` you control" -
     as a factory for the `Count` of that many permanents a player controls: a
@@ -3626,12 +3691,14 @@ def _controlled_count_factory(qualifier: str) -> ControlledCountFactory | None:
     """
     card_type = _card_type_word(qualifier)
     if card_type is not None:
-        return lambda username: count_permanents_controlled_by(username, card_type)
+        return lambda username: CountPermanentsControlledBy(
+            username=username, card_type=card_type, excludes_self=excludes_self
+        )
     subtype = _singular_subtype_word(qualifier)
     if subtype is None:
         return None
     return lambda username: CountPermanentsWithSubtypeControlledBy(
-        username=username, subtype=subtype
+        username=username, subtype=subtype, excludes_self=excludes_self
     )
 
 
@@ -3781,9 +3848,25 @@ def _self_pump_per_graveyard_card_batch_builder(
 #: `TokenDefinition.rules_text` prints verbatim (CR 111.3) onto the token's
 #: own synthesised `Card.oracle_text`, read by this module's ordinary static-
 #: ability sweep the same as any printed creature's would be.
+#: "other" (Iron Man, Master of Machines' "for each other artifact you
+#: control", Pride Sovereign's "for each other Cat you control", Leonardo, Big
+#: Brother's "for each other creature you control") leaves the source out of
+#: its own count.
 _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE = re.compile(
     r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
-    r"(?P<qualifier>[a-z]+) you control\.?$",
+    r"(?P<other>other )?(?P<qualifier>[a-z]+) you control\.?$",
+    re.IGNORECASE,
+)
+
+#: "This creature gets +2/+2 for each Equipment attached to it." (Loxodon
+#: Punisher) and Winter Soldier, Icy Assassin's "Winter Soldier gets +2/+0
+#: for each Equipment attached to him." (a legend's own pronoun, CR 201.5's
+#: name already rewritten to "this permanent") - a count of a subtype
+#: attached to the source itself (`CountAttachedWithSubtype`), sublayer 7c
+#: (CR 613.4c).
+_SELF_PUMP_PER_ATTACHED_RE = re.compile(
+    r"^this (?:creature|token|permanent) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each "
+    r"(?P<qualifier>[a-z]+) attached to (?:it|him|her|them)\.?$",
     re.IGNORECASE,
 )
 
@@ -4346,6 +4429,30 @@ _INDEFINITE_KEYWORD_AND_PROTECTION_GRANT_RE = re.compile(
     r"(?:have|has) (?:(?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*)"
     r"(?:,)?\s+and\s+)?protection from (?P<qualities>[a-z]+(?: [a-z]+)?(?:\s+and from\s+"
     r"[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+#: "Attacking creature tokens you control have first strike." (Okoye, Dora
+#: Milaje Leader); "Attacking tokens you control have flying." (Starry-Eyed
+#: Skyrider) - a layer 6 keyword grant (CR 613.1f) to a group picked out by
+#: token status (CR 111.1) and attacking status (CR 508.1k).
+_ATTACKING_TOKENS_KEYWORD_GRANT_RE = re.compile(
+    r"^attacking (?P<creature>creature )?tokens you control have "
+    r"(?P<keywords>[a-z][a-z ,{}0-9]*?)\.?$",
+    re.IGNORECASE,
+)
+
+#: "As long as there are two or more creature cards in your graveyard,
+#: Killmonger gets +2/+1." (Killmonger, Scourge of Wakanda); Threshold's
+#: leading form, "As long as there are seven or more cards in your graveyard,
+#: this creature gets +3/+0." (Mind Drill Assailant, the ability word already
+#: stripped) - `_GRAVEYARD_CARD_COUNT_GATED_SELF_STATIC_RE`'s condition
+#: printed first, optionally narrowed to one card type (CR 205.2a).
+_LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE = re.compile(
+    r"^as long as there (?:is|are) (?P<count>[a-z]+|\d+) or more "
+    r"(?:(?P<qualifier>[a-z]+) )?cards? in your graveyard, "
+    r"this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?P<rest>(?:,? and has [^.]+)?)\.?$",
     re.IGNORECASE,
 )
 
@@ -7378,6 +7485,37 @@ _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+)(?P<in_addition> in addition to its other types)?\.?$"
 )
 
+#: "Enchanted creature gets +2/+2, has first strike and vigilance, and is a
+#: legendary Soldier in addition to its other types." (Super-Soldier Serum);
+#: "Equipped creature gets +1/+0, has flying, and is a Bird in addition to its
+#: other types." (Raven Wings); "Enchanted creature gets +3/+3, has reach, and
+#: is a Giant in addition to its other types." (Tall as a Beanstalk);
+#: "Equipped creature gets +3/+2 and is a Warrior in addition to its other
+#: types." (Warrior's Sword, no keyword at all). `_ATTACHED_CREATURE_STATIC_
+#: RE`'s pump and keyword grant with a type grant closing the list: sublayer
+#: 7c (CR 613.4c), layer 6 (CR 613.1f) and layer 4 (CR 613.1d) - CR 205.1b's
+#: "in addition to its other types" keeps everything printed. The subtype
+#: words are capitalised, the way Oracle prints a subtype; an optional
+#: "legendary" is CR 205.4a's supertype added alongside.
+_ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE = re.compile(
+    r"^(?P<attachment>[Ee]quipped|[Ee]nchanted) creature gets (?P<power>[+-]\d+)/"
+    r"(?P<toughness>[+-]\d+)"
+    r"(?:, has (?P<keywords>[a-z][a-z {}0-9]*?(?:,? and [a-z][a-z {}0-9]*?)?),)?"
+    r" and is an? (?P<legendary>legendary )?(?P<subtypes>[A-Z][a-z]+(?: [A-Z][a-z]+)*) "
+    r"in addition to its other types\.?$"
+)
+
+#: "Equipped creature can't be blocked as long as its power is 3 or less."
+#: (Thieves' Tools) and the unconditional "Equipped creature can't be
+#: blocked." (Prowler's Helm) - CR 509.1a's restriction granted in layer 6
+#: (CR 613.1f) to whatever the Equipment or Aura is attached to, as the
+#: self-referential sentence `machines/combat.py`'s evasion reader enforces.
+_ATTACHED_CREATURE_CANT_BE_BLOCKED_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature can'?t be blocked"
+    r"(?P<condition> as long as its power is \d+ or less)?\.?$",
+    re.IGNORECASE,
+)
+
 #: "Enchanted permanent is a Construct creature with base power and
 #: toughness 5/5 in addition to its other types." (Puppet Crafting);
 #: "Enchanted artifact is a creature with base power and toughness 5/5 in
@@ -9057,6 +9195,68 @@ def _attached_permanent_becomes_creature_builder(
     return builder
 
 
+def _attached_creature_pump_keywords_and_type_builder(
+    power: int,
+    toughness: int,
+    keywords: list[str],
+    subtypes: tuple[str, ...],
+    *,
+    legendary: bool,
+    subject: str,
+    line: str,
+) -> EffectBuilder:
+    """`_ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE`'s shape: the pump and
+    keywords `_attached_creature_static_builder` already builds, plus layer
+    4's type grant (CR 613.1d) - each subtype, and CR 205.4a's legendary
+    supertype when printed (CR 205.4b: "When an object gains or loses a
+    supertype, it retains any other supertypes it had"). One ability in three
+    layers (CR 613.6); the subject is the source's `attached_to` link, as for
+    every "equipped/enchanted creature" static."""
+    pump_and_keywords = _attached_creature_static_builder(
+        power, toughness, keywords, subject=subject, line=line
+    )
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        effects = list(pump_and_keywords(source, timestamp, targets, context))
+        ability = _source_line_for(source, line)
+        selector = _only(attached)
+        if legendary:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {subject} creature is legendary",
+                    layer=Layer.TYPE,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=ability,
+                    selector=selector,
+                    modification=AddSupertype(supertype=Supertype.LEGENDARY),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: {subject} creature is {with_indefinite_article(word)}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=_add_types_and_subtype((), word),
+            )
+            for word in subtypes
+        )
+        return effects
+
+    return builder
+
+
 def _add_types_and_subtype(types: Sequence[Type], subtype: str) -> Modification:
     """Layer 4 (CR 613.1d): gain each card type and the creature type named,
     keeping everything already there (CR 205.1b).
@@ -9208,6 +9408,79 @@ def _count_cards_of_type(card_type: Type | None) -> Callable[[Iterable[CardState
         return sum(1 for state in cards if card_type in state.types)
 
     return count
+
+
+def _leading_graveyard_count_gated_builder(
+    match: re.Match[str], *, line: str
+) -> EffectBuilder | None:
+    """`_LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE`'s shape, built by the
+    same `_graveyard_count_gated_self_static_builder` threshold and delirium
+    use - the count is taken over the controller's own graveyard (CR 404.1)
+    at each computation (CR 611.3a), of every card or only of the named card
+    type (CR 205.2b: a card of several types counts once)."""
+    threshold = parse_count(match.group("count"), article=False)
+    if not threshold:
+        return None
+    granted = _split_gated_grants(match.group("rest") or "")
+    if granted is None:
+        return None
+    qualifier = match.group("qualifier")
+    count_fn: Callable[[Iterable[CardState]], int] = len_of
+    if qualifier is not None:
+        card_type = _card_type_word(qualifier)
+        if card_type is None:
+            return None
+
+        def count_fn(cards: Iterable[CardState]) -> int:
+            return sum(1 for card in cards if card_type in card.types)
+
+    return _graveyard_count_gated_self_static_builder(
+        threshold,
+        int(match.group("power")),
+        int(match.group("toughness")),
+        granted,
+        line=line,
+        count_fn=count_fn,
+    )
+
+
+def len_of(cards: Iterable[CardState]) -> int:
+    """How many cards - every card counts, with no type filter."""
+    return sum(1 for _ in cards)
+
+
+def _attacking_tokens_keyword_grant_builder(
+    keywords: list[str], *, creatures_only: bool, line: str
+) -> EffectBuilder:
+    """`_ATTACKING_TOKENS_KEYWORD_GRANT_RE`'s shape: each keyword granted in
+    layer 6 (CR 613.1f) to the source controller's attacking tokens, read off
+    `LayerContext.attacking` at each computation (CR 613.5)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = AttackingTokensControlledBy(
+            username=source.controller,
+            attacking_ids=tuple(sorted(context.attacking, key=str)),
+            creatures_only=creatures_only,
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: attacking tokens you control have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
 
 
 def _graveyard_count_gated_self_static_builder(
@@ -10442,6 +10715,18 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     +4/+4 until end of turn."
     """
     sentence = _strip_ability_word(_normalize_duration_first(sentence))
+    if (match := _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE.fullmatch(sentence)) and (
+        leading_gated := _leading_graveyard_count_gated_builder(match, line=sentence)
+    ) is not None:
+        # A qualifier this does not read ("permanent cards", descend's own
+        # count) falls through to the readers below.
+        return leading_gated
+    if (match := _ATTACKING_TOKENS_KEYWORD_GRANT_RE.fullmatch(sentence)) and (
+        attacking_keywords := _split_and_validate_keywords(match.group("keywords"))
+    ) is not None:
+        return _attacking_tokens_keyword_grant_builder(
+            attacking_keywords, creatures_only=match.group("creature") is not None, line=sentence
+        )
     if (gated := split_as_long_as(sentence)) is not None:
         return _parse_designation_gated_sentence(sentence, *gated)
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
@@ -10521,14 +10806,26 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE.fullmatch(sentence):
         # A card type (the Urza's Saga Construct's "artifact") or a subtype
         # (Outcaster Greenblade's "Desert").
-        count = _controlled_count_factory(match.group("qualifier"))
+        count = _controlled_count_factory(
+            match.group("qualifier"), excludes_self=match.group("other") is not None
+        )
         if count is None:
             return None
         return _self_pump_per_controlled_permanent_builder(
             int(match.group("power")),
             int(match.group("toughness")),
-            match.group("qualifier").lower(),
+            f"{match.group('other') or ''}{match.group('qualifier').lower()}",
             count,
+        )
+    if match := _SELF_PUMP_PER_ATTACHED_RE.fullmatch(sentence):
+        attached_subtype = _singular_subtype_word(match.group("qualifier"))
+        if attached_subtype is None:
+            return None
+        return _self_pump_per_controlled_permanent_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            f"{match.group('qualifier')} attached",
+            lambda username: CountAttachedWithSubtype(subtype=attached_subtype),
         )
     if match := _SELF_PUMP_PER_COLOR_AMONG_RE.fullmatch(sentence):
         count_colors = _colors_among_count_factory(
@@ -11244,6 +11541,30 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             color=_COLOR_WORDS[color.lower()] if color else None,
             in_addition=match.group("in_addition") is not None,
+        )
+    if match := _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE.fullmatch(sentence):
+        pump_keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated_keywords = _split_and_validate_keywords(match.group("keywords"))
+            if validated_keywords is None:
+                return None
+            pump_keywords = validated_keywords
+        return _attached_creature_pump_keywords_and_type_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            pump_keywords,
+            tuple(match.group("subtypes").split()),
+            legendary=match.group("legendary") is not None,
+            subject=match.group("attachment").lower(),
+            line=sentence,
+        )
+    if match := _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE.fullmatch(sentence):
+        return _attached_creature_static_builder(
+            0,
+            0,
+            [f"This creature can't be blocked{match.group('condition') or ''}."],
+            subject=match.group("attachment").lower(),
+            line=sentence,
         )
     if match := _ATTACHED_PERMANENT_BECOMES_CREATURE_RE.fullmatch(sentence):
         return _attached_permanent_becomes_creature_builder(
@@ -12069,6 +12390,12 @@ class LayerContext(EngineModel):
     #: asks of its own controller, a designation that no more stands on the
     #: battlefield than a life total does.
     enduring_story_players: frozenset[str] = frozenset()
+
+    #: The creatures attacking right now (CR 508.1k), by id - `Game.combat`'s
+    #: attackers. Attacking status does not stand on the battlefield as a
+    #: characteristic, so "attacking tokens you control have first strike"
+    #: (`AttackingTokensControlledBy`) reads it from here.
+    attacking: frozenset[UUID] = frozenset()
 
     def designation_holds(self, condition: str, player: str | None) -> bool:
         """Whether `player` has the designation `condition` names

@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["permanents_left_battlefield_this_turn"],
+    "fields_changed": ["permanents_left_battlefield_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Fable of the Mirror-Breaker@alice#1": {

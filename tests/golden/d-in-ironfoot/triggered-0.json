@@ -62,7 +62,7 @@
         "source": "Dáin Ironfoot"
       }
     ],
-    "fields_changed": ["continuous_effects", "delayed_triggers"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {},

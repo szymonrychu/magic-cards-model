@@ -1529,6 +1529,10 @@ def _cast_spell_targets_condition_holds(
     from .abilities import self_reference_names
     from .targeting import _read_phrase
 
+    # Storm, Windrider's "a spell that targets one or more creatures": any
+    # one of the spell's targets fitting is enough, the same test as "a
+    # creature".
+    target_text = re.sub(r"^one or more\s+", "", target_text.strip(), flags=re.IGNORECASE)
     stripped = _strip_leading_article(target_text).strip()
     if stripped in self_reference_names(source.name, legendary=_is_legendary_source(source)):
         if event.subject_id is None:
@@ -5172,7 +5176,80 @@ def intervening_if_holds(
     if entered_or_cast_from_graveyard is not None:
         return entered_or_cast_from_graveyard
 
+    equipped = _source_equipped_holds(game, clause, source)
+    if equipped is not None:
+        return equipped
+
+    typed_turn_fact = _typed_turn_fact_holds(game, clause, source)
+    if typed_turn_fact is not None:
+        return typed_turn_fact
+
     return _fail_closed(game, ability, source)
+
+
+#: "he's equipped" (Whiplash, Vengeful Engineer), "this creature is equipped"
+#: (Avacynian Missionaries) - CR 301.5a: a creature is equipped while an
+#: Equipment is attached to it. A legend's own pronoun is the source itself.
+_SOURCE_EQUIPPED_CLAUSE = re.compile(
+    r"^(?:it's|it is|he's|he is|she's|she is|this (?:creature|permanent) is) equipped$"
+)
+
+
+def _source_equipped_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_SOURCE_EQUIPPED_CLAUSE`: whether an Equipment (its subtype read off
+    the computed board, CR 613.5) is attached to the source right now."""
+    if _SOURCE_EQUIPPED_CLAUSE.fullmatch(clause) is None:
+        return None
+    if source.zone is not Zone.BATTLEFIELD:
+        return False
+    return any(
+        permanent.attached_to == source.id
+        and "Equipment" in game.characteristics_of(permanent).subtypes
+        for permanent in game.battlefield
+    )
+
+
+#: "an artifact entered the battlefield under your control this turn" (Iron
+#: Man, Master of Machines), "a Hero entered the battlefield under your
+#: control this turn" and "you attacked with a Hero this turn" (Avengers
+#: Assemble!, the two joined by "or") - facts of the turn `Game` records as
+#: they happen (`models.game.entered_type_facts`/`attacked_with_type_facts`),
+#: so a permanent that entered or attacked and has since left still counts.
+_ENTERED_UNDER_YOUR_CONTROL_THIS_TURN = re.compile(
+    r"^(?:an?|another) (?P<quality>[a-z]+) entered the battlefield under your control this turn$"
+)
+_ATTACKED_WITH_THIS_TURN = re.compile(r"^you attacked with an? (?P<quality>[a-z]+) this turn$")
+
+
+def _typed_turn_fact_key(prefix: str, quality: str) -> str | None:
+    """The `turn_facts` key a card type or subtype word stands for."""
+    if quality in {member.value for member in Type}:
+        return f"{prefix}_type:{quality}"
+    from ..data.subtypes import canonical_subtype
+
+    subtype = canonical_subtype(quality)
+    return None if subtype is None else f"{prefix}_subtype:{subtype}"
+
+
+def _typed_turn_fact_holds(game: "Game", clause: str, source: CardState) -> bool | None:
+    """`_ENTERED_UNDER_YOUR_CONTROL_THIS_TURN`/`_ATTACKED_WITH_THIS_TURN`, or
+    an "or"-joined pair of them (either being true is enough); `None` unless
+    every part is one of the two shapes."""
+    keys: list[str] = []
+    for part in clause.split(" or "):
+        entered = _ENTERED_UNDER_YOUR_CONTROL_THIS_TURN.fullmatch(part.strip())
+        attacked = _ATTACKED_WITH_THIS_TURN.fullmatch(part.strip())
+        if entered is not None:
+            key = _typed_turn_fact_key("entered", entered.group("quality"))
+        elif attacked is not None:
+            key = _typed_turn_fact_key("attacked_with", attacked.group("quality"))
+        else:
+            return None
+        if key is None:
+            return None
+        keys.append(key)
+    controller = controller_of_source(game, source)
+    return any(game.turn_fact_holds(key, controller) for key in keys)
 
 
 #: One alternative of Prized Amalgam's and Archfiend's Vessel's clause: "it

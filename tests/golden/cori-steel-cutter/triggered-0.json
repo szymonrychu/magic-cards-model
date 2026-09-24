@@ -62,7 +62,7 @@
         "source": "Cori-Steel Cutter"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "turn_facts"],
     "notices": {},
     "objects": {
       "Cori-Steel Cutter@alice#1": {

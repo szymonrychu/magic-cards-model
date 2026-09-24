@@ -1219,6 +1219,25 @@ _CONDITION_LAND_ENTERED_THIS_TURN = re.compile(
     re.IGNORECASE,
 )
 
+
+def entered_type_facts(types: object, subtypes: object) -> list[str]:
+    """The `turn_facts` keys an entering permanent records for its controller:
+    one per card type (CR 205.2a) and one per subtype (CR 205.3), lowercased
+    - "entered_type:artifact", "entered_subtype:hero"."""
+    return [f"entered_type:{str(kind).lower()}" for kind in (types or ())] + [
+        f"entered_subtype:{str(word).lower()}" for word in (subtypes or ())
+    ]
+
+
+def attacked_with_type_facts(types: object, subtypes: object) -> list[str]:
+    """The `turn_facts` keys a declared attacker records for the attacking
+    player (CR 508.1) - "attacked_with_type:creature",
+    "attacked_with_subtype:hero"."""
+    return [f"attacked_with_type:{str(kind).lower()}" for kind in (types or ())] + [
+        f"attacked_with_subtype:{str(word).lower()}" for word in (subtypes or ())
+    ]
+
+
 #: Every shape `condition_holds` reads, in the same order it tries them -
 #: kept as one tuple, rather than re-deriving it, so `condition_is_readable`
 #: below and `condition_holds` itself can never drift apart on which
@@ -3639,7 +3658,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 78
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 79
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3679,6 +3698,9 @@ class Game(EngineModel):
     #: (Cloak and Dagger, Entwined's own CR 610.2 exile-until-departure can
     #: take a card from a hand, not only a permanent from the battlefield,
     #: so its CR 610.3 return needs to remember which) (C02-T7).
+    #: 79: `machines/layers.CountPermanentsControlledBy` and
+    #: `CountPermanentsWithSubtypeControlledBy` gained `excludes_self` ("for
+    #: each other artifact you control", C02-T8).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -4719,6 +4741,13 @@ class Game(EngineModel):
     Damage reaches `deal_damage` as a target and a number, with nothing to say
     where it came from, so this is how a prevention effect limited to *combat*
     damage tells the two apart."""
+
+    _combat_damage_this_step: dict[UUID, int] | None = None
+    """Damage marked on each permanent during the combat damage step now being
+    dealt (CR 510.2: one simultaneous event) - what "all other damage already
+    dealt to him" (Wolverine, Fierce Fighter) must not count as already
+    dealt. A fresh ledger as each combat damage step begins, `None` outside
+    one."""
 
     automatic_turn_based_actions: bool = True
     """Whether `advance` performs the step's turn-based actions itself (CR 703.3).
@@ -10614,6 +10643,14 @@ class Game(EngineModel):
                 # under your control this turn" (Searing Blaze) - a fact of
                 # the turn, still true once the land has left again.
                 self.record_turn_fact("land_entered", card_state.controller)
+            if card_state.controller:
+                # "if an artifact entered the battlefield under your control
+                # this turn" (Iron Man, Master of Machines), "a Hero entered
+                # the battlefield under your control this turn" (Avengers
+                # Assemble!) - the entering object's own types, a fact of the
+                # turn that stays true once it has left again.
+                for fact in entered_type_facts(event.subject_types, event.subject_subtypes):
+                    self.record_turn_fact(fact, card_state.controller)
             origin = self._entry_origins.pop(card_state.id, None)
             if origin is not None:
                 event = event.model_copy(update={"origin_zone": origin})
@@ -15285,6 +15322,9 @@ class Game(EngineModel):
                     self.deal_damage_to_player(target, event.amount)
             else:
                 self._apply_damage_to_permanent(target, event.amount, as_counters=infect or wither)
+                ledger = self._combat_damage_this_step
+                if event.combat and ledger is not None and not (infect or wither):
+                    ledger[target.id] = ledger.get(target.id, 0) + event.amount
                 if source is not None and source.id in self._damage_recorders:
                     self._damage_recorders[source.id].append(target.id)
             # CR 613.5: the source's characteristics for this event are the
@@ -16970,6 +17010,9 @@ class Game(EngineModel):
                 for permanent in self.battlefield
                 if permanent.mana_cost
             },
+            # CR 508.1k: "Attacking tokens you control have flying" reads who
+            # is attacking, which is combat state, not a characteristic.
+            attacking=frozenset(self.combat.attacker_ids),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -17912,6 +17955,11 @@ class Game(EngineModel):
                 # over. Cleared at the same new-turn reset as the rest of
                 # `Game`'s "this turn" fields.
                 self.attacked_this_turn.add(creature.id)
+                # "you attacked with a Hero this turn" (Avengers Assemble!) -
+                # the attacker's types as declared (CR 508.1).
+                chars = self.characteristics_of(creature)
+                for fact in attacked_with_type_facts(chars.types, chars.subtypes):
+                    self.record_turn_fact(fact, self.active_player.username)
             if attacks:
                 # CR 508.1: declaring attackers is how a player attacks -
                 # "you attacked this turn" (Kaito Shizuki) asks this.
@@ -18053,10 +18101,18 @@ class Game(EngineModel):
         needs to know.
         """
         self._dealing_combat_damage = True
+        self._combat_damage_this_step = {}
         try:
             return combat_rules.combat_damage_step(self)
         finally:
             self._dealing_combat_damage = False
+            self._combat_damage_this_step = None
+
+    def combat_damage_marked_this_step(self, permanent: CardState) -> int:
+        """Damage marked on `permanent` so far in the combat damage step being
+        dealt right now (CR 510.2) - 0 outside one."""
+        ledger = self._combat_damage_this_step
+        return 0 if ledger is None else ledger.get(permanent.id, 0)
 
     def combat_damage(self) -> list[tuple[Targetable, int]]:
         """Run every combat damage step this combat needs (CR 510.1, 510.4).

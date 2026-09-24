@@ -2674,7 +2674,11 @@ def _parse_chapter_line(text: str, common: dict) -> list[TriggeredAbility] | Non
 #: condition; CR 702.186b's own "as long as this permanent is harnessed, it
 #: has [Ability]" gate is enforced elsewhere (`Game.characteristics_of`),
 #: not by this classification.
-_ABILITY_WORD = re.compile(r"^(∞|[A-Z][A-Za-z'\- ]{2,30}?(?: \d+)?[!?]?)\s+—\s+(?=\S)")
+#:
+#: A flavor word may end in its own punctuation - The Unbeatable Squirrel
+#: Girl's "Do You Like Squirrels? —" and "I LOVE Squirrels! —" (CR 207.2d:
+#: flavor words have no rules meaning either) - so "?" and "!" are allowed.
+_ABILITY_WORD = re.compile(r"^(∞|[A-Z][A-Za-z'\-?! ]{2,30}?(?: \d+)?[!?]?)\s+—\s+(?=\S)")
 
 #: CR 603.1's three words, at the start of the line.
 _TRIGGER = re.compile(r"^(When|Whenever|At)\b\s*", re.IGNORECASE)
