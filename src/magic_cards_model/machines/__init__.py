@@ -88,7 +88,7 @@ from .layers import (
     compute_board,
     printed_characteristics,
 )
-from .legal_actions import decision_answers, legal_actions
+from .legal_actions import blocked_casts, decision_answers, legal_actions
 from .modes import ModalProfile, Mode, is_modal, modal_profile, mode_rules_text
 from .priority import PriorityMachine, PriorityOutcome
 from .replacement import (
@@ -192,6 +192,7 @@ __all__ = [
     "apply_modifications",
     "compute_board",
     "could_pay_mana_cost",
+    "blocked_casts",
     "decision_answers",
     "discard_cost",
     "effect_for",

@@ -5112,3 +5112,29 @@ classifier fix without needing to be added).
 | "Spend this mana only to cast a `<X>` spell or an `<Y>` spell" - the second phrase borrows the elided "cast" | `cost._spend_clauses` (`_SPEND_VERB`) | Maelstrom of the Spirit Dragon | - | `test_mana_spend_restrictions.py` |
 | a creature's own "can't be blocked [by ...]" / "can't block [...]" and "Equip abilities you activate that target this creature cost {N} less" credited as handled through their enforcing readers | `combat.reads_self_combat_restriction_line`, `keywords.is_equip_discount_for_this_line` | Duskwatch Hunter, Old Fat Spider, Gollum the Abandoned, Bilbo, Luckwearer, Dwarven Mauler | Questing Beast, The Mindskinner, Bloodghast, Zurgo Bellstriker, Changeling Outcast, Fervent Champion | `test_combat_restriction_credit.py` |
 | "if mana from a Treasure was spent to cast it" (CR 601.2h, CR 106.3's source of mana) - `ManaPool.treasure` / `ManaPayment.treasure_spent` / `CastRecord.treasure_mana_spent`; schema 73 | `triggers._TREASURE_MANA_SPENT_CLAUSE` in `intervening_if_holds`, `cost.is_treasure_source` | Smaug, Wicked Worm | Hired Hexblade | `test_treasure_mana_spent.py` |
+
+## FB3: `blocked_casts` - refused casts reported, not silently dropped
+
+`machines/legal_actions.py`'s own `_cast_actions` computed
+`_why_cannot_cast_face` (CR 117.1a's timing, `casting.why_cannot_cast_now`,
+plus CR 611.1's rules-modifying prohibitions, `casting.why_cannot_cast_
+restriction`) per face and `continue`d past a refusal without keeping it -
+`legal_actions` never grows a row for an illegal cast (CR 601.3), correctly,
+but a seat reading it alone had no way to tell "nothing to cast" apart from
+"Ocelot Pride sat in hand the whole game, uncastable only because the stack
+was never empty". `blocked_casts(game, player, pending=None)` is the
+companion enumeration: one `BlockedCast` (`models/action.py`) per face the
+per-face check refused, carrying the engine's own reason verbatim and the CR
+number it leads with, read off the refusal string rather than re-derived.
+Timing/prohibition only - a card with no permission to be cast from its zone
+at all (`why_cannot_cast_from`) and a land (CR 305.1: never a spell) are
+left out entirely, the same as `legal_actions`. `_cast_actions`/
+`_permission_cast_actions` now take an optional `blocked` output list so the
+one walk that decides a face is refused is the one walk that reports it;
+`legal_actions` itself is unchanged, and the dispatch fingerprint and
+goldens do not move - no `EFFECTS`/`TRIGGER_EFFECTS`/`ACTIVATED_EFFECTS` row
+was added.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| CR 117.1a timing and CR 611.1 prohibition refusals on a `CAST` face, enumerated with the engine's own reason instead of dropped | `machines.legal_actions.blocked_casts`, `models.action.BlockedCast` | Ocelot Pride | Act of Treason (sorcery timing), Ambush Viper (a flash creature never blocked), Repudiate // Replicate (CR 709.3a: only the sorcery half of a split card blocks), Voice of Victory (a CR 611.1 prohibition, not a timing question) | `scenarios/test_blocked_casts.py` |

@@ -498,3 +498,49 @@ class Action(EngineModel):
     a planeswalker or battle, being attacked."""
     attacker_id: UUID | None = None
     """`DECLARE_BLOCKER` only: which attack this assigns a blocker to."""
+
+
+class BlockedCast(EngineModel):
+    """One `CAST` face CR 601.3 refuses right now on timing (CR 117.1a,
+    `machines.casting.why_cannot_cast_now`) or a CR 611.1 rules-modifying
+    prohibition (`machines.casting.why_cannot_cast_restriction`) - the same
+    per-face refusal `machines.legal_actions._cast_actions` already computes
+    and used to silently `continue` past, reported here instead.
+
+    `legal_actions` (`machines.legal_actions.legal_actions`) itself never
+    grows a row for one of these: CR 601.3 makes a refused cast an illegal
+    one, and `legal_actions`'s own promise is "what was legal" (see its
+    module docstring). `blocked_casts` (`machines.legal_actions.
+    blocked_casts`) is the companion enumeration - walking the same hand and
+    permission-granted zones `legal_actions` itself walks building `CAST`
+    rows - so a seat can tell "there was nothing to cast" apart from "Ocelot
+    Pride sat in hand the whole game, uncastable only because the stack was
+    never empty".
+
+    **Timing/prohibition only, on purpose.** A card that fails
+    `why_cannot_cast_from` (no permission to cast from where it sits at all -
+    CR 601.3's "a rule or effect allows... to cast it" half) is left out
+    entirely, never reported here: `legal_actions` enumerates no `Action` for
+    it either, this reports only the *other* half of CR 601.3 ("no rule or
+    effect prohibits"), and a land (CR 305.1: never a spell) is never a
+    candidate to begin with."""
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    name: str
+    zone: Zone
+    spell_face: str | None = None
+    """Which face was refused (CR 709.3a/715.3a's chosen half) - `None` for
+    a card whose only cast option is its plain front-face cast, the same
+    value `Action.spell_face` would carry for that face."""
+    reason: str
+    """The engine's own refusal, verbatim - whatever `why_cannot_cast_now` or
+    `why_cannot_cast_restriction` returned, never re-worded or summarized."""
+    rule: str
+    """The CR number `reason` itself cites first (`"117.1a"`, `"611.1"`),
+    read off the refusal string rather than re-derived from which check
+    produced it - a reason that cites more than one rule (Teferi, Time
+    Raveler's own combined sorcery-speed refusal names CR 117.1a before CR
+    611.1) reports the one it leads with, matching what a reader of `reason`
+    would call the rule for this refusal."""
