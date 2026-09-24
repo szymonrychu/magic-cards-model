@@ -52550,7 +52550,7 @@ def _return_rider_modifications(rider: str) -> "list[tuple[str, Layer, Modificat
     read (the whole ability then fails closed)."""
     from .layers import _creature_type_words, _split_and_validate_keywords
 
-    parts: "list[tuple[str, Layer, Modification]]" = []
+    parts: list[tuple[str, Layer, Modification]] = []
     for predicate in re.split(r"\s+and\s+(?=loses|gains|is\b)", rider.strip()):
         match = _RETURN_RIDER_PREDICATE_RE.fullmatch(predicate.strip())
         if match is None:
