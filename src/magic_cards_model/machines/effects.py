@@ -166,6 +166,7 @@ from .delayed import (
 )
 from .layers import (
     BASIC_LAND_TYPES,
+    CLOSED_SUBTYPE_LISTS,
     KNOWN_KEYWORDS,
     Characteristics,
     ContinuousEffect,
@@ -175,6 +176,7 @@ from .layers import (
     Layer,
     LayerContext,
     LayerNotice,
+    SetTypesAndSubtypes,
     Sublayer,
     _only,
     _split_and_validate_keywords,
@@ -10574,7 +10576,8 @@ _COUNTER_EACH_GROUP_RE = re.compile(
     rf"(?P<other>other )?"
     r"(?:(?P<tap_state>tapped|untapped) )?"
     r"(?:(?P<color>white|blue|black|red|green|colorless|monocolored|multicolored) )?"
-    rf"(?P<group>[a-z]+) you control{where_x_pattern('expr')}\.?$",
+    rf"(?P<group>[a-z]+) (?P<whose>you control|your opponents control|an opponent controls)"
+    rf"{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
 
@@ -10720,6 +10723,10 @@ def _parse_put_counters_on_group_clause(
     excludes_source = match.group("other") is not None
     tap_state = (match.group("tap_state") or "").lower()
     color_word = (match.group("color") or "").lower()
+    # Archfiend of Ifnir's "each creature your opponents control": the
+    # opponents of the resolving object's controller (CR 102.3: every
+    # player not on that player's team), not that controller.
+    opponents = not match.group("whose").lower().startswith("you ")
 
     def color_matches(colors: tuple[Color, ...]) -> bool:
         if not color_word:
@@ -10746,7 +10753,7 @@ def _parse_put_counters_on_group_clause(
             if excluded is not None and permanent.id == excluded:
                 continue
             chars = board.of(permanent)
-            if chars.controller != controller:
+            if (chars.controller == controller) is opponents:
                 continue
             if tap_state == "tapped" and not permanent.tapped:
                 continue
@@ -18731,18 +18738,106 @@ _LOOK_TOP_CARD_CONDITIONAL_RE = re.compile(
 )
 
 
+#: Matter Reshaper's "reveal the top card of your library. You may put that
+#: card onto the battlefield if it's a permanent card with mana value 3 or
+#: less. Otherwise, put that card into your hand." - the same instruction as
+#: `_LOOK_TOP_CARD_CONDITIONAL_RE` with the condition trailing the "you may"
+#: instead of leading it, and an optional CR 202.3 mana value bound on the
+#: kind. "Otherwise" here covers a declined "you may" as well as a card
+#: failing the condition (the printing's own ruling: "If you don't put the
+#: card onto the battlefield for any reason, you put the card into your
+#: hand."), so it reads as `decline_runs_else`.
+_LOOK_TOP_CARD_MAY_PUT_IF_RE = re.compile(
+    r"^(?P<verb>look at|reveal) the top card of your library\. "
+    r"(?P<may>you may )put (?:it|that card) "
+    r"(?P<dest>onto the battlefield tapped|onto the battlefield) "
+    rf"if it's an? (?P<kind>{_LOOK_TOP_CARD_KIND}(?: or {_LOOK_TOP_CARD_KIND})*) card"
+    r"(?: with mana value (?P<mv>\d+) or (?P<cmp>less|greater))?\. "
+    r"(?:otherwise|if you don't), put (?:it|that card|the card) "
+    r"(?P<other>into your hand|into your graveyard|on the bottom of your library)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _aura_host_for_entry(
+    game: "Game", aura: CardState, controller: str, source_name: str, source_id: str | None
+) -> "CardState | Player | None | bool":
+    """CR 303.4f: an Aura entering the battlefield other than by resolving as
+    an Aura spell enchants whatever its controller chooses as it enters,
+    among the objects or players its enchant ability allows (CR 702.5a,
+    `machines/keywords.why_cannot_enchant`). `True` for a card that is not an
+    Aura (nothing to choose), `None` when nothing legal exists - the Aura
+    then cannot enter at all - and otherwise the chosen host."""
+    from .keywords import why_cannot_enchant
+
+    if "Aura" not in aura.subtypes:
+        return True
+    cards = [
+        permanent
+        for permanent in game.battlefield
+        if permanent.id != aura.id and why_cannot_enchant(aura, permanent, controller, game) is None
+    ]
+    players = [
+        player
+        for player in game.players
+        if why_cannot_enchant(aura, player, controller, game) is None
+    ]
+    if cards:
+        if len(cards) == 1:
+            return cards[0]
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=f"choose what {aura.name} will enchant",
+                source=source_name,
+                amount=1,
+                cards=tuple(permanent.id for permanent in cards),
+                source_id=source_id,
+            )
+        )
+        assert isinstance(chosen, tuple)
+        return next(permanent for permanent in cards if permanent.id == chosen[0])
+    if players:
+        if len(players) == 1:
+            return players[0]
+        picked = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_PLAYERS,
+                player=controller,
+                prompt=f"choose which player {aura.name} will enchant",
+                source=source_name,
+                amount=1,
+                players=tuple(player.username for player in players),
+                source_id=source_id,
+            )
+        )
+        assert isinstance(picked, tuple)
+        return next(player for player in players if player.username == picked[0])
+    return None
+
+
 def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_CARD_CONDITIONAL_RE`'s shape - Fecund Greenshell's own
     enters trigger, and Coiling Oracle's, Risen Reef's, and Skyward Eye
-    Prophets's, all verified with `resolve_cards`.
+    Prophets's, all verified with `resolve_cards` - and
+    `_LOOK_TOP_CARD_MAY_PUT_IF_RE`'s (Matter Reshaper).
 
     An empty library means there is no top card to look at or reveal, so
     every branch is impossible and the whole instruction is ignored (CR
     609.3's "does only as much as possible", CR 101.3's ignored impossible
     part) - no `Game.look`/`Game.reveal` call either, since CR 701.20 has
     nothing to show.
+
+    An Aura bound for the battlefield enchants what its controller chooses
+    as it enters (CR 303.4f, `_aura_host_for_entry`); with nothing legal to
+    enchant it cannot be put there, and the instruction's other arm takes it.
     """
-    match = _LOOK_TOP_CARD_CONDITIONAL_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    stripped = _strip_non_effect_preamble(text).strip()
+    match = _LOOK_TOP_CARD_CONDITIONAL_RE.fullmatch(stripped)
+    trailing = match is None
+    if match is None:
+        match = _LOOK_TOP_CARD_MAY_PUT_IF_RE.fullmatch(stripped)
     if match is None:
         return None
     kinds = [
@@ -18751,19 +18846,28 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     ]
     if any(kind is None for kind in kinds):
         return None
+    bound = int(match.group("mv")) if trailing and match.group("mv") else None
+    at_most = trailing and (match.group("cmp") or "").lower() == "less"
 
     def predicate(state: CardState) -> bool:
-        return any(kind(state) for kind in kinds if kind is not None)
+        if not any(kind(state) for kind in kinds if kind is not None):
+            return False
+        if bound is None:
+            return True
+        # CR 202.3: the card's own mana value, read in the library.
+        return state.mana_value <= bound if at_most else state.mana_value >= bound
 
     reveals_to_all = match.group("verb").lower() == "reveal"
     optional = match.group("may") is not None
-    else_optional = match.group("else_may") is not None
-    decline_runs_else = match.group("decline_runs_else") is not None
+    else_optional = not trailing and match.group("else_may") is not None
+    decline_runs_else = trailing or match.group("decline_runs_else") is not None
     destination = match.group("dest").lower()
     otherwise = match.group("other").lower()
     noun = f"{match.group('kind').lower()} card"
 
-    def move(game: "Game", player: Player, state: CardState, where: str) -> None:
+    def move(
+        game: "Game", player: Player, state: CardState, where: str, ability: AbilityOnStack
+    ) -> bool:
         if where == "into your hand":
             player.move(state, Zone.HAND)
         elif where == "into your graveyard":
@@ -18771,7 +18875,15 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
         elif where == "on the bottom of your library":
             player.move(state, Zone.LIBRARY)
         else:
+            host = _aura_host_for_entry(
+                game, state, player.username, ability.source_name, source_id_of(ability)
+            )
+            if host is None:
+                return False
             game.put_onto_battlefield(state, player.username, tapped=where.endswith("tapped"))
+            if host is not True and state.zone is Zone.BATTLEFIELD:
+                state.attach_to(host)
+        return True
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         player = game.player(ability.controller)
@@ -18792,8 +18904,7 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
                     f"put {with_indefinite_article(noun)} {destination}",
                     source=ability.source_name,
                     source_id=source_id_of(ability),
-                ):
-                    move(game, player, top, destination)
+                ) and move(game, player, top, destination, ability):
                     return
                 # CR 118.12: only the anaphoric "If you don't put the card
                 # onto the battlefield" else-arm (Risen Reef) fires on a
@@ -18803,8 +18914,7 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
                 # keep it - on top of the library, untouched.
                 if not decline_runs_else:
                     return
-            else:
-                move(game, player, top, destination)
+            elif move(game, player, top, destination, ability):
                 return
         if else_optional and not game.may(
             player,
@@ -18813,7 +18923,7 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
             source_id=source_id_of(ability),
         ):
             return
-        move(game, player, top, otherwise)
+        move(game, player, top, otherwise, ability)
 
     return effect
 
@@ -20531,6 +20641,15 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     # `_CLAUSE_SEPARATOR` cuts into "return it to the battlefield tapped" /
     # "transformed under its owner's control" before either fragment reaches
     # a clause parser - Ojer Taq, Deepest Foundation's own death trigger.
+    return_self_as_type = _parse_return_self_as_type_clause(effect_text)
+    if return_self_as_type is not None:
+        return return_self_as_type
+    counter_targeting_unless = _parse_counter_targeting_object_unless_clause(effect_text)
+    if counter_targeting_unless is not None:
+        return counter_targeting_unless
+    if_you_do_self_gains = _parse_targeted_then_self_gains_clause(effect_text)
+    if if_you_do_self_gains is not None:
+        return if_you_do_self_gains
     return_self_transformed_whole = _parse_return_self_to_battlefield_transformed_clause(
         effect_text, for_spell=False
     )
@@ -43457,6 +43576,197 @@ _RETURN_SELF_TO_BATTLEFIELD_TRANSFORM_RE = re.compile(
     r"\.?$",
     re.IGNORECASE,
 )
+
+
+#: "return it to the battlefield under its owner's control. It's an
+#: enchantment. (It's not a creature.)" - the Enduring cycle's death trigger
+#: (Enduring Innocence, Enduring Curiosity): the source returns with its card
+#: types *set* to the named list. The reminder parenthesis is tolerated
+#: whether or not the oracle stripper already removed it.
+_CARD_TYPE_WORD = r"(?:artifact|battle|creature|enchantment|land|planeswalker)"
+_RETURN_SELF_AS_TYPE_RE = re.compile(
+    r"^return it to the battlefield(?P<tapped> tapped)?"
+    r" under (?P<control>its owner'?s|your) control\.\s*"
+    rf"it's an? (?P<types>{_CARD_TYPE_WORD}(?:(?:,| and|, and) {_CARD_TYPE_WORD})*)\."
+    r"(?:\s*\(it's not an? [a-z]+\.\))?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_self_as_type_clause(text: str) -> AbilityEffect | None:
+    """`_RETURN_SELF_AS_TYPE_RE`'s shape.
+
+    CR 205.1a: "Some effects set an object's card type. In most such cases,
+    the new card type(s) replaces any existing card types" - and a subtype
+    correlated only with a removed card type goes with it, so Enduring
+    Innocence comes back an enchantment with neither Sheep nor Glimmer. The
+    type is part of the return itself, so the layer 4 effect (CR 613.1d) is
+    in place before the enters event is announced: `Game.entering_together`
+    defers that announcement until the effect exists, and a "whenever a
+    creature enters" ability never sees a creature arrive.
+
+    The return only happens if the card is still in the graveyard it died
+    into (CR 400.7: exiled in response it is a new object), the same gate
+    `_parse_return_self_to_battlefield_transformed_clause` uses. The returned
+    permanent is a new object (CR 400.7), so the selector is keyed on the
+    incarnation it arrives as, and the effect lasts until it leaves (CR
+    611.2a: no duration stated).
+    """
+    match = _RETURN_SELF_AS_TYPE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    types = tuple(Type(word) for word in re.findall(_CARD_TYPE_WORD, match.group("types").lower()))
+    tapped = match.group("tapped") is not None
+    under_owner = match.group("control").lower().startswith("its")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.GRAVEYARD:
+            return
+        controller = (source.owner or ability.controller) if under_owner else ability.controller
+        with game.entering_together():
+            returned = game.put_onto_battlefield(source, controller, tapped=tapped)
+            if returned.zone is not Zone.BATTLEFIELD:
+                return
+            kept = tuple(
+                subtype
+                for subtype in returned.subtypes
+                if any(subtype in CLOSED_SUBTYPE_LISTS.get(kind, ()) for kind in types)
+            )
+            game.continuous_effects.add(
+                ContinuousEffect(
+                    description=f"{returned.name}: it's {with_indefinite_article(types[0].value)}",
+                    layer=Layer.TYPE,
+                    timestamp=game.continuous_effects.tick(),
+                    duration=Duration.INDEFINITE,
+                    selector=only_this_incarnation(returned, returned.zone_change_stamp),
+                    modification=SetTypesAndSubtypes(types=types, subtypes=kept),
+                )
+            )
+
+    return effect
+
+
+#: The printed, non-keyword twin of ward (CR 702.21a) on a becomes-target
+#: trigger: "counter that spell unless its controller discards a card"
+#: (Reality Smasher), "counter that spell or ability unless its controller
+#: pays {2}" (Frost Titan). "that spell [or ability]" is the object that did
+#: the targeting (`GameEvent.targeted_by`); the cost after the verb is any
+#: printed cost `machines/cost.total_cost_for_phrase` reads, the verb put
+#: back into its imperative form ("discards a card" -> "discard a card").
+_COUNTER_TARGETING_OBJECT_UNLESS_RE = re.compile(
+    r"^counter that (?:spell or ability|spell|ability) unless its controller "
+    r"(?P<verb>pays|discards|sacrifices|exiles|returns) (?P<rest>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_targeting_object_unless_clause(text: str) -> AbilityEffect | None:
+    """`_COUNTER_TARGETING_OBJECT_UNLESS_RE`'s shape.
+
+    CR 118.12a: ""[Do something] unless [a player does something else]"
+    means the same thing as "[A player may do something else]. If [that
+    player doesn't], [do something]."" - the targeting object's controller
+    is offered the cost through `Game.may_pay_unless_cost` (the same path
+    ward's own `_ward_effect` takes), and a cost they cannot pay (CR 118.3)
+    is simply not paid. Unpaid, the object is countered (CR 701.6a). A
+    targeting object already gone from the stack leaves nothing to counter
+    and nobody is asked.
+    """
+    from .cost import total_cost_for_phrase
+
+    match = _COUNTER_TARGETING_OBJECT_UNLESS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    verb = match.group("verb").lower()
+    rest = match.group("rest").strip()
+    if verb == "pays":
+        phrase = rest if rest.startswith("{") else f"pay {rest}"
+    else:
+        phrase = f"{verb[:-1]} {rest}"
+    if total_cost_for_phrase(phrase) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.targeted_by is None:
+            return
+        targeting = next(
+            (item for item in game.stack if getattr(item, "id", None) == event.targeted_by),
+            None,
+        )
+        if targeting is None:
+            return
+        payer = game.controller_of(targeting).username
+        cost = total_cost_for_phrase(phrase, payer)
+        if cost is not None and game.may_pay_unless_cost(
+            payer,
+            cost.assign_payer(payer),
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        game.counter(targeting)
+
+    return effect
+
+
+#: "`<targeted instruction>`. If you do, this `<noun>` gains "`<ability>`"." -
+#: Thief of Existence's cast trigger, once `trigger_effect_for` has
+#: normalized the printed name to "this permanent": the first sentence is
+#: any targeted instruction `parse_mixed_effect` reads, and CR 118.12's "If
+#: you do" is whether it actually moved one of its targets.
+_TARGETED_THEN_SELF_GAINS_RE = re.compile(
+    r'^(?P<first>[^"]+?\.)\s*if you do, this [a-z]+ gains "(?P<ability>[^"]+)"\.?$',
+    re.IGNORECASE,
+)
+
+
+def _parse_targeted_then_self_gains_clause(text: str) -> AbilityEffect | None:
+    """`_TARGETED_THEN_SELF_GAINS_RE`'s shape.
+
+    CR 113.10: the grant is an added ability, stored verbatim on
+    `CardState.granted_ability_texts` the way `_parse_gains_ability_clause`
+    stores "This Saga gains ..."; CR 400.7a carries it from a permanent
+    spell on the stack to the permanent that spell becomes, so a cast
+    trigger's grant to its own spell is had by the creature. The source must
+    still be the same object that triggered (CR 400.7) - on the stack or the
+    battlefield, with the stamp the ability recorded - so a spell countered
+    in response gains nothing.
+
+    "If you do" (CR 118.12) holds only when the first instruction moved at
+    least one of its targets (its `zone_change_stamp` changed) - "up to one"
+    with no target chosen, or a target that resisted the move, grants
+    nothing. A wholly illegal target never reaches this effect at all (CR
+    608.2b).
+    """
+    match = _TARGETED_THEN_SELF_GAINS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    first = parse_mixed_effect(match.group("first").strip())
+    if first is None:
+        return None
+    granted_text = match.group("ability").strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        stamps = {target.id: target.zone_change_stamp for target in targets}
+        first(game, ability)
+        if not any(target.zone_change_stamp != stamps[target.id] for target in targets):
+            return
+        source = ability.source(game)
+        if (
+            source is None
+            or source.zone not in (Zone.STACK, Zone.BATTLEFIELD)
+            or source.zone_change_stamp != ability.source_stamp
+        ):
+            return
+        if granted_text not in source.granted_ability_texts:
+            source.granted_ability_texts = (*source.granted_ability_texts, granted_text)
+
+    return effect
 
 
 def _parse_return_self_to_battlefield_transformed_clause(

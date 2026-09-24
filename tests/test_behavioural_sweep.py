@@ -1455,6 +1455,21 @@ def _targeting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
         yield spell
 
+    if "an opponent controls" in ability.condition.lower():
+        # "becomes the target of a spell an opponent controls" (Reality
+        # Smasher, Frost Titan): the probe spell is cast by the opponent,
+        # once the active player has passed priority (CR 117.3d).
+        for probe in ("Giant Growth", "Lightning Bolt"):
+
+            def opposing_spell(probe: str = probe) -> tuple[PlayedScenario, Any]:
+                scenario, source_id = _home(case, ability, bob_hand=(probe,))
+                if scenario.priority_holder == ALICE:
+                    scenario.pass_priority(ALICE)
+                _cast(scenario, probe, BOB, prefer=source_id)
+                return scenario, source_id
+
+            yield opposing_spell
+
     def tool() -> tuple[PlayedScenario, Any]:
         scenario, source_id = _home(case, ability, battlefield=(_TARGETING_TOOL,))
         tool_state = _staged(scenario, _TARGETING_TOOL)
