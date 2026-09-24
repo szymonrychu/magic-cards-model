@@ -125,6 +125,17 @@ class ControllerRestriction(StrEnum):
     YOU = "you"
     OPPONENT = "opponent"
     NOT_YOU = "not_you"
+    EVENT_PLAYER = "event_player"
+    """"... that player controls" in a triggered ability whose trigger event
+    names a player - Soul Seizer's "When this creature deals combat damage to
+    a player, ... target creature that player controls." Who "that player" is
+    is not printed text but the event (`GameEvent.player`), so the printed
+    phrase alone reads this and `TargetingProfile.for_event_player` binds the
+    actual player into `TargetRequirement.event_player` once an ability with
+    that event exists. Unbound (no event to read, a scripted choice made
+    before the trigger exists), it restricts nothing - the same fail-open
+    posture every restriction here takes when the caller cannot supply what
+    it needs."""
 
 
 class RetargetScope(StrEnum):
@@ -384,6 +395,10 @@ class TargetRequirement(EngineModel):
     opponent_only: bool = False
     zones: SortedFrozenSet[Zone] = frozenset({Zone.BATTLEFIELD})
     controller: ControllerRestriction = ControllerRestriction.ANY
+    event_player: str | None = None
+    """`ControllerRestriction.EVENT_PLAYER` only: the player "that player"
+    names, bound from the trigger's own event by
+    `TargetingProfile.for_event_player`. `None` until then."""
     must_be_tapped: bool | None = None
     excludes_source: bool = False
     """True for "target *other* ..." / "*another* target ...": the permanent
@@ -679,6 +694,8 @@ class TargetRequirement(EngineModel):
         controller = getattr(target, "controller", None)
         if self.controller is ControllerRestriction.ANY or controller is None:
             return None
+        if self.controller is ControllerRestriction.EVENT_PLAYER:
+            return self._rejects_event_player_control(target, controller)
         if self.controller is ControllerRestriction.YOU and controller != caster:
             return f"{self.phrase} needs an ability {caster} controls, and {target.name} is not"
         not_yours = {ControllerRestriction.OPPONENT, ControllerRestriction.NOT_YOU}
@@ -1267,12 +1284,25 @@ class TargetRequirement(EngineModel):
         controller = getattr(target, "controller_or_owner", target.controller)
         if self.controller is ControllerRestriction.ANY or controller is None:
             return None
+        if self.controller is ControllerRestriction.EVENT_PLAYER:
+            return self._rejects_event_player_control(target, controller)
         if self.controller is ControllerRestriction.YOU and controller != caster:
             return f"{self.phrase} needs a permanent {caster} controls, and {target.name} is not"
         not_yours = {ControllerRestriction.OPPONENT, ControllerRestriction.NOT_YOU}
         if self.controller in not_yours and controller == caster:
             return f"{self.phrase} cannot target {target.name}, which {caster} controls"
         return None
+
+    def _rejects_event_player_control(self, target: Any, controller: str) -> str | None:
+        """`ControllerRestriction.EVENT_PLAYER`: the target must be controlled
+        by the player the trigger event named, once `event_player` is bound;
+        unbound, nothing is restricted (see the enum member's docstring)."""
+        if self.event_player is None or controller == self.event_player:
+            return None
+        return (
+            f"{self.phrase} needs a permanent {self.event_player} controls, "
+            f"and {target.name} is not"
+        )
 
     def _rejects_player(self, username: str, caster: str) -> str | None:
         if not self.allows_players:
@@ -1364,6 +1394,29 @@ class TargetingProfile(EngineModel):
     @property
     def targets_anything(self) -> bool:
         return bool(self.requirements)
+
+    def for_event_player(self, player: str | None) -> "TargetingProfile":
+        """Bind `ControllerRestriction.EVENT_PLAYER`'s "that player" to the
+        player the trigger event named (`GameEvent.player`) - CR 603.3d
+        chooses a trigger's targets as it is put on the stack, when that event
+        is known, and CR 608.2b rechecks them against the same restriction.
+        `player=None` (no event, or an event naming nobody) leaves the profile
+        as read, restriction unbound."""
+        if player is None or not any(
+            requirement.controller is ControllerRestriction.EVENT_PLAYER
+            for requirement in self.requirements
+        ):
+            return self
+        return self.model_copy(
+            update={
+                "requirements": tuple(
+                    requirement.model_copy(update={"event_player": player})
+                    if requirement.controller is ControllerRestriction.EVENT_PLAYER
+                    else requirement
+                    for requirement in self.requirements
+                )
+            }
+        )
 
     def for_gift_promise(self, promised: bool) -> "TargetingProfile":
         """CR 601.2c/702.174m: which candidate set applies, once whether this
@@ -2040,7 +2093,7 @@ _COMBAT_ADJECTIVES = {
 
 _CONTROL_CLAUSE = re.compile(
     r"^(?:that\s+)?(you\s+control|you\s+don't\s+control|an\s+opponent\s+controls|"
-    r"your\s+opponents\s+control)\b",
+    r"your\s+opponents\s+control|that\s+player\s+controls)\b",
     re.IGNORECASE,
 )
 _ZONE_CLAUSE = re.compile(
@@ -2293,7 +2346,14 @@ def profile_for_modes_with_owners(
 #: required - Bumi, Unleashed prints exactly that with none at all). The
 #: ordinary word-scan below finds nothing to read unless it is told, once,
 #: what the rule itself already says the target is.
-_EARTHBEND = re.compile(r"\bearthbend\b", re.IGNORECASE)
+#:
+#: The *instruction* only - "earthbend" followed by its N or X. The bare verb
+#: in a trigger condition (Avatar Aang's "Whenever you waterbend, earthbend,
+#: firebend, or airbend, draw a card.") names the action as an event (CR
+#: 701.66b) and targets nothing; reading it as the instruction used to make
+#: that draw trigger demand "target land you control", so it was removed
+#: from the stack (CR 603.3d) whenever its controller had no land.
+_EARTHBEND = re.compile(r"\bearthbend (?:\d+|x)\b", re.IGNORECASE)
 _EARTHBEND_TARGET_TEXT = "target land you control"
 
 #: "up to one target nonland card of each card type from your graveyard" -
@@ -4394,4 +4454,5 @@ _CONTROLLERS = {
     "you don't control": ControllerRestriction.NOT_YOU,
     "an opponent controls": ControllerRestriction.OPPONENT,
     "your opponents control": ControllerRestriction.OPPONENT,
+    "that player controls": ControllerRestriction.EVENT_PLAYER,
 }

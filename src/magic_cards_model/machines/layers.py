@@ -6503,6 +6503,16 @@ _ATTACHED_PERMANENT_BECOMES_CREATURE_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+) in addition to its other types\.?$"
 )
 
+#: "You control enchanted creature." (Ghastly Haunting, Soul Seizer's back
+#: face) - an Aura's own static control change (CR 613.1b: "Layer 2:
+#: Control-changing effects are applied"), for as long as the Aura is on the
+#: battlefield attached to it (CR 611.3a). The subject is whatever the Aura
+#: or Equipment is attached to, never a target.
+_YOU_CONTROL_ATTACHED_RE = re.compile(
+    r"^[Yy]ou control (?P<attachment>enchanted|equipped) "
+    r"(?P<subject>creature|permanent|artifact|enchantment|land|planeswalker)\.?$"
+)
+
 #: "Creatures entering don't cause abilities to trigger." (Torpor Orb);
 #: "Artifacts and creatures entering the battlefield don't cause abilities to
 #: trigger." (Karn, Argent Defender) - an and-joined card-type list, "the
@@ -7786,6 +7796,60 @@ def _attached_creature_loses_and_becomes_builder(
         return effects
 
     return builder
+
+
+def _you_control_attached_builder(*, subject: str, line: str) -> EffectBuilder:
+    """`_YOU_CONTROL_ATTACHED_RE`'s shape - Ghastly Haunting.
+
+    Layer 2 (CR 613.1b): the attached permanent's controller becomes the
+    source's controller. "You" is the source's own controller (CR 611.3's
+    static ability belongs to it), read as its base controller: the layer
+    system is what is being computed here, so asking the source for its
+    computed controller would ask for this very answer. An Aura attached to
+    nothing produces nothing."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        controller = source.stored_controller
+        if attached is None or controller is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {controller} controls the {subject} it is on",
+                layer=Layer.CONTROL,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=set_controller(controller),
+            )
+        ]
+
+    return builder
+
+
+def static_control_change_in_play(game: Game | None) -> bool:
+    """Whether some permanent's own static ability changes another's
+    controller right now - `_YOU_CONTROL_ATTACHED_RE` on an attached Aura or
+    Equipment. The battlefield-sweep half of `ContinuousEffects.
+    has_control_effect`, kept to a text check so the question stays cheaper
+    than the board it saves computing."""
+    if game is None:
+        return False
+    for permanent in getattr(game, "battlefield", ()):
+        if permanent.attachment is None:
+            continue
+        text = permanent.oracle_text or ""
+        if ("control enchanted" in text or "control equipped" in text) and any(
+            _YOU_CONTROL_ATTACHED_RE.fullmatch(line.strip()) for line in text.split("\n")
+        ):
+            return True
+    return False
 
 
 def _attached_permanent_becomes_creature_builder(
@@ -9424,6 +9488,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             subject=match.group("subject").lower(),
             line=sentence,
         )
+    if match := _YOU_CONTROL_ATTACHED_RE.fullmatch(sentence):
+        return _you_control_attached_builder(subject=match.group("subject"), line=sentence)
     if match := _DONT_CAUSE_TRIGGERS_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and\s+", match.group("types"))
         card_types = [_card_type_word(word.rstrip("sS")) for word in words]
@@ -11037,14 +11103,16 @@ class ContinuousEffects(EngineModel):
 
         Asked by `CardState.controller` before it recomputes the whole board
         to answer a question the board would answer with the base controller
-        anyway. Sound because `set_controller` is reachable from exactly one
-        builder, `_gain_control_until_eot_builder`, and that builder only ever
-        runs from `create` - a resolving spell or ability - so a control
-        change is always a *stored* effect and never one the battlefield sweep
-        rebuilds. A static ability that changed control (an Aura's "You control
-        enchanted creature") would have to be added here as well as there.
+        anyway. `set_controller` is reachable from two builders:
+        `_gain_control_until_eot_builder`, which only ever runs from `create`
+        (a *stored* effect), and `_you_control_attached_builder`, an Aura's
+        own static "You control enchanted creature" that the battlefield sweep
+        rebuilds - `static_control_change_in_play` answers for that one.
         """
-        return any(effect.layer is Layer.CONTROL for effect in self.active(game))
+        if any(effect.layer is Layer.CONTROL for effect in self.active(game)):
+            return True
+        bound = game if game is not None else cast("Game | None", self._game)
+        return static_control_change_in_play(bound)
 
     def active(self, game: Game | None = None) -> list[ContinuousEffect]:
         """The stored effects whose duration is still running (CR 611.2b).

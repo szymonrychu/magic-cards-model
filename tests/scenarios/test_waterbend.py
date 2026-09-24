@@ -307,12 +307,10 @@ def test_waterbend_fires_the_701_67c_trigger_on_avatar_aang():
 
 def test_avatar_aang_transforms_once_all_four_bends_happen_in_one_turn():
     """Avatar Aang's own second sentence: "Then if you've done all four this
-    turn, transform Avatar Aang." Earthbend, firebend and airbend have no
-    built mechanic in this engine yet (`docs/engine-coverage.md`) - their
-    own per-turn facts are staged directly through the identical `Game.
-    record_turn_fact` API any future mechanic for them would call, so what
-    this proves is the transform *condition* reading `Game.turn_facts`
-    correctly, not those three keywords."""
+    turn, transform Avatar Aang." The other three bends' per-turn facts are
+    staged through `Game.record_turn_fact` here so this stays about the
+    transform *condition*; `test_bending_trigger_events.py` does all four
+    for real."""
     scenario = _geyser_leaper_board(aang=True).build()
     aang = scenario.find("Avatar Aang", Zone.BATTLEFIELD, "alice")
     leaper = scenario.creature("Geyser Leaper", "alice")

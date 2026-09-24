@@ -116,9 +116,9 @@ def _replay_cast_trigger_and_token_sequence(game: Game) -> None:
     of the same snapshot takes the identical sequence of engine calls both
     times.
     """
-    for _ in range(3):  # CR 500.1: UNTAP -> UPKEEP -> DRAW -> PRECOMBAT_MAIN
-        decider = game.controller_of_player(game.turn.active_player)
-        game.advance(decider)
+    # CR 500.1: UNTAP -> UPKEEP -> PRECOMBAT_MAIN - alice plays first, so
+    # CR 103.8a skips her first draw step.
+    _advance(game, 2)
     played = PlayedScenario(game)
     bears = played.creature("Grizzly Bears", "alice")
 

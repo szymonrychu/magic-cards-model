@@ -339,28 +339,17 @@ def test_questing_beast_triggers_but_its_resolution_is_left_unmodelled():
     player controls."
 
     The trigger fires on "to an opponent" (proven in `test_trigger_events.py`),
-    but "target planeswalker **that player** controls" needs a target
-    restricted by the trigger's own event rather than by the ability's static
-    printed text - `machines/targeting.profile_for_text` only ever reads the
-    latter ("you control"/"an opponent controls" against the ability's
-    *controller*, never against whoever the triggering damage happened to
-    land on), so the parsed requirement is silently broader than the card
-    says: any planeswalker anywhere, not only one bob controls.
-
-    alice's own Karn, the Great Creator is on the battlefield so that broader
-    candidate pool is non-empty - CR 601.2c/603.3d's mandatory-target fix
-    (`tests/scenarios/test_trigger_target_decisions.py`) means a trigger with
-    *no* legal candidate at all is now correctly removed from the stack before
-    it ever resolves, which would make this board (nobody controlling any
-    planeswalker) prove nothing about the notice below; with Karn present the
-    ability reaches resolution exactly as before, and its own unreadable
-    "that player controls" clause is what leaves the notice, not an absent
-    target.
+    and its target is now restricted by the trigger's own event: "that player"
+    is the player dealt the damage (`ControllerRestriction.EVENT_PLAYER`, bound
+    by `TargetingProfile.for_event_player` when the targets are chosen, CR
+    603.3d). So only bob's Karn, the Great Creator is a legal target - alice's
+    own Karn is not - and the ability reaches resolution. What is still left
+    unread is "it deals that much damage", which leaves the notice below.
     """
     scenario = (
         Scenario()
         .player("alice", battlefield=["Questing Beast", "Karn, the Great Creator"])
-        .player("bob", battlefield=[])
+        .player("bob", battlefield=["Karn, the Great Creator"])
         .build()
     )
     beast = scenario.creature("Questing Beast", "alice")

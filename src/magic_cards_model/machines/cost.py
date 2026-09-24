@@ -3737,6 +3737,16 @@ class CostModifierKind(StrEnum):
     `COLOR_DECREASE`. Exactly one of `applies_to_types`/`excludes_type` is
     set, matching which of the two shapes was printed."""
 
+    SYMBOL_DECREASE = "symbol_decrease"
+    """"Spells you cast cost `<mana symbols>` less to cast." - unqualified, and
+    written in mana symbols rather than one generic number: Aang, Master of
+    Elements' own "{W}{U}{B}{R}{G}", The Immortal Sun's "{1}". The symbols are
+    kept whole in `reduction` and handed to CR 601.2f as a cost reduction,
+    where `ManaCost.minus` applies CR 118.7a-c to each one: a coloured symbol
+    takes a pip of its own colour first and generic mana where the spell has
+    none of that colour. Controller-scoped ("you cast") the same way as
+    `COLOR_DECREASE`/`TYPE_DECREASE`."""
+
     OPPONENT_TYPE_INCREASE = "opponent_type_increase"
     """"[<Qualifier> s]pells your opponents cast cost `{N}` more to cast." -
     Thalia, the Survivor's own "Noncreature spells your opponents cast cost
@@ -3804,6 +3814,10 @@ class CostModifierEffect(EngineModel):
     `amount` of that color per unit (CR 118.7b-c turn it into generic when the
     cost has not enough of that color; the "(or {1})" is only that reminder).
     `None` for the ordinary generic "{N} less"."""
+
+    reduction: str | None = None
+    """`SYMBOL_DECREASE` only: the printed mana symbols, "{W}{U}{B}{R}{G}" or
+    "{1}", read back with `ManaCost.parse` when the cost is determined."""
 
     per_each: str | None = None
     """`TYPE_DECREASE` only: a "for each `<count>`" tail (Eluge's "for each
@@ -3917,6 +3931,20 @@ _FIRST_SPELL_EACH_TURN_COST_DECREASE = re.compile(
     re.IGNORECASE,
 )
 
+#: The unqualified, symbol-written shape - Aang, Master of Elements' "Spells you
+#: cast cost {W}{U}{B}{R}{G} less to cast. (This can reduce generic costs.)" and
+#: The Immortal Sun's "Spells you cast cost {1} less to cast." Any run of plain
+#: generic, coloured or colourless symbols; a hybrid symbol is left unread
+#: (CR 118.7e has the payer choose a half, which nothing here asks). A trailing
+#: reminder is allowed, a trailing rider is not - "This effect reduces only
+#: the amount of colored mana you pay." is a different reduction (no CR 118.7b
+#: spill into generic), and anything else after the full stop is unread text.
+_SYMBOL_COST_DECREASE = re.compile(
+    r"^Spells you cast cost (?P<symbols>(?:\{(?:\d+|[WUBRGC])\})+) less to cast\."
+    r"(?:\s*\([^)]*\))?$",
+    re.IGNORECASE,
+)
+
 #: The subtype shape - Goblin Warchief's own "Goblin spells you cast cost {1}
 #: less to cast." One capitalised word that `canonical_subtype` places in
 #: CR 205.3's list; a card type or a color word never reaches here, because
@@ -3939,7 +3967,9 @@ _COST_MODIFIER_SIGNAL = re.compile(r"more to cast|would cost .* mana to cast")
 #: [N] less to cast for each card type...", already `Game.cost_reduction_for`'s
 #: job, not this one) even after that spell resolves onto the battlefield and
 #: its printed text is scanned here again.
-_COST_DECREASE_SIGNAL = re.compile(r"spells you cast cost \{\d+\} less to cast", re.IGNORECASE)
+_COST_DECREASE_SIGNAL = re.compile(
+    r"spells you cast cost (?:\{(?:\d+|[WUBRGC])\})+ less to cast", re.IGNORECASE
+)
 
 
 #: A static cost modifier's trailing condition - Gran-Gran's "Noncreature
@@ -4015,6 +4045,14 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
             kind=CostModifierKind.FLOOR,
             amount=total,
             requires_untapped=match.group("condition") is not None,
+        )
+    match = _SYMBOL_COST_DECREASE.fullmatch(text.strip())
+    if match is not None:
+        reduction = match.group("symbols").upper()
+        return CostModifierEffect(
+            kind=CostModifierKind.SYMBOL_DECREASE,
+            amount=ManaCost.parse(reduction).converted,
+            reduction=reduction,
         )
     match = _COLOR_COST_DECREASE.search(text)
     if match is not None:

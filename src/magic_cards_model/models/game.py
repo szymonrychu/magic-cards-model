@@ -1976,6 +1976,32 @@ def ring_emblem_text(tempted: int) -> str:
     return "\n".join(RING_EMBLEM_ABILITIES[: max(1, min(tempted, len(RING_EMBLEM_ABILITIES)))])
 
 
+#: "target (player|opponent)" ahead of "that player controls" - then "that
+#: player" is that target, not whoever the trigger event named.
+_TARGET_PLAYER_BEFORE_THAT_PLAYER_RE = re.compile(r"\btarget (?:player|opponent)\b", re.IGNORECASE)
+
+
+def _that_player_of(ability: "AbilityOnStack") -> str | None:
+    """Who a triggered ability's "... that player controls" names: the player
+    its trigger event names (`GameEvent.player` - the player dealt the damage
+    for "deals combat damage to a player"), bound into the targeting
+    restriction by `TargetingProfile.for_event_player`.
+
+    `None` - the restriction left unbound, exactly as it read before - when
+    there is no event or it names nobody, when the text has no "that player
+    controls" at all, and when a "target player"/"target opponent" comes
+    first, since "that player" is then that target rather than the event's.
+    """
+    event = ability.event
+    if event is None or event.player is None:
+        return None
+    text = ability.ability.text or ""
+    at = text.lower().find("that player controls")
+    if at < 0 or _TARGET_PLAYER_BEFORE_THAT_PLAYER_RE.search(text[:at]):
+        return None
+    return event.player
+
+
 class SchemaVersionMismatch(RuntimeError):
     """A `Game` snapshot's `schema_version` does not match this build's
     `Game.CURRENT_SCHEMA_VERSION`, or the snapshot has no `schema_version` at
@@ -3090,7 +3116,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 63
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 64
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3927,6 +3953,13 @@ class Game(EngineModel):
     Master of Time's -3/-10, Teferi, Timebender's -9 and Haystack's ability,
     all in the pool, now resolve where a version-62 board resolved nothing -
     the second bullet.
+
+    Bumped 63 -> 64 (S33, optional transform and airbend): `AbilityOnStack`
+    gained `source_times_transformed` (CR 701.27f), the bump rule's first
+    bullet. Aang, Master of Elements' upkeep trigger, Appa, Steadfast
+    Guardian's airbend, a board-wide "Spells you cast cost {W}{U}{B}{R}{G}
+    less" and "that player controls" targets now resolve where a version-63
+    board did nothing, the second.
     """
 
     @model_validator(mode="before")
@@ -8750,7 +8783,7 @@ class Game(EngineModel):
         """
         printed = ability.ability
         text = printed.text if isinstance(printed, TriggeredAbility) else ""
-        profile = profile_for_text(text)
+        profile = profile_for_text(text).for_event_player(_that_player_of(ability))
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
         )
@@ -13038,7 +13071,7 @@ class Game(EngineModel):
                 and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
             )
-            profile = profile_for_text(ability_text)
+            profile = profile_for_text(ability_text).for_event_player(_that_player_of(spell))
             if not profile.understood or not profile.requirements:
                 return thing
             caster = spell.controller
@@ -17919,6 +17952,11 @@ class Game(EngineModel):
                     prior = len(self.spells_cast_this_turn.get(caster, []))
                     if prior:
                         increases.append(ManaCost.parse(f"{{{effect.amount * prior}}}"))
+                elif effect.kind is CostModifierKind.SYMBOL_DECREASE:
+                    # "Spells you cast": only the permanent's controller's.
+                    if permanent.controller != caster or effect.reduction is None:
+                        continue
+                    decreases.append(ManaCost.parse(effect.reduction))
                 elif effect.kind is CostModifierKind.COLOR_DECREASE:
                     if permanent.controller != caster:
                         continue
@@ -20169,6 +20207,7 @@ class Game(EngineModel):
                 # to its owner's hand" leaves a permanent that has since left
                 # and come back alone.
                 source_stamp=source_stamp,
+                source_times_transformed=permanent.times_transformed,
                 controller=controller,
                 targets=[TargetRef.coerce(target) for target in targets or []],
                 x_value=x_value,
@@ -20698,6 +20737,14 @@ class Game(EngineModel):
             # across an `advance()` boundary.
             self.turn.add_second_combat_damage_step()
         step = self.turn.advance()
+        if step is Step.DRAW and self.turn.skips_draw():
+            # CR 103.8a skips the starting player's whole first draw step, and
+            # CR 500.11: to skip a step "is to proceed past it as though it
+            # didn't exist" - no beginning event, so no "at the beginning of
+            # your draw step" trigger, no priority, nothing scheduled for it
+            # (CR 614.10a). `draw_step` still checks too, for a caller that
+            # walks the pointer into the step some other way.
+            step = self.turn.advance()
         self._note_step_began(step)
 
         if self.automatic_turn_based_actions and previous_step is Step.DECLARE_ATTACKERS:

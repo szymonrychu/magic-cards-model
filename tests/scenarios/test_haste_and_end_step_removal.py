@@ -355,7 +355,7 @@ def _elementals(scenario) -> list:
 def test_coils_with_five_counters_removes_them_and_makes_five_hasty_elementals():
     scenario, coils = _coils_board(5)
 
-    _walk_to(scenario, Step.DRAW)
+    _walk_to(scenario, Step.PRECOMBAT_MAIN)
 
     tokens = _elementals(scenario)
     assert len(tokens) == 5
@@ -371,7 +371,7 @@ def test_coils_with_five_counters_removes_them_and_makes_five_hasty_elementals()
 def test_coils_with_seven_counters_makes_seven():
     scenario, coils = _coils_board(7)
 
-    _walk_to(scenario, Step.DRAW)
+    _walk_to(scenario, Step.PRECOMBAT_MAIN)
 
     assert len(_elementals(scenario)) == 7
     assert coils.counter_count("charge") == 0
@@ -381,7 +381,7 @@ def test_coils_with_four_counters_does_not_trigger():
     """CR 603.4: the intervening "if" is false, so nothing triggers."""
     scenario, coils = _coils_board(4)
 
-    _walk_to(scenario, Step.DRAW)
+    _walk_to(scenario, Step.PRECOMBAT_MAIN)
 
     assert _elementals(scenario) == []
     assert coils.counter_count("charge") == 4
@@ -389,7 +389,7 @@ def test_coils_with_four_counters_does_not_trigger():
 
 def test_coils_exile_leaves_a_token_that_already_died_alone():
     scenario, _ = _coils_board(5)
-    _walk_to(scenario, Step.DRAW)
+    _walk_to(scenario, Step.PRECOMBAT_MAIN)
     first = _elementals(scenario)[0]
 
     scenario.game.destroy(first)

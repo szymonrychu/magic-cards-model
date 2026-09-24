@@ -65,7 +65,7 @@ from pydantic import ConfigDict
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.subtypes import creature_type_vocabulary, subtype_vocabulary
-from ..models.card import Color, Supertype, Type
+from ..models.card import Color, Supertype, Type, types_of
 from ..models.card_state import (
     PERMANENT_TYPES,
     CardState,
@@ -225,6 +225,7 @@ from .targeting import (
 )
 from .triggers import (
     AbilityOnStack,
+    ExtraTriggerEvent,
     batched_attackers,
     event_subject_power,
     is_ability,
@@ -7201,8 +7202,13 @@ _POISON_COUNTERS_RE = re.compile(rf"(?:you )?gets? (?P<n>{COUNT}) poison counter
 #: Mirror-Breaker II) reads the count channel (`that_many`).
 #: "that many cards minus one" (Dark Deal) / "plus one" adjusts it (CR 107.1b:
 #: a negative result is zero).
+#: "draw an additional card" / "draw two additional cards" (The Immortal Sun's
+#: draw-step trigger) is the same draw: "additional" only says it comes on top
+#: of CR 504.1's own draw that turn, which has already happened by the time
+#: the trigger resolves (CR 504.2).
 _DRAW_RE = re.compile(
-    rf"(?:you )?draws? (?:a card|(?:(?P<that_many>that many)|(?P<n>{COUNT})) cards?"
+    rf"(?:you )?draws? (?:an? (?:additional )?card|"
+    rf"(?:(?P<that_many>that many)|(?P<n>{COUNT})) (?:additional )?cards?"
     rf"(?: (?P<op>plus|minus) (?P<adjust>{COUNT}))?)"
     rf"(?: for each (?P<each>.+))?",
     re.IGNORECASE,
@@ -17896,17 +17902,27 @@ def _parse_firebending_add_mana(text: str) -> AbilityEffect | None:
             count = fixed
         else:
             source = ability.source(game)
-            if source is None:
-                return
-            count = game.power_of(source) or 0
-        if count <= 0:
-            return
+            count = (game.power_of(source) or 0) if source is not None else 0
         pool = game.player(ability.controller).mana_pool
-        for _ in range(count):
+        for _ in range(max(count, 0)):
             for color in colors:
                 pool.add(color, retain_until=ManaRetentionScope.END_OF_COMBAT)
+        # CR 702.189b: "An ability that triggers whenever a player firebends
+        # triggers whenever a firebending ability they control resolves" -
+        # whatever it added, this one just did.
+        _record_bending(game, "firebent", ExtraTriggerEvent.FIREBENDS, ability.controller)
 
     return effect
+
+
+def _record_bending(game: "Game", fact: str, event: ExtraTriggerEvent, player: str) -> None:
+    """One bending action done by `player`: the per-turn fact Avatar Aang's
+    "if you've done all four this turn" reads, and the event its "whenever
+    you ... bend" trigger watches (CR 701.65b, 701.66b, 702.189b)."""
+    from .triggers import GameEvent
+
+    game.record_turn_fact(fact, player)
+    game.emit(GameEvent(event=event, player=player))
 
 
 #: "When this land enters, add one mana of any color." (Crumbling Vestige),
@@ -19225,6 +19241,187 @@ def transform_permanent(game: "Game", permanent: CardState, *, day_night: bool =
     )
 
 
+# --------------------------------------------------------------------------
+# "You may transform <this>. If you do, <payoff>."
+# --------------------------------------------------------------------------
+#
+# Aang, Master of Elements: "At the beginning of each upkeep, you may transform
+# Aang, Master of Elements. If you do, you gain 4 life, draw four cards, put
+# four +1/+1 counters on him, and he deals 4 damage to each opponent." Soul
+# Seizer: "When this creature deals combat damage to a player, you may
+# transform it. If you do, attach it to target creature that player controls."
+#
+# One instruction (CR 608.2c): the optional transform (CR 603.5's "may",
+# chosen as the ability resolves) and a payoff that happens only if the
+# permanent actually turned over. CR 701.27f: "If an activated or triggered
+# ability of a permanent ... tries to transform it, the permanent does so only
+# if it hasn't transformed or converted since the ability was put onto the
+# stack" - read off `AbilityOnStack.source_times_transformed`. CR 608.2d: "The
+# player can't choose an option that's illegal or impossible", so when the
+# transform cannot happen (the source is gone or is a new object, CR 400.7;
+# it has transformed since, CR 701.27f; it has no face to turn to, CR 701.27c
+# and 701.27d) nothing is asked and nothing follows.
+
+#: The self is "this <noun>", "it", or the source's own printed name (CR
+#: 201.5, checked against the live source at resolution). The payoff is
+#: anything `_optional_transform_payoff` can read.
+_MAY_TRANSFORM_SELF_IF_YOU_DO_RE = re.compile(
+    r"^[Yy]ou may transform (?P<self>this (?:creature|permanent|artifact|enchantment|land)|it|"
+    r"[A-Z][^.]*?)\.\s*[Ii]f you do,\s*(?P<payoff>.+?)\.?$",
+    re.DOTALL,
+)
+
+#: A legend's own object pronoun after a preposition - "put four +1/+1 counters
+#: on him" - and its own subject pronoun opening an instruction - "he deals 4
+#: damage". Oracle text uses "he"/"she"/"him"/"her" only for the legendary
+#: character the card is (the same convention
+#: `abilities.legendary_self_pronoun_normalized` reads), so each is CR 700.7's
+#: "this permanent".
+_SELF_OBJECT_PRONOUN_RE = re.compile(r"\b(?P<prep>on|to|from|with|at) (?:him|her)\b", re.IGNORECASE)
+_SELF_SUBJECT_PRONOUN_RE = re.compile(r"^(?:he|she) (?=\w)", re.IGNORECASE)
+
+#: A serial list of instructions, "A, B, C, and D" (or "then D"): the commas
+#: between whole instructions, the last one carrying the conjunction.
+_SERIAL_INSTRUCTION_SEPARATOR_RE = re.compile(r",\s*(?:and\s+|then\s+)?", re.IGNORECASE)
+
+#: "attach it to target <description>" / "attach this Aura to target ..." -
+#: CR 701.3a's attach of the ability's own source onto its announced target.
+_ATTACH_SELF_TO_TARGET_RE = re.compile(
+    r"^attach (?:it|this (?:aura|equipment|fortification|permanent)) to target\b.+$",
+    re.IGNORECASE,
+)
+
+
+def attach_permanent(game: "Game", attached: CardState, host: CardState) -> bool:
+    """CR 701.3a's attach, with CR 701.3b's refusals: an object that is not
+    an Aura, Equipment or Fortification is not moved, nor is one onto a host
+    it could not enchant (CR 702.5a), equip (CR 301.5) or fortify, nor onto a
+    host with protection from it (CR 702.16c, CR 702.16d). Attaching to what
+    it is already attached to does nothing. True when it moved."""
+    from .keywords import _protection_refusal_for_attachment, why_cannot_enchant
+
+    if host.zone is not Zone.BATTLEFIELD or attached.zone is not Zone.BATTLEFIELD:
+        return False
+    subtypes = set(game.characteristics_of(attached).subtypes)
+    host_characteristics = game.characteristics_of(host)
+    if attached.attached_to == host.id:
+        return False
+    if "Aura" in subtypes:
+        controller = game.controller_of(attached).username
+        if why_cannot_enchant(attached, host, controller, game) is not None:
+            return False
+    elif "Equipment" in subtypes:
+        if not host_characteristics.is_creature:
+            return False
+    elif "Fortification" in subtypes:
+        if Type.LAND not in host_characteristics.types:
+            return False
+    else:
+        return False
+    if _protection_refusal_for_attachment(game, attached, host) is not None:
+        return False
+    attached.attach_to(host)
+    return True
+
+
+def _attach_self_to_target_effect(text: str) -> AbilityEffect | None:
+    """`_ATTACH_SELF_TO_TARGET_RE`: the source attached to the target the
+    ability announced (CR 603.3d), rechecked by `Game.resolve_targets` (CR
+    608.2b)."""
+    if _ATTACH_SELF_TO_TARGET_RE.fullmatch(" ".join(text.strip().rstrip(".").split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and attach_permanent(game, source, target):
+                return
+
+    return effect
+
+
+def _optional_transform_payoff(payoff: str) -> AbilityEffect | None:
+    """The "If you do" half, read three ways in turn: an attach of the source
+    to its target; the payoff as one sentence `parse_mixed_effect` reads; or a
+    serial list of instructions ("A, B, C, and D"), each read as its own
+    sentence and run in the order written (CR 608.2c) - read only when every
+    one of them is, so a list is never half-run. A legend's own pronouns are
+    "this permanent" first."""
+    text = _SELF_OBJECT_PRONOUN_RE.sub(lambda m: f"{m.group('prep')} this permanent", payoff)
+    attach = _attach_self_to_target_effect(text)
+    if attach is not None:
+        return attach
+    whole = parse_mixed_effect(
+        _as_capitalized_sentence(_SELF_SUBJECT_PRONOUN_RE.sub("this permanent ", text))
+    )
+    if whole is not None:
+        return whole
+    pieces = [piece.strip() for piece in _SERIAL_INSTRUCTION_SEPARATOR_RE.split(text)]
+    if len(pieces) < 2 or not all(pieces):
+        return None
+    sentences = [
+        _as_capitalized_sentence(_SELF_SUBJECT_PRONOUN_RE.sub("this permanent ", p)) for p in pieces
+    ]
+    if any(parse_mixed_effect(sentence) is None for sentence in sentences):
+        return None
+    return parse_mixed_effect(" ".join(sentences))
+
+
+def _as_capitalized_sentence(text: str) -> str:
+    """`text` as one capitalized sentence with a single closing period."""
+    text = text.strip().rstrip(".")
+    return text[:1].upper() + text[1:] + "."
+
+
+def _parse_may_transform_self_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_TRANSFORM_SELF_IF_YOU_DO_RE`'s shape - see the section note."""
+    match = _MAY_TRANSFORM_SELF_IF_YOU_DO_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).strip().split())
+    )
+    if match is None:
+        return None
+    named = match.group("self").strip()
+    by_name = not (named.lower() == "it" or named.lower().startswith("this "))
+    payoff = _optional_transform_payoff(match.group("payoff"))
+    if payoff is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
+            return  # CR 400.7: a new object, not the one this ability is about
+        if by_name and named.lower() not in (source.name or "").lower():
+            return  # CR 201.5: the name means this object, and this is not it
+        if (
+            ability.source_times_transformed is not None
+            and source.times_transformed != ability.source_times_transformed
+        ):
+            return  # CR 701.27f
+        target_face = source.face_it_would_transform_into
+        if target_face is None or {Type.INSTANT, Type.SORCERY} & set(
+            types_of(target_face.type_line or "")
+        ):
+            return  # CR 701.27c, CR 701.27d: nothing would happen
+        if not game.may(
+            game.controller_of(ability),
+            f"transform {source.name}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        before = source.times_transformed
+        transform_permanent(game, source)
+        if source.times_transformed == before:
+            return
+        payoff(game, ability)
+
+    return effect
+
+
 def reads_as_transforms_line(text: str) -> bool:
     """Whether `text` is an "As this ... transforms into `<face>`, `<effect>`"
     line whose effect `transform_permanent` can carry out, whatever the face's
@@ -20080,6 +20277,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     meld_resolution = parse_meld_resolution_clause(effect_text)
     if meld_resolution is not None:
         return meld_resolution
+    may_transform_self_if_you_do = _parse_may_transform_self_if_you_do_clause(effect_text)
+    if may_transform_self_if_you_do is not None:
+        return may_transform_self_if_you_do
     cast_from_hand_then_exile = _parse_cast_from_hand_then_exile_clause(effect_text)
     if cast_from_hand_then_exile is not None:
         return cast_from_hand_then_exile
@@ -31178,23 +31378,30 @@ _DRAW_N_CARDS_RE = re.compile(rf"^draw (?P<count>{COUNT}) cards?$", re.IGNORECAS
 # exist as a state-based action the moment it is anywhere but the battlefield,
 # which is before any player next receives priority (CR 704.3).
 #
-# CR 701.65b ("An ability that triggers whenever a player airbends triggers
+# CR 701.65b: "An ability that triggers whenever a player airbends triggers
 # when that player exiles one or more objects as a result of an instruction to
-# airbend") has no card in this pool to trigger, so nothing is emitted for it;
-# the ordinary battlefield-departure events `Game.exile_permanent` raises are
+# airbend." `airbend` raises `ExtraTriggerEvent.AIRBENDS` once per instruction
+# (never per object) and records the "airbent" turn fact Avatar Aang's "if
+# you've done all four this turn" reads - both only when something actually
+# reached exile, since exiling nothing is not "one or more objects". The
+# ordinary battlefield-departure events `Game.exile_permanent` raises are
 # unaffected.
 
-#: "Airbend up to one other target creature or spell." - the whole of an
-#: ability's effect text once its trigger condition has been split off. The
-#: count and the "other" are already enforced by `machines/targeting.py` off
-#: the same printed words, so nothing here has to re-read them; this only has
-#: to recognise that the instruction *is* an airbend.
+#: "Airbend up to one other target creature or spell.", "airbend any number of
+#: other target nonland permanents you control.", "Airbend target nonland
+#: permanent." - the airbend instruction, whatever its count. The count, the
+#: "other" and the controller are already enforced by `machines/targeting.py`
+#: off the same printed words (CR 107.1c's "any number" included), so nothing
+#: here has to re-read them; this only has to recognise that the instruction
+#: *is* an airbend.
 _AIRBEND_RE = re.compile(
-    r"^airbend (?:up to (?:\w+|\d+) )?(?:other |another )?target\b.*$", re.IGNORECASE
+    r"^airbend (?:up to (?:\w+|\d+) |any number of |(?:\w+|\d+) (?=(?:other |another )?target))?"
+    r"(?:other |another )?target\b.*$",
+    re.IGNORECASE,
 )
 
 
-def airbend(game: "Game", objects: list[CardState]) -> None:
+def airbend(game: "Game", objects: list[CardState], player: str | None = None) -> None:
     """CR 701.65a's exile, plus CR 406.4's note on each *card* that lands.
 
     One instruction, so `Game.exile_cards` rather than a loop of
@@ -31205,23 +31412,33 @@ def airbend(game: "Game", objects: list[CardState]) -> None:
     An object the move refused (CR 111.8's token that has already left the
     battlefield) never reaches exile, so it is never annotated: the check is on
     where the object actually ended up, not on what was asked for.
+
+    `player` is who airbent (the instruction's controller) - CR 701.65b's
+    "that player" - and `None` only for a caller with no player to name, which
+    then raises no airbend event.
     """
+    exiled_any = False
     for exiled in game.exile_cards(objects):
-        if exiled.zone is not Zone.EXILE or is_token(exiled):
+        if exiled.zone is not Zone.EXILE:
+            continue
+        exiled_any = True
+        if is_token(exiled):
             continue
         annotate_exile(exiled, ExileMarker.AIRBENT, exiled.owner, game)
+    if player is None or not exiled_any:
+        return
+    _record_bending(game, "airbent", ExtraTriggerEvent.AIRBENDS, player)
 
 
 def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """ "Airbend ... target ..." - see `_AIRBEND_RE` and the section note.
 
-    Reads only the targets the ability already chose (CR 601.2c / 603.3d ran
-    long before this resolves), rechecked by `Game.resolve_targets` for
-    CR 608.2b. "Up to one" means an ability that chose none is legal and simply
-    does nothing, which falls out of the empty list rather than needing a case.
+    Reads only the targets the spell or ability already chose (CR 601.2c /
+    603.3d ran long before this resolves), rechecked by `Game.resolve_targets`
+    for CR 608.2b. "Up to one" and "any number of" (CR 107.1c) both allow an
+    announcement of none, which is legal and simply does nothing - that falls
+    out of the empty list rather than needing a case.
     """
-    if for_spell:
-        return None  # no card in the pool prints airbend on a spell.
     if _AIRBEND_RE.fullmatch(" ".join(clause.strip().rstrip(".").split())) is None:
         return None
 
@@ -31231,7 +31448,7 @@ def _parse_airbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | N
         ]
         if not targets:
             return
-        airbend(game, targets)
+        airbend(game, targets, game.controller_of(stack_object).username)
 
     return effect
 
@@ -31382,6 +31599,10 @@ def earthbend(
         )
     for trigger in siblings:
         trigger.sibling_ids = tuple(other.id for other in siblings if other is not trigger)
+    # CR 701.66b: "An ability that triggers whenever a player earthbends
+    # triggers when the delayed triggered ability described in rule 701.66a is
+    # created" - just now, above.
+    _record_bending(game, "earthbent", ExtraTriggerEvent.EARTHBENDS, controller)
 
 
 def _parse_earthbend_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:

@@ -496,12 +496,18 @@ class TurnMachine(EngineModel):
           turn, so a first-turn extra turn would still read as turn 1 and skip a
           second draw. `turns_taken` is the count that goes up once per turn
           that actually begins, so the skip is spent after exactly one turn.
+
+        And it is *the* draw step of that turn - the one `TURN_ORDER` walks
+        into. A draw step of a CR 500.8 additional beginning phase is served
+        from `extra_phase_queue` with `resume_index` set, and CR 614.10a
+        spends a skip on its first occurrence, so that later one is drawn in.
         """
         return (
             len(self.players) == 2
             and self.turns_taken == 1
             and self.is_first_turn
             and self.active_index == 0
+            and self.resume_index is None
         )
 
     # -- the pregame sequence (CR 103.5, CR 103.6) -------------------------

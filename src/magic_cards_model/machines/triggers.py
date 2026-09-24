@@ -200,13 +200,10 @@ class ExtraTriggerEvent(StrEnum):
     WATERBENDS = "waterbends"
     #: The three sibling bending verbs Avatar Aang's own "Whenever you
     #: waterbend, earthbend, firebend, or airbend, draw a card" condition
-    #: names alongside waterbend (CR 701.67c's own rule number covers only
-    #: waterbend; the other three bending keywords are not built by this
-    #: module - see `docs/engine-coverage.md`). Named here, with no emitter,
-    #: purely so the condition parser can read the whole printed OR-list
-    #: without misreading the words it does not yet have an event for as
-    #: unparseable; `_unread_condition_matches` never returns True for one
-    #: of these because nothing raises them.
+    #: names alongside waterbend, each raised by `machines/effects.
+    #: _record_bending`: earthbend as its delayed return is created (CR
+    #: 701.66b), firebend as a firebending ability resolves (CR 702.189b),
+    #: airbend once per instruction that exiled anything (CR 701.65b).
     EARTHBENDS = "earthbends"
     FIREBENDS = "firebends"
     AIRBENDS = "airbends"
@@ -645,6 +642,14 @@ class AbilityOnStack(EngineModel):
     its last known information is used"; CR 608.2h) rather than whatever new
     object the card has since become (CR 400.7). `None` for an ability that
     records no source object."""
+    source_times_transformed: int | None = None
+    """The source's `CardState.times_transformed` when the ability triggered
+    or was activated - the count CR 701.27f compares: an activated or
+    triggered ability of a permanent that tries to transform it does so "only
+    if it hasn't transformed or converted since the ability was put onto the
+    stack". A count, not a face, so a permanent turned over twice in response
+    (back where it started) is still recognised as having transformed. `None`
+    for an ability that records no source object."""
     state_class: Literal["AbilityOnStack"] = "AbilityOnStack"
     """Which concrete Python class built this object - decode-time identity
     for `models.game.StackObject`'s discriminated union, the exact
@@ -3229,9 +3234,7 @@ def _day_night_events_named(condition: str) -> frozenset[ExtraTriggerEvent]:
 #: earthbend, firebend, or airbend" list, in any order and with any subset
 #: of the four bending verbs (CR 207.2's own listing-order convention is not
 #: pinned to). Every named word maps onto its own `ExtraTriggerEvent`
-#: member; only `WATERBENDS` is ever actually raised (see that member's own
-#: docstring), so a condition naming only the other three never fires -
-#: correctly, since nothing bends that way yet.
+#: member, and all four are raised (see those members' own docstrings).
 _BENDING_WORD = r"(?:waterbend|earthbend|firebend|airbend)"
 _BENDING_CONDITION = re.compile(
     rf"^you {_BENDING_WORD}(?:,\s*{_BENDING_WORD})*(?:,)?\s*(?:or\s+{_BENDING_WORD})?$",
@@ -6003,6 +6006,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             source_name=source.name,
             controller=controller,
             source_stamp=source.zone_change_stamp,
+            source_times_transformed=source.times_transformed,
             event=_event_for(game, ability, controller, event),
         )
         triggered.append(on_stack)
@@ -6205,6 +6209,7 @@ def state_triggers_for(game: "Game") -> list[AbilityOnStack]:
             source_name=source.name,
             controller=controller,
             source_stamp=source.zone_change_stamp,
+            source_times_transformed=source.times_transformed,
         )
         game.state_trigger_latches[key] = on_stack.id
         triggered.append(on_stack)

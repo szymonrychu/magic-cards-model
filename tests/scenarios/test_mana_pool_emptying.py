@@ -47,9 +47,10 @@ def test_upkeep_mana_is_gone_by_the_precombat_main():
     scenario.start_at(Step.UPKEEP)
     float_green(scenario, 2)
 
-    scenario.advance()  # upkeep ends -> draw step
-    assert scenario.player("alice").mana_pool.floating == {}
-    scenario.advance()  # draw step ends -> precombat main
+    # upkeep ends -> precombat main: alice plays first, so CR 103.8a skips
+    # her first draw step.
+    scenario.advance()
+    assert scenario.step is Step.PRECOMBAT_MAIN
     assert scenario.player("alice").mana_pool.floating == {}
 
     casting = announce(scenario, "Grizzly Bears")

@@ -804,3 +804,25 @@ def test_a_snapshot_written_before_phasing_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_PHASING}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before S33's `AbilityOnStack.source_times_transformed`.
+_SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED = 63
+
+
+def test_the_source_times_transformed_bump_moved_the_version_past_sixty_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED
+
+
+def test_a_snapshot_written_before_source_times_transformed_is_refused() -> None:
+    """A version-63 dump is refused rather than decoded as current: a pending
+    trigger in it carries no `source_times_transformed`, so CR 701.27f could
+    not tell whether its source had transformed since."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_SOURCE_TIMES_TRANSFORMED}",
+    ):
+        Game.model_validate(dumped)

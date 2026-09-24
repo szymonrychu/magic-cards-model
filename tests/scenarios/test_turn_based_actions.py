@@ -68,10 +68,12 @@ def test_the_draw_step_puts_nothing_on_the_stack():
 
 
 def test_the_player_who_plays_first_skips_their_first_draw_step():
-    """CR 103.8a: in a *two-player* game, the starting player skips that one draw."""
+    """CR 103.8a: in a *two-player* game, the starting player skips that draw
+    step - and CR 500.11 skips it whole, so upkeep goes straight to main."""
     scenario = driven(alice={"library": ["Mountain", "Forest"]}, bob={"library": ["Island"]})
-    advance_to(scenario, "alice", Step.DRAW)
+    advance_to(scenario, "alice", Step.UPKEEP)
 
+    assert scenario.advance() is Step.PRECOMBAT_MAIN
     assert scenario.player("alice").hand == []
     assert len(scenario.player("alice").library) == 2
 
@@ -79,10 +81,10 @@ def test_the_player_who_plays_first_skips_their_first_draw_step():
 def test_the_starting_player_draws_on_their_second_turn():
     """The skip is one draw step, not a standing exemption (CR 103.8a)."""
     scenario = driven(alice={"library": ["Mountain", "Forest"]}, bob={"library": ["Island"]})
-    advance_to(scenario, "alice", Step.DRAW)
+    advance_to(scenario, "alice", Step.PRECOMBAT_MAIN)
     assert scenario.player("alice").hand == []
 
-    advance_to(scenario, "alice", Step.PRECOMBAT_MAIN)
+    advance_to(scenario, "bob", Step.PRECOMBAT_MAIN)
     advance_to(scenario, "alice", Step.DRAW)
 
     assert [state.name for state in scenario.player("alice").hand] == ["Mountain"]

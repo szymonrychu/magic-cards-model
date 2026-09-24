@@ -1,0 +1,196 @@
+{
+  "object": "card",
+  "id": "f500cb95-d5ea-4cf2-920a-f1df45a9059b",
+  "oracle_id": "98950aaf-d0b8-420b-9e6a-c7d07d0f8588",
+  "multiverse_ids": [
+    222178,
+    242498
+  ],
+  "mtgo_id": 43173,
+  "mtgo_foil_id": 43174,
+  "tcgplayer_id": 57608,
+  "cardmarket_id": 252479,
+  "name": "Soul Seizer // Ghastly Haunting",
+  "lang": "en",
+  "released_at": "2012-02-03",
+  "uri": "https://api.scryfall.com/cards/f500cb95-d5ea-4cf2-920a-f1df45a9059b",
+  "scryfall_uri": "https://scryfall.com/card/dka/50/soul-seizer-ghastly-haunting?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:07:22Z",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Spirit // Enchantment \u2014 Aura",
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Transform",
+    "Enchant"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Soul Seizer",
+      "mana_cost": "{3}{U}{U}",
+      "type_line": "Creature \u2014 Spirit",
+      "oracle_text": "Flying\nWhen this creature deals combat damage to a player, you may transform it. If you do, attach it to target creature that player controls.",
+      "colors": [
+        "U"
+      ],
+      "power": "1",
+      "toughness": "3",
+      "artist": "Lucas Graciano",
+      "artist_id": "ce98f39c-7cdd-47e6-a520-6c50443bb4c2",
+      "illustration_id": "97ac3535-9384-4187-9787-2b48b981fa5a",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "normal": "https://cards.scryfall.io/normal/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "large": "https://cards.scryfall.io/large/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "png": "https://cards.scryfall.io/png/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.png?1783940842",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "thumb": "https://cards.scryfall.io/thumb/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "grid": "https://cards.scryfall.io/grid/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "display": "https://cards.scryfall.io/display/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "art": "https://cards.scryfall.io/art/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "crop": "https://cards.scryfall.io/crop/front/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Ghastly Haunting",
+      "mana_cost": "",
+      "type_line": "Enchantment \u2014 Aura",
+      "oracle_text": "Enchant creature\nYou control enchanted creature.",
+      "colors": [
+        "U"
+      ],
+      "color_indicator": [
+        "U"
+      ],
+      "flavor_text": "The body often twists and flails spasmodically as the spirit explores its new home.",
+      "artist": "Lucas Graciano",
+      "artist_id": "ce98f39c-7cdd-47e6-a520-6c50443bb4c2",
+      "illustration_id": "a5820e6d-5a27-494d-ab4c-c9cb3fd6e74f",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "normal": "https://cards.scryfall.io/normal/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "large": "https://cards.scryfall.io/large/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "png": "https://cards.scryfall.io/png/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.png?1783940842",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.jpg?1783940842",
+        "thumb": "https://cards.scryfall.io/thumb/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "grid": "https://cards.scryfall.io/grid/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "display": "https://cards.scryfall.io/display/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "art": "https://cards.scryfall.io/art/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842",
+        "crop": "https://cards.scryfall.io/crop/back/f/5/f500cb95-d5ea-4cf2-920a-f1df45a9059b.webp?1783940842"
+      }
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "825c61e7-bf33-45ea-af78-97ab3bc96753",
+      "component": "combo_piece",
+      "name": "Dark Ascension Checklist",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/825c61e7-bf33-45ea-af78-97ab3bc96753"
+    },
+    {
+      "object": "related_card",
+      "id": "f500cb95-d5ea-4cf2-920a-f1df45a9059b",
+      "component": "combo_piece",
+      "name": "Soul Seizer // Ghastly Haunting",
+      "type_line": "Creature \u2014 Spirit // Enchantment \u2014 Aura",
+      "uri": "https://api.scryfall.com/cards/f500cb95-d5ea-4cf2-920a-f1df45a9059b"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8052750a-aaf2-46fc-b46d-633f14124017",
+  "set": "dka",
+  "set_name": "Dark Ascension",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8052750a-aaf2-46fc-b46d-633f14124017",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adka&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dka?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f500cb95-d5ea-4cf2-920a-f1df45a9059b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A98950aaf-d0b8-420b-9e6a-c7d07d0f8588&unique=prints",
+  "collector_number": "50",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Lucas Graciano",
+  "artist_ids": [
+    "ce98f39c-7cdd-47e6-a520-6c50443bb4c2"
+  ],
+  "border_color": "black",
+  "frame": "2003",
+  "frame_effects": [
+    "sunmoondfc"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 24244,
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.33",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=222178&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSoul%2BSeizer%2B%252F%252F%2BGhastly%2BHaunting",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSoul%2BSeizer%2B%252F%252F%2BGhastly%2BHaunting",
+    "edhrec": "https://edhrec.com/route/?cc=Soul+Seizer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F57608%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=252479&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/43173?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
