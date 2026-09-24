@@ -1,0 +1,95 @@
+{
+  "ability": "III — Cold Snap — Tap all lands your opponents control. Exile Shiva, then return it to the battlefield .",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Shiva, Warden of Ice@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Jill, Shiva's Dominant // Shiva, Warden of Ice"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Jill, Shiva's Dominant // Shiva, Warden of Ice",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Jill, Shiva's Dominant",
+        "source": "Jill, Shiva's Dominant"
+      }
+    ],
+    "fields_changed": ["permanents_left_battlefield_this_turn"],
+    "notices": {},
+    "objects": {
+      "Forest@bob#1": {
+        "tapped": [false, true]
+      },
+      "Island@bob#1": {
+        "tapped": [false, true]
+      },
+      "Mountain@bob#1": {
+        "tapped": [false, true]
+      },
+      "Plains@bob#1": {
+        "tapped": [false, true]
+      },
+      "Shiva, Warden of Ice@alice#1": {
+        "counters": [
+          {
+            "lore": 3
+          },
+          {}
+        ],
+        "power": [4, 2],
+        "toughness": [5, 2],
+        "transformed": [true, false]
+      },
+      "Swamp@bob#1": {
+        "tapped": [false, true]
+      },
+      "Wastes@bob#1": {
+        "tapped": [false, true]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Shiva, Warden of Ice@alice#1: When Jill enters, return up to one other target nonland permanent to its owner's hand."]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "lore_counters_added",
+  "number": 3,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

@@ -1,11 +1,11 @@
 {
-  "ability": "II — Create three Treasure tokens.",
+  "ability": "I — This Saga deals 3 damage to target opponent and each creature they control.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "The Great Work@alice#1",
-    "targets": [],
+    "targets": ["player:bob"],
     "x": 0
   },
   "board": {
@@ -34,58 +34,23 @@
   },
   "card": "Urabrask // The Great Work",
   "delta": {
-    "created": {
-      "Treasure Token@alice+1": {
-        "attached_to": null,
-        "class_level": 1,
-        "controller": "alice",
-        "counters": {},
-        "damage": 0,
-        "face_up": true,
-        "granted": [],
-        "monstrous": false,
-        "power": null,
-        "tapped": false,
-        "toughness": null,
-        "transformed": false,
-        "zone": "battlefield"
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_facts"],
+    "notices": {},
+    "objects": {
+      "Fleecemane Lion@bob#1": {
+        "zone": ["battlefield", "graveyard"]
       },
-      "Treasure Token@alice+2": {
-        "attached_to": null,
-        "class_level": 1,
-        "controller": "alice",
-        "counters": {},
-        "damage": 0,
-        "face_up": true,
-        "granted": [],
-        "monstrous": false,
-        "power": null,
-        "tapped": false,
-        "toughness": null,
-        "transformed": false,
-        "zone": "battlefield"
-      },
-      "Treasure Token@alice+3": {
-        "attached_to": null,
-        "class_level": 1,
-        "controller": "alice",
-        "counters": {},
-        "damage": 0,
-        "face_up": true,
-        "granted": [],
-        "monstrous": false,
-        "power": null,
-        "tapped": false,
-        "toughness": null,
-        "transformed": false,
-        "zone": "battlefield"
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", "graveyard"]
       }
     },
-    "decisions": [],
-    "fields_changed": ["continuous_effects"],
-    "notices": {},
-    "objects": {},
-    "players": {},
+    "players": {
+      "bob": {
+        "life": [20, 17]
+      }
+    },
     "stack": []
   },
   "family": "triggered",
