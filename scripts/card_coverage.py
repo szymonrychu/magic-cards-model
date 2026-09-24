@@ -32,6 +32,7 @@ import argparse
 import gzip
 import json
 import re
+import shutil
 import sys
 import urllib.error
 import urllib.request
@@ -322,6 +323,74 @@ def assign_numbers(ordered_oldest_first: list[str], existing: dict[str, int]) ->
     return numbers
 
 
+def find_orphaned_set_dirs(out_dir: Path, modern_codes: set[str]) -> dict[str, Path]:
+    """Existing `docs/card_coverage/<NNN>-<code>/` directories whose code is
+    no longer in this run's `modern_codes` - every one of that set's cards
+    got reattributed elsewhere (typically `select_first_printing`'s promo
+    preference homing them at the real expansion instead), so the set no
+    longer has any first-printed card in scope and its stale directory would
+    otherwise keep reporting numbers nobody can act on."""
+    orphans: dict[str, Path] = {}
+    if not out_dir.exists():
+        return orphans
+    for child in out_dir.iterdir():
+        if not child.is_dir():
+            continue
+        match = _DIR_RE.match(child.name)
+        if not match:
+            continue
+        code = match.group(2)
+        if code not in modern_codes:
+            orphans[code] = child
+    return orphans
+
+
+def prune_orphaned_sets(
+    out_dir: Path, modern_codes: set[str]
+) -> tuple[list[str], list[tuple[str, str]]]:
+    """Deletes every orphaned set directory (`find_orphaned_set_dirs`) - but
+    never one whose `status.md` carries a non-empty `## Notes` section: a
+    human wrote something there, so that directory is left on disk
+    untouched, and its `(code, notes)` pair is returned instead for the
+    caller to fold into `plan.md`'s own `## Notes`
+    (`merge_pruned_notes_into_plan`) so the record survives even though the
+    set no longer appears anywhere else in the campaign.
+
+    Returns `(pruned_codes, kept_with_notes)`, both sorted by code for
+    deterministic output."""
+    pruned: list[str] = []
+    kept_with_notes: list[tuple[str, str]] = []
+    for code, path in sorted(find_orphaned_set_dirs(out_dir, modern_codes).items()):
+        status_path = path / "status.md"
+        notes = extract_section(status_path.read_text(), "Notes") if status_path.exists() else None
+        if notes:
+            kept_with_notes.append((code, notes))
+            continue
+        shutil.rmtree(path)
+        pruned.append(code)
+    return pruned, kept_with_notes
+
+
+def merge_pruned_notes_into_plan(
+    existing_notes: str | None, kept_with_notes: list[tuple[str, str]]
+) -> str | None:
+    """`existing_notes` (plan.md's own `## Notes` body, already read back
+    for the caller to carry forward) with one tagged block appended per
+    `(code, notes)` pair `prune_orphaned_sets` chose to keep rather than
+    delete. Idempotent across repeated runs: a code whose tagged block is
+    already present in `existing_notes` (because a prior run already
+    recovered it, and the directory - still holding notes - is still
+    orphaned) is not appended again."""
+    notes = existing_notes or ""
+    for code, set_notes in kept_with_notes:
+        marker = f"### Pruned set `{code}`"
+        if marker in notes:
+            continue
+        block = f"{marker}\n\n{set_notes}"
+        notes = f"{notes}\n\n{block}" if notes.strip() else block
+    return notes if notes.strip() else None
+
+
 # ---------------------------------------------------------------------------
 # Tested-card detection
 # ---------------------------------------------------------------------------
@@ -468,6 +537,22 @@ _WHITESPACE_RE = re.compile(r"\s+")
 #: exactly as printed.
 _KEYWORD_LEAD_RE = re.compile(r"^([A-Z][A-Za-z'’]*(?:\s+[A-Za-z][A-Za-z'’]*){0,3})\s*[-—]\s+")
 
+#: A Saga/Case chapter marker ("I —", "II —", "I, II —", CR 714.2/CR 715.2)
+#: leading a clause. Plain roman-numeral chapter counters, never ability
+#: words - "I" is not a keyword and must never be clustered as one.
+_CHAPTER_LEAD_RE = re.compile(r"^([IVX]+(?:\s*,\s*[IVX]+)*)\s*[-—]\s+")
+_ROMAN_CHAPTER_TOKENS = {"I", "II", "III", "IV", "V", "VI"}
+
+#: A reason string that implicates the Saga/Case chapter machinery itself
+#: (chapter/lore-counter advancement not modelled) rather than just one
+#: chapter's own unparsed effect text - the rare case that earns the extra
+#: "Saga chapter (see templates)" roll-up row alongside the per-template
+#: clusters every chapter clause gets regardless.
+_SAGA_MACHINERY_REASON_RE = re.compile(r"\bsaga\b", re.IGNORECASE)
+
+_SAGA_MACHINERY_SIGNATURE = "meta:saga-chapter-machinery"
+_SAGA_MACHINERY_LABEL = "Saga chapter (see templates)"
+
 
 @dataclass(frozen=True)
 class MechanicCluster:
@@ -483,6 +568,22 @@ def _keyword_lead_label(text: str) -> str | None:
     `None` if the clause isn't in that template."""
     match = _KEYWORD_LEAD_RE.match(text.strip())
     return match.group(1).strip() if match else None
+
+
+def _chapter_lead_strip(text: str) -> str | None:
+    """`text` with a leading Saga/Case chapter marker removed, or `None` if
+    it isn't led by one. A chapter marker is one or more roman numerals
+    (`I`..`VI`, comma-separated for a shared chapter like "I, II —") - never
+    an ability word, so callers must check this before `_keyword_lead_label`
+    to keep "I"/"II"/"III" out of the keyword-cluster path entirely."""
+    stripped = text.strip()
+    match = _CHAPTER_LEAD_RE.match(stripped)
+    if not match:
+        return None
+    tokens = [token.strip() for token in match.group(1).split(",")]
+    if not all(token in _ROMAN_CHAPTER_TOKENS for token in tokens):
+        return None
+    return stripped[match.end() :]
 
 
 def _normalize_template(text: str, card_name: str) -> str:
@@ -515,19 +616,32 @@ def cluster_missing_mechanics(
     for the caller's own use, not part of the clustering key) into probable
     missing mechanics.
 
-    A clause led by a keyword or ability word ("Waterbend — ...") clusters by
-    that word, labelled with it. Everything else clusters by its normalized
-    TEMPLATE (`_normalize_template`) - only identical templates group
-    together, never a loose "same first few words" match, so unrelated
+    A clause led by a Saga/Case chapter marker ("I —", "II —", ...) is never
+    treated as an ability word: the marker is stripped and the chapter's own
+    effect text clusters by normalized template like any other clause. When
+    a chapter clause's own `reason` implicates the chapter/lore-counter
+    machinery itself (rather than just that one chapter's unparsed effect),
+    it also feeds one extra roll-up cluster labelled
+    "Saga chapter (see templates)" - a pointer at the per-template clusters,
+    not a replacement for them.
+
+    Anything else led by a keyword or ability word ("Waterbend — ...")
+    clusters by that word, labelled with it. Everything else clusters by its
+    normalized TEMPLATE (`_normalize_template`) - only identical templates
+    group together, never a loose "same first few words" match, so unrelated
     clauses that happen to open the same way land in separate clusters."""
     groups: dict[str, dict[str, object]] = {}
-    for card_name, _status, _kind, clause_text, _reason, set_code in entries:
-        keyword = _keyword_lead_label(clause_text)
+    for card_name, _status, _kind, clause_text, reason, set_code in entries:
+        chapter_remainder = _chapter_lead_strip(clause_text)
+        is_chapter = chapter_remainder is not None
+        effect_text = chapter_remainder if is_chapter else clause_text
+
+        keyword = None if is_chapter else _keyword_lead_label(effect_text)
         if keyword:
             signature = f"kw:{keyword.lower()}"
             label = keyword
         else:
-            template = _normalize_template(clause_text, card_name)
+            template = _normalize_template(effect_text, card_name)
             if not template:
                 signature = f"__unsignatured__:{card_name}"
                 label = clause_text
@@ -537,6 +651,14 @@ def cluster_missing_mechanics(
         bucket = groups.setdefault(signature, {"label": label, "cards": {}, "sets": set()})
         bucket["cards"][card_name] = None  # dict used as an ordered set
         bucket["sets"].add(set_code)
+
+        if is_chapter and _SAGA_MACHINERY_REASON_RE.search(reason or ""):
+            meta = groups.setdefault(
+                _SAGA_MACHINERY_SIGNATURE,
+                {"label": _SAGA_MACHINERY_LABEL, "cards": {}, "sets": set()},
+            )
+            meta["cards"][card_name] = None
+            meta["sets"].add(set_code)
     clusters: list[MechanicCluster] = []
     for signature, data in groups.items():
         cards = tuple(data["cards"].keys())
@@ -575,8 +697,13 @@ def extract_section(markdown: str, heading: str) -> str | None:
     return body if body else None
 
 
+#: `.*` (not `[^|]*`) between the code and the state column so this keeps
+#: matching regardless of how many columns sit between them - the campaign-
+#: order table has grown a column before now (Works, alongside Tested) and
+#: may again; only the row's very last field is ever the state.
 _ROUND_ROW_RE = re.compile(
-    r"\|\s*\d+\s*\|\s*\[([a-z0-9]+)\]\([^)]*\)[^|]*\|[^|]*\|[^|]*\|\s*([a-z-]+)\s*\|"
+    r"^\|\s*\d+\s*\|\s*\[([a-z0-9]+)\]\([^)]*\).*\|\s*([a-z-]+)\s*\|\s*$",
+    re.MULTILINE,
 )
 
 
@@ -595,18 +722,24 @@ def extract_round_states(markdown: str) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
+#: Display labels for each `Bucket`, in the order every rendered table shows
+#: them: Tested (handled + tested) -> Works (handled, untested) -> Partial
+#: (unaudited) -> Not working (silent / notice / error).
+_BUCKET_LABELS: dict[Bucket, str] = {
+    "full": "Tested",
+    "not_tested": "Works (untested)",
+    "partial": "Partial (unaudited)",
+    "not_working": "Not working",
+}
+_BUCKET_DISPLAY_ORDER: tuple[Bucket, ...] = ("full", "not_tested", "partial", "not_working")
+
+
 def _format_bucket_table(counts: dict[Bucket, int], total: int) -> str:
     lines = ["| Bucket | Count | % |", "|---|---|---|"]
-    labels: dict[Bucket, str] = {
-        "full": "Full (handled + tested)",
-        "partial": "Partial (unaudited)",
-        "not_tested": "Not tested (handled, untested)",
-        "not_working": "Not working (silent / notice / error)",
-    }
-    for bucket in ("full", "partial", "not_tested", "not_working"):
+    for bucket in _BUCKET_DISPLAY_ORDER:
         count = counts.get(bucket, 0)
         pct = f"{(100.0 * count / total):.1f}%" if total else "0.0%"
-        lines.append(f"| {labels[bucket]} | {count} | {pct} |")
+        lines.append(f"| {_BUCKET_LABELS[bucket]} | {count} | {pct} |")
     return "\n".join(lines)
 
 
@@ -736,7 +869,10 @@ class PlanRow:
     name: str
     release_date: str
     total: int
-    full: int
+    tested: int
+    works: int
+    partial: int
+    not_working: int
     state: str
 
 
@@ -753,8 +889,12 @@ def render_plan_md(
     newest_first = sorted(rows, key=lambda r: (r.release_date, r.number), reverse=True)
 
     total_cards = sum(r.total for r in rows)
-    total_full = sum(r.full for r in rows)
-    overall_pct = f"{(100.0 * total_full / total_cards):.1f}%" if total_cards else "0.0%"
+    total_bucket_counts: dict[Bucket, int] = {
+        "full": sum(r.tested for r in rows),
+        "not_tested": sum(r.works for r in rows),
+        "partial": sum(r.partial for r in rows),
+        "not_working": sum(r.not_working for r in rows),
+    }
 
     lines: list[str] = []
     lines.append("# Card coverage campaign plan")
@@ -766,26 +906,26 @@ def render_plan_md(
     lines.append("")
     lines.append("## Overall coverage")
     lines.append("")
-    lines.append("| Expansions | Cards in scope | Fully supported | % |")
-    lines.append("|---|---|---|---|")
-    lines.append(f"| {len(rows)} | {total_cards} | {total_full} | {overall_pct} |")
+    lines.append(f"{len(rows)} expansions, {total_cards} cards in scope.")
+    lines.append("")
+    lines.append(_format_bucket_table(total_bucket_counts, total_cards))
     lines.append("")
     lines.append("## Campaign order")
     lines.append("")
-    lines.append("| Round | Set | Release date | Cards | Full | State |")
-    lines.append("|---|---|---|---|---|---|")
+    lines.append("| Round | Set | Release date | Cards | Tested | Works | State |")
+    lines.append("|---|---|---|---|---|---|---|")
     round0_state = "in-progress" if round0_cards else "done"
     round0_count = len(round0_cards)
     lines.append(
         f"| Round 0 | metagame decks ({round0_count} cards not full) "
-        f"| - | {round0_count} | - | {round0_state} |"
+        f"| - | {round0_count} | - | - | {round0_state} |"
     )
     for row in newest_first:
         dir_name = format_expansion_dir(row.number, row.code)
         link = f"[{row.code}]({dir_name}/status.md)"
         lines.append(
             f"| {row.number} | {link} - {row.name} | {row.release_date} "
-            f"| {row.total} | {row.full} | {row.state} |"
+            f"| {row.total} | {row.tested} | {row.works} | {row.state} |"
         )
     lines.append("")
     lines.append("## Missing mechanics")
@@ -936,6 +1076,8 @@ def fetch_set_cards(code: str) -> list[dict]:
 class GenerateResult:
     set_count: int
     card_count: int
+    pruned_codes: tuple[str, ...] = ()
+    recovered_notes_codes: tuple[str, ...] = ()
 
 
 def _classifications_and_tested_for_meta(
@@ -954,7 +1096,7 @@ def _write_set_status(
     out_dir: Path,
     tested_index: TestedIndex,
     workers: int,
-) -> tuple[int, int]:
+) -> tuple[int, dict[Bucket, int]]:
     classifications, tested = _classifications_and_tested_for_meta(meta, tested_index, workers)
     return _write_set_status_from_classifications(meta, number, out_dir, classifications, tested)
 
@@ -965,11 +1107,14 @@ def _write_set_status_from_classifications(
     out_dir: Path,
     classifications: dict[str, ClassificationResult],
     tested: dict[str, bool],
-) -> tuple[int, int]:
+) -> tuple[int, dict[Bucket, int]]:
     """Renders and writes one set's `status.md` from already-computed
     classifications, so a full run's single big classification pass
     (`generate_all`) never re-classifies a set's cards a second time just to
-    write its file."""
+    write its file. Returns the total card count and every bucket's count
+    (`full`/`not_tested`/`partial`/`not_working`), not just `full` - the
+    campaign-order table's Tested/Works columns and the overall roll-up need
+    all four."""
     dir_name = format_expansion_dir(number, meta.code)
     set_dir = out_dir / dir_name
     set_dir.mkdir(parents=True, exist_ok=True)
@@ -988,12 +1133,11 @@ def _write_set_status_from_classifications(
     status_path.write_text(text)
 
     total = len(classifications)
-    full = sum(
-        1
-        for name, r in classifications.items()
-        if bucket_of(r.status, tested.get(name, False)) == "full"
-    )
-    return total, full
+    bucket_counts: dict[Bucket, int] = {}
+    for name, r in classifications.items():
+        bucket = bucket_of(r.status, tested.get(name, False))
+        bucket_counts[bucket] = bucket_counts.get(bucket, 0) + 1
+    return total, bucket_counts
 
 
 def generate_all(
@@ -1042,6 +1186,14 @@ def generate_all(
     )
     existing_plan_done = extract_section(existing_plan_text, "Done") if existing_plan_text else None
 
+    # A set whose cards all got reattributed elsewhere this run (typically
+    # select_first_printing's promo preference) no longer has any
+    # first-printed card in `modern_codes` at all - its directory is
+    # orphaned. Prune it, unless a human left notes there, in which case it
+    # survives untouched and its notes move into plan.md's own Notes.
+    pruned_codes, recovered_notes = prune_orphaned_sets(out_dir, modern_codes)
+    existing_plan_notes = merge_pruned_notes_into_plan(existing_plan_notes, recovered_notes)
+
     # One classification pass across every set's target-format-legal cards,
     # through a single process pool - not one pool per set (200+ of them on
     # a full run) and not classified twice for the status.md write and the
@@ -1072,7 +1224,7 @@ def generate_all(
         number = numbers[code]
         classifications = classifications_by_set[code]
         tested = tested_by_set[code]
-        total, full = _write_set_status_from_classifications(
+        total, bucket_counts = _write_set_status_from_classifications(
             meta, number, out_dir, classifications, tested
         )
         total_card_count += total
@@ -1084,7 +1236,10 @@ def generate_all(
                 name=meta.name,
                 release_date=meta.release_date,
                 total=total,
-                full=full,
+                tested=bucket_counts.get("full", 0),
+                works=bucket_counts.get("not_tested", 0),
+                partial=bucket_counts.get("partial", 0),
+                not_working=bucket_counts.get("not_working", 0),
                 state=state,
             )
         )
@@ -1114,7 +1269,12 @@ def generate_all(
     out_dir.mkdir(parents=True, exist_ok=True)
     plan_path.write_text(plan_text)
 
-    return GenerateResult(set_count=len(rows), card_count=total_card_count)
+    return GenerateResult(
+        set_count=len(rows),
+        card_count=total_card_count,
+        pruned_codes=tuple(pruned_codes),
+        recovered_notes_codes=tuple(code for code, _notes in recovered_notes),
+    )
 
 
 def generate_one_set(
@@ -1126,7 +1286,7 @@ def generate_one_set(
     tests_dir: Path,
     golden_dir: Path,
     workers: int = 1,
-) -> tuple[int, int]:
+) -> tuple[int, dict[Bucket, int]]:
     """The `--set` fast path: classify and write just one set's `status.md`
     (fetched fresh, spoilers included), assigning it a number if it does not
     already have one, without touching any other set's file."""
@@ -1183,7 +1343,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.set_code:
         raw_cards = fetch_set_cards(args.set_code)
-        total, full = generate_one_set(
+        total, bucket_counts = generate_one_set(
             code=args.set_code,
             raw_cards=raw_cards,
             out_dir=args.out_dir,
@@ -1192,7 +1352,8 @@ def main(argv: list[str] | None = None) -> int:
             golden_dir=args.golden_dir,
             workers=args.workers,
         )
-        print(f"{args.set_code}: {total} cards in scope, {full} fully supported")
+        tested = bucket_counts.get("full", 0)
+        print(f"{args.set_code}: {total} cards in scope, {tested} tested")
         return 0
 
     bulk_path = download_bulk("oracle-cards", cache_dir=args.cache_dir, force=args.refresh_bulk)
@@ -1212,6 +1373,15 @@ def main(argv: list[str] | None = None) -> int:
         workers=args.workers,
     )
     print(f"{result.set_count} expansions, {result.card_count} cards in scope")
+    if result.pruned_codes:
+        print(
+            f"pruned {len(result.pruned_codes)} orphaned set dirs: {', '.join(result.pruned_codes)}"
+        )
+    if result.recovered_notes_codes:
+        print(
+            f"kept {len(result.recovered_notes_codes)} orphaned set dirs with notes "
+            f"(moved into plan.md): {', '.join(result.recovered_notes_codes)}"
+        )
     return 0
 
 

@@ -678,6 +678,153 @@ def test_cluster_missing_mechanics_limits_example_cards_to_five():
     assert len(clusters[0].cards) == 5
 
 
+def test_cluster_missing_mechanics_chapter_markers_are_not_ability_words():
+    """Review follow-up: "I", "II", "III" (Saga/Case chapter markers) must
+    never cluster by their roman-numeral lead the way a real ability word
+    ("Waterbend — ...") does - two different sagas' chapter I, with
+    genuinely different effects, must land in separate clusters, not one
+    "I" cluster."""
+    entries = [
+        (
+            "Saga A",
+            "silent",
+            "triggered",
+            "I — Destroy target creature an opponent controls.",
+            "nothing in the engine reads this text",
+            "seta",
+        ),
+        (
+            "Saga B",
+            "silent",
+            "triggered",
+            "I — Draw a card.",
+            "nothing in the engine reads this text",
+            "setb",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert not any(c.label == "I" for c in clusters)
+    assert len(clusters) == 2
+    assert all(c.count == 1 for c in clusters)
+
+
+def test_cluster_missing_mechanics_chapter_markers_cluster_by_stripped_template():
+    """Same effect modulo card name/number, whatever chapter it's printed
+    on, must cluster together by the normalized template of the effect text
+    with the chapter marker itself stripped off (the marker is not part of
+    the clustering key - Saga C's genuinely different effect must not join
+    that cluster just because it also happens to be a chapter)."""
+    entries = [
+        (
+            "Saga A",
+            "silent",
+            "triggered",
+            "I — Saga A deals 1 damage to any target.",
+            "nothing in the engine reads this text",
+            "seta",
+        ),
+        (
+            "Saga B",
+            "silent",
+            "triggered",
+            "I — Saga B deals 3 damage to any target.",
+            "nothing in the engine reads this text",
+            "setb",
+        ),
+        (
+            "Saga C",
+            "silent",
+            "triggered",
+            "II — Saga C gains flying until end of turn.",
+            "nothing in the engine reads this text",
+            "setc",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    template_clusters = [c for c in clusters if c.label != "Saga chapter (see templates)"]
+    assert len(template_clusters) == 2  # damage-template cluster, flying-template cluster
+    by_count = sorted(template_clusters, key=lambda c: -c.count)
+    assert by_count[0].count == 2
+    assert set(by_count[0].cards) == {"Saga A", "Saga B"}
+    assert by_count[1].count == 1
+    assert by_count[1].cards == ("Saga C",)
+
+
+def test_cluster_missing_mechanics_chapter_ranges_are_stripped_too():
+    entries = [
+        (
+            "Saga D",
+            "silent",
+            "triggered",
+            "I, II — Create a 1/1 white Human Soldier creature token.",
+            "nothing in the engine reads this text",
+            "setd",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert not any(c.label in ("I", "II", "I, II") for c in clusters)
+    assert any("create a N/N" in c.label for c in clusters)
+
+
+def test_cluster_missing_mechanics_adds_saga_machinery_rollup_when_reason_implicates_it():
+    """Only when the failing chapter's own reason implicates the Saga
+    machinery itself (not just that chapter's unparsed effect) does the
+    extra "Saga chapter (see templates)" roll-up row appear, in addition to
+    the ordinary per-template clusters."""
+    entries = [
+        (
+            "Saga E",
+            "notice",
+            "triggered",
+            "I — Create a 1/1 white Human Soldier creature token.",
+            "no machine advances this Saga's lore/chapter counters",
+            "sete",
+        ),
+        (
+            "Saga F",
+            "notice",
+            "triggered",
+            "II — Draw two cards.",
+            "no machine advances this Saga's lore/chapter counters",
+            "setf",
+        ),
+        (
+            # An ordinary unmodeled chapter effect - reason never mentions
+            # "Saga" - must NOT count toward the machinery roll-up.
+            "Saga G",
+            "silent",
+            "triggered",
+            "I — Exile target artifact.",
+            "nothing in the engine reads this text",
+            "setg",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    rollups = [c for c in clusters if c.label == "Saga chapter (see templates)"]
+    assert len(rollups) == 1
+    (rollup,) = rollups
+    assert rollup.count == 2
+    assert set(rollup.cards) == {"Saga E", "Saga F"}
+    assert "Saga G" not in rollup.cards
+    # The per-template clusters for those same chapters still exist too.
+    assert any(c.label != "Saga chapter (see templates)" and "Saga E" in c.cards for c in clusters)
+
+
+def test_cluster_missing_mechanics_no_saga_rollup_when_no_reason_implicates_it():
+    entries = [
+        (
+            "Saga H",
+            "silent",
+            "triggered",
+            "I — Exile target artifact.",
+            "nothing in the engine reads this text - it would do nothing and log nothing",
+            "seth",
+        ),
+    ]
+    clusters = cc.cluster_missing_mechanics(entries)
+    assert not any(c.label == "Saga chapter (see templates)" for c in clusters)
+
+
 # ---------------------------------------------------------------------------
 # Notes / round-state preservation
 # ---------------------------------------------------------------------------
@@ -701,6 +848,21 @@ def test_extract_round_states_reads_state_column():
         "|---|---|---|---|---|\n"
         "| 1 | [hob](001-hob/status.md) | 107 | 90 | done |\n"
         "| 2 | [msh](002-msh/status.md) | 156 | 100 | in-progress |\n"
+    )
+    states = cc.extract_round_states(md)
+    assert states == {"hob": "done", "msh": "in-progress"}
+
+
+def test_extract_round_states_reads_state_column_with_works_column():
+    """Regression: the campaign-order table gained a Works column next to
+    Tested (bucket relabeling). extract_round_states must still find the
+    right (last) column as the state, whatever the column count."""
+    md = (
+        "## Campaign order\n\n"
+        "| Round | Set | Release date | Cards | Tested | Works | State |\n"
+        "|---|---|---|---|---|---|---|\n"
+        "| 1 | [hob](001-hob/status.md) - The Hobbit | 2026-08-14 | 107 | 90 | 10 | done |\n"
+        "| 2 | [msh](002-msh/status.md) - Marvel | 2026-06-26 | 156 | 16 | 100 | in-progress |\n"
     )
     states = cc.extract_round_states(md)
     assert states == {"hob": "done", "msh": "in-progress"}
@@ -755,6 +917,40 @@ def test_render_status_md_contains_required_sections():
     assert "Full Card" in md
     assert "## Missing mechanics" in md
     assert "## Notes" in md
+
+
+def test_render_status_md_coverage_table_uses_relabeled_buckets_in_order():
+    meta = _sample_set_meta()
+    classifications = {
+        "Full Card": cc.ClassificationResult(
+            name="Full Card",
+            status="handled",
+            clause_kind="spell",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+        "Silent Card": cc.ClassificationResult(
+            name="Silent Card",
+            status="silent",
+            clause_kind="keyword",
+            clause_text="Frobnicate",
+            reason="no machine executes this keyword",
+            error=False,
+        ),
+    }
+    tested = {"Full Card": True, "Silent Card": False}
+    md = cc.render_status_md(
+        meta, number=1, classifications=classifications, tested=tested, existing_notes=None
+    )
+    coverage = cc.extract_section(md, "Coverage")
+    assert coverage is not None
+    assert "Full (handled + tested)" not in coverage
+    assert "Not tested (handled, untested)" not in coverage
+    assert "Not working (silent / notice / error)" not in coverage
+    lines = [line for line in coverage.splitlines() if line.startswith("| ")]
+    labels = [line.split("|")[1].strip() for line in lines]
+    assert labels == ["Bucket", "Tested", "Works (untested)", "Partial (unaudited)", "Not working"]
 
 
 def test_render_status_md_preserves_existing_notes():
@@ -820,7 +1016,10 @@ def test_render_plan_md_shows_only_top_50_missing_mechanics_clusters():
             name="One",
             release_date="2020-01-01",
             total=1,
-            full=0,
+            tested=0,
+            works=0,
+            partial=0,
+            not_working=1,
             state="todo",
         ),
     ]
@@ -858,7 +1057,10 @@ def test_render_plan_md_contains_required_sections():
             name="Marvel",
             release_date="2026-06-26",
             total=156,
-            full=10,
+            tested=10,
+            works=20,
+            partial=30,
+            not_working=96,
             state="in-progress",
         ),
         cc.PlanRow(
@@ -867,7 +1069,10 @@ def test_render_plan_md_contains_required_sections():
             name="Hobbit",
             release_date="2026-08-14",
             total=107,
-            full=107,
+            tested=107,
+            works=0,
+            partial=0,
+            not_working=0,
             state="done",
         ),
     ]
@@ -886,6 +1091,72 @@ def test_render_plan_md_contains_required_sections():
     assert "## Done" in md
     # Newest first.
     assert md.index("hob") < md.index("msh")
+
+
+def test_render_plan_md_overall_coverage_shows_all_four_relabeled_buckets():
+    rows = [
+        cc.PlanRow(
+            number=1,
+            code="one",
+            name="One",
+            release_date="2020-01-01",
+            total=100,
+            tested=10,
+            works=20,
+            partial=30,
+            not_working=40,
+            state="todo",
+        ),
+    ]
+    md = cc.render_plan_md(
+        rows=rows,
+        round0_cards=[],
+        missing_mechanics=[],
+        existing_notes=None,
+        existing_done=None,
+    )
+    overall = cc.extract_section(md, "Overall coverage")
+    assert overall is not None
+    assert "Tested" in overall
+    assert "Works (untested)" in overall
+    assert "Partial (unaudited)" in overall
+    assert "Not working" in overall
+    # Old headline wording is gone.
+    assert "Full (handled + tested)" not in overall
+    assert "Not tested (handled, untested)" not in overall
+    # Counts and percentages for each bucket are present.
+    assert "| Tested | 10 | 10.0% |" in overall
+    assert "| Works (untested) | 20 | 20.0% |" in overall
+    assert "| Partial (unaudited) | 30 | 30.0% |" in overall
+    assert "| Not working | 40 | 40.0% |" in overall
+
+
+def test_render_plan_md_campaign_order_has_tested_and_works_columns():
+    rows = [
+        cc.PlanRow(
+            number=1,
+            code="one",
+            name="One",
+            release_date="2020-01-01",
+            total=100,
+            tested=10,
+            works=20,
+            partial=30,
+            not_working=40,
+            state="todo",
+        ),
+    ]
+    md = cc.render_plan_md(
+        rows=rows,
+        round0_cards=[],
+        missing_mechanics=[],
+        existing_notes=None,
+        existing_done=None,
+    )
+    campaign = cc.extract_section(md, "Campaign order")
+    assert campaign is not None
+    assert "| Round | Set | Release date | Cards | Tested | Works | State |" in campaign
+    assert "| 1 | [one](001-one/status.md) - One | 2020-01-01 | 100 | 10 | 20 | todo |" in campaign
 
 
 # ---------------------------------------------------------------------------
@@ -1177,3 +1448,180 @@ def test_generate_all_preserves_hand_edited_notes(tmp_path: Path):
         workers=1,
     )
     assert "Hand-written note." in status_path.read_text()
+
+
+# ---------------------------------------------------------------------------
+# Pruning orphaned set directories
+# ---------------------------------------------------------------------------
+
+
+def _write_status_md(path: Path, *, notes: str | None) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    body = "# Some Set (xyz)\n\n## Coverage\n\nsomething\n\n## Notes\n\n"
+    body += (notes or "") + "\n"
+    (path / "status.md").write_text(body)
+
+
+def test_prune_orphaned_sets_removes_dirs_with_no_notes(tmp_path: Path):
+    out_dir = tmp_path / "docs" / "card_coverage"
+    _write_status_md(out_dir / "003-gone", notes=None)
+    _write_status_md(out_dir / "004-keep", notes=None)
+    pruned, kept_with_notes = cc.prune_orphaned_sets(out_dir, {"keep"})
+    assert pruned == ["gone"]
+    assert kept_with_notes == []
+    assert not (out_dir / "003-gone").exists()
+    assert (out_dir / "004-keep").exists()
+
+
+def test_prune_orphaned_sets_never_deletes_a_dir_with_notes(tmp_path: Path):
+    out_dir = tmp_path / "docs" / "card_coverage"
+    _write_status_md(out_dir / "005-noted", notes="Human wrote something important here.")
+    pruned, kept_with_notes = cc.prune_orphaned_sets(out_dir, set())
+    assert pruned == []
+    assert kept_with_notes == [("noted", "Human wrote something important here.")]
+    assert (out_dir / "005-noted").exists()
+    assert (out_dir / "005-noted" / "status.md").exists()
+
+
+def test_merge_pruned_notes_into_plan_appends_tagged_block():
+    merged = cc.merge_pruned_notes_into_plan(
+        "Existing human note.", [("psos", "Cards moved to sos.")]
+    )
+    assert merged is not None
+    assert "Existing human note." in merged
+    assert "psos" in merged
+    assert "Cards moved to sos." in merged
+
+
+def test_merge_pruned_notes_into_plan_is_idempotent():
+    once = cc.merge_pruned_notes_into_plan(None, [("psos", "Cards moved to sos.")])
+    twice = cc.merge_pruned_notes_into_plan(once, [("psos", "Cards moved to sos.")])
+    assert once == twice
+
+
+def test_generate_all_prunes_orphaned_set_with_no_notes(tmp_path: Path):
+    def make_oracle_cards(include_gone: bool) -> list[dict]:
+        cards = [
+            make_card(
+                "Keep Card",
+                set_code="keep",
+                set_name="Keep Set",
+                released_at="2020-01-01",
+                legal_modern="legal",
+            ),
+        ]
+        if include_gone:
+            cards.append(
+                make_card(
+                    "Gone Card",
+                    set_code="gone",
+                    set_name="Gone Set",
+                    released_at="2019-01-01",
+                    legal_modern="legal",
+                )
+            )
+        return cards
+
+    bulk_path = tmp_path / "oracle-cards.json"
+    out_dir = tmp_path / "docs" / "card_coverage"
+    printings_dir = tmp_path / "printings"
+    printings_dir.mkdir()
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    golden_dir = tests_dir / "golden"
+    golden_dir.mkdir()
+
+    bulk_path.write_text(json.dumps(make_oracle_cards(True)))
+    cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+    assert (out_dir / "001-gone").exists()
+
+    bulk_path.write_text(json.dumps(make_oracle_cards(False)))
+    result = cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+    assert not (out_dir / "001-gone").exists()
+    assert result.pruned_codes == ("gone",)
+    assert result.recovered_notes_codes == ()
+
+
+def test_generate_all_keeps_and_recovers_notes_for_pruned_set(tmp_path: Path):
+    def make_oracle_cards(include_marked: bool) -> list[dict]:
+        cards = [
+            make_card(
+                "Keep Card",
+                set_code="keep",
+                set_name="Keep Set",
+                released_at="2020-01-01",
+                legal_modern="legal",
+            ),
+        ]
+        if include_marked:
+            cards.append(
+                make_card(
+                    "Marked Card",
+                    set_code="marked",
+                    set_name="Marked Set",
+                    released_at="2019-01-01",
+                    legal_modern="legal",
+                )
+            )
+        return cards
+
+    bulk_path = tmp_path / "oracle-cards.json"
+    out_dir = tmp_path / "docs" / "card_coverage"
+    printings_dir = tmp_path / "printings"
+    printings_dir.mkdir()
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    golden_dir = tests_dir / "golden"
+    golden_dir.mkdir()
+
+    bulk_path.write_text(json.dumps(make_oracle_cards(True)))
+    cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+    marked_status = out_dir / "001-marked" / "status.md"
+    text = marked_status.read_text()
+    text = text.replace("## Notes\n\n", "## Notes\n\nDo not lose this human note.\n\n", 1)
+    marked_status.write_text(text)
+
+    bulk_path.write_text(json.dumps(make_oracle_cards(False)))
+    result = cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+    # The directory survives untouched - never deleted while it holds notes.
+    assert marked_status.exists()
+    assert "Do not lose this human note." in marked_status.read_text()
+    assert result.pruned_codes == ()
+    assert result.recovered_notes_codes == ("marked",)
+    plan_text = (out_dir / "plan.md").read_text()
+    plan_notes = cc.extract_section(plan_text, "Notes")
+    assert plan_notes is not None
+    assert "marked" in plan_notes
+    assert "Do not lose this human note." in plan_notes

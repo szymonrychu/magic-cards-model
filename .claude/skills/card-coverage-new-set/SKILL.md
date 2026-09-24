@@ -110,7 +110,7 @@ say so explicitly for a human reading the report:
 ### 5. Report
 
 Say, in a few lines: the set code and name, its expansion number, cards in
-scope and the full/partial/not-tested/not-working split, whether it's
+scope and the tested/works/partial/not-working split, whether it's
 provisional, and the two or three biggest entries in its "Missing
 mechanics" section (these are the campaign's next likely work items, but
 **this skill does not do that work** - `card-coverage-campaign` does).

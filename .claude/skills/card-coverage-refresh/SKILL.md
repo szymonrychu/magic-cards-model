@@ -105,16 +105,17 @@ regenerated `status.md` counts:
 
 | Evidence | State |
 |---|---|
-| Full = total (100% coverage) | `done` |
-| Full rose from the previous state, or a `card-coverage-campaign` round is actively running for it | `in-progress` |
+| Tested = total (100% coverage) | `done` |
+| Tested rose from the previous state, or a `card-coverage-campaign` round is actively running for it | `in-progress` |
 | Otherwise, no work has started | `todo` |
 | A landed round's cards are all handled but the set contains cards blocked on a named, tracked engine limitation (SWEEP_DRIVER_GAPS, an documented `docs/engine-coverage.md` exception) | `done` with a `## Notes` line naming the exception - do not hold a set at `in-progress` forever waiting on something the campaign itself will never close |
 
 **Coverage numbers alone cannot tell you a round is `done`.** A round only
 implements the templates on its own task list; a set can legitimately sit at
-`done` well under 100% full (`hob` landed at 62% full/38% not-tested - untested-
-but-handled cards, not silent ones - and is still `done` by campaign say-so, not
-by the "Full = total" row above). `scripts/card_coverage.py`'s `SEED_ROUND_STATES`
+`done` well under 100% tested (`hob` landed at 62% tested/38% works (untested)
+- untested-but-handled cards, not silent ones - and is still `done` by campaign
+say-so, not by the "Tested = total" row above). `scripts/card_coverage.py`'s
+`SEED_ROUND_STATES`
 carries forward whatever state a set is already at, but nothing in this repo
 (no `campaign_rounds.json` or `STATE.md` exists here despite the generator's
 own docstring naming them as the seed source) records which round is *currently*
