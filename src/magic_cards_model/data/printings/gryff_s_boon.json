@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "a01e7a3f-9654-4f72-8adc-20dad0b5d14e",
+  "oracle_id": "f62f3f4e-d506-43a9-91d8-bbc86e0a9167",
+  "multiverse_ids": [
+    685841
+  ],
+  "mtgo_id": 135410,
+  "tcgplayer_id": 609805,
+  "cardmarket_id": 805692,
+  "name": "Gryff's Boon",
+  "lang": "en",
+  "released_at": "2025-01-24",
+  "uri": "https://api.scryfall.com/cards/a01e7a3f-9654-4f72-8adc-20dad0b5d14e",
+  "scryfall_uri": "https://scryfall.com/card/inr/25/gryffs-boon?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:03:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.jpg?1783908181",
+    "normal": "https://cards.scryfall.io/normal/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.jpg?1783908181",
+    "large": "https://cards.scryfall.io/large/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.jpg?1783908181",
+    "png": "https://cards.scryfall.io/png/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.png?1783908181",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.jpg?1783908181",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.jpg?1783908181",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.webp?1783908181",
+    "grid": "https://cards.scryfall.io/grid/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.webp?1783908181",
+    "display": "https://cards.scryfall.io/display/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.webp?1783908181",
+    "art": "https://cards.scryfall.io/art/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.webp?1783908181",
+    "crop": "https://cards.scryfall.io/crop/front/a/0/a01e7a3f-9654-4f72-8adc-20dad0b5d14e.webp?1783908181"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant creature\nEnchanted creature gets +1/+0 and has flying.\n{3}{W}: Return this card from your graveyard to the battlefield attached to target creature. Activate only as a sorcery.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set": "inr",
+  "set_name": "Innistrad Remastered",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/b9618c8c-9f31-4b42-9798-2991893c27bf",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ainr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/inr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a01e7a3f-9654-4f72-8adc-20dad0b5d14e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af62f3f4e-d506-43a9-91d8-bbc86e0a9167&unique=prints",
+  "collector_number": "25",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Svetlin Velinov",
+  "artist_ids": [
+    "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
+  ],
+  "illustration_id": "b602ef6f-f8b6-4c77-8d9f-f9b3152fb193",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7739,
+  "penny_rank": 986,
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.31",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=685841&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGryff%2527s%2BBoon",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGryff%2527s%2BBoon",
+    "edhrec": "https://edhrec.com/route/?cc=Gryff%27s+Boon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F609805%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=805692&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/135410?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

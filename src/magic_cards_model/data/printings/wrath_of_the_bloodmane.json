@@ -40,7 +40,7 @@
   "keywords": [],
   "legalities": {
     "standard": "not_legal",
-    "future": "not_legal",
+    "future": "legal",
     "historic": "not_legal",
     "timeless": "not_legal",
     "gladiator": "not_legal",
@@ -61,7 +61,7 @@
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -105,7 +105,7 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 32224,
+  "edhrec_rank": 32254,
   "preview": {
     "source": "iYingdi",
     "source_uri": "https://www.iyingdi.com/tz/post/5714994",
@@ -115,7 +115,7 @@
     "usd": null,
     "usd_foil": null,
     "usd_etched": null,
-    "eur": null,
+    "eur": "0.30",
     "eur_foil": null,
     "tix": null
   },

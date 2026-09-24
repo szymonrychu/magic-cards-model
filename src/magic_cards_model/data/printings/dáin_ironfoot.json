@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "7112e460-9160-4535-ad94-93f1f4ac04cf",
+  "oracle_id": "9924c189-3c82-431a-b570-7805b2a406f0",
+  "multiverse_ids": [],
+  "resource_id": "3F07B6C5DE2BE4C8EEEFAA096DBAE0C776183D9EADB1F0AA5A47C1A707C00F6B",
+  "mtgo_id": 154112,
+  "arena_id": 103467,
+  "tcgplayer_id": 708763,
+  "cardmarket_id": 899784,
+  "name": "D\u00e1in Ironfoot",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/7112e460-9160-4535-ad94-93f1f4ac04cf",
+  "scryfall_uri": "https://scryfall.com/card/hob/91/d%C3%A1in-ironfoot?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-28T11:05:01Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.jpg?1785236701",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.jpg?1785236701",
+    "large": "https://cards.scryfall.io/large/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.jpg?1785236701",
+    "png": "https://cards.scryfall.io/png/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.png?1785236701",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.jpg?1785236701",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.jpg?1785236701",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.webp?1785236701",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.webp?1785236701",
+    "display": "https://cards.scryfall.io/display/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.webp?1785236701",
+    "art": "https://cards.scryfall.io/art/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.webp?1785236701",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/7112e460-9160-4535-ad94-93f1f4ac04cf.webp?1785236701"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Dwarf Warrior",
+  "oracle_text": "When D\u00e1in enters, create a colorless Equipment artifact token named Axe with \"Equipped creature gets +1/+0\" and equip {2}. When you do, attach it to target creature you control.\nWhenever D\u00e1in attacks, each equipped attacking creature gains double strike until end of turn.",
+  "power": "1",
+  "toughness": "4",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "6f7a3999-e341-43bb-9b8f-6c1a05b98906",
+      "component": "token",
+      "name": "Axe",
+      "type_line": "Token Artifact \u2014 Equipment",
+      "uri": "https://api.scryfall.com/cards/6f7a3999-e341-43bb-9b8f-6c1a05b98906"
+    },
+    {
+      "object": "related_card",
+      "id": "ff35d11c-6429-4aab-b9c8-0c0306f13db9",
+      "component": "combo_piece",
+      "name": "D\u00e1in Ironfoot",
+      "type_line": "Legendary Creature \u2014 Dwarf Warrior",
+      "uri": "https://api.scryfall.com/cards/ff35d11c-6429-4aab-b9c8-0c0306f13db9"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7112e460-9160-4535-ad94-93f1f4ac04cf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9924c189-3c82-431a-b570-7805b2a406f0&unique=prints",
+  "collector_number": "91",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tomas Duchek",
+  "artist_ids": [
+    "ceb3ce65-efa6-4bcc-b2a3-33e83a047528"
+  ],
+  "illustration_id": "ff8e20ed-7fb9-4ddd-a034-200671b14a0d",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 10415,
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.36",
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": "0.30",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DD%25C3%25A1in%2BIronfoot",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DD%25C3%25A1in%2BIronfoot",
+    "edhrec": "https://edhrec.com/route/?cc=D%C3%A1in+Ironfoot"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708763%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=899784&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154112?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -2250,10 +2250,15 @@ def compute_board(
     """
     counters = counters or {}
     board: dict[UUID, Characteristics] = {}
+    attachments: dict[UUID, UUID] = {}
     for state in permanents:
         board[state.id] = printed_characteristics(state, counters.get(state.id))
+        if state.attached_to is not None:
+            attachments[state.id] = state.attached_to
 
-    all_effects = list(effects) + _counter_effects(board)
+    all_effects = (
+        list(effects) + _counter_effects(board) + _hone_counter_effects(board, attachments)
+    )
     journal = Journal()
     started: set[object] = set()
 
@@ -2362,6 +2367,44 @@ def _counter_effects(board: Board) -> list[ContinuousEffect]:
                 from_counters=True,
                 selector=_only(card_id),
                 modification=modify_power_toughness(amount, amount),
+            )
+        )
+    return effects
+
+
+def _hone_counter_effects(board: Board, attachments: dict[UUID, UUID]) -> list[ContinuousEffect]:
+    """CR 122.1j: "A hone counter on an Equipment gives +1/+0 to any
+    creature that Equipment is attached to." - Sting, Bilbo's Sword's own
+    counter kind.
+
+    A 7c effect (CR 613.4c), the same sublayer `_counter_effects` above puts
+    a permanent's own `+1/+1`/`-1/-1` count in - the difference is only the
+    *selector*: a hone counter's bonus applies to what the Equipment carrying
+    it is attached to, never to the Equipment itself, so this reads
+    `attachments` (`CardState.attached_to`, not itself a computed
+    characteristic - `board` alone has nowhere to keep it) rather than
+    `board`'s own id. An Equipment with hone counters but nothing attached
+    (CR 704.5n's own gap, or one that simply hasn't been equipped yet)
+    contributes nothing, the same way an unattached Equipment's ordinary
+    "Equipped creature gets ..." static already does.
+    """
+    effects: list[ContinuousEffect] = []
+    for card_id, chars in board.items():
+        amount = chars.counters.get("hone", 0)
+        if amount <= 0 or "Equipment" not in chars.subtypes:
+            continue
+        host_id = attachments.get(card_id)
+        if host_id is None or host_id not in board:
+            continue
+        effects.append(
+            ContinuousEffect(
+                description=f"{chars.name}: {amount:+}/+0 to equipped creature from hone counters",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=0,
+                from_counters=True,
+                selector=_only(host_id),
+                modification=modify_power_toughness(amount, 0),
             )
         )
     return effects
@@ -9188,6 +9231,22 @@ _COSTED_KEYWORD_ITEM_RE = re.compile(
     r"^(?P<keyword>ward) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
 )
 
+#: "can't be blocked[ by `<quality>`]" (CR 509.1a) as one item of an "and"/
+#: comma-joined keyword-and-ability list - My Precious's own "Equipped
+#: creature has hexproof and can't be blocked.", Slippery Scoundrel's "this
+#: creature has hexproof and can't be blocked." Not itself a CR 702 keyword
+#: (so absent from `_KNOWN_KEYWORDS`/`_BARE_KEYWORD_ITEM_RE`'s one-or-two-word
+#: whitelist), and unlike every other item here, the reading side
+#: (`machines/combat.py::_evasion_restriction_sentences`) requires a
+#: self-referential *subject* ("This creature ...") ahead of the restriction
+#: before it ever reads it - a bare, subject-less "can't be blocked" line is
+#: invisible to it - so the granted text built here is the whole sentence,
+#: not the bare phrase every other list item grants.
+_CANT_BE_BLOCKED_ITEM_RE = re.compile(
+    r"^can'?t be blocked(?: by (?P<by>[a-z][a-z0-9 +/'-]*?))?(?:,\s*|\s+and\s+|$)",
+    re.IGNORECASE,
+)
+
 
 def _split_and_validate_keywords(raw: str) -> list[str] | None:
     """ "double strike and lifelink" / "menace, deathtouch and first strike" /
@@ -9233,6 +9292,17 @@ def _split_and_validate_keywords(raw: str) -> list[str] | None:
         if numbered is not None and numbered.group("keyword").lower() in _KNOWN_NUMBERED_KEYWORDS:
             result.append(f"{numbered.group('keyword').capitalize()} {numbered.group('n')}")
             remaining = remaining[numbered.end() :].strip()
+            continue
+        cant_be_blocked = _CANT_BE_BLOCKED_ITEM_RE.match(remaining)
+        if cant_be_blocked is not None:
+            by = cant_be_blocked.group("by")
+            sentence = (
+                f"This creature can't be blocked by {by.strip()}."
+                if by
+                else "This creature can't be blocked."
+            )
+            result.append(sentence)
+            remaining = remaining[cant_be_blocked.end() :].strip()
             continue
         bare = _BARE_KEYWORD_ITEM_RE.match(remaining)
         if bare is None:

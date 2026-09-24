@@ -102,6 +102,7 @@ from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
 
+from ..data.subtypes import noncreature_subtype_card_type
 from ..models.card import Card, Color, Supertype, Type
 from ..models.card_state import CardState, TargetRef
 from ..models.zone import Zone
@@ -3603,7 +3604,18 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             following = words[index + 1] if index + 1 < len(words) else ""
             following_bare = following[:-1] if following.endswith("s") else following
             if following_bare not in _ALL_NOUNS:
-                card_types.add(Type.CREATURE)
+                # CR 205.3m's elision only ever stands in for "creature" -
+                # "target Equipment you control" (Blacksmith's Talent) is
+                # never "target Equipment creature you control" (Equipment
+                # is CR 205.3g's artifact subtype). A bare subtype word this
+                # engine knows to be some *other* card type's - artifact,
+                # enchantment, land, battle, planeswalker - elides that card
+                # type instead, never creature.
+                other_type = noncreature_subtype_card_type(word)
+                if other_type is not None:
+                    card_types.add(Type(other_type))
+                else:
+                    card_types.add(Type.CREATURE)
             allows_cards = True
         elif nouns_read == 0 and not adjectives.read:
             return None  # an adjective the parser does not know: fail open

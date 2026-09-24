@@ -6484,6 +6484,7 @@ class Game(EngineModel):
         source_id: UUID | None,
         source_name: str,
         callback: DelayedEffectSpec,
+        subject_id: UUID | None = None,
     ) -> AbilityOnStack:
         """Create a reflexive triggered ability (CR 603.12) and queue it for
         the stack.
@@ -6494,6 +6495,13 @@ class Game(EngineModel):
         lets `DelayedTriggers.create_reflexive` treat CR 603.12's "checked
         immediately after being created" as already satisfied rather than
         something to watch for.
+
+        `subject_id` (CR 603.7c) is the particular object this reflexive
+        ability refers to when it is not the creating ability's own source or
+        target - Dain Ironfoot's "When you do, attach it to target creature
+        you control." names the token the antecedent just created, which
+        `ReflexiveAttachSubjectToTargetConsequence` reads back off this field
+        rather than re-deriving it from printed text.
 
         Appending straight to `pending_triggers` - the same queue `emit`
         fills for every ordinary trigger - is what makes `put_triggers_on_
@@ -6506,6 +6514,7 @@ class Game(EngineModel):
                 text=text,
                 controller=controller,
                 source_id=source_id,
+                subject_id=subject_id,
                 source_name=source_name,
                 callback=callback,
             )
@@ -9146,6 +9155,25 @@ class Game(EngineModel):
         """
         printed = ability.ability
         text = printed.text if isinstance(printed, TriggeredAbility) else ""
+        # CR 603.12: when this ability *is itself* the reflexively created
+        # one - its own printed text opens with "When you do," (or "when ...
+        # this way,") rather than merely containing that clause somewhere
+        # inside a larger antecedent - `profile_for_text`'s own
+        # `_REFLEXIVE_CLAUSE_TAIL` cut (deliberately built for the *outer*
+        # ability's own announcement, so it never claims a target that
+        # belongs to a reflexive ability not yet created) would otherwise
+        # strip the *entire* text here, since there is no antecedent in
+        # front of it to leave behind - Dain Ironfoot's own "When you do,
+        # attach it to target creature you control." always read as "no
+        # target" this way, so the Equipment token it just created never
+        # attached to anything. `reflexive_consequence_text` reads the exact
+        # same words `profile_for_text` would have thrown away; using them
+        # here is not new latitude, only reading them for the one ability
+        # they actually belong to instead of discarding them.
+        if re.match(r"^\s*(?:when you do|when [^,]+ this way)\s*,", text, re.IGNORECASE):
+            consequence = reflexive_consequence_text(text)
+            if consequence is not None:
+                text = consequence
         profile = profile_for_text(text).for_event_player(_that_player_of(ability))
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
@@ -18527,6 +18555,13 @@ class Game(EngineModel):
         ):
             return None
         units = effect.amount
+        if effect.per_equipped_power:
+            from ..machines.keywords import equipped_creature
+
+            host = equipped_creature(self, permanent)
+            units = self.power_of(host) if host is not None else None
+            if units is None:
+                return None
         if effect.per_each is not None:
             from ..machines.effects import _for_each_multiplier
 

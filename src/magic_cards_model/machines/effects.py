@@ -64,7 +64,7 @@ from pydantic import ConfigDict
 
 from magic_cards_model.phrases import with_indefinite_article
 
-from ..data.subtypes import creature_type_vocabulary, subtype_vocabulary
+from ..data.subtypes import canonical_subtype, creature_type_vocabulary, subtype_vocabulary
 from ..models.card import Color, Supertype, Type, types_of
 from ..models.card_state import (
     PERMANENT_TYPES,
@@ -146,8 +146,10 @@ from .delayed import (
     NextSpellCannotBeCountered,
     PayOrLoseTheGame,
     PumpEventSubject,
+    ReflexiveAttachSubjectToTargetConsequence,
     ReflexiveConsequence,
     ReflexiveCounterCountConsequence,
+    ReflexiveDamageEqualToSubjectPowerConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
     ReturnExiledCardAndAddCounters,
@@ -21152,6 +21154,39 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     create_token_then_may_attach = _parse_create_token_then_may_attach_clause(effect_text)
     if create_token_then_may_attach is not None:
         return create_token_then_may_attach
+    create_token_then_attach = _parse_create_token_then_attach_clause(effect_text)
+    if create_token_then_attach is not None:
+        return create_token_then_attach
+    named_equipment_token = _parse_named_equipment_token_clause(effect_text)
+    if named_equipment_token is not None:
+        return named_equipment_token
+    attach_self_to_target = _attach_self_to_target_effect(effect_text)
+    if attach_self_to_target is not None:
+        return attach_self_to_target
+    amass_then_attach = _parse_amass_then_attach_clause(effect_text)
+    if amass_then_attach is not None:
+        return amass_then_attach
+    attach_target_equipment_up_to_one_creature = (
+        _parse_attach_target_equipment_up_to_one_creature_clause(effect_text)
+    )
+    if attach_target_equipment_up_to_one_creature is not None:
+        return attach_target_equipment_up_to_one_creature
+    attach_any_number_equipment = _parse_attach_any_number_equipment_clause(effect_text)
+    if attach_any_number_equipment is not None:
+        return attach_any_number_equipment
+    put_self_counter_then_attach = (
+        _parse_put_self_counter_for_each_opponent_creature_then_attach_clause(effect_text)
+    )
+    if put_self_counter_then_attach is not None:
+        return put_self_counter_then_attach
+    choose_type_treasure = _parse_choose_creature_type_treasure_per_match_clause(effect_text)
+    if choose_type_treasure is not None:
+        return choose_type_treasure
+    equipped_attackers_gain_keywords = _parse_equipped_attacking_creatures_gain_keywords_clause(
+        effect_text
+    )
+    if equipped_attackers_gain_keywords is not None:
+        return equipped_attackers_gain_keywords
     dalkovan_attack_tokens = _parse_attack_this_turn_create_tapped_attacking_tokens(effect_text)
     if dalkovan_attack_tokens is not None:
         return dalkovan_attack_tokens
@@ -21429,6 +21464,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     mill_then_take_from_milled_ability = _parse_mill_then_may_take_from_milled_ability(effect_text)
     if mill_then_take_from_milled_ability is not None:
         return mill_then_take_from_milled_ability
+    mill_then_put_all_from_milled_ability = _parse_mill_then_put_all_from_milled_ability(
+        effect_text
+    )
+    if mill_then_put_all_from_milled_ability is not None:
+        return mill_then_put_all_from_milled_ability
     look_top_card_conditional = _parse_look_top_card_conditional_clause(effect_text)
     if look_top_card_conditional is not None:
         return look_top_card_conditional
@@ -24464,6 +24504,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     mill_then_take_from_milled = _parse_mill_then_may_take_from_milled(effect_text)
     if mill_then_take_from_milled is not None:
         return mill_then_take_from_milled
+    mill_then_put_all_from_milled = _parse_mill_then_put_all_from_milled(effect_text)
+    if mill_then_put_all_from_milled is not None:
+        return mill_then_put_all_from_milled
     mill_then_return_to_hand = _parse_mill_then_return_to_hand_clause(effect_text)
     if mill_then_return_to_hand is not None:
         return mill_then_return_to_hand
@@ -25625,6 +25668,106 @@ def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | Non
     return conditional_rider
 
 
+#: "If it's a `<subtype>`, you may attach an Equipment you control to it."
+#: - Vow to Erebor's own trailing rider ("Untap target creature you
+#: control. It gets +2/+2 until end of turn. If it's a Dwarf, you may
+#: attach an Equipment you control to it."), read as one of
+#: `_parse_object_anaphor_clause_series`'s riders rather than through
+#: `_parse_conditional_referent_clause` - that reader's own "if `<condition>`,
+#: `<anaphor>` `<rider>`" shape requires the rider itself to *start* with the
+#: anaphor ("it"/"that creature"), which this sentence's own "it" (at the very
+#: end, "... to it") never does, and its condition ("it's a Dwarf") is about
+#: the referent's own characteristics rather than a board-state
+#: `condition_is_readable` phrase.
+_IF_TYPE_MAY_ATTACH_EQUIPMENT_RE = re.compile(
+    r"^if it'?s an? (?P<quality>[a-z][a-z '-]*?),?\s*you may attach an equipment you "
+    r"control to it$",
+    re.IGNORECASE,
+)
+
+
+def _matches_subtype_on_battlefield(game: "Game", referent: CardState, quality: str) -> bool:
+    """Whether `referent`'s computed subtypes (CR 613.5) include `quality`
+    (an article-stripped noun phrase - "Dwarf", "Human Soldier") - the same
+    generic word-by-word subtype check `machines/keywords.equip_quality_
+    refusal` already reads an "Equip [quality]" ability's own quality with,
+    narrowed here to the single subtype-list shape this rider's own "if it's
+    a `<subtype>`" ever prints (CR 205.3's card subtypes, `canonical_subtype`).
+    """
+    if referent.zone is not Zone.BATTLEFIELD:
+        return False
+    subtypes = {subtype.lower() for subtype in game.characteristics_of(referent).subtypes}
+    words = quality.strip().lower().split()
+    if not words:
+        return False
+    return all((canonical_subtype(word) or word) in subtypes for word in words)
+
+
+def _parse_if_type_may_attach_equipment_referent_clause(rider: str) -> ReferentObjectClause | None:
+    """`_IF_TYPE_MAY_ATTACH_EQUIPMENT_RE`'s shape; see the banner above.
+
+    The Equipment is CR 608.2d's own free choice among whatever the
+    controller controls, offered only when the referent still qualifies and
+    only when at least one Equipment exists to offer - the identical
+    `DecisionKind.MAY` shape `_parse_create_token_then_may_attach_clause`
+    already asks, just with the roles of "the thing offered" (an Equipment
+    the player picks) and "the thing attached to" (the referent, already
+    found) swapped from that clause's own token-then-target-chooser.
+    """
+    match = _IF_TYPE_MAY_ATTACH_EQUIPMENT_RE.fullmatch(rider)
+    if match is None:
+        return None
+    quality = match.group("quality").strip()
+
+    def rider_effect(game: "Game", referents: list[CardState], stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        for referent in referents:
+            if not _matches_subtype_on_battlefield(game, referent, quality):
+                continue
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(controller.username)
+                if "Equipment" in game.characteristics_of(permanent).subtypes
+            ]
+            if not candidates:
+                continue
+            source_name = (
+                stack_object.name
+                if isinstance(stack_object, CardState)
+                else stack_object.source_name  # type: ignore[union-attr]
+            )
+            decision = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller.username,
+                    prompt=f"attach an Equipment you control to {referent.name}",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    affirmative_is_legal=True,
+                )
+            )
+            if not decision:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose an Equipment you control to attach",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {permanent.id: permanent for permanent in candidates}
+            equipment = by_id.get(chosen_ids[0]) if chosen_ids else None
+            if equipment is not None:
+                attach_permanent(game, equipment, referent)
+
+    return rider_effect
+
+
 def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     """A rider sentence read as something to do to the objects its antecedent
     found, or `None` when this wave cannot read it - in which case the pair is
@@ -25634,6 +25777,10 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     # CR 207.2c: a leading ability word ("Delirium — ") carries no rules
     # meaning; the rider is the sentence after it.
     rider = _strip_ability_word_labels(rider.strip()).strip().rstrip(".").strip()
+
+    may_attach_if_type = _parse_if_type_may_attach_equipment_referent_clause(rider)
+    if may_attach_if_type is not None:
+        return may_attach_if_type
 
     conditional = _parse_conditional_referent_clause(rider)
     if conditional is not None:
@@ -29438,6 +29585,110 @@ def _parse_choose_creature_type_destroy_except_clause(
     return effect
 
 
+#: "Choose a creature type. Create a Treasure token for each creature you
+#: control of that type." - Orcrist, Goblin-cleaver's own combat-damage
+#: trigger. CR 701.6a's choice (`creature_type_vocabulary`, the same
+#: vocabulary `_parse_choose_creature_type_destroy_except_clause` above
+#: offers) counted back against the board the same "of that type" way
+#: `_parse_choose_creature_type_destroy_except_clause`'s own "aren't of the
+#: chosen type" reads it - CR 111.10a's own predefined Treasure.
+_CHOOSE_CREATURE_TYPE_TREASURE_PER_MATCH_RE = re.compile(
+    r"^choose a creature type\.\s*create a treasure token for each creature "
+    r"you control of that type\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_choose_creature_type_treasure_per_match_clause(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_CREATURE_TYPE_TREASURE_PER_MATCH_RE`'s shape; see the banner
+    above."""
+    if _CHOOSE_CREATURE_TYPE_TREASURE_PER_MATCH_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        chosen = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt="choose a creature type",
+                source=ability.source_name,
+                options=tuple(sorted(creature_type_vocabulary())),
+                source_id=source_id_of(ability),
+            )
+        )
+        assert isinstance(chosen, str)
+        board = game.computed_board()
+        count = sum(
+            1
+            for permanent in game.battlefield
+            if permanent.zone is Zone.BATTLEFIELD
+            and permanent.controller == controller.username
+            and Type.CREATURE in board.of(permanent).types
+            and chosen in board.of(permanent).subtypes
+        )
+        if count:
+            create_tokens(game, PREDEFINED["Treasure"], controller.username, count)
+
+    return effect
+
+
+#: "Each equipped attacking creature gains `<keyword(s)>` until end of
+#: turn." - Dain Ironfoot's own attack trigger. CR 301.5a's "equipped
+#: creature" widened to a group ("each equipped ... creature", not "the
+#: equipped creature" - a permanent qualifies whenever *any* Equipment is
+#: attached to it, not only the ability's own source's Equipment), narrowed
+#: to attackers by `Game.attacking_creatures`, the same "computed at
+#: resolution, not re-targeted" set `_parse_dalkovan_attack_tokens` and
+#: every other attacker-scoped grant already reads.
+_EQUIPPED_ATTACKING_CREATURES_GAIN_KEYWORDS_RE = re.compile(
+    r"^each equipped attacking creature gains? (?P<keywords>[a-z].+?) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_equipped_attacking_creatures_gain_keywords_clause(text: str) -> AbilityEffect | None:
+    """`_EQUIPPED_ATTACKING_CREATURES_GAIN_KEYWORDS_RE`'s shape; see the
+    banner above."""
+    match = _EQUIPPED_ATTACKING_CREATURES_GAIN_KEYWORDS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    keywords = _split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        equipped_attackers = [
+            creature
+            for creature in game.attacking_creatures()
+            if any(
+                permanent.zone is Zone.BATTLEFIELD
+                and permanent.attached_to == creature.id
+                and "Equipment" in game.characteristics_of(permanent).subtypes
+                for permanent in game.battlefield
+            )
+        ]
+        if not equipped_attackers:
+            return
+        effects = game.continuous_effects
+        for creature in equipped_attackers:
+            for keyword in keywords:
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{ability.source_name}: {creature.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=effects.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(creature, creature.zone_change_stamp),
+                        modification=grant_ability(keyword),
+                    ),
+                    game,
+                )
+
+    return effect
+
+
 #: CR 607.1's "that many"/"that much" anaphora, and its own "twice `<x>`"
 #: multiplier (Borborygmos and Fblthp's own "twice that much damage") - read
 #: as one substitution so the multiplied form is never mistaken for two
@@ -30065,6 +30316,134 @@ def _parse_create_token_then_may_attach_clause(text: str) -> AbilityEffect | Non
         )
         if decision:
             source.attach_to(token)
+
+    return effect
+
+
+#: "create `<token(s)>`, then attach this Equipment to it." (no "you may") -
+#: Dwarven Shortsword's and Kyoshi Battle Fan's own ETB trigger.
+#: `_CREATE_TOKEN_THEN_MAY_ATTACH_RE`'s own twin, mandatory rather than
+#: CR 608.2d-optional: CR 701.3a's attach always happens once the token
+#: exists, the identical "instruct" half `_CREATE_TOKEN_THEN_MAY_ATTACH_RE`'s
+#: own docstring already reads for the token creation itself.
+_CREATE_TOKEN_THEN_ATTACH_RE = re.compile(
+    r"^(?P<action>create .+?), then attach this (?:equipment|permanent) to (?:it|them)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_token_then_attach_clause(text: str) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_THEN_ATTACH_RE`'s shape - see the banner above.
+
+    Read the identical way `_parse_create_token_then_may_attach_clause`
+    already does (single-token only, `_TOKEN_CLAUSE_RE`'s own generic
+    descriptor), the only difference being that the attach here is CR
+    701.3a's unconditional "instruct", never a `Decision`.
+    """
+    match = _CREATE_TOKEN_THEN_ATTACH_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    action_text = match.group("action").strip()
+    token_match = _TOKEN_CLAUSE_RE.fullmatch(action_text)
+    if token_match is None:
+        return None
+    count = parse_count(token_match.group("n"))
+    if count != 1:
+        return None
+    words = token_match.group("desc").strip().split()
+    tail = token_match.group("tail")
+    if not words:
+        return None
+    predefined_name = " ".join(words)
+    definition = (
+        PREDEFINED[predefined_name]
+        if tail is None and predefined_name in PREDEFINED
+        else _parse_generic_token_descriptor(words, tail)
+    )
+    if definition is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        created = create_tokens(game, definition, controller.username, count)
+        if not created:
+            return
+        token = created[0]
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        attach_permanent(game, source, token)
+
+    return effect
+
+
+#: "create a colorless Equipment artifact token named `<Name>` with
+#: \"`<ability>`\" and equip `<cost>`[. When you do, attach it to target
+#: creature you control.]" - Dain Ironfoot's and Iron Hills Blacksmith's own
+#: ETB trigger, Blacksmith's Talent's identically-shaped Class-enters one.
+#: `_TOKEN_CLAUSE_RE`'s own tail grammar (`_parse_token_tail`) reads a single
+#: quoted ability, or bare keywords, or both together - never a quoted
+#: ability *and* a full "and equip `{cost}`" activated-ability sentence
+#: riding along after it, which is exactly this shape - so it is read here as
+#: its own whole sentence instead of widening that shared reader for one
+#: printed shape no other pool card needs.
+#:
+#: The token's own "Equip `<cost>`" line is put straight into its
+#: `rules_text` beside the quoted ability, exactly as a real Equipment
+#: printing carries both on separate lines - `parse_abilities`/`has_equip`
+#: read a token's synthesised `Card.oracle_text` the same way they read any
+#: other card's, so the token equips like any other Equipment with no extra
+#: plumbing.
+_NAMED_EQUIPMENT_TOKEN_RE = re.compile(
+    r"^create a colorless equipment artifact token named "
+    r"(?P<name>[A-Z][\w' -]*?) with "
+    r"[\"“‘'](?P<ability>[^\"”’']+)[\"”’'] "
+    r"and equip (?P<cost>(?:\{[^}]+\})+)\.?"
+    r"(?P<attach> when you do, attach it to target creature you control\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_named_equipment_token_clause(text: str) -> AbilityEffect | None:
+    """`_NAMED_EQUIPMENT_TOKEN_RE`'s shape - see the banner above.
+
+    The token is always created; the "When you do, attach it ..." tail, when
+    printed, is CR 603.12's reflexive trigger, created only once the token is
+    real (a `DecisionKind`-free, mandatory attach: CR 603.12's own "when [a
+    player] does" needs no "may" here because nothing about creating the
+    token was optional either).
+    """
+    match = _NAMED_EQUIPMENT_TOKEN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    name = match.group("name").strip()
+    ability = match.group("ability").strip()
+    cost = match.group("cost").strip()
+    has_reflexive_attach = match.group("attach") is not None
+    definition = TokenDefinition(
+        types=(Type.ARTIFACT,),
+        subtypes=("Equipment",),
+        name=name,
+        rules_text=f"{ability}\nEquip {cost}",
+    )
+
+    def effect(game: "Game", ability_on_stack: AbilityOnStack) -> None:
+        controller = game.controller_of(ability_on_stack)
+        created = create_tokens(game, definition, controller.username, 1)
+        if not created:
+            return
+        token = created[0]
+        if not has_reflexive_attach:
+            return
+        reflexive_text = "When you do, attach it to target creature you control."
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=controller.username,
+            source_id=ability_on_stack.source_id,
+            source_name=ability_on_stack.source_name,
+            subject_id=token.id,
+            callback=ReflexiveAttachSubjectToTargetConsequence(),
+        )
 
     return effect
 
@@ -32660,7 +33039,7 @@ def amass(
     source_name: str,
     *,
     source_id: str | None,
-) -> None:
+) -> CardState | None:
     """CR 701.47a: "To amass [subtype] N means 'If you don't control an Army
     creature, create a 0/0 black [subtype] Army creature token. Choose an Army
     creature you control. Put N +1/+1 counters on that creature. If it isn't a
@@ -32702,7 +33081,7 @@ def amass(
         )
         armies = _armies_controlled_by(game, controller)
     if not armies:
-        return  # CR 701.47b: the player still amassed.
+        return None  # CR 701.47b: the player still amassed.
     if len(armies) == 1:
         army = armies[0]
     else:
@@ -32724,7 +33103,7 @@ def amass(
     if any(
         existing.lower() == singular.lower() for existing in game.characteristics_of(army).subtypes
     ):
-        return
+        return army
     game.continuous_effects.add(
         ContinuousEffect(
             description=f"amass {subtype}: {army.name} becomes {with_indefinite_article(singular)}",
@@ -32735,6 +33114,7 @@ def amass(
             modification=add_subtype(singular),
         )
     )
+    return army
 
 
 def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -32776,6 +33156,224 @@ def _parse_amass_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
             source,
             source_id=source_id_of(stack_object),
         )
+
+    return effect
+
+
+#: "Amass `<subtype>` `<n>`, then attach this Equipment to the amassed
+#: Army." - Goblin Plate Mail's own ETB trigger. CR 701.47a's "amass" already
+#: names which Army the process acted on ("Choose an Army creature you
+#: control. Put N +1/+1 counters on that creature."); "the amassed Army" is
+#: CR 607.1 anaphora back to that same creature, not a second target, so this
+#: only has to keep what `amass` (above) hands back and attach the Equipment
+#: (`attach_permanent`, CR 701.3a) to it - never a target list of its own,
+#: for the identical reason `_parse_amass_clause` above needs none.
+_AMASS_THEN_ATTACH_RE = re.compile(
+    rf"^amass (?P<subtype>[A-Za-z][a-z]*) {count_pattern('n', x=True)}{where_x_pattern()}, "
+    r"then attach this (?:equipment|permanent) to the amassed army\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_amass_then_attach_clause(clause: str) -> AbilityEffect | None:
+    """`_AMASS_THEN_ATTACH_RE`'s shape - see the banner above."""
+    match = _AMASS_THEN_ATTACH_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    subtype = match.group("subtype")
+    reader = _fixed_or_where_x_amount(match.group("n"), match.group("where_x"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = ability.controller
+        amount = reader(game, controller, source, 0)
+        army = amass(
+            game,
+            controller,
+            subtype,
+            amount,
+            ability.source_name,
+            source_id=source_id_of(ability),
+        )
+        if army is not None:
+            attach_permanent(game, source, army)
+
+    return effect
+
+
+#: "Attach target Equipment you control to up to one target creature you
+#: control." - Iron Hills Stalwart's own ETB trigger, Blacksmith's Talent's
+#: level-2 combat trigger (verified against the pool printing). CR 701.3a's
+#: attach, with two independent targets (CR 601.2c/603.3d announce both):
+#: the Equipment always required, the creature CR 115.6's own "up to one" -
+#: choosing none simply leaves the Equipment where it is.
+_ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE = re.compile(
+    r"^attach target equipment you control to up to one target creature "
+    r"you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attach_target_equipment_up_to_one_creature_clause(text: str) -> AbilityEffect | None:
+    """`_ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE`'s shape - see the
+    banner above. The Equipment target is picked out of the resolved targets
+    by its own subtype rather than by position, since `Game.resolve_targets`
+    makes no promise about ordering two independently-typed targets in one
+    sentence - the one target that carries "Equipment" is the Equipment
+    half; whichever other one is left (there is at most one, CR 115.6) is
+    the creature.
+    """
+    if _ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [t for t in game.resolve_targets(ability) if isinstance(t, CardState)]
+        legal = [t for t in targets if t.zone is Zone.BATTLEFIELD]
+        equipment = next(
+            (t for t in legal if "Equipment" in game.characteristics_of(t).subtypes), None
+        )
+        if equipment is None:
+            return
+        creature = next((t for t in legal if t.id != equipment.id), None)
+        if creature is None:
+            return
+        attach_permanent(game, equipment, creature)
+
+    return effect
+
+
+#: "Attach any number of target Equipment you control to target creature you
+#: control." - Thorin, Mountain-king's own ETB trigger. "... to it." -
+#: Super-Soldier Serum's own attack/block trigger, "it" being CR 301.5a's/
+#: 303.4b's "enchanted creature" (the ability's own source's attached-to
+#: object, `_attached_object`), not a fresh target - CR 115.4's "any number
+#: of" still only counts the Equipment half either way.
+_ATTACH_ANY_NUMBER_EQUIPMENT_RE = re.compile(
+    r"^attach any number of target equipment you control to "
+    r"(?P<destination>target creature you control|it)\.?"
+    r"(?P<reflexive> when one or more equipment become attached to (?:that|this) "
+    r"creature this way, that creature deals damage equal to its power to "
+    r"up to one target creature\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attach_any_number_equipment_clause(text: str) -> AbilityEffect | None:
+    """`_ATTACH_ANY_NUMBER_EQUIPMENT_RE`'s shape - see the banner above.
+
+    The creature target is picked out the same subtype-agnostic way the
+    "up to one" sibling above does (the one resolved target that is *not*
+    Equipment); every other resolved target is one of the "any number of"
+    Equipment (CR 115.4), each attached in turn. The optional trailing
+    reflexive sentence - Thorin, Mountain-king's own - fires once, CR 603.12,
+    only if at least one Equipment actually became attached this way, naming
+    the creature as `ReflexiveDamageEqualToSubjectPowerConsequence`'s own
+    subject.
+    """
+    match = _ATTACH_ANY_NUMBER_EQUIPMENT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    has_reflexive_damage = match.group("reflexive") is not None
+    to_attached_object = match.group("destination").lower() == "it"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [t for t in game.resolve_targets(ability) if isinstance(t, CardState)]
+        equipment_pieces = [t for t in targets if t.zone is Zone.BATTLEFIELD]
+        if to_attached_object:
+            creature = _attached_object(game, ability)
+        else:
+            creature = next(
+                (
+                    t
+                    for t in equipment_pieces
+                    if "Equipment" not in game.characteristics_of(t).subtypes
+                ),
+                None,
+            )
+            equipment_pieces = [t for t in equipment_pieces if t is not creature]
+        if creature is None:
+            return
+        attached_any = False
+        for equipment in equipment_pieces:
+            if attach_permanent(game, equipment, creature):
+                attached_any = True
+        if not attached_any or not has_reflexive_damage:
+            return
+        reflexive_text = (
+            "When one or more Equipment become attached to that creature this way, "
+            "that creature deals damage equal to its power to up to one target creature."
+        )
+        game.create_reflexive_trigger(
+            text=reflexive_text,
+            controller=ability.controller,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            subject_id=creature.id,
+            callback=ReflexiveDamageEqualToSubjectPowerConsequence(),
+        )
+
+    return effect
+
+
+#: "Put a `<kind>` counter on this permanent for each creature target
+#: opponent controls. Attach this permanent to up to one target creature you
+#: control." - Sting, Bilbo's Sword's own ETB trigger (`self_normalized_
+#: effect_text` has already turned "Sting"/"Attach Sting" into "this
+#: permanent" by the time this is tried, the same normalization every other
+#: CR 201.5 self-reference in this file already reads through). CR 122.1j's
+#: hone counter is the pool's own instance of `<kind>`, but the count and
+#: the counter kind are both read generically - any future Equipment that
+#: puts a named counter on itself scaled by an opponent's board reaches this
+#: the same way.
+_PUT_SELF_COUNTER_FOR_EACH_OPPONENT_CREATURE_THEN_ATTACH_RE = re.compile(
+    r"^put an? (?P<kind>[\w+/-]+) counters? on this permanent for each creature "
+    r"target opponent controls\. attach this permanent to up to one target "
+    r"creature you control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_self_counter_for_each_opponent_creature_then_attach_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_PUT_SELF_COUNTER_FOR_EACH_OPPONENT_CREATURE_THEN_ATTACH_RE`'s shape -
+    see the banner above. Both sentences share one target opponent
+    (CR 115.1's ordinary "target opponent") and one up-to-one creature
+    target; the count is read off the computed board (CR 613.5) at
+    resolution, after the opponent is known, never re-derived from a
+    battlefield sweep of "creatures" in general.
+    """
+    match = _PUT_SELF_COUNTER_FOR_EACH_OPPONENT_CREATURE_THEN_ATTACH_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        resolved = game.resolve_targets(ability)
+        opponent = next((t for t in resolved if isinstance(t, Player)), None)
+        creature = next(
+            (t for t in resolved if isinstance(t, CardState) and t.zone is Zone.BATTLEFIELD),
+            None,
+        )
+        if opponent is not None:
+            count = sum(
+                1
+                for permanent in game.battlefield
+                if permanent.zone is Zone.BATTLEFIELD
+                and game.controller_of(permanent).username == opponent.username
+                and game.characteristics_of(permanent).is_creature
+            )
+            if count:
+                game.add_counters(source, kind, count)
+        if creature is not None:
+            attach_permanent(game, source, creature)
 
     return effect
 
@@ -41372,6 +41970,13 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if return_self_from_graveyard is not None:
         return return_self_from_graveyard
+    return_self_from_graveyard_attached = (
+        _parse_return_self_from_graveyard_to_battlefield_attached_clause(
+            clause, for_spell=for_spell
+        )
+    )
+    if return_self_from_graveyard_attached is not None:
+        return return_self_from_graveyard_attached
     return_self_transformed = _parse_return_self_to_battlefield_transformed_clause(
         clause, for_spell=for_spell
     )
@@ -44478,6 +45083,55 @@ def _parse_return_self_from_graveyard_to_battlefield_clause(
     return effect
 
 
+#: "Return this card from your graveyard to the battlefield attached to
+#: target creature you control[ with power `<n>` or less]. Activate only as
+#: a sorcery." - Eagle's Rescue's own graveyard-zone activated ability
+#: (CR 113.6m), a twin of `_RETURN_SELF_FROM_GRAVEYARD_TO_BATTLEFIELD_RE`
+#: with CR 701.3a's attach in place of that shape's own optional "tapped"/
+#: counters tail. "Activate only as a sorcery" is stripped by `effect_for`'s
+#: own `_CAST_TIMING_RESTRICTION_RE` before this ever sees it, the same way
+#: it already is for every other timing-restricted ability.
+_RETURN_SELF_FROM_GRAVEYARD_ATTACHED_RE = re.compile(
+    r"^return this card from your graveyard to the battlefield attached to "
+    r"target creature(?P<you_control> you control)?"
+    r"(?P<power_bound> with power (?P<power>\d+) or less)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_self_from_graveyard_to_battlefield_attached_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_RETURN_SELF_FROM_GRAVEYARD_ATTACHED_RE`'s shape - see the banner
+    above. The target is announced and re-checked exactly as every other
+    targeted ability's is (CR 601.2c/CR 608.2b); the card only returns, and
+    only attaches, if it is still in a graveyard and the target is still
+    legal once the ability resolves.
+    """
+    if for_spell:
+        return None
+    match = _RETURN_SELF_FROM_GRAVEYARD_ATTACHED_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.GRAVEYARD:
+            return
+        target = next(
+            (t for t in game.resolve_targets(stack_object) if isinstance(t, CardState)), None
+        )
+        if target is None:
+            return
+        permanent = game.put_onto_battlefield(source, game.controller_of(stack_object).username)
+        if permanent.zone is Zone.BATTLEFIELD:
+            attach_permanent(game, permanent, target)
+
+    return effect
+
+
 #: "return it to the battlefield[ tapped][ and][ transformed] under its
 #: owner's/your control[ with `<n>` `<kind>` counters on it]." - the Ojer
 #: cycle's own death trigger (Ojer Taq, Deepest Foundation: "When Ojer Taq
@@ -47053,6 +47707,84 @@ def _parse_mill_then_may_take_from_milled_ability(text: str) -> AbilityEffect | 
     """The runner above, on a triggered or activated ability (CR 603.3a,
     CR 602.2a) - Vorinclex // The Grand Evolution's chapter I."""
     run = _mill_then_may_take_from_milled_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        run(game, game.player(ability.controller), ability.source_name, source_id_of(ability))
+
+    return effect
+
+
+#: "Mill `<n>` cards, then put all `<quality>` cards from among them into your
+#: hand." (CR 701.13c's mill, CR 608.2c's "then") - Glamdring, Foe-hammer //
+#: Gleam of Death's Adventure half. `_MILL_THEN_MAY_TAKE_FROM_MILLED_RE`'s own
+#: `quantity_pattern` reads "up to `<n>`"/"any number of"/a bare number, never
+#: the word "all" - this is the sibling shape for the unconditional,
+#: everything-that-qualifies count `parse_quantity` has no `Quantity` for at
+#: all, so it needs its own regex and its own (unconditional, no `Decision`)
+#: runner rather than a new branch inside that one.
+_MILL_THEN_PUT_ALL_FROM_MILLED_RE = re.compile(
+    r"^mill (?P<mill_n>" + COUNT + r") cards?, then put all "
+    r"(?P<group>[a-z]+(?:(?:,| (?:and/or|and|or)|, or) [a-z]+)*) cards? from among them "
+    r"into your hand\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _mill_then_put_all_from_milled_runner(
+    text: str,
+) -> Callable[["Game", Player, str, str | None], None] | None:
+    """`_MILL_THEN_PUT_ALL_FROM_MILLED_RE`'s shape, compiled once for both
+    the spell and the ability side - the identical split
+    `_mill_then_may_take_from_milled_runner` already draws."""
+    match = _MILL_THEN_PUT_ALL_FROM_MILLED_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("mill_n"))
+    if count is None:
+        return None
+    # CR 205.2a's card-type list always reads as a union - a card qualifying
+    # under "instant and sorcery cards" needs only one of the two types, the
+    # same non-intersective "and" `_parse_card_group_alternatives` already
+    # reads for an "and/or" list - so every joining word (a comma, "and",
+    # "and/or", or "or") is folded to "or" before that reader ever sees it.
+    group_text = re.sub(
+        r",\s*(?:and(?:/or)?\s+|or\s+)?|\s+and/or\s+|\s+and\s+",
+        " or ",
+        match.group("group"),
+        flags=re.IGNORECASE,
+    )
+    group_predicate = _parse_card_group_qualifier(group_text) or _parse_card_group_alternatives(
+        group_text
+    )
+    if group_predicate is None:
+        return None
+
+    def run(game: "Game", controller: Player, source_name: str, source_id: str | None) -> None:
+        milled = _mill(game, controller, count)
+        for state in milled:
+            if state.zone is Zone.GRAVEYARD and group_predicate(state):
+                controller.move(state, Zone.HAND)
+
+    return run
+
+
+def _parse_mill_then_put_all_from_milled(text: str) -> Effect | None:
+    """The runner above, on a spell (CR 608.3) - Gleam of Death."""
+    run = _mill_then_put_all_from_milled_runner(text)
+    if run is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        run(game, game.controller_of(spell), spell.name, source_id_of(spell))
+
+    return effect
+
+
+def _parse_mill_then_put_all_from_milled_ability(text: str) -> AbilityEffect | None:
+    """The runner above, on a triggered or activated ability."""
+    run = _mill_then_put_all_from_milled_runner(text)
     if run is None:
         return None
 

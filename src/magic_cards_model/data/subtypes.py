@@ -124,3 +124,39 @@ def canonical_subtype(word: str) -> str | None:
     if lowered in subtype_vocabulary():
         return lowered
     return _plural_index().get(lowered)
+
+
+@cache
+def _card_type_by_subtype() -> dict[str, str]:
+    """Every subtype word, lowercased, to the one CR 205.3 card-type group
+    (`subtypes.json`'s own top-level key - "artifact", "battle", "creature",
+    "enchantment", "land", "planeswalker", "spell") it belongs to.
+
+    CR 205.3c: a subtype belongs to exactly one card type in this engine's
+    vocabulary (there is no real cross-listed subtype in the pool today), so
+    a plain `dict` needs no collision handling the way `_plural_index` does.
+    """
+    groups = json.loads(SUBTYPES_FILE.read_text())
+    return {word.lower(): category for category, words in groups.items() for word in words}
+
+
+def noncreature_subtype_card_type(word: str) -> str | None:
+    """Which CR 205.3 card-type group `word` (already `canonical_subtype`-
+    resolved, lowercased) belongs to, when it is not a creature type - or
+    `None` when it names no subtype, or names a creature type.
+
+    `machines/targeting.py`'s own elided-noun reading ("target Soldier you
+    control" standing in for "target Soldier creature you control", CR
+    205.3m) is right only for an actual creature type: "target Equipment you
+    control" (Blacksmith's Talent) is never "target Equipment creature you
+    control" - Equipment is CR 205.3g's artifact subtype, not one CR 205.3m
+    ever elides "creature" for - and defaulting it to `Type.CREATURE` anyway
+    made an Equipment permanent an illegal target for the one clause that
+    names it. This is the read that tells the two cases apart: `None` here
+    keeps the caller's own creature-type elision exactly as it was, and a
+    real category name is what the caller uses instead - the artifact/
+    enchantment/land/battle/planeswalker card type an elided *that* noun
+    would have meant, `Type.CREATURE` never among the answers.
+    """
+    category = _card_type_by_subtype().get(word.strip().lower())
+    return None if category is None or category in ("creature", "spell") else category

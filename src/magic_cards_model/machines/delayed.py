@@ -1086,6 +1086,106 @@ class ReflexiveCounterCountConsequence(DelayedEffectSpecBase):
         consequence(game, ability)
 
 
+def _reflexive_when_you_do_ability(trigger: "DelayedTrigger") -> TriggeredAbility | None:
+    """ "When you do, `<effect>`." (CR 603.12) as a `TriggeredAbility` whose
+    `effect` field holds only `<effect>` - not `DelayedTrigger.as_ability`'s
+    own fallback, which leaves `condition` *and* `effect` both set to the
+    whole unsplit sentence.
+
+    That fallback is fine for every reflexive consequence that reads its own
+    resolution off `trigger.text` again (`ReflexiveConsequence` and its
+    siblings, none of which name a target of their own), but it breaks a
+    reflexive ability whose `<effect>` half prints "target ...": CR 603.3d's
+    targets are announced as the ability goes on the stack, off
+    `AbilityOnStack.ability.text` via `machines/targeting.profile_for_text`,
+    and that reader has no shape for a target sitting inside an unstripped
+    "When you do," preamble - the whole sentence answers "no targets" and the
+    ability sits on the stack unable to find what "it"/"that creature" means
+    once it resolves. Splitting the two apart here, the same way any other
+    printed "When ..., ..." sentence already is, is what lets `profile_for_
+    text` see the effect's own "target creature you control" (or "target
+    creature") on its own.
+    """
+    prefix = "when you do, "
+    if not trigger.text.lower().startswith(prefix):
+        return None
+    return TriggeredAbility(
+        raw=trigger.text,
+        text=trigger.text,
+        face=trigger.source_name,
+        word=TriggerWord.WHEN,
+        condition="you do",
+        effect=trigger.text[len(prefix) :].strip(),
+        event=trigger.event,
+    )
+
+
+class ReflexiveAttachSubjectToTargetConsequence(DelayedEffectSpecBase):
+    """ "Create `<a token>` [...]. When you do, attach it to target creature
+    you control." (CR 603.12) - Dain Ironfoot's own named-Equipment-token
+    trigger, `machines/effects.py`'s equipment-token-then-attach reader.
+
+    Unlike `ReflexiveConsequence`'s own "it"/"that" antecedents, which are
+    all still on the battlefield and findable off the *creating* ability's
+    own source or target list, "it" here is the token the antecedent just
+    created - an object with no printed description this reflexive trigger
+    could re-derive, so its id is carried on `DelayedTrigger.subject_id`
+    (CR 603.7c) instead of re-parsed from text.
+    """
+
+    kind: Literal["reflexive_attach_subject_to_target_consequence"] = (
+        "reflexive_attach_subject_to_target_consequence"
+    )
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        return _reflexive_when_you_do_ability(trigger)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import attach_permanent
+
+        if trigger.subject_id is None:
+            return
+        subject = game.find_by_id(trigger.subject_id)
+        if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
+            return
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and attach_permanent(game, subject, target):
+                return
+
+
+class ReflexiveDamageEqualToSubjectPowerConsequence(DelayedEffectSpecBase):
+    """ "When one or more Equipment become attached to that creature this
+    way, that creature deals damage equal to its power to up to one target
+    creature." (CR 603.12) - Thorin, Mountain-king's own reflexive trigger,
+    `machines/effects.py`'s attach-any-number-of-Equipment reader.
+
+    "That creature" is the one the antecedent attached Equipment to - not
+    this ability's own source (Thorin, whose own power the sentence never
+    names) - carried the same way, on `DelayedTrigger.subject_id`.
+    """
+
+    kind: Literal["reflexive_damage_equal_to_subject_power_consequence"] = (
+        "reflexive_damage_equal_to_subject_power_consequence"
+    )
+
+    def printed_ability(self, trigger: "DelayedTrigger") -> TriggeredAbility | None:
+        return _reflexive_when_you_do_ability(trigger)
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if trigger.subject_id is None:
+            return
+        dealer = game.find_by_id(trigger.subject_id)
+        if not isinstance(dealer, CardState) or dealer.zone is not Zone.BATTLEFIELD:
+            return
+        amount = game.power_of(dealer)
+        if amount is None or amount <= 0:
+            return
+        for target in game.resolve_targets(ability):
+            if isinstance(target, CardState) and target.zone is not Zone.BATTLEFIELD:
+                continue
+            game.deal_damage(target, amount, source=dealer)
+
+
 class ReflexiveExileCopiedCard(DelayedEffectSpecBase):
     """Superior Spider-Man's "When you do, exile that card." (CR 603.12,
     `machines/replacement.py`'s `_choose_a_quality`-adjacent copy-choice
@@ -1556,6 +1656,8 @@ DelayedEffectSpec = Annotated[
     | ReflexivePayEnergyConsequence
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
+    | ReflexiveAttachSubjectToTargetConsequence
+    | ReflexiveDamageEqualToSubjectPowerConsequence
     | ReflexiveExileCopiedCard
     | RevokeGrantedAbility
     | AddManaWhenLandTapped
@@ -2392,6 +2494,7 @@ class DelayedTriggers(EngineModel):
         source_id: UUID | None,
         source_name: str,
         callback: DelayedEffectSpec,
+        subject_id: UUID | None = None,
     ) -> AbilityOnStack:
         """CR 603.12: create a reflexive triggered ability and hand back the
         stack object it becomes - with no wait, unlike an ordinary delayed
@@ -2439,6 +2542,7 @@ class DelayedTriggers(EngineModel):
             controller=controller,
             source_id=source_id,
             source_name=source_name,
+            subject_id=subject_id,
             effect=callback,
             remaining=0,  # CR 603.7b/603.12: spent the moment it is created
         )

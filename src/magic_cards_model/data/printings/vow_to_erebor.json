@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2",
+  "oracle_id": "f8961618-ae68-4d13-84eb-8b5464ce4971",
+  "multiverse_ids": [],
+  "resource_id": "E6DF4E034FB4A87E9F0CEF6F440816633925D42328A95452BD059A2363E0A062",
+  "mtgo_id": 153980,
+  "arena_id": 103401,
+  "tcgplayer_id": 709466,
+  "cardmarket_id": 900603,
+  "name": "Vow to Erebor",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2",
+  "scryfall_uri": "https://scryfall.com/card/hob/31/vow-to-erebor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-31T11:23:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+    "normal": "https://cards.scryfall.io/normal/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+    "large": "https://cards.scryfall.io/large/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+    "png": "https://cards.scryfall.io/png/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.png?1785497034",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.jpg?1785497034",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.webp?1785497034",
+    "grid": "https://cards.scryfall.io/grid/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.webp?1785497034",
+    "display": "https://cards.scryfall.io/display/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.webp?1785497034",
+    "art": "https://cards.scryfall.io/art/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.webp?1785497034",
+    "crop": "https://cards.scryfall.io/crop/front/8/d/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2.webp?1785497034"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Untap target creature you control. It gets +2/+2 until end of turn. If it's a Dwarf, you may attach an Equipment you control to it.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8d4f3eb5-fedf-45d6-8bd8-aacbe0ce33b2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af8961618-ae68-4d13-84eb-8b5464ce4971&unique=prints",
+  "collector_number": "31",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"We shall soon, before the break of day, start on our long journey\u2014a journey from which some of us, or perhaps all of us, may never return.\"\n\u2014Thorin",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Andreia Ugrai",
+  "artist_ids": [
+    "f72c1593-751b-45a4-ba65-205509b81b93"
+  ],
+  "illustration_id": "a7670d85-54f2-41f6-a8c6-dbfa3a6f27a6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16418,
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.23",
+    "usd_etched": null,
+    "eur": "0.04",
+    "eur_foil": "0.08",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVow%2Bto%2BErebor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVow%2Bto%2BErebor",
+    "edhrec": "https://edhrec.com/route/?cc=Vow+to+Erebor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F709466%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=900603&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153980?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
