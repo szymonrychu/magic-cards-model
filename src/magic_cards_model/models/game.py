@@ -992,8 +992,15 @@ _CONDITION_OPPONENT_NONCOMBAT_DAMAGE_THIS_TURN = re.compile(
 #: already is. Bare "you've cast a spell this turn" (no quality) is the same
 #: shape with nothing to qualify - `_card_quality(None)` reads that as every
 #: spell.
+#: Captain Mar-Vell, Space-Born's own "Cosmic Awareness — As long as an
+#: opponent has cast a spell this turn, ..." widens the subject to an
+#: opponent too, beside the pre-existing "you've cast" reading - the same
+#: `Game.spells_cast_this_turn` board fact, asked of every opponent instead
+#: of the controller.
 _CONDITION_CAST_A_SPELL_THIS_TURN = re.compile(
-    r"you(?:'ve| have) cast an? (?:(?P<quality>[\w-]+) )?spell this turn", re.IGNORECASE
+    r"(?:(?P<opponent>an opponent) (?:has cast|cast)|you(?:'ve| have) cast) "
+    r"an? (?:(?P<quality>[\w-]+) )?spell this turn",
+    re.IGNORECASE,
 )
 #: Veil of Summer's own trailing "Draw a card if an opponent has cast a blue
 #: or black spell this turn." and Sandstalker Moloch's differently-worded
@@ -17449,9 +17456,18 @@ class Game(EngineModel):
         r"^[A-Z][a-z']*(?: (?:[A-Za-z][a-z']*|\d+))? — (?P<rest>.+)$"
     )
 
+    #: CR 207.2's reminder text, italicized parenthetical rules restatement
+    #: that carries no rules meaning of its own - stripped the same way a
+    #: trailing "(...)" is elsewhere in this codebase, needed here because
+    #: `computed_board().of(...).abilities` hands a static line over with its
+    #: own trailing reminder still attached ("Nonartifact spells you cast
+    #: have improvise. (Your artifacts can help cast those spells. ...)").
+    _TRAILING_REMINDER_TEXT_RE: ClassVar[re.Pattern[str]] = re.compile(r"\s*\([^()]*\)\s*$")
+
     def _static_line_without_ability_word(self, text: str) -> str:
         match = self._ABILITY_WORD_PREFIX_RE.match(text.strip())
-        return match.group("rest").strip() if match else text.strip()
+        without_word = match.group("rest").strip() if match else text.strip()
+        return self._TRAILING_REMINDER_TEXT_RE.sub("", without_word).strip()
 
     def _looks_at_top_card_any_time_line(self, text: str) -> bool:
         """Whether one static line is "You may look at the top card of your
@@ -17502,6 +17518,90 @@ class Game(EngineModel):
             ):
                 return permanent
         return None
+
+    #: "Noncreature spells you cast have improvise." (Ironheart, Clever
+    #: Champion) - CR 113.6's static ability grant, over a whole family of
+    #: spells rather than one printed card (CR 702.126a's keyword itself).
+    #: The qualifier is the same closed vocabulary `_TYPE_NOUNS`/`Type`
+    #: already enumerate; an unqualified "Spells you cast have improvise."
+    #: is read too (`quality` group empty).
+    _SPELLS_YOU_CAST_HAVE_IMPROVISE_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^(?:(?P<negated>non)?(?P<type>creature|artifact|land|enchantment|"
+        r"planeswalker|battle|instant|sorcery) )?spells you cast have improvise\.?$",
+        re.IGNORECASE,
+    )
+
+    def has_granted_improvise(self, caster: str, spell: CardState) -> bool:
+        """Whether some permanent `caster` controls grants `spell` CR
+        702.126a's improvise right now via `_SPELLS_YOU_CAST_HAVE_IMPROVISE_
+        RE`'s shape (CR 113.6), regardless of `spell`'s own printed
+        keywords. A type qualifier ("Noncreature spells ...") is checked
+        against `spell.types`; "non`<type>`" reads as that type's absence
+        the same way `_named_type_matcher`'s own "non`<type>`" branch does.
+        """
+        board = self.computed_board()
+        for permanent in self.permanents_controlled_by(caster):
+            for line in board.of(permanent).abilities:
+                match = self._SPELLS_YOU_CAST_HAVE_IMPROVISE_RE.fullmatch(
+                    self._static_line_without_ability_word(line)
+                )
+                if match is None:
+                    continue
+                type_word = match.group("type")
+                if type_word is None:
+                    return True
+                try:
+                    wanted = Type(type_word.lower())
+                except ValueError:
+                    continue
+                if match.group("negated"):
+                    if wanted not in spell.types:
+                        return True
+                    continue
+                if wanted in spell.types:
+                    return True
+        return False
+
+    #: "Instant and sorcery spells you cast with mana value `<N>` or greater
+    #: cost `{X}` less to cast, where X is `<this>`'s power." (The Scarlet
+    #: Witch) - matched only after `self_normalized_effect_text` has turned
+    #: the card's own printed name back into "this creature" (CR 201.5).
+    _TYPE_MV_THRESHOLD_COST_LESS_SELF_POWER_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^(?P<types>instant and sorcery|instant|sorcery) spells you cast with mana value "
+        r"(?P<mv>\d+) or greater cost \{x\} less to cast, where x is this "
+        r"(?:creature|permanent|artifact)'s power\.?$",
+        re.IGNORECASE,
+    )
+
+    def _type_mv_threshold_cost_less_self_power(
+        self, text: str, permanent: CardState, spell: CardState, caster: str
+    ) -> ManaCost | None:
+        """`_TYPE_MV_THRESHOLD_COST_LESS_SELF_POWER_RE`'s reduction for
+        `spell`, or `None` when this line is not that shape or does not
+        apply.
+
+        Controller-scoped ("spells *you* cast", CR 601.2f), gated on
+        `spell`'s own printed mana value (CR 202.3 - unaffected by the
+        reduction itself, since it is a characteristic, not the cost being
+        paid) meeting the threshold, and on the granting permanent's own
+        live power (layer 7c, CR 613.1) being positive - a 0-or-negative
+        power discounts nothing rather than raising the cost.
+        """
+        if permanent.controller != caster:
+            return None
+        normalized = self_normalized_effect_text(permanent.name, text, legendary=True)
+        match = self._TYPE_MV_THRESHOLD_COST_LESS_SELF_POWER_RE.fullmatch(normalized.strip())
+        if match is None:
+            return None
+        wanted_types = {Type(word.lower()) for word in match.group("types").split(" and ")}
+        if not wanted_types & set(spell.types_as_a_spell(spell.card.types)):
+            return None
+        if spell.mana_value < int(match.group("mv")):
+            return None
+        power = self.power_of(permanent)
+        if power is None or power <= 0:
+            return None
+        return ManaCost.parse(f"{{{power}}}")
 
     def grant_extra_land_play(self, username: str, amount: int = 1) -> None:
         """CR 305.2's allowance increase for the rest of this turn only -
@@ -18036,7 +18136,7 @@ class Game(EngineModel):
                     if offer.why_not(c, player, self) is None
                 ],
             )
-        if has_improvise(card.card):
+        if has_improvise(card.card) or self.has_granted_improvise(player, card):
             offer = improvise_offer()
             out["improvise"] = ObjectCostOffer(
                 rule="CR 702.126a",
@@ -18248,7 +18348,12 @@ class Game(EngineModel):
             if delve:
                 pay_delve(payment, casting.spell, *delve)
             if improvise:
-                pay_improvise(payment, casting.spell, *improvise)
+                pay_improvise(
+                    payment,
+                    casting.spell,
+                    *improvise,
+                    granted=self.has_granted_improvise(casting.caster, casting.spell),
+                )
             unpinned: list[CardState] = []
             for entry in mana_sources or ():
                 if isinstance(entry, tuple):
@@ -18884,6 +18989,21 @@ class Game(EngineModel):
                 text = line.strip()
                 if not text or text not in static_lines:
                     continue
+                # Read before `cost_modifier_effect` (`machines/cost.py`, not
+                # this task's file - see the reader just below): The Scarlet
+                # Witch's own "Instant and sorcery spells you cast with mana
+                # value `<N>` or greater cost `{X}` less to cast, where X is
+                # The Scarlet Witch's power." scales by the granting
+                # permanent's own live power (CR 107.3a's X, CR 613.1's
+                # layer-7c stat), a shape no `CostModifierEffect` kind reads.
+                self_power_reduction = self._type_mv_threshold_cost_less_self_power(
+                    text, permanent, spell, caster
+                )
+                if self_power_reduction is not None:
+                    if self_power_reduction.symbols:
+                        decreases.append(self_power_reduction)
+                    continue
+
                 # Read before `cost_modifier_effect`, which has no shape for a
                 # discount *gated* on a count rather than scaled by one:
                 # Gran-Gran's "Noncreature spells you cast cost {1} less to
@@ -19057,6 +19177,46 @@ class Game(EngineModel):
             return ManaCost.parse(f"{{{effect.colored.value}}}" * units)
         return ManaCost.parse(f"{{{units}}}")
 
+    #: "You may cast spells as though they had flash." (High Fae Trickster,
+    #: unconditional), optionally preceded by "As long as `<condition>`, "
+    #: (Captain Mar-Vell's own "Cosmic Awareness — As long as an opponent
+    #: has cast a spell this turn, you may cast spells as though they had
+    #: flash.") - a CR 611.3d rules-modifying grant to a player, read the
+    #: same way the "look at the top card"/"play lands from the top" grants
+    #: above are, additively alongside `has_first_spell_flash_grant`'s own
+    #: pre-existing Radagast-shaped check rather than in place of it.
+    _CAST_SPELLS_AS_THOUGH_FLASH_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^(?:as long as (?P<condition>[^,]+), )?"
+        r"you may cast spells as though they had flash\.?$",
+        re.IGNORECASE,
+    )
+
+    def has_static_spells_flash_grant(self, caster: str, spell: CardState) -> bool:
+        """Whether some permanent `caster` controls grants *every* spell
+        flash right now via `_CAST_SPELLS_AS_THOUGH_FLASH_RE`'s shape - wider
+        than `has_first_spell_flash_grant`'s own type-and-cost-reduction
+        template, and never conditioned on `spell`'s own type at all.
+
+        A conditional grant's "as long as `<condition>`" is read through
+        `condition_holds` the same way an "Activate only if" restriction is
+        (CR 602.5b's own fail-closed default): an unreadable condition
+        refuses the grant rather than allowing it unchecked.
+        """
+        board = self.computed_board()
+        for permanent in self.permanents_controlled_by(caster):
+            for line in board.of(permanent).abilities:
+                match = self._CAST_SPELLS_AS_THOUGH_FLASH_RE.fullmatch(
+                    self._static_line_without_ability_word(line)
+                )
+                if match is None:
+                    continue
+                condition = match.group("condition")
+                if condition is None:
+                    return True
+                if self.condition_holds(caster, condition.strip(), permanent) is True:
+                    return True
+        return False
+
     def has_first_spell_flash_grant(self, caster: str, spell: CardState) -> bool:
         """Whether some permanent `caster` controls grants `spell` CR
         702.8a's flash right now, through Radagast of Rhosgobel's own shape:
@@ -19071,7 +19231,13 @@ class Game(EngineModel):
         caster must not already have cast a spell of those types this turn -
         the exact `first_each_turn` gate `_counted_type_decrease` uses for
         the discount, asked here with no discount to compute.
+
+        Also true - additively, alongside the Radagast shape above - when
+        `has_static_spells_flash_grant` finds a wider, type-agnostic grant
+        (Captain Mar-Vell's own "Cosmic Awareness").
         """
+        if self.has_static_spells_flash_grant(caster, spell):
+            return True
         for permanent in self.permanents_controlled_by(caster):
             up_face_name = permanent.up_face_name or permanent.card.name
             for line in parse_abilities(permanent.card):
@@ -19722,6 +19888,12 @@ class Game(EngineModel):
             quality = _card_quality(match.group("quality"))
             if quality is None:
                 return None
+            if match.group("opponent"):
+                return any(
+                    quality(state)
+                    for opponent in opponents
+                    for state in self.spells_cast_this_turn.get(opponent.username, [])
+                )
             return any(quality(state) for state in self.spells_cast_this_turn.get(controller, []))
 
         if match := _CONDITION_OPPONENT_CAST_COLOR.fullmatch(text):
@@ -20258,6 +20430,7 @@ class Game(EngineModel):
         revealing: list[CardState] | None = None,
         tapping: list[CardState] | None = None,
         x_value: int = 0,
+        targets: list[object] | None = None,
     ) -> TotalCost:
         """The total cost of one activation (CR 602.1a, 601.2f).
 
@@ -20367,7 +20540,16 @@ class Game(EngineModel):
                 # `machines/cost.cost_component_for_phrase` is the reader that
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
-                component = cost_component_for_phrase(piece.text, payer=controller)
+                # CR 201.5: Jessica Jones, Private Eye's own "Put a stun
+                # counter on Jessica Jones" names itself by its printed name
+                # rather than "this creature" - `cost_component_for_phrase`
+                # already reads the normalized shape (`PLACE_COUNTERS`), so
+                # normalizing here is what a future "self-named cost" printing
+                # needs too, not only this one card.
+                normalized_piece_text = self_normalized_effect_text(
+                    permanent.name, piece.text, legendary=True
+                )
+                component = cost_component_for_phrase(normalized_piece_text, payer=controller)
                 if (
                     component is not None
                     and component.requirement is not None
@@ -20497,9 +20679,60 @@ class Game(EngineModel):
             # a clause of it - see `ActivationCostReduction`'s docstring).
             mana = mana.minus(self.activation_cost_reduction_for(permanent, ability, controller))
 
+        mana = mana.minus(self._activation_target_cost_reduction(permanent, ability, targets))
+
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic
         ).assign_payer(controller)
+
+    #: "This ability costs `<N>` less to activate if it targets a `<quality>`
+    #: with power `<M>` or less/greater." (Raft Security Officer) - a
+    #: reduction gated on the ability's own *chosen target*, CR 602.2b's own
+    #: CR 601.2c-then-601.2f ordering (the target is announced before the
+    #: cost is priced), unlike `activation_cost_reduction_for`'s own "for
+    #: each `<quality>` you control" shape above, which never looks at a
+    #: target at all.
+    _ABILITY_COSTS_LESS_IF_TARGETS_POWER_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"this ability costs \{(?P<n>\d+)\} less to activate if it targets an? "
+        r"(?P<quality>[a-z]+) with power (?P<power>\d+) or "
+        r"(?P<cmp>less|greater)\.",
+        re.IGNORECASE,
+    )
+
+    def _activation_target_cost_reduction(
+        self, permanent: CardState, ability: ActivatedAbility, targets: list[object] | None
+    ) -> ManaCost:
+        """`_ABILITY_COSTS_LESS_IF_TARGETS_POWER_RE`'s reduction, read off
+        every static-kind sentence this ability's own raw text carries
+        (CR 604.1's one-sentence-per-ability convention does not apply
+        within a single activated ability's own paragraph the way it does
+        between separate abilities, so this simply searches the whole raw
+        text) - `None` when the ability names no such sentence, `targets` is
+        empty, or the chosen target does not qualify.
+        """
+        if not targets:
+            return ManaCost()
+        match = self._ABILITY_COSTS_LESS_IF_TARGETS_POWER_RE.search(ability.raw or "")
+        if match is None:
+            return ManaCost()
+        try:
+            wanted_type = Type(match.group("quality").lower())
+        except ValueError:
+            return ManaCost()
+        at_most = match.group("cmp").lower() == "less"
+        bound = int(match.group("power"))
+        for target in targets:
+            state = target if isinstance(target, CardState) else self.find_by_id(target)
+            if not isinstance(state, CardState):
+                continue
+            if wanted_type not in state.types:
+                continue
+            power = self.power_of(state)
+            if power is None:
+                continue
+            if (power <= bound) if at_most else (power >= bound):
+                return ManaCost.parse(f"{{{match.group('n')}}}")
+        return ManaCost()
 
     def activation_cost_reduction_for(
         self, permanent: CardState, ability: ActivatedAbility, controller: str
@@ -20748,9 +20981,19 @@ class Game(EngineModel):
         graveyard" is marked by `LoyaltyCost.variable` instead.
         """
         has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
-        if cost_announces_x(ability.cost) or has_variable_loyalty:
-            return substitute_x(ability.text, x_value)
-        return ability.text
+        text = (
+            substitute_x(ability.text, x_value)
+            if (cost_announces_x(ability.cost) or has_variable_loyalty)
+            else ability.text
+        )
+        # Raft Security Officer's own trailing "This ability costs {1} less
+        # to activate if it targets a creature with power 3 or less." reads
+        # like a second targeting sentence to `machines/targeting.profile_
+        # for_text`, which left the whole ability `understood=False` and so
+        # silently announced no target at all (CR 601.2c) even when one was
+        # given - stripped here the same way `machines/effects.
+        # activated_effect_for` strips it before parsing the effect.
+        return self._ABILITY_COSTS_LESS_IF_TARGETS_POWER_RE.sub("", text).strip()
 
     def _announce_activation_targets(
         self,
@@ -20862,6 +21105,7 @@ class Game(EngineModel):
             revealing=revealing,
             tapping=tapping,
             x_value=x_value,
+            targets=targets,
         )
         # CR 601.2h pays the cost the player chose, so a reveal cost nobody
         # named is asked about now, before anything is spent - and refused now

@@ -2748,6 +2748,22 @@ _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE = re.compile(
     r"\s*\bactivate only [^.]*\.\s*$", re.IGNORECASE
 )
 
+#: "This ability costs `<N>` less to activate if it targets a `<quality>`
+#: with power `<M>` or less/greater." (Raft Security Officer) - `machines/
+#: abilities.py` (locked to another C02 task this round) reads this trailing
+#: sentence as part of the ability's own *effect* rather than splitting it
+#: into `ActivatedAbility.cost_reduction` the way it already does for a
+#: "for each `<quality>` you control" cost reduction, so "Tap target
+#: creature." never reached any effect parser with this rider still glued
+#: onto it. `Game._activation_target_cost_reduction` is what actually reads
+#: and applies the rider (CR 601.2f via CR 602.2b); this only clears it out
+#: of the way so the sentence in front of it parses.
+_TRAILING_ACTIVATION_TARGET_COST_REDUCTION_RE = re.compile(
+    r"\s*this ability costs \{\d+\} less to activate if it targets "
+    r"an? [a-z]+ with power \d+ or (?:less|greater)\.\s*$",
+    re.IGNORECASE,
+)
+
 
 def _gain_control_untap_grant(effect_text: str) -> tuple[str, str] | None:
     """The two layer sentences of either word order - Threaten's
@@ -37801,7 +37817,8 @@ ExileAntecedent = Callable[["Game", AbilityOnStack], list[CardState]]
 #: antecedent Experimental Synthesizer prints in front of "Until end of turn,
 #: you may play that card."
 _EXILE_TOP_OF_YOUR_LIBRARY_RE = re.compile(
-    rf"^exile (?:the top (?:card|{count_pattern('n')} cards) of your library"
+    rf"^exile (?:the top (?:card|{count_pattern('n', x=True)} cards) of your library"
+    rf"{where_x_pattern('where_x')}"
     r"|(?P<that_many>that many) cards from the top of your library)$",
     re.IGNORECASE,
 )
@@ -37841,7 +37858,25 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
         # "that many cards from the top" (Chandra, Legacy of Fire's 0) is the
         # count channel's number (`that_many`), read as it resolves.
         carried = match.group("that_many") is not None
-        n = parse_count(match.group("n")) if match.group("n") else 1
+        raw_n = match.group("n")
+        where_x = match.group("where_x")
+        # Jessica Jones, Private Eye's own "the top X cards ..., where X is
+        # this permanent's power" (CR 107.3f, after `_self_normalized_
+        # effect_text`'s own CR 201.5 rewrite has already turned the card's
+        # printed name into "this permanent") - `amount_expression` reads the
+        # definition against the ability's own source, with no announced X
+        # (CR 107.3a) to fall back on, since this activation's cost carries
+        # none.
+        x_expression = None
+        if raw_n is not None and raw_n.lower() == "x":
+            if where_x is None:
+                return None
+            x_expression = amount_expression(where_x)
+            if x_expression is None:
+                return None
+            n = 1  # placeholder; recomputed per-resolution below
+        else:
+            n = parse_count(raw_n) if raw_n else 1
 
         def exile_own_top(game: "Game", ability: AbilityOnStack) -> list[CardState]:
             player = game.controller_of(ability)
@@ -37854,13 +37889,18 @@ def _parse_exile_antecedent(clause: str) -> tuple[ExileAntecedent, bool] | None:
                 if counted is None:
                     return []
                 count = counted
+            elif x_expression is not None:
+                source = ability.source(game)
+                if source is None:
+                    return []
+                count = x_expression(game, ability.controller, source, 0)
             for _ in range(count):
                 if not player.library:
                     break
                 exiled.append(game.exile_permanent(player.library[0]))
             return exiled
 
-        return exile_own_top, carried or n > 1
+        return exile_own_top, carried or x_expression is not None or n > 1
 
     if _EXILE_TOP_OF_THAT_PLAYERS_LIBRARY_RE.fullmatch(stripped):
 
@@ -47570,6 +47610,7 @@ def activated_effect_for(
     if effect_text is None:
         return None
     effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
+    effect_text = _TRAILING_ACTIVATION_TARGET_COST_REDUCTION_RE.sub("", effect_text).strip()
     effect_text = _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
     if x_value is not None:
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
