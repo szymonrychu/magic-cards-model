@@ -1433,6 +1433,15 @@ class TargetingProfile(EngineModel):
         judges - the spell itself for a cast (`Casting._check_targets`), or an
         ability's source; when it is not given, `source_id` is looked up.
         """
+        for target in targets:
+            # CR 702.26b: a phased-out permanent "is treated as though it
+            # does not exist. It can't affect or be affected by anything else
+            # in the game" - nothing can name it as a target.
+            if getattr(target, "phased_out", False):
+                raise ValueError(
+                    f"{target.name} is phased out and is treated as though it does "
+                    "not exist (CR 702.26b)"
+                )
         self._check_protection(targets, game)
         self._check_shroud(targets, game)
         self._check_hexproof(targets, caster, game, source, source_id)

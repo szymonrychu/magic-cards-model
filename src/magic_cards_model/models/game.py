@@ -2169,6 +2169,20 @@ class Game(EngineModel):
     `combat.attack_refusal` reads it directly; nothing needs to clear it
     early, since the comparison itself goes stale the moment the turn ends."""
 
+    phased_out: list[CardState] = Field(default_factory=list)
+    """Permanents that are phased out (CR 702.26b), in the order they
+    phased out.
+
+    CR 702.26b: "a phased-out permanent is treated as though it does not
+    exist. It can't affect or be affected by anything else in the game." So
+    it is held here rather than in `battlefield`, which is what every reader
+    of the battlefield - combat, targeting, the layer system's selectors,
+    state-based actions, counts, `find_by_id` - walks: none of them has to
+    learn to skip it. CR 702.26d keeps its `zone` at `Zone.BATTLEFIELD`
+    (phasing is no zone change), its counters, and a token's existence.
+    `Game.phase_out` and `Game.phase_in` are the only writers.
+    """
+
     players_skipping_next_untap: dict[str, int] = Field(default_factory=dict)
     """How many of a username's upcoming untap steps are replaced with
     nothing (CR 614.10: "skip [something]" is a replacement effect). Brine
@@ -3076,7 +3090,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 62
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 63
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -3905,6 +3919,14 @@ class Game(EngineModel):
     `ExtraTriggerEvent` gained `RING_TEMPTS_YOU` - the bump rule's first
     bullet. Gollum, Patient Plotter's leaves-the-battlefield trigger, already
     in the pool, now tempts where a version-61 game did nothing, the second.
+
+    Bumped 62 -> 63 (S31, phasing): `CardState` gained `phased_out_under`
+    and `phased_out_indirectly`, and `Game` gained `phased_out` (CR 702.26) -
+    fields added, the first bullet. Savor the Moment's `EFFECTS` row became
+    `parse_clause_effect`'s extra-turn and skip-untap clauses, and Teferi,
+    Master of Time's -3/-10, Teferi, Timebender's -9 and Haystack's ability,
+    all in the pool, now resolve where a version-62 board resolved nothing -
+    the second bullet.
     """
 
     @model_validator(mode="before")
@@ -4141,6 +4163,8 @@ class Game(EngineModel):
             for zone_cards in player.zones.values():
                 for state in zone_cards:
                     state.bind_to_game(self)
+        for state in self.phased_out:
+            state.bind_to_game(self)
         for stack_item in (*self.stack, *self.pending_triggers):
             # `AbilityOnStack.keyword_activation.game` (`machines/keywords.
             # KeywordActivation.game`) is the same shape as `Player.game`
@@ -4452,6 +4476,16 @@ class Game(EngineModel):
     def _untap_step_impl(self) -> None:
         """The rest of `untap_step` - see its own docstring for why it is split out."""
         active = self.active_player
+        # CR 502.1 comes first in the step: phased-out permanents the active
+        # player controlled when they phased out phase in, before CR 502.3
+        # untaps anything - and before `begin_turn_for`, so a permanent
+        # phasing in is one its controller has controlled continuously
+        # (CR 702.26d: phasing changes no control) and sheds summoning
+        # sickness with the rest. CR 702.26m: "If an effect causes a player
+        # to skip their untap step, the phasing event simply doesn't occur
+        # that turn."
+        if self.players_skipping_next_untap.get(active.username, 0) == 0:
+            self.phase_in_for(active.username)
         self.begin_turn_for(active.username)
         # `untap_step_rule` is the rule itself - the CR 614.10 skip verdict and
         # the CR 502.3 batch, with CR 122.1d's stun counter deliberately left
@@ -4547,6 +4581,102 @@ class Game(EngineModel):
     def become_night(self) -> None:
         """ "It becomes night" (CR 731.1)."""
         self.set_day_night(DayNight.NIGHT)
+
+    # -- phasing (CR 702.26) -----------------------------------------------
+
+    def _attached_to_recursively(self, host: CardState) -> list[CardState]:
+        """Everything on the battlefield attached to `host`, and to those in
+        turn - the objects CR 702.26g phases out along with it."""
+        found: list[CardState] = []
+        frontier = [host.id]
+        while frontier:
+            host_id = frontier.pop()
+            for state in self.battlefield:
+                if state.attached_to == host_id and state not in found:
+                    found.append(state)
+                    frontier.append(state.id)
+        return found
+
+    def phase_out(self, permanent: CardState) -> None:
+        """`permanent` phases out, with everything attached to it (CR 702.26b,
+        CR 702.26g).
+
+        CR 702.26b: its status becomes "phased out" and it "is treated as
+        though it does not exist ... A permanent that phases out is removed
+        from combat" (CR 506.4 too). It leaves `battlefield` for
+        `phased_out`, which is the whole of "does not exist" for every reader
+        of the battlefield. CR 702.26d: no zone change - `zone` is untouched,
+        no leaves-the-battlefield event is emitted, and counters stay on it.
+
+        CR 702.26g: Auras, Equipment and Fortifications attached to it phase
+        out "indirectly" at the same time, and CR 702.26h makes an object
+        that would phase out both ways at once phase out only indirectly.
+        CR 702.26j: nothing becomes attached or unattached, so `attachment`
+        is left exactly as it was.
+
+        A permanent that is not on the battlefield (already phased out, or
+        gone) does nothing: CR 702.26b's phased-out permanent "can't ... be
+        affected by anything else in the game".
+        """
+        if permanent not in self.battlefield:
+            return
+        under = self.controller_of(permanent).username
+        attached = self._attached_to_recursively(permanent)
+        for state in (permanent, *attached):
+            self.battlefield.remove(state)
+            self.combat.remove(state.id)
+            state.phased_out_under = under
+            state.phased_out_indirectly = state is not permanent
+            self.phased_out.append(state)
+
+    def phase_in(self, permanent: CardState) -> None:
+        """`permanent` phases in, with what phased out indirectly with it
+        (CR 702.26c, CR 702.26g).
+
+        CR 702.26c: "The game once again treats it as though it exists." It
+        goes back to `battlefield` with its counters and attachments intact;
+        CR 702.26d: no enters-the-battlefield event. An Aura or Equipment
+        that phased out indirectly comes back only here, along with its host.
+        """
+        if permanent not in self.phased_out:
+            return
+        returning = [permanent]
+        frontier = [permanent.id]
+        while frontier:
+            host_id = frontier.pop()
+            for state in self.phased_out:
+                if (
+                    state.phased_out_indirectly
+                    and state.attached_to == host_id
+                    and state not in returning
+                ):
+                    returning.append(state)
+                    frontier.append(state.id)
+        for state in returning:
+            self.phased_out.remove(state)
+            state.phased_out_under = None
+            state.phased_out_indirectly = False
+            self.battlefield.append(state)
+
+    def phase_in_for(self, username: str) -> None:
+        """CR 502.1's phasing turn-based action for `username`'s untap step:
+        "all phased-out permanents that the active player controlled when
+        they phased out phase in ... This all happens simultaneously."
+
+        Only permanents that phased out directly are picked up here; an
+        indirectly phased-out one phases in with its host (CR 702.26g).
+
+        The other half of CR 502.1 - permanents *with phasing* phasing out -
+        is not run here: no printing legal in Modern, Pioneer or Standard
+        carries the phasing keyword (CR 702.26a), so nothing could exercise
+        it.
+        """
+        for state in [
+            state
+            for state in self.phased_out
+            if state.phased_out_under == username and not state.phased_out_indirectly
+        ]:
+            self.phase_in(state)
 
     # -- turn-based actions (CR 703) ---------------------------------------
 
@@ -15950,6 +16080,13 @@ class Game(EngineModel):
                 if state.controller == username:
                     self.combat.remove(state.id)
                     zone_cards.remove(state)
+        # CR 702.26k: "Phased-out permanents owned by a player who leaves the
+        # game also leave the game."
+        self.phased_out = [
+            state
+            for state in self.phased_out
+            if (state.owner if state.owner is not None else state.controller) != username
+        ]
         # CR 800.4d: a triggered ability that would be controlled by a player who
         # has left the game is never put on the stack.
         self.pending_triggers = [

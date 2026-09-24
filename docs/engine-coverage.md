@@ -587,6 +587,8 @@ other work.
 | Block requirements, and attack requirements beyond a creature's own | CR 508.1d, 509.1c | A creature's own "attacks each combat if able" and goad (CR 701.15) are enforced (see the Modelled rows). Not read: "must block if able" (CR 509.1c) beyond a resolving ability's "target creature blocks this creature this turn if able" (see the Modelled row), requirements naming other creatures or a defender, and "can't attack unless [a player pays]" costs, so CR 508.1d's unpaid-cost clause has nothing to apply to. |
 | Removed from combat, other causes | CR 506.4 | Every `Combat.remove` call site is a zone change, plus `Game.end_the_turn` and `Game._player_left`. A controller or protector change (`Layer.CONTROL` does change control, and combat never notices), phasing out, and an effect that says so do not remove anything from combat. |
 | Phasing and Attractions | CR 703.4a, 703.4g, 502.1, 702.26a, 717.4 | Two turn-based actions with no mechanism at all behind them (day/night, CR 703.4b, is modelled - see "S29: day and night"). `Game.turn_based_actions` dispatches untap, draw, the Saga lore counter, the three combat steps and cleanup, and nothing else. Mana pools emptying (CR 703.4q) is modelled. Note that rolling to visit Attractions is a turn-based action of the precombat main phase, not a step of its own. |
+| Removed from combat, other causes | CR 506.4 | Every `Combat.remove` call site is a zone change, plus `Game.end_the_turn` and `Game._player_left`. Phasing out removes it too (`Game.phase_out`, S31). A controller or protector change (`Layer.CONTROL` does change control, and combat never notices) and an effect that says so do not remove anything from combat. |
+| Phasing (the keyword half), day/night, and Attractions | CR 703.4a, 703.4b, 703.4g, 502.1, 702.26a, 731.2, 717.4 | CR 502.1's phase-in half is modelled (`Game.phase_in_for`, S31, see its section); its other half, permanents *with phasing* (CR 702.26a) phasing out, is not, since no printing legal in Modern, Pioneer or Standard carries the keyword. Day/night and Attractions are turn-based actions with no mechanism at all behind them. `Game.turn_based_actions` dispatches untap, draw, the Saga lore counter, the three combat steps and cleanup, and nothing else. Mana pools emptying (CR 703.4q) is modelled. Note that rolling to visit Attractions is a turn-based action of the precombat main phase, not a step of its own. |
 | Draws with no mechanism behind them | CR 104.4c, 104.4d, 104.4e, 104.4g, 104.4i | CR 104.4a's simultaneous loss is modelled, and CR 104.4b is detected for exactly one loop shape - `Game.resolve_triggered_mana_abilities` sets `Game.drawn` past `TRIGGERED_MANA_ABILITY_LOOP_BOUND` consecutive inline resolutions (`judge/test_judge_mana_abilities.py`). Loops of any other shape, an effect that states the game is a draw, the team and limited-range-of-influence variants, and the intentional draw have nothing behind them; `Game.end_in_draw` is the staging entry a scenario calls. |
 | Pregame effects a card can grant | CR 103.5b | Starting a game, the London mulligan and CR 103.6's opening-hand actions are all modelled - see the Modelled table and `machines/opening_hand.py`. What is left is CR 103.5b's "any time [that player] could mulligan" permission, which nothing reads, and the Chancellor cycle, which has no printing in the fixture pool. |
 | Layer 1's sublayers, past the ordering itself | CR 613.2, 613.2a, 613.2b, 613.2c, 708.2 | `CopySublayer.COPIABLE`/`FACE_DOWN` put CR 613.2a before CR 613.2b whatever the timestamps say, and `machines/layers.py` registers copy effects in 1a. Nothing in `src/` ever registers a 1b effect: a face-down permanent's characteristics come from `FaceDownCharacteristics`/`CardState.has_no_characteristics` outside the layer system, so CR 708.2 is applied but never *in* layer 1b, and only `tests/test_layers.py` exercises the sublayer ordering at all. CR 613.2a's other half - merging an object with a permanent - has no mechanic. |
@@ -827,7 +829,7 @@ The remaining three are the earlier token wave:
 |---|---|---|
 | Malevolent Rumble | Reveals four, puts a permanent card into hand, the rest into the graveyard, then creates the Eldrazi Spawn, in printed order (CR 608.2c) | **No registry row any more**: read by `_merge_reveal_top_to_hand_rest_to_graveyard_clauses`, the "Reveal the top N cards of your library. You may put a `<quality>` card from among them into your hand. Put the rest into your graveyard." template shared with Grisly Salvage and Satyr Wayfinder (`tests/scenarios/test_reveal_top_n_put_one_into_hand.py`). Every revealed card is a public `Game.reveal` record made while it is still in the library (CR 701.20a, 701.20b), so the card taken to hand is carried as known to the opponent; the `Game.may` names the qualifying cards; "permanent card" is CR 110.4a's six types. The unscripted default still takes the first qualifying card in library order. Battle report B4-04's reveal-before-choosing is this template's order: all N are recorded before the `Game.may` is put, so a paused seat is never asked about unshown cards; `scenarios/test_reveal_before_the_choice.py` pins it for Malevolent Rumble and for Commune with the Gods, an off-pool card with the same three sentences |
 | Monstrous Rage | The +2/+0 in sublayer 7c (CR 613.4c) and the Monster Role token created attached to the target (CR 111.10k, CR 701.3a). The Role's own +1/+1 and trample are `LAYER_EFFECTS["Monster"]`, CR 704.5m/CR 704.5z both police it, and combat reads the granted trample off the computed board | Nothing |
-| Savor the Moment | Both sentences: "Take an extra turn after this one" (CR 500.7) and "Skip the untap step of that turn" (CR 614.10, a replacement effect, through `Game.players_skipping_next_untap`) | - |
+| Savor the Moment | Both sentences: "Take an extra turn after this one" (CR 500.7) and "Skip the untap step of that turn" (CR 614.10, a replacement effect, through `Game.players_skipping_next_untap`) - no longer an `EFFECTS` row since S31, read by `parse_clause_effect` | - |
 
 Four more came in with the decision point and the prevention shields:
 
@@ -3387,21 +3389,13 @@ harmless. Four were closed test-first as part of landing this merge:
   player's own sacrifice sweep runs
   (`tests/scenarios/test_each_player_chooses_creature_then_sacrifices_rest.py`).
 
-**Two clauses from that same six-card list are left open, documented
+**Two clauses from that same six-card list were left open here, documented
 rather than hardcoded around:**
 
 - **Teferi, Master of Time's own `-3`, "Target creature you don't control
-  phases out."** CR 702.26 (phasing) has no vocabulary anywhere in this
-  engine at all - no `phased_out` state on `CardState`, no untap-step
-  phase-in, no "treated as though it doesn't exist" read by combat,
-  targeting, or the layer system. This is a whole subsystem, not a narrow
-  parser gap, and building it correctly (untap-step timing, attachments
-  phasing with their permanent, the target-and-combat-invisibility rule)
-  is out of proportion to a merge-verification pass. `-10`'s own "Take two
-  extra turns after this one" is a smaller gap in the same silent clause
-  bucket (the existing `take_an_extra_turn`/`grant_extra_turn` machinery
-  only ever grants *one* extra turn) but is left alongside it, since the
-  card as a whole stays silent either way until phasing exists.
+  phases out."** and `-10`, "Take two extra turns after this one." - both
+  closed by S31 (see its own section below): phasing is a subsystem now,
+  and the extra-turn clause reads any count.
 - **Tamiyo Meets the Story Circle's own chapter II, "Discard any number of
   cards, then investigate twice for each card discarded this way."** and
   **chapter III, "Shuffle up to three target cards from your graveyard
@@ -4372,3 +4366,19 @@ Proof printings added: Nazgul, Took Reaper, Claim the Precious. Not read yet
 creature as your Ring-bearer" event and the "if you chose a creature other
 than `<self>` as your Ring-bearer" intervening *if* (Faramir, Gandalf,
 Galadriel, Aragorn).
+
+## S31: phasing, multiple extra turns, loyalty abilities on any turn
+
+| Mechanic | CR | Reader / machine | Reported card | Proof printing | Test |
+|---|---|---|---|---|---|
+| "`<target phrase>` phases out." - a phased-out permanent is held in `Game.phased_out`, out of `Game.battlefield`, so combat, targeting, the layer system's selectors, state-based actions, counts and `find_by_id` all treat it as though it does not exist; `zone` stays `Zone.BATTLEFIELD` and counters stay on it; removed from combat; Auras and Equipment attached to it phase out indirectly and back in with it; no zone-change trigger either way; a phased-out permanent leaves with its owner | CR 702.26b-d, 702.26g, 702.26h, 702.26j, 702.26k, 506.4 | `effects._TARGET_PHASES_OUT_RE` in `_parse_targeted_clause`; `Game.phase_out`/`phase_in`; `CardState.phased_out_under`/`phased_out_indirectly`; targeting (`TargetingProfile.check`) and `combat.attack_refusal`/`block_refusal` refuse a phased-out object by name | Teferi, Master of Time `-3` | Haystack | `scenarios/test_phasing.py` |
+| Phase-in at the untap step of the player who controlled it when it phased out, before anything untaps and before summoning sickness is shed; not at all when that untap step is skipped | CR 502.1, 703.4a, 702.26m | `Game._untap_step_impl` -> `Game.phase_in_for` | Teferi, Master of Time `-3` | Haystack + Savor the Moment | `scenarios/test_phasing.py` |
+| "Take `<N>` extra turn(s) after this one." - N grants, taken one after another, the most recent first | CR 500.7 | `effects._TAKE_EXTRA_TURNS_RE` in `parse_clause_effect` | Teferi, Master of Time `-10` | Teferi, Timebender `-9`, Savor the Moment | `scenarios/test_multiple_extra_turns.py` |
+| "Skip the untap step of that turn." after an extra turn | CR 614.10, 500.11 | `effects._SKIP_UNTAP_STEP_OF_THAT_TURN_RE` in `parse_clause_effect` (Savor the Moment's `EFFECTS` row deleted) | Savor the Moment | - | `scenarios/test_multiple_extra_turns.py` |
+| "You may activate loyalty abilities of `<self>` on any player's turn any time you could cast an instant." - timing only; once per turn per permanent still holds | CR 606.3, 117.1a | `Game._loyalty_instant_speed_permitted` (already present), proven here: opponent's upkeep and end step, with a spell on the stack, own upkeep, `legal_actions` | Teferi, Master of Time | no other legal printing carries the static | `scenarios/test_any_turn_loyalty.py` |
+
+Still not modelled: the phasing keyword's own phase-out half (CR 702.26a; no
+legal printing carries it), a directly phased-out Aura phasing back in
+unattached when its object is gone (CR 702.26i; nothing legal phases an Aura
+out directly), Kaito Shizuki's self-referential "he phases out", and CR
+702.26f's "for as long as" durations ending at phase-out.

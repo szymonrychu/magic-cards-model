@@ -781,3 +781,26 @@ def test_a_snapshot_written_before_day_and_night_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_DAY_AND_NIGHT}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before S31's phasing: `CardState` had no
+#: `phased_out_under`/`phased_out_indirectly` and `Game` no `phased_out`.
+_SCHEMA_VERSION_BEFORE_PHASING = 62
+
+
+def test_the_phasing_bump_moved_the_version_past_sixty_two() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_PHASING
+
+
+def test_a_snapshot_written_before_phasing_is_refused() -> None:
+    """A version-62 dump is refused rather than decoded as current: it has no
+    `phased_out` list, and Teferi, Master of Time's -3 resolved nothing there
+    and phases a creature out here (CR 702.26b)."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_PHASING
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_PHASING}",
+    ):
+        Game.model_validate(dumped)

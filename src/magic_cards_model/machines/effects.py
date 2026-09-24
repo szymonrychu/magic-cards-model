@@ -3038,34 +3038,6 @@ def hangarback_dies(game: "Game", ability: AbilityOnStack) -> None:
     create_tokens(game, THOPTER, ability.controller, counters[Counter.PLUS_ONE])
 
 
-def take_an_extra_turn(game: "Game", spell: CardState) -> None:
-    """Savor the Moment: "Take an extra turn after this one. Skip the untap step
-    of that turn." Both sentences.
-
-    CR 500.7: "Some effects can give a player extra turns. They do this by
-    adding the turns directly after the specified turn." So "that turn" in the
-    second sentence is the turn the first sentence just added, and since it is
-    the very next turn this player takes, its untap step is the next one they
-    would have - which is exactly what `Game.players_skipping_next_untap`
-    counts.
-
-    Skipping is a replacement effect, not a continuous one: CR 614.10 -
-    "An effect that causes a player to skip an event, step, phase, or turn is a
-    replacement effect. 'Skip [something]' is the same as 'Instead of doing
-    [something], do nothing.'" - and CR 614.1b says the same from the other
-    side. CR 500.11 is the step half: "To skip a step, phase, or turn is to
-    proceed past it as though it didn't exist." `Game.untap_step` honours the
-    counter by returning before anything untaps and before any
-    `BECOMES_UNTAPPED` event is emitted, which is CR 614.10a's "anything
-    scheduled for a skipped step ... won't happen".
-    """
-    controller = game.controller_of(spell).username
-    game.grant_extra_turn(controller)
-    game.players_skipping_next_untap[controller] = (
-        game.players_skipping_next_untap.get(controller, 0) + 1
-    )
-
-
 # --------------------------------------------------------------------------
 # Looking at the top of your library (CR 701.22, CR 701.25)
 # --------------------------------------------------------------------------
@@ -3444,8 +3416,11 @@ EFFECTS: dict[str, Effect] = {
     # token creation is `_parse_create_role_token_clause`'s (CR 111.10j-r),
     # both read off the card's own printed text, so `effect_for`'s fallback
     # reaches both clauses. See `tests/scenarios/test_registry_is_minimal.py`.
-    # "Take an extra turn after this one" (CR 500.7).
-    "Savor the Moment": take_an_extra_turn,
+    # "Savor the Moment": "Take an extra turn after this one. Skip the untap
+    # step of that turn." is not entered here any more: `_TAKE_EXTRA_TURNS_RE`
+    # and `_SKIP_UNTAP_STEP_OF_THAT_TURN_RE` read both sentences as
+    # `parse_clause_effect` clauses off the card's own printed text, so
+    # `effect_for`'s fallback reaches it. See `test_registry_is_minimal.py`.
     # Preordain's "Scry 2, then draw a card." is not entered here any more:
     # it is two clauses of exactly the shape `parse_player_effect_for_spell`
     # reads off the card's own printed text (`scry N`, then `draw a card`),
@@ -7077,6 +7052,23 @@ _ADDITIONAL_LAND_PLAY_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Take `<N>` extra turn(s) after this one." (CR 500.7) - Teferi, Master of
+#: Time's "Take two extra turns after this one.", Teferi, Timebender's and
+#: Savor the Moment's "Take an extra turn after this one." CR 500.7: "If a
+#: player is given multiple extra turns, the extra turns are added one at a
+#: time" - N grants, each pushed onto `TurnMachine.extra_turns`.
+_TAKE_EXTRA_TURNS_RE = re.compile(
+    rf"take {count_pattern('n', article=True)} extra turns? after this one",
+    re.IGNORECASE,
+)
+
+#: "Skip the untap step of that turn." (CR 614.10) - the rider that follows
+#: "Take an extra turn after this one." (Savor the Moment). "That turn" is
+#: the extra turn the previous clause just added directly after this one
+#: (CR 500.7), which is the next turn this player takes, so its untap step
+#: is their next untap step - `Game.players_skipping_next_untap`'s count.
+_SKIP_UNTAP_STEP_OF_THAT_TURN_RE = re.compile(r"skip the untap step of that turn", re.IGNORECASE)
+
 #: The optional "for each `<expr>`" tail - Mastery of the Unseen's "gain 1
 #: life for each creature you control" - is read by `_for_each_multiplier`
 #: below, once, at the moment CR 608.2h fixes the count.
@@ -8122,6 +8114,29 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
     if match := _PLAYER_GAINS_HEXPROOF_RE.fullmatch(clause):
         return _player_gains_hexproof_clause(match)
+
+    if match := _TAKE_EXTRA_TURNS_RE.fullmatch(clause):
+        turns = parse_count(match.group("n"))
+        if turns is None or turns < 1:
+            return None
+
+        def take_extra_turns(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            for _ in range(turns):
+                game.grant_extra_turn(player.username)
+
+        return take_extra_turns
+
+    if _SKIP_UNTAP_STEP_OF_THAT_TURN_RE.fullmatch(clause):
+
+        def skip_that_turns_untap_step(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            skipping = game.players_skipping_next_untap
+            skipping[player.username] = skipping.get(player.username, 0) + 1
+
+        return skip_that_turns_untap_step
 
     if match := _ADDITIONAL_LAND_PLAY_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -14855,6 +14870,16 @@ _TARGET_CANT_BE_BLOCKED_RE = re.compile(
     r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn\.?$", re.IGNORECASE
 )
 
+#: "`<target phrase>` phases out." (CR 702.26b) - Teferi, Master of Time's
+#: "Target creature you don't control phases out.", Haystack's "Target
+#: creature you control phases out.". The restriction is whatever
+#: `machines/targeting.py` reads off the phrase; the reminder text
+#: ("(Treat it and anything attached to it ...)") is stripped before this
+#: sees the clause.
+_TARGET_PHASES_OUT_RE = re.compile(
+    r"^(?P<phrase>(?:another )?target .+?) phases? out\.?$", re.IGNORECASE
+)
+
 #: "`<target phrase>` gains `<keyword>`[, `<keyword>`, and `<keyword>`] until
 #: end of turn." (CR 613.1f) - a direct grant over an arbitrary target
 #: phrase `machines/targeting.py` already reads in full (a comparison, a
@@ -14925,6 +14950,19 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
                 )
 
         return cant_be_blocked_targets
+
+    if match := _TARGET_PHASES_OUT_RE.fullmatch(clause):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+
+        def phase_out_targets(game: "Game", stack_object: "StackObject") -> None:
+            # CR 608.2b: an illegal target is simply not affected; a legal
+            # one phases out with whatever is attached to it (CR 702.26g).
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, CardState):
+                    game.phase_out(target)
+
+        return phase_out_targets
 
     if match := _TARGET_GAINS_KEYWORDS_RE.fullmatch(clause):
         phrase = match.group("phrase")

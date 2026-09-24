@@ -851,6 +851,23 @@ class CardState(EngineModel):
     copiable value (CR 701.15b), so nothing copies it; `Game.goad` is the one
     writer and `Game._note_left_battlefield` clears it, since the object that
     comes back is a new one (CR 400.7)."""
+    phased_out_under: str | None = None
+    """Who controlled this permanent when it phased out, or `None` while it
+    is phased in (CR 702.26b's "phased out" status).
+
+    CR 502.1: "all phased-out permanents that the active player controlled
+    when they phased out phase in" - so the phase-in reads this, not the
+    permanent's current controller. CR 702.26d: phasing changes neither zone
+    nor control, so `zone` stays `Zone.BATTLEFIELD` throughout; what makes
+    the permanent "treated as though it does not exist" (CR 702.26b) is that
+    `Game.phase_out` moves it out of `Game.battlefield` into
+    `Game.phased_out`, where no reader of the battlefield looks."""
+    phased_out_indirectly: bool = False
+    """CR 702.26g: an Aura, Equipment, or Fortification that phased out
+    because the permanent it is attached to did. It "won't phase in by
+    itself, but instead phases in along with the permanent it's attached
+    to" - `Game.phase_in` brings it back with its host, and CR 502.1's
+    untap-step phase-in never picks it up on its own."""
     meld_result: Card | None = None
     """The combined back face's printed characteristics (CR 712.8g), while
     this `CardState` is one half of a melded permanent - the surviving,
@@ -2112,6 +2129,11 @@ class CardState(EngineModel):
         if self.attachment is not None and self.attachment.is_card:
             return self.attachment.card_id
         return None
+
+    @property
+    def phased_out(self) -> bool:
+        """Whether this permanent is phased out (CR 702.26b)."""
+        return self.phased_out_under is not None
 
     @property
     def is_attached(self) -> bool:

@@ -500,6 +500,8 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
 
     if creature.zone is not Zone.BATTLEFIELD:
         return f"{creature.name} is in {creature.zone.value}, not on the battlefield"
+    if creature.phased_out:
+        return f"{creature.name} is phased out (CR 702.26b)"
     if not game.characteristics_of(creature).is_creature:
         # Read off the computed board (CR 613.5), not the printed type line,
         # so a permanent a continuous effect turned into a creature - Karn,
@@ -1441,6 +1443,8 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
 
     if blocker.zone is not Zone.BATTLEFIELD:
         return f"{blocker.name} is in {blocker.zone.value}, not on the battlefield"
+    if blocker.phased_out:
+        return f"{blocker.name} is phased out (CR 702.26b)"
     if not game.characteristics_of(blocker).is_creature:
         # Computed, not printed (CR 613.5) - see `attack_refusal`'s identical
         # check for why.
