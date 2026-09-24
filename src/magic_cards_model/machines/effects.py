@@ -180,6 +180,7 @@ from .layers import (
     Layer,
     LayerContext,
     LayerNotice,
+    RemainsOnBattlefield,
     SetTypesAndSubtypes,
     Sublayer,
     _only,
@@ -18160,6 +18161,352 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
     return effect
 
 
+#: A base power and toughness *set* (CR 613.4b, sublayer 7b) a triggered
+#: ability applies until end of turn, in three wordings of one mechanic:
+#:
+#: - Galion, Elvenking's Butler: "choose up to one other target creature you
+#:   control. Its base power and toughness become equal to Galion's power and
+#:   toughness until end of turn." - the target, a value copied off the source;
+#: - Mirkwood Meditator: "you may have this creature's base power and
+#:   toughness become 4/2 until end of turn." - optional (CR 608.2d), the
+#:   source, a printed value;
+#: - Eldrazi Mimic: "you may have this creature's base power and toughness
+#:   become equal to that creature's power and toughness until end of turn." -
+#:   optional, the source, a value copied off the trigger's own subject.
+#:
+#: A copied value is read once, as the ability resolves (CR 608.2h), and then
+#: fixed - a later pump on the object copied does not move it. The subject is
+#: fixed then too (CR 611.2c).
+_SELF_WORDS = r"this creature|this permanent"
+_BASE_PT_BECOME_RE = re.compile(
+    r"^(?:(?P<choose>choose (?:up to one |one |a )?(?:other |another )?target creature"
+    r"(?: you control)?)\. its"
+    rf"|(?P<may>you may have )?(?P<subject>{_SELF_WORDS}|that creature)['’]s)"
+    r" base power and toughness become "
+    r"(?:(?P<power>\d+)/(?P<toughness>\d+)"
+    rf"|equal to (?P<reference>{_SELF_WORDS}|that creature)['’]s power and toughness)"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _base_pt_become_object(game: "Game", ability: AbilityOnStack, word: str) -> CardState | None:
+    """ "this creature" is the ability's source, "that creature" the trigger's
+    own event subject (CR 603.2) - each only while it is still the object the
+    ability knew (a permanent that left the battlefield is a new object, CR
+    400.7, and has no current characteristics to set)."""
+    if word.lower() == "that creature":
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return None
+        return game.find_by_id(event.subject_id)
+    return ability.source(game)
+
+
+def _parse_base_pt_become_clause(effect_text: str) -> AbilityEffect | None:
+    """`_BASE_PT_BECOME_RE`'s shape - see the banner above."""
+    match = _BASE_PT_BECOME_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    optional = match.group("may") is not None
+    fixed = (
+        (int(match.group("power")), int(match.group("toughness")))
+        if match.group("power") is not None
+        else None
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if match.group("choose") is not None:
+            subjects = [
+                target
+                for target in game.resolve_card_targets(ability)
+                if target.zone is Zone.BATTLEFIELD
+            ]
+        else:
+            subject = _base_pt_become_object(game, ability, match.group("subject"))
+            subjects = [subject] if subject is not None and subject.zone is Zone.BATTLEFIELD else []
+        if not subjects:
+            return
+        if fixed is not None:
+            power, toughness = fixed
+        else:
+            reference = _base_pt_become_object(game, ability, match.group("reference"))
+            if reference is None:
+                return
+            if reference.zone is Zone.BATTLEFIELD:
+                power, toughness = game.characteristics_of(reference).numeric_power_toughness
+            else:
+                # CR 608.2h: an object no longer where the ability expected
+                # it is read by its last known information.
+                power, toughness = reference.power or 0, reference.toughness or 0
+        controller = game.controller_of(ability)
+        if optional and not game.may(
+            controller,
+            f"have {subjects[0].name}'s base power and toughness become "
+            f"{power}/{toughness} until end of turn",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        effects = continuous_effects(game)
+        timestamp = effects.tick()
+        for subject in subjects:
+            effects.add(
+                ContinuousEffect(
+                    description=(
+                        f"{ability.source_name}: {subject.name} has base power and "
+                        f"toughness {power}/{toughness}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.SET,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=only_this_incarnation(subject, subject.zone_change_stamp),
+                    modification=set_power_toughness(power, toughness),
+                ),
+                game,
+            )
+
+    return effect
+
+
+#: "Prevent all damage that would be dealt by up to one target creature for
+#: as long as this Saga remains on the battlefield." (Old Fat Spider Can't
+#: See Me's chapter II) and "Prevent all combat damage that would be dealt by
+#: target attacking or blocking creature this turn[. If {R} was spent to cast
+#: this spell, <this spell> deals damage to that creature's controller equal
+#: to the creature's power.]" (Boros Fury-Shield). CR 615.1a: a prevention
+#: effect, stored as a shield (CR 615.4) keyed to the one object targeted -
+#: its id *and* its zone-change stamp, since that creature leaving and coming
+#: back is a new object (CR 400.7). The duration is CR 514.2's "this turn" or
+#: CR 611.2b's "for as long as" the resolving ability's own source remains.
+_PREVENT_DAMAGE_DEALT_BY_TARGET_RE = re.compile(
+    r"^prevent all (?P<combat>combat )?damage that would be dealt by "
+    r"(?P<phrase>(?:up to one )?target [a-z ]*?creature) "
+    r"(?:(?P<this_turn>this turn)|for as long as (?P<remains>this (?:saga|creature|enchantment|"
+    r"artifact|permanent|land)) remains on the battlefield)\."
+    r"(?:\s*if \{(?P<color>[wubrg])\} was spent to cast this spell, (?:this spell|[^,.]+?) "
+    r"deals damage to that creature['’]s controller equal to the creature['’]s power\.)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | None:
+    """`_PREVENT_DAMAGE_DEALT_BY_TARGET_RE`'s shape, on a spell or an ability."""
+    match = _PREVENT_DAMAGE_DEALT_BY_TARGET_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    combat_only = match.group("combat") is not None
+    lasts_while_source = match.group("remains") is not None
+    spent_color = Color(match.group("color").upper()) if match.group("color") else None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        from ..models.game import PreventionShield, ShieldKind
+
+        is_spell = isinstance(stack_object, CardState)
+        source = stack_object if is_spell else stack_object.source(game)  # type: ignore[union-attr]
+        condition: RemainsOnBattlefield | None = None
+        if lasts_while_source:
+            # CR 611.2b: the source (the Saga) must still be the object the
+            # ability came from; one already gone never starts the duration.
+            if (
+                source is None
+                or source.zone is not Zone.BATTLEFIELD
+                or source.zone_change_stamp is None
+                or (
+                    not is_spell
+                    and stack_object.source_stamp is not None  # type: ignore[union-attr]
+                    and source.zone_change_stamp != stack_object.source_stamp  # type: ignore[union-attr]
+                )
+            ):
+                return
+            condition = RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp)
+        controller = game.controller_of(stack_object).username
+        targets = [
+            target
+            for target in game.resolve_card_targets(stack_object)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        for target in targets:
+            game.create_prevention_shield(
+                PreventionShield(
+                    kind=ShieldKind.ALL,
+                    label=(
+                        f"prevent all {'combat ' if combat_only else ''}damage that would be "
+                        f"dealt by {target.name}"
+                    ),
+                    controller=controller,
+                    source_id=target.id,
+                    source_stamp=target.zone_change_stamp,
+                    combat_only=combat_only,
+                    until_end_of_turn=not lasts_while_source,
+                    lasts_while=condition,
+                )
+            )
+        if spent_color is None or not is_spell or not targets:
+            return
+        if game.cast_record(stack_object).mana_of_color_spent(spent_color) <= 0:  # type: ignore[arg-type]
+            return
+        for target in targets:
+            # CR 608.2h: the creature's power as this part of the effect runs.
+            power = game.characteristics_of(target).numeric_power
+            if power > 0:
+                game.deal_damage(game.controller_of(target), power, source=stack_object)  # type: ignore[arg-type]
+
+    return effect
+
+
+#: "Exchange control of two target creatures." (Switcheroo), "... two target
+#: nonland permanents that share a card type." (Burglar's Plot), "... two
+#: target permanents that share a card type." (Shifting Loyalties) - CR
+#: 701.12's exchange, performed by `machines/control.exchange_control`. The
+#: two targets are one "target" instance (CR 601.2c), announced together;
+#: "that share a card type" is enforced on the announcement by
+#: `TargetRequirement.share_a_card_type` and rechecked as it resolves.
+_EXCHANGE_CONTROL_RE = re.compile(
+    r"^exchange control of (?P<phrase>two target [a-z ]+?)\.?$", re.IGNORECASE
+)
+
+
+def _parse_exchange_control_clause(text: str) -> TargetedClause | None:
+    """`_EXCHANGE_CONTROL_RE`'s shape, on a spell or an ability."""
+    from .control import exchange_control
+
+    match = _EXCHANGE_CONTROL_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    profile = profile_for_text(match.group("phrase"))
+    if (
+        not profile.understood
+        or len(profile.requirements) != 1
+        or profile.requirements[0].count != 2
+        or profile.requirements[0].zones != frozenset({Zone.BATTLEFIELD})
+        or profile.requirements[0].allows_players
+    ):
+        return None
+    share = profile.requirements[0].share_a_card_type
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = game.resolve_card_targets(stack_object)
+        if len(targets) != 2:
+            # CR 608.2b left one of the pair illegal: CR 701.12a, no part of
+            # the exchange occurs.
+            return
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+        )
+        exchange_control(
+            game, targets[0], targets[1], source_name=source_name, share_a_card_type=share
+        )
+
+    return effect
+
+
+#: "Put onto the battlefield under your control all creature cards in your
+#: opponents' graveyards that were put there from the battlefield this turn.
+#: They are Food artifacts with "{2}, {T}, Sacrifice this artifact: You gain
+#: 3 life." (They lose all other types and subtypes.)" (Supper for Spiders)
+#: and "Return to the battlefield all permanent cards in your graveyard that
+#: were put there from the battlefield this turn." (Faith's Reward). The
+#: history is `Game.cards_put_into_graveyard_from_battlefield_this_turn`; CR
+#: 110.2a puts each under the resolving spell's controller. One instruction
+#: is one event (CR 603.6a, `Game.entering_together`), and the "They are
+#: `<subtype>` `<type>`s with "`<ability>`"" rider is in place before that
+#: event is announced: layer 4 sets the types (CR 205.1a, CR 613.1d), layer
+#: 6 grants the quoted ability (CR 613.1f), no duration (CR 611.2a).
+_PUT_CARDS_THAT_DIED_THIS_TURN_RE = re.compile(
+    r"^(?:put onto the battlefield under your control|return to the battlefield) all "
+    r"(?P<quality>[a-z]+) cards in (?P<whose>your|your opponents['’]|all) graveyards? "
+    r"that were put there from the battlefield this turn\."
+    r"(?:\s*they are (?P<subtype>[A-Z][a-z]+) (?P<type>artifact|enchantment|land)s with "
+    r"[\"“](?P<ability>[^\"”]+)[\"”]\.?)?"
+    r"(?:\s*\(they lose all other types and subtypes\.\))?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_cards_that_died_this_turn_clause(text: str) -> Effect | None:
+    """`_PUT_CARDS_THAT_DIED_THIS_TURN_RE`'s shape - see the banner above."""
+    match = _PUT_CARDS_THAT_DIED_THIS_TURN_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    quality = match.group("quality").lower()
+    if quality == "permanent":
+        wanted: frozenset[Type] = frozenset(_PERMANENT_CARD_TYPES)
+    else:
+        card_type = _singular_card_type(quality)
+        if card_type is None:
+            return None
+        wanted = frozenset({card_type})
+    whose = match.group("whose").lower()
+    rider_type = _singular_card_type(match.group("type")) if match.group("type") else None
+    rider_subtype = match.group("subtype")
+    rider_ability = match.group("ability")
+    if rider_ability is not None:
+        rider_ability = rider_ability.strip()
+        if not rider_ability.endswith("."):
+            rider_ability += "."
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        if whose == "your":
+            owners = [controller]
+        elif whose == "all":
+            owners = [player.username for player in game.players_in_game]
+        else:
+            owners = [p.username for p in game.players_in_game if p.username != controller]
+        cards = [
+            card
+            for owner in owners
+            for card in game.cards_put_into_graveyard_from_battlefield_this_turn(owner)
+            if wanted & set(card.types)
+        ]
+        if not cards:
+            return
+        with game.entering_together():
+            for card in cards:
+                game.put_onto_battlefield(card, controller)
+                if card.zone is not Zone.BATTLEFIELD or rider_type is None:
+                    continue
+                store = continuous_effects(game)
+                timestamp = store.tick()
+                selector = only_this_incarnation(card, card.zone_change_stamp)
+                store.add(
+                    ContinuousEffect(
+                        description=f"{spell.name}: {card.name} is a {rider_subtype} "
+                        f"{rider_type.value}",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        selector=selector,
+                        modification=SetTypesAndSubtypes(
+                            types=(rider_type,), subtypes=(str(rider_subtype),)
+                        ),
+                    ),
+                    game,
+                )
+                if rider_ability is not None:
+                    store.add(
+                        ContinuousEffect(
+                            description=f"{spell.name}: {card.name} has {rider_ability!r}",
+                            layer=Layer.ABILITY,
+                            timestamp=timestamp,
+                            selector=selector,
+                            modification=grant_ability(rider_ability),
+                        ),
+                        game,
+                    )
+                    # `Game.activated_abilities` reads a granted activated
+                    # ability off `granted_ability_texts` (the resolved-grant
+                    # channel Urza's Saga's chapter II uses); CR 400.7 clears
+                    # it again when the card leaves the battlefield.
+                    if rider_ability not in card.granted_ability_texts:
+                        card.granted_ability_texts = (*card.granted_ability_texts, rider_ability)
+
+    return effect
+
+
 def _layer_sentences_come_last(sentences: Sequence[str]) -> bool:
     """True when every genuine layer sentence of an ability follows every
     other sentence - the printed order `_compose_layer_effect_with_
@@ -18293,6 +18640,22 @@ def _compose_layer_effect_with_remainder_for_mode(mode_text: str) -> Effect | No
     layer_effect = _create_continuous_effect_for_mode_text(mode_text)
     if not remainder:
         return layer_effect
+    if (
+        len(sentences) > 1
+        and remainder == sentences[1:]
+        and is_genuine_resolution_layer_sentence(sentences[0])
+    ):
+        # Gnashing of Teeth's first mode, "Target creature gets -5/-5 until
+        # end of turn. If that creature would die this turn, exile it
+        # instead." - every sentence after the pump is a rider naming the
+        # pump's own object (CR 608.2c: one instruction). Read alone, the
+        # rider has no antecedent and failed closed; the anaphoric series
+        # reads it against the pump, the same way a non-modal Bleed Dry is.
+        anaphoric = _parse_object_anaphor_clause_series(
+            sentences[0], sentences[1:], for_spell=True, layer_antecedent_first=True
+        )
+        if anaphoric is not None:
+            return anaphoric
     remainder_text = " ".join(remainder)
     remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=True)
     if remainder_effect is not None:
@@ -21601,6 +21964,15 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     meld_activation = parse_meld_activation_clause(effect_text)
     if meld_activation is not None:
         return meld_activation
+    base_pt_become = _parse_base_pt_become_clause(effect_text)
+    if base_pt_become is not None:
+        return base_pt_become
+    prevent_dealt_by_target = _parse_prevent_damage_dealt_by_target_clause(effect_text)
+    if prevent_dealt_by_target is not None:
+        return prevent_dealt_by_target
+    exchange_control_clause = _parse_exchange_control_clause(effect_text)
+    if exchange_control_clause is not None:
+        return exchange_control_clause
     meld_resolution = parse_meld_resolution_clause(effect_text)
     if meld_resolution is not None:
         return meld_resolution
@@ -21715,6 +22087,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if for_each_creature_target_player_copy is not None:
         return for_each_creature_target_player_copy
+    for_each_creature_you_control_copy = _parse_for_each_creature_you_control_copy_clause(
+        effect_text, for_spell=False
+    )
+    if for_each_creature_you_control_copy is not None:
+        return for_each_creature_you_control_copy
     modal_triggered = _resolve_modal_triggered_ability_clause(effect_text)
     if modal_triggered is not None:
         return modal_triggered
@@ -24946,6 +25323,15 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
     if dealt_damage_this_way is not None:
         return dealt_damage_this_way
+    prevent_dealt_by_target = _parse_prevent_damage_dealt_by_target_clause(whole)
+    if prevent_dealt_by_target is not None:
+        return prevent_dealt_by_target  # type: ignore[return-value]
+    put_cards_that_died = _parse_put_cards_that_died_this_turn_clause(whole)
+    if put_cards_that_died is not None:
+        return put_cards_that_died
+    exchange_control_clause = _parse_exchange_control_clause(whole)
+    if exchange_control_clause is not None:
+        return exchange_control_clause  # type: ignore[return-value]
     exile_card_then_token_copy = _parse_exile_card_then_token_copy_clause(whole, for_spell=True)
     if exile_card_then_token_copy is not None:
         return exile_card_then_token_copy
@@ -25025,6 +25411,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     )
     if for_each_creature_target_player_copy is not None:
         return for_each_creature_target_player_copy
+    for_each_creature_you_control_copy = _parse_for_each_creature_you_control_copy_clause(
+        whole, for_spell=True
+    )
+    if for_each_creature_you_control_copy is not None:
+        return for_each_creature_you_control_copy
     tokens_graveyard_cast_counters = _parse_create_tokens_graveyard_cast_counters_clause(whole)
     if tokens_graveyard_cast_counters is not None:
         return tokens_graveyard_cast_counters
@@ -27041,7 +27432,7 @@ def _parse_object_anaphor_clause_pair(
 
 
 def _parse_object_anaphor_clause_series(
-    first: str, riders: Sequence[str], *, for_spell: bool
+    first: str, riders: Sequence[str], *, for_spell: bool, layer_antecedent_first: bool = False
 ) -> TargetedClause | None:
     """`_parse_object_anaphor_clause_pair`'s own shape, widened to **two or
     more** trailing rider sentences that all refer back to the same
@@ -27066,7 +27457,14 @@ def _parse_object_anaphor_clause_series(
     referent_of = _referent_reader(first)
     if referent_of is None:
         return None
-    antecedent = _parse_mixed_clause(first, for_spell=for_spell)
+    # `layer_antecedent_first`: one *mode* of a modal spell (CR 700.2a), where
+    # `_parse_mixed_clause` reads a pump as the bare `create_continuous_
+    # effect` sentinel - which builds off the whole card's bulleted text and
+    # so applies nothing for the chosen mode. The scoped layer antecedent
+    # comes first there.
+    antecedent = (
+        _layer_antecedent_clause(first, referent_of) if layer_antecedent_first else None
+    ) or _parse_mixed_clause(first, for_spell=for_spell)
     if antecedent is None:
         antecedent = _layer_antecedent_clause(first, referent_of)
     if antecedent is None:
@@ -37553,11 +37951,34 @@ def _parse_add_any_combination_mana_clause(
 #: CR 700.7's "this `<something>`" names the same source - Phoenix Fleet
 #: Airship's "create a token that's a copy of this Vehicle", Scute Swarm's
 #: "... a copy of this creature instead".
+#:
+#: The Notary Hobbits widen it twice: a plural self-reference ("copies of
+#: them", the card's own name being plural) and CR 707.9b's "except the
+#: tokens aren't legendary" / "except it isn't legendary" (Impostor Syndrome,
+#: where "it" is the creature that dealt the damage - the trigger's own event
+#: subject, see `_self_copy_token_object`).
 _SELF_COPY_TOKEN_RE = re.compile(
     rf"^create (?P<n>{COUNT}) "
-    r"(?:tokens that are copies|token that(?:'s| is) a copy) of (?:it|this [a-z]+)\.?$",
+    r"(?:tokens that are copies|token that(?:'s| is) a copy) of (?P<of>it|them|this [a-z]+)"
+    r"(?P<nonlegendary>,? except (?:the tokens aren['’]t|they aren['’]t|it isn['’]t|"
+    r"the token isn['’]t) legendary)?\.?$",
     re.IGNORECASE,
 )
+
+
+def _self_copy_token_object(game: "Game", ability: AbilityOnStack, word: str) -> CardState | None:
+    """What `_SELF_COPY_TOKEN_RE`'s "it"/"them" names: the trigger's own event
+    subject when it has one (CR 603.2 - Impostor Syndrome's "a nontoken
+    creature you control deals combat damage", Sphinx of False Conclusions'
+    own death, Gruff Triplets' own entry), else the ability's own source;
+    "this `<something>`" is always the source (CR 700.7). CR 113.7a/608.2h:
+    an object that has left its zone is read by its last known information."""
+    event = ability.event
+    if word.lower() in ("it", "them") and event is not None and event.subject_id is not None:
+        subject = game.find_by_id(event.subject_id)
+        if subject is not None:
+            return subject
+    return ability.source_or_last_known(game)
 
 
 def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -37571,18 +37992,19 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
     """
     if for_spell:
         return None
-    match = _SELF_COPY_TOKEN_RE.fullmatch(clause.strip())
+    match = _SELF_COPY_TOKEN_RE.fullmatch(" ".join(clause.strip().split()))
     if match is None:
         return None
     count = parse_count(match.group("n"))
+    not_legendary = match.group("nonlegendary") is not None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         assert isinstance(stack_object, AbilityOnStack)
         controller = game.controller_of(stack_object).username
-        source = stack_object.source_or_last_known(game)
-        if source is None:
+        original = _self_copy_token_object(game, stack_object, match.group("of"))
+        if original is None:
             return
-        token_copy_of(game, source, controller, count=count)
+        token_copy_of(game, original, controller, count=count, not_legendary=not_legendary)
 
     return effect  # type: ignore[return-value]
 
@@ -37717,6 +38139,46 @@ def _parse_for_each_creature_target_player_copy_clause(
             ]
             for creature in creatures:
                 token_copy_of(game, creature, controller, added_abilities=added)
+
+    return effect
+
+
+#: "For each nontoken creature you control, create a token that's a copy of
+#: that creature, except it isn't legendary." (Multiversal Incursion) - the
+#: you-control twin of `_FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE`, with CR
+#: 707.9b's nonlegendary exception. The creatures are read once, off the
+#: computed board, as the instruction resolves (CR 611.2c's fixed-set-now
+#: convention), so the new tokens are not copied in turn.
+_FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE = re.compile(
+    r"^for each (?P<nontoken>nontoken )?creature you control,\s*"
+    r"create a token that['’]?s a copy of that creature"
+    r"(?P<nonlegendary>,\s*except it isn['’]t legendary)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_for_each_creature_you_control_copy_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE`'s shape, or `None`."""
+    match = _FOR_EACH_CREATURE_YOU_CONTROL_COPY_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    nontoken = match.group("nontoken") is not None
+    not_legendary = match.group("nonlegendary") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        board = game.computed_board()
+        creatures = [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).controller == controller
+            and Type.CREATURE in board.of(permanent).types
+            and not (nontoken and permanent.token)
+        ]
+        for creature in creatures:
+            token_copy_of(game, creature, controller, not_legendary=not_legendary)
 
     return effect
 
@@ -42474,6 +42936,89 @@ def _parse_mass_pump_group_clause(clause: str, *, for_spell: bool) -> TargetedCl
     return ability_clause
 
 
+#: "Creatures target player controls get -1/-1 until end of turn." (Gnashing
+#: of Teeth's second mode), "Creatures target opponent controls get -1/-1
+#: until end of turn." (Wail of War, Neutralize the Guards) and the same
+#: subject with a keyword grant ("... get +2/+0 and gain haste until end of
+#: turn."). CR 611.2c: the creatures are the ones that player controls as the
+#: effect begins, fixed then - one sublayer 7c modification (CR 613.4c) and
+#: one layer 6 grant (CR 613.1f) each, ending at cleanup (CR 514.2).
+_TARGET_PLAYER_CREATURES_PUMP_RE = re.compile(
+    r"^(?P<leading>until end of turn, )?creatures (?P<targeted>target (?:player|opponent)) "
+    r"controls get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and gain (?P<keywords>[a-z][a-z ,]*?))?(?P<trailing> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_creatures_pump_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_CREATURES_PUMP_RE`'s shape, on a spell or an ability."""
+    match = _TARGET_PLAYER_CREATURES_PUMP_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    if bool(match.group("leading")) == bool(match.group("trailing")):
+        return None
+    if not _targets_understood(match.group("targeted"), allow_player_targets=True):
+        return None
+    keywords: list[str] = []
+    if match.group("keywords") is not None:
+        validated = _split_and_validate_keywords(match.group("keywords"))
+        if validated is None:
+            return None
+        keywords = validated
+    power, toughness = int(match.group("power")), int(match.group("toughness"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        players = {
+            target.username
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, Player)
+        }
+        if not players:
+            return
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+        )
+        board = game.computed_board()
+        group = [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).is_creature and board.of(permanent).controller in players
+        ]
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for creature in group:
+            selector = only_this_incarnation(creature, creature.zone_change_stamp)
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {creature.name} gets {power:+d}/{toughness:+d}",
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                ),
+                game,
+            )
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source_name}: {creature.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=selector,
+                        modification=grant_ability(keyword),
+                    ),
+                    game,
+                )
+
+    return effect
+
+
 #: A mass, one-shot "lose all abilities" (CR 613.1f, layer 6), optionally
 #: with a base power/toughness it sets at the same time (CR 613.4b, sublayer
 #: 7b) - Final Showdown's "All creatures lose all abilities until end of
@@ -42978,6 +43523,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
     if mass_pump is not None:
         return mass_pump
+    target_player_creatures_pump = _parse_target_player_creatures_pump_clause(
+        clause, for_spell=for_spell
+    )
+    if target_player_creatures_pump is not None:
+        return target_player_creatures_pump
     mass_lose_all = _parse_mass_lose_all_abilities_clause(clause, for_spell=for_spell)
     if mass_lose_all is not None:
         return mass_lose_all

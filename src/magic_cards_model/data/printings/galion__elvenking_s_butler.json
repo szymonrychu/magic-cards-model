@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "985bd676-58c4-42c7-a570-1b413e9aa94c",
+  "oracle_id": "9efb3aa4-0023-4e0e-8bd4-f4dff1b3be66",
+  "multiverse_ids": [],
+  "resource_id": "EE78DDA22064CE2962279E6F4D71AEDDBE0034CB70939E4A858FD2F0F146DBBD",
+  "mtgo_id": 154188,
+  "arena_id": 103505,
+  "tcgplayer_id": 708217,
+  "cardmarket_id": 899595,
+  "name": "Galion, Elvenking's Butler",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/985bd676-58c4-42c7-a570-1b413e9aa94c",
+  "scryfall_uri": "https://scryfall.com/card/hob/125/galion-elvenkings-butler?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-27T11:35:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.jpg?1785152142",
+    "normal": "https://cards.scryfall.io/normal/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.jpg?1785152142",
+    "large": "https://cards.scryfall.io/large/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.jpg?1785152142",
+    "png": "https://cards.scryfall.io/png/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.png?1785152142",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.jpg?1785152142",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.jpg?1785152142",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.webp?1785152142",
+    "grid": "https://cards.scryfall.io/grid/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.webp?1785152142",
+    "display": "https://cards.scryfall.io/display/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.webp?1785152142",
+    "art": "https://cards.scryfall.io/art/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.webp?1785152142",
+    "crop": "https://cards.scryfall.io/crop/front/9/8/985bd676-58c4-42c7-a570-1b413e9aa94c.webp?1785152142"
+  },
+  "mana_cost": "{2}{G}{G}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Elf Advisor",
+  "oracle_text": "Whenever Galion attacks, choose up to one other target creature you control. Its base power and toughness become equal to Galion's power and toughness until end of turn.",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/985bd676-58c4-42c7-a570-1b413e9aa94c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9efb3aa4-0023-4e0e-8bd4-f4dff1b3be66&unique=prints",
+  "collector_number": "125",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Here's the old villain with his head on a jug! He's been having a little feast all to himself!\"\n\u2014Elven guard",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jarel Threat",
+  "artist_ids": [
+    "0fd89fbd-bd59-4ded-890e-731a8982f278"
+  ],
+  "illustration_id": "4685cc0a-9cb0-4966-a8ae-7846bc070ade",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 21294,
+  "preview": {
+    "source": "Good Games Morley",
+    "source_uri": "https://www.youtube.com/shorts/kYY_ZyG1nvM",
+    "previewed_at": "2026-07-25"
+  },
+  "prices": {
+    "usd": "0.11",
+    "usd_foil": "0.28",
+    "usd_etched": null,
+    "eur": "0.06",
+    "eur_foil": "0.11",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGalion%252C%2BElvenking%2527s%2BButler",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGalion%252C%2BElvenking%2527s%2BButler",
+    "edhrec": "https://edhrec.com/route/?cc=Galion%2C+Elvenking%27s+Butler"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F708217%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=899595&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154188?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

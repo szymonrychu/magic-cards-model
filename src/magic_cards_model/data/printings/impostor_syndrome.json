@@ -1,0 +1,160 @@
+{
+  "object": "card",
+  "id": "08da9f92-0e25-4f39-aaa4-d8974af81a41",
+  "oracle_id": "7be47440-b627-411e-a28f-d5a92e5e2fb7",
+  "multiverse_ids": [],
+  "resource_id": "11B445E5C96199D01A96662AA10850638D5D91C6546E4E3909234156C3026583",
+  "mtgo_id": 153303,
+  "arena_id": 97849,
+  "tcgplayer_id": 651851,
+  "cardmarket_id": 845930,
+  "name": "Impostor Syndrome",
+  "lang": "en",
+  "released_at": "2025-09-26",
+  "uri": "https://api.scryfall.com/cards/08da9f92-0e25-4f39-aaa4-d8974af81a41",
+  "scryfall_uri": "https://scryfall.com/card/spm/34/impostor-syndrome?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:15:54Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.jpg?1783905354",
+    "normal": "https://cards.scryfall.io/normal/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.jpg?1783905354",
+    "large": "https://cards.scryfall.io/large/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.jpg?1783905354",
+    "png": "https://cards.scryfall.io/png/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.png?1783905354",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.jpg?1783905354",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.jpg?1783905354",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.webp?1783905354",
+    "grid": "https://cards.scryfall.io/grid/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.webp?1783905354",
+    "display": "https://cards.scryfall.io/display/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.webp?1783905354",
+    "art": "https://cards.scryfall.io/art/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.webp?1783905354",
+    "crop": "https://cards.scryfall.io/crop/front/0/8/08da9f92-0e25-4f39-aaa4-d8974af81a41.webp?1783905354"
+  },
+  "mana_cost": "{4}{U}{U}",
+  "cmc": 6.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever a nontoken creature you control deals combat damage to a player, create a token that's a copy of it, except it isn't legendary.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "72341b76-c3bb-4c39-80d9-f4747d139375",
+      "component": "combo_piece",
+      "name": "Impostor Syndrome",
+      "type_line": "Enchantment",
+      "uri": "https://api.scryfall.com/cards/72341b76-c3bb-4c39-80d9-f4747d139375"
+    },
+    {
+      "object": "related_card",
+      "id": "e980eddf-92f8-4dc4-8bad-b2f3dcaf03ef",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/e980eddf-92f8-4dc4-8bad-b2f3dcaf03ef"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set": "spm",
+  "set_name": "Marvel's Spider-Man",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aspm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/spm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/08da9f92-0e25-4f39-aaa4-d8974af81a41/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7be47440-b627-411e-a28f-d5a92e5e2fb7&unique=prints",
+  "collector_number": "34",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "\"I'm the real Spider-Man!\"\n\"No, *I'm* the real Spider-Man!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Javier Charro",
+  "artist_ids": [
+    "8fd2d5fa-3b94-4e48-9cec-9d148acc8180"
+  ],
+  "illustration_id": "97390188-3a4b-4749-b3ad-b0af9a0521fd",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "enchantment"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 3208,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://bsky.app/profile/magic.wizards.com/post/3lxsinubdt72x",
+    "previewed_at": "2025-09-01"
+  },
+  "prices": {
+    "usd": "7.18",
+    "usd_foil": "8.31",
+    "usd_etched": null,
+    "eur": "4.99",
+    "eur_foil": "5.81",
+    "tix": "0.09"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DImpostor%2BSyndrome",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DImpostor%2BSyndrome",
+    "edhrec": "https://edhrec.com/route/?cc=Impostor+Syndrome"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F651851%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=845930&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153303?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

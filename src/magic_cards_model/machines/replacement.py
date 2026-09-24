@@ -829,7 +829,9 @@ def _parse_oracle_text(
             linked = following if following and _REFLEXIVE_OPENER.match(following) else None
             for effect in _parse_sentence(sentence, names):
                 update = {"raw": paragraph, "reminder": reminder, "face": face}
-                if linked is not None and effect.kind in ENTERS_KINDS:
+                if linked is not None and (
+                    effect.kind in ENTERS_KINDS or effect.kind is ReplacementKind.IF_WOULD_INSTEAD
+                ):
                     update["linked_trigger"] = linked
                 effects.append(effect.model_copy(update=update))
     return effects
@@ -2324,6 +2326,13 @@ def _compile_dies_exile(effect: ReplacementEffect) -> CardReplacement | None:
             is_opponent = _is_opponent(game, event.card.controller, source.controller)
             return is_opponent if wants_opponent else not is_opponent
 
+        if effect.linked_trigger is not None:
+            reflexive = _exile_instead_then_reflexive(effect.linked_trigger)
+            if reflexive is None:
+                # A "When you do, ..." this module cannot read: refuse the
+                # whole line rather than exile and silently drop the rest.
+                return None
+            return CardReplacement(label=effect.text, applies=applies, apply=reflexive)
         return CardReplacement(label=effect.text, applies=applies, apply=_exile_instead)
     if _SELF_DIES_EVENT_RE.match(event_text):
 
@@ -2337,6 +2346,43 @@ def _compile_dies_exile(effect: ReplacementEffect) -> CardReplacement | None:
 
         return CardReplacement(label=effect.text, applies=self_applies, apply=_exile_instead)
     return None
+
+
+def _exile_instead_then_reflexive(linked: str) -> Apply | None:
+    """ "... exile it instead. When you do, `<consequence>`." (Head of the
+    Hunt's Wolf, Nemata, Primeval Warden's Saproling) - CR 603.12's reflexive
+    triggered ability, created only when this replacement was actually
+    applied to an event (CR 614.5 gives it one opportunity, so two such
+    permanents exiling one creature create one trigger, from whichever
+    applied). It goes on the stack the next time a player would receive
+    priority (CR 603.3), controlled by the replacement's own controller.
+
+    `None` when the consequence is not something `machines/effects.py`'s
+    reflexive reader performs - the caller refuses the line (fail closed).
+    """
+    from .delayed import ReflexiveConsequence
+    from .effects import reflexive_consequence_effect
+
+    match = _REFLEXIVE_OPENER.match(linked.strip())
+    if match is None or match.group(0).lower().startswith("when you don"):
+        return None
+    consequence = match.group("effect").strip()
+    if reflexive_consequence_effect(consequence) is None:
+        return None
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        _exile_instead(game, source, event)
+        if source is None or source.controller is None:
+            return
+        game.create_reflexive_trigger(
+            text=consequence,
+            controller=source.controller,
+            source_id=source.id,
+            source_name=source.name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return apply
 
 
 # -- "if a [nontoken] creature would enter and it wasn't cast, exile it instead" --
@@ -4233,6 +4279,9 @@ def is_mana_production_line(text: str) -> bool:
 #: work; it is simply not audited by this function.
 _AUDITED_STATIC_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = (
     _compile_graveyard_exile,
+    # C01-T7: proven by `test_die_exile_replacement_widened.py` (Head of the
+    # Hunt, Nemata, Primeval Warden), with and without its reflexive rider.
+    _compile_dies_exile,
     _compile_enters_uncast_exile,
     _compile_counter_doubler,
     _compile_draw_plus,

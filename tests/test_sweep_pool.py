@@ -652,15 +652,14 @@ def test_blade_of_the_bloodchief_no_longer_reports_an_unmatchable_condition():
     assert classify_card(card("Blade of the Bloodchief"))[0] != UNMATCHABLE_CONDITION
 
 
-def test_miirym_still_reports_silent_for_its_missing_effect():
-    """Miirym's *condition* fires correctly since the nontoken fix, but the
-    card still has no `TRIGGER_EFFECTS` entry or parser reading "create a
-    token that's a copy of it" - the two holes are independent, and closing
-    one must not paper over the other still being open.
-    """
+def test_miirym_reports_handled_now_its_copy_effect_is_read():
+    """Miirym's *condition* fires correctly since the nontoken fix, and its
+    "create a token that's a copy of it, except the token isn't legendary"
+    is read since C01-T7 (`_SELF_COPY_TOKEN_RE`, "it" the entering Dragon -
+    `tests/scenarios/test_token_copies_not_legendary.py`)."""
     by_source = {c.source: c.category for c in classify_clauses(card("Miirym, Sentinel Wyrm"))}
-    assert by_source["triggered"] == SILENT
-    assert classify_card(card("Miirym, Sentinel Wyrm"))[0] == SILENT
+    assert by_source["triggered"] == HANDLED
+    assert classify_card(card("Miirym, Sentinel Wyrm"))[0] == HANDLED
 
 
 # -- The quoted-text closure: an effect matched out of a granted ability's

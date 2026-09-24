@@ -2354,6 +2354,16 @@ def condition_matches(
                 or Supertype.LEGENDARY not in game.characteristics_of(subject).supertypes
             ):
                 return False
+        if _color_condition(condition) is not None:
+            # Eldrazi Mimic's "another colorless creature you control enters"
+            # (CR 105.2c) and any colour adjective on the entering object,
+            # read off its computed colours (CR 613.1e) - unread, a green
+            # Grizzly Bears fired a colorless-only trigger.
+            subject = game.find_by_id(event.subject_id) if event.subject_id else None
+            if subject is None or not _color_matches(
+                game.characteristics_of(subject).colors, condition
+            ):
+                return False
         if not _controller_clause_holds(
             condition, controller, event.subject_controller
         ) or not _types_match(event.subject_types, condition):
@@ -4679,7 +4689,16 @@ def intervening_if_holds(
             return _fail_closed(game, ability, source)
         return dying > (game.power_of(source) or 0)
 
-    if clause == "it isn't a token":
+    if clause in (
+        "it isn't a token",
+        "it's not a token",
+        "they aren't a token",
+        "they're not a token",
+        "they aren't tokens",
+        "they're not tokens",
+    ):
+        # The Notary Hobbits' plural "if they're not a token" names the one
+        # permanent as "they" (its name is plural) - the same question.
         # Gruff Triplets' own ETB ("if it isn't a token, create two tokens
         # that are copies of it") and Sphinx of False Conclusions' dies
         # trigger ("if it isn't a token, create a token that's a copy of

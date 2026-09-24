@@ -5027,3 +5027,42 @@ Hunger, Explore, Mindcrank, Faerie Mastermind, Blooming Blast, Anticipate,
 Sign in Blood, Opt.
 
 `Game.schema_version` bumped 67 -> 68 for `CardState.chosen_modal_options`.
+
+## C01-T7: P/T setting, type changes, control exchange, token copies, die-exile replacements
+
+Beorn's Hospitality, Bilbo, Luckwearer // Burglar's Plot, Esgaroth Garrison,
+Galion, Elvenking's Butler, Gnashing of Teeth, Head of the Hunt, Master's
+Councillors, Mirkwood Meditator, Old Fat Spider Can't See Me, Stone by
+Sunlight, Supper for Spiders and The Notary Hobbits now sweep every clause
+`handled`, except Bilbo's two lines, which the sweep still files under
+`static_unaudited` - "Bilbo can't be blocked." and the Adventure face (whose
+classifier belongs to C01-T8) - both proven in
+`test_exchange_control_shared_type.py`. CR numbers verified with `mise run
+rules:find`: 105.2c, 110.2a, 113.7a, 115.6, 205.1a, 205.1b, 205.2a, 205.4d,
+208.2a, 400.7, 404.1, 514.2, 601.2c, 602.2a, 603.2, 603.3, 603.4, 603.6a,
+603.12, 604.3a, 608.2b, 608.2c, 608.2d, 608.2h, 611.2a, 611.2b, 611.2c,
+611.3a, 613.1b, 613.1d, 613.1e, 613.1f, 613.4a, 613.4b, 613.4c, 613.5, 613.6,
+613.7a, 613.7b, 614.1a, 614.5, 615.1a, 615.4, 700.2a, 700.4, 700.7, 701.12a,
+701.12b, 702.12b, 704.5f, 704.5j, 707.9b, 714.4, 715.3d.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "`<This creature>`'s power is equal to the number of `<qualifier>` you control." - CR 208.2a's power-only CDA, sublayer 7a (CR 613.4a), printed toughness untouched | `layers._QUALIFIER_COUNT_CDA_RE` (widened), `_qualifier_count_cda_builder(power_only=)` | Esgaroth Garrison | Snow Villiers | `test_power_equal_count_cda.py` |
+| "This creature gets +N/+M for each graveyard with `<n>` or more cards in it." - counted per graveyard (CR 404.1), 7c, not locked in (CR 611.3a) | `layers._SELF_PUMP_PER_FULL_GRAVEYARD_RE` | Master's Councillors | none legal (see MEMORY.md) | `test_graveyard_count_pump.py` |
+| "[you may have] `<subject>`'s base power and toughness become `<N/M>` / equal to `<object>`'s power and toughness until end of turn" - 7b (CR 613.4b); a copied value read once as it resolves (CR 608.2h); subject the target ("Its" after "choose ... target"), the source, or the trigger's event subject | `effects._parse_base_pt_become_clause` | Galion, Elvenking's Butler; Mirkwood Meditator | Eldrazi Mimic | `test_base_pt_set_until_eot.py` |
+| a colour word in an "enters" trigger condition ("another colorless creature you control enters") is enforced off the entering object's computed colours (CR 105.2c) - it was ignored | `triggers.condition_matches` (ENTERS branch, `_color_matches`) | - | Eldrazi Mimic | `test_base_pt_set_until_eot.py` |
+| "[Until end of turn, ]this enchantment becomes a `<Subtype(s)>` creature in addition to its other types and gains "This creature's power and toughness are each equal to the number of `<lands you control / kind counters on it>`."" - layer 4 add, layer 6 grant, and the granted ability's own 7b set (CR 604.3a (4): not a CDA), keyed to the granted text so a later ability removal stops it (CR 613.6) | `layers._SELF_BECOMES_CREATURE_WITH_PT_ABILITY_RE`, `CountPermanentsControlledByItsController`, `CountCountersOnIt` | Beorn's Hospitality | Myth Realized | `test_animate_enchantment_cda.py` |
+| "`<subject>` becomes a[n] `<card type>` in addition to its other types [and gains `<keywords>`] until end of turn" - widened from Liquimetal Coating's "target permanent" to any subject plus a keyword grant; a creature type in the slot falls through to the subtype shape | `layers._BECOMES_TYPE_IN_ADDITION_RE` | Stone by Sunlight (mode 2) | Argent Mutation | `test_becomes_artifact_indestructible.py` |
+| "Creatures target player/opponent controls get ±N/±M [and gain `<keywords>`] until end of turn" - the set fixed as it resolves (CR 611.2c) | `effects._parse_target_player_creatures_pump_clause` | Gnashing of Teeth (mode 2) | Wail of War, Neutralize the Guards | `test_die_exile_replacement_widened.py` |
+| a layer mode followed by riders naming its object (Gnashing of Teeth's "... gets -5/-5 ... If that creature would die this turn, exile it instead.") reads the riders against a mode-scoped layer antecedent - it used to drop the rider with a `LayerRemainderNotice` | `effects._compose_layer_effect_with_remainder_for_mode`, `_parse_object_anaphor_clause_series(layer_antecedent_first=)` | Gnashing of Teeth (mode 1) | - (Bleed Dry is the non-modal twin) | `test_die_exile_replacement_widened.py` |
+| "If a creature an opponent controls would die, exile it instead. When you do, `<consequence>`." - the static die-exile with CR 603.12's reflexive trigger, created only when the replacement applied; the compiler joins `_AUDITED_STATIC_COMPILERS` | `replacement._compile_dies_exile`, `_exile_instead_then_reflexive` | Head of the Hunt | Nemata, Primeval Warden | `test_die_exile_replacement_widened.py` |
+| "`<subject>` gains `<keywords>` for as long as this `<Saga / creature ...>` remains on the battlefield / you control this `<creature>`" - CR 611.2b off the resolving ability's source; `YouStillControl` asks layer 2 through a re-entrancy guard | `layers._KEYWORD_GRANT_FOR_AS_LONG_RE`, `YouStillControl` | Old Fat Spider Can't See Me (I) | Aegis Angel | `test_saga_duration_effects.py` |
+| "Prevent all [combat] damage that would be dealt by [up to one] target `<creature>` this turn / for as long as this Saga remains on the battlefield[. If {R} was spent ..., ... deals damage to that creature's controller equal to the creature's power.]" - a source-keyed shield: `PreventionShield.source_stamp` (CR 400.7) and `.lasts_while` (CR 611.2b) | `effects._parse_prevent_damage_dealt_by_target_clause` | Old Fat Spider Can't See Me (II) | Boros Fury-Shield | `test_saga_duration_effects.py` |
+| "Exchange control of two target `<permanents>` [that share a card type]" - CR 701.12a/b, two indefinite layer 2 effects on one timestamp; "that share a card type" enforced on the announcement (`TargetRequirement.share_a_card_type`) and rechecked on resolution | `effects._parse_exchange_control_clause`, `control.exchange_control` | Bilbo, Luckwearer // Burglar's Plot | Switcheroo, Shifting Loyalties | `test_exchange_control_shared_type.py` |
+| "Put onto the battlefield under your control / Return to the battlefield all `<type / permanent>` cards in `<whose>` graveyard(s) that were put there from the battlefield this turn[. They are `<Subtype>` `<type>`s with "`<ability>`"]" - per-turn history on `GraveyardArrival.card_id` (latest arrival counts, CR 400.7); one entering event (CR 603.6a) with the type rider already applied; a granted activated ability that sacrifices its source is still found as the cost is paid (CR 602.2a) | `effects._parse_put_cards_that_died_this_turn_clause`, `Game.cards_put_into_graveyard_from_battlefield_this_turn` | Supper for Spiders | Faith's Reward | `test_reanimate_as_food.py` |
+| "create `<n>` tokens that are copies of `<it / them / this ...>`[, except the tokens aren't / it isn't legendary]" and "For each [nontoken] creature you control, create a token that's a copy of that creature[, except it isn't legendary]" - CR 707.9b (`token_copy_of(not_legendary=)`); "it"/"them" is the trigger's event subject when it has one; "if they're not a token" (CR 603.4) | `effects._SELF_COPY_TOKEN_RE`, `_parse_for_each_creature_you_control_copy_clause`, `triggers.intervening_if_holds` | The Notary Hobbits | Impostor Syndrome, Multiversal Incursion (Miirym, Sentinel Wyrm's pool-only gap closes too, a double-faced Dragon's face type lines included) | `test_token_copies_not_legendary.py` |
+
+Proof printings added: Snow Villiers, Eldrazi Mimic, Myth Realized, Argent
+Mutation, Wail of War, Neutralize the Guards, Nemata, Primeval Warden, Aegis
+Angel, Boros Fury-Shield, Switcheroo, Shifting Loyalties, Faith's Reward,
+Impostor Syndrome, Multiversal Incursion. Schema 67 -> 68.

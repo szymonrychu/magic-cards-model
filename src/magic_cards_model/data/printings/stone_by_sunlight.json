@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "c5752731-253c-4b41-bdd8-94c26d715206",
+  "oracle_id": "7907bbf0-f6d9-4e5b-b5de-73cd94979f98",
+  "multiverse_ids": [],
+  "resource_id": "81AFC623E0157BAD6A46ACC188FD807DADA12E591F4CC75CC55BAE3D1DCAB233",
+  "mtgo_id": 153968,
+  "arena_id": 103395,
+  "tcgplayer_id": 707274,
+  "cardmarket_id": 898483,
+  "name": "Stone by Sunlight",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/c5752731-253c-4b41-bdd8-94c26d715206",
+  "scryfall_uri": "https://scryfall.com/card/hob/27/stone-by-sunlight?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-21T11:05:53Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.jpg?1784631953",
+    "normal": "https://cards.scryfall.io/normal/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.jpg?1784631953",
+    "large": "https://cards.scryfall.io/large/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.jpg?1784631953",
+    "png": "https://cards.scryfall.io/png/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.png?1784631953",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.jpg?1784631953",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.jpg?1784631953",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.webp?1784631953",
+    "grid": "https://cards.scryfall.io/grid/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.webp?1784631953",
+    "display": "https://cards.scryfall.io/display/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.webp?1784631953",
+    "art": "https://cards.scryfall.io/art/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.webp?1784631953",
+    "crop": "https://cards.scryfall.io/crop/front/c/5/c5752731-253c-4b41-bdd8-94c26d715206.webp?1784631953"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Choose one \u2014\n\u2022 Destroy target creature with power 4 or greater.\n\u2022 Until end of turn, target creature becomes an artifact in addition to its other types and gains indestructible. (Damage and effects that say \"destroy\" don't destroy it.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c5752731-253c-4b41-bdd8-94c26d715206/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7907bbf0-f6d9-4e5b-b5de-73cd94979f98&unique=prints",
+  "collector_number": "27",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Dawn take you all, and be stone to you!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kamila Szutenberg",
+  "artist_ids": [
+    "bec9ba7f-594e-4ff0-8172-9ec1fc909607"
+  ],
+  "illustration_id": "c9b20ba3-44c8-4fa7-a58b-bf0660680bd5",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16391,
+  "preview": {
+    "source": "Rubee",
+    "source_uri": "https://www.instagram.com/reels/DbCEfSkO2wE/",
+    "previewed_at": "2026-07-21"
+  },
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.12",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStone%2Bby%2BSunlight",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStone%2Bby%2BSunlight",
+    "edhrec": "https://edhrec.com/route/?cc=Stone+by+Sunlight"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707274%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898483&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153968?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
