@@ -131,6 +131,7 @@ from magic_cards_model.machines.triggers import (
     _unread_trigger_events,
     condition_matches,
     is_batched_attack_condition,
+    triggers_only_off_the_stack,
 )
 from magic_cards_model.machines.triggers import (
     _required_entering_subtype as _condition_required_entering_subtype,
@@ -2544,6 +2545,17 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
     prepare_spell_face_name = (
         printing.prepare_spell.name if printing.prepare_spell is not None else None
     )
+    # CR 712.11b: a modal double-faced card whose front is a permanent can
+    # still be cast as its instant or sorcery back face (Flamescroll
+    # Celebrant // Revel in Silence). That face's printed lines are its own
+    # resolution text, already judged whole as its "[spell]" clause above -
+    # never a static ability of the permanent front, the same classifier
+    # artifact CR 722.4's prepare-spell skip below exists for.
+    spell_only_face_names = (
+        {face.name for face in _spell_faces(printing) if not face.is_permanent}
+        if is_permanent and printing.layout is Layout.MODAL_DFC
+        else set()
+    )
 
     if not printing.is_land:
         for face in _spell_faces(printing):
@@ -2652,9 +2664,21 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             if _leaves_you_and_group_player_half_unread(ability.effect):
                 category = _worse(category, NOTICE)
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
-        elif isinstance(ability, TriggeredAbility) and is_permanent:
+        elif isinstance(ability, TriggeredAbility) and (
+            is_permanent or triggers_only_off_the_stack(ability)
+        ):
+            # A non-permanent card's "When you discard/cycle this card"
+            # (Edgar's Awakening, Choking Tethers) is the exception to the
+            # permanent gate explained below: CR 113.6k makes it an ability
+            # of the card in whatever zone the discard or cycle leaves it
+            # in, triggered off `machines/triggers.py` and put on the stack
+            # as its own object, and `effect_for` strips it off the spell's
+            # own resolution text (`_strip_trailing_standalone_triggered_
+            # ability`), so it is judged here or nowhere.
             if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
                 continue  # CR 722.4 - see this function's own docstring above.
+            if ability.face in spell_only_face_names:
+                continue  # CR 712.11b - see `spell_only_face_names` above.
             # Gated on `is_permanent` the same way the static branch below
             # already is, and for the identical reason: `trigger_effect_for`
             # is called from exactly one place in the real engine,
@@ -2727,6 +2751,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
         elif ability.kind is AbilityKind.STATIC and is_permanent:
             if prepare_spell_face_name is not None and ability.face == prepare_spell_face_name:
                 continue  # CR 722.4 - see this function's own docstring above.
+            if ability.face in spell_only_face_names:
+                continue  # CR 712.11b - see `spell_only_face_names` above.
             clauses.append(
                 ClauseOutcome(
                     _static_ability_category(printing, ability.text), ability.text, "static"

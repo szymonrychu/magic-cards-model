@@ -69,6 +69,7 @@ from ..machines.casting_restrictions import (
     CastingRuleKind,
     cannot_be_countered,
     combat_lockdown_restriction_source,
+    loyalty_activation_restriction,
     spell_protected_from_countering,
 )
 from ..machines.combat import (
@@ -17814,6 +17815,17 @@ class Game(EngineModel):
         if prohibited is not None:
             return prohibited
 
+        if ability.loyalty is not None:
+            # CR 602.5 / CR 606.3: a resolved "Your opponents can't ...
+            # activate planeswalkers' loyalty abilities this turn" (Revel in
+            # Silence), recorded on `casting_rule_effects` (CR 611.2c).
+            locked = loyalty_activation_restriction(self, controller)
+            if locked is not None:
+                return (
+                    f"{controller} can't activate loyalty abilities this turn: "
+                    f"{locked.source_name} says so (CR 602.5, CR 606.3)"
+                )
+
         if ability.mana is not None and ability.mana.unparsed_rider is not None:
             # CR 405.6c: "If a mana ability both produces mana and has
             # another effect, the mana is produced and the other effect
@@ -19372,6 +19384,17 @@ class Game(EngineModel):
         elif rider.kind == "gain_life":
             self.gain_life(controller, rider.amount)
 
+    def _activated_source_types(self, permanent: CardState) -> tuple[Type, ...]:
+        """The card types of an activated ability's source as it was
+        activated (CR 603.10a's look-back for a source its own cost moved -
+        "Sacrifice this artifact: ..." has left the battlefield by now)."""
+        if permanent.zone is Zone.BATTLEFIELD:
+            return tuple(self.characteristics_of(permanent).types)
+        left = self._left_battlefield_characteristics.get(permanent.id)
+        if left is not None:
+            return tuple(left.types)
+        return tuple(permanent.types)
+
     def activate_ability(
         self,
         permanent: CardState,
@@ -19736,6 +19759,27 @@ class Game(EngineModel):
             # wholesale), and the ability is on the stack, so anything watching
             # "becomes the target of ... an ability" now has an event to see.
             self._emit_ability_becomes_target(on_stack)
+            # CR 602.2: the ability is on the stack and its costs are paid -
+            # it has been activated, and it is not a mana ability (CR 605.3b
+            # returned above for those). Flamescroll Celebrant's "Whenever an
+            # opponent activates an ability that isn't a mana ability" and
+            # Immolation Shaman's type-qualified sibling watch this;
+            # `origin_zone` is where the source was (CR 109.2).
+            self.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.ABILITY_ACTIVATED,
+                    subject_id=permanent.id,
+                    subject_name=permanent.name,
+                    subject_controller=controller,
+                    subject_card=permanent.card,
+                    subject_types=self._activated_source_types(permanent),
+                    # Every ability this method activates is a battlefield
+                    # permanent's; `machines/keywords.KeywordActivation` is
+                    # the door for one that functions in another zone.
+                    origin_zone=Zone.BATTLEFIELD,
+                    player=controller,
+                )
+            )
             # CR 117.3c hands priority straight back, so anything that triggered
             # while the cost was paid goes on the stack now - above the ability.
             self.put_triggers_on_stack()

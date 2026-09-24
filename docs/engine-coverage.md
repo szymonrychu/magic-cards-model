@@ -4299,3 +4299,27 @@ verified with `mise run rules:find`: 107.3a, 113.10, 205.1a, 205.1b, 400.7,
 `sweep_pool.py --effects` before/after: notice 4 -> 1 on the legal-card
 list (the three listed cards left it), silent unchanged at 26; no card moved
 into silent or notice.
+
+## S28: hand-zone and activation trigger events, turn-long cast lock, modal DFC back-face casts
+
+Vizier of Tumbling Sands, Edgar's Awakening and Flamescroll Celebrant //
+Revel in Silence were silent. Every clause of all three (and of the `A // B`
+full name) now sweeps `handled`. CR numbers verified with `mise run
+rules:find`: 101.2, 109.2, 109.5, 113.6, 113.6k, 117.1a, 117.3c, 201.5,
+514.2, 601.3, 602.2, 602.5, 603.1b, 603.2, 603.3, 603.10a, 603.12, 605.1a,
+605.3b, 606.3, 611.2c, 701.9a, 702.6a, 702.29a, 702.29c, 702.29d, 702.29f,
+709.3a, 712.8a, 712.8f, 712.11, 712.11b, 712.11c, 712.12, 715.3b.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "When you cycle this card" (CR 702.29c: discarding this card to pay a cycling or typecycling cost, CR 702.29f), and the "you/a player/an opponent cycles a card/another card" forms; functions from wherever the card lands (CR 113.6k) | `triggers._CYCLE_CONDITION` on `ExtraTriggerEvent.CYCLED`, raised by `keywords.KeywordActivation` for a cycling activation; `zones_ability_functions_in` answers graveyard/exile | Vizier of Tumbling Sands | Windcaller Aven, Choking Tethers (on an instant) | `test_cycle_self_triggers.py` |
+| A trailing "When you discard/cycle this card, ..." paragraph on an instant or sorcery is its own ability, not resolution text (CR 113.6k) | `triggers.triggers_only_off_the_stack`, `effects._strip_trailing_standalone_triggered_ability`; `support.classify_clauses` judges it as a triggered clause | Edgar's Awakening | Choking Tethers | `test_discard_self_triggers.py`, `test_cycle_self_triggers.py` |
+| "When you discard this card, you may pay {M}. When you do, ..." (CR 701.9a, 603.12) - already read; now reachable on a sorcery | existing `DISCARDS_A_CARD` self branch and reflexive may-pay reader | Edgar's Awakening | Bartered Cow (compound "dies and when you discard") | `test_discard_self_triggers.py` |
+| "Whenever `<you/a player/an opponent>` activates an ability [of `<type list>`] that isn't a mana ability" (CR 602.2, 605.1a; a type without "card" is a permanent on the battlefield, CR 109.2) | `triggers._ABILITY_ACTIVATED_CONDITION` on `ExtraTriggerEvent.ABILITY_ACTIVATED`, raised by `Game.activate_ability` (non-mana path) and `KeywordActivation` (cycling, equip, every keyword activation); `abilities._ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY` keeps the serial type list in the condition | Flamescroll Celebrant | Burning-Tree Shaman ("a player"), Immolation Shaman (type list) | `test_opponent_activates_trigger.py` |
+| "Your opponents can't cast spells [or activate planeswalkers' loyalty abilities] this turn." on a resolving spell (CR 601.3, 602.5, 606.3, 611.2c, 514.2) | `casting_restrictions._OPPONENTS_CANT_CAST_THIS_TURN_RE` records `OPPONENTS_CANT_CAST` / `OPPONENTS_CANT_ACTIVATE_LOYALTY`; read by `blanket_cant_cast_restriction` and `Game.why_cannot_activate` (`loyalty_activation_restriction`) | Revel in Silence | Silence | `test_turn_long_cast_lock.py` |
+| Casting a modal double-faced card as its instant or sorcery back face (CR 712.11b/c; on the stack it has only that face, CR 712.8f) | `casting.modal_dfc_spell_back_faces`, `castable_faces`, `Casting.cast_as_split_half` (now split or MDFC), `CardState.up_face`, `legal_actions._base_cost_options` | Revel in Silence | none read (every other legal creature/artifact // instant/sorcery MDFC has an unread back face) | `test_modal_dfc_spell_back_face.py` |
+
+Not read: Harsh Mentor's "..., if it isn't a mana ability," intervening-if
+form of the activation punisher. A *permanent* back face of a modal DFC
+(Esika's Prismatic Bridge) is still not offered as a cast: it would have to
+enter the battlefield with that face up (CR 712.8f), which nothing records.

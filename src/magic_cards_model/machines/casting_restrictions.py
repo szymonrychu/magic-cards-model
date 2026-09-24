@@ -122,6 +122,17 @@ class CastingRuleKind:
     graveyards or libraries." Scoped to the zone a cast would come from, so it
     is answered by `zone_cast_prohibition_source` - which takes the spell and
     its origin zone - rather than by the blanket reader below."""
+    OPPONENTS_CANT_CAST = "opponents_cant_cast"
+    """Silence's and Revel in Silence's resolving "Your opponents can't cast
+    spells this turn." - every opponent of `controller` is barred from
+    casting any spell until the turn ends (CR 601.3, CR 514.2). Recorded,
+    like Ranger-Captain of Eos's noncreature half, because the spell that
+    made it is gone by the time anyone tries to cast (CR 611.2c)."""
+    OPPONENTS_CANT_ACTIVATE_LOYALTY = "opponents_cant_activate_loyalty"
+    """Revel in Silence's "... or activate planeswalkers' loyalty abilities
+    this turn." - every opponent of `controller` is barred from activating
+    a loyalty ability (CR 602.5, CR 606.3) until the turn ends. Read by
+    `Game.why_cannot_activate` through `loyalty_activation_restriction`."""
     SPELLS_CANT_BE_COUNTERED_GRANT = "spells_cant_be_countered_grant"
     """Veil of Summer's "Spells you control can't be countered this turn."
     and Determined's "Other spells you control can't be countered this
@@ -324,9 +335,11 @@ def blanket_cant_cast_restriction(
     CR 613.11 is why neither writes a layer.
     """
     for effect in getattr(game, "casting_rule_effects", []):
-        if effect.kind != CastingRuleKind.TARGETED_CANT_CAST:
-            continue
-        if effect.restricted_player == caster:
+        if effect.kind == CastingRuleKind.TARGETED_CANT_CAST and effect.restricted_player == caster:
+            return effect
+        # Silence's "Your opponents can't cast spells this turn" - the
+        # effect's own controller is never among them.
+        if effect.kind == CastingRuleKind.OPPONENTS_CANT_CAST and effect.controller != caster:
             return effect
     return _live_blanket_cant_cast(game, caster, spell_types, spell_subtypes)
 
@@ -512,6 +525,20 @@ def create_instant_sorcery_cost_reduction_grant(
     )
 
 
+def loyalty_activation_restriction(game: Any, activator: str) -> CastingRuleEffect | None:
+    """The recorded effect stopping `activator` from activating loyalty
+    abilities right now (CR 602.5, CR 606.3), or None - Revel in Silence's
+    "Your opponents can't ... activate planeswalkers' loyalty abilities this
+    turn". Only an opponent of the effect's own controller is caught."""
+    for effect in getattr(game, "casting_rule_effects", []):
+        if effect.kind != CastingRuleKind.OPPONENTS_CANT_ACTIVATE_LOYALTY:
+            continue
+        if effect.controller == activator:
+            continue
+        return effect
+    return None
+
+
 def restricted_from_noncreature_casting(game: Any, caster: str) -> CastingRuleEffect | None:
     """The recorded effect stopping `caster` from casting noncreature spells
     right now, or None.
@@ -629,6 +656,18 @@ _NONCREATURE_CAST_RESTRICTION_RE = re.compile(
     r"^your opponents can't cast noncreature spells this turn\.?$", re.IGNORECASE
 )
 
+#: Silence's "Your opponents can't cast spells this turn." and Revel in
+#: Silence's "Your opponents can't cast spells or activate planeswalkers'
+#: loyalty abilities this turn." - a resolving effect's CR 601.3 cast
+#: prohibition over every opponent, with CR 602.5's loyalty-activation
+#: prohibition (CR 606.3) as an optional second half. "this turn" is CR
+#: 514.2's until-end-of-turn duration.
+_OPPONENTS_CANT_CAST_THIS_TURN_RE = re.compile(
+    r"^(?:your opponents|each opponent) can't cast spells"
+    r"(?P<loyalty> or activate (?:planeswalkers' )?loyalty abilities)? this turn\.?$",
+    re.IGNORECASE,
+)
+
 #: Teferi, Time Raveler's exact printed "+1" effect.
 _SORCERY_FLASH_GRANT_RE = re.compile(
     r"^until your next turn, you may cast sorcery spells as though they had flash\.?$",
@@ -645,19 +684,54 @@ _INSTANT_SORCERY_COST_REDUCTION_GRANT_RE = re.compile(
 )
 
 
-def parse_casting_rule_clause(
-    clause: str, *, for_spell: bool
-) -> Callable[[Any, AbilityOnStack], None] | None:
-    """One activated-ability clause that records a `CastingRuleEffect` when it
-    resolves, or None.
+def parse_casting_rule_clause(clause: str, *, for_spell: bool) -> Callable[[Any, Any], None] | None:
+    """One clause that records a `CastingRuleEffect` when it resolves, or
+    None.
 
-    Never matches spell text: both shapes read here - Ranger-Captain of Eos's
-    sacrifice ability and Teferi, Time Raveler's +1 - are printed on activated
-    abilities, so `for_spell=True` always misses.
+    The turn-long "Your opponents can't cast spells [or activate
+    planeswalkers' loyalty abilities] this turn" lock is read for a spell and
+    an ability alike (Silence and Revel in Silence are instants). The other
+    shapes read here - Ranger-Captain of Eos's sacrifice ability and Teferi,
+    Time Raveler's +1 - are printed on activated abilities only, so
+    `for_spell=True` misses them.
     """
+    stripped = clause.strip()
+
+    lock_match = _OPPONENTS_CANT_CAST_THIS_TURN_RE.match(stripped)
+    if lock_match is not None:
+        also_loyalty = lock_match.group("loyalty") is not None
+
+        def lock(game: Any, obj: Any) -> None:
+            # A resolving spell (`CardState`) or ability (`AbilityOnStack`):
+            # "your" is whoever controls it as it resolves (CR 109.5).
+            controller = (
+                obj.controller
+                if isinstance(obj, AbilityOnStack)
+                else game.controller_of(obj).username
+            )
+            source_name = obj.source_name if isinstance(obj, AbilityOnStack) else obj.name
+            game.casting_rule_effects.append(
+                CastingRuleEffect(
+                    kind=CastingRuleKind.OPPONENTS_CANT_CAST,
+                    controller=controller,
+                    source_name=source_name,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                )
+            )
+            if also_loyalty:
+                game.casting_rule_effects.append(
+                    CastingRuleEffect(
+                        kind=CastingRuleKind.OPPONENTS_CANT_ACTIVATE_LOYALTY,
+                        controller=controller,
+                        source_name=source_name,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                    )
+                )
+
+        return lock
+
     if for_spell:
         return None
-    stripped = clause.strip()
 
     if _NONCREATURE_CAST_RESTRICTION_RE.match(stripped):
 

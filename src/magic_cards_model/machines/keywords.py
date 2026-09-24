@@ -91,7 +91,13 @@ from .layers import (
     only_this_incarnation,
 )
 from .objects_as_costs import crew_number, crew_offer, power_of, total_power
-from .triggers import AbilityOnStack, GameEvent, activated_abilities_of, triggers_for
+from .triggers import (
+    AbilityOnStack,
+    ExtraTriggerEvent,
+    GameEvent,
+    activated_abilities_of,
+    triggers_for,
+)
 
 
 class KeywordRule(StrEnum):
@@ -1551,8 +1557,50 @@ class KeywordActivation(EngineModel):
             keyword_activation=None if self.generic_effect else self,
         )
         self.game.stack.append(self.on_stack)
+        self._emit_activation_events()
         self.game.put_triggers_on_stack()  # CR 117.3c hands priority straight back
         return self.on_stack
+
+    def _emit_activation_events(self) -> None:
+        """What this activation is, as trigger events (CR 603.2).
+
+        Every keyword activation is CR 602.2's "put it onto the stack and pay
+        its costs" - never a mana ability (CR 605.1a) - so it always raises
+        `ExtraTriggerEvent.ABILITY_ACTIVATED`. A cycling or typecycling one
+        (CR 702.29f: "Typecycling abilities are cycling abilities") also
+        raises `ExtraTriggerEvent.CYCLED`, CR 702.29c's "When you cycle this
+        card": its cost discarded the card, and the discard's own event was
+        already raised by the cost (CR 701.9a).
+        """
+        game = self.game
+        on_battlefield = self.card.zone is Zone.BATTLEFIELD
+        types = (
+            tuple(game.characteristics_of(self.card).types)
+            if on_battlefield
+            else tuple(self.card.types)
+        )
+        game.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.ABILITY_ACTIVATED,
+                subject_id=self.card.id,
+                subject_name=self.card.name,
+                subject_controller=self.player,
+                subject_card=self.card.card,
+                subject_types=types,
+                origin_zone=self.zone,
+                player=self.player,
+            )
+        )
+        if self.rule in (str(KeywordRule.CYCLING), str(KeywordRule.TYPECYCLING)):
+            game.emit(
+                GameEvent(
+                    event=ExtraTriggerEvent.CYCLED,
+                    subject_id=self.card.id,
+                    subject_name=self.card.name,
+                    subject_card=self.card.card,
+                    player=self.player,
+                )
+            )
 
     def resolve(self) -> Any:
         """Resolve the ability and run the keyword's own effect (CR 608.2).

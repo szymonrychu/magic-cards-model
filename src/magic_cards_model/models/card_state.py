@@ -1539,9 +1539,13 @@ class CardState(EngineModel):
                 return back_face
         if (
             self.face_played is not None
-            and self.card.layout in (Layout.SPLIT, Layout.ADVENTURE)
+            and self.card.layout in (Layout.SPLIT, Layout.ADVENTURE, Layout.MODAL_DFC)
             and self.zone is Zone.STACK
         ):
+            # CR 712.8f: "While a modal double-faced spell is on the stack
+            # ... it has only the characteristics of the face that's up" -
+            # the face CR 712.11b let its caster choose; off the stack it is
+            # its front face again (CR 712.8a).
             # CR 709.2: off the stack, a split card is "only one card" again -
             # both halves, not the one that was last cast. CR 715.4 says the
             # same for an adventurer card: "in every zone except the stack,

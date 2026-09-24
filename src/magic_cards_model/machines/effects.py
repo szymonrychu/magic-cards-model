@@ -230,6 +230,7 @@ from .triggers import (
     resolution_key,
     triggered_mana_count,
     triggered_mana_recipient,
+    triggers_only_off_the_stack,
 )
 from .turn import COMBAT_PHASE_STEPS, Step
 
@@ -3539,26 +3540,38 @@ def _strip_trailing_standalone_triggered_ability(text: str) -> str:
     ability on its own before checking its shape, so a future card's
     genuinely continued resolution text that happens to also start with a
     capital "At" or "When" mid-sentence is never mistaken for one (a real
-    continuation line does not *parse* as a complete ability by itself). The
-    stripped ability's own execution - a triggered ability that functions
-    from a zone other than the battlefield or stack - is a mechanic this
-    wave does not build; `docs/engine-coverage.md` is where that gap is
-    recorded, not here.
+    continuation line does not *parse* as a complete ability by itself).
+
+    The same holds for a trailing "When you discard this card, ..." or
+    "When you cycle this card, ..." paragraph (Edgar's Awakening, Choking
+    Tethers): CR 113.6k makes it an ability of the card wherever the discard
+    or cycle leaves it, triggered off `machines/triggers.py`
+    (`triggers_only_off_the_stack`), never part of the spell's resolution.
+    Trailing paragraphs are stripped one at a time from the end, so a
+    keyword line printed between them (Choking Tethers' "Cycling {1}{U}")
+    is left for the spell's own reader, which already skips it.
     """
     lines = text.split("\n")
-    if len(lines) < 2:
-        return text
-    tail = lines[-1].strip()
-    if not tail:
-        return text
-    parsed = _parse_line(tail, [], lines[-1])
-    if (
-        len(parsed) == 1
-        and isinstance(parsed[0], TriggeredAbility)
-        and _RETURNS_ITSELF_FROM_GRAVEYARD_RE.search(parsed[0].effect)
-    ):
-        return "\n".join(lines[:-1])
-    return text
+    while len(lines) >= 2:
+        tail = lines[-1].strip()
+        if not tail:
+            return "\n".join(lines)
+        parsed = _parse_line(tail, [], lines[-1])
+        if not (
+            parsed
+            and all(isinstance(ability, TriggeredAbility) for ability in parsed)
+            and (
+                _RETURNS_ITSELF_FROM_GRAVEYARD_RE.search(parsed[0].effect)
+                # CR 113.6k: "When you discard/cycle this card" can never
+                # occur while this card is a spell on the stack either, so
+                # it is its own ability (Edgar's Awakening, Choking Tethers),
+                # triggered off `machines/triggers.py`, never resolution text.
+                or any(triggers_only_off_the_stack(ability) for ability in parsed)
+            )
+        ):
+            break
+        lines = lines[:-1]
+    return "\n".join(lines)
 
 
 #: CR 601.3b's own timing restriction, printed on the card itself (distinct

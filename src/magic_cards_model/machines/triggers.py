@@ -248,6 +248,29 @@ class ExtraTriggerEvent(StrEnum):
     #: level bar's resolution in `Game._effect_of`, and only when the
     #: level actually changed.
     CLASS_BECOMES_LEVEL = "class_becomes_level"
+    #: CR 702.29c: "'When you cycle this card' means 'When you discard this
+    #: card to pay an activation cost of a cycling ability.'" - and CR
+    #: 702.29f makes a typecycling ability a cycling ability. Its own event
+    #: rather than `TriggerEvent.DISCARDS_A_CARD`, which a cycling discard
+    #: *also* raises (the cost is a discard, CR 701.9a): a card discarded by
+    #: an effect was discarded but never cycled. `GameEvent.subject_id` is
+    #: the cycled card, `GameEvent.player` who cycled it. **Emitted by:**
+    #: `machines/keywords.KeywordActivation` once a cycling or typecycling
+    #: activation is on the stack, its cost paid.
+    CYCLED = "cycled"
+    #: CR 602.2: "To activate an ability is to put it onto the stack and pay
+    #: its costs" - raised for every activated ability that does that, and
+    #: so never for a mana ability (CR 605.3b: it does not use the stack).
+    #: Flamescroll Celebrant's and Burning-Tree Shaman's "Whenever
+    #: `<a player>` activates an ability that isn't a mana ability" watch it.
+    #: `GameEvent.subject_id`/`subject_types` are the ability's source as it
+    #: was activated, `GameEvent.origin_zone` the zone that source was in
+    #: (CR 109.2 reads "an ability of a creature" as a creature *on the
+    #: battlefield*), `GameEvent.player` who activated it. **Emitted by:**
+    #: `Game.activate_ability` (every battlefield ability, loyalty included)
+    #: and `machines/keywords.KeywordActivation` (cycling, equip and every
+    #: other keyword activation), once the ability is on the stack.
+    ABILITY_ACTIVATED = "ability_activated"
 
 
 class GameEvent(EngineModel):
@@ -3128,6 +3151,25 @@ def _returned_to_hand_matches(
 #: level is the Class's own (CR 716.2b).
 _CLASS_BECOMES_LEVEL_CONDITION = re.compile(r"^(?P<subject>.+?) becomes level (?P<level>\d+)$")
 
+#: CR 702.29c's "When you cycle this card" (Vizier of Tumbling Sands,
+#: Windcaller Aven, Choking Tethers), and the non-self "you cycle a card" /
+#: "another card" forms of the same verb. CR 702.29d's "cycles or discards"
+#: is a different, discard-shaped condition `machines/abilities.
+#: _trigger_event` already files under `TriggerEvent.DISCARDS_A_CARD`.
+_CYCLE_CONDITION = re.compile(
+    r"^(?P<who>you|a player|an opponent) cycles? (?P<what>this card|another card|a card)$"
+)
+
+#: CR 602.2's activation, restricted by CR 605.1a's mana-ability test:
+#: "`<who>` activates an ability [of `<type list>`] that isn't a mana
+#: ability" - Flamescroll Celebrant's "an opponent", Burning-Tree Shaman's
+#: "a player", Immolation Shaman's "of an artifact, creature, or land".
+_ABILITY_ACTIVATED_CONDITION = re.compile(
+    r"^(?P<who>you|a player|an opponent) activates? an ability"
+    r"(?: of (?P<types>an? [a-z]+(?:(?:,\s*(?:or\s+)?|\s+or\s+)(?:an? )?[a-z]+)*))?"
+    r" that isn't a mana ability$"
+)
+
 #: CR 701.67c's own words, "whenever a player waterbends", read off however
 #: the condition actually names the bending verbs - a bare "you waterbend"
 #: (nothing printed prints this alone yet, but CR 701.67c's rule is written
@@ -3205,6 +3247,10 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({TriggerEvent.LEAVES_BATTLEFIELD_TO_HAND})
     if _CLASS_BECOMES_LEVEL_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.CLASS_BECOMES_LEVEL})
+    if _CYCLE_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.CYCLED})
+    if _ABILITY_ACTIVATED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.ABILITY_ACTIVATED})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -3417,6 +3463,34 @@ def _unread_condition_matches(
             )
         )
 
+    match = _CYCLE_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.CYCLED:
+            return False
+        if not _acting_player_matches(match.group("who"), controller, event.player):
+            return False
+        # CR 702.29c's "this card" is the source itself; "another card" is
+        # anything but it.
+        if match.group("what") == "this card":
+            return event.subject_id == source.id
+        if match.group("what") == "another card":
+            return event.subject_id != source.id
+        return True
+
+    match = _ABILITY_ACTIVATED_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.ABILITY_ACTIVATED:
+            return False
+        if not _acting_player_matches(match.group("who"), controller, event.player):
+            return False
+        types = match.group("types")
+        if types is None:
+            return True
+        # CR 109.2: a type named without "card", "spell" or "source" means a
+        # permanent of that type on the battlefield - a creature card cycled
+        # from a hand is not "a creature".
+        return event.origin_zone is Zone.BATTLEFIELD and _types_match(event.subject_types, types)
+
     bending_events = _bending_events_named(condition)
     if bending_events:
         # CR 701.67c: "whenever a player waterbends" - "you", so the event's
@@ -3425,6 +3499,37 @@ def _unread_condition_matches(
         return event.event in bending_events and event.player == controller
 
     return False
+
+
+def triggers_only_off_the_stack(ability: TriggeredAbility) -> bool:
+    """Whether this triggered ability's own condition can only occur while
+    its card is in a hand on its way somewhere else - "When you discard this
+    card" (CR 701.9a) or "When you cycle this card" (CR 702.29c).
+
+    CR 113.6k: "A trigger condition that can't trigger from the battlefield
+    functions in all zones it can trigger from." Neither can occur while the
+    card is a spell on the stack either, so on an instant or sorcery such a
+    paragraph is a separate ability printed on the card, never part of the
+    spell's own resolution (CR 113.6: an instant's or sorcery's abilities
+    usually function only on the stack - this is one of the exceptions).
+    """
+    condition = ability.condition.lower().strip()
+    if ability.event is TriggerEvent.DISCARDS_A_CARD and condition.endswith("this card"):
+        return True
+    cycled = _CYCLE_CONDITION.match(condition)
+    return cycled is not None and cycled.group("what") == "this card"
+
+
+def _acting_player_matches(who: str, controller: str, actor: str | None) -> bool:
+    """Whether `actor` is the "you" / "a player" / "an opponent" a condition
+    names, relative to the ability's `controller` (CR 109.5)."""
+    if actor is None:
+        return False
+    if who == "you":
+        return actor == controller
+    if who == "an opponent":
+        return actor != controller
+    return True
 
 
 def _step_matches(condition: str, controller: str, event: GameEvent) -> bool:
@@ -3541,6 +3646,13 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # (CR 701.9a's ordinary destination) or, for a madness-replaced discard,
     # exile (CR 702.35a) - both are offered rather than guessing which.
     if ability.event is TriggerEvent.DISCARDS_A_CARD and "this card" in lowered:
+        return frozenset({Zone.GRAVEYARD, Zone.EXILE})
+
+    # CR 702.29c, the cycling twin of the discard branch just above: "These
+    # abilities trigger from whatever zone the card winds up in after it's
+    # cycled" - never the hand it was cycled from, never the battlefield.
+    cycled = _CYCLE_CONDITION.match(lowered.strip())
+    if cycled is not None and cycled.group("what") == "this card":
         return frozenset({Zone.GRAVEYARD, Zone.EXILE})
 
     # CR 702.35a: madness watches its own exile, which can only be observed

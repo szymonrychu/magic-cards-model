@@ -3064,6 +3064,20 @@ _CAST_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
     re.IGNORECASE,
 )
 
+#: Immolation Shaman's "Whenever an opponent activates an ability of an
+#: artifact, creature, or land that isn't a mana ability, `<effect>`." - the
+#: same comma-separated type list inside the condition that
+#: `_CAST_TYPE_LIST_CONDITION_BOUNDARY` reads for a cast, here naming the
+#: source of a CR 602.2 activation, with CR 605.1a's "that isn't a mana
+#: ability" closing it. `machines/triggers._ABILITY_ACTIVATED_CONDITION`
+#: reads the captured condition.
+_ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY = re.compile(
+    r"^(?P<condition>(?:you|a player|an? opponent) activates? an ability of "
+    r"an? [a-z]+(?:,\s*(?:an? )?[a-z]+)*(?:,)?\s+or\s+(?:an? )?[a-z]+"
+    r" that isn't a mana ability)\s*,\s*",
+    re.IGNORECASE,
+)
+
 #: Avatar Aang's own "Whenever you waterbend, earthbend, firebend, or
 #: airbend, draw a card." - the same "list of verbs joined by a final 'or',
 #: itself followed by the ordinary trigger comma" shape
@@ -3184,7 +3198,9 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     word = TriggerWord(match.group(1).lower())
     body = text[match.end() :]
 
-    type_list_boundary = _CAST_TYPE_LIST_CONDITION_BOUNDARY.match(body)
+    type_list_boundary = _CAST_TYPE_LIST_CONDITION_BOUNDARY.match(
+        body
+    ) or _ACTIVATES_TYPE_LIST_CONDITION_BOUNDARY.match(body)
     bending_list_boundary = (
         None if type_list_boundary is not None else _BENDING_LIST_CONDITION_BOUNDARY.match(body)
     )
