@@ -88,6 +88,7 @@ from .targeting import (
     profile_for_text,
     spell_profile_for_text,
     targeting_profile,
+    targeting_trigger_text,
 )
 from .teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from .triggers import ExtraTriggerEvent, GameEvent
@@ -5001,11 +5002,60 @@ class Casting(EngineModel):
                 raise ValueError(f"{self.spell.name} is an illegal target for itself (CR 115.5)")
         # CR 702.11b/702.11d: hexproof is judged inside `check`, with this
         # spell as the source whose quality "hexproof from" asks about.
-        self.targeting.check(chosen, self.caster, game=self.game, source=self.spell)
+        try:
+            self.targeting.check(chosen, self.caster, game=self.game, source=self.spell)
+        except ValueError as refusal:
+            raise self._trigger_targets_not_cast_targets(chosen, refusal) from None
         for target in chosen:
             refusal = self._enchant_refusal(target)
             if refusal is not None:
                 raise ValueError(refusal)
+
+    def _trigger_targets_not_cast_targets(
+        self, chosen: list[Any], refusal: ValueError
+    ) -> ValueError:
+        """Turn a bare "too many targets" refusal into the real reason, when
+        the real reason is that the "target" the caster is reading belongs to
+        a triggered ability, not to this spell (CR 115.1a vs CR 115.1d).
+
+        `self.targeting.check` above already raised because the spell's own
+        profile takes zero targets (CR 601.2c: a spell with no targeting text
+        requires none) and some were chosen anyway. That refusal is correct,
+        but its "too many targets: N chosen where the spell takes at most 0"
+        does not say *why* the card prints the word "target" if the spell
+        itself does not use it - which is exactly what a caster who typed
+        Ulamog, the Ceaseless Hunger's cast trigger's targets straight onto
+        the cast, or Ravenous Chupacabra's ETB targets the same way, is
+        missing. `targeting_trigger_text` reads the card's own triggered
+        abilities (cast and ETB alike - CR 603.2/603.2g both put a trigger's
+        targets on the same CR 603.3d footing) the way `Game.
+        why_cannot_target_with_trigger` does, and names whichever one prints
+        the word.
+
+        Left untouched for every other case: a spell that genuinely takes
+        targets and was given too many (`self.targeting.max_targets` is
+        `None` or nonzero), a cast with no targets chosen at all (`chosen` is
+        empty - there is no "target" to blame on a trigger), a card with no
+        targeting trigger at all (`targeting_trigger_text` returns `None`),
+        and any refusal that is not this "too many targets" one to begin with
+        (CR 115.5 self-targeting, protection, shroud, hexproof, phased-out -
+        none of those become "true" just because a targeting trigger exists).
+        """
+        if (
+            not chosen
+            or self.targeting.max_targets != 0
+            or not str(refusal).startswith("too many targets:")
+        ):
+            return refusal
+        trigger_text = targeting_trigger_text(self.spell.card)
+        if trigger_text is None:
+            return refusal
+        return ValueError(
+            f"{self.spell.name} as a spell takes no targets (CR 601.2c); "
+            f'"target" is in its triggered ability "{trigger_text}", whose targets are '
+            "chosen when that ability is put on the stack (CR 603.3d, 115.1d) - cast "
+            "without targets and answer its choose_targets decision then"
+        )
 
     def _slice_targets_by_mode(self, chosen: list[Any]) -> None:
         """CR 700.2f: bucket `chosen` by which chosen mode instance each entry
