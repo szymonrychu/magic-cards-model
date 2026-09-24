@@ -52429,6 +52429,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     for reader in (
         _parse_if_self_isnt_a_creature_clause,
         _parse_double_target_power_and_toughness_clause,
+        _parse_target_fights_other_target_clause,
         _parse_return_with_rider_clause,
         copy_ability_effect,
         control_change_ability_effect,
@@ -52446,6 +52447,7 @@ def _c02_t6_spell_effect(effect_text: str) -> Effect | None:
 
     for reader in (
         _parse_double_target_power_and_toughness_clause,
+        _parse_target_fights_other_target_clause,
         copy_spell_effect,
         control_change_spell_effect,
     ):
@@ -52616,5 +52618,52 @@ def _parse_return_with_rider_clause(effect_text: str) -> AbilityEffect | None:
                 ),
                 game,
             )
+
+    return effect
+
+
+#: "`<target X>` fights up to one other target `<Y>`." - The Super Hero Civil
+#: War's chapter III ("Target creature you control fights up to one other
+#: target creature."). Unlike `_TARGET_FIGHTS_TARGET_RE`, the two fighters
+#: cannot be told apart by controller ("other" names no controller), so they
+#: are read by announcement position: the first target is the first fighter.
+#: CR 701.14b: if either is no longer a legal target, on the battlefield, or
+#: a creature, neither fights; CR 115.6: "up to one" chose none, no fight.
+_TARGET_FIGHTS_OTHER_TARGET_RE = re.compile(
+    r"^(?P<first>target .+?) fights (?P<second>(?:up to one )?(?:other|another) target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_fights_other_target_clause(
+    text: str,
+) -> Callable[["Game", "StackObject"], None] | None:
+    """`_TARGET_FIGHTS_OTHER_TARGET_RE`'s shape, or `None`."""
+    match = _TARGET_FIGHTS_OTHER_TARGET_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("first").strip(), count_agnostic=True):
+        return None
+    if not _targets_understood(match.group("second").strip(), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        announced = list(stack_object.targets)
+        if len(announced) < 2:
+            return  # CR 115.6: no second fighter chosen.
+        legal = {
+            target.id: target
+            for target in game.resolve_card_targets(stack_object)
+            if target.zone is Zone.BATTLEFIELD
+        }
+        first = legal.get(announced[0].card_id) if announced[0].is_card else None
+        second = legal.get(announced[1].card_id) if announced[1].is_card else None
+        if first is None or second is None or first.id == second.id:
+            return  # CR 701.14b
+        if not game.characteristics_of(first).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(second).is_creature:
+            return  # CR 701.14b
+        _fight(game, first, second)
 
     return effect

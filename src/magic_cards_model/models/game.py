@@ -9437,7 +9437,10 @@ class Game(EngineModel):
             return None if profile.min_targets > 0 else []
 
         minimum = min(profile.min_targets, len(candidates))
-        across = any(r.distinct_controllers or r.share_a_card_type for r in profile.requirements)
+        across = any(
+            r.distinct_controllers or r.share_a_card_type or r.total_mana_value_at_most is not None
+            for r in profile.requirements
+        )
         if any(r.one_per_opponent for r in profile.requirements):
             # CR 601.2c: one target per opponent with a legal choice. Each
             # controller's first candidate leads, so the default answer (the

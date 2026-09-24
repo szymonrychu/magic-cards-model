@@ -547,6 +547,16 @@ class TargetRequirement(EngineModel):
     a `TargetRef`), like every other restriction here that needs more than the
     caller supplied."""
 
+    total_mana_value_at_most: int | None = None
+    """"up to two target creatures with total mana value 6 or less" (The Super
+    Hero Civil War's chapter I) - like `distinct_controllers`, a restriction
+    *across* this requirement's targets: the sum of their mana values (CR
+    202.3) may not exceed the bound. CR 601.2c: the announcement has to be
+    "an appropriate object ... for each target the spell requires". Read
+    ahead of the per-target comparison scan, which would otherwise take it
+    for a bound on each target alone. Fails open for a target whose mana
+    value cannot be read."""
+
     share_a_card_type: bool = False
     """"two target nonland permanents that share a card type" (Burglar's Plot,
     Shifting Loyalties) - like `distinct_controllers`, a restriction *across*
@@ -1757,12 +1767,13 @@ class TargetingProfile(EngineModel):
         taken: dict[int, set[TargetRef]] = {}
         controllers: dict[int, set[str]] = {}
         shared_types: dict[int, frozenset[Type]] = {}
+        totals: dict[int, float] = {}
 
         for target in targets:
             reasons: list[str] = []
             for index, slot in enumerate(slots):
                 reason = self._why_not(
-                    slot, target, caster, taken, game, source_id, controllers, shared_types
+                    slot, target, caster, taken, game, source_id, controllers, shared_types, totals
                 )
                 if reason is None:
                     slots.pop(index)
@@ -1779,6 +1790,7 @@ class TargetingProfile(EngineModel):
                         source_id,
                         controllers,
                         shared_types,
+                        totals,
                     )
                     if reason is None:
                         break
@@ -1796,6 +1808,7 @@ class TargetingProfile(EngineModel):
         source_id: UUID | None = None,
         controllers: dict[int, set[str]] | None = None,
         shared_types: dict[int, frozenset[Type]] | None = None,
+        totals: dict[int, float] | None = None,
     ) -> str | None:
         """Why this requirement cannot take this target, CR 115.3 included.
 
@@ -1828,6 +1841,19 @@ class TargetingProfile(EngineModel):
                     f"{requirement.phrase} need targets that share a card type, and "
                     f"{target} shares none with the others (CR 601.2c)"
                 )
+        mana_value: float | None = None
+        if requirement.total_mana_value_at_most is not None and totals is not None:
+            mana_value = _computed_mana_value(target, game)
+            running = totals.get(id(requirement), 0)
+            if (
+                mana_value is not None
+                and running + mana_value > requirement.total_mana_value_at_most
+            ):
+                return (
+                    f"{requirement.phrase} need a total mana value of "
+                    f"{requirement.total_mana_value_at_most} or less, and {target} would bring "
+                    f"it to {running + mana_value:g} (CR 601.2c)"
+                )
         try:
             reference = TargetRef.coerce(target)
         except TypeError:
@@ -1842,6 +1868,8 @@ class TargetingProfile(EngineModel):
         if types is not None and shared_types is not None:
             common = shared_types.get(id(requirement))
             shared_types[id(requirement)] = types if common is None else common & types
+        if mana_value is not None and totals is not None:
+            totals[id(requirement)] = totals.get(id(requirement), 0) + mana_value
         return None
 
     def assign_to_owners(
@@ -3730,6 +3758,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     # see `_SETS_BASE_POWER_TOUGHNESS_EFFECT`.
     rest = _SETS_BASE_POWER_TOUGHNESS_EFFECT.sub("", rest).strip()
 
+    total_mana_value_at_most, rest = _extract_total_mana_value(rest)
+
     comparison = _extract_comparison(rest)
     if comparison is _COMPARISON_UNREADABLE:
         # A comparison was clearly attempted and this parser could not finish
@@ -3923,6 +3953,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
         share_a_card_type=share_a_card_type,
+        total_mana_value_at_most=total_mana_value_at_most,
         required_keyword=required_keyword,
         required_counter_kind=required_counter_kind,
     )
@@ -4433,6 +4464,40 @@ def _extract_share_a_card_type(rest: str) -> tuple[bool, str]:
     if match is None:
         return False, rest
     return True, rest[match.end() :].strip()
+
+
+#: "with total mana value `<n>` or less" - see
+#: `TargetRequirement.total_mana_value_at_most`.
+_TOTAL_MANA_VALUE_RE = re.compile(
+    r"^with total mana value (?P<n>\d+|[a-z]+) or less\b", re.IGNORECASE
+)
+
+
+def _extract_total_mana_value(rest: str) -> tuple[int | None, str]:
+    """Read a "with total mana value N or less" clause out of `rest`, or leave
+    it untouched when there is none."""
+    match = _TOTAL_MANA_VALUE_RE.match(rest)
+    if match is None:
+        return None, rest
+    raw = match.group("n")
+    bound = int(raw) if raw.isdigit() else parse_count(raw, article=False)
+    if bound is None:
+        return None, rest
+    return bound, rest[match.end() :].strip()
+
+
+def _computed_mana_value(target: Any, game: Any) -> float | None:
+    """A target's mana value for `total_mana_value_at_most`: the computed one
+    for a permanent (a copy effect changes it, CR 707.2), the printed one
+    elsewhere, `None` for a target without one (a bare id, a player)."""
+    mana_value = getattr(target, "mana_value", None)
+    if mana_value is None:
+        return None
+    if game is not None and getattr(target, "zone", None) is Zone.BATTLEFIELD:
+        characteristics_of = getattr(game, "characteristics_of", None)
+        if characteristics_of is not None:
+            return float(characteristics_of(target).mana_value)
+    return float(mana_value)
 
 
 def _computed_card_types(target: Any, game: Any) -> frozenset[Type] | None:

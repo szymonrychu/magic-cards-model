@@ -12,12 +12,14 @@ here is two sentences joined by an anaphor ("It", "That creature"), which
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState
 from ..models.zone import Zone
 from .layers import (
     DOESNT_UNTAP_TEXT,
+    Characteristics,
     Condition,
     ContinuousEffect,
     Duration,
@@ -28,6 +30,7 @@ from .layers import (
     grant_ability,
     lose_all_abilities,
     only_this_incarnation,
+    set_controller,
 )
 
 if TYPE_CHECKING:
@@ -138,9 +141,177 @@ def _parse_tap_then_lock_clause(effect_text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Gain control of `<target>` for as long as `<you control this|this remains
+#: on the battlefield>`.[ Then `<instruction>`.]" - The Super Hero Civil
+#: War's chapter I ("Gain control of up to two target creatures with total
+#: mana value 6 or less for as long as this Saga remains on the battlefield.")
+#: and Rangers of Ithilien ("... gain control of up to one target creature
+#: with lesser power for as long as you control this creature. Then the Ring
+#: tempts you."). Layer 2 (CR 613.1b) with CR 611.2b's duration, which is the
+#: source's: if it never starts, nothing is stolen, and the "Then"
+#: instruction still happens.
+_GAIN_CONTROL_FOR_AS_LONG_RE = re.compile(
+    r"^gain control of (?P<phrase>(?:up to (?:one|two|three|\d+) )?target [^.]+?) "
+    rf"for as long as (?:you control (?P<controlled>{_SELF})|(?P<remains>{_SELF}) remains "
+    r"on the battlefield)\.(?:\s*then (?P<rest>.+))?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | None:
+    """`_GAIN_CONTROL_FOR_AS_LONG_RE`'s shape, or `None`."""
+    from .effects import _targets_understood, parse_mixed_effect
+
+    match = _GAIN_CONTROL_FOR_AS_LONG_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    rest = None
+    if match.group("rest"):
+        rest = parse_mixed_effect(match.group("rest").strip())
+        if rest is None:
+            return None
+    controlled = match.group("controlled") is not None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        condition = _lock_condition(game, ability, controlled=controlled)
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        if condition is not None and targets:
+            store = game.continuous_effects
+            timestamp = store.tick()
+            for target in targets:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: {ability.controller} gains control of "
+                            f"{target.name}"
+                        ),
+                        layer=Layer.CONTROL,
+                        timestamp=timestamp,
+                        duration=Duration.FOR_AS_LONG_AS,
+                        condition=condition,
+                        selector=only_this_incarnation(target, target.zone_change_stamp),
+                        modification=set_controller(ability.controller),
+                    ),
+                    game=game,
+                )
+        if rest is not None:
+            rest(game, ability)
+
+    return effect
+
+
+#: "Gain control of target creature until end of turn. If you control a[n]
+#: `<quality>` with greater mana value than that creature, gain control of
+#: that creature until the end of your next turn instead.[ Untap that
+#: creature.][ It gains `<keywords>` until end of turn.]" - Evil's Thrall.
+#: The "instead" is decided as the spell resolves, against the computed mana
+#: values (CR 202.3, CR 613.5) of the permanents its controller controls
+#: then; "until the end of your next turn" is CR 611.2a's stated duration
+#: (`Duration.UNTIL_END_OF_YOUR_NEXT_TURN`).
+_GAIN_CONTROL_LONGER_IF_RE = re.compile(
+    r"^gain control of (?P<phrase>target [^.]+?) until end of turn\.\s*"
+    r"if you control an? (?P<quality>[a-z]+) with greater mana value than that creature, "
+    r"gain control of that creature until the end of your next turn instead\."
+    r"(?P<untap>\s*untap (?:that creature|it)\.)?"
+    r"(?:\s*(?:it|that creature) gains (?P<keywords>[a-z][a-z ,]*?) until end of turn\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _quality_matcher(word: str) -> Callable[[Characteristics], bool] | None:
+    """A card type (CR 205.2a) or a subtype (CR 205.3) as a test on computed
+    characteristics - `None` for a word that is neither."""
+    from .layers import _card_type_word, _singular_subtype_word
+
+    card_type = _card_type_word(word)
+    if card_type is not None:
+        return lambda chars: card_type in chars.types
+    subtype = _singular_subtype_word(word)
+    if subtype is None:
+        return None
+    return lambda chars: any(each.lower() == subtype.lower() for each in chars.subtypes)
+
+
+def _parse_gain_control_longer_if_clause(effect_text: str) -> Effect | None:
+    """`_GAIN_CONTROL_LONGER_IF_RE`'s shape, or `None`."""
+    from .effects import _targets_understood
+    from .layers import _split_and_validate_keywords
+
+    match = _GAIN_CONTROL_LONGER_IF_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    has_quality = _quality_matcher(match.group("quality"))
+    if has_quality is None:
+        return None
+    keywords: list[str] = []
+    if match.group("keywords"):
+        validated = _split_and_validate_keywords(match.group("keywords"))
+        if validated is None:
+            return None
+        keywords = validated
+    untap = match.group("untap") is not None
+
+    def effect(game: Game, spell: CardState) -> None:
+        caster = game.controller_of(spell).username
+        store = game.continuous_effects
+        for target in game.resolve_card_targets(spell):
+            if target.zone is not Zone.BATTLEFIELD:
+                continue
+            target_value = game.characteristics_of(target).mana_value
+            longer = any(
+                has_quality(chars) and chars.mana_value > target_value
+                for chars in (
+                    game.characteristics_of(permanent)
+                    for permanent in game.permanents_controlled_by(caster)
+                )
+            )
+            timestamp = store.tick()
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            store.add(
+                ContinuousEffect(
+                    description=f"{spell.name}: {caster} gains control of {target.name}",
+                    layer=Layer.CONTROL,
+                    timestamp=timestamp,
+                    duration=(
+                        Duration.UNTIL_END_OF_YOUR_NEXT_TURN
+                        if longer
+                        else Duration.UNTIL_END_OF_TURN
+                    ),
+                    until_next_turn_of=caster if longer else None,
+                    selector=selector,
+                    modification=set_controller(caster),
+                ),
+                game=game,
+            )
+            if untap:
+                target.untap()
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{spell.name}: {target.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=selector,
+                        modification=grant_ability(keyword),
+                    ),
+                    game=game,
+                )
+
+    return effect
+
+
 def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A control change or rider on an activated or triggered ability."""
-    for reader in (_parse_tap_then_lock_clause,):
+    for reader in (_parse_tap_then_lock_clause, _parse_gain_control_for_as_long_clause):
         effect = reader(effect_text)
         if effect is not None:
             return effect
@@ -149,11 +320,4 @@ def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
 
 def control_change_spell_effect(effect_text: str) -> Effect | None:
     """A control change or rider on a resolving spell."""
-    return None
-
-
-__all__ = [
-    "CardState",
-    "control_change_ability_effect",
-    "control_change_spell_effect",
-]
+    return _parse_gain_control_longer_if_clause(effect_text)

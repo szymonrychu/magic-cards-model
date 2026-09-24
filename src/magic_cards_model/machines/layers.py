@@ -232,6 +232,12 @@ class Duration(StrEnum):
     UNTIL_END_OF_TURN = "until end of turn"
     FOR_AS_LONG_AS = "for as long as"
     UNTIL_YOUR_NEXT_TURN = "until your next turn"
+    #: Evil's Thrall's "gain control of that creature until the end of your
+    #: next turn" (CR 611.2a: "as long as stated"). It outlives this turn's
+    #: cleanup; `ContinuousEffects.end_for_next_turn` turns it into an
+    #: ordinary `UNTIL_END_OF_TURN` effect as `until_next_turn_of`'s next turn
+    #: begins, so that turn's cleanup (CR 514.2) ends it.
+    UNTIL_END_OF_YOUR_NEXT_TURN = "until the end of your next turn"
     INDEFINITE = "indefinite"
 
 
@@ -2243,9 +2249,10 @@ class ContinuousEffect(EngineModel):
             raise ValueError(
                 f"{with_indefinite_article(str(self.duration))} effect has no condition to check"
             )
-        if self.duration is Duration.UNTIL_YOUR_NEXT_TURN and self.until_next_turn_of is None:
+        next_turn_durations = (Duration.UNTIL_YOUR_NEXT_TURN, Duration.UNTIL_END_OF_YOUR_NEXT_TURN)
+        if self.duration in next_turn_durations and self.until_next_turn_of is None:
             raise ValueError('an "until your next turn" effect needs to say whose (CR 611.2a)')
-        not_next_turn = self.duration is not Duration.UNTIL_YOUR_NEXT_TURN
+        not_next_turn = self.duration not in next_turn_durations
         if not_next_turn and self.until_next_turn_of is not None:
             raise ValueError(
                 f"{with_indefinite_article(str(self.duration))} effect "
@@ -12789,7 +12796,18 @@ class ContinuousEffects(EngineModel):
             and effect.until_next_turn_of == username
         ]
         gone = {effect.id for effect in ended}
-        self.effects = [effect for effect in self.effects if effect.id not in gone]
+        # "Until the end of your next turn": that turn has now begun, so the
+        # effect is an ordinary "until end of turn" one for it (CR 514.2).
+        self.effects = [
+            effect.model_copy(
+                update={"duration": Duration.UNTIL_END_OF_TURN, "until_next_turn_of": None}
+            )
+            if effect.duration is Duration.UNTIL_END_OF_YOUR_NEXT_TURN
+            and effect.until_next_turn_of == username
+            else effect
+            for effect in self.effects
+            if effect.id not in gone
+        ]
         return ended
 
     def all_effects(
