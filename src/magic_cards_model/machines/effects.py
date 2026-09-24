@@ -18146,26 +18146,32 @@ def _parse_create_that_many_color_pip_tokens_clause(
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
-        if not is_ability(stack_object) or stack_object.event is None:
-            return
-        ability = stack_object
-        condition_text = getattr(ability.ability, "condition", None) or ""
-        color_match = _MANA_SYMBOLS_COLOR_IN_COST_CONDITION_RE.search(condition_text)
-        if color_match is None:
-            return
-        letter = _COLOR_WORD_TO_LETTER.get(color_match.group("color").lower())
-        card = ability.event.subject_card
-        if letter is None or card is None:
-            return
-        count = sum(
-            1
-            for symbol in _MANA_SYMBOL_RE.findall(card.mana_cost or "")
-            if symbol.upper() == letter
-        )
-        if count > 0:
-            create_tokens(game, definition, ability.controller, count, tapped=tapped)
+        count = color_pip_count_named_by_trigger(stack_object)
+        if count:
+            create_tokens(game, definition, stack_object.controller, count, tapped=tapped)
 
     return effect
+
+
+def color_pip_count_named_by_trigger(stack_object: "StackObject") -> int | None:
+    """What "that many" counts when the trigger's own condition is "a spell
+    with one or more `<color>` mana symbols in its mana cost" (Namor the
+    Sub-Mariner): that colour's symbols in the cast spell's mana cost. `None`
+    when the stack object is not a triggered ability with that condition, so
+    a caller falls back to its own "that many" channel."""
+    if not is_ability(stack_object) or stack_object.event is None:
+        return None
+    condition_text = getattr(stack_object.ability, "condition", None) or ""
+    color_match = _MANA_SYMBOLS_COLOR_IN_COST_CONDITION_RE.search(condition_text)
+    if color_match is None:
+        return None
+    letter = _COLOR_WORD_TO_LETTER.get(color_match.group("color").lower())
+    card = stack_object.event.subject_card
+    if letter is None or card is None:
+        return 0
+    return sum(
+        1 for symbol in _MANA_SYMBOL_RE.findall(card.mana_cost or "") if symbol.upper() == letter
+    )
 
 
 def _token_creation_clause(

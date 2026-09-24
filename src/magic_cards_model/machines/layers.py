@@ -8938,7 +8938,19 @@ def _stored_self_grant_ability_texts(
             )
         ):
             texts.add(modification.text)
-    return frozenset(texts)
+    # A grant whose line the resolving effect already built into stored
+    # effects of its own (Iron Man Armor's and Great Hall of the Biblioplex's
+    # "becomes a ... with '<static>'" animation stores the quoted static's
+    # layer-7 effect beside the grant) is not swept again - it would apply
+    # twice.
+    built = {
+        effect.source_ability
+        for effect in stored
+        if effect.modification.kind not in ("grant_ability", "grant_ability_instance")
+        and effect.source_ability is not None
+        and getattr(effect.selector, "card_id", None) == permanent.id
+    }
+    return frozenset(texts - built)
 
 
 def _sync_stored_grant_ability_texts(

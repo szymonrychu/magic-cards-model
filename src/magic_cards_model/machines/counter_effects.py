@@ -537,13 +537,17 @@ def _create_that_many_tokens(text: str, *, for_spell: bool):  # noqa: ANN202
         return None
 
     def effect(game: Game, stack_object) -> None:  # noqa: ANN001
-        count = effects._that_many_or_notice(
-            game,
-            text,
-            source_id=getattr(stack_object, "source_id", None),
-            source_name=stack_object.name,
-            stack_object=stack_object,
-        )
+        # Namor the Sub-Mariner's "that many" is its condition's own count
+        # of coloured mana symbols, not the event's or a cost's.
+        count = effects.color_pip_count_named_by_trigger(stack_object)
+        if count is None:
+            count = effects._that_many_or_notice(
+                game,
+                text,
+                source_id=getattr(stack_object, "source_id", None),
+                source_name=stack_object.name,
+                stack_object=stack_object,
+            )
         if not count or count <= 0:
             return
         controller = game.controller_of(stack_object).username
