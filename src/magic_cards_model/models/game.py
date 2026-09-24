@@ -262,6 +262,7 @@ from ..machines.triggers import (
     apnap_order,
     granted_activated_abilities_of,
     intervening_if_holds,
+    mana_ability_activated_event,
     mana_added_event,
     resolution_key,
     rewritten_ability_lines,
@@ -20790,6 +20791,9 @@ class Game(EngineModel):
                     set_off.extend(
                         self.emit(tapped_for_mana_event(permanent, self, mana_added=produced_mana))
                     )
+                # CR 605.3a: a mana ability is activated like any other, only
+                # without the stack - "whenever you activate an ability" sees it.
+                set_off.extend(self.emit(mana_ability_activated_event(permanent, self)))
                 if produced_mana:
                     # Not CR 106.12's tap event but its sibling: an ability caused
                     # this player to add mana. Caged Sun's own condition asks about
@@ -20864,6 +20868,11 @@ class Game(EngineModel):
                     subject_controller=controller,
                     subject_card=permanent.card,
                     subject_types=self._activated_source_types(permanent),
+                    subject_subtypes=tuple(
+                        self.characteristics_of(permanent).subtypes
+                        if permanent.zone is Zone.BATTLEFIELD
+                        else permanent.subtypes
+                    ),
                     # Every ability this method activates is a battlefield
                     # permanent's; `machines/keywords.KeywordActivation` is
                     # the door for one that functions in another zone.

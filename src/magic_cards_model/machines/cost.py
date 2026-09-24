@@ -104,6 +104,7 @@ from .triggers import (
     added_ability_lines,
     granted_activated_abilities_of,
     is_ability,
+    mana_ability_activated_event,
     mana_added_event,
     rewritten_ability_lines,
     tapped_for_mana_event,
@@ -6004,6 +6005,8 @@ class CostPayment(EngineModel):
             set_off = [
                 *self.game.emit(tapped_for_mana_event(source, self.game, mana_added=produces)),
                 *self.game.emit(mana_added_event(source, self.game, mana_added=produces)),
+                # CR 605.3a: the mana ability was activated, too.
+                *self.game.emit(mana_ability_activated_event(source, self.game)),
             ]
             # CR 605.4a: the triggered mana abilities among them resolve now,
             # into this payment's pool (`Game.mana_pool_receiving`), with any
