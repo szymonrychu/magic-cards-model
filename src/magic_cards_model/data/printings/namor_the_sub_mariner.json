@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "7aaefcf9-fbe1-4767-92a5-09825761d116",
+  "oracle_id": "dff11626-ad4d-443a-b7db-f508790b5fd2",
+  "multiverse_ids": [],
+  "resource_id": "3064BA4EE50CDB84A6E5A5384252CC6C27D347E0A2939CC68E34D1724E4132CE",
+  "mtgo_id": 152323,
+  "arena_id": 104963,
+  "tcgplayer_id": 668572,
+  "cardmarket_id": 886597,
+  "name": "Namor the Sub-Mariner",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/7aaefcf9-fbe1-4767-92a5-09825761d116",
+  "scryfall_uri": "https://scryfall.com/card/msh/69/namor-the-sub-mariner?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:56Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.jpg?1783902956",
+    "normal": "https://cards.scryfall.io/normal/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.jpg?1783902956",
+    "large": "https://cards.scryfall.io/large/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.jpg?1783902956",
+    "png": "https://cards.scryfall.io/png/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.png?1783902956",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.jpg?1783902956",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.jpg?1783902956",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.webp?1783902956",
+    "grid": "https://cards.scryfall.io/grid/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.webp?1783902956",
+    "display": "https://cards.scryfall.io/display/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.webp?1783902956",
+    "art": "https://cards.scryfall.io/art/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.webp?1783902956",
+    "crop": "https://cards.scryfall.io/crop/front/7/a/7aaefcf9-fbe1-4767-92a5-09825761d116.webp?1783902956"
+  },
+  "mana_cost": "{1}{U}{U}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Mutant Merfolk Villain",
+  "oracle_text": "Flying\nNamor's power is equal to the number of Merfolk you control.\nWhenever you cast a noncreature spell with one or more blue mana symbols in its mana cost, create that many 1/1 blue Merfolk creature tokens.",
+  "power": "*",
+  "toughness": "4",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7f7a4f95-f12b-4c28-a6f7-f3c64364abba",
+      "component": "token",
+      "name": "Merfolk",
+      "type_line": "Token Creature \u2014 Merfolk",
+      "uri": "https://api.scryfall.com/cards/7f7a4f95-f12b-4c28-a6f7-f3c64364abba"
+    },
+    {
+      "object": "related_card",
+      "id": "47016620-48c7-42b2-9bef-8e2f8fc0786e",
+      "component": "combo_piece",
+      "name": "Namor the Sub-Mariner",
+      "type_line": "Legendary Creature \u2014 Mutant Merfolk Villain",
+      "uri": "https://api.scryfall.com/cards/47016620-48c7-42b2-9bef-8e2f8fc0786e"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7aaefcf9-fbe1-4767-92a5-09825761d116/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adff11626-ad4d-443a-b7db-f508790b5fd2&unique=prints",
+  "collector_number": "69",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rallis",
+  "artist_ids": [
+    "a8e7b854-b15a-421a-b66d-6e68187ae285"
+  ],
+  "illustration_id": "8ac4a0f0-4bdf-4346-bd84-b307620eca19",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11309,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/feature/marvel-super-heroes-preview-prologue",
+    "previewed_at": "2025-12-09"
+  },
+  "prices": {
+    "usd": "3.46",
+    "usd_foil": "5.90",
+    "usd_etched": null,
+    "eur": "6.43",
+    "eur_foil": "8.06",
+    "tix": "0.97"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DNamor%2Bthe%2BSub-Mariner",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DNamor%2Bthe%2BSub-Mariner",
+    "edhrec": "https://edhrec.com/route/?cc=Namor+the+Sub-Mariner"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F668572%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=886597&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152323?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

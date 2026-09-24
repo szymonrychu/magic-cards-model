@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945",
+  "oracle_id": "aeeb50f2-8e02-4d40-a1dd-28b1c5c85c7e",
+  "multiverse_ids": [],
+  "resource_id": "89CED28F95BC9EF8138F2E790C482BC243B1F14525CCAFC723D3C8CD4FEB2853",
+  "mtgo_id": 152401,
+  "arena_id": 105002,
+  "tcgplayer_id": 697004,
+  "cardmarket_id": 891533,
+  "name": "Moonstone, Harsh Mistress",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945",
+  "scryfall_uri": "https://scryfall.com/card/msh/107/moonstone-harsh-mistress?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.jpg?1783902940",
+    "normal": "https://cards.scryfall.io/normal/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.jpg?1783902940",
+    "large": "https://cards.scryfall.io/large/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.jpg?1783902940",
+    "png": "https://cards.scryfall.io/png/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.png?1783902940",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.jpg?1783902940",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.jpg?1783902940",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.webp?1783902940",
+    "grid": "https://cards.scryfall.io/grid/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.webp?1783902940",
+    "display": "https://cards.scryfall.io/display/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.webp?1783902940",
+    "art": "https://cards.scryfall.io/art/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.webp?1783902940",
+    "crop": "https://cards.scryfall.io/crop/front/1/a/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945.webp?1783902940"
+  },
+  "mana_cost": "{3}{B}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Doctor Villain",
+  "oracle_text": "Flying\nWhenever you discard a card, you may exile that card from your graveyard. If you do, until the end of your next turn, you may play that card.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1a1b2bd0-e17d-4b34-a8ee-7c913a6bc945/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaeeb50f2-8e02-4d40-a1dd-28b1c5c85c7e&unique=prints",
+  "collector_number": "107",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Let me show you the dark side of the moon.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Grace Zhu",
+  "artist_ids": [
+    "2bd5874c-2f48-4df3-9d8f-84bcd3f204a9"
+  ],
+  "illustration_id": "cc53c717-4712-4701-80db-ff8ccd83c7d2",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11334,
+  "preview": {
+    "source": "Amber Glenn",
+    "source_uri": "https://www.instagram.com/amberglenniceskater/reel/DZO2bK6MWyX/",
+    "previewed_at": "2026-06-05"
+  },
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.27",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.19",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMoonstone%252C%2BHarsh%2BMistress",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMoonstone%252C%2BHarsh%2BMistress",
+    "edhrec": "https://edhrec.com/route/?cc=Moonstone%2C+Harsh+Mistress"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697004%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891533&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152401?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

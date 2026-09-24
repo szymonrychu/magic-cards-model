@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b",
+  "oracle_id": "6677cd5a-0785-499b-ba99-f6bdcfb196d5",
+  "multiverse_ids": [],
+  "resource_id": "A4FBE5C2D94FD8B69554F598A6AB9CC1FCB4CCCB3729BFC2CA6A58354B591623",
+  "mtgo_id": 152465,
+  "arena_id": 105034,
+  "tcgplayer_id": 696565,
+  "cardmarket_id": 891172,
+  "name": "Jessica Jones, Private Eye",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b",
+  "scryfall_uri": "https://scryfall.com/card/msh/139/jessica-jones-private-eye?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.jpg?1783902929",
+    "normal": "https://cards.scryfall.io/normal/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.jpg?1783902929",
+    "large": "https://cards.scryfall.io/large/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.jpg?1783902929",
+    "png": "https://cards.scryfall.io/png/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.png?1783902929",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.jpg?1783902929",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.jpg?1783902929",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.webp?1783902929",
+    "grid": "https://cards.scryfall.io/grid/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.webp?1783902929",
+    "display": "https://cards.scryfall.io/display/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.webp?1783902929",
+    "art": "https://cards.scryfall.io/art/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.webp?1783902929",
+    "crop": "https://cards.scryfall.io/crop/front/b/4/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b.webp?1783902929"
+  },
+  "mana_cost": "{2}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Detective Hero",
+  "oracle_text": "{T}, Put a stun counter on Jessica Jones: Exile the top X cards of your library, where X is Jessica Jones's power. You may play those cards this turn. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b48278fd-1d95-4ad6-9a51-f1c5a2ab9f4b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6677cd5a-0785-499b-ba99-f6bdcfb196d5&unique=prints",
+  "collector_number": "139",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"I would trade all my powers for a fresh pot of hot coffee right now.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Julia Vasilyeva",
+  "artist_ids": [
+    "f86d69da-4f35-465a-a85f-a9215c9e5ab8"
+  ],
+  "illustration_id": "d7fddd96-1d10-46b3-aa69-a00579344705",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 19715,
+  "prices": {
+    "usd": "0.11",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.13",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJessica%2BJones%252C%2BPrivate%2BEye",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJessica%2BJones%252C%2BPrivate%2BEye",
+    "edhrec": "https://edhrec.com/route/?cc=Jessica+Jones%2C+Private+Eye"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F696565%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891172&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152465?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -3197,6 +3197,21 @@ def _read_one_compound_item(raw_item: list[str], lower_item: list[str]) -> dict[
             "required_colors": frozenset(colors),
         }
     if _is_bare_subtype_word(remaining_raw[0], word):
+        # CR 205.3g/h/i/k/q's *closed* subtype lists (Equipment, Vehicle, an
+        # enchantment type, ...) each elide their own card type, never
+        # "creature" - `_split_type_or_closed_subtype_card`'s own docstring
+        # (the two-item "target creature or Equipment card" shape) is the
+        # identical bug this reads the same fix for, one list item at a time
+        # rather than only the first/last pair of a two-item list. Checked
+        # before the CR 205.3m creature-type fallback below, since a closed
+        # list is a strict lookup and a creature type never collides with it.
+        closed_type = _CLOSED_LIST_TYPE_OF.get(word)
+        if closed_type is not None:
+            return {
+                "card_types": frozenset({closed_type}),
+                "required_subtypes": frozenset({word}),
+                "required_colors": frozenset(colors),
+            }
         return {
             "card_types": frozenset({Type.CREATURE}),
             "required_subtypes": frozenset({word}),
@@ -3533,6 +3548,15 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     adjectives, index = _read_adjectives(raw_words, words)
     card_types: set[Type] = set()
     required_subtypes: set[str] = set()
+    #: Which of `card_types` arrived by eliding a closed-list subtype word
+    #: (CR 205.3g/h/i/k/q) standing alone for its own noun - "target
+    #: Equipment, instant, or sorcery card" (Thor, God of Thunder) elides
+    #: Equipment's own artifact type here, tracked separately so the post-loop
+    #: split below can tell it apart from "instant"/"sorcery", which name
+    #: their own card type directly and carry no subtype requirement at all.
+    #: See the split just after the loop for why the two cannot share one
+    #: flat `required_subtypes` the ordinary way a uniform list does.
+    subtype_elided_types: set[Type] = set()
     allows_players = False
     opponent_only = False
     allows_cards = False
@@ -3647,6 +3671,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             # already guards against for creature types.
             required_subtypes.add(word)
             card_types.add(Type.LAND)
+            subtype_elided_types.add(Type.LAND)
             allows_cards = True
         elif nouns_read == 0 and _is_bare_subtype_word(raw_words[index], word):
             # Aeronaut Cavalry's "another target Soldier you control" - CR
@@ -3681,8 +3706,10 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 other_type = noncreature_subtype_card_type(word)
                 if other_type is not None:
                     card_types.add(Type(other_type))
+                    subtype_elided_types.add(Type(other_type))
                 else:
                     card_types.add(Type.CREATURE)
+                    subtype_elided_types.add(Type.CREATURE)
             allows_cards = True
         elif nouns_read == 0 and not adjectives.read:
             return None  # an adjective the parser does not know: fail open
@@ -3851,9 +3878,16 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     compound_alternatives: tuple[TargetRequirement, ...] = ()
     if nouns_read >= 2:
         compound_items = _read_compound_target_alternatives(words[:noun_end], raw_words[:noun_end])
-        if (
-            compound_items is not None
-            and len({item["required_colors"] for item in compound_items}) > 1
+        if compound_items is not None and (
+            len({item["required_colors"] for item in compound_items}) > 1
+            or
+            # Thor, God of Thunder's own "target Equipment, instant, or
+            # sorcery card": no color divergence at all, but one item (the
+            # closed-list-subtype "Equipment") carries a `required_subtypes`
+            # the others do not - the identical "shared adjectives merge is
+            # wrong here" problem `TargetRequirement.alternatives` exists
+            # for, just on the subtype axis instead of the color one.
+            len({item["required_subtypes"] for item in compound_items}) > 1
         ):
             first, *rest_items = compound_items
             compound_card_types = first["card_types"]  # type: ignore[assignment]
@@ -3878,6 +3912,39 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             compound_required_colors = frozenset(adjectives.required_colors)
     else:
         compound_required_colors = frozenset(adjectives.required_colors)
+
+    if (
+        nouns_read >= 2
+        and not compound_alternatives
+        and required_subtypes
+        and (card_types - subtype_elided_types)
+        and subtype_elided_types
+    ):
+        # `_read_compound_target_alternatives` above cannot read Thor, God of
+        # Thunder's own "target Equipment, instant, or sorcery card" at all -
+        # every item there needs its own trailing noun ("green planeswalker"),
+        # and this list has only one, shared by the whole thing ("sorcery
+        # card"). `subtype_elided_types` tracked which types actually came
+        # with a subtype requirement as the ordinary merge loop ran; anything
+        # left over in `card_types` never had one, so folding the whole set's
+        # `required_subtypes` onto it the flat way would wrongly refuse a
+        # plain instant or sorcery for not being Equipment. Split the same
+        # way `_split_type_or_closed_subtype_card` already splits a two-item
+        # version of the identical shape: the subtype-eliding type(s) keep
+        # the requirement as their own `alternatives` entry, and the type(s)
+        # that never carried one become the base requirement with none.
+        compound_card_types = frozenset(card_types - subtype_elided_types)
+        compound_required_subtypes = frozenset()
+        compound_alternatives = (
+            TargetRequirement(
+                phrase="target " + " or ".join(sorted(kind.value for kind in subtype_elided_types)),
+                card_types=frozenset(subtype_elided_types),
+                required_subtypes=frozenset(required_subtypes),
+                allows_cards=allows_cards,
+                zones=frozenset(zones),
+                controller=controller,
+            ),
+        )
 
     # A trailing "that's `<color>` or `<color>`" (Refute Destiny, Terminal
     # Criticism) restricts the whole compound noun at once, the same way a
