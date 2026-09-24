@@ -876,6 +876,47 @@ class CopyNextSpellYouCast(DelayedEffectSpecBase):
             )
 
 
+class CopyNextSpellWithinManaValue(DelayedEffectSpecBase):
+    """ "When you next cast an instant or sorcery spell with mana value `<N>`
+    or less this turn, copy that spell." (Dual Strike, Gadwick's First Duel's
+    chapter III) and its "... with mana value less than or equal to Loki's
+    power ..." twin (Loki Laufeyson) - `CopyNextSpellYouCast` with a bound
+    on the spell cast, checked as it is cast (CR 603.2: the event is the
+    cast; CR 202.3 its mana value, `GameEvent.amount`).
+
+    A spell above the bound is not "the next" matching spell, so the delayed
+    ability keeps waiting (`DelayedTriggers.fire` spends `remaining` only on a
+    match). The source's power is read when the spell is cast - the current
+    value (CR 613.5), or its last known one once it has left (CR 608.2h).
+    """
+
+    kind: Literal["copy_next_spell_within_mana_value"] = "copy_next_spell_within_mana_value"
+
+    may_retarget: bool
+    at_most: int | None = None
+    at_most_source_power: bool = False
+
+    matches_against_the_game: ClassVar[bool] = True
+
+    def event_matches(self, game: "Game", trigger: "DelayedTrigger", event: GameEvent) -> bool:
+        mana_value = event.amount
+        if mana_value is None and event.subject_id is not None:
+            spell = game.find_by_id(event.subject_id)
+            mana_value = spell.mana_value if isinstance(spell, CardState) else None
+        if mana_value is None:
+            return False
+        bound: float | None = self.at_most
+        if self.at_most_source_power:
+            source = game.find_by_id(trigger.source_id) if trigger.source_id else None
+            if not isinstance(source, CardState):
+                return False
+            bound = game.power_of(source) if source.zone is Zone.BATTLEFIELD else source.power
+        return bound is not None and mana_value <= bound
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        CopyNextSpellYouCast(may_retarget=self.may_retarget)(game, ability, trigger)
+
+
 class NextSpellCannotBeCountered(DelayedEffectSpecBase):
     """ "The next spell you cast this turn can't be countered." - Theorist's
     Sanctum's own Theorist's Proxy, and Mistrise Village (Tarkir:
@@ -1684,6 +1725,7 @@ DelayedEffectSpec = Annotated[
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
     | CopyNextSpellYouCast
+    | CopyNextSpellWithinManaValue
     | NextSpellCannotBeCountered
     | DelayedBlinkReturnWithRider
     | ReflexiveConsequence

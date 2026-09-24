@@ -2934,7 +2934,7 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 category = _worse(category, NOTICE)
             clauses.append(ClauseOutcome(category, ability.text, "activated"))
         elif isinstance(ability, TriggeredAbility) and (
-            is_permanent or triggers_only_off_the_stack(ability)
+            is_permanent or triggers_only_off_the_stack(ability) or _is_own_cast_trigger(ability)
         ):
             # A non-permanent card's "When you discard/cycle this card"
             # (Edgar's Awakening, Choking Tethers) is the exception to the
@@ -3032,6 +3032,16 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             )
 
     return clauses
+
+
+def _is_own_cast_trigger(ability: TriggeredAbility) -> bool:
+    """An instant's or sorcery's printed "When you cast this spell, ..."
+    paragraph (Photon Blast Barrage, Show of Confidence): CR 113.6k makes it
+    function on the stack, where it triggers and goes on the stack as its own
+    object - `Game._effect_of` asks `trigger_effect_for` about it, so it is
+    judged here, and `machines/copy_effects` strips it off the spell's own
+    resolution text."""
+    return ability.event is TriggerEvent.CAST_SPELL and "this spell" in ability.condition.lower()
 
 
 def classify_card(printing: Card) -> tuple[str, str]:
