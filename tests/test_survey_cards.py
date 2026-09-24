@@ -198,8 +198,15 @@ def test_a_permanents_unaudited_static_reaches_the_survey_as_its_own_category(tm
     categories that does not include this one, so the *table* and the CSV/JSON
     rows carry it but the human summary does not count it. That is a companion
     change owed to `survey_cards.py`, which this task does not own.
+
+    The Cage's lines are read now (C00), so the example is chosen, never
+    named, the same way the silent control above is.
     """
-    result = survey_one("Grafdigger's Cage", tmp_path)
+    printing = gap_example(
+        "an unaudited static",
+        lambda p: bool(p.type_line) and classify_card(p)[0] == "static_unaudited",
+    )
+    result = survey_one(printing.name, tmp_path)
     assert result.found
     assert result.category == "static_unaudited"
     assert result.category != NO_RULES_TEXT
