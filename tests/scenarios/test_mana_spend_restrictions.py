@@ -1308,3 +1308,16 @@ def test_smokebraiders_mana_refuses_a_spell_that_is_not_an_elemental():
 
     casting.cancel()  # CR 601.6, undoing CR 601.2a's move
     assert scenario.find("Llanowar Elves", Zone.HAND).zone is Zone.HAND
+
+
+def test_a_second_spell_phrase_shares_the_first_ones_cast():
+    """Maelstrom of the Spirit Dragon's "Spend this mana only to cast a Dragon
+    spell or an Omen spell" - the second phrase's "cast" is elided, not
+    missing (CR 205.3k's Omen spell type)."""
+    maelstrom = spend_restriction(card("Maelstrom of the Spirit Dragon").oracle_text)
+    assert maelstrom is not None and maelstrom.understood
+    assert [clause.purpose for clause in maelstrom.clauses] == [SpendPurpose.CAST_SPELL] * 2
+    assert [set(clause.subtypes) for clause in maelstrom.clauses] == [{"dragon"}, {"omen"}]
+    # The borrowed verb still has to make a readable phrase.
+    unread = spend_restriction("Spend this mana only to cast a Dragon spell or an Omen.")
+    assert unread is not None and not unread.understood

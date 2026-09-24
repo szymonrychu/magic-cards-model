@@ -655,6 +655,9 @@ _TYPE_LIST_JOINERS = {"and", "or", "and/or"}
 #: only ever tried on a phrase the grammar has already failed to read as a
 #: single clause. See `_spend_clauses`.
 _SPEND_CLAUSE_SPLIT = re.compile(r" and/or | and | or ")
+#: The verb a split "only to ..." phrase opens with, lent to a following
+#: phrase that elides it.
+_SPEND_VERB = re.compile(r"^(?:cast|activate|pay|unlock) ", re.IGNORECASE)
 #: CR 400.1's zones, by the word a card prints for each. The sideboard is not
 #: one ("Cards in a player's sideboard are outside the game", CR 400.11a) and
 #: is left out so a "from the sideboard" sentence fails closed.
@@ -879,8 +882,17 @@ def _spend_clauses(what: str, chosen_type: str | None) -> list[SpendClause] | No
     if len(alternatives) == 1:
         return None
     clauses: list[SpendClause] = []
+    verb: str | None = None
     for alternative in alternatives:
-        clause = _one_spend_clause(alternative.strip(), chosen_type)
+        phrase = alternative.strip()
+        printed = _SPEND_VERB.match(phrase)
+        if printed is not None:
+            verb = printed.group(0).strip()
+        elif verb is not None:
+            # Maelstrom of the Spirit Dragon's "cast a Dragon spell or an
+            # Omen spell": the second phrase's verb is the first one's.
+            phrase = f"{verb} {phrase}"
+        clause = _one_spend_clause(phrase, chosen_type)
         if clause is None:
             return None
         clauses.append(clause)
@@ -3091,7 +3103,7 @@ class CostComponent(EngineModel):
                 self._remember(card)
                 game.put_into_graveyard(card)
         elif self.kind is ComponentKind.PAY_LIFE and self.amount:
-            game.player(self.payer).lose_life(self.amount)
+            game.lose_life(game.player(self.payer), self.amount)
         elif self.kind is ComponentKind.REMOVE_COUNTERS:
             # The counters come off at payment time (CR 601.2h/602.2b: the
             # cost is paid before the ability resolves), not when the

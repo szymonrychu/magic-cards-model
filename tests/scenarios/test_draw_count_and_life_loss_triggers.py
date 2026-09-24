@@ -246,3 +246,44 @@ def test_faerie_mastermind_reads_the_identical_second_draw_template():
     resolve_all(scenario)
 
     assert len(scenario.player("alice").hand) == hand_before + 1
+
+
+# -- life loss that is not damage (CR 119.3, CR 119.4) ------------------------
+
+
+def test_life_lost_to_an_effect_triggers_the_life_loss_mill():
+    """CR 119.3: an effect that makes a player lose life is life loss as much
+    as damage is - Sign in Blood's "loses 2 life" mills two."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Sign in Blood"], battlefield=["Mindcrank", "Swamp", "Swamp"])
+        .player("bob", library=["Forest"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_onto_stack(
+        "Sign in Blood",
+        *scenario.untapped_sources("Swamp", "Swamp"),
+        targets=["bob"],
+    )
+    resolve_all(scenario)
+
+    graveyard = [card.name for card in scenario.player("bob").graveyard]
+    assert graveyard.count("Forest") == 2, graveyard
+
+
+def test_paid_life_triggers_the_life_loss_mill():
+    """CR 119.4: "If a player pays life, the payment is subtracted from their
+    life total; in other words, the player loses that much life.\""""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Master of Lake-town"], library=["Island"] * 10)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_pay_the_life(username="alice")
+    assert scenario.game.may_pay_life("alice", 2, source="a test payment")
+    resolve_all(scenario)
+
+    assert len(scenario.player("alice").graveyard) == 2

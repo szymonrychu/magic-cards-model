@@ -11247,7 +11247,7 @@ class Game(EngineModel):
         if not answer:
             return False
         if amount > 0:
-            player.lose_life(amount)
+            self.lose_life(player, amount)
         return True
 
     def may_pay_energy(
@@ -11540,7 +11540,7 @@ class Game(EngineModel):
         paid = self.ask(decision)
         assert isinstance(paid, int)
         if paid > 0:
-            player.lose_life(paid)
+            self.lose_life(player, paid)
         return paid
 
     def _look_at_top(self, player: Player, count: int) -> list[CardState]:
@@ -12953,6 +12953,26 @@ class Game(EngineModel):
             player.gain_life(event.amount)
             self.emit(GameEvent(event=TriggerEvent.GAINS_LIFE, player=player.username))
         return player.life
+
+    def lose_life(self, player: Player | str, amount: int) -> int:
+        """A player loses life, returning the new total (CR 119.3).
+
+        Every life loss comes through here - an effect's "loses N life",
+        damage (CR 119.2, via `deal_damage_to_player`) and a life payment,
+        which CR 119.4 says is life loss ("in other words, the player loses
+        that much life") - so a "whenever a player loses life" trigger sees
+        each one. The event carries the amount lost, what a "that player
+        mills that many cards" trigger reads (The Master of Lake-town,
+        Mindcrank); a loss of 0 is no event (CR 603.2g).
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        new_total = player.lose_life(amount)
+        if amount > 0:
+            self.emit(
+                GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=amount)
+            )
+        return new_total
 
     def exchange_life_totals(self, a: Player | str, b: Player | str) -> int:
         """Two players exchange life totals (CR 701.12a, CR 701.12c).
@@ -14977,17 +14997,7 @@ class Game(EngineModel):
                 player = self.player(player)
             if amount == 0:
                 return player.life
-            new_total = player.lose_life(amount)
-            # `Player.lose_life` returns the *new total* (CR 119.3's own
-            # contract, matched here), not how much was lost - `amount` is
-            # the number a "that player mills that many cards" trigger
-            # actually wants (The Master of Lake-town, Mindcrank), and this
-            # method's own callers already read its return value as the new
-            # total the identical way `lose_life` documents.
-            self.emit(
-                GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=amount)
-            )
-            return new_total
+            return self.lose_life(player, amount)
 
     def counter(
         self,
@@ -20825,7 +20835,7 @@ class Game(EngineModel):
         if rider.kind == "damage_to_controller":
             self.deal_damage(self.player(controller), rider.amount, source=source)
         elif rider.kind == "lose_life":
-            self.player(controller).lose_life(rider.amount)
+            self.lose_life(self.player(controller), rider.amount)
         elif rider.kind == "gain_life":
             self.gain_life(controller, rider.amount)
 

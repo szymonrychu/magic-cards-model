@@ -1977,7 +1977,7 @@ def _parse_devotion_drain_clauses(
         total_lost = 0
         for opponent in _opponents(game, controller.username):
             before = opponent.life
-            opponent.lose_life(amount)
+            game.lose_life(opponent, amount)
             total_lost += before - opponent.life
         if total_lost > 0:
             controller.gain_life(total_lost)
@@ -4190,7 +4190,7 @@ def _parse_each_opponent_loses_life_equal_to(text: str) -> AbilityEffect | None:
         if amount <= 0:
             return
         for opponent in _opponents(game, controller):
-            opponent.lose_life(amount)
+            game.lose_life(opponent, amount)
 
     return effect
 
@@ -7671,7 +7671,7 @@ def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
         if gains:
             game.gain_life(player, amount)
         else:
-            player.lose_life(amount)
+            game.lose_life(player, amount)
 
     return counted_life_change
 
@@ -8175,7 +8175,7 @@ def _merge_surveil_then_for_each_on_top_draw_and_lose_life_clauses(
         )
         for _ in split.top_order:
             game.draw_cards(player, 1)
-            player.lose_life(life_per_card)
+            game.lose_life(player, life_per_card)
 
     return 3, effect
 
@@ -8236,7 +8236,7 @@ def _merge_reveal_top_hand_lose_life_equal_to_mana_value_clauses(
         game.reveal(card, source=source)
         mana_value = int(card.mana_value)
         player.add(card, Zone.HAND)
-        player.lose_life(mana_value)
+        game.lose_life(player, mana_value)
 
     return 3, effect
 
@@ -8908,7 +8908,7 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
         def lose_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
             total = amount * multiplier(game, player.username, source_id) if multiplier else amount
-            player.lose_life(total)
+            game.lose_life(player, total)
 
         return lose_life
 
@@ -8923,7 +8923,7 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             game: "Game", player: Player, source: str, source_id: str | None
         ) -> None:
             for opponent in _opponents(game, player.username):
-                opponent.lose_life(amount)
+                game.lose_life(opponent, amount)
 
         return each_opponent_loses
 
@@ -18128,7 +18128,7 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
         def fixed_referent_lose_life(
             game: "Game", player: Player, power: int | None, source: str, source_id: str | None
         ) -> None:
-            player.lose_life(loss)
+            game.lose_life(player, loss)
 
         return fixed_referent_lose_life
 
@@ -26921,7 +26921,7 @@ def _parse_destroy_then_if_that_permanent_was_draw_clause_pair(
         if draw_amount is not None:
             game.draw_cards(controller, draw_amount)
         elif life_amount is not None:
-            game.player(target_controller_username).lose_life(life_amount)
+            game.lose_life(game.player(target_controller_username), life_amount)
 
     return effect
 
@@ -28330,7 +28330,7 @@ def _parse_draw_equal_to_then_lose_life_clause_pair(
             return
         drawn = game.draw_cards(controller.username, amount)
         if drawn:
-            controller.lose_life(len(drawn))
+            game.lose_life(controller, len(drawn))
 
     return effect
 
@@ -28411,7 +28411,7 @@ def _who_cant_discard_consequence(
             return None
 
         def lose_life(game: "Game", player: Player, source: str, source_id: str | None) -> None:
-            player.lose_life(amount)
+            game.lose_life(player, amount)
 
         clause = lose_life
     else:
@@ -28519,7 +28519,7 @@ def _parse_each_group_discards_then_consequence_per_failure_clause_pair(
                 )
                 matched = sum(1 for state in discarded if quality_matches(state))
                 if matched < threshold:
-                    member.lose_life(life_loss)
+                    game.lose_life(member, life_loss)
 
         consequence = life_consequence
 
@@ -37030,7 +37030,7 @@ def _parse_they_gain_or_lose_life_clause(clause: str, *, for_spell: bool) -> Tar
         if gains:
             game.gain_life(player, amount)
         else:
-            player.lose_life(amount)
+            game.lose_life(player, amount)
 
     return effect
 
@@ -39741,7 +39741,7 @@ def _merge_reveal_hand_choose_discard_clauses(
                 elif chosen:
                     game.discard_cards(revealer.username, chosen, source=source)
         if life_loss:
-            controller.lose_life(life_loss)
+            game.lose_life(controller, life_loss)
 
     return consumed, effect
 
@@ -40823,7 +40823,7 @@ def _parse_target_player_draws_and_loses_life_clause(
         for target in game.resolve_targets(stack_object):
             if isinstance(target, Player):
                 game.draw_cards(target.username, draw_count)
-                target.lose_life(life_loss)
+                game.lose_life(target, life_loss)
 
     return effect
 
@@ -49261,7 +49261,7 @@ def _parse_each_opponent_discards_then_shortfall_loses_life_whole_text(
             source_name=source_name,
         )
         for player in shortfalls:
-            player.lose_life(life_n)
+            game.lose_life(player, life_n)
 
     return effect
 
