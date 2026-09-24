@@ -130,6 +130,18 @@ def test_your_own_creature_is_not_a_legal_first_target():
         scenario.cast("Trickster's Stratagem", targets=[bears, own_elves])
 
 
+def test_the_mandatory_first_target_cannot_be_left_empty():
+    """CR 601.2c: "target creature an opponent controls" has no "up to", so
+    naming only alice's Bears (legal for the second, optional requirement)
+    leaves the first requirement unfilled and the cast is refused."""
+    scenario = _board(["Forest"])
+    scenario.creature("Llanowar Elves", "bob")
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    with pytest.raises(ValueError):
+        scenario.cast("Trickster's Stratagem", targets=[bears])
+
+
 def test_the_connive_still_happens_when_the_first_target_is_gone():
     """CR 608.2b: the Elves left before resolution; the Bears still connive."""
     scenario = _board(["Forest"])

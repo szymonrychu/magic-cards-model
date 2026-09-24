@@ -1757,6 +1757,7 @@ class TargetingProfile(EngineModel):
         taken: dict[int, set[TargetRef]] = {}
         controllers: dict[int, set[str]] = {}
         shared_types: dict[int, frozenset[Type]] = {}
+        filled: dict[int, int] = {}
 
         for target in targets:
             reasons: list[str] = []
@@ -1766,6 +1767,7 @@ class TargetingProfile(EngineModel):
                 )
                 if reason is None:
                     slots.pop(index)
+                    filled[id(slot)] = filled.get(id(slot), 0) + 1
                     break
                 reasons.append(reason)
             else:
@@ -1781,10 +1783,22 @@ class TargetingProfile(EngineModel):
                         shared_types,
                     )
                     if reason is None:
+                        filled[id(requirement)] = filled.get(id(requirement), 0) + 1
                         break
                     reasons.append(reason)
                 else:
                     raise ValueError("illegal target: " + "; ".join(dict.fromkeys(reasons)))
+
+        # CR 601.2c: the total can reach `min_targets` while one mandatory
+        # "target ..." is left empty and an optional "up to one" beside it
+        # takes the target instead - every requirement needs its own minimum.
+        for requirement in self.requirements:
+            if filled.get(id(requirement), 0) < requirement.minimum:
+                raise ValueError(
+                    f"too few targets for {requirement.phrase}: "
+                    f"{filled.get(id(requirement), 0)} chosen where it requires "
+                    f"{requirement.minimum} (CR 601.2c)"
+                )
 
     @staticmethod
     def _why_not(
