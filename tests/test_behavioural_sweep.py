@@ -119,7 +119,7 @@ from magic_cards_model.machines.triggers import (
 from magic_cards_model.models import Card, CardState, Color, Type, Zone
 from magic_cards_model.models.action import ActionKind
 from magic_cards_model.models.card import Layout
-from magic_cards_model.models.card_state import TargetRef
+from magic_cards_model.models.card_state import Choice, ChoiceKind, TargetRef
 from magic_cards_model.models.token import PREDEFINED, create_predefined_tokens, token_copy_of
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.support import _probe_cards, card_support, in_target_formats
@@ -1055,7 +1055,19 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         source.class_level = level
     _attach(scenario, source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _chosen_parity(source, getattr(ability, "condition", None))
     return source
+
+
+def _chosen_parity(source: CardState, condition: str | None) -> None:
+    """A trigger reading "mana value of the chosen quality" off its own
+    "As this enters, choose odd or even" (CR 614.12a) has an answer on the
+    staged source, which skipped entering: odd, which the stock probes
+    (Opt, Lightning Bolt) fit."""
+    if source.choice is not None or not condition or "chosen quality" not in condition.lower():
+        return
+    if re.search(r"\bchoose odd or even\b", source.card.oracle_text or "", re.IGNORECASE):
+        source.choice = Choice(kind=ChoiceKind.ODD_OR_EVEN, value="odd")
 
 
 def _counter_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:
@@ -1876,7 +1888,7 @@ def _bending(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
 
 def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterator[Attempt]:
-    """An event that happens to a player: drawing, gaining life,
+    """An event that happens to a player: drawing, gaining or losing life,
     discarding, getting energy, being dealt noncombat damage, scrying -
     up to three times, for "your second/third card each turn"."""
     lowered = ability.condition.lower()
@@ -1896,6 +1908,8 @@ def _player_event(case: Case, ability: TriggeredAbility, action: str) -> Iterato
                     game.draw_cards(player, 1)
                 elif action == "gain":
                     game.gain_life(player, 1)
+                elif action == "lose":
+                    game.lose_life(player, 1)
                 elif action == "discard":
                     game.discard_cards(player, [game.player(player).hand[-1]])
                 elif action == "energy":
@@ -2131,6 +2145,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _player_event(case, ability, "draw")
         elif kind == "gains_life":
             yield from _player_event(case, ability, "gain")
+        elif kind == "loses_life":
+            yield from _player_event(case, ability, "lose")
         elif kind == "discards_a_card":
             yield from _player_event(case, ability, "discard")
         elif kind == "player_counters_put":
