@@ -1523,8 +1523,16 @@ def _greatest_mana_value_among_cards_in_your_graveyard(
 #: `self_normalized_effect_text`): CR 306.5c's loyalty is the planeswalker's
 #: loyalty counters on the battlefield, and CR 608.2h's last known
 #: information once it has left.
+#: "its"/"this `<noun>`'s" power/toughness/loyalty, or a gendered pronoun
+#: standing in for the same self-reference (CR 201.5, Iron Fist, Living
+#: Weapon's own "damage equal to his power" - `legendary_self_pronoun_
+#: normalized`'s own vocabulary, widened here since a quoted ability text
+#: granted onto another permanent (`grant_ability`) is read back through
+#: `amount_expression` directly rather than through that normalizer, which
+#: only ever runs once, on the *printed* card text, before the quote marks
+#: around the granted ability's own text are ever separated out).
 _OBJECT_CHARACTERISTIC_RE = re.compile(
-    r"^(?:its|this [a-z]+'s) (?P<characteristic>power|toughness|loyalty)$", re.IGNORECASE
+    r"^(?:its|his|her|this [a-z]+'s) (?P<characteristic>power|toughness|loyalty)$", re.IGNORECASE
 )
 
 
@@ -15896,6 +15904,55 @@ _DAMAGE_ANY_TARGET_RE = re.compile(
     r"(?P<phrase>any (?:other )?target|[^.]*?\btargets?\b[^.]*?)\.?$",
     re.IGNORECASE,
 )
+
+#: "`<this>` deals damage equal to that spell's mana value to any target." -
+#: Thor, God of Thunder's own cast trigger. "That spell" is CR 400.7/607.1
+#: anaphora back to the spell this ability's own `TriggerEvent.CAST_SPELL`
+#: watched (`event.subject_card`), the identical "that spell" reading
+#: `_TARGET_OPPONENT_DRAW_THEN_COPY_THAT_SPELL_RE` already gives elsewhere -
+#: a magnitude, not `amount_expression`'s own vocabulary (which has no term
+#: for a specific anaphoric object's mana value).
+_DAMAGE_EQUAL_TO_THAT_SPELLS_MV_RE = re.compile(
+    r"^(?:it |this [a-z]+ )deals damage equal to that spell'?s mana value to "
+    r"(?P<phrase>any (?:other )?target|[^.]*?\btargets?\b[^.]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_damage_equal_to_that_spells_mv_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_DAMAGE_EQUAL_TO_THAT_SPELLS_MV_RE`'s shape, or `None`.
+
+    Ability-only: `GameEvent.subject_card` is a triggered ability's own
+    event attribute.
+    """
+    if for_spell:
+        return None
+    match = _DAMAGE_EQUAL_TO_THAT_SPELLS_MV_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if not _targets_understood(phrase, allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object) or stack_object.event is None:
+            return
+        ability = stack_object
+        card = ability.event.subject_card
+        if card is None:
+            return
+        amount = int(card.cmc)
+        if amount <= 0:
+            return
+        source = ability.source_or_last_known(game)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
 _DESTROY_IF_TYPE_DEALT_DAMAGE_THIS_WAY_RE = re.compile(
     r"^if an? (?P<quality>[a-z]+) is dealt damage this way, destroy it\.?$", re.IGNORECASE
 )
@@ -16291,8 +16348,20 @@ def _optional_targeted_clause(
 #: targeted clause's own phrase is, through `_targets_understood` -
 #: `machines/targeting.py` already reads "with power N or less" as CR
 #: 115.1's own comparison restriction, so this never has to.
+#: `exception` ("... except by creatures with `<keyword>`", Speed, Young
+#: Avenger's own rider) is captured but deliberately refused below: `machines/
+#: combat.py` (locked to another C02 task this round) has no reader for a
+#: keyword-qualified "can't be blocked except by ..." exception at all - only
+#: a bare "can't be blocked", a power comparison, and a token exclusion - so
+#: granting the plain text here would silently drop the exception (every
+#: creature refused, haste ones included) rather than reading it, and
+#: granting nothing at all would let every creature block (the opposite
+#: error). Matching-but-refusing keeps this clause a fail-closed notice
+#: instead of either silently-wrong shape.
 _TARGET_CANT_BE_BLOCKED_RE = re.compile(
-    r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn\.?$", re.IGNORECASE
+    r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn"
+    r"(?P<exception> except by creatures with [a-z]+)?\.?$",
+    re.IGNORECASE,
 )
 
 #: "`<target phrase>` phases out." (CR 702.26b) - Teferi, Master of Time's
@@ -16355,8 +16424,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # the anaphoric rider `_RIDER_CANT_BE_BLOCKED_RE` reads after a
         # different antecedent - Eardrum Rattler's whole activated ability
         # is this one sentence, with no antecedent in front of it at all.
+        if match.group("exception") is not None:
+            # See the banner above `_TARGET_CANT_BE_BLOCKED_RE`: refused
+            # rather than silently read wrong either direction.
+            return None
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
+        granted_text = "This creature can't be blocked."
 
         def cant_be_blocked_targets(game: "Game", stack_object: "StackObject") -> None:
             effects = game.continuous_effects
@@ -16370,7 +16444,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
                         timestamp=effects.tick(),
                         duration=Duration.UNTIL_END_OF_TURN,
                         selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability("This creature can't be blocked."),
+                        modification=grant_ability(granted_text),
                     )
                 )
 
@@ -17203,6 +17277,83 @@ def _parse_create_x_tokens_where_x_is_clause(text: str) -> AbilityEffect | None:
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         count = magnitude(game, ability.controller, source, ability.x_value)
+        if count > 0:
+            create_tokens(game, definition, ability.controller, count, tapped=tapped)
+
+    return effect
+
+
+#: "create that many `<desc>` tokens[ with `<tail>`]." - Namor the Sub-
+#: Mariner's own "Whenever you cast a noncreature spell with one or more
+#: blue mana symbols in its mana cost, create that many 1/1 blue Merfolk
+#: creature tokens." "That many" here is not `that_many()`'s own count
+#: channel (a *preceding* counted instruction in the same ability) - it is
+#: the trigger's own condition, "one or more `<color>` mana symbols in its
+#: mana cost", counted off the cast spell CR 400.7 anaphora names
+#: (`GameEvent.subject_card`).
+_CREATE_THAT_MANY_COLOR_PIP_TOKENS_RE = re.compile(
+    r"^create that many (?P<desc>.+?) \btokens?\b(?:\s+with\s+(?P<tail>.+?))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: The trigger condition's own "with one or more `<color>` mana symbols in
+#: its mana cost" clause, read back from `TriggeredAbility.condition` at
+#: resolution time - the color word this card's own token count is over.
+_MANA_SYMBOLS_COLOR_IN_COST_CONDITION_RE = re.compile(
+    r"with (?:one or more|at least one) (?P<color>white|blue|black|red|green) "
+    r"mana symbols? in its mana cost",
+    re.IGNORECASE,
+)
+
+_COLOR_WORD_TO_LETTER = {
+    "white": "W",
+    "blue": "U",
+    "black": "B",
+    "red": "R",
+    "green": "G",
+}
+
+
+def _parse_create_that_many_color_pip_tokens_clause(
+    text: str, *, for_spell: bool
+) -> AbilityEffect | None:
+    """`_CREATE_THAT_MANY_COLOR_PIP_TOKENS_RE`'s shape, or `None`.
+
+    Ability-only: `TriggeredAbility.condition`/`GameEvent.subject_card` are
+    both a triggered ability's own attributes.
+    """
+    if for_spell:
+        return None
+    match = _CREATE_THAT_MANY_COLOR_PIP_TOKENS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    words = match.group("desc").strip().split()
+    tapped = bool(words) and words[0].lower() == "tapped"
+    if tapped:
+        words = words[1:]
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, match.group("tail"))
+    if definition is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object) or stack_object.event is None:
+            return
+        ability = stack_object
+        condition_text = getattr(ability.ability, "condition", None) or ""
+        color_match = _MANA_SYMBOLS_COLOR_IN_COST_CONDITION_RE.search(condition_text)
+        if color_match is None:
+            return
+        letter = _COLOR_WORD_TO_LETTER.get(color_match.group("color").lower())
+        card = ability.event.subject_card
+        if letter is None or card is None:
+            return
+        count = sum(
+            1
+            for symbol in _MANA_SYMBOL_RE.findall(card.mana_cost or "")
+            if symbol.upper() == letter
+        )
         if count > 0:
             create_tokens(game, definition, ability.controller, count, tapped=tapped)
 
@@ -22447,8 +22598,17 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     match = _SELF_DAMAGE_EQUAL_TO_COUNT_RE.fullmatch(text.strip())
     if match is None:
         return None
-    counted = count_expression(match.group("expr"))
-    if counted is None:
+    expr = match.group("expr")
+    counted = count_expression(expr)
+    # "its power"/"his power"/"her power" (Iron Fist, Living Weapon's own
+    # granted "{T}: this permanent deals damage equal to his power to any
+    # other target") is `amount_expression`'s own vocabulary (CR 208.1's
+    # power/toughness), not `count_expression`'s ("the number of `<quality>`
+    # you control") - tried second, since `count_expression`'s own
+    # "the number of ... power ..." phrasings (none in the pool) would
+    # otherwise never get a chance to match first.
+    magnitude = amount_expression(expr) if counted is None else None
+    if counted is None and magnitude is None:
         return None
     recipient = match.group("recipient").lower()
     each_opponent = recipient == "each opponent"
@@ -22457,7 +22617,12 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source_or_last_known(game)
-        amount = counted(game, ability.controller)
+        if counted is not None:
+            amount = counted(game, ability.controller)
+        else:
+            assert magnitude is not None
+            obj = ability.source(game)
+            amount = magnitude(game, ability.controller, obj, ability.x_value)
         if amount <= 0:
             return
         if each_opponent:
@@ -22797,6 +22962,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     it_gains_quoted_ability = _parse_it_gains_quoted_ability_clause(effect_text)
     if it_gains_quoted_ability is not None:
         return it_gains_quoted_ability
+    self_gains_quoted_ability_until_eot = _parse_self_gains_quoted_ability_until_eot_clause(
+        effect_text
+    )
+    if self_gains_quoted_ability_until_eot is not None:
+        return self_gains_quoted_ability_until_eot
     # S22's whole-text readers: each names its own object ("exiled with this
     # creature", "that card" after an exile, "them" after a count), so none
     # of them may be cut apart by the clause splitter below.
@@ -37190,6 +37360,154 @@ def _parse_it_gains_rebound_clause(clause: str, *, for_spell: bool) -> TargetedC
     return effect
 
 
+#: "This permanent/creature gains "`<ability>`" until end of turn." - Iron
+#: Fist, Living Weapon's own "Iron Fist gains "{T}: Iron Fist deals damage
+#: equal to his power to any other target" until end of turn." CR 201.5
+#: self-reference, normalized to "this permanent"/"this creature" by the
+#: time this is reached (`trigger_effect_for`'s own fallback). Built the same
+#: way `_SELF_KEYWORD_GRANT_UNTIL_EOT_RE`'s plain keyword grant just above
+#: is - a hand-built `ContinuousEffect` via `layers.grant_ability` and
+#: `ContinuousEffects.add` - rather than through `create_continuous_effect_
+#: of_ability`, which only ever reads a *keyword or plain static* sentence
+#: off `LAYER_EFFECTS`'s own registry (`machines/layers.py`, locked to
+#: another C02 task this round) and has no row for a quoted, self-granted
+#: *activated* ability at all - a resolving trigger that named this shape
+#: registered a `ContinuousEffect` whose own `ability_text` `effects_for`
+#: never turned into anything, so the grant silently added nothing to the
+#: computed board.
+_SELF_GAINS_QUOTED_ABILITY_UNTIL_EOT_RE = re.compile(
+    r"^this (?:permanent|creature|artifact) gains "
+    r'["“](?P<ability>.+)["”] until end of turn\.?$',
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: Ms. Marvel, Kamala Khan's own leading-duration twin: "Until end of turn,
+#: `<this>` gains "`<ability>`"." - the identical grant, with CR 611.2a's
+#: duration printed before the sentence instead of after it.
+_LEADING_UNTIL_EOT_SELF_GAINS_QUOTED_ABILITY_RE = re.compile(
+    r"^until end of turn, this (?:permanent|creature|artifact) gains "
+    r'["“](?P<ability>.+)["”]\.?$',
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_self_gains_quoted_ability_until_eot_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_GAINS_QUOTED_ABILITY_UNTIL_EOT_RE`'s shape, read whole - the
+    quoted ability ends in a full stop of its own, which the clause splitter
+    would otherwise cut at."""
+    match = _SELF_GAINS_QUOTED_ABILITY_UNTIL_EOT_RE.fullmatch(
+        text.strip()
+    ) or _LEADING_UNTIL_EOT_SELF_GAINS_QUOTED_ABILITY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    granted_text = match.group("ability").strip()
+    if not granted_text:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f'{source.name}: gains "{granted_text}" until end of turn',
+                layer=Layer.ABILITY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_only(source.id),
+                modification=grant_ability(granted_text),
+            ),
+            game,
+        )
+
+    return effect
+
+
+#: "This permanent/creature/artifact gets `<P>`/`<T>` until end of turn." as
+#: ONE clause among several (Speedball, New Warrior's own "he gets +2/+2
+#: until end of turn. You may choose new targets for that spell.") -
+#: `_ability_effect_or_notice`'s own whole-text fallback to `create_
+#: continuous_effect_of_ability` (Basking Rootwalla's shape) only ever runs
+#: on an ability's *entire* text, so a card mixing a bare self-pump sentence
+#: with another clause had no reader for this half at all; Daredevil, Man
+#: Without Fear's own exile-trigger merge builds the identical continuous
+#: effect inline for the same reason.
+_SELF_PUMP_UNTIL_EOT_BARE_RE = re.compile(
+    r"^this (?:permanent|creature|artifact) gets? "
+    r"(?P<pt>[+-]\d+/[+-]\d+) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_bare_self_pump_until_eot_clause(text: str) -> AbilityEffect | None:
+    """`_SELF_PUMP_UNTIL_EOT_BARE_RE`'s shape, or `None`."""
+    match = _SELF_PUMP_UNTIL_EOT_BARE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    pump_text = f"this creature gets {match.group('pt')} until end of turn"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=[source],
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=_as_sentence(pump_text),
+            game=game,
+        )
+
+    return effect
+
+
+#: "You may choose new targets for that spell." - Speedball, New Warrior's
+#: own trailing rider (CR 115.7d), "that spell" being CR 607.1 anaphora onto
+#: whatever this trigger's own `TriggerEvent.CAST_SPELL` event names
+#: (`event.subject_id`) - not a copy (`Game.offer_new_targets_for_copy`),
+#: the ordinary spell itself, still on the stack.
+_CHOOSE_NEW_TARGETS_FOR_THAT_SPELL_RE = re.compile(
+    r"^you may choose new targets for that spell\.?$", re.IGNORECASE
+)
+
+
+def _parse_choose_new_targets_for_that_spell_clause(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_NEW_TARGETS_FOR_THAT_SPELL_RE`'s shape, or `None`.
+
+    Ability-only: `event.subject_id` is a triggered ability's own attribute.
+    """
+    if _CHOOSE_NEW_TARGETS_FOR_THAT_SPELL_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object) or stack_object.event is None:
+            return
+        ability = stack_object
+        event = ability.event
+        if event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if spell is None or spell not in game.stack:
+            return
+        game.change_targets(
+            spell,
+            ability.controller,
+            scope=RetargetScope.ANY,
+            optional=True,
+            source_name=ability.source_name,
+            source_id=source_id_of(ability),
+        )
+
+    return effect
+
+
 #: "It gains "<ability>"." - Rivaz of the Claw's "Whenever you cast a Dragon
 #: creature spell from your graveyard, it gains "When this creature dies,
 #: exile it."" "It" is the spell whose casting triggered this, as
@@ -44850,6 +45168,26 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     token = _parse_token_clause(clause, for_spell=for_spell)
     if token is not None:
         return token
+    that_many_color_pip_tokens = _parse_create_that_many_color_pip_tokens_clause(
+        clause, for_spell=for_spell
+    )
+    if that_many_color_pip_tokens is not None:
+        return that_many_color_pip_tokens
+    damage_equal_to_that_spells_mv = _parse_damage_equal_to_that_spells_mv_clause(
+        clause, for_spell=for_spell
+    )
+    if damage_equal_to_that_spells_mv is not None:
+        return damage_equal_to_that_spells_mv
+    if not for_spell:
+        self_gains_quoted_ability = _parse_self_gains_quoted_ability_until_eot_clause(clause)
+        if self_gains_quoted_ability is not None:
+            return self_gains_quoted_ability
+        self_pump_bare = _parse_bare_self_pump_until_eot_clause(clause)
+        if self_pump_bare is not None:
+            return self_pump_bare
+        choose_new_targets_for_that_spell = _parse_choose_new_targets_for_that_spell_clause(clause)
+        if choose_new_targets_for_that_spell is not None:
+            return choose_new_targets_for_that_spell
     mass_pump = _parse_mass_pump_group_clause(clause, for_spell=for_spell)
     if mass_pump is not None:
         return mass_pump
