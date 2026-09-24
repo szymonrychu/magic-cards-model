@@ -3977,6 +3977,15 @@ class CostModifierEffect(EngineModel):
     each oil counter on this artifact") - the decrease is multiplied by that
     count, read afresh each time a cost is determined."""
 
+    per_equipped_power: bool = False
+    """`TYPE_DECREASE` only: "..., where X is equipped creature's power."
+    (Glamdring, Foe-hammer) - `amount` is ignored and the decrease is instead
+    the permanent's own equipped creature's power (CR 301.5a), read fresh
+    each time a cost is determined (CR 611.3a: a static ability's own
+    magnitude is never locked in) and floored at zero the same way an
+    unequipped Equipment or a negative-power creature already floors any
+    other `TYPE_DECREASE`'s own `units <= 0` check."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -4064,6 +4073,21 @@ _TYPE_COST_DECREASE = re.compile(
     r"spells you cast cost \{(?P<amount>\d+)\} less to cast"
     # Mindsplice Apparatus: "... for each oil counter on this artifact."
     r"(?: for each (?P<each>[^.]+))?\.",
+    re.IGNORECASE,
+)
+
+#: "`<type list>` spells you cast cost `{X}` less to cast, where X is
+#: equipped creature's power." - Glamdring, Foe-hammer's own static. A
+#: dynamic sibling of `_TYPE_COST_DECREASE` above: that regex only ever reads
+#: a literal digit for the discount (`{(?P<amount>\d+)}`), which cannot
+#: match a printed `{X}` at all, so this magnitude - CR 301.5a's "equipped
+#: creature", recomputed fresh every time a cost is determined (CR 611.3a) -
+#: needs its own shape rather than a wider `\d+` that would also start
+#: matching a bare literal "X" typo no printing actually has.
+_TYPE_COST_DECREASE_EQUIPPED_POWER_RE = re.compile(
+    r"\b(?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land)"
+    r"(?: and (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land))?) "
+    r"spells you cast cost \{X\} less to cast, where X is equipped creature'?s power\.?$",
     re.IGNORECASE,
 )
 
@@ -4236,6 +4260,17 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 colored=colored,
                 per_each=each.strip() if each is not None else None,
             )
+    match = _TYPE_COST_DECREASE_EQUIPPED_POWER_RE.search(text)
+    if match is not None:
+        words = [word.strip().lower() for word in match.group("types").split(" and ")]
+        types = tuple(_TYPE_WORDS[word] for word in words if word in _TYPE_WORDS)
+        if types:
+            return CostModifierEffect(
+                kind=CostModifierKind.TYPE_DECREASE,
+                amount=0,
+                applies_to_types=types,
+                per_equipped_power=True,
+            )
     match = _TYPE_COST_DECREASE.search(text)
     if match is not None:
         words = [word.strip().lower() for word in match.group("types").split(" and ")]
@@ -4328,14 +4363,39 @@ _ALTERNATIVE_IF_NOT_YOUR_TURN = re.compile(
 )
 
 
-def additional_cost_phrases(card: Card) -> list[str]:
-    """The "as an additional cost" sentences printed on the card (CR 118.8a)."""
-    return [match.group("what") for match in _ADDITIONAL.finditer(card.oracle_text or "")]
+def _oracle_text_for_face(card: Card, face: str | None) -> str:
+    """`card`'s own printed text, narrowed to `face` when it names one of
+    `card.card_faces` (CR 715.3a/CR 709.3a: only that face's own text is
+    evaluated).
+
+    Split, Adventure, and modal-DFC printings carry no top-level
+    `Card.oracle_text` at all - Scryfall leaves it null and puts each half's
+    sentences on its own `CardFace` instead - so reading `card.oracle_text`
+    unconditionally answers "" for every one of them regardless of what
+    either face prints. `face=None` (every caller that has not chosen a
+    face yet) keeps exactly the old, whole-card answer.
+    """
+    if face is not None and card.card_faces:
+        for card_face in card.card_faces:
+            if card_face.name == face:
+                return card_face.oracle_text or ""
+    return card.oracle_text or ""
 
 
-def alternative_cost_phrases(card: Card) -> list[str]:
-    """The "rather than pay this spell's mana cost" offers on the card (CR 118.9)."""
-    return [match.group("what") for match in _ALTERNATIVE.finditer(card.oracle_text or "")]
+def additional_cost_phrases(card: Card, *, face: str | None = None) -> list[str]:
+    """The "as an additional cost" sentences printed on the card (CR 118.8a),
+    or on `face` alone once one has been chosen (CR 715.3a, CR 709.3a)."""
+    return [
+        match.group("what") for match in _ADDITIONAL.finditer(_oracle_text_for_face(card, face))
+    ]
+
+
+def alternative_cost_phrases(card: Card, *, face: str | None = None) -> list[str]:
+    """The "rather than pay this spell's mana cost" offers on the card (CR
+    118.9), or on `face` alone once one has been chosen."""
+    return [
+        match.group("what") for match in _ALTERNATIVE.finditer(_oracle_text_for_face(card, face))
+    ]
 
 
 class AlternativeCostOffer(EngineModel):

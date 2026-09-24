@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "f54f1c1d-6a22-43e9-a842-0a1ae25b323c",
+  "oracle_id": "cc65821a-1893-4087-b461-35cf9fd26c71",
+  "multiverse_ids": [],
+  "resource_id": "EEBBC309D15A3F3724D61645C20E8C2820AC3A492B392224934B48CB8148B53C",
+  "mtgo_id": 154300,
+  "arena_id": 103561,
+  "tcgplayer_id": 707517,
+  "cardmarket_id": 898952,
+  "name": "Orcrist, Goblin-cleaver",
+  "lang": "en",
+  "released_at": "2026-08-14",
+  "uri": "https://api.scryfall.com/cards/f54f1c1d-6a22-43e9-a842-0a1ae25b323c",
+  "scryfall_uri": "https://scryfall.com/card/hob/177/orcrist-goblin-cleaver?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-23T09:17:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.jpg?1784798240",
+    "normal": "https://cards.scryfall.io/normal/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.jpg?1784798240",
+    "large": "https://cards.scryfall.io/large/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.jpg?1784798240",
+    "png": "https://cards.scryfall.io/png/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.png?1784798240",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.jpg?1784798240",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.jpg?1784798240",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.webp?1784798240",
+    "grid": "https://cards.scryfall.io/grid/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.webp?1784798240",
+    "display": "https://cards.scryfall.io/display/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.webp?1784798240",
+    "art": "https://cards.scryfall.io/art/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.webp?1784798240",
+    "crop": "https://cards.scryfall.io/crop/front/f/5/f54f1c1d-6a22-43e9-a842-0a1ae25b323c.webp?1784798240"
+  },
+  "mana_cost": "{3}",
+  "cmc": 3.0,
+  "type_line": "Legendary Artifact \u2014 Equipment",
+  "oracle_text": "Equipped creature gets +2/+2 and has trample.\nWhenever equipped creature deals combat damage to a player, choose a creature type. Create a Treasure token for each creature you control of that type.\nEquip {3}",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [
+    "Treasure",
+    "Equip"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d1892b78-7663-4cbd-a732-9a4b0b18d4c8",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/d1892b78-7663-4cbd-a732-9a4b0b18d4c8"
+    },
+    {
+      "object": "related_card",
+      "id": "a496a9e4-8dd7-44a2-a4b2-d4ecfc8ee7c8",
+      "component": "combo_piece",
+      "name": "Orcrist, Goblin-cleaver",
+      "type_line": "Legendary Artifact \u2014 Equipment",
+      "uri": "https://api.scryfall.com/cards/a496a9e4-8dd7-44a2-a4b2-d4ecfc8ee7c8"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set": "hob",
+  "set_name": "The Hobbit",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59218c23-cb7a-4fde-9cff-3f2f71af1308",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ahob&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/hob?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f54f1c1d-6a22-43e9-a842-0a1ae25b323c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Acc65821a-1893-4087-b461-35cf9fd26c71&unique=prints",
+  "collector_number": "177",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Erikas Perl",
+  "artist_ids": [
+    "39cb50cf-0223-43c7-bd96-afb5f05c7e43"
+  ],
+  "illustration_id": "8b288328-aae1-4f36-8f7d-60e41fe25589",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 5362,
+  "preview": {
+    "source": "Polygon",
+    "source_uri": "https://www.polygon.com/mtg-the-hobbit-exclusive-orcrist-thorin-sword-equipment/",
+    "previewed_at": "2026-07-21"
+  },
+  "prices": {
+    "usd": "11.15",
+    "usd_foil": "14.52",
+    "usd_etched": null,
+    "eur": "9.38",
+    "eur_foil": "10.70",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOrcrist%252C%2BGoblin-cleaver",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOrcrist%252C%2BGoblin-cleaver",
+    "edhrec": "https://edhrec.com/route/?cc=Orcrist%2C+Goblin-cleaver"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F707517%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=898952&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/154300?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

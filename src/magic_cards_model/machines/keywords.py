@@ -62,6 +62,7 @@ from .abilities import (
     TriggerEvent,
     TriggerWord,
     keyword_abilities,
+    parse_abilities,
     target_cost_reduction_amount,
 )
 from .combat import has_keyword
@@ -2225,6 +2226,46 @@ def free_first_equip_source(game: Any, player: str) -> CardState | None:
     return None
 
 
+#: "Equip abilities you activate that target this creature cost `{N}` less
+#: to activate." - Dwarven Mauler's own static, a discount granted by a
+#: *different* permanent than the Equipment whose equip ability it reduces
+#: (CR 601.2f via CR 602.2b), the templated sibling of `Fervent Champion`'s
+#: identically-worded off-set printing (`{3}` in place of `{2}`).
+_EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE = re.compile(
+    r"^equip abilities you activate that target this creature cost "
+    r"\{(?P<amount>\d+)\} less to activate\.?$",
+    re.IGNORECASE,
+)
+
+
+def _equip_cost_reduction_for_target(game: Any, target: CardState, player: str) -> int:
+    """The total `{N}` an equip activation's own target discounts it by,
+    read off that target's *own* static text (`_EQUIP_ABILITIES_TARGETING_
+    THIS_COST_LESS_RE`) rather than off the Equipment being activated.
+
+    Scoped to `player`'s own such statics ("Equip abilities *you* activate")
+    and to a target still actually on the battlefield - the same two checks
+    `equip_activation`'s own `reduction.target_quality` branch above already
+    makes for the Equipment's own printed discount. Summed across every
+    static line that qualifies, in case more than one is ever printed the
+    same way, the same way `Game.static_cost_modifiers_for` sums a spell's
+    own board-wide discounts rather than stopping at the first.
+    """
+    if target.zone is not Zone.BATTLEFIELD:
+        return 0
+    if game.controller_of(target).username != player:
+        return 0
+    up_face_name = target.up_face_name or target.card.name
+    total = 0
+    for ability in parse_abilities(target.card):
+        if ability.face != up_face_name or ability.kind is not AbilityKind.STATIC:
+            continue
+        match = _EQUIP_ABILITIES_TARGETING_THIS_COST_LESS_RE.fullmatch(ability.raw.strip())
+        if match is not None:
+            total += int(match.group("amount"))
+    return total
+
+
 def equip_activation(
     game: Any,
     equipment: CardState,
@@ -2310,6 +2351,19 @@ def equip_activation(
                     mana=activation.cost.mana.minus(ManaCost.parse(f"{{{reduced_by}}}")),
                     components=activation.cost.components,
                 )
+    # "Equip abilities you activate that target this creature cost {N} less
+    # to activate." (Dwarven Mauler) - a static ability on a *different*
+    # permanent than the Equipment being activated, so it is never part of
+    # `ability.cost_reduction` above (that field is read off the Equipment's
+    # own printed text). Summed rather than only the first found: CR 601.2f
+    # folds every applicable discount together the same way `static_cost_
+    # modifiers_for` already does for a spell.
+    target_discount = _equip_cost_reduction_for_target(game, target, player)
+    if target_discount:
+        activation.cost = TotalCost(
+            mana=activation.cost.mana.minus(ManaCost.parse(f"{{{target_discount}}}")),
+            components=activation.cost.components,
+        )
     return activation
 
 

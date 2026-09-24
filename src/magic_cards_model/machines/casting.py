@@ -2710,6 +2710,7 @@ def mandatory_additional_costs(
     *,
     blighted: bool = False,
     primary_alternatives: frozenset[int] = frozenset(),
+    face: str | None = None,
 ) -> list[TotalCost]:
     """The spell's own printed "As an additional cost to cast this spell, ..."
     sentences as fresh, unfilled `TotalCost`s (CR 118.8a, 601.2f), X
@@ -2728,9 +2729,16 @@ def mandatory_additional_costs(
     `blighted` is left false - a caller judging affordability with no
     objects chosen yet (`legal_actions`) always gets a single, cheap-to-
     compute answer rather than a set of alternatives to choose between.
+
+    `face` is CR 715.3a's/CR 709.3a's chosen face (Adventure, split): a
+    spell cast as one carries its additional cost, if any, on that face's own
+    text rather than on `spell.card.oracle_text`, which a split/Adventure/
+    modal-DFC printing leaves null - My Precious // Allure of Power's "As an
+    additional cost to cast this spell, sacrifice a creature." is Allure of
+    Power's own sentence, read only once that face is the one being cast.
     """
     built: list[TotalCost] = []
-    for index, printed in enumerate(additional_cost_phrases(spell.card)):
+    for index, printed in enumerate(additional_cost_phrases(spell.card, face=face)):
         phrase = substitute_x(printed, x_value)
         if _OPTIONAL_ADDITIONAL_COST.match(phrase):
             continue
@@ -5188,7 +5196,7 @@ class Casting(EngineModel):
         `blight_paid`/`pay_blight`, never by this.
         """
         chosen: set[int] = set()
-        for index, printed in enumerate(additional_cost_phrases(self.spell.card)):
+        for index, printed in enumerate(additional_cost_phrases(self.spell.card, face=self.face)):
             if _BLIGHT_PHRASE.match(printed) is not None:
                 continue
             or_pay = _OR_PAY_TAIL.match(substitute_x(printed, self.x_value))
@@ -5227,6 +5235,7 @@ class Casting(EngineModel):
             self.x_value,
             blighted=self.blight_paid,
             primary_alternatives=self._additional_cost_primary_alternatives(pools),
+            face=self.face,
         ):
             for component in cost.components:
                 if component.kind is ComponentKind.REVEAL:
