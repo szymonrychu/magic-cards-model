@@ -56,7 +56,10 @@ from magic_cards_model.machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     player_keyword_grant_of_line,
+    reads_mandatory_additional_cost_line,
+    reads_printed_zone_permission_line,
 )
+from magic_cards_model.machines.casting_restrictions import reads_player_rule_static_line
 from magic_cards_model.machines.combat import (
     Keyword,
     is_attack_requirement_line,
@@ -64,6 +67,7 @@ from magic_cards_model.machines.combat import (
     is_group_attack_restriction_line,
     is_self_card_count_restriction_line,
 )
+from magic_cards_model.machines.companion import reads_companion_line
 from magic_cards_model.machines.cost import (
     additional_cost_phrases,
     cost_announces_x,
@@ -116,6 +120,8 @@ from magic_cards_model.machines.replacement import (
     parse_replacement_effects,
     performed_static_replacement_line,
     performs_static_line,
+    reads_cant_enter_line,
+    self_enters_effects_read,
     strip_reminder_text,
 )
 from magic_cards_model.machines.triggers import (
@@ -159,7 +165,11 @@ from magic_cards_model.models.card import (
     types_of,
 )
 from magic_cards_model.models.card_state import Counters, TargetRef
-from magic_cards_model.models.game import is_player_rules_static_line, reads_activation_rule_line
+from magic_cards_model.models.game import (
+    is_player_rules_static_line,
+    reads_activation_rule_line,
+    reads_self_cost_reduction_line,
+)
 from magic_cards_model.numbers import parse_count
 from magic_cards_model.snapshot import EngineModel
 
@@ -1600,6 +1610,11 @@ def _self_enters_line_category(printing: Card, text: str) -> str | None:
     ]
     if not self_kinds:
         return None
+    if self_enters_effects_read(printing, self_kinds):
+        # Performed whenever its own gate holds - a condition read as it
+        # enters, CR 107.3m's X, a back-face land's payment - which the empty
+        # board below cannot stage (`replacement.self_enters_effects_read`).
+        return HANDLED
     try:
         game = Game(
             players=[Player(username="sweep_you"), Player(username="sweep_opp")],
@@ -1785,6 +1800,20 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_player_rules_static_line(text):
         # CR 119.7 / CR 615.12: `Game.life_gain_prohibited` and
         # `Game.damage_cant_be_prevented` read these off the battlefield.
+        return HANDLED
+    if reads_player_rule_static_line(text) or reads_cant_enter_line(text):
+        # CR 601.3 / 121.2b / 614.17d: `machines/casting_restrictions`'s
+        # battlefield readers and `replacement._cant_enter_replacements`.
+        return HANDLED
+    if reads_self_cost_reduction_line(text) or reads_mandatory_additional_cost_line(text):
+        # CR 601.2f / 118.8a: `Game.cost_reduction_for` and
+        # `casting.mandatory_additional_costs` charge them on every cast.
+        return HANDLED
+    if reads_printed_zone_permission_line(printing, text):
+        # CR 604.6: `casting._printed_zone_permissions` offers the keyword.
+        return HANDLED
+    if reads_companion_line(printing, text):
+        # CR 702.139a: `companion.companion_condition_satisfied` reads it.
         return HANDLED
     return STATIC_UNAUDITED
 

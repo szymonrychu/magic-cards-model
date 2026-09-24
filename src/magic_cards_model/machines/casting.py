@@ -6346,3 +6346,44 @@ def splice_candidates(game: Any, spell: CardState, player: str) -> list[SpliceCa
             continue
         candidates.append(SpliceCandidate(card=card, cost=TotalCost.of(cost)))
     return candidates
+
+
+#: One whole "As an additional cost to cast this spell, <cost>." line.
+_ADDITIONAL_COST_LINE = re.compile(
+    r"^as an additional cost to cast this spell, (?P<what>[^.]+)\.?$", re.IGNORECASE
+)
+
+
+def reads_mandatory_additional_cost_line(text: str) -> bool:
+    """Whether one printed line is a mandatory CR 118.8a additional cost
+    `mandatory_additional_costs` reads (`total_cost_for_phrase`) and so
+    charges on every cast - `support.py`'s credit for it on a permanent
+    card. An optional one, blight, or a "[cost] or pay [mana]" choice is
+    left to the readers that already answer for those."""
+    match = _ADDITIONAL_COST_LINE.match(text.strip())
+    if match is None:
+        return False
+    phrase = match.group("what")
+    if (
+        _OPTIONAL_ADDITIONAL_COST.match(phrase)
+        or _BLIGHT_PHRASE.match(phrase)
+        or _OR_PAY_TAIL.match(phrase)
+    ):
+        return False
+    return total_cost_for_phrase(phrase) is not None
+
+
+def reads_printed_zone_permission_line(card: Card, text: str) -> bool:
+    """Whether one printed line is wholly "You may cast this card from your
+    <zone> using its <keyword> ability." and `keyword_cast_options` really
+    offers that keyword from that zone, understood (CR 604.6) - `support.py`'s
+    credit for it."""
+    match = _PRINTED_CAST_FROM_ZONE_USING_KEYWORD.fullmatch(text.strip().rstrip("."))
+    if match is None:
+        return False
+    zone = _PRINTED_PERMISSION_ZONES[match.group("zone").lower()]
+    keyword = match.group("keyword").lower()
+    return any(
+        option.keyword.lower() == keyword and option.zone is zone and option.understood
+        for option in keyword_cast_options(card)
+    )

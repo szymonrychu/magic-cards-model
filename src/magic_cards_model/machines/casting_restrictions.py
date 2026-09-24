@@ -1118,3 +1118,41 @@ def conditionally_cannot_be_countered(game: Any, spell: Any) -> bool:
         if game.condition_holds(controller, match.group("condition"), spell) is True:
             return True
     return False
+
+
+def reads_player_rule_static_line(text: str) -> bool:
+    """Whether one printed static line is a player rule this module's
+    battlefield readers enforce in full - `support.py`'s credit for it.
+
+    Mirrors the scans above shape for shape, so a line is vouched for only
+    when the reader that enforces it would read all of it: a cast window or
+    spell-count cap (`_live_blanket_cant_cast`, every conjoined clause read),
+    Voice of Victory's turn window, Teferi, Time Raveler's sorcery-speed limit
+    (`sorcery_speed_restriction_source`), a zone cast prohibition whose every
+    zone word is known (`zone_cast_prohibition_source`, CR 601.3), a draw cap
+    (`draw_cap_restriction`, CR 121.2b), the search prohibition
+    (`search_prohibition_source`) and the combat lockdown
+    (`combat_lockdown_restriction_source`).
+    """
+    line = text.strip()
+    if (
+        _OPPONENTS_CANT_CAST_DURING_YOUR_TURN_RE.match(line)
+        or _SORCERY_SPEED_ONLY_RE.match(line)
+        or _SEARCH_PROHIBITION_RE.match(line)
+        or _DURING_COMBAT_LOCKDOWN_RE.match(line)
+    ):
+        return True
+    draw_cap = _DRAW_CAP_RE.match(line)
+    if draw_cap is not None:
+        return parse_count(draw_cap.group("count")) is not None
+    zone_ban = _ZONE_CAST_PROHIBITION_RE.match(line)
+    if zone_ban is not None:
+        return bool(_prohibited_zones(zone_ban.group("zones")))
+    clauses = [clause.strip() for clause in _RESTRICTION_CLAUSE_SPLIT.split(line.rstrip("."))]
+    for clause in clauses:
+        if _CAST_ONLY_DURING_TURN_RE.fullmatch(clause):
+            continue
+        cap = _SPELL_COUNT_CAP_RE.fullmatch(clause)
+        if cap is None or parse_count(cap.group("count")) is None:
+            return False
+    return bool(clauses)

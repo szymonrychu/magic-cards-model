@@ -110,7 +110,7 @@ tapped."
 
 import functools
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal
@@ -3795,6 +3795,20 @@ def _cant_enter_replacements(card: Card) -> list[CardReplacement]:
     return found
 
 
+def reads_cant_enter_line(text: str) -> bool:
+    """Whether one printed static line is a "<type> cards in <zones> can't
+    enter the battlefield" rule `_cant_enter_replacements` enforces in full
+    (CR 614.17d) - its type word and every zone word read - which is
+    `support.py`'s credit for it."""
+    match = _CANT_ENTER_RE.match(strip_reminder_text(text)[0].strip())
+    if match is None:
+        return False
+    word = match.group("filter").lower()
+    if word != "permanent" and _CARD_TYPE_WORDS.get(word) is None:
+        return False
+    return _read_zone_list(match.group("zones")) is not None
+
+
 # -- "if <player> would draw a card[ except ...], [instead ]that player skips
 #    that draw[ and you draw a card]" (Notion Thief; Plagiarize's created form) --
 
@@ -5904,6 +5918,60 @@ def _self_enters_modifiers(
         performable.append(compleated)
 
     return performable
+
+
+def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -> bool:
+    """Whether `_self_enters_modifiers` performs every one of `effects` - a
+    card's own "enters ..." lines - whenever the game state its own gates
+    read allows it, rather than only on the empty board `support.py` stages.
+
+    The same gates, asked of the text instead of a board: a condition must be
+    one `_enters_tapped_condition` reads (evaluated as the permanent enters,
+    CR 614.1d); "enters with" counters need a count - printed, CR 107.3m's X
+    of the spell that became the object, the foretold count, or an
+    `amount_expression` a reader claims; and CR 614.12a's "you may pay N
+    life. If you don't, it enters tapped." pair needs its payment read. That
+    is what lets a fastland, a Walking Ballista or an MDFC's back-face land
+    be credited without a synthetic cast or a board where the condition
+    happens to hold.
+    """
+    from .effects import amount_expression
+
+    if not effects:
+        return False
+    parsed = parse_replacement_effects(card)
+    for effect in effects:
+        if effect.kind is ReplacementKind.AS_ENTERS:
+            if not (effect.optional and _optional_enters_payment(effect, card.name) is not None):
+                return False
+            continue
+        if effect.condition is not None:
+            if _IF_YOU_DONT.match(effect.condition.strip()):
+                paired = any(
+                    other.kind is ReplacementKind.AS_ENTERS
+                    and other.optional
+                    and other.face == effect.face
+                    and _optional_enters_payment(other, card.name) is not None
+                    for other in parsed
+                )
+                if not paired or effect.kind is not ReplacementKind.ENTERS_TAPPED:
+                    return False
+                continue
+            if _enters_tapped_condition(effect) is None:
+                return False
+        if effect.kind in (ReplacementKind.ENTERS_TAPPED, ReplacementKind.ENTERS_PREPARED):
+            continue
+        if effect.kind is not ReplacementKind.ENTERS_WITH or effect.counter_kind is None:
+            return False
+        if effect.amount is not None:
+            continue
+        if effect.amount_expression is not None:
+            if amount_expression(effect.amount_expression) is None:
+                return False
+            continue
+        if not effect.variable_amount:
+            return False
+    return True
 
 
 def _sunburst_counter_amount(game: "Game", entering: CardState) -> int | None:

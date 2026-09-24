@@ -164,8 +164,14 @@ def test_a_permanent_with_an_unmodelled_static_is_not_reported_as_clean():
     the survey's `no_rules_text` bucket beside a vanilla creature - a count of
     cards nobody looked at, reading as coverage. It must now be judged, and
     the judgement must be the explicit unknown, never `HANDLED`.
+
+    The Cage's lines are read now (C00), so the example is chosen, never
+    named: any printing whose worst clause is still an unaudited static.
     """
-    printing = card("Grafdigger's Cage")
+    printing = gap_example(
+        "an unaudited static",
+        lambda p: bool(p.type_line) and classify_card(p)[0] == STATIC_UNAUDITED,
+    )
     assert has_rules_text(printing)
     category, detail = classify_card(printing)
     assert category == STATIC_UNAUDITED

@@ -540,6 +540,38 @@ _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE = re.compile(
 #: read it out of.
 _AFFINITY_RE = re.compile(r"\baffinity for (?P<what>[A-Za-z]+)", re.IGNORECASE)
 
+
+#: A printed self reduction `Game.cost_reduction_for` computes whatever the
+#: board holds - the counted shapes and the announced-target one above, but
+#: not `_COSTS_LESS_IF_CONDITION_RE`, whose condition `condition_holds` may
+#: not read. An ability word ahead of it ("Domain - ", CR 207.2c) is only a
+#: label.
+_SELF_COST_REDUCTION_SHAPES = (
+    _COSTS_LESS_PER_CARD_TYPE,
+    _COSTS_LESS_PER_CARD_DISCARDED_RE,
+    _COSTS_LESS_PER_BASIC_LAND_TYPE_RE,
+    _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE,
+    _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE,
+    _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE,
+)
+_ABILITY_WORD_PREFIX_RE = re.compile(r"^[A-Z][\w' -]*\s+[\u2014-]\s+")
+
+
+def reads_self_cost_reduction_line(text: str) -> bool:
+    """Whether one printed line is wholly a "This spell costs {N} less to
+    cast ..." reduction `Game.cost_reduction_for` computes (CR 601.2f) -
+    `support.py`'s credit for it on a permanent card, whose line is read as a
+    static (CR 604.2) rather than as part of a spell's resolution."""
+    line = _ABILITY_WORD_PREFIX_RE.sub("", text.strip(), count=1)
+    for shape in _SELF_COST_REDUCTION_SHAPES:
+        pattern = shape.pattern
+        if not pattern.lower().startswith("this spell"):
+            pattern = f"this spell {pattern}"
+        if re.fullmatch(rf"{pattern}\.?", line, re.IGNORECASE):
+            return True
+    return False
+
+
 #: What "[text]" in CR 702.41a's "Affinity for [text]" can name, mapped to the
 #: thing to count on the battlefield. Card types (CR 205.2a) on the left of the
 #: split, basic land types (CR 305.6) on the right; anything else is left

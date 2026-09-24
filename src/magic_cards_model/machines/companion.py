@@ -324,3 +324,13 @@ def companion_condition_satisfied(
     return CompanionConditionResult(
         satisfied=None, reason=f"{card.name}'s condition {condition!r} is not a recognised shape"
     )
+
+
+def reads_companion_line(card: Card, text: str) -> bool:
+    """Whether one printed line is this card's "Companion - [Condition]."
+    (CR 702.139a) and `companion_condition_satisfied` reads its condition
+    rather than failing closed - `support.py`'s credit for it. Asked of an
+    empty starting deck, which every readable shape answers."""
+    if _COMPANION_LINE_RE.match(text.strip()) is None:
+        return False
+    return companion_condition_satisfied(card, []).satisfied is not None
