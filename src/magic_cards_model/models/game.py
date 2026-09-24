@@ -253,6 +253,7 @@ from ..machines.targeting import (
     spell_profile_for_text,
     targeting_profile,
 )
+from ..machines.teamwork import teamwork_instead_target_text
 from ..machines.triggers import (
     AbilityOnStack,
     CastConditionNotice,
@@ -1043,6 +1044,12 @@ _CONDITION_SUSPENDED = re.compile(r"this (?:card|permanent) is suspended", re.IG
 #: kicked, choose any number instead." - CR 601.4's worked example for this
 #: exact card.
 _CONDITION_KICKED = re.compile(r"this spell was kicked", re.IGNORECASE)
+#: `machines/teamwork.py`'s own optional additional cost - "If this spell
+#: was cast using teamwork, ..." (Cruel Alliance and every other Teamwork
+#: spell in the pool), the identical shape `_CONDITION_KICKED` already
+#: reads for kicker, off `CastRecord.cast_using_teamwork` instead of
+#: `.kicked`.
+_CONDITION_CAST_USING_TEAMWORK = re.compile(r"this spell was cast using teamwork", re.IGNORECASE)
 #: CR 702.174k: "If a spell's controller declares the intention to pay a
 #: spell's gift cost, that spell's gift was promised." Crumb and Get It's and
 #: Dawn's Truce's own "If the gift was promised, ..." - read off the resolving
@@ -1201,6 +1208,7 @@ _CONDITION_PATTERNS: tuple[re.Pattern[str], ...] = (
     _CONDITION_OPPONENT_CAST_COLOR,
     _CONDITION_SUSPENDED,
     _CONDITION_KICKED,
+    _CONDITION_CAST_USING_TEAMWORK,
     _CONDITION_GIFT_PROMISED,
     _CONDITION_DESCENDED,
     _CONDITION_SCRIED_OR_SURVEILLED_THIS_TURN,
@@ -1968,6 +1976,12 @@ class CastRecord(EngineModel):
     `optional_additional_cost_paid` below is the field that clause's own
     reader actually asks, so a future card whose optional additional cost is
     something other than blight is not left unreadable."""
+    cast_using_teamwork: bool = False
+    """Whether this spell's Teamwork cost was paid (`machines/teamwork.py`),
+    copied from `Casting.teamwork_paid`. Read by `_CONDITION_CAST_USING_
+    TEAMWORK` (`Game.condition_holds`) and by `machines/triggers.
+    intervening_if_holds`'s own "if this spell was cast using teamwork"
+    branch, the same two doors `kicked` is read through above."""
     phyrexian_life_symbols_paid: int = 0
     """How many Phyrexian mana symbols of this spell's total cost were paid
     with life rather than mana (CR 107.4f), read off the settled payment by
@@ -2002,7 +2016,9 @@ class CastRecord(EngineModel):
         than one such cost to begin with, and CR 607's "linked ability"
         shape assumes exactly one antecedent per card.
         """
-        return self.kicked > 0 or self.offspring_paid or self.blight_paid
+        return (
+            self.kicked > 0 or self.offspring_paid or self.blight_paid or self.cast_using_teamwork
+        )
 
     gift_promised: bool = False
     """Whether this spell's gift was promised (CR 702.174k), copied from
@@ -3121,6 +3137,19 @@ class Game(EngineModel):
     already reads it - `Player.gain_life` keeps only one recorder, not two,
     per `CLAUDE.md`'s "keep one mechanism" rule."""
 
+    became_tapped_count_this_turn: dict[UUID, int] = Field(default_factory=dict)
+    """How many times each permanent (by id) has become tapped (CR 701.26a)
+    this turn, for Captain America, Living Legend's own "Whenever a creature
+    you control becomes tapped during your turn, if it's the first time that
+    creature has become tapped this turn, untap it." - `machines/triggers.
+    intervening_if_holds`'s own "it's the first time `<subject>` has become
+    tapped this turn" clause reads `== 1` off this. Incremented wherever a
+    `BECOMES_TAPPED` `GameEvent` is emitted (`Game.note_became_tapped`), so
+    it always agrees with what the trigger itself watches - not a second,
+    independently-kept count that could drift from the event stream. Cleared
+    when a new turn begins, the same reset `attacked_this_turn` already
+    gets."""
+
     attacked_this_turn: SortedSet[UUID] = Field(default_factory=set)
     """Which creatures (by id) have attacked this turn (CR 508.1), for
     Hexhaven Dueling Arena's own "target creature that attacked this turn" -
@@ -3482,7 +3511,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 73
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 74
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4389,6 +4418,17 @@ class Game(EngineModel):
     first bullet. A version-72 pool would decode its Treasure mana as plain
     mana, and Smaug, Wicked Worm's trigger on a spell already cast with it
     would not resolve - the second.
+
+    Bumped 73 -> 74 (C02-T2, teamwork): `CastRecord` gained `cast_using_
+    teamwork` (`machines/teamwork.py`'s own optional additional cost) and
+    `Game` gained `became_tapped_count_this_turn` (Captain America, Living
+    Legend's own "if it's the first time that creature has become tapped
+    this turn" intervening if) - the first bullet. A version-73 record would
+    decode a Teamwork spell's cast as never having used teamwork, so every
+    "if this spell was cast using teamwork" rider in the pool would read
+    false even for a spell that paid it, and a version-73 board has no
+    per-turn tap count for Captain America's trigger to read at all - the
+    second.
     """
 
     @model_validator(mode="before")
@@ -5911,6 +5951,7 @@ class Game(EngineModel):
         replicated: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
+        cast_using_teamwork: bool = False,
         phyrexian_life_symbols_paid: int = 0,
         gift_promised: bool = False,
         gift_chosen_player: str | None = None,
@@ -5973,6 +6014,7 @@ class Game(EngineModel):
             replicated=replicated,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
+            cast_using_teamwork=cast_using_teamwork,
             phyrexian_life_symbols_paid=phyrexian_life_symbols_paid,
             gift_promised=gift_promised,
             gift_chosen_player=gift_chosen_player,
@@ -8940,6 +8982,19 @@ class Game(EngineModel):
         being sacrificed and a spell being countered (CR 603.10e), whose
         subjects have also moved by the time the trigger is worked out.
         """
+        if event.event is TriggerEvent.BECOMES_TAPPED and event.subject_id is not None:
+            # `became_tapped_count_this_turn`'s one write site (CR 701.26a) -
+            # every `BECOMES_TAPPED` this engine ever emits passes through
+            # here, from combat's attack-declaration tap, a cost's own
+            # `ComponentKind.TAP` payment, or any future emitter, so Captain
+            # America, Living Legend's "first time ... this turn" (`machines/
+            # triggers.intervening_if_holds`) is answered off one count that
+            # can never drift from what the trigger itself is watching,
+            # rather than a second tally each tap site would have to
+            # remember to keep in step.
+            self.became_tapped_count_this_turn[event.subject_id] = (
+                self.became_tapped_count_this_turn.get(event.subject_id, 0) + 1
+            )
         if (
             event.event
             in (
@@ -14123,6 +14178,12 @@ class Game(EngineModel):
             # they were chosen under (CR 608.2b).
             kicked = record is not None and record.kicked > 0
             return profile_for_text(kicked_alternative[1 if kicked else 0])
+        teamwork_alternative = teamwork_instead_target_text(spell.oracle_text or "")
+        if teamwork_alternative is not None:
+            # The identical CR 601.2c/608.2b recheck for Teamwork's own
+            # additional cost (`machines/teamwork.py`).
+            teamwork = record is not None and record.cast_using_teamwork
+            return profile_for_text(teamwork_alternative[1 if teamwork else 0])
         if spell.fused and spell.card.card_faces and len(spell.card.card_faces) == 2:
             # CR 702.102b/709.4b: the same combined-profile shape `Casting.
             # targeting` builds at announcement, rebuilt here for CR 608.2b's
@@ -19750,6 +19811,17 @@ class Game(EngineModel):
             record = self.cast_record_of(source)
             return record is not None and record.kicked > 0
 
+        if _CONDITION_CAST_USING_TEAMWORK.fullmatch(text):
+            # Same shape as `_CONDITION_KICKED` just above, off `CastRecord.
+            # cast_using_teamwork` instead of `.kicked` - a mid-announcement
+            # modal choice reaches `Casting._alternative_mode_count`'s own
+            # `self.teamwork_paid` override instead of this branch, the same
+            # way kicker's own in-progress read never reaches here either.
+            if source is None:
+                return None
+            record = self.cast_record_of(source)
+            return record is not None and record.cast_using_teamwork
+
         if _CONDITION_GIFT_PROMISED.fullmatch(text):
             if source is None:
                 return None
@@ -21974,6 +22046,7 @@ class Game(EngineModel):
             self.previous_turn_active_player = previous_active_player
             self.permanents_left_battlefield_this_turn = {}
             self.attacked_this_turn = set()
+            self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
             self.ability_resolutions_this_turn = {}

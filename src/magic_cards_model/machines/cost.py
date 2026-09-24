@@ -2535,6 +2535,14 @@ class CostComponent(EngineModel):
     requirement: CardRequirement | None = None
     """What the chosen cards have to be, when the cost says (CR 118.3)."""
 
+    minimum_total_power: int | None = None
+    """`ComponentKind.TAP` only: the combined power `cards` must reach or
+    beat (CR 208.1) - Teamwork N's own "tap any number of creatures you
+    control with total power N or more" (`machines/teamwork.py`). `None` for
+    every ordinary tap cost, which asks nothing about power at all - convoke
+    and crew tap a fixed count of objects, never a power total, so this is
+    read only when it is set."""
+
     pay_mana_cost_of_chosen: bool = False
     """`ComponentKind.EXILE` only: Back from the Brink's own "... and pay its
     mana cost" shape (CR 118.9's "rather than pay [an alternative cost]" is
@@ -2903,13 +2911,31 @@ class CostComponent(EngineModel):
                 return f"{card.name} is not on the battlefield, so it cannot be exerted"
         return self._why_not_controlled()
 
-    def _why_not_tap(self, _game: Any) -> str | None:
+    def _why_not_tap(self, game: Any) -> str | None:
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
                 return f"{card.name} is not on the battlefield, so it cannot be tapped"
             if card.tapped:
                 return f"{card.name} is already tapped, so it cannot be tapped to pay a cost"
-        return self._why_not_controlled()
+        controlled = self._why_not_controlled()
+        if controlled is not None:
+            return controlled
+        if self.minimum_total_power is not None:
+            total = 0
+            for card in self.cards:
+                power = None
+                if game is not None:
+                    try:
+                        power = game.characteristics_of(card).power
+                    except KeyError:
+                        power = None
+                total += (power if power is not None else card.power) or 0
+            if total < self.minimum_total_power:
+                return (
+                    f"total power {self.minimum_total_power} or more is needed, "
+                    f"{total} offered (CR 208.1)"
+                )
+        return None
 
     def _why_not_sacrifice(self, _game: Any) -> str | None:
         for card in self.cards:
@@ -2973,6 +2999,12 @@ class CostComponent(EngineModel):
                             subject_controller=card.controller,
                             subject_card=card.card,
                             player=card.controller,
+                            # Agent Maria Hill's own "becomes tapped to pay
+                            # a teamwork cost" (`machines/triggers.GameEvent.
+                            # tapped_for_teamwork`) - `minimum_total_power`
+                            # is set only by `machines/teamwork.py`'s own
+                            # component, never by an ordinary tap cost.
+                            tapped_for_teamwork=self.minimum_total_power is not None,
                         )
                     )
         elif self.kind is ComponentKind.SACRIFICE:

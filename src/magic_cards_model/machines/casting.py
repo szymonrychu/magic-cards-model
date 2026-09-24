@@ -89,6 +89,7 @@ from .targeting import (
     spell_profile_for_text,
     targeting_profile,
 )
+from .teamwork import teamwork_ability, teamwork_instead_target_text, teamwork_payment_refusal
 from .triggers import ExtraTriggerEvent, GameEvent
 from .turn import Step
 
@@ -1951,7 +1952,7 @@ _COST_INCREASE_PER_TARGET_RE = re.compile(
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
-    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift"}
+    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift", "teamwork"}
 )
 
 
@@ -3074,6 +3075,13 @@ class Casting(EngineModel):
     """Whether this spell's blight cost was paid (CR 701.68a), set by
     `pay_blight` - read by whatever linked ability the card's own printed
     text carries ("If this spell's additional cost was paid, ...")."""
+    teamwork_paid: bool = False
+    """Whether this spell's Teamwork cost was paid, set by `pay_teamwork` -
+    `machines/teamwork.py`'s own additional cost, CR 601.2b's optional kind.
+    A flag rather than a count: every printing in the pool reads "If this
+    spell was cast using teamwork", never a per-payment variant the way
+    kicker's own "if it was kicked with its [quality] kicker" (CR 702.33f,
+    not in this pool either) would need a count for."""
     paying_life_for_additional_cost: frozenset[int] = Field(default_factory=frozenset)
     """Which of CR 601.2b's "[cost] or pay [mana]" additional-cost sentences
     (`_OR_PAY_TAIL`, indexed the same way `additional_cost_phrases` orders
@@ -3633,6 +3641,14 @@ class Casting(EngineModel):
                 return self._with_bestowed_target(
                     profile_for_text(kicked_alternative[1 if self.kicked else 0])
                 )
+            teamwork_alternative = teamwork_instead_target_text(self.spell.oracle_text or "")
+            if teamwork_alternative is not None:
+                # The identical CR 601.2c shape, for Teamwork's own
+                # additional cost (Too Evil to Stay Dead's own "If this
+                # spell was cast using teamwork, instead choose ...").
+                return self._with_bestowed_target(
+                    profile_for_text(teamwork_alternative[1 if self.teamwork_paid else 0])
+                )
             return self._with_bestowed_target(targeting_profile(self.spell.card))
         return self._with_bestowed_target(
             profile_for_modes(self.spell.card, self.chosen_mode_objects, self.x_value)
@@ -3745,6 +3761,12 @@ class Casting(EngineModel):
         condition = (modal.alternative_condition or "").strip().rstrip(".").strip().lower()
         if condition == "this spell was kicked":
             override = self.kicked > 0
+        elif condition == "this spell was cast using teamwork":
+            # Same shape as kicker's own override just above: `self.
+            # teamwork_paid` is this cast's still-in-progress flag, live
+            # while modes are being chosen (CR 601.2b), not the finalized
+            # `CastRecord` `Game.condition_holds` would otherwise read.
+            override = self.teamwork_paid
         return self.game.modal_alternative_applies(
             modal,
             self.caster,
@@ -4632,6 +4654,44 @@ class Casting(EngineModel):
                     remaining = remaining[component.required :]
             self.add_additional_cost(cost)
             self.kicked += 1
+        return self.step
+
+    def pay_teamwork(self, creatures: Sequence[CardState]) -> CastingStep:
+        """Pay this spell's Teamwork cost as an optional additional cost
+        (CR 601.2b, CR 118.8a/b): tap any number of untapped creatures the
+        caster controls with total power N or more, where N is the printed
+        `Teamwork N` (see `machines/teamwork.py`'s own module docstring for
+        why no single CR 702 number governs the keyword itself).
+
+        `creatures` is the whole offer, chosen once - unlike multikicker or
+        replicate there is no repeat count, because the cost is not "pay
+        this again"; it is "however many creatures reach the threshold",
+        settled by which creatures are named. `CastRecord.cast_using_
+        teamwork` is what the card's own "if this spell was cast using
+        teamwork" rider (`machines/triggers.intervening_if_holds`) and the
+        "choose both instead"/"choose N instead" modal alternative
+        (`Game.modal_alternative_applies`) both read afterwards.
+        """
+        ability = teamwork_ability(self.spell.card)
+        if ability is None:
+            raise ValueError(f"{self.spell.name} has no teamwork ability")
+        if self.teamwork_paid:
+            raise ValueError(f"{self.spell.name}'s teamwork cost was already paid")
+        threshold = ability.count or 0
+        chosen = list(creatures)
+        refusal = teamwork_payment_refusal(self.game, self.caster, threshold, chosen)
+        if refusal is not None:
+            raise ValueError(f"{self.spell.name}'s teamwork cost cannot be paid: {refusal}")
+        component = CostComponent(
+            kind=ComponentKind.TAP,
+            cards=chosen,
+            required=len(chosen),
+            minimum_total_power=threshold,
+            payer=self.caster,
+            description=f"tap for teamwork (Teamwork {threshold})",
+        )
+        self.additional_costs.append(TotalCost(components=[component]).assign_payer(self.caster))
+        self.teamwork_paid = True
         return self.step
 
     def pay_replicate(
@@ -5822,6 +5882,7 @@ class Casting(EngineModel):
                 replicated=self.replicated,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
+                cast_using_teamwork=self.teamwork_paid,
                 # CR 702.150a (compleated): read off the settled payment,
                 # only at CR 601.2h like `mana_spent` just above it - the
                 # payment is the one place the actual choice of resource per
