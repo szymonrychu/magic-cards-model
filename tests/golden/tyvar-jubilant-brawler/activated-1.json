@@ -55,7 +55,7 @@
         "source": "Tyvar, Jubilant Brawler"
       }
     ],
-    "fields_changed": ["continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn"],
+    "fields_changed": ["continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

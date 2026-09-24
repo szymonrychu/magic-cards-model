@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Celestial Colonnade@alice#1": {
+        "granted": [
+          [],
+          ["Flying", "Vigilance"]
+        ],
         "power": [null, 4],
         "toughness": [null, 4]
       }

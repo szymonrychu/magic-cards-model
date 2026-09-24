@@ -1,0 +1,174 @@
+{
+  "ability": "Trick Arrows — Whenever Hawkeye becomes tapped, you may pay {1} up to three times. When you do, choose up to that many — • Net — Target creature can't block this turn. • Explosive — Hawkeye deals 2 damage to target player. • Boomerang — Discard a card, then draw a card.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Hawkeye, Master Marksman@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Hawkeye, Master Marksman"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Hawkeye, Master Marksman",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose another mode",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_a_mode",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose a mode",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose another mode",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_a_mode",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose a mode",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose another mode",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_a_mode",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose a mode",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": ["?", "?", "?"],
+        "kind": "order_triggers",
+        "player": "alice",
+        "players": [],
+        "prompt": "order your triggered abilities on the stack, bottom of the stack first: 1. Hawkeye, Master Marksman, 2. Hawkeye, Master Marksman, 3. Hawkeye, Master Marksman",
+        "source": null
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Hawkeye, Master Marksman",
+        "source": "Hawkeye, Master Marksman"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Hawkeye, Master Marksman",
+        "source": "Hawkeye, Master Marksman"
+      }
+    ],
+    "fields_changed": ["delayed_triggers"],
+    "notices": {},
+    "objects": {
+      "Swamp@alice#1": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#2": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#3": {
+        "tapped": [false, true]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Hawkeye, Master Marksman@alice#1: Target creature can't block this turn", "ability of Hawkeye, Master Marksman@alice#1: Hawkeye deals 2 damage to target player", "ability of Hawkeye, Master Marksman@alice#1: Discard a card, then draw a card"]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "becomes_tapped",
+  "number": 0,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

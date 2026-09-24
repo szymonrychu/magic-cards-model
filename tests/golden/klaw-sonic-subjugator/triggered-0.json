@@ -46,7 +46,7 @@
         "source": "Klaw, Sonic Subjugator"
       }
     ],
-    "fields_changed": ["cards_discarded_this_turn", "graveyard_arrivals_this_turn", "reveals"],
+    "fields_changed": ["cards_discarded_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "reveals"],
     "notices": {},
     "objects": {
       "Opt@alice#1": {

@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Moon Girl and Devil Dinosaur@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ],
         "power": [2, 6],
         "toughness": [2, 6]
       }

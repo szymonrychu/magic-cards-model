@@ -46,6 +46,10 @@
             "+1/+1": 1
           }
         ],
+        "granted": [
+          [],
+          ["Haste"]
+        ],
         "power": [null, 1],
         "toughness": [null, 1]
       }

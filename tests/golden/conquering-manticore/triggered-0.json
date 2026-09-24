@@ -40,7 +40,11 @@
     "notices": {},
     "objects": {
       "Fleecemane Lion@bob#1": {
-        "controller": ["bob", "alice"]
+        "controller": ["bob", "alice"],
+        "granted": [
+          [],
+          ["Haste"]
+        ]
       }
     },
     "players": {},

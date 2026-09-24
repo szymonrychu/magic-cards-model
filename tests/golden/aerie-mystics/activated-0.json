@@ -38,7 +38,26 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Aerie Mystics@alice#1": {
+        "granted": [
+          [],
+          ["Shroud"]
+        ]
+      },
+      "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Shroud"]
+        ]
+      },
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Shroud"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

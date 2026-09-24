@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Venerated Rotpriest@alice#1",
-    "targets": [],
+    "targets": ["player:bob"],
     "x": 0
   },
   "board": {
@@ -39,7 +39,16 @@
     "fields_changed": [],
     "notices": {},
     "objects": {},
-    "players": {},
+    "players": {
+      "bob": {
+        "counters": [
+          {},
+          {
+            "poison": 1
+          }
+        ]
+      }
+    },
     "stack": ["Giant Growth@alice#1"]
   },
   "family": "triggered",

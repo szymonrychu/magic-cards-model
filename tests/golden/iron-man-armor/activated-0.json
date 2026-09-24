@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Iron Man Armor@alice#1": {
+        "granted": [
+          [],
+          ["Flying"]
+        ],
         "power": [null, 5],
         "toughness": [null, 5]
       }

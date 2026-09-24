@@ -40,12 +40,24 @@
     "notices": {},
     "objects": {
       "Cavalier of Flame@alice#1": {
+        "granted": [
+          [],
+          ["Haste"]
+        ],
         "power": [6, 7]
       },
       "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Haste"]
+        ],
         "power": [2, 3]
       },
       "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Haste"]
+        ],
         "power": [1, 2]
       }
     },

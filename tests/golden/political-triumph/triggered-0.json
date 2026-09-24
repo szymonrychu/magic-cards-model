@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Political Triumph"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aang, at the Crossroads // Aang, Destined Savior"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "A.I.M. Scientists"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -38,7 +38,7 @@
     "decisions": [
       {
         "amount": 1,
-        "cards": ["Opt@alice#3"],
+        "cards": ["Grizzly Bears@alice#3"],
         "kind": "scry",
         "player": "alice",
         "players": [],
@@ -46,7 +46,7 @@
         "source": "Political Triumph"
       }
     ],
-    "fields_changed": ["reveals", "turn_facts"],
+    "fields_changed": ["counters_put_this_turn", "reveals", "turn_facts"],
     "notices": {},
     "objects": {
       "Political Triumph@alice#1": {
@@ -70,7 +70,7 @@
     "index": 3,
     "params": {
       "owner": "alice",
-      "probe": "Aang, at the Crossroads // Aang, Destined Savior",
+      "probe": "A.I.M. Scientists",
       "tapped": false
     },
     "variant": "quiet"

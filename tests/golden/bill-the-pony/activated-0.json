@@ -40,7 +40,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Assigns combat damage equal to its toughness rather than its power."]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

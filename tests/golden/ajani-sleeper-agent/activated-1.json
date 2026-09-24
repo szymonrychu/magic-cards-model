@@ -46,6 +46,10 @@
             "+1/+1": 3
           }
         ],
+        "granted": [
+          [],
+          ["Vigilance"]
+        ],
         "power": [1, 4],
         "toughness": [1, 4]
       }

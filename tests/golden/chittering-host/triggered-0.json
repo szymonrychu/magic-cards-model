@@ -40,9 +40,17 @@
     "notices": {},
     "objects": {
       "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Menace"]
+        ],
         "power": [2, 3]
       },
       "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Menace"]
+        ],
         "power": [1, 2]
       }
     },

@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Plains@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

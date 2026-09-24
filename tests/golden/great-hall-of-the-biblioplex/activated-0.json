@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Great Hall of the Biblioplex@alice#1": {
+        "granted": [
+          [],
+          ["Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn."]
+        ],
         "power": [null, 2],
         "toughness": [null, 4]
       }

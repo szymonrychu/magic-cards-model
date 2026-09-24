@@ -46,7 +46,7 @@
         "source": "Red Hulk"
       }
     ],
-    "fields_changed": ["delayed_triggers"],
+    "fields_changed": ["counters_put_this_turn", "delayed_triggers"],
     "notices": {},
     "objects": {
       "Red Hulk@alice#1": {

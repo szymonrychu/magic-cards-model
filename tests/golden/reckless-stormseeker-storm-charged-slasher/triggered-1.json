@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Haste", "Trample"]
+        ],
         "power": [1, 3]
       }
     },

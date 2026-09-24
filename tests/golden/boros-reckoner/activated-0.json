@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Boros Reckoner@alice#1": {
+        "granted": [
+          [],
+          ["First strike"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

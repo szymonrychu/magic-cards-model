@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Reptil, Dinomorpher@alice#1": {
+        "granted": [
+          [],
+          ["Reach", "Vigilance"]
+        ],
         "power": [1, 3],
         "toughness": [2, 5]
       }

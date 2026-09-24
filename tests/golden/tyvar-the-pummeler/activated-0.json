@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Tyvar, the Pummeler@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ],
         "tapped": [false, true]
       }
     },

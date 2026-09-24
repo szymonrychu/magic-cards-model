@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Hall of Storm Giants@alice#1": {
+        "granted": [
+          [],
+          ["Ward {3}"]
+        ],
         "power": [null, 7],
         "toughness": [null, 7]
       }

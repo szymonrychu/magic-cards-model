@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Vanguard of the Rose@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ],
         "tapped": [false, true]
       }
     },

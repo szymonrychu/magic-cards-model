@@ -90,6 +90,7 @@ from magic_cards_model.machines.abilities import (
     has_mana_ability,
     keyword_abilities,
     parse_abilities,
+    self_reference_names,
 )
 from magic_cards_model.machines.casting import MarkedExile
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
@@ -109,6 +110,7 @@ from magic_cards_model.machines.targeting import (
     TargetRequirement,
     profile_for_text,
 )
+from magic_cards_model.machines.teamwork import teamwork_ability
 from magic_cards_model.machines.triggers import (
     AbilityOnStack,
     _required_cast_origin_zone,
@@ -793,14 +795,14 @@ def _cast(
         raise _Unavailable(f"casting {name}: {error}") from error
 
 
-def _opponent_casts(scenario: PlayedScenario, name: str) -> CardState:
+def _opponent_casts(scenario: PlayedScenario, name: str, *, prefer: Any = None) -> CardState:
     """The non-active player casts an instant (CR 117.1a) once the active
     player has passed priority to them (CR 117.3d)."""
     active = scenario.game.active_player.username
     other = BOB if active == ALICE else ALICE
     if scenario.priority_holder == active:
         scenario.pass_priority(active)
-    return _cast(scenario, name, other)
+    return _cast(scenario, name, other, prefer=prefer)
 
 
 def _objects(scenario: PlayedScenario) -> list[Any]:
@@ -1071,6 +1073,10 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     if level is not None:
         source.class_level = level
     _attach(scenario, source)
+    if getattr(ability, "ability_word", None) == "∞":
+        # An Infinity ability functions only while its source is harnessed
+        # (The Mind Stone, The Soul Stone) - staged harnessed.
+        scenario.game.harness(source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
     _equip_for_condition(scenario, source, ability)
@@ -1742,6 +1748,14 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     else:
         casters = [ALICE]
     during_your_turn = "during your turn" in lowered
+    # "a spell that targets <this>" (Speedball, New Warrior): the probe names
+    # the source as its target when it can.
+    target_phrase = re.search(r"\bthat targets (.+)$", lowered)
+    targets_self = target_phrase is not None and (
+        target_phrase.group(1).startswith("this ")
+        or target_phrase.group(1)
+        in {name.lower() for name in self_reference_names(case.printing.name)}
+    )
     # "if mana from a Treasure was spent to cast it" (CR 106.3): the caster
     # floats a Treasure's mana first, which the pool spends before any land.
     treasure_paid = "mana from a treasure" in (ability.intervening_if or "").lower()
@@ -1768,10 +1782,11 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 for _ in range(2 if caster == ALICE else 1):
                     if treasure_paid:
                         _treasure_mana_for(scenario, probe, caster)
+                    prefer = source_id if targets_self else None
                     if caster == scenario.game.active_player.username:
-                        _cast(scenario, probe, caster)
+                        _cast(scenario, probe, caster, prefer=prefer)
                     else:
-                        _opponent_casts(scenario, probe)
+                        _opponent_casts(scenario, probe, prefer=prefer)
                     if _drive(scenario, case, source_id) is not None:
                         break
                 return scenario, source_id
@@ -1928,6 +1943,10 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
                 for card in _format_pool()
                 if Type.CREATURE in card.types
                 and subtype.lower() in {word.lower() for word in card.subtypes}
+                # A multi-faced printing carries its text per face, so an
+                # empty top-level text would rank it "simplest" - and it
+                # enters under its face's name, not the card's.
+                and not card.card_faces
             ),
             key=lambda card: (len(card.oracle_text or ""), card.name),
         )
@@ -2349,6 +2368,56 @@ def _playing_exiled(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     yield play_exiled
 
 
+def _teamwork_tapping(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "becomes tapped to pay a teamwork cost" (Agent Maria Hill): a Teamwork
+    spell from the pool is cast with the source among the creatures tapped
+    for its teamwork cost (`Casting.pay_teamwork`), every other untapped
+    creature alice controls joining it to reach the printed power."""
+    spells = sorted(
+        (
+            card
+            for card in _format_pool()
+            if not card.card_faces and teamwork_ability(card) is not None
+        ),
+        key=lambda card: (len(card.oracle_text or ""), card.name),
+    )
+    for spell in spells[:3]:
+
+        def cast_with_teamwork(spell: str = spell.name) -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, hand=(spell,))
+            game = scenario.game
+            source = game.find_by_id(source_id)
+            crew = [source] + [
+                p
+                for p in game.permanents_controlled_by(ALICE)
+                if p is not source and Type.CREATURE in p.types and not p.tapped
+            ]
+            card = _last(scenario, spell, Zone.HAND, ALICE)
+            action = _action_for(scenario, ALICE, ActionKind.CAST, card.id, alternative_cost=None)
+            targets = (
+                _pick(scenario, action.target_slots, text=card.card.oracle_text or "")
+                if action is not None
+                else []
+            )
+            try:
+                casting = scenario.cast(spell, ALICE)
+                casting.pay_teamwork(crew)
+                if targets:
+                    casting.choose_targets(targets)
+                payment = casting.begin_paying()
+                payment.auto_tap(
+                    [p for p in game.permanents_controlled_by(ALICE) if p.card.is_land]
+                )
+                payment.pay()
+                scenario.put_on_stack(casting)
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(f"teamwork cast: {error}") from error
+            _drive(scenario, case, source_id)
+            return scenario, source_id
+
+        yield cast_with_teamwork
+
+
 def _attempts(case: Case) -> Iterator[Attempt]:
     ability = _trigger_ability(case.printing, case.text)
     kinds = case.kind.split("+")
@@ -2358,6 +2427,8 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _other_entering(case, ability)
         elif kind in _REMOVALS:
             yield from _leaving(case, ability, kind)
+        elif kind == "becomes_tapped" and "teamwork" in ability.condition.lower():
+            yield from _teamwork_tapping(case, ability)
         elif kind in (
             "attacks",
             "blocks",
@@ -2853,7 +2924,9 @@ def _cost_choices(
         keyword = _COST_KEYWORDS.get(component.kind)
         if keyword is None or component.cards or component.required <= 0:
             continue
-        if component.kind in (ComponentKind.SACRIFICE, ComponentKind.TAP):
+        if component.kind in (ComponentKind.SACRIFICE, ComponentKind.TAP) or (
+            component.zone is Zone.BATTLEFIELD
+        ):
             pool = [
                 p
                 for p in game.permanents_controlled_by(ALICE)
@@ -2990,6 +3063,12 @@ def _same_name_pair(requirement: Any) -> str | None:
     return None
 
 
+def _subtype_stems(subtypes: Any) -> set[str]:
+    """Each printed subtype lowercased, as printed and without a plural "s"
+    ("Sacrifice five Treasures")."""
+    return {s.lower() for s in subtypes} | {s.lower().removesuffix("s") for s in subtypes}
+
+
 def _cost_card(component: Any) -> Material | None:
     requirement = component.requirement
     if component.kind in (ComponentKind.DISCARD, ComponentKind.REVEAL):
@@ -3000,7 +3079,7 @@ def _cost_card(component: Any) -> Material | None:
         zone = Zone.BATTLEFIELD
     if requirement is not None and zone is Zone.BATTLEFIELD:
         for token in PREDEFINED:
-            if token.lower() in {s.lower() for s in requirement.subtypes}:
+            if token.lower() in _subtype_stems(requirement.subtypes):
                 return Material(token, ALICE, Zone.BATTLEFIELD)
     tried = 0
     for card in _format_pool():
@@ -3144,7 +3223,12 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
     tried: list[str] = []
     outcome: Outcome | None = None
     profile = profile_for_text(ability.effect)
-    in_combat = any(r.combat_states for r in profile.requirements)
+    # "target creature ... that's attacking alone" (CR 506.5) needs combat
+    # too: the one stock attacker is attacking alone.
+    in_combat = any(
+        r.combat_states or getattr(r, "must_be_attacking_alone", False)
+        for r in profile.requirements
+    )
     for variant in VARIANTS:
         if only is not None and variant != only["variant"]:
             continue
@@ -3356,7 +3440,7 @@ def _off_zone_cost_material(case: Case) -> tuple[Material, ...]:
         if keyword != "sacrificing" or requirement is None:
             continue
         for token in PREDEFINED:
-            if token.lower() in {s.lower() for s in requirement.subtypes}:
+            if token.lower() in _subtype_stems(requirement.subtypes):
                 material.append(Material(token, ALICE, Zone.BATTLEFIELD))
     return tuple(material)
 

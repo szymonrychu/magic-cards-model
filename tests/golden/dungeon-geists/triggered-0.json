@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Fleecemane Lion@bob#1": {
+        "granted": [
+          [],
+          ["Doesn't untap during its controller's untap step."]
+        ],
         "tapped": [false, true]
       }
     },

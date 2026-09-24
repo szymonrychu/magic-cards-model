@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "The Vision@alice#1": {
+        "granted": [
+          [],
+          ["Double strike"]
+        ]
+      }
+    },
     "players": {},
     "stack": ["Opt@alice#1"]
   },

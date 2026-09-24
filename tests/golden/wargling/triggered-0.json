@@ -39,7 +39,29 @@
     "fields_changed": ["continuous_effects"],
     "notices": {},
     "objects": {
+      "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      },
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      },
+      "Serra Angel@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      },
       "Wargling@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ],
         "power": [2, 3]
       }
     },

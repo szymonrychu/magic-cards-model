@@ -38,7 +38,26 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      },
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      },
+      "Summon: Fat Chocobo@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

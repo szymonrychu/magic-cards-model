@@ -2648,7 +2648,10 @@ class CostComponent(EngineModel):
             ComponentKind.TAP: self._why_not_tap,
             ComponentKind.SACRIFICE: self._why_not_sacrifice,
             ComponentKind.DISCARD: lambda _: self._why_not_in_zone(Zone.HAND),
-            ComponentKind.EXILE: lambda _: self._why_not_in_zone(self.zone),
+            ComponentKind.EXILE: lambda _: (
+                self._why_not_in_zone(self.zone)
+                or (self._why_not_controlled() if self.zone is Zone.BATTLEFIELD else None)
+            ),
             ComponentKind.PAY_LIFE: self._why_not_life,
             ComponentKind.REMOVE_COUNTERS: self._why_not_remove_counters,
             ComponentKind.PLACE_COUNTERS: self._why_not_place_counters,
@@ -4739,6 +4742,13 @@ _PHRASE_EXILE = re.compile(
     + r"(?: from (?:your|their) (?P<zone>hand|graveyard|library|battlefield))?$",
     re.IGNORECASE,
 )
+#: "Exile a creature you control" (The Soul Stone): CR 406.2's exile from the
+#: battlefield as a cost, of a permanent the payer controls (CR 118.3) - the
+#: exile twin of `_PHRASE_SACRIFICE`, "another" excluding the source.
+_PHRASE_EXILE_PERMANENT = re.compile(
+    rf"^exile (?:(?P<another>another)|{_COST_COUNT}) (?P<quality>[\w ,]+?) you control$",
+    re.IGNORECASE,
+)
 #: CR 701.20a's reveal as a cost: "Reveal X white cards from your hand"
 #: (Martyr of Sands, Martyr of Spores), "reveal a creature card from your
 #: hand" (Living Destiny). The count is a number word or CR 107.3a's X, and
@@ -5204,6 +5214,25 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         if exile.group("mana_value") is not None:
             requirement.mana_value = int(exile.group("mana_value"))
         component = exile_cost(payer=payer, required=read[0], description=text, zone=zone)
+        component.requirement = requirement
+        component.variable_count = read[1]
+        return component
+
+    exile_permanent = _PHRASE_EXILE_PERMANENT.match(text)
+    if exile_permanent is not None:
+        read = (
+            (1, False)
+            if exile_permanent.group("another")
+            else _cost_count(exile_permanent.group("count"))
+        )
+        requirement = _requirement(exile_permanent.group("quality"))
+        if read is None or requirement is None:
+            return None
+        if exile_permanent.group("another") is not None:
+            requirement.excludes_source = True
+        component = exile_cost(
+            payer=payer, required=read[0], description=text, zone=Zone.BATTLEFIELD
+        )
         component.requirement = requirement
         component.variable_count = read[1]
         return component

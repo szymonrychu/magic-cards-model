@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Hydro-Man, Fluid Felon@alice#1": {
+        "granted": [
+          [],
+          ["{T}: Add {U}."]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

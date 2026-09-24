@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "counters_put_this_turn"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Alien Invasion@alice#1": {

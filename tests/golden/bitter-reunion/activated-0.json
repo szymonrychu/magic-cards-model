@@ -38,7 +38,20 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Haste"]
+        ]
+      },
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Haste"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

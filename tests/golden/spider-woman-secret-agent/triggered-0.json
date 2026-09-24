@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Fleecemane Lion@bob#1": {
+        "granted": [
+          [],
+          ["Can't become untapped."]
+        ],
         "tapped": [false, true]
       }
     },

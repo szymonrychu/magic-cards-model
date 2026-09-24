@@ -33,6 +33,8 @@ your graveyard to the battlefield." - the same two keywords, a different
 cost and a differently-worded ∞ ability.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 
@@ -182,3 +184,41 @@ def test_off_pool_proof_the_soul_stone_harness_and_infinity():
     scenario.pass_until_resolved()
 
     assert elves.zone is Zone.BATTLEFIELD
+
+
+# ---------------------------------------------------------------------------
+# "Exile a creature you control" as an activation cost (C02 integration).
+# ---------------------------------------------------------------------------
+
+
+def _soul_stone_board():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["The Soul Stone", "Grizzly Bears", *["Swamp"] * 7])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario, scenario.creature("The Soul Stone", "alice")
+
+
+def test_the_soul_stone_harnesses_by_exiling_a_creature_you_control():
+    scenario, stone = _soul_stone_board()
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.activate(stone, *scenario.untapped_sources(*["Swamp"] * 7), index=1, exiling=[bears])
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.EXILE
+    assert scenario.game.is_harnessed(stone) is True
+
+
+def test_the_soul_stone_cannot_exile_a_creature_an_opponent_controls():
+    scenario, stone = _soul_stone_board()
+    giant = scenario.creature("Hill Giant", "bob")
+
+    with pytest.raises(ValueError, match="does not control"):
+        scenario.activate(
+            stone, *scenario.untapped_sources(*["Swamp"] * 7), index=1, exiling=[giant]
+        )
+    assert giant.zone is Zone.BATTLEFIELD

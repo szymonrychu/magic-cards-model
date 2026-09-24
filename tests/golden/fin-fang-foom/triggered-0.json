@@ -60,7 +60,7 @@
         "source": "Fin Fang Foom"
       }
     ],
-    "fields_changed": ["cast_records"],
+    "fields_changed": ["cast_records", "counters_put_this_turn"],
     "notices": {},
     "objects": {
       "Fin Fang Foom@alice#1": {

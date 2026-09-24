@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Immolation Shaman@alice#1": {
+        "granted": [
+          [],
+          ["Menace"]
+        ],
         "power": [1, 4],
         "toughness": [3, 6]
       }

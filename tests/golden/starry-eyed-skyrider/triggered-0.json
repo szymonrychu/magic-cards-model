@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Flying"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

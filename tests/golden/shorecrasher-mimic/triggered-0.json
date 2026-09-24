@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Shorecrasher Mimic@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ],
         "power": [2, 5],
         "toughness": [1, 3]
       }

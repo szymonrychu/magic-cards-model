@@ -41,6 +41,13 @@
     "objects": {
       "Forest@alice#6": {
         "zone": ["library", "hand"]
+      },
+      "Ms. Marvel, Kamala Khan@alice#1": {
+        "granted": [
+          [],
+          ["this permanent's base power is equal to the number of cards in your hand."]
+        ],
+        "power": [1, 6]
       }
     },
     "players": {},

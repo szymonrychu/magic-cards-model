@@ -38,7 +38,26 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Archangel Avacyn@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ]
+      },
+      "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ]
+      },
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Indestructible"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

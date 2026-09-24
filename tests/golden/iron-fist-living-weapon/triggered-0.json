@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Iron Fist, Living Weapon@alice#1": {
+        "granted": [
+          [],
+          ["{T}: this permanent deals damage equal to his power to any other target"]
+        ]
+      }
+    },
     "players": {},
     "stack": ["Lightning Bolt@alice#1"]
   },

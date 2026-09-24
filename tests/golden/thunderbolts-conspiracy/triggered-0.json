@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Thunderbolts Conspiracy", "Absorbing Man"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Thunderbolts Conspiracy", "A.I.M. Scientists"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -36,10 +36,10 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
-      "Absorbing Man@alice#1": {
+      "A.I.M. Scientists@alice#1": {
         "counters": [
           {},
           {
@@ -50,7 +50,7 @@
       }
     },
     "players": {},
-    "stack": []
+    "stack": ["ability of A.I.M. Scientists@alice#1: When this creature enters, it connives."]
   },
   "family": "triggered",
   "format": 1,
@@ -62,7 +62,7 @@
     "params": {
       "as_token": false,
       "owner": "alice",
-      "probe": "Absorbing Man",
+      "probe": "A.I.M. Scientists",
       "removal": "destroy"
     },
     "variant": "quiet"

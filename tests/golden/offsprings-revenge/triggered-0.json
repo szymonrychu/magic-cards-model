@@ -42,7 +42,7 @@
         "counters": {},
         "damage": 0,
         "face_up": true,
-        "granted": [],
+        "granted": ["Haste"],
         "monstrous": false,
         "power": 1,
         "tapped": false,

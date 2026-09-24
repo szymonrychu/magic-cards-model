@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Hardened Academic@alice#1": {
+        "granted": [
+          [],
+          ["Lifelink"]
+        ]
+      }
+    },
     "players": {},
     "stack": []
   },

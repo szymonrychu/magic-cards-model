@@ -40,6 +40,10 @@
     "notices": {},
     "objects": {
       "Icehide Golem@alice#1": {
+        "granted": [
+          [],
+          ["First strike"]
+        ],
         "power": [5, 8]
       }
     },
