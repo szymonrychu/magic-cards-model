@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917",
+  "oracle_id": "47654b36-b215-4333-aa70-d88d627447e3",
+  "multiverse_ids": [],
+  "resource_id": "E547DA348BE170E013A2F89BFA711ACBE3490CAB16DC83610985ECFC348477B4",
+  "mtgo_id": 152067,
+  "arena_id": 105831,
+  "tcgplayer_id": 700899,
+  "cardmarket_id": 892227,
+  "name": "Mob Lookout",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917",
+  "scryfall_uri": "https://scryfall.com/card/msc/821/mob-lookout?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:36:42Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.jpg?1783903002",
+    "normal": "https://cards.scryfall.io/normal/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.jpg?1783903002",
+    "large": "https://cards.scryfall.io/large/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.jpg?1783903002",
+    "png": "https://cards.scryfall.io/png/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.png?1783903002",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.jpg?1783903002",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.jpg?1783903002",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.webp?1783903002",
+    "grid": "https://cards.scryfall.io/grid/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.webp?1783903002",
+    "display": "https://cards.scryfall.io/display/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.webp?1783903002",
+    "art": "https://cards.scryfall.io/art/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.webp?1783903002",
+    "crop": "https://cards.scryfall.io/crop/front/3/a/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917.webp?1783903002"
+  },
+  "mana_cost": "{1}{U/B}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Human Rogue Villain",
+  "oracle_text": "When this creature enters, target creature you control connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on that creature.)",
+  "power": "0",
+  "toughness": "3",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Connive"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set": "msc",
+  "set_name": "Marvel Super Heroes Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/9d739461-c5ac-43a1-af41-3d5a585b5c8d",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3a9d6068-dd7b-4cbe-a9d6-5f716d8d1917/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A47654b36-b215-4333-aa70-d88d627447e3&unique=prints",
+  "collector_number": "821",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"Hurry up before the bug gets here!\"\n\u2014Hammerhead",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David Palumbo",
+  "artist_ids": [
+    "04ce1c75-e30c-4b7a-8cb0-b53e4ecc2f39"
+  ],
+  "illustration_id": "fbf13afb-e4db-4b65-8b5a-08bfc60d9401",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 15303,
+  "penny_rank": 3386,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.04",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMob%2BLookout",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMob%2BLookout",
+    "edhrec": "https://edhrec.com/route/?cc=Mob+Lookout"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F700899%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=892227&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152067?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

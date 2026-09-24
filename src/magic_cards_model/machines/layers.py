@@ -5404,7 +5404,9 @@ def _normalize_duration_first(sentence: str) -> str:
 #: except CR 207.2c's own "descend 4"/"descend 8", whose second word is a
 #: bare number rather than another capitalised word, so the second slot
 #: accepts one too.
-_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: (?:[A-Za-z][a-z']*|\d+))? — (?P<rest>.+)$")
+#: CR 207.2d's flavor words share the shape and can run longer - M.O.D.O.K.'s
+#: own four-word "Designed Only for Killing" - so up to five words are read.
+_ABILITY_WORD_RE = re.compile(r"^[A-Z][a-z']*(?: (?:[A-Za-z][a-z']*|\d+)){0,4} — (?P<rest>.+)$")
 
 
 def _strip_ability_word(sentence: str) -> str:
@@ -5891,7 +5893,9 @@ def _anthem_builder(
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
                 source_id=source.id,
-                source_ability=line,
+                # The printed line, flavor/ability word included (CR 207.2c/d),
+                # which is what `_still_exists` finds on the computed board.
+                source_ability=_source_line_for(source, line),
                 selector=selector,
                 modification=modify_power_toughness(power, toughness),
             )

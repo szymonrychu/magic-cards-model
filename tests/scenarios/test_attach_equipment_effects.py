@@ -209,3 +209,98 @@ def test_vow_to_erebor_offers_nothing_for_a_non_dwarf():
 
     assert bears.untapped
     assert sword.attached_to is None
+
+
+def test_swordsman_attaches_up_to_one_equipment_when_a_villain_enters():
+    """Swordsman, Sharp Scoundrel: "Whenever another Villain you control
+    enters, attach up to one target Equipment you control to target creature
+    you control." - the same attach reader, with CR 115.6's "up to one" on
+    the Equipment half instead of the creature half."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kang, Temporal Tyrant"],
+            battlefield=["Swordsman, Sharp Scoundrel", "Bonesplitter", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    splitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Swordsman, Sharp Scoundrel", [splitter, bears])
+
+    scenario.put_onto_battlefield("Kang, Temporal Tyrant", "alice")
+    scenario.pass_until_resolved()
+
+    assert splitter.attached_to == bears.id
+
+
+def test_swordsman_with_no_equipment_chosen_attaches_nothing():
+    """ "Up to one" (CR 115.6): zero Equipment is a legal choice, and the
+    creature target alone moves nothing."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Kang, Temporal Tyrant"],
+            battlefield=["Swordsman, Sharp Scoundrel", "Bonesplitter", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    splitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.choose_trigger_targets("Swordsman, Sharp Scoundrel", [bears])
+
+    scenario.put_onto_battlefield("Kang, Temporal Tyrant", "alice")
+    scenario.pass_until_resolved()
+
+    assert splitter.attached_to is None
+
+
+def test_swordsman_ignores_a_non_villain():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Llanowar Elves"],
+            battlefield=["Swordsman, Sharp Scoundrel", "Bonesplitter", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.put_onto_battlefield("Llanowar Elves", "alice")
+
+    assert scenario.pending_triggers == []
+    assert scenario.stack_names() == []
+
+
+def test_proof_raubahn_attaches_up_to_one_equipment_to_an_attacking_creature():
+    """Raubahn, Bull of Ala Mhigo (Modern, Pioneer, Standard; in no deck
+    under `magic-cards-model-api/decks/`): "Whenever Raubahn attacks, attach
+    up to one target Equipment you control to target attacking creature." -
+    a different trigger and a different creature phrase on the same reader."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Raubahn, Bull of Ala Mhigo", "Bonesplitter", "Grizzly Bears"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    splitter = scenario.find("Bonesplitter", Zone.BATTLEFIELD, "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    raubahn = scenario.creature("Raubahn, Bull of Ala Mhigo", "alice")
+    scenario.will_choose_targets(splitter, bears)
+
+    scenario.attack_with(raubahn, bears)
+    scenario.pass_until_resolved()
+
+    assert splitter.attached_to == bears.id

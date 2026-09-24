@@ -636,8 +636,12 @@ _SPEND_CAST_CLAUSE = re.compile(
 #: spells" with nothing narrowing it. `_spend_clause` already turns an empty
 #: quality into a `SpendClause` with every qualifier set empty - unrestricted
 #: within its purpose - so no other change is needed to read it correctly.
+#: The singular "activate an ability of a Villain source" (Villainous
+#: Hideout, Cargo Ship, Ixalli's Lorekeeper) is the same restriction worded
+#: for one ability at a time (CR 106.6).
 _SPEND_ACTIVATE_CLAUSE = re.compile(
-    r"^activate abilities(?: of (?P<quality>.+?)(?: sources)?)?$", re.IGNORECASE
+    r"^activate (?:abilities|an ability)(?: of (?P<quality>.+?)(?: sources?)?)?$",
+    re.IGNORECASE,
 )
 #: A rider joined onto the restriction sentence with ", and" - the
 #: can't-be-countered half of Cavern of Souls and Delighted Halfling.
@@ -897,7 +901,9 @@ def _spend_clauses(what: str, chosen_type: str | None) -> list[SpendClause] | No
     clauses: list[SpendClause] = []
     verb: str | None = None
     for alternative in alternatives:
-        phrase = alternative.strip()
+        # "cast a Villain spell or to activate ...": the second phrase repeats
+        # the infinitive's "to", which the first one's "only to" already said.
+        phrase = alternative.strip().removeprefix("to ")
         printed = _SPEND_VERB.match(phrase)
         if printed is not None:
             verb = printed.group(0).strip()

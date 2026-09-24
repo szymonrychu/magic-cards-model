@@ -1321,3 +1321,84 @@ def test_a_second_spell_phrase_shares_the_first_ones_cast():
     # The borrowed verb still has to make a readable phrase.
     unread = spend_restriction("Spend this mana only to cast a Dragon spell or an Omen.")
     assert unread is not None and not unread.understood
+
+
+# --------------------------------------------------------------------------
+# "to activate an ability of a <quality> source" - the singular wording, and
+# a second infinitive "to" after the "or" (C02-T1: Villainous Hideout; proof
+# printing Cargo Ship, Modern/Pioneer/Standard, in no deck under
+# `magic-cards-model-api/decks/`).
+# --------------------------------------------------------------------------
+
+
+def test_villainous_hideouts_mana_casts_a_villain():
+    """Villainous Hideout: "{T}: Add one mana of any color. Spend this mana
+    only to cast a Villain spell or to activate an ability of a Villain
+    source." - its {B} and a Swamp cast Red Room Recruit ({1}{B})."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Red Room Recruit"], battlefield=["Villainous Hideout", "Swamp"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hideout = scenario.find("Villainous Hideout", Zone.BATTLEFIELD)
+    scenario.game.activate_ability(hideout, 1, "alice", color=Color.BLACK)
+    (swamp,) = scenario.untapped_sources("Swamp")
+
+    recruit = scenario.cast_onto_stack("Red Room Recruit", swamp, username="alice")
+
+    assert recruit.zone is Zone.STACK
+    assert scenario.player("alice").mana_pool.floating == {}
+
+
+def test_villainous_hideouts_mana_refuses_a_creature_that_is_not_a_villain():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Villainous Hideout", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hideout = scenario.find("Villainous Hideout", Zone.BATTLEFIELD)
+    scenario.game.activate_ability(hideout, 1, "alice", color=Color.GREEN)
+    (forest,) = scenario.untapped_sources("Forest")
+
+    with pytest.raises(ValueError):
+        scenario.cast_onto_stack("Grizzly Bears", forest, username="alice")
+
+
+def test_proof_cargo_ships_mana_activates_an_artifacts_ability():
+    """Cargo Ship: "Spend this mana only to cast an artifact spell or activate
+    an ability of an artifact source." - its {C} pays Icy Manipulator's {1}."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Cargo Ship", "Icy Manipulator"])
+        .player("bob", battlefield=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ship = scenario.find("Cargo Ship", Zone.BATTLEFIELD)
+    scenario.game.activate_ability(ship, 0, "alice")
+    manipulator = _ready(scenario, "Icy Manipulator")
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
+
+    scenario.activate(manipulator, index=0, targets=[forest])
+
+    assert scenario.player("alice").mana_pool.floating == {}
+
+
+def test_proof_cargo_ships_mana_refuses_a_creature_spell():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Memnite", "Grizzly Bears"], battlefield=["Cargo Ship", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    ship = scenario.find("Cargo Ship", Zone.BATTLEFIELD)
+    scenario.game.activate_ability(ship, 0, "alice")
+    (forest,) = scenario.untapped_sources("Forest")
+
+    with pytest.raises(ValueError):
+        scenario.cast_onto_stack("Grizzly Bears", forest, username="alice")

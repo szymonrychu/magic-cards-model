@@ -88,6 +88,7 @@ from ..machines.combat import (
     source_had_keyword,
 )
 from ..machines.cost import (
+    CardRequirement,
     ComponentKind,
     CostComponent,
     CostModifierEffect,
@@ -757,6 +758,76 @@ _COLOR_WORDS: dict[str, Color] = {
 }
 
 
+#: "Exile any number of <colour> cards from your graveyard with <N> or more
+#: <colour> mana symbols among their mana costs" - Baron Helmut Zemo's boast
+#: cost. A count of mana symbols of one colour across the chosen cards' mana
+#: costs (CR 107.4e/107.4f: hybrid and Phyrexian symbols are coloured symbols
+#: of every colour they show), read by `_symbol_threshold_exile_component`.
+_SYMBOL_THRESHOLD_EXILE_COST = re.compile(
+    r"^exile any number of (?P<quality>white|blue|black|red|green) cards from your "
+    r"graveyard with (?P<count>\w+) or more (?P<color>white|blue|black|red|green) mana "
+    r"symbols among their mana costs\.?$",
+    re.IGNORECASE,
+)
+
+
+def symbol_threshold_exile_cost(text: str) -> tuple[Color, Color, int] | None:
+    """`_SYMBOL_THRESHOLD_EXILE_COST`'s parts - the cards' colour, the symbols'
+    colour, and the threshold - or `None` for any other cost sentence."""
+    match = _SYMBOL_THRESHOLD_EXILE_COST.fullmatch(text.strip())
+    if match is None:
+        return None
+    needed = parse_count(match.group("count"))
+    if needed is None:
+        return None
+    return (
+        _COLOR_WORDS[match.group("quality").lower()],
+        _COLOR_WORDS[match.group("color").lower()],
+        needed,
+    )
+
+
+def colored_symbol_count(card: CardState | Card, color: Color) -> int:
+    """How many mana symbols of `color` a card's mana cost shows (CR 107.4e/
+    107.4f: a hybrid or Phyrexian symbol counts for every colour it shows)."""
+    return sum(
+        1 for symbol in ManaCost.parse(card.mana_cost or "").symbols if color in symbol.colors
+    )
+
+
+def _symbol_threshold_exile_component(
+    text: str, chosen: list[CardState], payer: str
+) -> CostComponent | None:
+    """`_SYMBOL_THRESHOLD_EXILE_COST`'s cost over the cards `chosen` for it,
+    or `None` when `text` is not that shape.
+
+    CR 118.3: the cards chosen must carry the threshold between them, or the
+    cost cannot be paid - refused here, as the cost is built, the same way
+    `Game.activation_cost` refuses any other cost it cannot build. Each card's
+    colour and zone are the `EXILE` component's own checks (a
+    `CardRequirement` and `Zone.GRAVEYARD`), made again as it is paid.
+    """
+    if _SYMBOL_THRESHOLD_EXILE_COST.fullmatch(text.strip()) is None:
+        return None
+    parts = symbol_threshold_exile_cost(text)
+    if parts is None:
+        raise ValueError(f"cannot build a cost for {text!r}")
+    quality, color, needed = parts
+    shown = sum(colored_symbol_count(card, color) for card in chosen)
+    if shown < needed:
+        raise ValueError(
+            f"the {len(chosen)} card(s) chosen show {shown} {color.name.lower()} mana "
+            f"symbol(s) among their mana costs, not the {needed} the cost asks for (CR 118.3)"
+        )
+    component = exile_cost(
+        *chosen, payer=payer, required=len(chosen), description=text, zone=Zone.GRAVEYARD
+    )
+    component.requirement = CardRequirement(
+        colors=[quality], description=f"{quality.name.lower()} card"
+    )
+    return component
+
+
 #: CR 602.5d's timing restriction, in both templates WOTC prints it in:
 #: "Activate only as a sorcery" and the older "Activate only any time you could
 #: cast a sorcery". CR 307.5 makes them the same restriction.
@@ -771,6 +842,13 @@ _SORCERY_TIMING = re.compile(
 #: (Manaforge Cinder).
 _ACTIVATION_LIMIT = re.compile(
     rf"\b(?:only|no more than) (?P<times>{MULTIPLIER}) each turn\b", re.IGNORECASE
+)
+#: CR 602.5b's turn-ownership restriction: "Activate only during your turn"
+#: (M.O.D.O.K.'s own Mental Organism) and its mirror "... during an
+#: opponent's turn". Read against whose turn it is, not against the phase.
+_ACTIVATION_TURN_OWNER = re.compile(
+    r"activate (?:this ability )?only during (?P<whose>your|an opponent's) turn",
+    re.IGNORECASE,
 )
 
 #: CR 602.5b's "Activate only if <condition>" restriction, the condition taken
@@ -19369,6 +19447,35 @@ class Game(EngineModel):
                 f"{controller}'s main phase, with the stack empty "
                 f"(CR 602.5d, CR 307.5)"
             )
+        turn_owner = _ACTIVATION_TURN_OWNER.search(instructions)
+        if turn_owner is not None:
+            # CR 602.5b: "Activate only during your turn" is a restriction on
+            # the ability's use, checked against whose turn it is (CR 102.1's
+            # active player) - never against the ability's owner.
+            own_turn = self.active_player.username == controller
+            wants_own = turn_owner.group("whose").lower() == "your"
+            if own_turn is not wants_own:
+                whose = "its controller's" if wants_own else "an opponent's"
+                return (
+                    f"{permanent.name}'s ability can only be activated during {whose} "
+                    "turn (CR 602.5b)"
+                )
+        if (ability.ability_word or "").lower() == "boast":
+            # CR 702.142a: "Boast - [Cost]: [Effect]" means "[Cost]: [Effect].
+            # Activate only if this creature attacked this turn and only once
+            # each turn." The restriction is the keyword's own meaning, not
+            # printed text (the reminder is stripped), so it is read off the
+            # keyword here rather than off `instructions`.
+            if permanent.id not in self.attacked_this_turn:
+                return (
+                    f"{permanent.name} has not attacked this turn, so its boast ability "
+                    "cannot be activated (CR 702.142a)"
+                )
+            if self._activation_count(permanent, index):
+                return (
+                    f"{permanent.name}'s boast ability has already been activated this "
+                    "turn (CR 702.142a)"
+                )
         condition = _activation_condition(ability.instructions or "")
         if condition is not None:
             held = self._activation_condition_holds(ability, controller, permanent)
@@ -20254,6 +20361,11 @@ class Game(EngineModel):
                 # `machines/cost.cost_component_for_phrase` is the reader that
                 # turns the sentence into something payable - "Exert this land"
                 # (CR 701.43a), "Exile a black card from your hand" (CR 118.9).
+                threshold = _symbol_threshold_exile_component(piece.text, exiles, controller)
+                if threshold is not None:
+                    exiles.clear()  # "any number of": every card named pays it
+                    components.append(threshold)
+                    continue
                 component = cost_component_for_phrase(piece.text, payer=controller)
                 if (
                     component is not None

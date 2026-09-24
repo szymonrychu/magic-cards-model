@@ -128,6 +128,7 @@ from .casting import (
 )
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
+from .connive import parse_connive_clause
 from .cost import cost_announces_x, is_snow_source, spend_restriction
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
@@ -22960,6 +22961,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     copy_exiled_and_cast = _parse_copy_exiled_card_and_cast(effect_text)
     if copy_exiled_and_cast is not None:
         return copy_exiled_and_cast
+    copy_cost_exiled = _parse_copy_cost_exiled_cards_and_cast(effect_text)
+    if copy_cost_exiled is not None:
+        return copy_cost_exiled
     exile_one_of_each_type_copy_cast = _parse_exile_one_of_each_type_copy_cast_clause(effect_text)
     if exile_one_of_each_type_copy_cast is not None:
         return exile_one_of_each_type_copy_cast
@@ -33724,6 +33728,79 @@ def _parse_copy_exiled_card_and_cast(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Copy those exiled cards. You may cast up to `<N>` of the copies without
+#: paying their mana costs." - Baron Helmut Zemo's boast. "Those exiled
+#: cards" are the ones this ability's own cost exiled (CR 602.2b's paid cost,
+#: `AbilityOnStack.cost_exiled_card_ids`); "up to N" and "any number" are
+#: both read, as is a plain "you may cast" that pays the copies' costs.
+#:
+#: CR 707.12: each copy is created in the zone its card is in - exile - and
+#: cast from there while this ability resolves; CR 707.12a lets the player
+#: choose "individually, for each of those objects, whether or not to cast
+#: it"; CR 707.10a: a copy left in exile ceases to exist; CR 112.2a: the
+#: player told to create and cast it owns it.
+_COPY_COST_EXILED_CARDS_AND_CAST_RE = re.compile(
+    r"^copy (?:those|the) exiled cards\.\s*"
+    r"you may cast (?:up to (?P<count>\w+)|any number) of the copies"
+    r"(?P<free> without paying their mana costs)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_cost_exiled_cards_and_cast(text: str) -> AbilityEffect | None:
+    """`_COPY_COST_EXILED_CARDS_AND_CAST_RE`'s shape; see the banner above."""
+    match = _COPY_COST_EXILED_CARDS_AND_CAST_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    limit = parse_count(match.group("count")) if match.group("count") else None
+    if match.group("count") and limit is None:
+        return None
+    free = match.group("free") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        originals = [
+            card
+            for card_id in ability.cost_exiled_card_ids
+            if (card := game.find_by_id(card_id)) is not None and card.zone is Zone.EXILE
+        ]
+        copies: list[CardState] = []
+        for original in originals:
+            copy = CardState(
+                card=original.card,
+                zone=Zone.EXILE,
+                controller=controller.username,
+                owner=controller.username,  # CR 112.2a
+                is_copy=True,
+            )
+            game.exile.append(copy)
+            copies.append(copy)
+        cast = 0
+        for copy in copies:
+            if limit is not None and cast >= limit:
+                break
+            spell = game.may_cast_during_resolution(
+                copy,
+                controller.username,
+                prompt=(
+                    f"cast the copy of {copy.name}"
+                    + (" without paying its mana cost" if free else "")
+                ),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                source_name=ability.source_name,
+                rule="CR 707.12",
+                pays_mana_cost=not free,
+            )
+            if spell is not None:
+                cast += 1
+        for copy in copies:
+            if copy in game.exile:
+                game.exile.remove(copy)  # CR 707.10a
+
+    return effect
+
+
 #: "exile `<target phrase>` from your graveyard. [If you do, ]copy it. You
 #: may cast the copy[ without paying its mana cost]." and its "... from your
 #: graveyard and copy it. ..." sibling - Jacob Frye's "exile up to one target
@@ -35299,9 +35376,15 @@ def _parse_destroy_then_amass_by_referent_then_draw_if_controlled_clause(
 #: attach, with two independent targets (CR 601.2c/603.3d announce both):
 #: the Equipment always required, the creature CR 115.6's own "up to one" -
 #: choosing none simply leaves the Equipment where it is.
+#:
+#: CR 115.6's "up to one" sits on either half: Swordsman, Sharp Scoundrel's
+#: "attach up to one target Equipment you control to target creature you
+#: control" moves it to the Equipment, and Raubahn, Bull of Ala Mhigo's "...
+#: to target attacking creature" names the creature by its combat status
+#: instead of by controller - the same attach either way.
 _ATTACH_TARGET_EQUIPMENT_UP_TO_ONE_CREATURE_RE = re.compile(
-    r"^attach target equipment you control to up to one target creature "
-    r"you control\.?$",
+    r"^attach (?:up to one )?target equipment you control to (?:up to one )?target "
+    r"(?:attacking creature|creature you control)\.?$",
     re.IGNORECASE,
 )
 
@@ -44336,6 +44419,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     explores = _parse_explores_clause(clause, for_spell=for_spell)
     if explores is not None:
         return explores
+    connives = parse_connive_clause(clause, for_spell=for_spell)
+    if connives is not None:
+        return connives
     loyalty_instant_speed = _parse_loyalty_instant_speed_clause(clause, for_spell=for_spell)
     if loyalty_instant_speed is not None:
         return loyalty_instant_speed
