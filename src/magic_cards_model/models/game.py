@@ -1096,6 +1096,25 @@ _CONDITION_LAND_ENTERED_THIS_TURN = re.compile(
     re.IGNORECASE,
 )
 
+
+def entered_type_facts(types: object, subtypes: object) -> list[str]:
+    """The `turn_facts` keys an entering permanent records for its controller:
+    one per card type (CR 205.2a) and one per subtype (CR 205.3), lowercased
+    - "entered_type:artifact", "entered_subtype:hero"."""
+    return [f"entered_type:{str(kind).lower()}" for kind in (types or ())] + [
+        f"entered_subtype:{str(word).lower()}" for word in (subtypes or ())
+    ]
+
+
+def attacked_with_type_facts(types: object, subtypes: object) -> list[str]:
+    """The `turn_facts` keys a declared attacker records for the attacking
+    player (CR 508.1) - "attacked_with_type:creature",
+    "attacked_with_subtype:hero"."""
+    return [f"attacked_with_type:{str(kind).lower()}" for kind in (types or ())] + [
+        f"attacked_with_subtype:{str(word).lower()}" for word in (subtypes or ())
+    ]
+
+
 #: Every shape `condition_holds` reads, in the same order it tries them -
 #: kept as one tuple, rather than re-deriving it, so `condition_is_readable`
 #: below and `condition_holds` itself can never drift apart on which
@@ -10202,6 +10221,14 @@ class Game(EngineModel):
                 # under your control this turn" (Searing Blaze) - a fact of
                 # the turn, still true once the land has left again.
                 self.record_turn_fact("land_entered", card_state.controller)
+            if card_state.controller:
+                # "if an artifact entered the battlefield under your control
+                # this turn" (Iron Man, Master of Machines), "a Hero entered
+                # the battlefield under your control this turn" (Avengers
+                # Assemble!) - the entering object's own types, a fact of the
+                # turn that stays true once it has left again.
+                for fact in entered_type_facts(event.subject_types, event.subject_subtypes):
+                    self.record_turn_fact(fact, card_state.controller)
             origin = self._entry_origins.pop(card_state.id, None)
             if origin is not None:
                 event = event.model_copy(update={"origin_zone": origin})
@@ -17164,6 +17191,11 @@ class Game(EngineModel):
                 # over. Cleared at the same new-turn reset as the rest of
                 # `Game`'s "this turn" fields.
                 self.attacked_this_turn.add(creature.id)
+                # "you attacked with a Hero this turn" (Avengers Assemble!) -
+                # the attacker's types as declared (CR 508.1).
+                chars = self.characteristics_of(creature)
+                for fact in attacked_with_type_facts(chars.types, chars.subtypes):
+                    self.record_turn_fact(fact, self.active_player.username)
             if attacks:
                 # CR 508.1: declaring attackers is how a player attacks -
                 # "you attacked this turn" (Kaito Shizuki) asks this.
