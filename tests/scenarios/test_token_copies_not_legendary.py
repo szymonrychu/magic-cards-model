@@ -178,3 +178,33 @@ def test_multiversal_incursion_copies_each_nontoken_creature_once():
     assert len(bears) == 2
     assert all(not _legendary(scenario, card) for card in galions if card.token)
     assert len(_named(scenario, "Hill Giant")) == 1  # bob's creature is not "you control"
+
+
+def test_miirym_copies_the_entering_dragon_not_itself():
+    """Miirym, Sentinel Wyrm's "Whenever another nontoken Dragon you control
+    enters, create a token that's a copy of it, except the token isn't
+    legendary." - "it" is the entering Dragon (the trigger's event subject),
+    so the legendary Nicol Bolas gets a nonlegendary token twin."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Nicol Bolas, the Ravager // Nicol Bolas, the Arisen"],
+            battlefield=["Miirym, Sentinel Wyrm"],
+        )
+        .player("bob", hand=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolas = scenario.put_onto_battlefield("Nicol Bolas, the Ravager", "alice")
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.resolve_top()
+        scenario.game.put_triggers_on_stack()
+    scenario.state_based_actions()
+
+    bolases = _named(scenario, bolas.name)
+    assert len(bolases) == 2
+    token = next(card for card in bolases if card.token)
+    assert not _legendary(scenario, token)
+    assert len(_named(scenario, "Miirym, Sentinel Wyrm")) == 1

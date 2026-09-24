@@ -789,8 +789,7 @@ def _type_line_without_legendary(type_line: str) -> str:
     """`type_line` with the legendary supertype (CR 205.4d) taken off its left
     side - CR 707.9b's "except it isn't legendary"."""
     left, dash, right = type_line.partition("\u2014")
-    kept = [word for word in left.split() if word != "Legendary"]
-    new_left = " ".join(kept)
+    new_left = " ".join(word for word in left.split() if word != "Legendary")
     return f"{new_left} {dash}{right}" if dash else new_left
 
 
@@ -937,9 +936,21 @@ def token_copy_of(
                     copiable.type_line, added_creature_type
                 )
             if not_legendary:
-                update["type_line"] = _type_line_without_legendary(
-                    update.get("type_line", copiable.type_line)
+                update["type_line"] = " // ".join(
+                    _type_line_without_legendary(half)
+                    for half in update.get("type_line", copiable.type_line).split(" // ")
                 )
+                if copiable.card_faces:
+                    # A double-faced original's own face type lines are what
+                    # its characteristics read (CR 712.8d), so each loses it.
+                    update["card_faces"] = [
+                        face.model_copy(
+                            update={"type_line": _type_line_without_legendary(face.type_line)}
+                        )
+                        if face.type_line
+                        else face
+                        for face in copiable.card_faces
+                    ]
             new_card_id = uuid5(
                 NAMESPACE_OID,
                 f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}:type:{added_creature_type}"
