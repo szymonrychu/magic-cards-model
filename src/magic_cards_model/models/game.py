@@ -12498,6 +12498,30 @@ class Game(EngineModel):
             shown = self._live_reveal(reveal, viewer)
             if shown is not None:
                 found[reveal.card_id] = shown
+        # "You may look at the top card of your library any time." (Radar
+        # Sense, Ka-Zar, Iron Lad, Courser of Kruphix, Augur of Autumn) - a
+        # live CR 611.3d grant rather than a one-shot `Reveal` record: this
+        # reads the *current* top card fresh every call (`known_to` stays
+        # pure), so it tracks a shuffle or a draw with no stale record to
+        # ever expire. Only `viewer`'s own library, and only while a
+        # permanent they control still grants it.
+        viewer_player = self._seat(viewer)
+        if (
+            viewer_player is not None
+            and viewer_player.library
+            and self.controls_look_at_top_permission(viewer)
+        ):
+            top = viewer_player.library[0]
+            found[top.id] = KnownCard(
+                card_id=top.id,
+                card_name=top.name,
+                owner=viewer,
+                zone=Zone.LIBRARY,
+                index_from_top=0,
+                source='a static "look at the top card" permission',
+                turn=self._turns_taken(),
+                carried=False,
+            )
         return list(found.values())
 
     def _live_reveal(self, reveal: Reveal, viewer: str) -> KnownCard | None:
@@ -17394,6 +17418,91 @@ class Game(EngineModel):
                 return permanent
         return None
 
+    #: "You may look at the top card of your library any time." (Courser of
+    #: Kruphix, Radha, Heart of Keld, Augur of Autumn; Daredevil's own "Radar
+    #: Sense", Ka-Zar's and Iron Lad's own bare printing) - a CR 611.3d
+    #: rules-modifying grant to a player, the same family
+    #: `plays_lands_from_graveyard_line` above already reads, except this one
+    #: grants information rather than a play: not owned by any single
+    #: subsystem (`machines/layers.py`, not touched by this task), so it is
+    #: read locally here rather than added to that file's own static-grant
+    #: readers.
+    _LOOK_AT_TOP_CARD_ANY_TIME_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^you may look at the top card of your library any time\.?$", re.IGNORECASE
+    )
+    #: "You may play lands from the top of your library." (Courser of
+    #: Kruphix, Radha, Ka-Zar's own second static) - CR 305.1's land drop
+    #: opened to a zone other than the hand, the identical shape
+    #: `plays_lands_from_graveyard_line` already reads for the graveyard.
+    _PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^you may play lands from the top of your library\.?$", re.IGNORECASE
+    )
+
+    #: CR 207.2c's ability word and its em dash, at the very start of a
+    #: computed ability line ("Radar Sense — ...") - `computed_board().of(
+    #: ...).abilities` hands lines over exactly as printed, with any leading
+    #: ability word still attached (`machines/layers.py`'s own `_strip_
+    #: ability_word` reads the identical shape for the static-grant readers
+    #: it owns; that file is another C02 task's this round, so this is its
+    #: own small, local copy rather than an import of a private name).
+    _ABILITY_WORD_PREFIX_RE: ClassVar[re.Pattern[str]] = re.compile(
+        r"^[A-Z][a-z']*(?: (?:[A-Za-z][a-z']*|\d+))? — (?P<rest>.+)$"
+    )
+
+    def _static_line_without_ability_word(self, text: str) -> str:
+        match = self._ABILITY_WORD_PREFIX_RE.match(text.strip())
+        return match.group("rest").strip() if match else text.strip()
+
+    def _looks_at_top_card_any_time_line(self, text: str) -> bool:
+        """Whether one static line is "You may look at the top card of your
+        library any time." - Daredevil's own "Radar Sense — " label stripped
+        first."""
+        stripped = self._static_line_without_ability_word(text)
+        return self._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(stripped) is not None
+
+    def _plays_lands_from_top_of_library_line(self, text: str) -> bool:
+        """Whether one static line is "You may play lands from the top of
+        your library."."""
+        stripped = self._static_line_without_ability_word(text)
+        return self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(stripped) is not None
+
+    def controls_look_at_top_permission(self, username: str) -> bool:
+        """Whether `username` controls a permanent granting CR 611.3d's "you
+        may look at the top card of your library any time" - read fresh off
+        the computed board every call, so the answer tracks the grant's own
+        source leaving the battlefield (`known_to`'s own purity contract)."""
+        board = self.computed_board()
+        return any(
+            self._looks_at_top_card_any_time_line(line)
+            for permanent in self.permanents_controlled_by(username)
+            for line in board.of(permanent).abilities
+        )
+
+    def land_from_top_of_library_permission(
+        self, land: CardState, username: str
+    ) -> CardState | None:
+        """The permanent whose "You may play lands from the top of your
+        library." lets `username` play `land` (CR 305.1, CR 611.3d), or
+        None. Only the top card of `username`'s own library qualifies - the
+        grant never reaches deeper, and CR 108.3's owner is irrelevant here
+        the way `graveyard_land_permission`'s own docstring is silent on it
+        too (a player only ever looks at and plays from their *own* library
+        under this shape - no printing in the pool grants it over another
+        player's)."""
+        if land.zone is not Zone.LIBRARY:
+            return None
+        player = self.player(username)
+        if not player.library or player.library[0] is not land:
+            return None
+        board = self.computed_board()
+        for permanent in self.permanents_controlled_by(username):
+            if any(
+                self._plays_lands_from_top_of_library_line(line)
+                for line in board.of(permanent).abilities
+            ):
+                return permanent
+        return None
+
     def grant_extra_land_play(self, username: str, amount: int = 1) -> None:
         """CR 305.2's allowance increase for the rest of this turn only -
         Way of the Paradox's own "You may play an additional land this
@@ -18203,7 +18312,11 @@ class Game(EngineModel):
             # permanent's "You may play lands from your graveyard." is the
             # other opener (`graveyard_land_permission`).
             permission = self.play_permission_for(land, username, PlayAction.PLAY)
-            if permission is None and self.graveyard_land_permission(land, username) is None:
+            if (
+                permission is None
+                and self.graveyard_land_permission(land, username) is None
+                and self.land_from_top_of_library_permission(land, username) is None
+            ):
                 granted = play_permissions_on(self, land)
                 if granted:
                     # A permission names this object and does not stretch this

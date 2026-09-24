@@ -20529,6 +20529,55 @@ _LOOK_TOP_CARD_MAY_PUT_IF_RE = re.compile(
 )
 
 
+#: "Reveal the top card of your library. If it's an `<quality>` card,
+#: `<effect>`." - Iron Lad, Diverging Destiny's own `{T}` ability. A simpler
+#: sibling of `_LOOK_TOP_CARD_CONDITIONAL_RE`/`_LOOK_TOP_CARD_MAY_PUT_IF_RE`
+#: just above: no "put"/"otherwise" branch at all, an arbitrary trailing
+#: effect instead (CR 101.3/609.3: the card stays on top either way, so
+#: there is no move to make when the condition fails - "if it's a Hero
+#: card" is the whole instruction).
+_REVEAL_TOP_CARD_IF_QUALITY_RE = re.compile(
+    r"^reveal the top card of your library\. if it's an? "
+    r"(?P<quality>[\w' ,-]+?) card, (?P<effect>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reveal_top_card_if_quality_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_REVEAL_TOP_CARD_IF_QUALITY_RE`'s shape, or `None`.
+
+    Ability-only: the reveal is CR 701.20a's public action off the resolving
+    ability's own controller's library, and nothing in the pool prints this
+    shape on a spell.
+    """
+    if for_spell:
+        return None
+    match = _REVEAL_TOP_CARD_IF_QUALITY_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    quality = match.group("quality")
+    if not _search_quality_is_readable(quality):
+        return None
+    matches = _quality_matcher(quality)
+    consequence = _parse_mixed_clause(match.group("effect").strip().rstrip("."), for_spell=False)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        controller = game.controller_of(ability)
+        if not controller.library:
+            return
+        top = controller.library[0]
+        game.reveal(top, source=ability.source_name)
+        if matches(top):
+            consequence(game, ability)
+
+    return effect
+
+
 def _aura_host_for_entry(
     game: "Game", aura: CardState, controller: str, source_name: str, source_id: str | None
 ) -> "CardState | Player | None | bool":
@@ -45774,6 +45823,9 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     )
     if look_top_cast_le_greatest_attacking_power is not None:
         return [look_top_cast_le_greatest_attacking_power]
+    reveal_top_if_quality = _parse_reveal_top_card_if_quality_clause(text, for_spell=for_spell)
+    if reveal_top_if_quality is not None:
+        return [reveal_top_if_quality]
     draw_and_gain_off_sacrificed = _parse_draw_and_gain_off_sacrificed_clause(
         text, for_spell=for_spell
     )
