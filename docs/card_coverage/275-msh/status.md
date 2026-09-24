@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 17 | 6.3% |
+| Tested | 17 | 6.3% |
+| Works (untested) | 102 | 38.1% |
 | Partial (unaudited) | 19 | 7.1% |
-| Not tested (handled, untested) | 102 | 38.1% |
-| Not working (silent / notice / error) | 130 | 48.5% |
+| Not working | 130 | 48.5% |
 
 ## Cards needing work
 
@@ -308,9 +308,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | teamwork | 8 | Atlantis Attacks, Go Nuts!, HULK SMASH!, Helicarrier Strike, Murdock's Crusade | msh |
-| I | 3 | Armor Wars, The Super Hero Civil War, World War Hulk | msh |
 | Enrage | 2 | Bruce Banner // The Incredible Hulk, Red Hulk | msh |
-| II | 2 | Avengers: Under Siege, Origin of the Avengers | msh |
 | when ~ enters, it connives. | 2 | A.I.M. Scientists, Red Room Recruit | msh |
 | Brontosaurus | 1 | Reptil, Dinomorpher | msh |
 | Choose one or both | 1 | Epic Fight | msh |
@@ -349,6 +347,7 @@
 | enchanted creature loses all abilities and can't become untapped. | 1 | Frozen in Ice | msh |
 | exile all creatures. each player may put any number of creature cards from their hand onto the battlefield. then put all cards exiled ~ into their owners' hands | 1 | Worlds Within Worlds | msh |
 | gain control of target creature until end of turn. if you control a villain with greater mana value than that creature, gain control of that creature until the  | 1 | Evil's Thrall | msh |
+| gain control of up to two target creatures with total mana value N or less for as long as ~ remains on the battlefield. | 1 | The Super Hero Civil War | msh |
 | heroes you control get +N/+N. | 1 | Avengers Assemble! | msh |
 | if a source you control would deal noncombat damage to an opponent or a permanent an opponent controls, instead it deals that much damage plus N, where N is haw | 1 | Hawkeye, Young Avenger | msh |
 | if damage would be dealt to wolverine, instead that damage is dealt, but all other damage already dealt to him is healed. | 1 | Wolverine, Fierce Fighter | msh |
@@ -373,6 +372,7 @@
 | teamwork N (as an additional cost to cast ~, you may tap any number of creatures you control with total power N or more.) counter target spell unless its contro | 1 | We Say Thee Nay! | msh |
 | teamwork N (as an additional cost to cast ~, you may tap any number of creatures you control with total power N or more.) exile target creature with mana value  | 1 | Cruel Alliance | msh |
 | teamwork N (as an additional cost to cast ~, you may tap any number of creatures you control with total power N or more.) reveal the top eight cards of your lib | 1 | Earth's Mightiest Heroes | msh |
+| the next red or green creature spell you cast ~ can be cast without paying its mana cost. | 1 | World War Hulk | msh |
 | the owner of target creature an opponent controls puts it into their library second from the top or on the bottom. then up to one target creature you control co | 1 | Trickster's Stratagem | msh |
 | until end of turn, target artifact or creature becomes an artifact creature with base power and toughness N/N and gains flying. draw a card. | 1 | I Am Iron Man | msh |
 | when bullseye enters, you may sacrifice an artifact or discard a nonland card. when you do, bullseye deals N damage to any target. | 1 | Bullseye, Death Dealer | msh |
@@ -429,7 +429,9 @@
 | whenever ~ becomes tapped to pay a teamwork cost, put a +N/+N counter on her and draw a card. | 1 | Agent Maria Hill | msh |
 | whenever ~ enters or attacks, choose another target creature. if that creature has haste and ~ doesn't, put a haste counter on ~. do the same for flying, first  | 1 | Super-Adaptoid | msh |
 | winter soldier gets +N/+N for each equipment attached to him. | 1 | Winter Soldier, Icy Assassin | msh |
+| you may draw a card for each artifact you control. if you do, each opponent draws a card. | 1 | Armor Wars | msh |
 | you may look at the top card of your library any time. | 1 | Ka-Zar of the Savage Land | msh |
+| you may put a hero creature card with mana value N or less from your hand onto the battlefield. if you don't, draw a card. | 1 | Origin of the Avengers | msh |
 | {M}, put a stun counter on jessica jones: exile the top N cards of your library, where N is jessica jones's power. you may play those cards ~. | 1 | Jessica Jones, Private Eye | msh |
 | {M}, {M}: copy target activated or triggered ability you control from a creature source. you may choose new targets for the copy. | 1 | Echo, Perceptive Prodigy | msh |
 | {M}, {M}: mill four cards. you may put a hero or enchantment card from among those cards into your hand. | 1 | Rick Jones, Destined Sidekick | msh |
@@ -444,6 +446,7 @@
 | {M}: target creature you control that's attacking alone gets +N/+N until end of turn. you gain N life. | 1 | Crowd of True Believers | msh |
 | {M}{M}, {M}, remove any number of +N/+N counters from ~: create that many N/N green insect creature tokens. | 1 | The Astonishing Ant-Man | msh |
 | {M}{M}, {M}: harness ~. | 1 | The Mind Stone | msh |
+| ~ deals N damage to each non-villain creature and each opponent. | 1 | Avengers: Under Siege | msh |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 13 | 7.0% |
+| Tested | 13 | 7.0% |
+| Works (untested) | 84 | 44.9% |
 | Partial (unaudited) | 10 | 5.3% |
-| Not tested (handled, untested) | 84 | 44.9% |
-| Not working (silent / notice / error) | 80 | 42.8% |
+| Not working | 80 | 42.8% |
 
 ## Cards needing work
 
@@ -227,9 +227,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | web-slinging | 7 | Arachne, Psionic Weaver, Scarlet Spider, Ben Reilly, Silk, Web Weaver, Spider-Man, Brooklyn Visionary, Spider-Man, Web-Slinger | spm |
-| II | 3 | Origin of Spider-Man, The Clone Saga, The Death of Gwen Stacy | spm |
 | Choose one | 2 | Heroes' Hangout, Secret Identity | spm |
-| I | 2 | Kraven's Last Hunt, Maximum Carnage | spm |
 | Dinosaur Formula | 1 | Stegron the Dinosaur Man | spm |
 | Fear Gas | 1 | Wraith, Vicious Vigilante | spm |
 | Lizard Formula | 1 | Lizard, Connors's Curse | spm |
@@ -248,6 +246,7 @@
 | at the beginning of your end step, you may tap two untapped creatures and/or treasures you control. if you do, draw a card. otherwise, sacrifice ~. | 1 | Rent Is Due | spm |
 | at the beginning of your first main phase, you may discard a card. when you do, target creature can't block ~. | 1 | Shriek, Treblemaker | spm |
 | each legendary spell you cast that's one or more colors has web-slinging {M}{M}{M}. | 1 | Peter Parker // Amazing Spider-Man | spm |
+| each player may discard a card. each player who doesn't loses N life. | 1 | The Death of Gwen Stacy | spm |
 | enchanted creature gets +N/+N for each aura and equipment attached to it. | 1 | With Great Power . . . | spm |
 | enchanted creature gets +N/+N, has menace, and is a symbiote in addition to its other types. | 1 | Alien Symbiosis | spm |
 | enchanted creature is a citizen with base power and toughness N/N. it has defender and loses all other abilities. | 1 | Spider-Man No More | spm |
@@ -255,8 +254,10 @@
 | equipped creature gets +N/+N and is a spider hero in addition to its other types. | 1 | Spider-Suit | spm |
 | exile N target artifacts and/or creatures. return the exiled cards to the battlefield under their owners' control at the beginning of the next end step. | 1 | Hide on the Ceiling | spm |
 | if damage would be dealt to anti-venom, prevent that damage and put that many +N/+N counters on him. | 1 | Anti-Venom, Horrifying Healer | spm |
+| mill five cards. when you do, ~ deals damage equal to the greatest power among creature cards in your graveyard to target creature. | 1 | Kraven's Last Hunt | spm |
 | morlun enters with N +N/+N counters on him. | 1 | Morlun, Devourer of Spiders | spm |
 | pavitr's sevā — whenever you cast a creature spell, put a +N/+N counter on target creature you control. it gains flying until end of turn. | 1 | Spider-Man India | spm |
+| put a +N/+N counter on target creature you control. it becomes a legendary spider hero in addition to its other types. | 1 | Origin of Spider-Man | spm |
 | put target creature on the bottom of its owner's library. you lose N life unless you control a villain. | 1 | The Spot's Portal | spm |
 | riot | 1 | Spider-Punk | spm |
 | spiders you control get +N/+N and can't be blocked by creatures with defender. | 1 | Wall Crawl | spm |
@@ -266,6 +267,7 @@
 | target player draws a card, then up to one target creature you control connives. (draw a card, then discard a card. if you discarded a nonland card, put a +N/+N | 1 | Unstable Experiment | spm |
 | top of the food chain — kraven's power is equal to the greatest mana value among permanents you control. | 1 | Kraven, Proud Predator | spm |
 | until end of turn, target creature you control gains indestructible and "..." | 1 | Strength of Will | spm |
+| until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | 1 | Maximum Carnage | spm |
 | vibro-shock gauntlets — when shocker enters, he deals N damage to target creature and N damage to that creature's controller. | 1 | Shocker, Unshakable | spm |
 | web-slinging {M} (you may cast ~ for {M} if you also return a tapped creature you control to its owner's hand.) counter target instant spell, sorcery spell, or  | 1 | Spider-Sense | spm |
 | when black cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | 1 | Black Cat, Cunning Thief | spm |
@@ -274,6 +276,7 @@
 | when mysterio enters, create a N/N blue illusion villain creature token for each nontoken villain you control. exile those tokens when mysterio leaves the battl | 1 | Mysterio, Master of Illusion | spm |
 | when scarlet spider enters, you may discard a card. if you do, put a +N/+N counter on him. | 1 | Scarlet Spider, Kaine | spm |
 | when the spot enters, exile up to one target nonland permanent and up to one target nonland permanent card from a graveyard. | 1 | The Spot, Living Portal | spm |
+| when you next cast a creature spell ~, copy it, except the copy isn't legendary. | 1 | The Clone Saga | spm |
 | when ~ enters, exile the top card of your library. you may play that card for as long as you control ~. | 1 | Gwen Stacy // Ghost-Spider | spm |
 | when ~ enters, exile up to one target card from a graveyard. target creature you control connives. | 1 | Mechanical Mobster | spm |
 | when ~ enters, suspect up to one target creature. | 1 | J. Jonah Jameson | spm |

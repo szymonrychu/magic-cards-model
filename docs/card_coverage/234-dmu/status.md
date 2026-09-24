@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 11 | 4.5% |
+| Tested | 11 | 4.5% |
+| Works (untested) | 110 | 45.1% |
 | Partial (unaudited) | 19 | 7.8% |
-| Not tested (handled, untested) | 110 | 45.1% |
-| Not working (silent / notice / error) | 104 | 42.6% |
+| Not working | 104 | 42.6% |
 
 ## Cards needing work
 
@@ -285,8 +285,6 @@
 |---|---|---|---|
 | Domain | 15 | Artillery Blast, Bortuk Bonerattle, Briar Hydra, Drag to the Bottom, Herd Migration | dmu |
 | enlist | 8 | Argivian Cavalier, Barkweave Crusher, Benalish Faithbonder, Coalition Skyknight, Coalition Warbrute | dmu |
-| I | 4 | Founding the Third Path, Love Song of Night and Day, The Elder Dragon War, Urza Assembles the Titans | dmu |
-| III | 4 | Braids's Frightful Return, The Phasing of Zhalfir, The World Spell, Yotia Declares War | dmu |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Shalai's Acolyte, Viashino Branchrider | dmu |
 | read ahead | 2 | The Cruelty of Gix, The Weatherseed Treaty | dmu |
 | Choose one | 1 | Twinferno | dmu |
@@ -306,6 +304,7 @@
 | at the beginning of your end step, you may pay {M}. if you do, draw N cards. N can't be greater than the amount of life you gained ~. | 1 | Shanna, Purifying Blade | dmu |
 | at the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. if you do, each opponent may sacrifice a permane | 1 | Braids, Arisen Nightmare | dmu |
 | choose target creature you control and target creature you don't control. if you cast ~ during your main phase, the creature you control gets +N/+N until end of | 1 | Tail Swipe | dmu |
+| destroy all creatures. for each creature destroyed ~, its controller creates a N/N black phyrexian creature token. | 1 | The Phasing of Zhalfir | dmu |
 | destroy target creature or planeswalker. if its mana value was N or less, you gain N life. | 1 | Extinguish the Light | dmu |
 | destroy target creature with total power and toughness N or less. | 1 | Cut Down | dmu |
 | draw cards equal to the number of instant and sorcery cards in your graveyard. | 1 | Cosmic Epiphany | dmu |
@@ -325,10 +324,14 @@
 | legendary creatures you control get +N/+N, where N is the number of legendary creatures you control. | 1 | Jodah, the Unifier | dmu |
 | once during each of your turns, you may play a land from your graveyard or cast a permanent spell with mana value N or less from your graveyard. if you do, it g | 1 | Serra Paragon | dmu |
 | players can"..."t mana abilities. | 1 | Karn's Sylex | dmu |
+| put up to two non-saga permanent cards from your hand onto the battlefield. | 1 | The World Spell | dmu |
 | sacrifice a merfolk: counter target noncreature spell unless its controller pays {M}. | 1 | Vodalian Hexcatcher | dmu |
+| scry N, then you may reveal the top card of your library. if a planeswalker card is revealed ~, put it into your hand. | 1 | Urza Assembles the Titans | dmu |
 | search your library for up to four creature cards with different powers and reveal them. an opponent chooses two of those cards. shuffle the chosen cards into y | 1 | Threats Undetected | dmu |
+| target opponent may sacrifice a nonland, nontoken permanent of their choice. if they don't, they lose N life and you draw a card. | 1 | Braids's Frightful Return | dmu |
 | the chosen creature gets +N/+N and has flying. | 1 | Tyrannical Pitlord | dmu |
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Join Forces | dmu |
+| up to one target artifact you control becomes an artifact creature with base power and toughness N/N until end of turn. | 1 | Yotia Declares War | dmu |
 | uurg's power is equal to the number of land cards in your graveyard. | 1 | Uurg, Spawn of Turg | dmu |
 | when danitha enters, you may put an aura or equipment card from your hand or graveyard onto the battlefield attached to danitha. | 1 | Danitha, Benalia's Hope | dmu |
 | when ~ dies, distribute N +N/+N counters among any number of target creatures you control, where N is the number of +N/+N counters on ~. | 1 | Quirion Beastcaller | dmu |
@@ -357,6 +360,8 @@
 | whenever ~ enlists a creature, scry N. | 1 | Guardian of New Benalia | dmu |
 | whenever ~ enters or attacks, you may put a land card from a graveyard onto the battlefield tapped under your control. | 1 | Soul of Windgrace | dmu |
 | whenever ~ or another goblin you control dies, exile the top card of your library. if it's a goblin creature card, you may cast that card until the end of your  | 1 | Rundvelt Hordemaster | dmu |
+| you and target opponent each draw two cards. | 1 | Love Song of Night and Day | dmu |
+| you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
 | you may cast ~ as though it had flash if N is N or less. draw N cards. | 1 | Silver Scrutiny | dmu |
 | you may cast ~ from your graveyard by discarding two cards in addition to paying its other costs. | 1 | Rona, Sheoldred's Faithful | dmu |
 | you may cast ~ from your graveyard by paying {M}{M} and exiling four other cards from your graveyard rather than paying its mana cost. | 1 | Squee, Dubious Monarch | dmu |
@@ -372,6 +377,7 @@
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
 | ~ can"..."ve cast an instant or sorcery spell ~. | 1 | Haunting Figment | dmu |
 | ~ costs {M} less to cast if an opponent cast two or more spells ~. counter target spell. | 1 | Ertai's Scorn | dmu |
+| ~ deals N damage to each creature and each opponent. | 1 | The Elder Dragon War | dmu |
 | ~ is the chosen type in addition to its other types. | 1 | Thran Portal | dmu |
 | ~'s power and toughness are each equal to the greatest mana value among cards in your graveyard. | 1 | Monstrous War-Leech | dmu |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Haughty Djinn | dmu |

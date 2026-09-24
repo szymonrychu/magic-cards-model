@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 52 | 20.3% |
+| Tested | 52 | 20.3% |
+| Works (untested) | 81 | 31.6% |
 | Partial (unaudited) | 20 | 7.8% |
-| Not tested (handled, untested) | 81 | 31.6% |
-| Not working (silent / notice / error) | 103 | 40.2% |
+| Not working | 103 | 40.2% |
 
 ## Cards needing work
 
@@ -297,10 +297,6 @@
 |---|---|---|---|
 | living weapon | 4 | Colossal Dreadmask, Cranial Ram, Drossclaw, Mandibular Kite | mh3 |
 | Landfall | 3 | Reckless Pyrosurfer, Springheart Nantuko, Territory Culler | mh3 |
-| I | 1 | The Creation of Avacyn | mh3 |
-| II | 1 | Ajani Fells the Godsire | mh3 |
-| III | 1 | Ral and the Implicit Maze | mh3 |
-| IV | 1 | The Hunger Tide Rises | mh3 |
 | Morbid | 1 | Muster the Departed | mh3 |
 | Revolt | 1 | Aether Revolt | mh3 |
 | as an additional cost to cast ~, sacrifice a creature or sacrifice a modified creature. (equipment, auras you control, and counters are modifications.) destroy  | 1 | Lethal Throwdown | mh3 |
@@ -314,6 +310,8 @@
 | choose target spell. you get {M}{M} (two energy counters), then you may pay any amount of {M}. counter that spell unless its controller pays {M} for each {M} pa | 1 | Aether Spike | mh3 |
 | choose up to one target artifact or creature card in your graveyard. you get {M}{M} (two energy counters). then you may pay an amount of {M} equal to that card' | 1 | Jolted Awake | mh3 |
 | connive | 1 | Copycrook | mh3 |
+| create a N/N white cat warrior creature token, then put a vigilance counter on a creature you control. | 1 | Ajani Fells the Godsire | mh3 |
+| create a spellgorger weird token. | 1 | Ral and the Implicit Maze | mh3 |
 | creature tokens you control have evolve. | 1 | Propagator Drone | mh3 |
 | creatures you control have "..." | 1 | Nadu, Winged Wisdom | mh3 |
 | destroy target creature or planeswalker. you gain N life for each of its colors. | 1 | Breathe Your Last | mh3 |
@@ -356,6 +354,8 @@
 | reinforce | 1 | Fowl Strike | mh3 |
 | return target artifact or creature card from your graveyard to your hand. ~ deals damage equal to that card's mana value to up to one target creature or planesw | 1 | Pyretic Rebirth | mh3 |
 | sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |
+| sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
+| search your library for a card, exile it face down, then shuffle. | 1 | The Creation of Avacyn | mh3 |
 | skip your draw step. | 1 | Necrodominance | mh3 |
 | target creature gets -N/-N until end of turn. {M}{M}, exile ~ from your graveyard: put a +N/+N counter on target creature you control. activate only as a sorcer | 1 | Wither and Bloom | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |

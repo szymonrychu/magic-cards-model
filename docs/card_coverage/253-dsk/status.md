@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 21 | 7.9% |
+| Tested | 21 | 7.9% |
+| Works (untested) | 98 | 37.0% |
 | Partial (unaudited) | 18 | 6.8% |
-| Not tested (handled, untested) | 98 | 37.0% |
-| Not working (silent / notice / error) | 128 | 48.3% |
+| Not working | 128 | 48.3% |
 
 ## Cards needing work
 
@@ -335,12 +335,12 @@
 | enchanted creature gets -N/-N and loses all abilities. | 1 | Duskmourn's Domination | dsk |
 | equipped creature gets +N/+N, where N is the number of rev counters on ~. | 1 | Chainsaw | dsk |
 | gain control of target creature until end of turn. untap it. it gains haste until end of turn. you may discard a card. if you do, draw a card. | 1 | Vengeful Possession | dsk |
-| i, ii, iii — mill two cards. if two cards that share a card type were milled ~, draw a card and repeat ~. | 1 | The Tale of Tamiyo | dsk |
 | if a card you didn"..."s graveyard from anywhere, exile it instead. | 1 | Valgavoth, Terror Eater | dsk |
 | manifest dread N times, then put N +N/+N counters on each of those creatures. (to manifest dread, look at the top two cards of your library, then put one onto t | 1 | Valgavoth's Onslaught | dsk |
 | manifest dread. (look at the top two cards of your library. put one onto the battlefield face down as a N/N creature and the other into your graveyard. turn it  | 1 | Under the Skin | dsk |
 | marvin has all activated abilities of creatures you control that don't have the same name as ~. | 1 | Marvin, Murderous Mimic | dsk |
 | mill three cards. then you may return a creature or land card from your graveyard to your hand. exile ~ and two other cards named ~ from your graveyard: search  | 1 | Say Its Name | dsk |
+| mill two cards. if two cards that share a card type were milled ~, draw a card and repeat ~. | 1 | The Tale of Tamiyo | dsk |
 | once each turn, you may pay {M} rather than pay the mana cost for a spell you cast from exile. | 1 | Charred Foyer // Warped Space | dsk |
 | other tapped creatures you control have hexproof. | 1 | The Wandering Rescuer | dsk |
 | search your library for a demon card, reveal it, put it into your hand, then shuffle. delirium — if there are four or more card types among cards in your gravey | 1 | Demonic Counsel | dsk |

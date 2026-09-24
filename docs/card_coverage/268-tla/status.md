@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 35 | 12.6% |
+| Tested | 35 | 12.6% |
+| Works (untested) | 121 | 43.7% |
 | Partial (unaudited) | 22 | 7.9% |
-| Not tested (handled, untested) | 121 | 43.7% |
-| Not working (silent / notice / error) | 99 | 35.7% |
+| Not working | 99 | 35.7% |
 
 ## Cards needing work
 
@@ -319,10 +319,7 @@
 | waterbend | 4 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol, Ruinous Waterbending | tla |
 | ~ enters tapped unless you control a basic land. | 4 | Abandoned Air Temple, Agna Qel'a, Ba Sing Se, Realm of Koh | tla |
 | Exhaust | 3 | Invasion Submersible, Jeong Jeong, the Deserter, Mai, Jaded Edge | tla |
-| II | 2 | The Legend of Kyoshi // Avatar Kyoshi, The Rise of Sozin // Fire Lord Sozin | tla |
 | Choose one | 1 | Ember Island Production | tla |
-| I | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
-| III | 1 | Leaves from the Vine | tla |
 | Landfall | 1 | Rabaroo Troop | tla |
 | Raid | 1 | Cruel Administrator | tla |
 | affinity for allies (~ costs {M} less to cast for each ally you control.) up to two target creatures you control each deal damage equal to their power to target | 1 | Allies at Last | tla |
@@ -336,10 +333,12 @@
 | at the beginning of your end step, if katara is tapped, put a +N/+N counter on her. | 1 | Katara, Bending Prodigy | tla |
 | at the beginning of your first main phase, choose one that hasn"..."s control. | 1 | Zuko, Conflicted | tla |
 | at the beginning of your upkeep, tap ~. | 1 | Tiger-Seal | tla |
+| choose a card name. search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. then that player shuffles. | 1 | The Rise of Sozin // Fire Lord Sozin | tla |
 | choose target creature. when that creature dies ~, you earthbend N. (target land you control becomes a N/N creature with haste that's still a land. put four +N/ | 1 | Fatal Fissure | tla |
 | choose up to one target creature, then airbend all other creatures. (exile them. while each one is exiled, its owner may cast it for {M} rather than its mana co | 1 | Avatar's Wrath | tla |
 | creatures you control with +N/+N counters on them have trample. | 1 | Badgermole | tla |
 | creatures you control with flying get +N/+N. | 1 | Air Nomad Legacy | tla |
+| draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
 | draw three cards. then discard a card unless you waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays  | 1 | Waterbending Lesson | tla |
 | during your turn, each non-lesson instant and sorcery card in your graveyard has flashback. the flashback cost is equal to that card's mana cost. | 1 | Iroh, Grand Lotus | tla |
 | each creature with mana value N or less loses all abilities until end of turn. destroy those creatures. | 1 | Day of Black Sun | tla |
@@ -348,6 +347,7 @@
 | each land and ally you control has "..." | 1 | Great Divide Guide | tla |
 | each non-human creature you control gets +N/+N for each of its creature types, to a maximum of N. | 1 | Diligent Zookeeper | tla |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Destined Confrontation | tla |
+| earthbend N, where N is the number of cards in your hand. that land becomes an island in addition to its other types. | 1 | The Legend of Kyoshi // Avatar Kyoshi | tla |
 | earthbend N. when you do, up to one target creature you control fights target creature an opponent controls. (to earthbend N, target land you control becomes a  | 1 | Earth Rumble | tla |
 | enchanted creature gets +N/+N for each creature card in your graveyard and is an avatar in addition to its other types. | 1 | Avatar Destiny | tla |
 | enchanted creature loses all abilities and is a citizen with base power and toughness N/N and "..." named humble merchant. | 1 | Honest Work | tla |
@@ -367,6 +367,7 @@
 | pay N life: choose a creature card exiled with koh. | 1 | Koh, the Face Stealer | tla |
 | sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | 1 | Cycle of Renewal | tla |
 | search your library for up to four land cards with different names and reveal them. an opponent chooses two of those cards. put the chosen cards into your grave | 1 | Elemental Teachings | tla |
+| starting with you, each player chooses up to one permanent with mana value N or greater from among permanents your opponents control. exile those permanents. | 1 | The Legend of Yangchen // Avatar Yangchen | tla |
 | target creature you control fights target creature an opponent controls. if the creature the opponent controls is dealt excess damage ~, add that much {M}. unti | 1 | The Last Agni Kai | tla |
 | target creature you control gets +N/+N until end of turn. if that creature is an ally, it also gains flying until end of turn. | 1 | Yip Yip! | tla |
 | the first non-lemur creature spell with flying you cast during each of your turns costs {M} less to cast. | 1 | Momo, Friendly Flier | tla |

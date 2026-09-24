@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 13 | 4.8% |
+| Tested | 13 | 4.8% |
+| Works (untested) | 109 | 40.1% |
 | Partial (unaudited) | 11 | 4.0% |
-| Not tested (handled, untested) | 109 | 40.1% |
-| Not working (silent / notice / error) | 139 | 51.1% |
+| Not working | 139 | 51.1% |
 
 ## Cards needing work
 
@@ -317,8 +317,6 @@
 | when ~ dies, incubate N, where N is its power. | 2 | Bloated Processor, Furnace Gremlin | mom |
 | when ~ dies, incubate N. | 2 | Infected Defector, Injector Crocodile | mom |
 | Choose one | 1 | Into the Fire | mom |
-| I | 1 | Jin-Gitaxias // The Great Synthesis | mom |
-| III | 1 | Sheoldred // The True Scriptures | mom |
 | +N: exile the top five cards of your library. until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | 1 | Chandra, Hope's Beacon | mom |
 | +N: up to one target land you control becomes a N/N elemental creature with vigilance, hexproof, and haste until your next turn. it's still a land. | 1 | Wrenn and Realmbreaker | mom |
 | aetherwing's power is equal to the number of artifacts you control. | 1 | Invasion of Kaladesh // Aetherwing, Golden-Scale Flagship | mom |
@@ -334,6 +332,7 @@
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
 | create two N/N red and white warrior creature tokens with "..." | 1 | Invasion of Kylem // Valor's Reach Tag Team | mom |
 | creatures you control have vigilance and "..." | 1 | Inga and Esika | mom |
+| draw cards equal to the number of cards in your hand. you have no maximum hand size for as long as you control ~. | 1 | Jin-Gitaxias // The Great Synthesis | mom |
 | each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
 | each player mills three cards. then you return up to two creature cards from your graveyard to your hand. (to mill three cards, a player puts the top three card | 1 | Unseal the Necropolis | mom |
 | enchanted creature gets -N/-N, where N is the number of cards in its controller's graveyard. | 1 | Disturbing Conversion | mom |
@@ -349,6 +348,7 @@
 | look at the top three cards of your library. put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | 1 | Moment of Truth | mom |
 | non-phyrexian creatures enter tapped. | 1 | Phyrexian Censor | mom |
 | noncreature spells you cast have convoke. | 1 | Invasion of Segovia // Caetus, Sea Tyrant of Segovia | mom |
+| put all creature cards from all graveyards onto the battlefield under your control. exile ~, then return it to the battlefield . | 1 | Sheoldred // The True Scriptures | mom |
 | target creature or land you control becomes a N/N elemental creature with haste in addition to its other types until end of turn. it must be blocked ~ if able. | 1 | Vengeant Earth | mom |
 | target creature or planeswalker you control gains protection from colorless or from the color of your choice until end of turn. if it"..."t be blocked, targeted | 1 | Angelic Intervention | mom |
 | target creature you control deals damage equal to its power to another target creature, planeswalker, or battle. | 1 | Cosmic Hunger | mom |

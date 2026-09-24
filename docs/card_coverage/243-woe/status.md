@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 10 | 3.8% |
+| Tested | 10 | 3.8% |
+| Works (untested) | 122 | 45.9% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not tested (handled, untested) | 122 | 45.9% |
-| Not working (silent / notice / error) | 124 | 46.6% |
+| Not working | 124 | 46.6% |
 
 ## Cards needing work
 
@@ -307,11 +307,8 @@
 |---|---|---|---|
 | bargain | 15 | Agatha's Champion, Archon's Glory, Back for Seconds, Candy Grapple, Diminisher Witch | woe |
 | Celebration | 6 | Armory Mice, Bespoke Battlegarb, Gallant Pie-Wielder, Goddric, Cloaked Reveler, Grand Ball Guest | woe |
-| III | 2 | The Princess Takes Flight, Welcome to Sweettooth | woe |
 | when ~ enters, create a royal role token attached to another target creature you control. | 2 | Charmed Clothier, Redtooth Genealogist | woe |
 | Choose one or more | 1 | Rankle's Prank | woe |
-| I | 1 | Gadwick's First Duel | woe |
-| II | 1 | The Huntsman's Redemption | woe |
 | +N: look at the top two cards of your library. exile one of them and put the other into your hand. | 1 | Ashiok, Wicked Manipulator | woe |
 | activated abilities of creatures you control cost {M} less to activate, where N is agatha"..."t reduce the mana in that cost to less than one mana. | 1 | Agatha of the Vile Cauldron | woe |
 | activated abilities of lands you control cost {M} less to activate. | 1 | Blossoming Tortoise | woe |
@@ -328,9 +325,11 @@
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) look at the top twenty cards of your library. you may reveal up to two creature ca | 1 | Thunderous Debut | woe |
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) search your library for a card, exile it face down, then shuffle. if ~ was bargain | 1 | Beseech the Mirror | woe |
 | choose a number between N and N. destroy all creatures with power greater than or equal to the chosen number. | 1 | Expel the Interlopers | woe |
+| choose target nontoken creature you control that doesn"..."s a copy of it, except it isn't legendary, is a reflection in addition to its other types, and has ha | 1 | The Apprentice's Folly | woe |
 | copy target activated or triggered ability you control. you may choose new targets for the copy. | 1 | Virtue of Knowledge // Vantress Visions | woe |
 | counter target spell unless its controller pays {M} plus an additional {M} for each faerie you control. | 1 | Spell Stutter | woe |
 | create N N/N black rat creature tokens with "..." creatures you control gain haste until end of turn. | 1 | Song of Totentanz | woe |
+| create a cursed role token attached to up to one target creature. | 1 | Gadwick's First Duel | woe |
 | create a monster role token attached to target creature you control. when you do, that creature fights up to one target creature you don't control. (if you cont | 1 | Curse of the Werefox | woe |
 | creatures with power less than ~ power can't block it. | 1 | Elusive Otter // Grove's Bounty | woe |
 | destroy target creature or enchantment. create a wicked role token attached to up to one target creature you control. (if you control another role on it, put th | 1 | Shatter the Oath | woe |
@@ -340,7 +339,6 @@
 | enchanted creatures you control get +N/+N. | 1 | A Tale for the Ages | woe |
 | foods you control have "..." | 1 | Night of the Sweets' Revenge | woe |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. create a wicked role token attached to up to one targe | 1 | Twisted Fealty | woe |
-| i, ii — choose target nontoken creature you control that doesn"..."s a copy of it, except it isn't legendary, is a reflection in addition to its other types, an | 1 | The Apprentice's Folly | woe |
 | instant and sorcery spells you control have lifelink. | 1 | Heartflame Duelist // Heartflame Slash | woe |
 | look at the top five cards of your library. you may exile a creature card from among them. put the rest on the bottom of your library in a random order. you may | 1 | Feral Encounter | woe |
 | mill seven cards. then put all cards that have an adventure from among the milled cards into your hand. | 1 | Beluna Grandsquall // Seek Thrills | woe |
@@ -348,9 +346,11 @@
 | other creatures you control get +N/+N for each aura and equipment attached to kellan. | 1 | Kellan, the Fae-Blooded // Birthright Boon | woe |
 | other creatures you control that are enchanted by auras you control have base power and toughness N/N and have flying. | 1 | Archon of the Wild Rose | woe |
 | prevent all damage that would be dealt to you and creatures you control ~ by creatures. | 1 | Eerie Interference | woe |
+| put N +N/+N counters on target creature you control, where N is one plus the number of foods you control. | 1 | Welcome to Sweettooth | woe |
 | put target instant or sorcery card from your graveyard on top of your library. (then exile ~. you may cast the creature later from exile.) | 1 | Aquatic Alchemist // Bubble Up | woe |
 | put target permanent card from your graveyard on top of your library. (then exile ~. you may cast the creature later from exile.) | 1 | Woodland Acolyte // Mend the Wilds | woe |
 | return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
+| return the exiled card to the battlefield under its owner's control. | 1 | The Princess Takes Flight | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
 | target creature gets -N/-N until end of turn. that creature gets an additional -N/-N until end of turn if you controlled a faerie as you cast ~. | 1 | Faerie Fencing | woe |
 | target creature you control deals damage equal to its power to any other target. then sacrifice it. | 1 | Callous Sell-Sword // Burn Together | woe |
@@ -396,6 +396,7 @@
 | you may cast ~ as though it had flash if you pay {M} more to cast it. for each creature your opponents control, create a cursed role token attached to that crea | 1 | Asinine Antics | woe |
 | you may discard a card. if you do, draw two cards. create a wicked role token attached to up to one target creature you control. (if you control another role on | 1 | Witch's Mark | woe |
 | you may look at the top card of your library any time. | 1 | Johann, Apprentice Sorcerer | woe |
+| you may sacrifice a creature. if you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | 1 | The Huntsman's Redemption | woe |
 | {M}, sacrifice an aura attached to ~: ~ fights target creature you don't control. if that creature would die ~, exile it instead. activate only as a sorcery. | 1 | Faunsbane Troll | woe |
 | {M}, sacrifice ~: create a young hero role token attached to another target creature. | 1 | Embereth Veteran | woe |
 | {M}, sacrifice ~: draw a card. create a sorcerer role token attached to up to one other target creature you control. activate only as a sorcery. | 1 | Living Lectern | woe |

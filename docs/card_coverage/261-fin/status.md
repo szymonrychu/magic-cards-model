@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 16 | 5.3% |
+| Tested | 16 | 5.3% |
+| Works (untested) | 129 | 42.4% |
 | Partial (unaudited) | 19 | 6.2% |
-| Not tested (handled, untested) | 129 | 42.4% |
-| Not working (silent / notice / error) | 140 | 46.1% |
+| Not working | 140 | 46.1% |
 
 ## Cards needing work
 
@@ -343,9 +343,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| I | 3 | Summon: Brynhildr, Summon: Esper Ramuh, Summon: Leviathan | fin |
 | Choose one | 2 | Aerith Rescue Mission, Opera Love Song | fin |
-| II | 2 | Summon: Fenrir, Summon: G.F. Cerberus | fin |
 | as long as you control seven or more lands, ~ gets +N/+N. | 2 | Gigantoad, Scorpion Sentinel | fin |
 | equipped creature gets +N/+N and is a knight in addition to its other types. | 2 | Dark Knight's Greatsword, Dragoon's Lance | fin |
 | equipped creature gets +N/+N, has "..." and is a cleric in addition to its other types. | 2 | Sage's Nouliths, White Mage's Staff | fin |
@@ -361,9 +359,7 @@
 | Echo of the Lost | 1 | Emet-Selch, Unsundered // Hades, Sorcerer of Eld | fin |
 | Fire Cross | 1 | Seifer Almasy | fin |
 | Flare Star | 1 | Kuja, Genome Sorcerer // Trance Kuja, Fate Defied | fin |
-| III | 1 | Summon: Primal Odin | fin |
 | Immune | 1 | Diamond Weapon | fin |
-| IV | 1 | Summon: Bahamut | fin |
 | Landfall | 1 | Tifa Lockhart | fin |
 | My First Friend | 1 | Zenos yae Galvus // Shinryu, Transcendent Rival | fin |
 | Particle Beam | 1 | Cloud of Darkness | fin |
@@ -393,6 +389,7 @@
 | at the beginning of your upkeep, you may pay N life. if you do, draw a card and put a +N/+N counter on ~. | 1 | Seymour Flux | fin |
 | at the end of combat on your turn, if a player was dealt N or more combat damage ~, transform ~, then attach it to a creature you control. | 1 | Sidequest: Play Blitzball // World Champion, Celestial Weapon | fin |
 | attacking creatures get +N/+N until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Auron's Inspiration | fin |
+| chain — exile the top card of your library. during any turn you put a lore counter on ~, you may play that card. | 1 | Summon: Brynhildr | fin |
 | choose target creature you control and target equipment. gain control of that equipment until end of turn. attach it to the chosen creature. when you lose contr | 1 | Stolen Uniform | fin |
 | choose target creature you control. it deals damage equal to its power to each other creature. if ~ was cast from a graveyard, discard your hand and draw four c | 1 | Nibelheim Aflame | fin |
 | choose target spell. surveil N, then counter the chosen spell unless its controller pays {M} for each card in your graveyard. (to surveil N, look at the top two | 1 | Swallowed by Leviathan | fin |
@@ -401,6 +398,7 @@
 | damage isn't removed from ~ during cleanup steps. | 1 | Ancient Adamantoise | fin |
 | destroy all artifacts and creatures. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to the | 1 | Ultima | fin |
 | destroy target creature an opponent controls. then draw a card for each creature that died ~. | 1 | Deadly Embrace | fin |
+| double — when you next cast an instant or sorcery spell ~, copy it. you may choose new targets for the copy. | 1 | Summon: G.F. Cerberus | fin |
 | during your turn, as long as cloud is equipped, it has double strike and indestructible. | 1 | Cloud, Planet's Champion | fin |
 | during your turn, yuna and enchantment creatures you control have trample, lifelink, and ward {M}. | 1 | Yuna, Hope of Spira | fin |
 | enchanted permanent doesn"..."s untap step and its activated abilities can't be activated. | 1 | Stuck in Summoner's Sanctum | fin |
@@ -421,12 +419,17 @@
 | equipped creatures you control have haste. | 1 | Firion, Wild Rose Warrior | fin |
 | for each creature you control, create a N/N white moogle creature token with lifelink. then creatures you control gain indestructible until end of turn. | 1 | Moogles' Valor | fin |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. you may attach an equipment you control to that creatu | 1 | Unexpected Request | fin |
+| hall of sorrow — draw two cards. each player loses N life. | 1 | Summon: Primal Odin | fin |
+| heavenward howl — when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Summon: Fenrir | fin |
 | i've come up with a new recipe! — {M}{M}{M}, {M}: exile target card from a graveyard. if a creature card was exiled ~, create a food token. | 1 | Ignis Scientia | fin |
-| i, ii — prevent all damage that would be dealt to creatures you control ~. | 1 | Crystal Fragments // Summon: Alexander | fin |
 | if a nontoken creature an opponent controls would die, instead exile it and you gain N life. | 1 | The Darkness Crystal | fin |
+| judgment bolt — ~ deals damage equal to the number of noncreature, nonland cards in your graveyard to target creature an opponent controls. | 1 | Summon: Esper Ramuh | fin |
 | kicker—return a land you control to its owner"..."s hand in addition to any other costs as you cast ~.) target creature you control deals damage equal to its po | 1 | Chocobo Kick | fin |
+| mega flare — ~ deals damage equal to the total mana value of other permanents you control to each opponent. | 1 | Summon: Bahamut | fin |
 | neo exdeath's power is equal to the number of permanent cards in your graveyard. | 1 | Exdeath, Void Warlock // Neo Exdeath, Dimension's End | fin |
 | other permanents you control have "..." | 1 | A Realm Reborn | fin |
+| prevent all damage that would be dealt to creatures you control ~. | 1 | Crystal Fragments // Summon: Alexander | fin |
+| return each creature that isn"..."s hand. | 1 | Summon: Leviathan | fin |
 | return target creature card from your graveyard to the battlefield with two additional +N/+N counters on it. | 1 | Evil Reawakened | fin |
 | return target instant or sorcery card from your graveyard or exiled card with flashback you own to your hand. add {M}. flashback {M}{M} (you may cast ~ from you | 1 | Sorceress's Schemes | fin |
 | reveal the top five cards of your library. put one of them into your hand. then choose an opponent. they put one on the bottom of your library. then you put one | 1 | Memories Returning | fin |

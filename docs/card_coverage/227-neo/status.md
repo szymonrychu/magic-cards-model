@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 20 | 7.5% |
+| Tested | 20 | 7.5% |
+| Works (untested) | 116 | 43.4% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not tested (handled, untested) | 116 | 43.4% |
-| Not working (silent / notice / error) | 121 | 45.3% |
+| Not working | 121 | 45.3% |
 
 ## Cards needing work
 
@@ -307,11 +307,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | reconfigure | 10 | Acquisition Octopus, Armguard Familiar, Bronzeplate Boar, Chainflail Centipede, Leech Gauntlet | neo |
-| II | 4 | Boseiju Reaches Skyward // Branch of Boseiju, Inventive Iteration // Living Breakthrough, Kumano Faces Kakkazan // Etching of Kumano, The Fall of Lord Konda // Fragment of Konda | neo |
 | as long as enchanted permanent is a creature, it gets +N/+N. | 3 | Akki War Paint, Historian's Wisdom, Twisted Embrace | neo |
 | Choose one | 2 | Debt to the Kami, Storyweave | neo |
 | Channel | 1 | Mirrorshell Crab | neo |
-| I | 1 | Behold the Unspeakable // Vision of the Unspeakable | neo |
 | +N: draw two cards. then discard two cards unless you discard an artifact card. | 1 | Tezzeret, Betrayer of Flesh | neo |
 | as an additional cost to cast ~, sacrifice an artifact or creature. search your library for an equipment or vehicle card, put that card onto the battlefield, th | 1 | Anchor to Reality | neo |
 | as an additional cost to cast ~, you may exile any number of blue cards from your hand. ~ costs {M} less to cast for each card exiled ~. up to N target creature | 1 | March of Swirling Mist | neo |
@@ -333,7 +331,11 @@
 | at the beginning of your end step, you may pay {M}. when you do, target player mills N cards, where N is the number of shrines you control. | 1 | Go-Shintai of Lost Wisdom | neo |
 | create N N/N white samurai creature tokens with vigilance. they gain menace and haste until end of turn. each opponent creates N minus one N/N white samurai cre | 1 | Eiganjo Uprising | neo |
 | create two N/N green spirit creature tokens. for each of them, put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Invoke the Ancients | neo |
+| creatures you don't control get -N/-N until your next turn. | 1 | Behold the Unspeakable // Vision of the Unspeakable | neo |
 | destroy up to one target artifact, enchantment, or tapped creature. then if you control an artifact and an enchantment, create a N/N white samurai creature toke | 1 | Banishing Slash | neo |
+| each opponent creates a N/N black rat rogue creature token. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
+| each opponent sacrifices a creature of their choice unless they discard a card. | 1 | The Long Reach of Night // Animus of Night's Reach | neo |
+| each player gains control of all permanents they own. | 1 | The Fall of Lord Konda // Fragment of Konda | neo |
 | enchanted land has "..." | 1 | Grafted Growth | neo |
 | enchanted land is a N/N green spirit creature with vigilance and haste. it's still a land. | 1 | Harmonious Emergence | neo |
 | enchanted land is a N/N red spirit creature with haste. it's still a land. | 1 | Crackling Emergence | neo |
@@ -342,10 +344,6 @@
 | equipped creature has base power and toughness N/N, has menace, and is a black demon in addition to its other colors and types. | 1 | Blade of the Oni | neo |
 | equipped creature has flying and "..." | 1 | Cloudsteel Kirin | neo |
 | gain control of target artifact or creature. untap it. | 1 | Invoke the Winds | neo |
-| i, ii — each opponent creates a N/N black rat rogue creature token. | 1 | Tribute to Horobi // Echo of Death's Wail | neo |
-| i, ii — each opponent sacrifices a creature of their choice unless they discard a card. | 1 | The Long Reach of Night // Animus of Night's Reach | neo |
-| i, ii — target creature gets +N/+N until end of turn for each artifact and/or enchantment you control. | 1 | Michiko's Reign of Truth // Portrait of Michiko | neo |
-| i, ii — you gain N life. look at the top three cards of your library. exile one of them face down with a hatching counter on it, then put the rest on the bottom | 1 | The Dragon-Kami Reborn // Dragon-Kami's Egg | neo |
 | if a creature attacking causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Isshin, Two Heavens as One | neo |
 | look at the top five cards of your library. exile one of them face down and put the rest on the bottom of your library in a random order. you may cast the exile | 1 | Discover the Impossible | neo |
 | modified creatures you control can attack as though they didn't have defender. | 1 | Guardians of Oboro | neo |
@@ -354,10 +352,13 @@
 | o-kagachi made manifest is all colors. | 1 | The Kami War // O-Kagachi Made Manifest | neo |
 | other enchantment creatures you control get +N/+N. | 1 | Weaver of Harmony | neo |
 | other ninja and rogue creatures you control get +N/+N. | 1 | Silver-Fur Master | neo |
+| put up to one target land card from your graveyard on top of your library. | 1 | Boseiju Reaches Skyward // Branch of Boseiju | neo |
 | return all artifact and enchantment cards from your graveyard to the battlefield. | 1 | Brilliant Restoration | neo |
+| return an artifact card from your graveyard to your hand. if you can't, draw a card. | 1 | Inventive Iteration // Living Breakthrough | neo |
 | return target creature or vehicle card from your graveyard to the battlefield. then put two +N/+N counters on that permanent if you control an artifact and an e | 1 | Okiba Salvage | neo |
 | return target permanent card from your graveyard to the battlefield, then distribute four +N/+N counters among any number of creatures and/or vehicles target pl | 1 | Invoke Justice | neo |
 | spells you cast cost {M} less to cast for each target. | 1 | Hinata, Dawn-Crowned | neo |
+| target creature gets +N/+N until end of turn for each artifact and/or enchantment you control. | 1 | Michiko's Reign of Truth // Portrait of Michiko | neo |
 | target creature gets +N/+N until end of turn, where N is the greatest mana value among permanents you control. untap it. | 1 | Boon of Boseiju | neo |
 | target creature gets +N/+N until end of turn. if it's an enchantment creature or legendary creature, instead put a +N/+N counter on it and it gets +N/+N until e | 1 | Regent's Authority | neo |
 | target creature gets -N/-N until end of turn. it gets an additional -N/-N until end of turn for each modified creature you controlled as you cast ~. (equipment, | 1 | Lethal Exploit | neo |
@@ -371,6 +372,7 @@
 | when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
 | when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
 | when satsuki dies, choose up to one — • return target saga or enchantment creature you control to its owner's hand. • return target saga card from your graveyar | 1 | Satsuki, the Living Lore | neo |
+| when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Kumano Faces Kakkazan // Etching of Kumano | neo |
 | when ~ dies, if it had counters on it, put those counters on target creature you control. | 1 | Iron Apprentice | neo |
 | when ~ enters, choose one — • return up to one target ninja or rogue creature card from your graveyard to your hand. • put target creature card from your gravey | 1 | Kami of Restless Shadows | neo |
 | when ~ enters, draw a card if a creature died ~. otherwise, each player sacrifices a creature of their choice. | 1 | Gravelighter | neo |
@@ -405,6 +407,7 @@
 | whenever ~ deals combat damage to a player, you may remove a menace counter from it. when you do, that player reveals their hand and you choose a nonland card f | 1 | Biting-Palm Ninja | neo |
 | whenever ~ deals damage to a player, if it has dealt N or more damage to that player ~, they lose the game. | 1 | Hidetsugu Consumes All // Vessel of the All-Consuming | neo |
 | whenever ~ or equipped creature becomes blocked, it deals N damage to defending player. | 1 | Simian Sling | neo |
+| you gain N life. look at the top three cards of your library. exile one of them face down with a hatching counter on it, then put the rest on the bottom of your | 1 | The Dragon-Kami Reborn // Dragon-Kami's Egg | neo |
 | you may cast up to two instant and/or sorcery spells with total mana value N or less from your graveyard and/or hand without paying their mana costs. if those s | 1 | Invoke Calamity | neo |
 | {M}, exile ~ and four other artifact creatures and/or vehicles you control: create mechtitan, a legendary N/N construct artifact creature token with flying, vig | 1 | Mechtitan Core | neo |
 | {M}, sacrifice an artifact with mana value N: return target artifact card with mana value less than N from your graveyard to the battlefield. it gains haste unt | 1 | Scrap Welder | neo |

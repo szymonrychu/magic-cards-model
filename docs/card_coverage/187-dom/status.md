@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 13 | 5.7% |
+| Tested | 13 | 5.7% |
+| Works (untested) | 124 | 53.9% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not tested (handled, untested) | 124 | 53.9% |
-| Not working (silent / notice / error) | 73 | 31.7% |
+| Not working | 73 | 31.7% |
 
 ## Cards needing work
 
@@ -269,7 +269,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| III | 7 | Chainer's Torment, Phyrexian Scriptures, The First Eruption, The Flame of Keld, The Mending of Dominaria | dom |
 | if ~ was kicked, it enters with three +N/+N counters on it. | 2 | Baloth Gorger, Untamed Kavu | dom |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Academy Drake, Stronghold Confessor | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) exile all nonland permanents that aren't legendary. | 1 | Urza's Ruinous Blast | dom |
@@ -286,22 +285,24 @@
 | at the beginning of your upkeep, if ~ is exiled with an egg counter on it, remove an egg counter from it. then if ~ has no egg counters on it, return it to the  | 1 | Darigaaz Reincarnated | dom |
 | aura and equipment spells you cast cost {M} less to cast. | 1 | Danitha Capashen, Paragon | dom |
 | counter target noncreature spell. untap up to three lands. | 1 | Unwind | dom |
+| create an N/N black nightmare horror creature token, where N is half your life total, rounded up. it deals N damage to you. | 1 | Chainer's Torment | dom |
 | creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Baird, Steward of Argive | dom |
 | creatures you control with first strike have double strike. | 1 | Kwende, Pride of Femeref | dom |
 | destroy target land. up to two target creatures can't block ~. | 1 | Seismic Shift | dom |
 | during each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard. | 1 | Muldrotha, the Gravetide | dom |
 | during your turn, equipped creature has first strike. | 1 | Jousting Lance | dom |
+| each player returns two land cards from their graveyard to the battlefield. | 1 | Fall of the Thran | dom |
 | enchanted creature gets +N/+N, has first strike, and is a knight in addition to its other types. | 1 | Dub | dom |
 | enchanted creature has base power and toughness N/N, has defender, loses all other abilities, and is a blue wall in addition to its other colors and types. | 1 | Deep Freeze | dom |
 | enchanted creature is legendary, gets +N/+N, and has flying, vigilance, and lifelink. | 1 | On Serra's Wings | dom |
 | enchanted permanent has hexproof. | 1 | Curator's Ward | dom |
 | enchanted permanent is legendary. | 1 | In Bolas's Clutches | dom |
 | equipped creature gets +N/+N for each land you control. | 1 | Blackblade Reforged | dom |
+| exile all opponents' graveyards. | 1 | Phyrexian Scriptures | dom |
 | exile target creature. put two loyalty counters on a planeswalker you control. | 1 | Settle the Score | dom |
 | historic spells you cast cost {M} less to cast. | 1 | Jhoira's Familiar | dom |
-| i, ii — until your next turn, creatures you control gain "..." | 1 | Song of Freyalise | dom |
+| if a red source you control would deal damage to a permanent or player ~, it deals that much damage plus N to that permanent or player instead. | 1 | The Flame of Keld | dom |
 | if a source would deal damage to equipped creature, prevent N of that damage. | 1 | Shield of the Realm | dom |
-| ii, iii — each player returns two land cards from their graveyard to the battlefield. | 1 | Fall of the Thran | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | look at the top three cards of your library. put two of them into your hand and the other into your graveyard. ~ deals N damage to you. | 1 | Dark Bargain | dom |
@@ -309,12 +310,17 @@
 | other angels you control get +N/+N and have lifelink. | 1 | Lyra Dawnbringer | dom |
 | prevent the next N damage that would be dealt to any target ~ by a source of your choice. you gain N life. | 1 | Healing Grace | dom |
 | put a +N/+N counter on target creature you control if it's legendary. then it fights target creature an opponent controls. (each deals damage equal to its power | 1 | Ancient Animus | dom |
+| return all land cards from your graveyard to the battlefield, then shuffle your graveyard into your library. | 1 | The Mending of Dominaria | dom |
+| return all tapped creatures to their owners' hands. | 1 | Time of Ice | dom |
+| sacrifice a mountain. if you do, ~ deals N damage to each creature. | 1 | The First Eruption | dom |
 | sacrifice ~: the chosen creature gains indestructible until end of turn. | 1 | Dauntless Bodyguard | dom |
 | search your library for two cards. put one into your hand and the other into your graveyard. then shuffle. | 1 | Final Parting | dom |
 | shanna can't be the target of abilities your opponents control. | 1 | Shanna, Sisay's Legacy | dom |
 | target creature gets +N/+N until end of turn. if it's legendary, it also gains lifelink until end of turn. | 1 | Blessing of Belzenlok | dom |
+| target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | 1 | Triumph of Gerrard | dom |
 | traxos enters tapped and doesn't untap during your untap step. | 1 | Traxos, Scourge of Kroog | dom |
 | until your next turn, all lands you control become N/N elemental creatures with reach, indestructible, and haste. they're still lands. | 1 | Sylvan Awakening | dom |
+| until your next turn, creatures you control gain "..." | 1 | Song of Freyalise | dom |
 | when enchanted creature dies, return that card to its owner's hand. | 1 | Demonic Vigor | dom |
 | when garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere ~. | 1 | Garna, the Bloodflame | dom |
 | when niambi enters, you may search your library and/or graveyard for a card named teferi, timebender, reveal it, and put it into your hand. if you search your l | 1 | Niambi, Faithful Healer | dom |

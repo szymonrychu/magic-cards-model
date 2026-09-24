@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 14 | 5.7% |
+| Tested | 14 | 5.7% |
+| Works (untested) | 121 | 49.4% |
 | Partial (unaudited) | 31 | 12.7% |
-| Not tested (handled, untested) | 121 | 49.4% |
-| Not working (silent / notice / error) | 79 | 32.2% |
+| Not working | 79 | 32.2% |
 
 ## Cards needing work
 
@@ -285,13 +285,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Choose one | 4 | Heliod's Intervention, Nylea's Intervention, Purphoros's Intervention, Thassa's Intervention | thb |
-| II | 4 | Elspeth Conquers Death, Kiora Bests the Sea God, Medomai's Prophecy, The Binding of the Titans | thb |
 | ~ escapes with a +N/+N counter on it. | 4 | Loathsome Chimera, Ox of Agonas, Phoenix of Ash, Underworld Rage-Hound | thb |
 | Constellation | 2 | Nessian Wanderer, Protean Thaumaturge | thb |
 | ~ escapes with two +N/+N counters on it. | 2 | Underworld Charger, Woe Strider | thb |
-| I | 1 | The Akroan War | thb |
-| III | 1 | Elspeth's Nightmare | thb |
-| IV | 1 | The First Iroan Games | thb |
 | +N: look at the top four cards of your library. you may reveal an enchantment card from among them and put that card into your hand. put the rest on the bottom  | 1 | Calix, Destiny's Hand | thb |
 | alirios doesn't untap during your untap step if you control a reflection. | 1 | Alirios, Enraptured | thb |
 | all creatures able to block ~ do so. | 1 | Treeshaker Chimera | thb |
@@ -299,7 +295,9 @@
 | at the beginning of your end step, you may exile an enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Aphemia, the Cacophony | thb |
 | at the beginning of your end step, you may pay {M}{M} and sacrifice a nonland permanent. if you do, reveal cards from the top of your library until you reveal a | 1 | Dreamshaper Shaman | thb |
 | callaphe's power is equal to your devotion to blue. | 1 | Callaphe, Beloved of the Sea | thb |
+| choose a card name. | 1 | Medomai's Prophecy | thb |
 | create a N/N red satyr creature token with "..." escape—{M}{M}, exile two other cards from your graveyard. (you may cast ~ from your graveyard for its escape co | 1 | Satyr's Cunning | thb |
+| create a gold token. | 1 | The First Iroan Games | thb |
 | creatures you control get +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your d | 1 | Klothys's Design | thb |
 | daxos's toughness is equal to your devotion to white. | 1 | Daxos, Blessed by the Sun | thb |
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Naiad of Hidden Coves | thb |
@@ -310,15 +308,18 @@
 | enchanted creature loses all abilities and is a blue fish with base power and toughness N/N. | 1 | Ichthyomorphosis | thb |
 | enchanted permanent is an enchantment and loses all other card types. | 1 | One with the Stars | thb |
 | equipped creatures you control have flying and haste. | 1 | Dalakos, Crafter of Wonders | thb |
+| exile target opponent's graveyard. | 1 | Elspeth's Nightmare | thb |
+| exile up to two target cards from graveyards. for each creature card exiled ~, you gain N life. | 1 | The Binding of the Titans | thb |
 | for each spell and ability your opponents control, counter it unless its controller pays {M}. | 1 | Whirlwind Denial | thb |
+| gain control of target creature for as long as ~ remains on the battlefield. | 1 | The Akroan War | thb |
 | haktos attacks each combat if able. | 1 | Haktos the Unscarred | thb |
-| i, ii — mill three cards. then you may exile a creature or enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Tymaret Calls the Dead | thb |
-| i, ii, iii — until end of turn, target creature gains trample and gets +N/+N, where N is the number of lore counters on ~. | 1 | The Triumph of Anax | thb |
 | if a creature dealt damage by ~ ~ would die, exile it instead. | 1 | Incendiary Oracle | thb |
 | if a creature would deal combat damage to ~, prevent that damage and put a +N/+N counter on ~. | 1 | Ironscale Hydra | thb |
 | if damage would be dealt to polukranos while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from it. | 1 | Polukranos, Unchained | thb |
 | krakens, leviathans, octopuses, and serpents you control can't be blocked except by krakens, leviathans, octopuses, and serpents. | 1 | Serpent of Yawning Depths | thb |
 | loyalty abilities of planeswalkers your opponents control cost {M} more to activate. | 1 | Eidolon of Obstruction | thb |
+| mill three cards. then you may exile a creature or enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Tymaret Calls the Dead | thb |
+| noncreature spells your opponents cast cost {M} more to cast until your next turn. | 1 | Elspeth Conquers Death | thb |
 | other satyrs you control get +N/+N and have haste. | 1 | Gallia of the Endless Dance | thb |
 | pegasus creatures you control have lifelink. | 1 | Archon of Sun's Grace | thb |
 | prevent all combat damage that would be dealt ~ except combat damage that would be dealt by enchanted creatures and enchantment creatures. scry N. | 1 | Inspire Awe | thb |
@@ -327,10 +328,12 @@
 | reveal the top six cards of your library. an opponent exiles a nonland card from among them, then you put the rest into your hand. that opponent may cast the ex | 1 | Allure of the Unknown | thb |
 | sacrifice ~: equipped creature can't be blocked ~. sacrifice it at the beginning of the next end step. | 1 | Wings of Hubris | thb |
 | spells you cast with mana value N or greater cost {M} less to cast and can't be countered. | 1 | Thryx, the Sudden Storm | thb |
+| tap all nonland permanents target opponent controls. they don"..."s next untap step. | 1 | Kiora Bests the Sea God | thb |
 | target creature gets +N/+N until end of turn. if it"..."t be the target of spells or abilities your opponents control. damage and effects that say "..." don't d | 1 | Karametra's Blessing | thb |
 | target creature you control gets +N/+N until end of turn. each other creature you control gets +N/+N until end of turn. | 1 | Phalanx Tactics | thb |
 | target opponent reveals their hand. you choose a nonland card from it or a card from their graveyard. exile that card. you lose N life. | 1 | Agonizing Remorse | thb |
 | tymaret's toughness is equal to your devotion to black. | 1 | Tymaret, Chosen from Death | thb |
+| until end of turn, target creature gains trample and gets +N/+N, where N is the number of lore counters on ~. | 1 | The Triumph of Anax | thb |
 | when atris enters, target opponent looks at the top three cards of your library and separates them into a face-down pile and a face-up pile. put one pile into y | 1 | Atris, Oracle of Half-Truths | thb |
 | when ~ dies, put all cards exiled with it onto the battlefield. | 1 | Underworld Sentinel | thb |
 | when ~ dies, return it to the battlefield. it's an aura enchantment with enchant creature you control and "..." and it loses all other abilities. | 1 | Bronzehide Lion | thb |

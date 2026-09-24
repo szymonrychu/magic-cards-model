@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 0 | 0.0% |
+| Tested | 0 | 0.0% |
+| Works (untested) | 10 | 52.6% |
 | Partial (unaudited) | 3 | 15.8% |
-| Not tested (handled, untested) | 10 | 52.6% |
-| Not working (silent / notice / error) | 6 | 31.6% |
+| Not working | 6 | 31.6% |
 
 ## Cards needing work
 

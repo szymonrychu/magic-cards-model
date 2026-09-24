@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 17 | 6.0% |
+| Tested | 17 | 6.0% |
+| Works (untested) | 130 | 46.3% |
 | Partial (unaudited) | 22 | 7.8% |
-| Not tested (handled, untested) | 130 | 46.3% |
-| Not working (silent / notice / error) | 112 | 39.9% |
+| Not working | 112 | 39.9% |
 
 ## Cards needing work
 
@@ -321,8 +321,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | ~ enters tapped unless you control a legendary creature. | 5 | Barad-dûr, Minas Tirith, Mines of Moria, Rivendell, The Shire | ltr |
-| I | 4 | Oath of the Grey Host, One Ring to Rule Them All, Scroll of Isildur, There and Back Again | ltr |
-| III | 2 | Fall of Gil-galad, Tale of Tinúviel | ltr |
 | Landfall | 1 | Strider, Ranger of the North | ltr |
 | (you may cast a legendary instant only if you control a legendary creature or planeswalker.) destroy target creature. if its controller has more than four cards | 1 | Isildur's Fateful Strike | ltr |
 | a deck can have up to nine cards named ~. | 1 | Nazgûl | ltr |
@@ -351,13 +349,14 @@
 | enchanted creature is a spirit and can't attack or block. | 1 | Fog on the Barrow-Downs | ltr |
 | equipped creature has first strike and gets +N/+N for each instant and sorcery card in your graveyard. | 1 | Glamdring | ltr |
 | exile all creature cards from target player's graveyard. you may cast spells from among those cards for as long as they remain exiled, and mana of any type can  | 1 | Shadow of the Enemy | ltr |
-| i, ii, iii, iv, v, vi — note a creature type that hasn't been noted for ~. when you next cast a creature spell of that type ~, that creature enters with an addi | 1 | Long List of the Ents | ltr |
+| gain control of up to one target artifact for as long as you control ~. the ring tempts you. | 1 | Scroll of Isildur | ltr |
 | if one or more +N/+N counters would be put on an army, goblin, or orc you control, that many plus one +N/+N counters are put on it instead. | 1 | Mauhúr, Uruk-hai Captain | ltr |
 | if one or more tokens would be created under your control, those tokens plus an additional food token are created instead. | 1 | Peregrin Took | ltr |
 | if you would draw a card while you have no cards in hand, draw two cards instead. | 1 | Phial of Galadriel | ltr |
 | legendary creatures you control get +N/+N and have ward {M}. | 1 | Flowering of the White Tree | ltr |
 | mana of any type can be spent to activate sharkey's abilities. | 1 | Sharkey, Tyrant of the Shire | ltr |
 | merry has first strike as long as it's equipped. | 1 | Merry, Esquire of Rohan | ltr |
+| note a creature type that hasn't been noted for ~. when you next cast a creature spell of that type ~, that creature enters with an additional +N/+N counter on  | 1 | Long List of the Ents | ltr |
 | put a +N/+N counter on each creature you control. they gain vigilance until end of turn. the ring tempts you. | 1 | Now for Wrath, Now for Ruin! | ltr |
 | put a +N/+N counter on target creature you control if its power is N or greater. then that creature gets +N/+N until end of turn and fights target creature you  | 1 | Ent's Fury | ltr |
 | put target creature into its owner's library second from the top. | 1 | Isolation at Orthanc | ltr |
@@ -373,8 +372,12 @@
 | target creature gets +N/+N until end of turn. if it's legendary, it also gains trample until end of turn. | 1 | Gimli's Fury | ltr |
 | target creature gets -N/-N until end of turn. {M}{M}, exile ~ from your graveyard: the ring tempts you. activate only as a sorcery. | 1 | Gollum's Bite | ltr |
 | target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | 1 | Friendly Rivalry | ltr |
+| the ring tempts you, then each player mills cards equal to your ring-bearer's power. | 1 | One Ring to Rule Them All | ltr |
 | the ring tempts you. search your library for a card that shares a color with a legendary creature you control, reveal it, put it into your hand, then shuffle. | 1 | Ringsight | ltr |
 | the ring tempts you. then reveal cards from the top of your library until you reveal N land cards, where N is the number of legendary creatures you control. put | 1 | The Ring Goes South | ltr |
+| until end of turn, target creature you control gains "..." then that creature fights up to one other target creature. | 1 | Fall of Gil-galad | ltr |
+| up to one target creature can't block for as long as you control ~. the ring tempts you. | 1 | There and Back Again | ltr |
+| up to two target creatures you control each gain lifelink until end of turn. | 1 | Tale of Tinúviel | ltr |
 | when grishnákh enters, amass orcs N. when you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | 1 | Grishnákh, Brash Instigator | ltr |
 | when lobelia enters, exile target creature card from an opponent"..."s power. | 1 | Lobelia Sackville-Baggins | ltr |
 | when samwise enters, choose up to one target permanent card in your graveyard that was put there from the battlefield ~. return it to your hand. then the ring t | 1 | Samwise the Stouthearted | ltr |
@@ -427,6 +430,7 @@
 | whenever ~ becomes blocked, it deals N damage to each creature blocking it. | 1 | Battle-Scarred Goblin | ltr |
 | whenever ~ deals damage to a goblin or orc, destroy that creature. | 1 | East-Mark Cavalier | ltr |
 | whenever ~ or another spirit you control becomes the target of a spell, it phases out. | 1 | King of the Oathbreakers | ltr |
+| you and target opponent each create a food token. | 1 | Oath of the Grey Host | ltr |
 | you may cast legendary spells and artifact spells as though they had flash. | 1 | Gandalf the White | ltr |
 | you may cast sorcery spells as though they had flash. | 1 | Gandalf, Friend of the Shire | ltr |
 | you may cast spells ~ as though they had flash. draw a card. | 1 | Borne Upon a Wind | ltr |

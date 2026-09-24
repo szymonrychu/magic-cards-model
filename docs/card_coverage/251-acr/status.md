@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 5 | 4.8% |
+| Tested | 5 | 4.8% |
+| Works (untested) | 29 | 27.6% |
 | Partial (unaudited) | 9 | 8.6% |
-| Not tested (handled, untested) | 29 | 27.6% |
-| Not working (silent / notice / error) | 62 | 59.0% |
+| Not working | 62 | 59.0% |
 
 ## Cards needing work
 
@@ -145,7 +145,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | freerunning | 7 | Achilles Davenport, Brotherhood Ambushers, Distract the Guards, Eagle Vision, Escape Detection | acr |
-| I | 2 | Fall of the First Civilization, The Aesir Escape Valhalla | acr |
 | Betrayal | 1 | Cleopatra, Exiled Pharaoh | acr |
 | Choose one | 1 | What Must Be Done | acr |
 | Choose one or both | 1 | Auditore Ambush | acr |
@@ -164,6 +163,7 @@
 | enchanted creature can't attack or block. | 1 | Detained by Legionnaires | acr |
 | equip abilities you activate cost {M} less to activate. | 1 | Bureau Headmaster | acr |
 | equipped creature has ward {M}, is an assassin in addition to its other types, and can't be blocked. | 1 | Brotherhood Regalia | acr |
+| exile a permanent card from your graveyard. you gain life equal to its mana value. | 1 | The Aesir Escape Valhalla | acr |
 | exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. they enter tapped.  | 1 | Become Anonymous | acr |
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) destroy target creature. if | 1 | Chain Assassination | acr |
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) exile the top two cards of  | 1 | Monastery Raid | acr |
@@ -171,7 +171,7 @@
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) search your library for up  | 1 | Viewpoint Synchronization | acr |
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) untap all creatures you con | 1 | Overpowering Attack | acr |
 | havi has indestructible as long as there are four or more historic cards in your graveyard. | 1 | Havi, the All-Father | acr |
-| i, ii, iii — mill three cards. you may put a historic card from among them into your hand. | 1 | Ballad of the Black Flag | acr |
+| mill three cards. you may put a historic card from among them into your hand. | 1 | Ballad of the Black Flag | acr |
 | other creatures you control are assassins in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Roshan, Hidden Magister | acr |
 | other knights you control get +N/+N and have protection from assassins. | 1 | Haytham Kenway | acr |
 | return each nonland permanent that"..."s hand. (artifacts, legendaries, and sagas are historic.) | 1 | Desynchronization | acr |
@@ -198,6 +198,7 @@
 | whenever you put a lore counter on a saga you control, put a +N/+N counter on up to one other target creature. | 1 | Sigurd, Jarl of Ravensthorpe | acr |
 | whenever ~ attacks, if an assassin crewed it ~, draw a card. ~ becomes an assassin in addition to its other types until end of turn. | 1 | Adrestia | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
+| you and target opponent each draw two cards. | 1 | Fall of the First Civilization | acr |
 | you may look at the top card of your library any time. | 1 | Crystal Skull, Isu Spyglass | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |

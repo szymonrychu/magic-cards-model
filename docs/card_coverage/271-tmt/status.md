@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 7 | 3.7% |
+| Tested | 7 | 3.7% |
+| Works (untested) | 98 | 52.4% |
 | Partial (unaudited) | 9 | 4.8% |
-| Not tested (handled, untested) | 98 | 52.4% |
-| Not working (silent / notice / error) | 73 | 39.0% |
+| Not working | 73 | 39.0% |
 
 ## Cards needing work
 
@@ -239,6 +239,7 @@
 | attacking creatures you control have double strike. | 1 | Raphael, the Nightwatcher | tmt |
 | attacking ninjas you control have deathtouch. | 1 | Dark Leo & Shredder | tmt |
 | counter target spell. create a mutagen token. (it's an artifact with "...") | 1 | Ooze Spill | tmt |
+| create a token that"..."t legendary and is a mutant in addition to its other types. | 1 | The Cloning of Shredder | tmt |
 | creature cards in your graveyard have sneak {M}{M}. | 1 | Ninja Teen | tmt |
 | destroy target artifact or creature. if its mana value was N or less, create a food token. (it's an artifact with "...") | 1 | Tainted Treats | tmt |
 | destroy up to one target artifact, enchantment, or creature with flying. create a mutagen token. (it's an artifact with "...") | 1 | Mutant Chain Reaction | tmt |
@@ -246,7 +247,6 @@
 | enchanted creature is a turtle with base power and toughness N/N. it can't attack and loses all abilities. | 1 | Retro-Mutation | tmt |
 | equipped creature gets +N/+N for each artifact you control. | 1 | Improvised Arsenal | tmt |
 | gain control of all artifacts your opponents control until end of turn. untap them. they gain haste until end of turn. | 1 | Broadcast Takeover | tmt |
-| ii, iii — create a token that"..."t legendary and is a mutant in addition to its other types. | 1 | The Cloning of Shredder | tmt |
 | leatherhead enters with a hexproof counter on her. | 1 | Leatherhead, Swamp Stalker | tmt |
 | leonardo gets +N/+N for each other creature you control. | 1 | Leonardo, Big Brother | tmt |
 | return all creatures to their owners' hands. each player may shuffle their hand and graveyard into their library, then each player who does draws seven cards. e | 1 | Turtles in Time | tmt |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Full (handled + tested) | 26 | 10.3% |
+| Tested | 26 | 10.3% |
+| Works (untested) | 124 | 49.2% |
 | Partial (unaudited) | 11 | 4.4% |
-| Not tested (handled, untested) | 124 | 49.2% |
-| Not working (silent / notice / error) | 91 | 36.1% |
+| Not working | 91 | 36.1% |
 
 ## Cards needing work
 
@@ -295,7 +295,6 @@
 | when ~ enters, exile up to two target cards from a single graveyard. | 2 | Arashin Sunshield, Feral Deathgorger // Dusk Sight | tdm |
 | Choose one | 1 | Frontline Rush | tdm |
 | Flurry | 1 | Taigam, Master Opportunist | tdm |
-| III | 1 | Roar of Endless Song | tdm |
 | as an additional cost to cast ~, you may behold a dragon. (you may choose a dragon you control or reveal a dragon card from your hand.) counter target spell unl | 1 | Dispelling Exhale | tdm |
 | as an additional cost to cast ~, you may behold a dragon. (you may choose a dragon you control or reveal a dragon card from your hand.) target creature you cont | 1 | Piercing Exhale | tdm |
 | as an additional cost to cast ~, you may behold a dragon. (you may choose a dragon you control or reveal a dragon card from your hand.) ~ deals N damage to targ | 1 | Osseous Exhale | tdm |
@@ -315,6 +314,7 @@
 | decayed | 1 | Rot-Curse Rakshasa | tdm |
 | destroy all creatures and enchantments. draw a card for each permanent destroyed ~. | 1 | Death Begets Life | tdm |
 | distribute two +N/+N counters among one or two target creatures you control. creatures you control with counters on them gain vigilance and trample until end of | 1 | Synchronized Charge | tdm |
+| double the power and toughness of each creature you control until end of turn. | 1 | Roar of Endless Song | tdm |
 | double the power and toughness of target creature you control until end of turn. then it fights up to one target creature an opponent controls. (each deals dama | 1 | Dragonclaw Strike | tdm |
 | during your end step, warrior tokens you control have "..." | 1 | Zurgo, Thunder's Decree | tdm |
 | during your turn, spells you cast cost {M} less to cast for each creature you control with power N or greater. | 1 | Temur Battlecrier | tdm |
