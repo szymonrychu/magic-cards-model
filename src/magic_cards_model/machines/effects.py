@@ -150,6 +150,7 @@ from .delayed import (
     ReflexiveCounterCountConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
+    ReturnEachExiledToBattlefieldUnderOwner,
     ReturnExiledCardAndAddCounters,
     ReturnRiderCounter,
     RevokeGrantedAbility,
@@ -24374,6 +24375,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
     if citys_blessing_instead is not None:
         return citys_blessing_instead
+    kicked_choose_return = _parse_kicked_choose_return_delayed_clause(whole)
+    if kicked_choose_return is not None:
+        return kicked_choose_return
     counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(whole)
     if counter_exile_may_cast is not None:
         return counter_exile_may_cast
@@ -25186,11 +25190,11 @@ def _parse_exile_if_mv_return_then_re_exile_clause(
 #: family, read here too since a blinked permanent arrives exactly the same
 #: way a reanimated one does (CR 614.12, 604.1a).
 _RETURN_TO_BATTLEFIELD_RE = re.compile(
-    r"^return (?:it|that (?:card|permanent|creature))"
+    r"^return (?:it|them|that (?:card|permanent|creature)|those (?:cards|permanents|creatures))"
     r" to the battlefield"
     r"(?P<tapped> tapped)?"
     r"(?P<transformed> transformed)?"
-    r"(?: under (?P<control>its owner's|your) control)?"
+    r"(?: under (?P<control>its owner's|their owners?'?s?|your) control)?"
     rf"(?: with an? (?:additional )?(?:(?P<counter_n>{COUNT}) )?(?P<counter>[a-z0-9+/-]+) "
     r"counters? on (?:it|them))?\.?$",
     re.IGNORECASE,
@@ -26903,26 +26907,37 @@ def _parse_exile_then_return_clause_pair(
         ((parse_count(counter_n_word) if counter_n_word else 1) or 1) if counter_word else 0
     )
 
+    owners_control = control is not None and control.lower() != "your"
+
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
+        exiled_cards: list[CardState] = []
         for target in game.resolve_targets(stack_object):
             if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
                 continue
             exiled = game.exile_permanent(target)
             if exiled.zone is not Zone.EXILE:
                 continue  # CR 111.8: a token refused the move; nothing to return.
-            owner = exiled.owner or controller
-            new_controller = owner if control == "its owner's" else controller
-            # CR 712.14a: "transformed" is how it *enters*, not something done
-            # to it afterwards - the difference is CR 306.5b's loyalty
-            # counters, which are put on as it enters and read off the face
-            # that is up. Transforming after the fact left a planeswalker back
-            # face on the battlefield at 0 loyalty, dead to CR 704.5i.
-            permanent = game.put_onto_battlefield(
-                exiled, new_controller, tapped=tapped, transformed=transformed
-            )
-            if counter_kind is not None and permanent.zone is Zone.BATTLEFIELD:
-                game.add_counters(permanent, counter_kind, counter_amount)
+            exiled_cards.append(exiled)
+        # "Exile two target creatures ..., then return them" (Gone Fishing,
+        # Displace): every card is exiled first and all of them return as
+        # one event (CR 603.6a), so each newcomer's enters ability sees the
+        # others.
+        with game.entering_together():
+            for exiled in exiled_cards:
+                owner = exiled.owner or controller
+                new_controller = owner if owners_control else controller
+                # CR 712.14a: "transformed" is how it *enters*, not something
+                # done to it afterwards - the difference is CR 306.5b's
+                # loyalty counters, which are put on as it enters and read
+                # off the face that is up. Transforming after the fact left a
+                # planeswalker back face on the battlefield at 0 loyalty,
+                # dead to CR 704.5i.
+                permanent = game.put_onto_battlefield(
+                    exiled, new_controller, tapped=tapped, transformed=transformed
+                )
+                if counter_kind is not None and permanent.zone is Zone.BATTLEFIELD:
+                    game.add_counters(permanent, counter_kind, counter_amount)
 
     return effect
 
@@ -32290,8 +32305,9 @@ def _look_at_target_hand(game: "Game", stack_object: "StackObject") -> None:
 #: its/their owner's control" - the blink idiom (Phelia, Blizzard Strix, Angel
 #: of Condemnation, Astral Drift all print it verbatim).
 _RETURN_TO_BATTLEFIELD_OWNER_RE = re.compile(
-    r"^return (?:it|that card|that creature|that permanent) to the battlefield "
-    r"under (?:its|their) owner'?s control$",
+    r"^(?:if you do, )?return (?:it|that card|that creature|that permanent|them"
+    r"|those (?:cards|creatures|permanents)) to the battlefield "
+    r"under (?:its|their) owners?'?s? control$",
     re.IGNORECASE,
 )
 
@@ -33628,7 +33644,14 @@ def _parse_delayed_blink_clauses(
     `DelayedTrigger`, the same way `_parse_anaphoric_clause_pair` closes over
     its own first clause's target.
     """
-    exile_match = _EXILE_TARGET_RE.fullmatch(clauses[index])
+    # "you may exile target ... If you do, return that card ..." (Sentinel of
+    # the Pearl Trident): CR 608.2d's optional exile, and "If you do" is the
+    # delayed return's own condition - nothing exiled, nothing returned.
+    first = clauses[index].strip()
+    optional = first.lower().startswith("you may ")
+    if optional:
+        first = first[len("you may ") :]
+    exile_match = _EXILE_TARGET_RE.fullmatch(first)
     if exile_match is None:
         return None
     if not _targets_understood(
@@ -33642,6 +33665,8 @@ def _parse_delayed_blink_clauses(
         return None
     step, verb = timing
     if not _RETURN_TO_BATTLEFIELD_OWNER_RE.fullmatch(verb):
+        return None
+    if optional and not verb.lower().startswith("if you do, "):
         return None
 
     consumed = 2
@@ -33663,32 +33688,67 @@ def _parse_delayed_blink_clauses(
             # CR 115.6: "up to one" chose zero, or CR 608.2b left nothing
             # legal - nothing to exile, so nothing to delay either.
             return
-        target = targets[0]
-        game.exile_permanent(target)
-        if target.zone is not Zone.EXILE:
-            # CR 111.8 refused it (a token that already left the battlefield
-            # once) - no delayed return for something that never left.
+        if optional and not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=controller,
+                prompt=f"exile {', '.join(target.name for target in targets)}",
+                source=source_name,
+                source_id=source_id_of(stack_object),
+                affirmative_is_legal=True,
+            )
+        ):
+            return
+        exiled_cards: list[CardState] = []
+        for target in targets:
+            game.exile_permanent(target)
+            # CR 111.8 refused a token that already left the battlefield once -
+            # no delayed return for something that never left.
+            if target.zone is Zone.EXILE:
+                exiled_cards.append(target)
+        if not exiled_cards:
             return
 
+        if len(exiled_cards) > 1 and rider is None:
+            # "Return those cards ..." (Elrond, Moon-Reader; Eerie Interlude):
+            # one delayed ability returning every card it exiled together.
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clauses[index + 1],
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    effect=ReturnEachExiledToBattlefieldUnderOwner(
+                        subjects=tuple(
+                            (card_state.id, card_state.zone_change_stamp)
+                            for card_state in exiled_cards
+                        )
+                    ),
+                )
+            )
+            return
         blink_effect = (
             return_subject_to_battlefield_under_owner
             if rider is None
             else DelayedBlinkReturnWithRider(rider=rider)
         )
-        game.create_delayed_trigger(
-            DelayedTrigger(
-                text=clauses[index + 1],
-                event=TriggerEvent.BEGINNING_OF_STEP,
-                step=step,
-                controller=controller,
-                source_id=source_id,
-                source_name=source_name,
-                subject_id=target.id,
-                expected_zone=Zone.EXILE,
-                expected_stamp=target.zone_change_stamp,
-                effect=blink_effect,
+        for target in exiled_cards:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clauses[index + 1],
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=controller,
+                    source_id=source_id,
+                    source_name=source_name,
+                    subject_id=target.id,
+                    expected_zone=Zone.EXILE,
+                    expected_stamp=target.zone_change_stamp,
+                    effect=blink_effect,
+                )
             )
-        )
 
     return consumed, effect
 
@@ -48392,5 +48452,87 @@ def _parse_for_each_opponent_exile_clause(text: str, *, for_spell: bool) -> Abil
                 _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
             if gains_life and power > 0:
                 game.gain_life(game.player(former_controller), power)
+
+    return effect
+
+
+#: "Choose `<targets>`. If this spell was kicked, instead choose `<targets>`.
+#: Return each chosen `<noun>` to `<hand>`.[ At the beginning of the next
+#: `<step>`, create `<a token>` for each `<noun>` returned to `<hand>` this
+#: way.]" - The Eagles Are Coming!. Which targets were chosen is settled at
+#: announcement (CR 601.2c, `machines/targeting.kicked_instead_target_text`),
+#: so resolution returns whatever was chosen and still legal (CR 608.2b),
+#: together (CR 603.2c), and the delayed tail (CR 603.7a) counts the cards
+#: that really arrived in a hand.
+_KICKED_CHOOSE_RETURN_DELAYED_RE = re.compile(
+    r"^choose (?P<base>[^.]*\btargets?\b[^.]*)\.\s*"
+    r"if this spell was kicked, instead choose (?P<kicked>[^.]*\btargets?\b[^.]*)\.\s*"
+    r"return each chosen (?P<noun>[a-z]+) to (?:your|its owner's|their owners'?) hands?\.?"
+    r"(?:\s*at the beginning of the next (?P<step>upkeep|end step), "
+    r"(?P<delayed>create an? .+? tokens?(?: with [^.]+?)?) for each (?P=noun) returned to "
+    r"(?:your|its owner's|their owners'?) hands? this way\.?)?$",
+    re.IGNORECASE,
+)
+
+_SINGLE_TOKEN_CLAUSE_RE = re.compile(
+    r"^create an? (?P<desc>.+?) token(?P<tail>(?: with [^.]+)?)$", re.IGNORECASE
+)
+
+
+def _parse_kicked_choose_return_delayed_clause(effect_text: str) -> Effect | None:
+    """`_KICKED_CHOOSE_RETURN_DELAYED_RE`'s shape.
+
+    The delayed half is a CR 603.7a delayed triggered ability made from its
+    own words (`CreatedTriggeredAbility`, triggering once, CR 603.7b), its
+    single token rewritten to the number of cards returned ("create a ...
+    token" -> "create N ... tokens"), read by the same token parser a printed
+    "create N ..." goes through - so the tokens are created together, as one
+    event. Nothing returned, nothing delayed.
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _KICKED_CHOOSE_RETURN_DELAYED_RE.fullmatch(whole)
+    if match is None:
+        return None
+    for phrase in (match.group("base"), match.group("kicked")):
+        if not _targets_understood(phrase, count_agnostic=True):
+            return None
+    step_word = (match.group("step") or "").lower()
+    step = {"upkeep": Step.UPKEEP, "end step": Step.END_STEP}.get(step_word)
+    delayed_clause = match.group("delayed")
+    token_match = None
+    if delayed_clause is not None:
+        token_match = _SINGLE_TOKEN_CLAUSE_RE.fullmatch(delayed_clause.strip())
+        if token_match is None:
+            return None
+        probe = f"create 2 {token_match.group('desc')} tokens{token_match.group('tail')}"
+        if parse_mixed_effect_for_spell(probe) is None:
+            return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        returned = 0
+        with game.returning_together():
+            for target in game.resolve_targets(spell):
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD:
+                    moved = game.return_to_hand(target)
+                    if moved is not None and moved.zone is Zone.HAND:
+                        returned += 1
+        if token_match is None or step is None or returned <= 0:
+            return
+        created = (
+            f"At the beginning of each {step_word}, create {returned} "
+            f"{token_match.group('desc')} tokens{token_match.group('tail')}."
+        )
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=f"At the beginning of the next {step_word}, {delayed_clause}.",
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=step,
+                controller=controller,
+                source_id=spell.id,
+                source_name=spell.name,
+                effect=CreatedTriggeredAbility(ability_text=created, source_card=spell.card),
+            )
+        )
 
     return effect

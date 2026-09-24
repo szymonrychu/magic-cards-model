@@ -241,6 +241,7 @@ from ..machines.targeting import (
     RetargetScope,
     TargetingProfile,
     TargetRequirement,
+    kicked_instead_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
@@ -13816,6 +13817,12 @@ class Game(EngineModel):
             except ValueError:
                 # Not a modal card after all; fall through to its plain text.
                 pass
+        kicked_alternative = kicked_instead_target_text(spell.oracle_text or "")
+        if kicked_alternative is not None:
+            # CR 601.2c's kicked targets, rechecked against the same sentence
+            # they were chosen under (CR 608.2b).
+            kicked = record is not None and record.kicked > 0
+            return profile_for_text(kicked_alternative[1 if kicked else 0])
         if spell.fused and spell.card.card_faces and len(spell.card.card_faces) == 2:
             # CR 702.102b/709.4b: the same combined-profile shape `Casting.
             # targeting` builds at announcement, rebuilt here for CR 608.2b's

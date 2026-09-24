@@ -82,6 +82,7 @@ from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .objects_as_costs import power_of
 from .targeting import (
     TargetingProfile,
+    kicked_instead_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
     profile_for_text,
@@ -3580,6 +3581,14 @@ class Casting(EngineModel):
                     spell_profile_for_text(
                         substitute_x(self.spell.oracle_text, self.x_value), self.spell.card
                     )
+                )
+            kicked_alternative = kicked_instead_target_text(self.spell.oracle_text or "")
+            if kicked_alternative is not None:
+                # CR 601.2c: kicker (announced at CR 601.2b) decides which
+                # targets are chosen - "If this spell was kicked, instead
+                # choose ..." (The Eagles Are Coming!).
+                return self._with_bestowed_target(
+                    profile_for_text(kicked_alternative[1 if self.kicked else 0])
                 )
             return self._with_bestowed_target(targeting_profile(self.spell.card))
         return self._with_bestowed_target(
