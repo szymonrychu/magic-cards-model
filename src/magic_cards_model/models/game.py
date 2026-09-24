@@ -441,6 +441,18 @@ _COSTS_LESS_PER_CARD_TYPE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This spell costs {N} less to cast for each `<quality>` card in your
+#: graveyard." - The Dawning Archaic's "for each instant and sorcery card":
+#: every card in the caster's graveyard that is any one of the named types
+#: (CR 205.2a) counts once. The quality is read by `machines/effects.
+#: _quality_matcher`, with the printed "and" meaning "or" for one card (no
+#: card is both an instant and a sorcery).
+_COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE = re.compile(
+    r"costs \{(\d+)\} less to cast for each (?P<quality>(?!card type)[a-z, ]+?) card "
+    r"in your graveyard",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's *other* self-referential reduction shape: "This spell costs
 #: `<N>` less to cast if it targets a `<color>` spell." (Mystical Dispute).
 #: Unlike Emrakul's row above, the condition is not a fact about the board -
@@ -550,6 +562,7 @@ _AFFINITY_RE = re.compile(r"\baffinity for (?P<what>[A-Za-z]+)", re.IGNORECASE)
 #: label.
 _SELF_COST_REDUCTION_SHAPES = (
     _COSTS_LESS_PER_CARD_TYPE,
+    _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE,
     _COSTS_LESS_PER_CARD_DISCARDED_RE,
     _COSTS_LESS_PER_BASIC_LAND_TYPE_RE,
     _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE,
@@ -7088,6 +7101,7 @@ class Game(EngineModel):
         mana_value_below: float | None = None,
         alternative_cost: TotalCost | None = None,
         pays_mana_cost: bool = False,
+        exile_instead_of_graveyard: bool = False,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -7157,6 +7171,10 @@ class Game(EngineModel):
             zone=card.zone,
             until_end_of_turn=False,
             immediate=True,
+            # "If an instant or sorcery spell cast this way would be put into
+            # your graveyard, exile it instead" (Bilbo, The Dawning Archaic):
+            # CR 614.1a's rider rides on how this spell was cast.
+            exile_instead_of_graveyard=exile_instead_of_graveyard,
         )
         casting: Casting | None = None
         payment: CostPayment | None = None
@@ -18089,6 +18107,16 @@ class Game(EngineModel):
             types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
             amount += int(match.group(1)) * len(types)
 
+        per_quality = _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE.search(text)
+        if per_quality is not None:
+            from ..machines.effects import _card_description_is_readable, _quality_matcher
+
+            quality = re.sub(r"\s+and\s+", " or ", per_quality.group("quality"))
+            if _card_description_is_readable(quality):
+                matches = _quality_matcher(quality)
+                counted = sum(1 for card in self.player(owner).graveyard if matches(card))
+                amount += int(per_quality.group(1)) * counted
+
         discarded = _COSTS_LESS_PER_CARD_DISCARDED_RE.search(text)
         if discarded is not None:
             amount += int(discarded.group(1)) * self.cards_discarded_this_turn.get(owner, 0)
@@ -18333,7 +18361,7 @@ class Game(EngineModel):
         return counted
 
     def static_cost_modifiers_for(
-        self, spell: CardState, caster: str | None = None
+        self, spell: CardState, caster: str | None = None, *, origin_zone: Zone | None = None
     ) -> tuple[list[ManaCost], list[ManaCost], int | None]:
         """Board-wide static cost increases, decreases, and the floor in play
         right now (CR 601.2f, 611.3).
@@ -18373,6 +18401,9 @@ class Game(EngineModel):
         already uses.
         """
         caster = caster or spell.controller or self.active_player.username
+        # CR 601.2a: where the spell was cast from - handed in by a casting
+        # already on the stack, read off the card before it has moved.
+        cast_from = origin_zone if origin_zone is not None else spell.zone
         increases: list[ManaCost] = []
         decreases: list[ManaCost] = []
         floor: int | None = None
@@ -18509,6 +18540,15 @@ class Game(EngineModel):
                     if permanent.controller != caster or effect.reduction is None:
                         continue
                     decreases.append(ManaCost.parse(effect.reduction))
+                elif effect.kind is CostModifierKind.ZONE_DECREASE:
+                    # Bilbo: "Spells you cast from anywhere other than your
+                    # hand" - the caster's own, by the zone cast from.
+                    if permanent.controller != caster:
+                        continue
+                    if (effect.from_zone is not None and cast_from is effect.from_zone) or (
+                        effect.not_from_zone is not None and cast_from is not effect.not_from_zone
+                    ):
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
                 elif effect.kind is CostModifierKind.COLOR_DECREASE:
                     if permanent.controller != caster:
                         continue

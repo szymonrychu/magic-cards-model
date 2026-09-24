@@ -5359,7 +5359,9 @@ def _quality_matcher(quality: str) -> Callable[[CardState], bool]:
         return legendary_matches
     if lowered == "historic":
         return _historic
-    words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
+    # "artifact, instant, or sorcery" (Bilbo, Thief in the Night): the Oxford
+    # comma's ", or" is one separator, not a comma then an "or sorcery" word.
+    words = [word.strip() for word in re.split(r",\s*(?:or\s+)?|\s+or\s+", lowered) if word.strip()]
     matchers = [_quality_word_matcher(word) for word in words]
     if len(words) > 1 and all(word.startswith("non") for word in words):
 
@@ -5454,7 +5456,9 @@ def _card_description_is_readable(quality: str) -> bool:
         return _card_description_is_readable(lowered.removeprefix("basic "))
     if lowered == "historic":
         return True
-    words = [word.strip() for word in re.split(r",\s*|\s+or\s+", lowered) if word.strip()]
+    # "artifact, instant, or sorcery" (Bilbo, Thief in the Night): the Oxford
+    # comma's ", or" is one separator, not a comma then an "or sorcery" word.
+    words = [word.strip() for word in re.split(r",\s*(?:or\s+)?|\s+or\s+", lowered) if word.strip()]
     if not words:
         return False
     for word in words:
@@ -20985,6 +20989,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     self_layer_and_verb = _parse_self_layer_and_verb_clause(effect_text)
     if self_layer_and_verb is not None:
         return self_layer_and_verb
+    cast_from_graveyard_now = _parse_cast_from_graveyard_now_clause(effect_text)
+    if cast_from_graveyard_now is not None:
+        return cast_from_graveyard_now
     counter_exile_may_cast = _parse_counter_exile_may_cast_free_clause(effect_text)
     if counter_exile_may_cast is not None:
         return counter_exile_may_cast
@@ -48533,6 +48540,119 @@ def _parse_kicked_choose_return_delayed_clause(effect_text: str) -> Effect | Non
                 source_name=spell.name,
                 effect=CreatedTriggeredAbility(ability_text=created, source_card=spell.card),
             )
+        )
+
+    return effect
+
+
+#: "you may cast {an? `<quality>` spell|target `<quality>` card} from your
+#: graveyard[ without paying its mana cost]. [If {an? `<quality>` spell cast
+#: this way|that spell} would be put into your graveyard, exile it instead.]"
+#: - Bilbo, Thief in the Night's and The Dawning Archaic's attack triggers:
+#: a cast made while the ability resolves (CR 608.2g), out of the
+#: controller's own graveyard, with CR 614.1a's exile rider carried on the
+#: cast (`CastRecord.exile_instead_of_graveyard`, the record S26's graveyard
+#: permissions write - `machines/replacement._stack_replacements` reads it).
+_CAST_FROM_GRAVEYARD_NOW_RE = re.compile(
+    r"^you may cast (?:an? (?P<quality>.+?) spell|(?P<target>target .+? card)) from your graveyard"
+    r"(?P<free> without paying its mana cost)?\.?"
+    r"(?:\s*if (?:an? (?P<rider_quality>.+?) spell cast this way|that spell) would be put "
+    r"into (?:your|a) graveyard, exile it instead\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_from_graveyard_now_clause(effect_text: str) -> AbilityEffect | None:
+    """`_CAST_FROM_GRAVEYARD_NOW_RE`'s shape.
+
+    CR 608.2d: the "may" is offered only when a legal choice exists - a
+    graveyard card of the quality (or the targeted card, rechecked by CR
+    608.2b) that `Game.can_cast_during_resolution` finds castable - then
+    `DecisionKind.CHOOSE_CARDS` for which one, and `Game.cast_during_
+    resolution` casts it, paying its mana cost unless the text waives it
+    (CR 118.9). The rider applies to the spell only when it has the rider's
+    own quality ("an instant or sorcery spell cast this way"), or always for
+    "that spell".
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _CAST_FROM_GRAVEYARD_NOW_RE.fullmatch(whole)
+    if match is None:
+        return None
+    quality = match.group("quality")
+    target_phrase = match.group("target")
+    if quality is not None and not _card_description_is_readable(quality):
+        return None
+    if target_phrase is not None and not _targets_understood(
+        f"{target_phrase} from your graveyard", battlefield_only=False
+    ):
+        return None
+    matches_quality = _quality_matcher(quality) if quality is not None else None
+    has_rider = "exile it instead" in whole.lower()
+    rider_quality = match.group("rider_quality")
+    if rider_quality is not None and not _card_description_is_readable(rider_quality):
+        return None
+    rider_matches = _quality_matcher(rider_quality) if rider_quality is not None else None
+    free = match.group("free") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        caster = game.controller_of(ability).username
+        if target_phrase is not None:
+            pool = [
+                card
+                for card in game.resolve_targets(ability)
+                if isinstance(card, CardState) and card.zone is Zone.GRAVEYARD
+            ]
+        else:
+            pool = [
+                card
+                for card in game.player(caster).graveyard
+                if matches_quality is not None and matches_quality(card)
+            ]
+        candidates = [
+            card
+            for card in pool
+            if not card.card.is_land and game.can_cast_during_resolution(card, caster)
+        ]
+        described = (
+            with_indefinite_article(f"{quality} spell") if quality is not None else "that card"
+        )
+        cost_words = " without paying its mana cost" if free else ""
+        taken = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=f"cast {described} from your graveyard{cost_words}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                affirmative_is_legal=bool(candidates),
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        if not taken or not candidates:
+            return
+        chosen = candidates[0]
+        if len(candidates) > 1 or target_phrase is None:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=f"choose a card to cast{cost_words}",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(card.id for card in candidates),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            chosen = {card.id: card for card in candidates}[chosen_ids[0]]
+        exile_instead = has_rider and (rider_matches is None or rider_matches(chosen))
+        game.cast_during_resolution(
+            chosen,
+            caster,
+            source_name=ability.source_name,
+            rule="CR 608.2g",
+            pays_mana_cost=not free,
+            exile_instead_of_graveyard=exile_instead,
         )
 
     return effect
