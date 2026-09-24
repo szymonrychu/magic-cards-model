@@ -2637,7 +2637,9 @@ def _printed_alternative_total_cost(phrase: str, payer: str | None) -> TotalCost
     """
     mana_only = _PAY_ONLY_MANA.match(phrase.strip().rstrip("."))
     if mana_only is not None:
-        return TotalCost.of(ManaCost.parse(mana_only.group("mana").strip()))
+        mana = ManaCost.try_parse(mana_only.group("mana").strip())
+        if mana is not None:
+            return TotalCost.of(mana)
     return total_cost_for_phrase(phrase, payer=payer)
 
 
@@ -5269,7 +5271,13 @@ class Casting(EngineModel):
         extra_targets = max(0, len(self.targets) - 1)
         if extra_targets == 0:
             return ManaCost()
-        per_target = ManaCost.parse(match.group("amount"))
+        per_target = ManaCost.try_parse(match.group("amount"))
+        if per_target is None:
+            raise ValueError(
+                f"{self.spell.name}'s per-target cost increase "
+                f"{match.group('amount')} is not a mana cost this engine can read; the spell "
+                "is refused rather than cast without it (CR 601.2f)"
+            )
         return ManaCost(symbols=per_target.symbols * extra_targets)
 
     def _own_cost_reduction(self) -> ManaCost:
@@ -6628,7 +6636,7 @@ def _splice_parameter(ability: KeywordAbility) -> tuple[str | None, str | None]:
     """
     parameter = (ability.parameter or ability.cost or "").strip()
     match = _SPLICE_PARAMETER_RE.fullmatch(parameter)
-    if match is None:
+    if match is None or ManaCost.try_parse(match.group("cost")) is None:
         return None, None
     return match.group("quality").strip().lower(), match.group("cost")
 

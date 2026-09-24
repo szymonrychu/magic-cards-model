@@ -159,6 +159,7 @@ from .delayed import (
     ReflexiveDamageEqualToSubjectPowerConsequence,
     ReflexiveMandatoryTokenDamageConsequence,
     ReflexivePayEnergyConsequence,
+    ReflexivePayManaConsequence,
     ReflexiveWhenYouDoConsequence,
     ReturnEachExiledToBattlefieldUnderOwner,
     ReturnExiledCardAndAddCounters,
@@ -771,7 +772,14 @@ def _create_continuous_effect_of_ability_for_mode_text(mode_text: str) -> Abilit
     (`_resolve_modal_triggered_ability_clause` - Elder Gargaroth, Abiding
     Grace, and any modal trigger whose own chosen mode is itself a layer
     shape).
+
+    A mode that names no target - Voltstorm Angel's "This creature gains
+    vigilance and lifelink until end of turn." - affects the ability's own
+    source, the same split `create_continuous_effect_of_ability` makes off
+    the text's own targeting profile.
     """
+    profile = profile_for_text(mode_text)
+    requires_target = profile.understood and bool(profile.requirements)
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
@@ -779,7 +787,7 @@ def _create_continuous_effect_of_ability_for_mode_text(mode_text: str) -> Abilit
             return
         continuous_effects(game).create(
             source,
-            targets=game.resolve_card_targets(ability),
+            targets=game.resolve_card_targets(ability) if requires_target else [source],
             context=layer_context_for(game, game.controller_of(ability)),
             ability_text=mode_text,
             game=game,
@@ -5111,6 +5119,34 @@ def damage_ability_targets_equal_to_expression(reader: "AmountReader") -> Abilit
     return effect
 
 
+def _self_deals_damage_equal_to_its_stat(stat: str) -> AbilityEffect:
+    """`_SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE`'s effect: the source deals
+    damage equal to its power (or toughness) to each target still legal (CR
+    608.2b), the amount read once as the damage is dealt (CR 608.2h).
+
+    A source still on the battlefield is read through the layer system (CR
+    613.5, `Game.power_of`); one that has left it is read off its last known
+    information (CR 608.2h, CR 113.7a), which `CardState.power`/`.toughness`
+    already fall back to once the object is off the battlefield - the same
+    read `triggers.event_subject_power` makes for a dying creature. A negative
+    value deals no damage (CR 107.1b).
+    """
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        if source.zone is Zone.BATTLEFIELD:
+            value = game.power_of(source) if stat == "power" else game.toughness_of(source)
+        else:
+            value = source.power if stat == "power" else source.toughness
+        amount = max(value or 0, 0)
+        for target in game.resolve_targets(ability):
+            game.deal_damage(target, amount, source=source)
+
+    return effect
+
+
 def become_prepared_ability_targets(game: "Game", ability: AbilityOnStack) -> None:
     """CR 722.3a: give the prepared designation to each permanent this
     ability still legally targets - Hexhaven Dueling Arena's own "Target
@@ -5217,7 +5253,7 @@ def has_land_type(*subtypes: str) -> Callable[[CardState], bool]:
 _MANA_COST_LIST = r"(?:\{[^}\s]+\})+(?:(?:,? or|,) (?:\{[^}\s]+\})+)*"
 
 
-def _exact_mana_cost_matcher(costs_text: str) -> Callable[[CardState], bool]:
+def _exact_mana_cost_matcher(costs_text: str) -> Callable[[CardState], bool] | None:
     """Whether a card's mana cost is one of the printed costs in `costs_text`.
 
     CR 202.1: "A card's mana cost is indicated by mana symbols near the top of
@@ -5226,11 +5262,14 @@ def _exact_mana_cost_matcher(costs_text: str) -> Callable[[CardState], bool]:
     mana value outside the stack, Swooping Lookout's {W} is not {1}, and a card
     with no mana cost (CR 202.1b) matches no cost at all. Symbols are compared
     as a multiset, so a cost printed in a different order still matches.
+
+    `None` when a printed cost carries a symbol that is not a mana symbol
+    (`ManaCost.try_parse`), so the description is refused rather than read.
     """
-    wanted = [
-        sorted(str(symbol) for symbol in ManaCost.parse(cost).symbols)
-        for cost in re.findall(r"(?:\{[^}\s]+\})+", costs_text)
-    ]
+    parsed = [ManaCost.try_parse(cost) for cost in re.findall(r"(?:\{[^}\s]+\})+", costs_text)]
+    if any(cost is None for cost in parsed):
+        return None
+    wanted = [sorted(str(symbol) for symbol in cost.symbols) for cost in parsed if cost is not None]
 
     def matches(state: CardState) -> bool:
         printed = state.mana_cost
@@ -5808,7 +5847,10 @@ def _search_descriptions(
         if mana_costs:
             # CR 202.1: a printed-cost bound, not a mana-value one - see
             # `_exact_mana_cost_matcher`.
-            matcher = _and_has_exact_mana_cost(matcher, _exact_mana_cost_matcher(mana_costs))
+            exact = _exact_mana_cost_matcher(mana_costs)
+            if exact is None:
+                return None
+            matcher = _and_has_exact_mana_cost(matcher, exact)
         having = piece.group("having")
         if having:
             matcher = _and_having(matcher, _having_matcher(having))
@@ -14858,6 +14900,19 @@ _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE = re.compile(
     r"(?P<phrase>any target|.*target.+)\.?$",
     re.IGNORECASE,
 )
+#: "This creature deals damage equal to its power to `<target>`." - the
+#: ability's own source deals damage equal to its own power (CR 208.1):
+#: Cyclops Superconductor's reflexive consequence, Spikeshot Elder's
+#: activation. CR 608.2h reads the power as the effect is applied - the
+#: current power while the source is on the battlefield, its last known
+#: information once it is not - and CR 113.7a lets the source "still perform
+#: the action even though it no longer exists", which is what a dies trigger
+#: (CR 603.10a) always asks of it.
+_SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE = re.compile(
+    r"^this [a-z]+ deals damage equal to its (?P<stat>power|toughness) to "
+    r"(?P<phrase>any target|.*\btarget\b.+?)\.?$",
+    re.IGNORECASE,
+)
 #: Combustion Technique: "<Source> deals damage equal to 2 plus the number of
 #: Lesson cards in your graveyard to target creature." A dynamic amount read
 #: through `amount_expression` (arithmetic over one or more `count_expression`
@@ -17125,10 +17180,12 @@ _TARGET_CANT_BE_BLOCKED_RE = re.compile(
 )
 
 #: "`<target phrase>` can't block this turn." (CR 509.1b) - Hawkeye, Master
-#: Marksman's own "Net" mode: "Target creature can't block this turn." The
+#: Marksman's own "Net" mode: "Target creature can't block this turn.", and
+#: Maulfist Doorbuster's and Frenzied Goblin's own paid consequence. The
 #: mirror restriction of `_TARGET_CANT_BE_BLOCKED_RE` just above - denying a
-#: block rather than granting evasion from one - read and granted the
-#: identical way.
+#: block rather than granting evasion from one - granted the same way: as the
+#: self line "This creature can't block." that `machines/combat.py`'s own
+#: blocker restriction already reads, for the rest of the turn.
 _TARGET_CANT_BLOCK_RE = re.compile(
     r"^(?P<phrase>(?:another )?target .+) can'?t block this turn\.?$", re.IGNORECASE
 )
@@ -17471,6 +17528,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             # an unread "for each" is a wrong count, not a missing one.
             return None
         return put_counters_on_ability_targets(kind, amount, multiplier)
+
+    if not for_spell and (match := _SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE.fullmatch(clause)):
+        if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+            return None
+        return _self_deals_damage_equal_to_its_stat(match.group("stat").lower())
 
     if for_spell and (match := _DAMAGE_EQUAL_TO_SACRIFICED_CREATURE_POWER_RE.fullmatch(clause)):
         if not _targets_understood(match.group("phrase"), allow_player_targets=True):
@@ -32642,16 +32704,18 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
     and creates nothing, the same "the cost stays paid, the trigger does not
     exist otherwise" shape as the sacrifice version, just for a cost that
     cannot be un-paid because it never was.
+
+    The consequence is `reflexive_pay_consequence_effect`'s to read - the
+    same reader the ordinary-mana twin uses - and it is read once, up front,
+    so an unread consequence declines the whole clause now rather than after
+    the energy is spent.
     """
     match = _REFLEXIVE_MAY_PAY_ENERGY_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
     amount = len(re.findall(r"\{e\}", match.group("energy"), re.IGNORECASE))
-    consequence_text = match.group("consequence").strip()
-    if (
-        _parse_counters_and_becomes_type_clause(consequence_text)
-        or parse_mixed_effect(consequence_text)
-    ) is None:
+    consequence_text = _reflexive_consequence_text(match.group("consequence"))
+    if reflexive_pay_consequence_effect(consequence_text) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -32671,6 +32735,149 @@ def _parse_reflexive_pay_energy_clause(text: str) -> AbilityEffect | None:
         )
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# The consequence of a paid "you may pay `<cost>`. If/When you do, ..."
+# --------------------------------------------------------------------------
+#
+# One reader for every paid-cost family - energy (CR 107.14) and ordinary
+# mana alike - since what follows "If you do"/"When you do" does not depend on
+# what was paid. Three consequence shapes the ordinary clause dispatcher
+# (`parse_mixed_effect`) does not read are read here:
+#
+# - the source anaphor, "it gets +2/+0 until end of turn." / "it gets +1/+1
+#   and gains trample ...": the "it" is the object the trigger event names
+#   (the attacking creature, the creature that died) - the ability's own
+#   source when the event names none;
+# - a one-shot continuous effect (CR 611.2) over the ability's own targets,
+#   "another target creature you control gets +1/+0 and gains haste until
+#   end of turn.", read by `machines/layers.py` off the consequence's own text
+#   rather than the whole printed ability;
+# - a modal consequence, "choose one - ...", only on the reflexive side: CR
+#   603.3c/700.2b choose the mode as the reflexive ability is put on the
+#   stack, which `Game.put_triggers_on_stack` already does for any modal
+#   triggered ability whose own text is the bulleted list.
+
+#: "it gets ..."/"it gains ..." - the source anaphor as the whole
+#: consequence's subject.
+_SOURCE_ANAPHOR_SUBJECT_RE = re.compile(r"^it (?P<predicate>(?:gets|gains)\b.+)$", re.IGNORECASE)
+
+
+def _reflexive_consequence_text(captured: str) -> str:
+    """A reflexive consequence as its ability's own text: stripped, with the
+    closing period a modal list's last mode printed put back, so every mode
+    reads (and is offered, CR 700.2) exactly as printed."""
+    text = captured.strip()
+    return _as_sentence(text) if modal_trigger_profile(text) is not None else text
+
+
+def _referent_of_it(game: "Game", ability: AbilityOnStack) -> CardState | None:
+    """The object a consequence's "it" names: the trigger event's own subject
+    (CR 603.2 - "Whenever this creature attacks" names the attacker, "When
+    this creature dies" the creature that died), or the ability's source when
+    the event names no object. Only a permanent still on the battlefield can
+    get or gain anything (CR 400.7: one that left is a new object)."""
+    subject_id = ability.event.subject_id if ability.event is not None else None
+    referent = game.find_by_id(subject_id) if subject_id is not None else ability.source(game)
+    if referent is None or referent.zone is not Zone.BATTLEFIELD:
+        return None
+    return referent
+
+
+def _continuous_consequence(sentence: str, *, anaphor: bool) -> AbilityEffect:
+    """A CR 611.2 one-shot continuous effect read off `sentence` alone.
+
+    `anaphor` says `sentence` stands for the source anaphor - rewritten with
+    a "target creature" subject so `machines/layers.py` builds it over the one
+    object handed to it, `_referent_of_it`'s answer. Otherwise the sentence's
+    own targets are the ability's announced ones, rechecked (CR 608.2b), or
+    the ability's source when it names none (`create_continuous_effect_of_
+    ability`'s own two shapes); CR 113.7a lets a targeted one apply after its
+    source is gone.
+    """
+    requires_target = False
+    if not anaphor:
+        profile = profile_for_text(sentence)
+        requires_target = profile.understood and bool(profile.requirements)
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if anaphor:
+            referent = _referent_of_it(game, ability)
+            if referent is None:
+                return
+            targets = [referent]
+            source = source or referent
+        elif requires_target:
+            targets = game.resolve_card_targets(ability)
+        else:
+            if source is None or source.zone is not Zone.BATTLEFIELD:
+                return
+            targets = [source]
+        if source is None or not targets:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=targets,
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=sentence,
+            game=game,
+        )
+
+    return effect
+
+
+def _layer_consequence(text: str) -> AbilityEffect | None:
+    """`text` as `_continuous_consequence`'s one-shot continuous effect, the
+    source anaphor first, or `None` when `machines/layers.py` reads neither."""
+    anaphor = _SOURCE_ANAPHOR_SUBJECT_RE.fullmatch(text.strip())
+    if anaphor is not None:
+        rewritten = _as_sentence(f"target creature {anaphor.group('predicate')}")
+        if is_resolution_layer_effect_text(rewritten) and parsed_layer_effects(rewritten):
+            return _continuous_consequence(rewritten, anaphor=True)
+        return None
+    sentence = _as_sentence(text)
+    if _is_layer_effect_text(sentence) and parsed_layer_effects(sentence) is not None:
+        return _continuous_consequence(sentence, anaphor=False)
+    return None
+
+
+def pay_consequence_effect(text: str) -> AbilityEffect | None:
+    """The consequence of a paid "you may pay `<cost>`. If you do, ..." (CR
+    118.12), run on the same ability that paid: an ordinary clause sequence
+    (`parse_mixed_effect`), or one of `_layer_consequence`'s one-shot
+    continuous effects. `None` when none of them reads it."""
+    return parse_mixed_effect(text) or _layer_consequence(text)
+
+
+def _modal_mode_is_readable(mode_text: str) -> bool:
+    """Whether `_resolve_modal_triggered_ability_clause` reads one mode's
+    text - the same readers it tries, in the same order."""
+    readers = (
+        parse_mixed_effect,
+        _compose_layer_effect_with_remainder_for_ability_mode,
+        _parse_where_x_is_continuous_effect,
+    )
+    return any(reader(mode_text) is not None for reader in readers)
+
+
+def reflexive_pay_consequence_effect(text: str) -> AbilityEffect | None:
+    """The consequence of a paid "you may pay `<cost>`. When you do, ..." (CR
+    603.12), run when the reflexive ability resolves: Guide of Souls' own
+    counters-and-type clause, a modal list whose every mode reads (the mode
+    already chosen as the reflexive ability went on the stack, CR 603.3c),
+    or `pay_consequence_effect`'s shapes. `None` when none of them reads it,
+    so the paying clause declines before anything is paid."""
+    counters = _parse_counters_and_becomes_type_clause(text)
+    if counters is not None:
+        return counters
+    modal = modal_trigger_profile(text)
+    if modal is not None:
+        if not all(_modal_mode_is_readable(mode_effect_body(mode)) for mode in modal.modes):
+            return None
+        return _resolve_modal_triggered_ability_clause(text)
+    return pay_consequence_effect(text)
 
 
 #: "you may pay `<energy>`. If you do, `<consequence>`." (CR 118.12, CR
@@ -32693,13 +32900,13 @@ _MAY_PAY_ENERGY_IF_YOU_DO_RE = re.compile(
 
 def _parse_may_pay_energy_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_ENERGY_IF_YOU_DO_RE`'s shape - see its own docstring for why
-    this is CR 118.12, not CR 603.12."""
+    this is CR 118.12, not CR 603.12. The consequence is `pay_consequence_
+    effect`'s to read, shared with the ordinary-mana twin."""
     match = _MAY_PAY_ENERGY_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
     amount = len(re.findall(r"\{e\}", match.group("energy"), re.IGNORECASE))
-    consequence_text = match.group("consequence").strip()
-    consequence = parse_mixed_effect(consequence_text)
+    consequence = pay_consequence_effect(match.group("consequence").strip())
     if consequence is None:
         return None
 
@@ -32816,7 +33023,9 @@ def _parse_get_energy_then_pay_create_x_token_clause(text: str) -> AbilityEffect
 
 #: "you may pay {N}. When you do, `<consequence>`." - Lich's Relic's own ETB
 #: trigger, the ordinary-mana twin of `_REFLEXIVE_MAY_PAY_ENERGY_RE`'s energy
-#: symbols.
+#: symbols. The symbol run is only ever mana: `ManaCost.try_parse` declines
+#: {E} (CR 107.14) and every other non-mana symbol, so an energy payment the
+#: energy reader could not read is never taken for a mana one.
 _REFLEXIVE_MAY_PAY_MANA_RE = re.compile(
     r"^you may pay (?P<mana>(?:\{[^}]+\})+)\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -32827,14 +33036,17 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
     """`_REFLEXIVE_MAY_PAY_MANA_RE`'s shape (CR 603.12, CR 601.2h, CR 118.3) -
     `Game.may_pay_mana_cost` asks CR 608.2g's payment question and pays it in
     full or not at all, the same "cost stays paid, consequence conditional"
-    shape `_parse_reflexive_pay_energy_clause` already reads for energy.
+    shape `_parse_reflexive_pay_energy_clause` already reads for energy, and
+    the same consequence reader (`reflexive_pay_consequence_effect`).
     """
     match = _REFLEXIVE_MAY_PAY_MANA_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    cost = ManaCost.parse(match.group("mana"))
-    consequence_text = match.group("consequence").strip()
-    if parse_mixed_effect(consequence_text) is None:
+    cost = ManaCost.try_parse(match.group("mana"))
+    if cost is None:
+        return None
+    consequence_text = _reflexive_consequence_text(match.group("consequence"))
+    if reflexive_pay_consequence_effect(consequence_text) is None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -32850,7 +33062,7 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
             controller=player.username,
             source_id=ability.source_id,
             source_name=source_name,
-            callback=ReflexiveConsequence(),
+            callback=ReflexivePayManaConsequence(),
         )
 
     return effect
@@ -33162,13 +33374,16 @@ _MAY_PAY_MANA_IF_YOU_DO_RE = re.compile(
 
 def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
     """`_MAY_PAY_MANA_IF_YOU_DO_RE`'s shape - see its own docstring for why
-    this is CR 118.12, not CR 603.12."""
+    this is CR 118.12, not CR 603.12. The symbol run is mana only
+    (`ManaCost.try_parse`), and the consequence is `pay_consequence_effect`'s,
+    shared with the energy twin."""
     match = _MAY_PAY_MANA_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    cost = ManaCost.parse(match.group("mana"))
-    consequence_text = match.group("consequence").strip()
-    consequence = parse_mixed_effect(consequence_text)
+    cost = ManaCost.try_parse(match.group("mana"))
+    if cost is None:
+        return None
+    consequence = pay_consequence_effect(match.group("consequence").strip())
     if consequence is None:
         return None
 
@@ -36361,9 +36576,8 @@ def _parse_may_cost_then_attacking_token_clause(text: str) -> AbilityEffect | No
     candidates_of = None
     prompt = ""
     if match.group("mana") is not None:
-        try:
-            cost = ManaCost.parse(match.group("mana"))
-        except ValueError:
+        cost = ManaCost.try_parse(match.group("mana"))
+        if cost is None:
             return None
         prompt = f"pay {cost}"
     else:
@@ -36543,9 +36757,8 @@ def _parse_delayed_pay_or_lose_clauses(
         return None
     if _PAY_OR_LOSE_SECOND_RE.fullmatch(clauses[index + 1].strip().rstrip(".")) is None:
         return None
-    try:
-        cost = ManaCost.parse(cost_match.group("cost"))
-    except ValueError:
+    cost = ManaCost.try_parse(cost_match.group("cost"))
+    if cost is None:
         return None
     text = f"{clauses[index]}. {clauses[index + 1]}."
 

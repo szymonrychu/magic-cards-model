@@ -4862,7 +4862,7 @@ def waterbend_mana_cost(phrase: str) -> ManaCost | None:
     match = _PHRASE_WATERBEND.match(phrase.strip().rstrip("."))
     if match is None:
         return None
-    return ManaCost.parse(match.group("cost"))
+    return ManaCost.try_parse(match.group("cost"))
 
 
 #: `Exert this land`, `Exert this creature` (CR 701.43a). Only the self-
@@ -5315,7 +5315,13 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     waterbend_generic: int | None = None
     for part in _split_cost_phrase(phrase):
         if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
-            mana = mana.plus(ManaCost.parse(part))
+            # A run of braced symbols that is not all mana - CR 107.14's {E}
+            # among them - is a cost this phrase reader does not know how to
+            # pay, so the whole phrase is unread rather than raising.
+            read = ManaCost.try_parse(part)
+            if read is None:
+                return None
+            mana = mana.plus(read)
             continue
         waterbend = waterbend_mana_cost(part)
         if waterbend is not None:
@@ -5365,11 +5371,10 @@ def cumulative_upkeep_cost(printed: str, count: int, payer: str | None = None) -
     """
     either = _ONE_SYMBOL_OR_ANOTHER.fullmatch(printed.strip().rstrip("."))
     if either is not None:
-        hybrid = f"{{{either.group('a')[1:-1]}/{either.group('b')[1:-1]}}}"
-        try:
-            one = TotalCost.of(ManaCost.parse(hybrid))
-        except ValueError:
+        hybrid = ManaCost.try_parse(f"{{{either.group('a')[1:-1]}/{either.group('b')[1:-1]}}}")
+        if hybrid is None:
             return None
+        one = TotalCost.of(hybrid)
     else:
         read = total_cost_for_phrase(printed, payer)
         if read is None:

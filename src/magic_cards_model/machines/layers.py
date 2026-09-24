@@ -878,7 +878,10 @@ class SelfIfDevotionBelow(SelectorBase):
             other = board.get(permanent_id)
             if other is None or other.controller != chars.controller:
                 continue
-            for symbol in ManaCost.parse(cost).symbols:
+            printed = ManaCost.try_parse(cost)
+            if printed is None:
+                continue
+            for symbol in printed.symbols:
                 if self.colors & set(symbol.colors):
                     devotion += 1
         return devotion < self.threshold

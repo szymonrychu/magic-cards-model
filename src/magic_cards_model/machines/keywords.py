@@ -393,7 +393,8 @@ def _keyword_cost(ability: KeywordAbility, payer: str) -> TotalCost | None:
     if not printed:
         return TotalCost()
     if ability.cost_is_mana:
-        return TotalCost.of(ManaCost.parse(printed)).assign_payer(payer)
+        mana = ManaCost.try_parse(printed)
+        return None if mana is None else TotalCost.of(mana).assign_payer(payer)
     read = total_cost_for_phrase(printed, payer)
     return None if read is None else read.assign_payer(payer)
 

@@ -292,6 +292,23 @@ class ManaCost(EngineModel):
         return cls(symbols=tuple(ManaSymbol.parse(s) for s in _SYMBOL.findall(text)))
 
     @classmethod
+    def try_parse(cls, mana_cost: str) -> "ManaCost | None":
+        """`parse` for printed text a parser captured, or `None` when any
+        braced symbol in it is not a mana symbol.
+
+        `parse` is a primitive and refuses an unknown symbol with a
+        `ValueError`. Oracle text braces symbols that are not mana at all -
+        CR 107.14's energy `{E}`, CR 107.5's tap `{T}`, CR 107.6's untap `{Q}`
+        - so a regex that captures a run of braced symbols out of a sentence
+        must not hand it to `parse` and let that raise into a live game: it
+        asks here and reads the text, or declines so its clause fails closed.
+        """
+        try:
+            return cls.parse(mana_cost)
+        except ValueError:
+            return None
+
+    @classmethod
     def for_card(cls, card: Card) -> "ManaCost":
         """The mana cost this card has in a zone other than the stack.
 

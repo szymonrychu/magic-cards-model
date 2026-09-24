@@ -1548,9 +1548,14 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     is_vehicle = crew_number(card) is not None
     # Pack tactics' "if you attacked with creatures with total power N or
     # greater this combat" (CR 207.2c): a 6-power partner attacks as well.
+    # "another target attacking creature" (Eddytrail Hawk, Smelted Chargebug)
+    # has no legal target unless a second creature attacks too (CR 603.3d),
+    # so a vanilla partner attacks alongside.
     partners: tuple[str, ...] = (
         ("Craw Wurm",)
         if re.search(r"attacked with creatures with total power", ability.intervening_if or "")
+        else ("Grizzly Bears",)
+        if re.search(r"\banother target attacking creature\b", ability.effect or "", re.I)
         else ()
     )
     # "Whenever an equipped creature you control attacks" on a non-Equipment
