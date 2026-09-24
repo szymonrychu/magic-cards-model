@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "The Wandering Emperor@alice#1",
-    "targets": ["Abhorrent Oculus@bob#1"],
+    "targets": ["A.I.M. Scientists@bob#1"],
     "x": 0
   },
   "board": {
@@ -20,7 +20,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Abhorrent Oculus"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "A.I.M. Scientists"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -28,7 +28,7 @@
     },
     "step": "precombat_main",
     "tapped": [
-      ["Abhorrent Oculus", "bob"]
+      ["A.I.M. Scientists", "bob"]
     ],
     "tokens": [],
     "variant": "quiet",
@@ -41,7 +41,7 @@
     "fields_changed": ["life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn"],
     "notices": {},
     "objects": {
-      "Abhorrent Oculus@bob#1": {
+      "A.I.M. Scientists@bob#1": {
         "zone": ["battlefield", "exile"]
       }
     },
