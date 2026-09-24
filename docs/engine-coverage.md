@@ -5146,3 +5146,78 @@ CR 611.1 prohibition is reported exactly like a hand card is.
 | Mechanic | Reader | Reported card | Off-pool proof | Test |
 |---|---|---|---|---|
 | CR 117.1a timing and CR 611.1 prohibition refusals on a `CAST` face, enumerated with the engine's own reason instead of dropped | `machines.legal_actions.blocked_casts`, `models.action.BlockedCast` | Ocelot Pride | Act of Treason (sorcery timing), Ambush Viper (a flash creature never blocked), Repudiate // Replicate (CR 709.3a: only the sorcery half of a split card blocks), Voice of Victory (a CR 611.1 prohibition, not a timing question), Faithless Looting (a flashback sorcery blocked by a graveyard-casting prohibition, the keyword-option loop), Bonecrusher Giant (its exiled Adventure creature half blocked by a CR 611.1 prohibition, the `pays_mana_cost=True` keyword-option branch) | `scenarios/test_blocked_casts.py` |
+
+## EC1: energy payments - "you may pay {E}. If/When you do", and no printed symbol reaches `ManaCost.parse`
+
+Nine in-format energy cards crashed live and in `card_support` with
+`ValueError: unsupported mana symbol: {E}`: `_parse_may_pay_energy_if_you_do_
+clause`/`_parse_reflexive_pay_energy_clause` declined a consequence they
+could not read, and the dispatcher fell through to the ordinary-mana twins,
+whose `(?:\{[^}]+\})+` group accepted {E} and handed it to `ManaCost.parse`.
+Three changes close it. The energy and mana twins now share one consequence
+reader (`pay_consequence_effect` for CR 118.12's "If you do", on the same
+ability; `reflexive_pay_consequence_effect` for CR 603.12's "When you do",
+run by the reflexive ability through `ReflexivePayEnergyConsequence` or the
+new `ReflexivePayManaConsequence`). The mana twins read mana symbols only
+(`ManaCost.try_parse`, `None` for {E} (CR 107.14), {T} (CR 107.5), {Q} (CR
+107.6) or any other non-mana symbol), so an energy text is never misrouted.
+And every call site that parses printed text a regex captured asks
+`ManaCost.try_parse` and reads the text or declines: the pay twins,
+`_exact_mana_cost_matcher` (the search description is refused), the "may
+pay ... attacking token" and "pay or lose" delayed readers, `cost.py`'s
+waterbend, whole-phrase (`total_cost_for_phrase`: the phrase is unread) and
+cumulative-upkeep hybrid readers, `combat._attack_cost_match` (the CR 508.1h
+line is not claimed), `keywords._keyword_cost` (unpayable), the devotion
+condition in `layers.py` (the symbol is not counted), and in `casting.py`
+the CR 118.9 "pay {N}" alternative cost (falls to the phrase reader), the
+splice parameter (refused) and the per-target cost increase (the cast is
+refused with the engine's reason, CR 601.2f, rather than under-charged).
+`ManaCost.parse` itself still raises: it is a primitive. Sites that format an
+integer (`f"{{{amount}}}"`), parse a card's own `mana_cost` field, or take a
+caller's argument (`Casting.increase_cost`'s `_as_mana`) are unchanged.
+
+The consequences read, beyond `parse_mixed_effect`:
+
+- the source anaphor "it gets +N/+N [and gains <keyword>] until end of turn"
+  / "it gains <keyword> ...": "it" is the object the trigger event names (the
+  attacker, the creature that died), the ability's source when it names
+  none; applied as a CR 611.2 one-shot continuous effect to that object only
+  while it is still on the battlefield (CR 400.7);
+- a one-shot continuous effect over the ability's own announced targets,
+  "another target [attacking] creature [you control] gets +N/+N and gains
+  <keyword>": read off the consequence's own text, not the whole printed
+  ability; the target is announced as the trigger goes on the stack (CR
+  603.3d), "another" excludes the source, and an illegal target on
+  resolution means the ability does not resolve and the payment is never
+  asked (CR 608.2b);
+- "target creature can't block this turn" (CR 509.1b), a new targeted clause
+  granted as the self line "This creature can't block." until end of turn,
+  the same modelling `_TARGET_CANT_BE_BLOCKED_RE` already uses for "can't be
+  blocked this turn";
+- a reflexive modal "choose one -": the mode is chosen as the reflexive
+  ability is put on the stack (CR 603.3c, CR 700.2b) by the existing modal
+  trigger path, and the clause is read only when every mode reads;
+  `_create_continuous_effect_of_ability_for_mode_text` now applies an
+  untargeted mode ("This creature gains vigilance and lifelink ...") to the
+  source instead of to an empty target list;
+- "this <noun> deals damage equal to its power|toughness to <target>", a new
+  targeted clause for abilities: the power is read as the damage is dealt,
+  through the layer system on the battlefield and by last known information
+  off it (CR 608.2h, CR 113.7a) - a dies trigger (CR 603.10a) deals the power
+  the creature died with.
+
+With too few energy counters the payment is not offered (CR 118.3,
+`Game.may_pay_energy`'s `affirmative_is_legal`) and nothing happens; a
+declined payment does nothing. Every in-format {E} card in the oracle dump
+now gets a `card_support` verdict without raising (75 handled, 29 silent, 2
+unaudited - the silent ones are "Pay {E}: ..." activations and "you get six
+{E}"-style clauses, outside this task).
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| CR 118.12 energy payment, source anaphor "it gets/gains ..." | `_parse_may_pay_energy_if_you_do_clause`, `pay_consequence_effect`, `_layer_consequence` | Aetherstream Leopard, Voltaic Brawler, Riparian Tiger, Hexgold Slith | Skyline Scout ({1}{W}, "it gains flying") | `tests/scenarios/test_may_pay_energy_if_you_do.py`, `test_may_pay_mana_consequences.py` |
+| "another target [attacking] creature [you control] gets +N/+N and gains <keyword>" | `_continuous_consequence` | Conduit Goblin, Smelted Chargebug | Eddytrail Hawk, Consul's Shieldguard (energy reader, "gains <keyword>") | `test_may_pay_energy_if_you_do.py` |
+| "target creature can't block this turn" (CR 509.1b) | `_TARGET_CANT_BLOCK_RE` in `_parse_targeted_clause` | Maulfist Doorbuster | Frenzied Goblin ({R}, If you do), Labyrinth Adversary ({1}{R}, When you do) | `test_may_pay_energy_if_you_do.py`, `test_may_pay_mana_consequences.py` |
+| CR 603.12 energy payment, reflexive modal "choose one -" (CR 603.3c, 700.2b) | `_parse_reflexive_pay_energy_clause`, `reflexive_pay_consequence_effect` | Voltstorm Angel | none readable: Hylda of the Icy Crown (the only other "you may pay. When you do, choose one") has an unread trigger condition; Riddle Gate Gargoyle proves the reflexive energy reader | `tests/scenarios/test_reflexive_pay_energy_when_you_do.py` |
+| "this creature deals damage equal to its power to <target>" by LKI (CR 608.2h, 113.7a) | `_SELF_DEALS_DAMAGE_EQUAL_TO_ITS_STAT_RE`, `_self_deals_damage_equal_to_its_stat` | Cyclops Superconductor | Spikeshot Elder (activated, killed in response) | `test_reflexive_pay_energy_when_you_do.py`, `tests/scenarios/test_self_damage_equal_to_its_power.py` |
+| No printed non-mana symbol reaches `ManaCost.parse` | `ManaCost.try_parse` at every regex-fed site | the nine above | every {E} printing in the pool | `tests/test_energy_symbol_audit.py` |

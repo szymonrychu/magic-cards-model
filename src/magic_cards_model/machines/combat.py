@@ -635,7 +635,7 @@ def _attack_cost_match(line: str) -> "tuple[re.Match[str], str | None] | None":
     if gated is not None:
         condition, text = gated
     match = _ATTACK_COST_RE.fullmatch(text)
-    if match is None:
+    if match is None or ManaCost.try_parse(match["cost"]) is None:
         return None
     return match, condition
 
@@ -680,7 +680,10 @@ def attack_costs_against(game: "Game", defender: TargetRef) -> list[AttackCost]:
                 condition, game.player(defender.username)
             ):
                 continue
-            costs.append(AttackCost(source, ManaCost.parse(match["cost"]), line.strip()))
+            cost = ManaCost.try_parse(match["cost"])
+            if cost is None:
+                continue
+            costs.append(AttackCost(source, cost, line.strip()))
     return costs
 
 

@@ -1021,17 +1021,34 @@ class ReflexiveConsequence(DelayedEffectSpecBase):
 class ReflexivePayEnergyConsequence(DelayedEffectSpecBase):
     """ "You may pay `{E}{E}{E}`. When you do, `<consequence>`." (CR 603.12,
     CR 107.14, CR 118.3) - Guide of Souls' attack trigger,
-    `machines/effects.py`'s `_parse_reflexive_pay_energy_clause`.
+    `machines/effects.py`'s `_parse_reflexive_pay_energy_clause`. The
+    consequence is `reflexive_pay_consequence_effect`'s to read.
     """
 
     kind: Literal["reflexive_pay_energy_consequence"] = "reflexive_pay_energy_consequence"
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
-        from .effects import _parse_counters_and_becomes_type_clause, parse_mixed_effect
+        from .effects import reflexive_pay_consequence_effect
 
-        consequence_effect = _parse_counters_and_becomes_type_clause(
-            trigger.text
-        ) or parse_mixed_effect(trigger.text)
+        consequence_effect = reflexive_pay_consequence_effect(trigger.text)
+        if consequence_effect is not None:
+            consequence_effect(game, ability)
+
+
+class ReflexivePayManaConsequence(DelayedEffectSpecBase):
+    """ "You may pay `{N}`. When you do, `<consequence>`." (CR 603.12, CR
+    118.3) - Lich's Relic's and Labyrinth Adversary's own triggers,
+    `machines/effects.py`'s `_parse_reflexive_pay_mana_clause`: the ordinary-
+    mana twin of `ReflexivePayEnergyConsequence`, reading the same
+    consequences (`reflexive_pay_consequence_effect`).
+    """
+
+    kind: Literal["reflexive_pay_mana_consequence"] = "reflexive_pay_mana_consequence"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .effects import reflexive_pay_consequence_effect
+
+        consequence_effect = reflexive_pay_consequence_effect(trigger.text)
         if consequence_effect is not None:
             consequence_effect(game, ability)
 
@@ -1688,6 +1705,7 @@ DelayedEffectSpec = Annotated[
     | DelayedBlinkReturnWithRider
     | ReflexiveConsequence
     | ReflexivePayEnergyConsequence
+    | ReflexivePayManaConsequence
     | ReflexiveMandatoryTokenDamageConsequence
     | ReflexiveCounterCountConsequence
     | ReflexiveAttachSubjectToTargetConsequence
