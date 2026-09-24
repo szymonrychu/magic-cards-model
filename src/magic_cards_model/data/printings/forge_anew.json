@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "56274b88-6e3f-4538-bb0c-eb5e52a58ef3",
+  "oracle_id": "4df579df-fdbb-418a-af2d-709e140ee569",
+  "multiverse_ids": [
+    616847
+  ],
+  "mtgo_id": 111944,
+  "arena_id": 84709,
+  "tcgplayer_id": 498525,
+  "cardmarket_id": 715997,
+  "name": "Forge Anew",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/56274b88-6e3f-4538-bb0c-eb5e52a58ef3",
+  "scryfall_uri": "https://scryfall.com/card/ltr/17/forge-anew?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:18:52Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.jpg?1783916332",
+    "normal": "https://cards.scryfall.io/normal/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.jpg?1783916332",
+    "large": "https://cards.scryfall.io/large/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.jpg?1783916332",
+    "png": "https://cards.scryfall.io/png/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.png?1783916332",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.jpg?1783916332",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.jpg?1783916332",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.webp?1783916332",
+    "grid": "https://cards.scryfall.io/grid/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.webp?1783916332",
+    "display": "https://cards.scryfall.io/display/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.webp?1783916332",
+    "art": "https://cards.scryfall.io/art/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.webp?1783916332",
+    "crop": "https://cards.scryfall.io/crop/front/5/6/56274b88-6e3f-4538-bb0c-eb5e52a58ef3.webp?1783916332"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "When this enchantment enters, return target Equipment card from your graveyard to the battlefield.\nDuring your turn, you may activate equip abilities any time you could cast an instant.\nYou may pay {0} rather than pay the equip cost of the first equip ability you activate during each of your turns.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/56274b88-6e3f-4538-bb0c-eb5e52a58ef3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A4df579df-fdbb-418a-af2d-709e140ee569&unique=prints",
+  "collector_number": "17",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Craig J Spearing",
+  "artist_ids": [
+    "b0f15e74-0dd6-4156-959e-c5e30c5cdc52"
+  ],
+  "illustration_id": "5397494c-820d-4dbf-af16-950393719230",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 1210,
+  "penny_rank": 2861,
+  "preview": {
+    "source": "MTGNerdGirl",
+    "source_uri": "https://twitter.com/MTGNerdGirl/status/1663953527708991489",
+    "previewed_at": "2023-05-31"
+  },
+  "prices": {
+    "usd": "5.63",
+    "usd_foil": "6.32",
+    "usd_etched": null,
+    "eur": "3.63",
+    "eur_foil": "4.28",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=616847&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DForge%2BAnew",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DForge%2BAnew",
+    "edhrec": "https://edhrec.com/route/?cc=Forge+Anew"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F498525%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=715997&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/111944?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

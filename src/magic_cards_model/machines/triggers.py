@@ -79,6 +79,7 @@ from .abilities import (
     self_reference_names,
     self_reference_pattern,
 )
+from .designations import designation_holds, split_as_long_as
 from .turn import Step
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
@@ -6169,14 +6170,112 @@ _ENTERING_CAUSE_RE = re.compile(
 )
 
 
+#: CR 603.2d's other shape, keyed by *whose* ability it is rather than by
+#: what caused it: "If a triggered ability of a Dwarf you control triggers,
+#: that ability triggers an additional time." (Bifur, Melodic Rider, behind
+#: its enduring-story gate), "... of a Shaman or another Wizard you control
+#: ..." (Harmonic Prodigy), "... of a legendary creature you control ..."
+#: (Annie Joins Up), "... of another Elemental you control triggers, it
+#: triggers ..." (Twinflame Travelers), and "... of equipped creature ..."
+#: (Wizard's Staff, CR 301.5a's "equipped creature").
+_TYPED_ADDITIONAL_TRIGGER_RE = re.compile(
+    r"^if a triggered ability of (?P<whose>.+?) triggers, "
+    r"(?:that ability|it) triggers an additional time\.?$",
+    re.IGNORECASE,
+)
+
+#: One alternative of `_TYPED_ADDITIONAL_TRIGGER_RE`'s "whose": an article
+#: ("another" excludes the multiplier itself) and the words every one of which
+#: the ability's source has to have.
+_TYPED_WHOSE_ALTERNATIVE_RE = re.compile(
+    r"^(?P<article>a|an|another)\s+(?P<words>.+)$", re.IGNORECASE
+)
+
+
+class _TypedWhose(NamedTuple):
+    """A parsed "whose": `equipped` for "equipped creature", else a list of
+    `(another, words)` alternatives among the multiplier controller's own."""
+
+    equipped: bool
+    alternatives: tuple[tuple[bool, tuple[str, ...]], ...]
+
+
+def _typed_whose(whose: str) -> _TypedWhose | None:
+    """ "a Shaman or another Wizard you control" -> two alternatives, each
+    word a supertype ("legendary"), a card type (CR 205.2a) or a subtype
+    (CR 205.3) - or None when a word is none of them, so an unreadable
+    qualifier ("with power 2 or less") multiplies nothing."""
+    text = whose.strip()
+    if text.lower() == "equipped creature":
+        return _TypedWhose(equipped=True, alternatives=())
+    if not text.lower().endswith(" you control"):
+        return None
+    text = text[: -len(" you control")].strip()
+    card_types = {card_type.value.lower() for card_type in Type}
+    supertypes = {supertype.value.lower() for supertype in Supertype}
+    subtypes = {subtype.lower() for subtype in subtype_vocabulary()}
+    alternatives: list[tuple[bool, tuple[str, ...]]] = []
+    for part in re.split(r",\s*(?:or\s+)?|\s+or\s+", text):
+        match = _TYPED_WHOSE_ALTERNATIVE_RE.match(part.strip())
+        if match is None:
+            return None
+        words = tuple(word.lower() for word in match["words"].split())
+        if not words or any(
+            word not in card_types and word not in supertypes and word not in subtypes
+            for word in words
+        ):
+            return None
+        alternatives.append((match["article"].lower() == "another", words))
+    return _TypedWhose(equipped=False, alternatives=tuple(alternatives)) if alternatives else None
+
+
+def _multiplier_line(line: str) -> tuple[str, str | None]:
+    """A static line with its designation gate split off, and the gate."""
+    gated = split_as_long_as(line.strip())
+    if gated is None:
+        return line.strip(), None
+    condition, rest = gated
+    return rest, condition
+
+
 def is_additional_trigger_line(text: str) -> bool:
-    """Whether a static line is CR 603.2d's entering multiplier with a cause
-    `_entering_cause_matches` can read - what `support.py` counts handled."""
-    match = _ADDITIONAL_TRIGGER_RE.match(text.strip())
-    if match is None:
-        return False
-    cause = _ENTERING_CAUSE_RE.match(match["cause"].strip())
-    return cause is not None and _cause_words(cause["types"]) is not None
+    """Whether a static line is CR 603.2d's multiplier - an entering cause
+    `_entering_cause_matches` can read, or a source `_typed_whose` can - gated
+    on a designation or not: what `support.py` counts handled."""
+    line, _condition = _multiplier_line(text)
+    match = _ADDITIONAL_TRIGGER_RE.match(line)
+    if match is not None:
+        cause = _ENTERING_CAUSE_RE.match(match["cause"].strip())
+        return cause is not None and _cause_words(cause["types"]) is not None
+    typed = _TYPED_ADDITIONAL_TRIGGER_RE.match(line)
+    return typed is not None and _typed_whose(typed["whose"]) is not None
+
+
+def _typed_source_matches(
+    game: "Game", whose: _TypedWhose, multiplier: CardState, source: CardState
+) -> bool:
+    """Whether `source` - the permanent whose triggered ability just
+    triggered - is the one `multiplier`'s "whose" names, read off the
+    computed board (CR 613.5)."""
+    if whose.equipped:
+        return multiplier.attached_to == source.id
+    try:
+        chars = game.characteristics_of(source)
+        have = (
+            {card_type.value.lower() for card_type in chars.types}
+            | {supertype.value.lower() for supertype in chars.supertypes}
+            | {subtype.lower() for subtype in chars.subtypes}
+        )
+    except KeyError:
+        have = (
+            {card_type.value.lower() for card_type in source.types}
+            | {supertype.value.lower() for supertype in source.card.supertypes}
+            | {subtype.lower() for subtype in source.subtypes}
+        )
+    return any(
+        (not another or source.id != multiplier.id) and set(words) <= have
+        for another, words in whose.alternatives
+    )
 
 
 def _cause_words(types: str) -> tuple[str, ...] | None:
@@ -6250,6 +6349,13 @@ def additional_trigger_times(
     ability has triggered, determine how many times it should trigger, then
     trigger it that many times."
 
+    Two shapes are read: the entering cause below, and `_TYPED_ADDITIONAL_
+    TRIGGER_RE`'s "if a triggered ability of `<whose>` triggers" - Bifur,
+    Melodic Rider's Dwarfs, Harmonic Prodigy's Shamans and other Wizards,
+    Wizard's Staff's equipped creature - either behind a designation gate
+    ("As long as you have an enduring story, ...", `machines/designations.
+    py`) checked against the multiplier's controller.
+
     Every permanent on the battlefield is asked whether one of its own static
     ability lines is a multiplier of this shape, read off the *computed* text
     (CR 613.5) - Panharmonicon, Elesh Norn, Mother of Machines, Starfield
@@ -6269,13 +6375,28 @@ def additional_trigger_times(
     extra = 0
     for permanent in list(game.battlefield):
         controller = permanent.controller
-        if controller is None or controller != ability.controller:
-            continue  # "a triggered ability of a permanent **you** control".
-        for line in _computed_ability_lines(game, permanent):
-            match = _ADDITIONAL_TRIGGER_RE.match(line.strip())
-            if match is None:
+        if controller is None:
+            continue
+        # "a triggered ability of a permanent / a Dwarf **you** control" -
+        # every shape but "equipped creature", which names its object outright.
+        yours = controller == ability.controller
+        for printed in _computed_ability_lines(game, permanent):
+            line, condition = _multiplier_line(printed)
+            if condition is not None and not designation_holds(condition, game.player(controller)):
                 continue
-            if _entering_cause_matches(game, match["cause"], event, controller):
+            if match := _ADDITIONAL_TRIGGER_RE.match(line):
+                if yours and _entering_cause_matches(game, match["cause"], event, controller):
+                    extra += 1
+                continue
+            typed = _TYPED_ADDITIONAL_TRIGGER_RE.match(line)
+            if typed is None:
+                continue
+            whose = _typed_whose(typed["whose"])
+            if (
+                whose is not None
+                and (whose.equipped or (yours and source.controller == controller))
+                and _typed_source_matches(game, whose, permanent, source)
+            ):
                 extra += 1
     return extra
 

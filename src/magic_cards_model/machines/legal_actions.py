@@ -78,7 +78,7 @@ from ..models.action import (
     TargetSlot,
 )
 from ..models.card import Layout, Type
-from ..models.card_state import CardState
+from ..models.card_state import CardState, TargetRef
 from ..models.mana import ManaCost, ManaSpend
 from ..models.player import Player
 from ..models.zone import Zone
@@ -106,6 +106,7 @@ from .casting import (
 )
 from .combat import (
     ATTACKABLE_PERMANENT_TYPES,
+    total_attack_cost,
     unobeyed_attack_requirement,
     unobeyed_block_requirement,
 )
@@ -1552,10 +1553,28 @@ def _attacker_actions(game: Any, player: str) -> list[Action]:
                         card_id=creature.id,
                         from_zone=Zone.BATTLEFIELD,
                         defender=label,
-                        affordable=Affordability.YES,
+                        **_attack_cost_fields(game, player, creature, target),
                     )
                 )
     return actions
+
+
+def _attack_cost_fields(game: Any, player: str, creature: CardState, target: Any) -> dict[str, Any]:
+    """The `Action` fields for CR 508.1h's cost to attack this defender with
+    this creature - Ghostly Prison's, Dain, Lord of the Iron Hills' - priced
+    and judged for affordability the way any other cost is (CR 118.6: an
+    unpayable attack is still enumerated). No cost is plain `YES`."""
+    total, reasons = total_attack_cost(game, [(creature, TargetRef.coerce(target))])
+    if not total.symbols:
+        return {"affordable": Affordability.YES}
+    scan = mana_candidate_scan(game.battlefield, game=game, payer=player)
+    status, reason, _plan = _mana_affordability(game, player, total, None, scan)
+    return {
+        "cost": str(total),
+        "mana_cost": str(total),
+        "affordable": status,
+        "unaffordable_reason": reason if reason is None else f"{reason} ({'; '.join(reasons)})",
+    }
 
 
 def _blocker_actions(game: Any, player: str) -> list[Action]:

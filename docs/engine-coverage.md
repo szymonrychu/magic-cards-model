@@ -4787,3 +4787,40 @@ Proof printings added: Summon: Fat Chocobo, Summon: Primal Garuda, Clive,
 Ifrit's Dominant, Joshua, Phoenix's Dominant, Flame Wave, Vohar, Vodalian
 Desecrator, Liliana, Untouched by Death, Gisa and Geralf, Kess, Dissident
 Mage, Secrets of the Dead.
+
+## C01-T1: storied and the enduring story, designation-gated statics, typed trigger doubling, attack costs, the free first equip
+
+Balin, Loremaster; Bifur, Melodic Rider; Bombur, Gentle Dreamer; Dain, Lord
+of the Iron Hills; Fili the Pathfinder; Kili the Resourceful; Ori, Keeper of
+Songs; Thorin Oakenshield; Oin the Brave; Wizard's Staff; Bolg's Company;
+Dain's Company and Chief Warg's Company were silent, notice or
+`static_unaudited`; every clause of each now sweeps `handled` and storied is
+an executed keyword. CR numbers verified with `mise run rules:find`: 109.5,
+118.6, 118.9, 120.3a, 201.5, 205.2a, 205.3, 301.5a, 502.3, 508.1, 508.1a,
+508.1c, 508.1d, 508.1f, 508.1h, 508.1i, 508.1j, 508.1k, 509.1b, 603.2d,
+604.2, 608.2c, 608.2d, 611.3a, 613.1f, 613.4c, 613.5, 613.6, 701.9a, 702.6a,
+702.15b, 702.20b, 702.21a, 702.108a, 702.108b, 702.195a, 702.195b, 702.195c, 301.5d.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| Storied (CR 702.195a): three or more permanents that are artifacts, Sagas and/or legendary (one permanent counts once) grant `Player.has_enduring_story` (CR 702.195b, set-only, schema 68); granted in `Game.emit` before triggers are matched (CR 702.195c) and in the state-based pass; storied and the types read off the computed board | `keywords.grant_enduring_stories` | every Hobbit storied Dwarf | - (Hobbit-only keyword; second listed card of different wording) | `test_storied_enduring_story.py` |
+| "As long as you have an enduring story, `<static>`" and "`<static>` unless you have an enduring story" - one condition reader for every machine | `machines/designations.py` (`split_as_long_as`, `split_unless`, `split_if`, `designation_holds`) | Fili, Ori, Oin, Thorin, Bombur, Dain, Kili, Bifur, Balin | - (Hobbit-only condition) | `test_enduring_story_statics.py` |
+| the gate in front of any layer static (anthem, self pump and keyword, group grant), off `LayerContext.enduring_story_players`, `source_ability` pointed at the whole printed line for CR 613.6 | `layers._parse_designation_gated_sentence` | Fili, Ori, Oin, Thorin | - | `test_enduring_story_statics.py` |
+| "`<types>` and `<types>` you control have `<keyword>`" with no turn restriction, and costed keywords ("ward {1}") in group grants | `layers._DURING_YOUR_TURN_MULTI_TYPE_KEYWORD_GRANT_RE` (optional "during your turn"), `_KEYWORD_LIST_WITH_COSTS` in `_INDEFINITE_KEYWORD_GRANT_RE`/`_SUBTYPE_KEYWORD_GRANT_RE` | Thorin Oakenshield | Dragon's Disciple | `test_enduring_story_statics.py` |
+| "`<this>` doesn't untap during your untap step unless you have an enduring story" (CR 502.3) | `layers._self_doesnt_untap_builder(unless=)` | Bombur, Gentle Dreamer | - | `test_enduring_story_statics.py` |
+| "creatures can't attack you unless their controller pays `{N}` for each creature they control that's attacking you / for each of those creatures" - CR 508.1h's total cost, paid from the pool plus auto-tapped non-attacking sources before anyone attacks, refused whole when unpayable (CR 508.1j); not a CR 508.1d obligation; `legal_actions` prices DECLARE_ATTACKER | `combat.attack_costs_against`/`total_attack_cost`, `Game._pay_attack_costs` (both `declare_attackers` and `declare_attacker`), `legal_actions._attack_cost_fields` | Dain, Lord of the Iron Hills | Ghostly Prison | `test_enduring_story_statics.py` |
+| "you may pay {0} rather than pay the equip cost of the first equip ability you activate each turn / during each of your turns" (CR 118.9, CR 702.6a) - taken by default (`pay_zero=False` declines); every equip activation is recorded as the turn's first (`ACTIVATED_EQUIP_FACT`) | `keywords.free_first_equip_source`, `unannounced_equip_activation`/`equip_activation` | Kili the Resourceful | Forge Anew | `test_enduring_story_statics.py` |
+| "If a triggered ability of `<a[n]/another> <types> you control` / equipped creature triggers, that ability triggers an additional time" (CR 603.2d), gated or not | `triggers._TYPED_ADDITIONAL_TRIGGER_RE`, `_typed_whose`, `_typed_source_matches` in `additional_trigger_times` | Bifur, Wizard's Staff | Harmonic Prodigy | `test_typed_trigger_doubling.py` |
+| prowess granted by a static ("Equipped creature has prowess.", "Creatures you control have prowess.") - CR 702.108a's trigger expanded off the granted line | `layers._GRANTABLE_TRIGGERED_KEYWORDS` in `_KNOWN_KEYWORDS` | Wizard's Staff | Narset, Enlightened Exile | `test_typed_trigger_doubling.py` |
+| "You may discard your hand. Draw X cards, where X is the number of cards discarded this way. [If you have an enduring story, `<this>` deals X damage to each opponent.]" | `effects._parse_discard_hand_draw_x_clause` (whole text) | Balin, Loremaster | - (the only legal printing, oracle search 2026-09-24) | `test_discard_hand_draw_x.py` |
+| "This creature has `<keyword>` as long as you control another `<type>`" - "another" leaves the source out (`SelfIfControls.other`) | `layers._SELF_CONTROLS_KEYWORD_GRANT_RE` | Bolg's Company, Dain's Company | Stampeding Horncrest | `test_conditional_type_statics.py` |
+| "`<this>` can't attack [or block] unless you control `<a/another/N or more [other]>` `<type>`" (CR 508.1c, CR 509.1b) | `combat.self_control_count_restriction_refusal` | Chief Warg's Company | Mouser Mark III | `test_conditional_type_statics.py` |
+
+Proof printings added: Ghostly Prison, Harmonic Prodigy, Stampeding
+Horncrest, Mouser Mark III, Forge Anew, Narset, Enlightened Exile, Dragon's
+Disciple. Dragon's Disciple's "As this creature enters, you may reveal a Dragon
+card ..." and Forge Anew's other static ("During your turn, you may
+activate equip abilities any time you could cast an instant.") are outside
+this task and stay `static_unaudited`. Rith, Liberated Primeval was tried
+for the costed ward grant and dropped: its end-step "was dealt excess damage
+this turn" intervening if fails closed in the behavioural sweep.
