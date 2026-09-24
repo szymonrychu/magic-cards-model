@@ -261,9 +261,58 @@ def _parse_spell_after_cast_trigger(text: str) -> Effect | None:
     return _spell_effect_or_notice(match.group("rest"))
 
 
+# ---------------------------------------------------------------------------
+# "Copy target activated or triggered ability you control[ from a <type> source]."
+# ---------------------------------------------------------------------------
+
+#: Echo, Perceptive Prodigy's "Copy target activated or triggered ability you
+#: control from a creature source. You may choose new targets for the copy.",
+#: Scientist Supreme of A.I.M.'s "... from an artifact source ...", Lithoform
+#: Engine's and Peter Parker's Camera's unrestricted form - CR 707.10's copy
+#: of an ability on the stack (`Game.copy_ability`); the restrictions are the
+#: target's own, enforced at announcement by `machines/targeting.py` and
+#: rechecked on resolution (CR 608.2b). CR 707.10c's new targets are CR
+#: 115.7d's "choose new targets" (`Game.change_targets`, any number of them).
+_COPY_TARGET_ABILITY_RE = re.compile(
+    r"^copy target (?:activated or triggered|activated|triggered) ability"
+    r"(?: you control)?(?: from an? [a-z]+ source)?\."
+    rf"{_NEW_TARGETS}$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_target_ability_clause(text: str) -> AbilityEffect | None:
+    from .targeting import RetargetScope
+
+    match = _COPY_TARGET_ABILITY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    offer_new_targets = match.group("new_targets") is not None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        from .triggers import AbilityOnStack as StackAbility
+
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, StackAbility) or target not in game.stack:
+                continue
+            copy = game.copy_ability(target, controller=ability.controller)
+            if offer_new_targets and copy.targets:
+                game.change_targets(
+                    copy,
+                    ability.controller,
+                    scope=RetargetScope.ANY,
+                    optional=True,
+                    source_name=ability.source_name,
+                    source_id=source_id_of(ability),
+                )
+
+    return effect
+
+
 def copy_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A copy instruction on an activated or triggered ability, or `None`."""
     for reader in (
+        _parse_copy_target_ability_clause,
         _parse_copy_next_within_mana_value_ability,
         _parse_copy_that_spell_then_clause,
         _parse_copy_it_n_times_clause,

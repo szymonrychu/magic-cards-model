@@ -408,6 +408,13 @@ class TargetRequirement(EngineModel):
     allows_players: bool = False
     allows_abilities: bool = False
     """True for "target activated or triggered ability" (CR 115.2, CR 113.1c)."""
+    ability_source_types: SortedFrozenSet[Type] = frozenset()
+    """"target activated or triggered ability you control from a creature
+    source" (Echo, Perceptive Prodigy; Scientist Supreme of A.I.M.'s
+    "artifact source"; Weaver of Harmony's "enchantment source") - the card
+    types the ability's source (CR 113.7) must have: its computed types while
+    it is on the battlefield, its last known ones once it has left (CR
+    113.7a). Empty means any source."""
     ability_kinds: SortedFrozenSet[AbilityKind] = frozenset()
     """Which of CR 113.3's categories an ability target must belong to, read
     off the phrase: `{TRIGGERED}` for Consign to Memory's "target triggered
@@ -692,7 +699,7 @@ class TargetRequirement(EngineModel):
         self, target: Any, caster: str, game: Any = None, source_id: UUID | None = None
     ) -> str | None:
         if getattr(target, "is_ability", False):
-            return self._rejects_ability(target, caster)
+            return self._rejects_ability(target, caster, game)
         if isinstance(target, CardState):
             return self._rejects_card(target, caster, game, source_id)
         if isinstance(target, TargetRef):
@@ -715,7 +722,7 @@ class TargetRequirement(EngineModel):
         """
         return self.allows_cards or self.allows_abilities
 
-    def _rejects_ability(self, target: Any, caster: str) -> str | None:
+    def _rejects_ability(self, target: Any, caster: str, game: Any = None) -> str | None:
         """CR 113.1c: an ability on the stack is an object, and can be targeted.
 
         CR 115.2 only lets a spell reach it when the spell says so, so a
@@ -732,6 +739,14 @@ class TargetRequirement(EngineModel):
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
+        if self.ability_source_types:
+            source_types = _ability_source_types(target, game)
+            if source_types is not None and not (source_types & self.ability_source_types):
+                wanted = " or ".join(sorted(t.value for t in self.ability_source_types))
+                return (
+                    f"{self.phrase} needs an ability from {with_indefinite_article(wanted)} "
+                    f"source, and {target.name}'s source is not one (CR 113.7)"
+                )
         controller = getattr(target, "controller", None)
         if self.controller is ControllerRestriction.ANY or controller is None:
             return None
@@ -2120,6 +2135,34 @@ _ABILITY_PHRASE = re.compile(
 )
 
 
+#: The tail after "target activated or triggered ability": "you control",
+#: "from a[n] <card type> source", or both (Echo, Perceptive Prodigy).
+_ABILITY_YOU_CONTROL_FROM_SOURCE_RE = re.compile(
+    r"^(?P<you>you control)?\s*(?:from an? (?P<type>[a-z]+) source)?$", re.IGNORECASE
+)
+
+
+def _ability_source_types(target: Any, game: Any) -> frozenset[Type] | None:
+    """The card types of an ability's source (CR 113.7): computed while it is
+    on the battlefield, its last known information once it has left
+    (CR 113.7a), `None` when there is no source to read."""
+    source = None
+    if game is not None:
+        finder = getattr(target, "source", None)
+        if callable(finder):
+            source = finder(game)
+    if source is None:
+        source = getattr(target, "source_last_known", None)
+    if source is None:
+        return None
+    if getattr(source, "zone", None) is Zone.BATTLEFIELD and game is not None:
+        return frozenset(game.characteristics_of(source).types)
+    last_known = getattr(source, "last_known_types", None)
+    if last_known is not None:
+        return frozenset(last_known)
+    return frozenset(getattr(source, "types", ()) or ())
+
+
 def _ability_kinds_named(words: str) -> frozenset[AbilityKind]:
     """The CR 113.3 categories `_ABILITY_PHRASE`'s words name: "triggered" is
     CR 113.3c's, "activated" CR 113.3b's, and "loyalty" is an activated
@@ -3460,6 +3503,35 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     ability = _ABILITY_PHRASE.match(noun_phrase)
     if ability is not None:
         tail = noun_phrase[ability.end() :].strip()
+        source_restricted = _ABILITY_YOU_CONTROL_FROM_SOURCE_RE.fullmatch(tail) if tail else None
+        if source_restricted is not None:
+            # "... ability you control[ from a[n] <type> source]" (Lithoform
+            # Engine; Echo, Perceptive Prodigy): the controller and the
+            # source's card type (CR 113.7).
+            source_type = source_restricted.group("type")
+            source_card_type = _TYPE_NOUNS.get(source_type.lower()) if source_type else None
+            if source_type and source_card_type is None:
+                return None
+            return TargetRequirement(
+                phrase="target " + " ".join(noun_phrase.split()).lower(),
+                count=count,
+                minimum=minimum,
+                unbounded=unbounded,
+                variable_count=variable,
+                allows_cards=False,
+                allows_abilities=True,
+                ability_kinds=_ability_kinds_named(ability.group(0)),
+                ability_source_types=(
+                    frozenset({source_card_type}) if source_card_type is not None else frozenset()
+                ),
+                controller=(
+                    ControllerRestriction.YOU
+                    if source_restricted.group("you")
+                    else ControllerRestriction.ANY
+                ),
+                zones=frozenset({Zone.STACK}),
+                excludes_source=excludes_source,
+            )
         if not tail:
             # CR 115.2(b): an ability on the stack is an object that cannot
             # exist on the battlefield, and a spell may target one when it

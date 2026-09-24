@@ -14,7 +14,7 @@ from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from ..data.creature_types import creature_types
 from ..data.subtypes import canonical_subtype
-from ..ids import install_id_allocator, reset_id_allocator
+from ..ids import install_id_allocator, new_id, reset_id_allocator
 from ..machines import combat as combat_rules
 from ..machines.abilities import (
     AbilityKind,
@@ -764,6 +764,10 @@ _SORCERY_TIMING = re.compile(
     r"activate (?:this ability )?only (?:as a sorcery|any time you could cast a sorcery)",
     re.IGNORECASE,
 )
+#: "Activate only during your turn" (Scientist Supreme of A.I.M., Sundial of
+#: the Infinite) - a restriction on when the ability may be activated
+#: (CR 602.5b), alone or joined to another ("... and only once each turn").
+_YOUR_TURN_ONLY = re.compile(r"activate (?:this ability )?only during your turn", re.IGNORECASE)
 #: CR 602.5b's per-turn limit, with its count read rather than assumed to be
 #: one: "Activate only once each turn" (Basking Rootwalla), "... and only once
 #: each turn" (Dragonkin Berserker's joined restriction), "Activate no more
@@ -7856,6 +7860,38 @@ class Game(EngineModel):
                 additional_cost_mana_values=list(original_record.additional_cost_mana_values),
                 is_copy=True,
             )
+            return copy
+
+    def copy_ability(
+        self, ability: AbilityOnStack, controller: str | None = None
+    ) -> AbilityOnStack:
+        """CR 707.10: put a copy of an activated or triggered ability onto the
+        stack - "a copy of an activated ability isn't activated", so no cost
+        is paid and nothing that watches activations sees it.
+
+        The copy "copies both the characteristics of the spell or ability and
+        all decisions made for it, including modes, targets, the value of X"
+        (CR 707.10), so it is the original object's own data under a fresh
+        id; CR 707.10b: it has the same source, and CR 707.10: it is
+        controlled by the player under whose control it was put on the stack.
+        A ward-style payment already made for the original is not the copy's
+        (`unless_payment` starts empty), and a delayed trigger's copy resolves
+        through the same delayed effect the original would have.
+        """
+        with self._id_allocator_scope():
+            data = ability.model_dump(mode="json")
+            data["id"] = str(new_id())
+            data["controller"] = controller or ability.controller
+            data["unless_payment"] = None
+            copy = AbilityOnStack.model_validate(data)
+            if copy.keyword_activation is not None:
+                copy.keyword_activation.game = self
+                if copy.keyword_activation.payment is not None:
+                    copy.keyword_activation.payment.game = self
+            pending = self.delayed_triggers.pending.get(ability.id)
+            if pending is not None:
+                self.delayed_triggers.pending[copy.id] = pending
+            self.stack.append(copy)
             return copy
 
     def offer_new_targets_for_copy(
@@ -19372,6 +19408,11 @@ class Game(EngineModel):
                     f"{limit.group('times').lower()} this turn, the most "
                     f"{limit.group(0)!r} allows (CR 602.5b)"
                 )
+        if _YOUR_TURN_ONLY.search(instructions) and self.active_player.username != controller:
+            return (
+                f"{permanent.name}'s ability can only be activated during its "
+                f"controller's turn, and it is {self.active_player.username}'s (CR 602.5b)"
+            )
         if _SORCERY_TIMING.search(instructions) and not self.can_cast_sorcery(controller):
             return (
                 f"{permanent.name}'s ability can only be activated as a sorcery: "
