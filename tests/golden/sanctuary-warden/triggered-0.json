@@ -71,7 +71,7 @@
         "source": "Sanctuary Warden's triggered ability"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "turn_facts"],
+    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

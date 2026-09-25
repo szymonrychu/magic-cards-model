@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["combat", "permanents_left_battlefield_this_turn"],
+    "fields_changed": ["combat", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Fleecemane Lion@bob#1": {

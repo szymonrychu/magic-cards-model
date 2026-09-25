@@ -62,7 +62,7 @@
         "source": "Seasoned Pyromancer"
       }
     ],
-    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "turn_facts"],
+    "fields_changed": ["cards_discarded_this_turn", "cards_drawn_this_turn", "continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#4": {

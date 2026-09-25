@@ -46,7 +46,7 @@
         "source": "Angler Drake"
       }
     ],
-    "fields_changed": ["known_carries", "permanents_left_battlefield_this_turn"],
+    "fields_changed": ["known_carries", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
       "Memnite@alice#1": {

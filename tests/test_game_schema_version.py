@@ -1261,3 +1261,35 @@ def test_a_snapshot_written_before_the_cast_record_reader_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_CAST_RECORD_READER}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before EC4's turn-history readers: `Game.turn_history`/
+#: `turn_history_last_turn`, `exile_residents_seen`,
+#: `dealt_combat_damage_since_their_turn` and `DamageDealt`'s source and
+#: recipient facts.
+_SCHEMA_VERSION_BEFORE_TURN_HISTORY = 82
+
+
+def test_the_turn_history_bump_moved_the_version_past_eighty_two() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_TURN_HISTORY
+
+
+def test_a_snapshot_written_before_the_turn_history_is_refused() -> None:
+    """A version-82 dump has no turn history: decoded as current, "if a
+    non-Skeleton creature died under your control this turn" would read a
+    turn whose deaths were never recorded as a turn where nothing died."""
+    dumped = _a_played_game().model_dump(mode="json")
+    for field in (
+        "turn_history",
+        "turn_history_last_turn",
+        "exile_residents_seen",
+        "dealt_combat_damage_since_their_turn",
+    ):
+        del dumped[field]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_TURN_HISTORY
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_TURN_HISTORY}",
+    ):
+        Game.model_validate(dumped)

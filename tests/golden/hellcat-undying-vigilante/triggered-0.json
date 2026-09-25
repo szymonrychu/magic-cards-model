@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_facts"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Hellcat, Undying Vigilante@alice#1": {

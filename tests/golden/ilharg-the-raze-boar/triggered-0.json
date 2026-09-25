@@ -55,7 +55,7 @@
         "source": "Ilharg, the Raze-Boar"
       }
     ],
-    "fields_changed": ["combat", "continuous_effects", "delayed_triggers", "turn_facts"],
+    "fields_changed": ["combat", "continuous_effects", "delayed_triggers", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#1": {

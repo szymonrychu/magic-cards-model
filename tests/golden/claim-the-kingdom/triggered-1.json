@@ -46,7 +46,7 @@
         "source": "Claim the Kingdom"
       }
     ],
-    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Claim the Kingdom@alice#1": {

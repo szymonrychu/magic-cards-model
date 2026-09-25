@@ -46,7 +46,7 @@
         "source": "Black Widow, Super Spy"
       }
     ],
-    "fields_changed": ["counters_put_this_turn", "reveals"],
+    "fields_changed": ["counters_put_this_turn", "exile_residents_seen", "reveals", "turn_counts"],
     "notices": {},
     "objects": {
       "Black Widow, Super Spy@alice#1": {

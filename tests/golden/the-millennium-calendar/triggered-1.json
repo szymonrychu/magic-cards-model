@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "losers", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "state_trigger_latches", "turn", "turn_facts", "winner"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "losers", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "state_trigger_latches", "turn", "turn_facts", "turn_history", "winner"],
     "notices": {},
     "objects": {
       "Dragonfire Blade@bob#1": {

@@ -9,14 +9,14 @@
     "x": 0
   },
   "board": {
-    "busy_turn": true,
+    "busy_turn": false,
     "entering": [],
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ocelot Pride", "Intangible Virtue", "Serra Angel", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Snow-Covered Forest", "Snow-Covered Forest", "Snow-Covered Forest"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ocelot Pride"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Giant Growth", "Memnite", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,10 +26,10 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": "precombat_main",
+    "step": null,
     "tapped": [],
     "tokens": [],
-    "variant": "busy",
+    "variant": "quiet",
     "war_turn": false
   },
   "card": "Ocelot Pride",
@@ -44,9 +44,9 @@
         "face_up": true,
         "granted": [],
         "monstrous": false,
-        "power": 2,
+        "power": 1,
         "tapped": false,
-        "toughness": 2,
+        "toughness": 1,
         "transformed": false,
         "zone": "battlefield"
       },
@@ -59,15 +59,15 @@
         "face_up": true,
         "granted": [],
         "monstrous": false,
-        "power": 2,
+        "power": 1,
         "tapped": false,
-        "toughness": 2,
+        "toughness": 1,
         "transformed": false,
         "zone": "battlefield"
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "turn_facts"],
+    "fields_changed": ["continuous_effects", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {},
@@ -81,6 +81,6 @@
     "attempt": "staged",
     "index": 0,
     "params": {},
-    "variant": "busy"
+    "variant": "quiet"
   }
 }

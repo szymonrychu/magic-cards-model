@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "e7b45197-d5c2-48c8-b72e-00236552e338",
+  "oracle_id": "aa3f4938-ac4b-4f52-a8d3-481c1b387467",
+  "multiverse_ids": [
+    249976
+  ],
+  "mtgo_id": 42804,
+  "mtgo_foil_id": 42805,
+  "tcgplayer_id": 56275,
+  "cardmarket_id": 250713,
+  "name": "Manor Skeleton",
+  "lang": "en",
+  "released_at": "2011-09-30",
+  "uri": "https://api.scryfall.com/cards/e7b45197-d5c2-48c8-b72e-00236552e338",
+  "scryfall_uri": "https://scryfall.com/card/isd/106/manor-skeleton?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:09:14Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.jpg?1783940954",
+    "normal": "https://cards.scryfall.io/normal/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.jpg?1783940954",
+    "large": "https://cards.scryfall.io/large/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.jpg?1783940954",
+    "png": "https://cards.scryfall.io/png/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.png?1783940954",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.jpg?1783940954",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.jpg?1783940954",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.webp?1783940954",
+    "grid": "https://cards.scryfall.io/grid/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.webp?1783940954",
+    "display": "https://cards.scryfall.io/display/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.webp?1783940954",
+    "art": "https://cards.scryfall.io/art/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.webp?1783940954",
+    "crop": "https://cards.scryfall.io/crop/front/e/7/e7b45197-d5c2-48c8-b72e-00236552e338.webp?1783940954"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Skeleton",
+  "oracle_text": "Haste\n{1}{B}: Regenerate this creature.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Regenerate",
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d1026945-2969-42b9-be53-f941405a58cb",
+  "set": "isd",
+  "set_name": "Innistrad",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d1026945-2969-42b9-be53-f941405a58cb",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aisd&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/isd?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e7b45197-d5c2-48c8-b72e-00236552e338/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aaa3f4938-ac4b-4f52-a8d3-481c1b387467&unique=prints",
+  "collector_number": "106",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Lungs dried to parchment wheeze blasphemies within a cage of bleached bone.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Eric Deschamps",
+  "artist_ids": [
+    "37970e22-9cee-44c1-af44-5ee27cf26b76"
+  ],
+  "illustration_id": "19e00a61-8d6c-4714-9f63-eb9d5d1e2a22",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21530,
+  "prices": {
+    "usd": "0.11",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.30",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=249976&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DManor%2BSkeleton",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DManor%2BSkeleton",
+    "edhrec": "https://edhrec.com/route/?cc=Manor+Skeleton"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F56275%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=250713&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/42804?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

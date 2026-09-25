@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cast_records", "play_permissions", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "exile_residents_seen", "play_permissions", "spells_cast_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Opt@alice#1": {

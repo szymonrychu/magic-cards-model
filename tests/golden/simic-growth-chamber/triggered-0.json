@@ -46,7 +46,7 @@
         "source": "Simic Growth Chamber"
       }
     ],
-    "fields_changed": ["known_carries", "permanents_left_battlefield_this_turn"],
+    "fields_changed": ["known_carries", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
       "Plains@alice#1": {

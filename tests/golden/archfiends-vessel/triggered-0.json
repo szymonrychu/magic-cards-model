@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "permanents_left_battlefield_this_turn", "turn_facts"],
+    "fields_changed": ["continuous_effects", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Archfiend's Vessel@alice#1": {

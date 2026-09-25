@@ -21,6 +21,7 @@ from typing import Any
 
 from magic_cards_model.machines import Casting, CostPayment, PriorityOutcome, Step, TurnMachine
 from magic_cards_model.machines.abilities import granted_mana_abilities, parse_mana_abilities
+from magic_cards_model.machines.conditions.history import note_exile_arrivals
 from magic_cards_model.machines.decisions import (
     CardSplit,
     Decision,
@@ -449,6 +450,10 @@ class Scenario:
         for username, names in getattr(self, "_exiled", []):
             for name in names:
                 game.exile.append(card_state(name, Zone.EXILE, controller=username, owner=username))
+        # A staged exile was already there when the scenario began, like a
+        # staged battlefield - nothing was put into exile this turn yet
+        # ("if one or more cards were put into exile this turn").
+        note_exile_arrivals(game, count=False)
         return PlayedScenario(checkpoint(game))
 
 

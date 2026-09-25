@@ -168,6 +168,12 @@ def executes(keyword: str) -> bool:
         "prowess",
         # CR 702.101a: `_extort_ability` (`_TRIGGER_EXPANSIONS`).
         "extort",
+        # CR 702.191a: `_increment_ability` (`_TRIGGER_EXPANSIONS`); its
+        # intervening "if" is `machines/triggers.intervening_if_answer`'s.
+        "increment",
+        # CR 702.54a: an "enters with" replacement (CR 614.1c),
+        # `machines/replacement._bloodthirst_entering_counters`.
+        "bloodthirst",
         "cascade",
         "storm",
         "persist",
@@ -740,6 +746,37 @@ def _extort_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+#: CR 702.191a's intervening "if", as `_increment_ability` writes it out.
+INCREMENT_CONDITION = (
+    "this permanent is a creature and the amount of mana spent to cast that spell is "
+    "greater than this creature's power or this creature's toughness"
+)
+
+
+def _increment_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.191a: "Increment is a triggered ability. 'Increment' means
+    'Whenever you cast a spell, if this permanent is a creature and the
+    amount of mana spent to cast that spell is greater than this creature's
+    power or this creature's toughness, put a +1/+1 counter on this
+    creature.'"
+
+    CR 702.191b: multiple instances trigger separately - one expansion per
+    printed instance, as every `_TRIGGER_EXPANSIONS` entry gives. The
+    intervening "if" (CR 603.4) is answered by `machines/triggers.
+    intervening_if_answer` from the cast spell's `CastRecord.mana_spent`
+    (CR 601.2h).
+    """
+    return _expansion(
+        ability,
+        keyword="increment",
+        word=TriggerWord.WHENEVER,
+        condition="you cast a spell",
+        effect="put a +1/+1 counter on this creature",
+        event=TriggerEvent.CAST_SPELL,
+        intervening_if=INCREMENT_CONDITION,
+    )
+
+
 def _battle_cry_ability(ability: KeywordAbility) -> TriggeredAbility:
     """CR 702.91a: "Battle cry" means "Whenever this creature attacks, each
     other attacking creature gets +1/+0 until end of turn.""
@@ -1228,6 +1265,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "partner with": _single(_partner_with_ability),
     "annihilator": _single(_annihilator_ability),
     "extort": _single(_extort_ability),
+    "increment": _single(_increment_ability),
 }
 
 

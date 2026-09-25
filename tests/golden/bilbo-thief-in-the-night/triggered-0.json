@@ -55,7 +55,7 @@
         "source": "Bilbo, Thief in the Night"
       }
     ],
-    "fields_changed": ["cast_records", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "spells_cast_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Memnite@alice#2": {

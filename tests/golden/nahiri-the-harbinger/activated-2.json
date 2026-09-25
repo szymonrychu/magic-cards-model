@@ -46,7 +46,7 @@
         "source": "Nahiri, the Harbinger"
       }
     ],
-    "fields_changed": ["continuous_effects", "delayed_triggers", "shuffles_performed", "turn_facts"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "shuffles_performed", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#3": {

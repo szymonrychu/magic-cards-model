@@ -46,7 +46,7 @@
         "source": "Sentinel of the Pearl Trident"
       }
     ],
-    "fields_changed": ["delayed_triggers", "permanents_left_battlefield_this_turn"],
+    "fields_changed": ["delayed_triggers", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Memnite@alice#1": {

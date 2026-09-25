@@ -1322,14 +1322,21 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
 
 
 def _history_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:
-    """A this-turn condition the stock board has not met yet is made true on
-    it, read off the condition's own words: "an opponent lost life this turn"
-    (the opponent loses 1 life, CR 119.3) and "a card left your graveyard
-    this turn" (a stock graveyard card other than the source is exiled, CR
-    603.10a). For an intervening "if" (CR 603.4) and an "Activate only if"
-    (CR 602.5b) alike."""
+    """A this-turn (or last-turn) condition the stock board has not met yet is
+    made true on it, read off the condition's own words - by playing the
+    history it asks about through the engine (life gained or lost, CR 119.3;
+    damage dealt, CR 120.1; a card leaving a graveyard or put into exile, CR
+    603.10a/400.7; a permanent bounced, sacrificed or put into a graveyard
+    from the battlefield, CR 701.21a/700.4; tokens entering; counters put, CR
+    122.6; energy paid, CR 107.14; an Equipment attached), or, for what the
+    turn before this one held, by staging last turn's own ledger the way the
+    board itself is staged. For an intervening "if" (CR 603.4) and an
+    "Activate only if" (CR 602.5b) alike."""
     lowered = (condition or "").lower()
+    if not lowered:
+        return
     game = scenario.game
+    count = _history_count(lowered)
     if "an opponent lost life this turn" in lowered:
         game.lose_life(BOB, 1)
     if "left your graveyard this turn" in lowered:
@@ -1346,6 +1353,201 @@ def _history_threshold(scenario: PlayedScenario, source: CardState, condition: s
         ]
         if creatures:
             game.exile_cards(creatures)
+    _life_history(scenario, lowered, count)
+    _damage_history(scenario, source, lowered, count)
+    _zone_history(scenario, source, lowered, count)
+    _action_history(scenario, source, lowered, count)
+
+
+_COLOR_OF = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def count_word(word: str) -> int:
+    return int(word) if word.isdigit() else parse_count(word, article=False) or 1
+
+
+def _history_count(lowered: str) -> int:
+    """The "N" of an "N or more" in the condition, 1 without one."""
+    match = re.search(r"\b(\w+) or more\b", lowered)
+    if match is None:
+        return 1
+    word = match.group(1)
+    return int(word) if word.isdigit() else parse_count(word, article=False) or 1
+
+
+def _other_permanent(scenario: PlayedScenario, source: CardState, card_type: Type | None):
+    for permanent in scenario.game.permanents_controlled_by(ALICE):
+        if permanent is source or permanent.card.is_land:
+            continue
+        if card_type is None or card_type in permanent.types:
+            return permanent
+    return None
+
+
+def _life_history(scenario: PlayedScenario, lowered: str, count: int) -> None:
+    game = scenario.game
+    whose = BOB if re.search(r"\ban opponent\b", lowered) else ALICE
+    if re.search(r"\b(?:you|an opponent|a player) lost (?:\w+ or more )?life last turn", lowered):
+        from magic_cards_model.machines.conditions.history import LIFE_LOST
+
+        game.turn_counts_last_turn.setdefault(LIFE_LOST, {})[whose] = count
+        return
+    if re.search(r"\bgained(?: (?:and|or) lost)? (?:\w+ or more )?life this turn", lowered):
+        game.gain_life(ALICE, count)
+    if re.search(r"\b(?:and|or) lost life this turn", lowered) or re.search(
+        r"\b(?:you|a player) lost (?:\w+ or more )?life this turn", lowered
+    ):
+        game.lose_life(ALICE, count)
+    elif re.search(r"\ban opponent lost \w+ or more life this turn", lowered):
+        game.lose_life(BOB, count)
+
+
+def _damage_history(scenario: PlayedScenario, source: CardState, lowered: str, count: int) -> None:
+    game = scenario.game
+    if "this creature dealt damage to an opponent this turn" in lowered:
+        game.deal_damage(game.player(BOB), 1, source=source)
+    if re.search(r"\byou were dealt \w+ or more damage this turn", lowered):
+        game.deal_damage(game.player(ALICE), count)
+    if re.search(r"\ban opponent (?:was|has been) dealt damage this turn", lowered):
+        game.deal_damage(game.player(BOB), 1)
+    if re.search(r"damage was dealt to (?:it|this creature) this turn", lowered):
+        game.deal_damage(source, count)
+    if "was dealt excess damage this turn" in lowered:
+        victim = next(
+            (each for each in game.permanents_controlled_by(BOB) if Type.CREATURE in each.types),
+            None,
+        )
+        if victim is not None:
+            toughness = game.characteristics_of(victim).toughness or 0
+            game.deal_damage(victim, toughness + 1)
+    if re.search(r"paid or lost (\w+) or more \{e\}", lowered):
+        game.add_player_counters(ALICE, "energy", count)
+        game.may_pay_energy(ALICE, count)
+    if lowered.startswith("equipped creature") and source.attached_to is None:
+        wearer = _other_permanent(scenario, source, Type.CREATURE)
+        if wearer is not None:
+            source.attach_to(wearer)
+
+
+def _zone_history(scenario: PlayedScenario, source: CardState, lowered: str, count: int) -> None:
+    game = scenario.game
+    if "put into your hand from the battlefield this turn" in lowered:
+        bounced = _other_permanent(scenario, source, None)
+        if bounced is not None:
+            game.return_to_hand(bounced)
+    if "put into exile this turn" in lowered:
+        graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
+        if graveyard:
+            game.exile_cards([graveyard[-1]])
+    graveyard_from_battlefield = re.search(
+        r"an? (?P<types>[a-z ]+?) was put into (?:a|your) graveyard from the battlefield", lowered
+    )
+    if graveyard_from_battlefield is not None:
+        for word in re.split(r" or ", graveyard_from_battlefield.group("types")):
+            card_type = next((each for each in Type if each.value == word.strip()), None)
+            victim = _other_permanent(scenario, source, card_type)
+            if victim is not None:
+                game.destroy(victim)
+                break
+    entered = re.search(
+        r"(?:\w+ or more |an? |another )(?P<quality>[a-z -]+?) entered the battlefield "
+        r"under your control this turn",
+        lowered,
+    )
+    if entered is not None and not re.search(r"\b(?:creature|land)s?\b", entered.group("quality")):
+        # Artifacts, nonland permanents, permanents: Treasures entering.
+        create_predefined_tokens(game, "Treasure", ALICE, count)
+    if entered is not None and "face-down" in entered.group("quality"):
+        from magic_cards_model.machines.effects import manifest
+
+        top = game.player(ALICE).library[0]
+        manifest(game, ALICE, top)
+    if "that player had another land enter" in lowered:
+        lands = [card for card in game.player(BOB).hand if card.card.is_land]
+        if lands:
+            game.put_onto_battlefield(lands[0], BOB)
+    had = re.search(r"you had an? (?P<list>[a-z ]+?) enter the battlefield", lowered)
+    if had is not None:
+        wanted = [word.strip() for word in had.group("list").split(" or ")]
+        entering = next(
+            (
+                printing
+                for printing in pool().values()
+                if printing.is_creature
+                and any(word.capitalize() in printing.subtypes for word in wanted)
+                and in_target_formats(printing)
+            ),
+            None,
+        )
+        if entering is not None:
+            arriving = card_state(entering.name)
+            game.player(ALICE).add(arriving, Zone.HAND)
+            game.put_onto_battlefield(arriving, ALICE)
+
+
+def _action_history(scenario: PlayedScenario, source: CardState, lowered: str, count: int) -> None:
+    game = scenario.game
+    sacrificed = re.search(r"sacrificed (?:\w+ or more |an? )(?P<what>\w+?)s? this turn", lowered)
+    if sacrificed is not None:
+        what = sacrificed.group("what").capitalize()
+        token = what if what in PREDEFINED else "Clue"
+        for each in create_predefined_tokens(game, token, ALICE, count):
+            game.sacrifice(each)
+    if re.search(r"counter was put on a permanent under your control this turn", lowered) or (
+        "you put a counter on this creature this turn" in lowered
+    ):
+        game.add_counters(source, "+1/+1", 1)
+    if "you put a counter on a creature this turn" in lowered:
+        creature = _other_permanent(scenario, source, Type.CREATURE)
+        if creature is not None:
+            game.add_counters(creature, "+1/+1", 1, putter=ALICE)
+    if "committed a crime this turn" in lowered:
+        from magic_cards_model.machines.conditions.history import record_crime
+
+        record_crime(game, ALICE, [TargetRef.to_player(BOB)])
+    mana_value = re.search(r"cast a spell with mana value (\w+) or greater this turn", lowered)
+    if mana_value is not None:
+        # The history the sweep has no casting driver for, staged as last
+        # turn's is: a real printing of that mana value, cast this turn.
+        big = next(
+            printing
+            for printing in pool().values()
+            if printing.cmc >= count_word(mana_value.group(1)) and not printing.is_land
+        )
+        game.spells_cast_this_turn.setdefault(ALICE, []).append(card_state(big.name, Zone.STACK))
+    dealt = re.search(
+        r"an opponent was dealt combat damage by an? (?P<quality>[a-z ]+?) this turn", lowered
+    ) or re.search(
+        r"(?P<color>white|blue|black|red|green) sources you controlled dealt (\w+) or more "
+        r"noncombat damage this turn",
+        lowered,
+    )
+    if dealt is not None:
+        from magic_cards_model.models.card import Supertype
+        from magic_cards_model.models.game import DamageDealt
+
+        color = dealt.groupdict().get("color")
+        game.damage_dealt_this_turn.append(
+            DamageDealt(
+                source_controller=ALICE,
+                source_types=(Type.CREATURE,),
+                source_supertypes=(Supertype.LEGENDARY,) if color is None else (),
+                source_colors=(_COLOR_OF[color],) if color is not None else (),
+                recipient_player=BOB,
+                amount=count,
+                combat=color is None,
+            )
+        )
+    if "from anywhere other than your hand" in lowered:
+        from magic_cards_model.machines.conditions.history import PLAYED_NOT_FROM_HAND
+
+        game.record_turn_fact(PLAYED_NOT_FROM_HAND, ALICE)
 
 
 def _activation_step(ability: ActivatedAbility) -> Step:
@@ -1411,7 +1613,13 @@ def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedSc
     graveyard" abilities."""
     card = case.printing
     if _functions_from_graveyard(card, ability):
-        scenario = _board(graveyard=(card.name, *extra.pop("graveyard", ())), **extra)
+        scenario = _board(
+            graveyard=(card.name, *extra.pop("graveyard", ())),
+            before=lambda played: _history_threshold(
+                played, _last(played, card.name, Zone.GRAVEYARD, ALICE), ability.intervening_if
+            ),
+            **extra,
+        )
         return scenario, _last(scenario, card.name, Zone.GRAVEYARD, ALICE).id
     battlefield = (
         card.name,
@@ -1655,6 +1863,30 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             return scenario, None
 
         yield cast_with_x
+
+    nth = re.search(r"\bit was the (\w+) spell you cast this turn\b", lowered)
+    if nth is not None:
+        # "if it was the second spell you cast this turn" (Codespell Cleric):
+        # that many spells before it are cast first (CR 601.2i), on a board
+        # with no other turn played.
+        before = (parse_ordinal(nth.group(1)) or 1) - 1
+
+        def cast_after_others() -> tuple[PlayedScenario, Any]:
+            scenario = _board(
+                hand=(card.name, *(["Opt"] * before)),
+                battlefield=_extra_lands_for(card),
+                busy=False,
+            )
+            game = scenario.game
+            for _ in range(before):
+                _cast(scenario, "Opt")
+                while game.stack:
+                    game.resolve_top()
+            _stack_material(scenario)
+            _cast(scenario, card.name)
+            return scenario, None
+
+        yield cast_after_others
 
     if "mana from a treasure" in lowered:
         # "if mana from a Treasure was spent to cast it" (CR 106.3): a
@@ -1991,13 +2223,17 @@ def _combat_sides(ability: TriggeredAbility) -> list[str]:
     return [ALICE]
 
 
-def _crew(scenario: PlayedScenario, vehicle: CardState) -> None:
-    """Crew a Vehicle (CR 702.122a) with the controller's other creatures."""
+def _crew(scenario: PlayedScenario, vehicle: CardState, only: tuple[str, ...] = ()) -> None:
+    """Crew a Vehicle (CR 702.122a) with the controller's other creatures -
+    only the ones named in `only`, when it names any."""
     controller = vehicle.controller
     crew = [
         p
         for p in scenario.game.permanents_controlled_by(controller)
-        if Type.CREATURE in p.types and p is not vehicle and not p.tapped
+        if Type.CREATURE in p.types
+        and p is not vehicle
+        and not p.tapped
+        and (not only or p.name in only)
     ]
     try:
         activation = crew_activation(scenario.game, vehicle, crew, controller)
@@ -2033,15 +2269,50 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         if re.search(r"\banother target attacking creature\b", ability.effect or "", re.I)
         else ()
     )
+    # "if you attacked with exactly N other creatures this combat" (Creepy
+    # Puppeteer): N vanilla partners attack alongside the source.
+    exactly = re.search(
+        r"\battacked with exactly (\w+) other creatures?\b", (ability.intervening_if or "").lower()
+    )
+    if exactly is not None and not partners:
+        partners = ("Grizzly Bears",) * (parse_count(exactly.group(1), article=False) or 1)
+    # "if a Pirate and a Vehicle attacked this combat" (Fearless
+    # Swashbuckler): each kind the source is not attacks alongside it - a
+    # crewed Vehicle (CR 702.122a), or the simplest creature of that subtype.
+    crewers: tuple[str, ...] = ()
+    composition = re.search(
+        r"\ban? (\w+) and an? (\w+) attacked this combat\b", (ability.intervening_if or "").lower()
+    )
+    if composition is not None and not partners:
+        wanted: list[str] = []
+        for word in composition.groups():
+            if word.lower() in {subtype.lower() for subtype in card.subtypes}:
+                continue
+            if word == "vehicle":
+                wanted.append(_VEHICLE)
+                crewers = (_VEHICLE_CREW,)
+                continue
+            kin = _simplest_creature_of(word)
+            if kin is None:
+                break
+            wanted.append(kin)
+        else:
+            partners = tuple(wanted)
     # "Whenever an equipped creature you control attacks" on a non-Equipment
     # source (Swordsman, Sharp Scoundrel, CR 301.5a): a real Equipment is
     # staged and attached to the attacker.
     equipment: tuple[str, ...] = (
         (_EQUIPMENT,) if "an equipped creature" in lowered and not _is_equipment(card) else ()
     )
+    # A transforming card whose ability is printed on a creature back face
+    # (Hidetsugu Consumes All's Vessel of the All-Consuming) fights as that
+    # face: `_source` stages it transformed (CR 712.8e).
+    back_creature = _back_face(card, ability) and "Creature" in (
+        (card.card_faces or [])[1].type_line or ""
+    )
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
-        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle):
+        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
             attackers.append(None)
         if not is_vehicle:
             attackers += [p for p in _probes(case, ability, entering=False) if p != card.name]
@@ -2057,6 +2328,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                             case.card,
                             *extra,
                             *partners,
+                            *crewers,
                             *equipment,
                             *_equipment_partner(ability),
                         ),
@@ -2082,6 +2354,9 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     if side == ALICE
                     else []
                 )
+                for partner in alongside:
+                    if crew_number(partner.card) is not None:
+                        _crew(scenario, partner, crewers)
                 try:
                     scenario.attack_with(attacker, *alongside, defending=defender)
                 except (ValueError, AssertionError) as error:
@@ -2089,6 +2364,54 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 return scenario, source, attacker, defender
 
             yield _combat_stages(case, fight, lowered)
+
+    if re.search(
+        r"\bthat creature entered (?:the battlefield )?this turn\b",
+        (ability.intervening_if or "").lower(),
+    ):
+        # "Whenever a creature you control deals combat damage to a player, if
+        # that creature entered this turn" (Samut, Vizier of Naktamun): a
+        # hasty creature enters this turn, then attacks (CR 702.10b).
+
+        def fresh_attacker() -> tuple[Any, ...]:
+            scenario = _board(battlefield=(case.card,), hand=(_HASTY,), step=Step.DECLARE_ATTACKERS)
+            source = _source(scenario, case, ability)
+            try:
+                fresh = scenario.game.put_onto_battlefield(
+                    _last(scenario, _HASTY, Zone.HAND, ALICE), ALICE
+                )
+                scenario.attack_with(fresh, defending=BOB)
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(str(error)) from error
+            return scenario, source, fresh, BOB
+
+        yield _combat_stages(case, fresh_attacker, lowered)
+
+
+#: A Vehicle with nothing but crew (CR 702.122a), and a creature that crews
+#: it alone, for "a Vehicle attacked this combat".
+_VEHICLE = "Consulate Dreadnought"
+_VEHICLE_CREW = "Craw Wurm"
+#: A vanilla creature with haste (CR 702.10b), for an attacker that entered
+#: this turn.
+_HASTY = "Raging Goblin"
+
+
+def _simplest_creature_of(subtype_word: str) -> str | None:
+    """The shortest-texted single-faced creature in the pool with this
+    subtype, or None."""
+    subtype = singular_subtype(subtype_word.capitalize()) or subtype_word.capitalize()
+    candidates = sorted(
+        (
+            card
+            for card in _format_pool()
+            if Type.CREATURE in card.types
+            and subtype.lower() in {word.lower() for word in card.subtypes}
+            and not card.card_faces
+        ),
+        key=lambda card: (len(card.oracle_text or ""), card.name),
+    )
+    return candidates[0].name if candidates else None
 
 
 def _combat_stages(case: Case, fight: Callable[[], tuple[Any, ...]], lowered: str) -> Attempt:
@@ -2151,6 +2474,42 @@ def _turns(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         return scenario, source_id
 
     yield staged
+
+    if re.search(r"\battack|\bcombat damage\b", (ability.intervening_if or "").lower()):
+        # "if this creature attacked this turn", "if Kytheon and at least two
+        # other creatures attacked this combat", "if a player was dealt 6 or
+        # more combat damage this turn": a combat is fought first - every
+        # creature the controller can attack with attacks, unblocked, and
+        # deals its damage (CR 508.1, CR 510) - then the turn plays on into
+        # the end of combat and end steps.
+
+        def fought() -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, step=Step.PRECOMBAT_MAIN, busy=False)
+            game = scenario.game
+            scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
+            game.sync_priority_with_step()
+            attackers = [
+                permanent
+                for permanent in game.permanents_controlled_by(ALICE)
+                if game.characteristics_of(permanent).is_creature and scenario.can_attack(permanent)
+            ]
+            if not attackers:
+                raise _Unavailable("nothing can attack")
+            # Staged deep enough to survive the whole board attacking, so the
+            # game goes on to the steps the ability waits for.
+            game.player(BOB).life = 1000
+            try:
+                scenario.attack_with(*attackers)
+                _settle(scenario)
+                while game.stack:
+                    game.resolve_top()
+                scenario.no_blocks()
+                scenario.combat_damage()
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(str(error)) from error
+            return scenario, source_id
+
+        yield fought
 
     if set(card.types) & _PERMANENT_TYPES:
 
@@ -2456,10 +2815,18 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
         r"\byou put (?:an?|one or more) (\+1/\+1|-1/-1|[a-z]+) counters? on (.+)$",
         ability.condition,
         re.IGNORECASE,
+    ) or re.search(
+        # The passive "one or more [<kind>] counters are put on another
+        # permanent you control" / "a creature you control" (Botanical
+        # Brawler, Stalwart Successor): no kind is any kind, a +1/+1 counter.
+        r"^one or more (?:(\+1/\+1|-1/-1|[a-z]+) )?counters are put on"
+        r" ((?:another|an?) [a-z ]+ you control)$",
+        ability.condition,
+        re.IGNORECASE,
     )
     if match is None:
         return
-    kind = match.group(1)
+    kind = match.group(1) or "+1/+1"
     partner = "Grizzly Bears"
     for word in re.findall(r"\b[A-Z][a-z]+\b", match.group(2)):
         subtype = singular_subtype(word)
@@ -3114,7 +3481,7 @@ def _attempts(case: Case) -> Iterator[Attempt]:
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
 #: `_drive` keeps playing forward after them.
-_ADVANCING = {"staged", "entered", "run"}
+_ADVANCING = {"staged", "entered", "run", "fought"}
 
 
 # ---------------------------------------------------------------------------
@@ -3136,6 +3503,10 @@ TRIGGER_KIND_SKIPS: dict[str, str] = {}
 KNOWN_ENGINE_GAPS: dict[str, str] = {
     "Sunstar Chaplain #0 [activated]": (
         "cost 'Remove a +1/+1 counter from a creature you control' cannot be built"
+    ),
+    "Luminarch Ascension #0 [activated]": (
+        "'Activate only if this enchantment has four or more quest counters on it' is not read "
+        "- cluster O1's object-state reader (EC6), not a turn-history clause"
     ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
@@ -3475,6 +3846,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     this-turn "Activate only if" condition (`_history_threshold`)."""
     game = scenario.game
     for condition in read_activation_instructions(ability.instructions).conditions:
+        _counter_threshold(scenario, source, condition)
         _history_threshold(scenario, source, condition)
         _board_threshold(scenario, source, condition)
     cost = ability.cost.lower()

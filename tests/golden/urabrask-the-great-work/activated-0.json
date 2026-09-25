@@ -46,7 +46,7 @@
         "source": "The Great Work"
       }
     ],
-    "fields_changed": ["permanents_left_battlefield_this_turn", "turn_facts"],
+    "fields_changed": ["exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Urabrask@alice#1": {

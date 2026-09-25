@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "b3770d86-4496-4c06-aab1-2917cfec100e",
+  "oracle_id": "90076bf5-aa9a-4a6e-9035-9aa97fd5561e",
+  "multiverse_ids": [
+    442012
+  ],
+  "mtgo_id": 66960,
+  "mtgo_foil_id": 66961,
+  "tcgplayer_id": 161533,
+  "cardmarket_id": 319254,
+  "name": "Luminarch Ascension",
+  "lang": "en",
+  "released_at": "2018-03-16",
+  "uri": "https://api.scryfall.com/cards/b3770d86-4496-4c06-aab1-2917cfec100e",
+  "scryfall_uri": "https://scryfall.com/card/a25/23/luminarch-ascension?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:33:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.jpg?1783935193",
+    "normal": "https://cards.scryfall.io/normal/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.jpg?1783935193",
+    "large": "https://cards.scryfall.io/large/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.jpg?1783935193",
+    "png": "https://cards.scryfall.io/png/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.png?1783935193",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.jpg?1783935193",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.jpg?1783935193",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.webp?1783935193",
+    "grid": "https://cards.scryfall.io/grid/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.webp?1783935193",
+    "display": "https://cards.scryfall.io/display/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.webp?1783935193",
+    "art": "https://cards.scryfall.io/art/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.webp?1783935193",
+    "crop": "https://cards.scryfall.io/crop/front/b/3/b3770d86-4496-4c06-aab1-2917cfec100e.webp?1783935193"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Enchantment",
+  "oracle_text": "At the beginning of each opponent's end step, if you didn't lose life this turn, you may put a quest counter on this enchantment. (Damage causes loss of life.)\n{1}{W}: Create a 4/4 white Angel creature token with flying. Activate only if this enchantment has four or more quest counters on it.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "1671013a-2c15-44f0-b4bc-057eb5f727db",
+      "component": "token",
+      "name": "Angel",
+      "type_line": "Token Creature \u2014 Angel",
+      "uri": "https://api.scryfall.com/cards/1671013a-2c15-44f0-b4bc-057eb5f727db"
+    },
+    {
+      "object": "related_card",
+      "id": "b3770d86-4496-4c06-aab1-2917cfec100e",
+      "component": "combo_piece",
+      "name": "Luminarch Ascension",
+      "type_line": "Enchantment",
+      "uri": "https://api.scryfall.com/cards/b3770d86-4496-4c06-aab1-2917cfec100e"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "41ee6e2f-69b3-4c53-8a8e-960f5e974cfc",
+  "set": "a25",
+  "set_name": "Masters 25",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/41ee6e2f-69b3-4c53-8a8e-960f5e974cfc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aa25&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/a25?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b3770d86-4496-4c06-aab1-2917cfec100e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A90076bf5-aa9a-4a6e-9035-9aa97fd5561e&unique=prints",
+  "collector_number": "23",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "set",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Michael Komarck",
+  "artist_ids": [
+    "96a53b95-fe5f-4fbb-9411-ccf4ee150aca"
+  ],
+  "illustration_id": "b3b760ee-095f-497e-b741-414327d5947a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3315,
+  "penny_rank": 2644,
+  "prices": {
+    "usd": "14.99",
+    "usd_foil": "31.79",
+    "usd_etched": null,
+    "eur": "7.28",
+    "eur_foil": "12.93",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=442012&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLuminarch%2BAscension",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLuminarch%2BAscension",
+    "edhrec": "https://edhrec.com/route/?cc=Luminarch+Ascension"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F161533%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=319254&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/66960?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

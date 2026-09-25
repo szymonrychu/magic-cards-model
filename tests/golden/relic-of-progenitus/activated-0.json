@@ -46,7 +46,7 @@
         "source": "Relic of Progenitus"
       }
     ],
-    "fields_changed": ["turn_counts"],
+    "fields_changed": ["exile_residents_seen", "turn_counts"],
     "notices": {},
     "objects": {
       "Serra Angel@alice#1": {
