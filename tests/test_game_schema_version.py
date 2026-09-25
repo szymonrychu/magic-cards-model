@@ -1293,3 +1293,28 @@ def test_a_snapshot_written_before_the_turn_history_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_TURN_HISTORY}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before EC5's player-state readers: `Player.starting_life`.
+_SCHEMA_VERSION_BEFORE_STARTING_LIFE = 83
+
+
+def test_the_starting_life_bump_moved_the_version_past_eighty_three() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_STARTING_LIFE
+
+
+def test_a_snapshot_written_before_the_starting_life_is_refused() -> None:
+    """A version-83 dump has no `starting_life`: decoded as current, the
+    player's validator would record the life they have now as the life they
+    began with (CR 103.4), so "if your life total is less than your starting
+    life total" would read a player at 12 life as never having lost any."""
+    dumped = _a_played_game().model_dump(mode="json")
+    for player in dumped["players"]:
+        del player["starting_life"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_STARTING_LIFE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_STARTING_LIFE}",
+    ):
+        Game.model_validate(dumped)
