@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "bd6e71a1-713e-4eca-bd65-9f0638c16794",
+  "oracle_id": "dbedd45e-f76c-4be7-ad89-ff57bed6626f",
+  "multiverse_ids": [
+    646566
+  ],
+  "mtgo_id": 121494,
+  "arena_id": 88923,
+  "tcgplayer_id": 534121,
+  "cardmarket_id": 752484,
+  "name": "Absolving Lammasu",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/bd6e71a1-713e-4eca-bd65-9f0638c16794",
+  "scryfall_uri": "https://scryfall.com/card/mkm/2/absolving-lammasu?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:22:11Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.jpg?1783912931",
+    "normal": "https://cards.scryfall.io/normal/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.jpg?1783912931",
+    "large": "https://cards.scryfall.io/large/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.jpg?1783912931",
+    "png": "https://cards.scryfall.io/png/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.png?1783912931",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.jpg?1783912931",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.jpg?1783912931",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.webp?1783912931",
+    "grid": "https://cards.scryfall.io/grid/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.webp?1783912931",
+    "display": "https://cards.scryfall.io/display/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.webp?1783912931",
+    "art": "https://cards.scryfall.io/art/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.webp?1783912931",
+    "crop": "https://cards.scryfall.io/crop/front/b/d/bd6e71a1-713e-4eca-bd65-9f0638c16794.webp?1783912931"
+  },
+  "mana_cost": "{4}{W}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Lammasu",
+  "oracle_text": "Flying\nWhen this creature enters, all suspected creatures are no longer suspected.\nWhen this creature dies, you gain 3 life and suspect up to one target creature an opponent controls. (A suspected creature has menace and can't block.)",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Suspect"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bd6e71a1-713e-4eca-bd65-9f0638c16794/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Adbedd45e-f76c-4be7-ad89-ff57bed6626f&unique=prints",
+  "collector_number": "2",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Izzy",
+  "artist_ids": [
+    "2c3d2473-ff5d-4309-8194-e0b2def2ab65"
+  ],
+  "illustration_id": "224a2e9d-1c2a-4502-92d1-5f0e1317f803",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 29051,
+  "preview": {
+    "source": "UncelQvwen",
+    "source_uri": "https://www.bilibili.com/video/BV1iW4y1w7Hh/",
+    "previewed_at": "2024-01-19"
+  },
+  "prices": {
+    "usd": "0.08",
+    "usd_foil": "0.02",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.07",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646566&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAbsolving%2BLammasu",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAbsolving%2BLammasu",
+    "edhrec": "https://edhrec.com/route/?cc=Absolving+Lammasu"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F534121%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=752484&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/121494?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

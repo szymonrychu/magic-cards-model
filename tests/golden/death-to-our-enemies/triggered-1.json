@@ -46,7 +46,7 @@
         "source": "Death to Our Enemies"
       }
     ],
-    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts"],
+    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {
       "Death to Our Enemies@alice#1": {

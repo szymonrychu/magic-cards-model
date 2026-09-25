@@ -1086,6 +1086,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         scenario.game.harness(source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _object_state_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
@@ -1103,10 +1104,89 @@ def _history_threshold(scenario: PlayedScenario, source: CardState, condition: s
     game = scenario.game
     if "an opponent lost life this turn" in lowered:
         game.lose_life(BOB, 1)
+    if removed := re.search(r"an? (\S+) counter was removed from a permanent you", lowered):
+        # "an oil counter was removed from a permanent you controlled this
+        # turn": the source takes one and gives it up (CR 122.1).
+        kind = removed.group(1)
+        game.add_counters(source, kind, 1)
+        source.remove_counters(kind, 1)
     if "left your graveyard this turn" in lowered:
         graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
         if graveyard:
             game.exile_cards([graveyard[-1]])
+
+
+#: The party a "you have a full party" condition is staged with (CR 700.8c):
+#: a pool Cleric, Rogue, Warrior and Wizard.
+_PARTY = ("Infernal Vessel", "Blackbloom Rogue", "Squad Commander", "Eccentric Apprentice")
+#: The source's own state a condition names, read off its words:
+#: "if it's saddled", "if this creature is renowned", "... monstrous",
+#: "... suspected" (CR 702.171b, 702.112b, 701.37b, 701.60b).
+_SELF_DESIGNATION = re.compile(
+    r"\b(?:it's|it is|this creature is|this permanent is) (?P<designation>saddled|renowned"
+    r"|monstrous|suspected)\b",
+    re.IGNORECASE,
+)
+#: "it has/had a +1/+1 counter on it", "there are N or more <kind> counters on
+#: this <type>", "this creature has a +1/+1 counter on it" - counters on the
+#: source itself (CR 122.1), put there as the board is staged.
+_SELF_COUNTERS = re.compile(
+    r"(?:\b(?:it|this \w+) (?:has|had) (?:(?P<count>a|an|one|two|three|four|five|\d+)"
+    r"(?: or more)? )?(?P<kind>\S+) counters? on it"
+    r"|there (?:is|are) (?P<count2>\w+) or more (?P<kind2>\S+) counters? on this \w+)",
+    re.IGNORECASE,
+)
+#: "this creature's power is N or greater", "its power was N or greater".
+_SELF_POWER = re.compile(
+    r"\b(?:this creature's|its) power (?:is|was) (?P<n>\d+) or greater", re.IGNORECASE
+)
+
+
+def _object_state_threshold(
+    scenario: PlayedScenario, source: CardState, condition: str | None
+) -> None:
+    """An object-state or designation condition the stock board does not
+    meet is made true on it, read off the condition's own words (never a
+    card's name): the source's own designation, counters or power; the
+    city's blessing (CR 702.131c); a full party (CR 700.8c); a completed
+    dungeon (CR 309.7); first strike (a keyword counter, CR 122.1b). For an
+    intervening "if" (CR 603.4) and an "Activate only if" (CR 602.5b)."""
+    lowered = (condition or "").lower()
+    if not lowered:
+        return
+    game = scenario.game
+    if (designation := _SELF_DESIGNATION.search(lowered)) is not None and " not " not in lowered:
+        setattr(source, designation.group("designation"), True)
+    if (
+        (counters := _SELF_COUNTERS.search(lowered)) is not None
+        and "no " not in lowered
+        and "n't" not in lowered
+    ):
+        kind = counters.group("kind") or counters.group("kind2")
+        raw = counters.group("count") or counters.group("count2") or "1"
+        count = int(raw) if raw.isdigit() else parse_count(raw) or 1
+        game.add_counters(source, "+1/+1" if kind == "counters" else kind, count)
+    if (power := _SELF_POWER.search(lowered)) is not None:
+        missing = int(power.group("n")) - (game.characteristics_of(source).power or 0)
+        if missing > 0:
+            game.add_counters(source, "+1/+1", missing)
+    if "you have the city's blessing" in lowered:
+        game.player(ALICE).has_citys_blessing = True
+    if "you have a full party" in lowered:
+        for name in _PARTY:
+            state = card_state(name, Zone.BATTLEFIELD, controller=ALICE, owner=ALICE)
+            state.bind_to_game(game)
+            game.battlefield.append(state)
+    if "it has first strike" in lowered and "n't" not in lowered:
+        game.add_counters(source, "first strike", 1)
+    if "you've completed a dungeon" in lowered:
+        from magic_cards_model.machines.dungeon import dungeon_printings
+
+        completed = card_state(
+            dungeon_printings()[0].name, Zone.SIDEBOARD, controller=ALICE, owner=ALICE
+        )
+        completed.dungeon_completions = 1
+        game.player(ALICE).sideboard.append(completed)
 
 
 def _activation_step(ability: ActivatedAbility) -> Step:
@@ -1194,7 +1274,8 @@ def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedSc
 #: 603.4, CR 301.5a - Whiplash, Vengeful Engineer; Avacynian Missionaries):
 #: the source is staged with a real Equipment attached to it.
 _EQUIPPED_SELF_CONDITION = re.compile(
-    r"\b(?:it's|he's|she's|this (?:creature|permanent) is) equipped\b", re.IGNORECASE
+    r"\b(?:it's|he's|she's|this (?:creature|permanent) is) (?:enchanted or )?equipped\b",
+    re.IGNORECASE,
 )
 _STAGED_EQUIPMENT = "Bonesplitter"
 
@@ -2658,6 +2739,9 @@ KNOWN_ENGINE_GAPS: dict[str, str] = {
         "cost 'Remove ten oil counters from among permanents you control and "
         "sacrifice The Filigree Sylex' cannot be built"
     ),
+    "Writ of Passage #0 [activated]": (
+        "Forecast (CR 702.57) is not built: its hand-zone activation is never offered"
+    ),
 }
 
 
@@ -2693,7 +2777,57 @@ class DriverGap:
         return f"sweep has no driver for {self.event} yet"
 
 
-SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = ()
+SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    # EC6's object-state conditions about an object other than the source,
+    # which the stock board cannot give the state the condition asks for.
+    DriverGap(
+        kind="dies",
+        event="another creature dying with the counters, toughness or attachments asked for",
+        precondition=r"^whenever (?:another|a) (?:nontoken )?creature(?: an opponent controls"
+        r"| you control)? "
+        r"dies, if (?:it had [^,]*counters?\b|its toughness was|it was enchanted|an aura)",
+    ),
+    DriverGap(
+        kind="ring_tempts_you",
+        event="the Ring tempting you with a creature other than the source chosen",
+        precondition=r"you chose a creature other than",
+    ),
+    DriverGap(
+        kind="cast_spell+plays_land",
+        event="a card exiled with the source sharing a type with what is played",
+        precondition=r"shares a card type with the exiled card",
+    ),
+    DriverGap(
+        kind="cast_spell",
+        event="a spell cast while the named source is attacking",
+        precondition=r"while .+ is attacking",
+    ),
+    DriverGap(
+        kind="enters_the_battlefield",
+        event="a creature entering from exile or cast from exile",
+        precondition=r"entered from exile or was cast from exile",
+    ),
+    DriverGap(
+        kind="enters_the_battlefield",
+        event="the source cast from a graveyard",
+        precondition=r"if it was cast from your graveyard",
+    ),
+    DriverGap(
+        kind="beginning_of_step",
+        event="an equipped creature and the combat damage it did not deal",
+        precondition=r"equipped creature didn't deal combat damage",
+    ),
+    DriverGap(
+        kind="activated",
+        event="an activation in combat by the attacking source",
+        precondition=r"activate only if this creature is attacking",
+    ),
+    DriverGap(
+        kind="activated",
+        event="the source made blue",
+        precondition=r"activate only if this creature is blue",
+    ),
+)
 
 
 def _driver_gap(case: Case) -> DriverGap | None:
@@ -2988,6 +3122,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     game = scenario.game
     for condition in read_activation_instructions(ability.instructions).conditions:
         _history_threshold(scenario, source, condition)
+        _object_state_threshold(scenario, source, condition)
     cost = ability.cost.lower()
     if "{e}" in cost:
         game.add_player_counters(ALICE, "energy", 10)

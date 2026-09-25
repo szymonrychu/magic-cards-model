@@ -13093,7 +13093,14 @@ def effects_for(
     text = source.class_ability_text
     # A keyword's own static ability has no printed sentence for the parser to
     # read, so it is added beside whatever the text produced.
-    keyword_statics = _impending_not_a_creature(source, timestamp) if static_only else []
+    keyword_statics = (
+        [
+            *_impending_not_a_creature(source, timestamp),
+            *_suspected_abilities(source, timestamp),
+        ]
+        if static_only
+        else []
+    )
     if builder is None:
         builder = parsed_layer_effects(
             text, static_only=static_only, card_name=source.name, legendary=legendary
@@ -13160,6 +13167,33 @@ def _impending_not_a_creature(source: CardState, timestamp: int) -> list[Continu
             selector=_only(source.id),
             modification=RemoveType(card_type=Type.CREATURE),
         )
+    ]
+
+
+#: CR 701.60c: "A suspected permanent has menace and 'This creature can't
+#: block' for as long as it's suspected."
+SUSPECTED_ABILITY_TEXTS: tuple[str, ...] = ("Menace", "This creature can't block.")
+
+
+def _suspected_abilities(source: CardState, timestamp: int) -> list[ContinuousEffect]:
+    """CR 701.60c's two abilities, as layer 6 additions (CR 613.1f) for as long
+    as `CardState.suspected` is set. Rebuilt with every static effect each time
+    the board is computed (CR 613.5), so the moment the designation ends - the
+    permanent leaves (CR 701.60a), or an effect says it is "no longer
+    suspected" - they are simply not built any more. Stamped with the
+    permanent's own timestamp, like every static effect it generates."""
+    if source.zone is not Zone.BATTLEFIELD or not source.suspected:
+        return []
+    return [
+        ContinuousEffect(
+            description=f"{source.name}: suspected, has {text!r} (CR 701.60c)",
+            layer=Layer.ABILITY,
+            timestamp=timestamp,
+            source_id=source.id,
+            selector=_only(source.id),
+            modification=grant_ability(text),
+        )
+        for text in SUSPECTED_ABILITY_TEXTS
     ]
 
 
@@ -13442,6 +13476,14 @@ class ContinuousEffects(EngineModel):
         ]
         gone = {effect.id for effect in ended}
         self.effects = [effect for effect in self.effects if effect.id not in gone]
+        if game is not None:
+            # CR 702.171a/b: a permanent "becomes saddled until end of turn" -
+            # a designation, not a characteristic, so no stored effect carries
+            # it, but it ends in the same CR 514.2 sentence.
+            for permanent in game.battlefield:
+                if permanent.saddled or permanent.saddled_by:
+                    permanent.saddled = False
+                    permanent.saddled_by = ()
         return ended
 
     def end_for_next_turn(self, username: str) -> list[ContinuousEffect]:

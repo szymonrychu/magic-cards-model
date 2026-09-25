@@ -143,7 +143,7 @@ def consume_shield_counter(permanent: CardState) -> None:
     """Remove one CR 122.1c shield counter - the "instead" half of both of
     the rule's own replacement/prevention effects, called only once the
     caller has already decided the counter is what stopped the event."""
-    permanent.counters.remove(SHIELD_COUNTER_KIND, 1)
+    permanent.remove_counters(SHIELD_COUNTER_KIND, 1)
 
 
 #: CR 614.1c's own "[Subject] enters with [a/N] [kind] counter(s) on [him/

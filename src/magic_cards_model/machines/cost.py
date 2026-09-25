@@ -3218,7 +3218,7 @@ class CostComponent(EngineModel):
                     else:
                         card.counters.add(Counter.LOYALTY, self.amount)
                 elif self.amount < 0:
-                    card.counters.remove(Counter.LOYALTY, -self.amount)
+                    card.remove_counters(Counter.LOYALTY, -self.amount)
 
         self.paid = True
 

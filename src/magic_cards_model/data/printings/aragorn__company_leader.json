@@ -1,0 +1,169 @@
+{
+  "object": "card",
+  "id": "73ca5f48-0117-49d6-8b00-b8482e3545b3",
+  "oracle_id": "1b841e8f-9484-4737-bd37-dfa11bd06883",
+  "multiverse_ids": [
+    617021
+  ],
+  "mtgo_id": 112292,
+  "arena_id": 84883,
+  "tcgplayer_id": 499868,
+  "cardmarket_id": 717089,
+  "name": "Aragorn, Company Leader",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/73ca5f48-0117-49d6-8b00-b8482e3545b3",
+  "scryfall_uri": "https://scryfall.com/card/ltr/191/aragorn-company-leader?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:17:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260",
+    "normal": "https://cards.scryfall.io/normal/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260",
+    "large": "https://cards.scryfall.io/large/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260",
+    "png": "https://cards.scryfall.io/png/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.png?1783916260",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.webp?1783916260",
+    "grid": "https://cards.scryfall.io/grid/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.webp?1783916260",
+    "display": "https://cards.scryfall.io/display/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.webp?1783916260",
+    "art": "https://cards.scryfall.io/art/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.webp?1783916260",
+    "crop": "https://cards.scryfall.io/crop/front/7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.webp?1783916260"
+  },
+  "mana_cost": "{1}{G}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Ranger",
+  "oracle_text": "Whenever the Ring tempts you, if you chose a creature other than Aragorn as your Ring-bearer, put your choice of a counter from among first strike, vigilance, deathtouch, and lifelink on Aragorn.\nWhenever you put one or more counters on Aragorn, put one of each of those kinds of counters on up to one other target creature.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "G",
+    "W"
+  ],
+  "color_identity": [
+    "G",
+    "W"
+  ],
+  "keywords": [
+    "Vigilance",
+    "Deathtouch"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "77dfb70e-42a5-44a0-977c-320bdb75e937",
+      "component": "combo_piece",
+      "name": "Aragorn, Company Leader",
+      "type_line": "Legendary Creature \u2014 Human Ranger",
+      "uri": "https://api.scryfall.com/cards/77dfb70e-42a5-44a0-977c-320bdb75e937"
+    },
+    {
+      "object": "related_card",
+      "id": "7215460e-8c06-47d0-94e5-d1832d0218af",
+      "component": "combo_piece",
+      "name": "The Ring // The Ring Tempts You",
+      "type_line": "Emblem // Card",
+      "uri": "https://api.scryfall.com/cards/7215460e-8c06-47d0-94e5-d1832d0218af"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "08078706-ac5d-439b-8f01-894d38751367",
+  "set": "ltr",
+  "set_name": "The Lord of the Rings: Tales of Middle-earth",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/08078706-ac5d-439b-8f01-894d38751367",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/73ca5f48-0117-49d6-8b00-b8482e3545b3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1b841e8f-9484-4737-bd37-dfa11bd06883&unique=prints",
+  "collector_number": "191",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anna Steinbauer",
+  "artist_ids": [
+    "3516496c-c279-4b56-8239-720683d03ae0"
+  ],
+  "illustration_id": "97feb344-1bdd-4563-b606-38e0356dbe54",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 11273,
+  "penny_rank": 15353,
+  "preview": {
+    "source": "IGN",
+    "source_uri": "https://www.ign.com/articles/magic-the-gathering-lord-of-the-rings-spoiler-reveal-bridge-of-khazad-dum-balrog-wings",
+    "previewed_at": "2023-06-08"
+  },
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": "0.37",
+    "usd_etched": null,
+    "eur": "0.28",
+    "eur_foil": "0.33",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=617021&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAragorn%252C%2BCompany%2BLeader",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAragorn%252C%2BCompany%2BLeader",
+    "edhrec": "https://edhrec.com/route/?cc=Aragorn%2C+Company+Leader"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F499868%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=717089&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/112292?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "object": "card",
+  "id": "d8fe33b3-afaf-4a98-ae64-7d7e0eabe993",
+  "oracle_id": "1ce7b966-2a10-4250-8c0d-525e73efe2f4",
+  "multiverse_ids": [
+    527327
+  ],
+  "mtgo_id": 91582,
+  "arena_id": 77145,
+  "tcgplayer_id": 243219,
+  "cardmarket_id": 571329,
+  "name": "Veteran Dungeoneer",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993",
+  "scryfall_uri": "https://scryfall.com/card/afr/40/veteran-dungeoneer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:08:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.jpg?1783926524",
+    "normal": "https://cards.scryfall.io/normal/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.jpg?1783926524",
+    "large": "https://cards.scryfall.io/large/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.jpg?1783926524",
+    "png": "https://cards.scryfall.io/png/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.png?1783926524",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.jpg?1783926524",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.jpg?1783926524",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.webp?1783926524",
+    "grid": "https://cards.scryfall.io/grid/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.webp?1783926524",
+    "display": "https://cards.scryfall.io/display/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.webp?1783926524",
+    "art": "https://cards.scryfall.io/art/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.webp?1783926524",
+    "crop": "https://cards.scryfall.io/crop/front/d/8/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993.webp?1783926524"
+  },
+  "mana_cost": "{3}{W}",
+  "cmc": 4.0,
+  "type_line": "Creature \u2014 Human Warrior",
+  "oracle_text": "When this creature enters, venture into the dungeon. (Enter the first room or advance to the next room.)",
+  "power": "3",
+  "toughness": "4",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Venture into the dungeon"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d8fe33b3-afaf-4a98-ae64-7d7e0eabe993",
+      "component": "combo_piece",
+      "name": "Veteran Dungeoneer",
+      "type_line": "Creature \u2014 Human Warrior",
+      "uri": "https://api.scryfall.com/cards/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993"
+    },
+    {
+      "object": "related_card",
+      "id": "6f509dbe-6ec7-4438-ab36-e20be46c9922",
+      "component": "combo_piece",
+      "name": "Dungeon of the Mad Mage",
+      "type_line": "Dungeon",
+      "uri": "https://api.scryfall.com/cards/6f509dbe-6ec7-4438-ab36-e20be46c9922"
+    },
+    {
+      "object": "related_card",
+      "id": "59b11ff8-f118-4978-87dd-509dc0c8c932",
+      "component": "combo_piece",
+      "name": "Lost Mine of Phandelver",
+      "type_line": "Dungeon",
+      "uri": "https://api.scryfall.com/cards/59b11ff8-f118-4978-87dd-509dc0c8c932"
+    },
+    {
+      "object": "related_card",
+      "id": "70b284bd-7a8f-4b60-8238-f746bdc5b236",
+      "component": "combo_piece",
+      "name": "Tomb of Annihilation",
+      "type_line": "Dungeon",
+      "uri": "https://api.scryfall.com/cards/70b284bd-7a8f-4b60-8238-f746bdc5b236"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d8fe33b3-afaf-4a98-ae64-7d7e0eabe993/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1ce7b966-2a10-4250-8c0d-525e73efe2f4&unique=prints",
+  "collector_number": "40",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Her tales of glory light a fire in the souls of the next generation of adventurers.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Sebastian Giacobino",
+  "artist_ids": [
+    "73a56d22-1628-49f3-8d4f-6cc3068bec02"
+  ],
+  "illustration_id": "7a61f797-0930-4fff-9006-aee28b021eae",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16347,
+  "prices": {
+    "usd": "0.20",
+    "usd_foil": "0.18",
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": "0.12",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527327&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVeteran%2BDungeoneer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVeteran%2BDungeoneer",
+    "edhrec": "https://edhrec.com/route/?cc=Veteran+Dungeoneer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243219%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571329&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/91582?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

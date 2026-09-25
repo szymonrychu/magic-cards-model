@@ -536,6 +536,14 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # tapping and summoning sickness so a Wall that is also tapped still
         # reports the reason a scenario is most likely asking about.
         return f"{creature.name} has defender and cannot attack (CR 702.3b)"
+    own_restriction = _self_attack_restriction_sentence(creature, game)
+    if own_restriction is not None:
+        # CR 508.1c: "The active player checks each creature they control to
+        # see whether it's affected by any restrictions (effects that say a
+        # creature can't attack ...)." - its own unconditional "This creature
+        # can't attack." line, printed or granted (Twisted Caverns' "Target
+        # creature can't attack until your next turn", CR 613.1f).
+        return f'{creature.name} can\'t attack: "{own_restriction}" (CR 508.1c)'
     restricted_until = getattr(game, "creatures_cant_attack_until_turns_taken", None)
     if restricted_until is not None and int(game.turn.turns_taken) == restricted_until:
         # CR 508.1c: a blanket "creatures can't attack this turn" restriction
@@ -937,6 +945,22 @@ def _power_restricted(restriction: GroupAttackRestriction, power: int, bound: in
     if restriction.operator == "less":
         return power < bound
     return power > bound
+
+
+def _self_attack_restriction_sentence(creature: CardState, game: "Game") -> str | None:
+    """The creature's own unconditional "can't attack" sentence - "This
+    creature can't attack." or "... can't attack or block." - among its
+    computed abilities (CR 613.5), or None."""
+    subjects = _self_reference_alternatives(creature)
+    pattern = re.compile(
+        rf"^(?:{'|'.join(re.escape(name) for name in subjects)}) can't attack"
+        r"(?: or block)?\.?$",
+        re.IGNORECASE,
+    )
+    for sentence in _computed_ability_sentences(creature, game):
+        if pattern.match(sentence.strip()):
+            return sentence.strip()
+    return None
 
 
 def group_attack_restriction_refusal(

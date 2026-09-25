@@ -95,7 +95,14 @@ from .layers import (
     modify_power_toughness,
     only_this_incarnation,
 )
-from .objects_as_costs import crew_number, crew_offer, power_of, total_power
+from .objects_as_costs import (
+    ObjectAction,
+    ObjectOffer,
+    crew_number,
+    crew_offer,
+    power_of,
+    total_power,
+)
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -132,6 +139,7 @@ class KeywordRule(StrEnum):
     REBOUND = "CR 702.88a"
     HIDEAWAY = "CR 702.75a"
     CREW = "CR 702.122a"
+    SADDLE = "CR 702.171a"
     STATION = "CR 702.184a"
     NINJUTSU = "CR 702.49a"
     EVOKE = "CR 702.74a"
@@ -144,6 +152,7 @@ class KeywordRule(StrEnum):
     POWER_UP = "CR 702.193a"
     PARTNER_WITH = "CR 702.124j"
     ANNIHILATOR = "CR 702.86a"
+    RENOWN = "CR 702.112a"
     CRAFT = "CR 702.167a"
 
 
@@ -178,6 +187,14 @@ def executes(keyword: str) -> bool:
         "rebound",
         "hideaway",
         "crew",
+        # CR 702.171a: `saddle_activation`/`_saddle_effect` here; the saddled
+        # designation is `CardState.saddled` (CR 702.171b).
+        "saddle",
+        # CR 701.60a and CR 701.49a: keyword *actions* embedded in effect
+        # text, read by `machines/effects.py`'s `_parse_suspect_clause` and
+        # `_parse_venture_clause` (the dungeon itself is `machines/dungeon.py`).
+        "suspect",
+        "venture into the dungeon",
         "station",
         "ninjutsu",
         "commander ninjutsu",
@@ -379,6 +396,11 @@ def executes(keyword: str) -> bool:
         # "Annihilator 2") or granted by a static ability with a variable N
         # (Ulamog, the Defiler's "annihilator X, where X is ...").
         "annihilator",
+        # CR 702.112a: `_renown_ability` below (`_TRIGGER_EXPANSIONS`); its
+        # effect, "put N +1/+1 counters on it and it becomes renowned", is
+        # `machines/effects._parse_renown_clause`, and the designation is
+        # `CardState.renowned` (CR 702.112b).
+        "renown",
     }
 
 
@@ -778,6 +800,29 @@ def _annihilator_ability(ability: KeywordAbility) -> TriggeredAbility:
         condition="this creature attacks",
         effect=f"defending player sacrifices {count} permanents",
         event=TriggerEvent.ATTACKS,
+    )
+
+
+def _renown_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.112a: "Renown N" means "When this creature deals combat damage
+    to a player, if it isn't renowned, put N +1/+1 counters on it and it
+    becomes renowned."
+
+    "If it isn't renowned" is an intervening *if* (CR 603.4), read by
+    `machines/conditions/objects.py` off `CardState.renowned`; CR 702.112c's
+    "each triggers separately" for several instances is
+    `keyword_triggered_abilities`' one ability per printed line - the first
+    to resolve makes the creature renowned, and the others are then removed
+    by CR 608.2a's recheck."""
+    count = ability.count if ability.count is not None else 1
+    return _expansion(
+        ability,
+        keyword="renown",
+        word=TriggerWord.WHEN,
+        condition="this creature deals combat damage to a player",
+        intervening_if="it isn't renowned",
+        effect=f"put {count} +1/+1 counters on it and it becomes renowned",
+        event=TriggerEvent.DEALS_DAMAGE,
     )
 
 
@@ -1227,6 +1272,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "cumulative upkeep": _single(_cumulative_upkeep_ability),
     "partner with": _single(_partner_with_ability),
     "annihilator": _single(_annihilator_ability),
+    "renown": _single(_renown_ability),
     "extort": _single(_extort_ability),
 }
 
@@ -2947,6 +2993,119 @@ def _crew_effect(activation: KeywordActivation) -> list[ContinuousEffect]:
         for added in (Type.ARTIFACT, Type.CREATURE)
     ]
     return created
+
+
+# --------------------------------------------------------------------------
+# Saddle (CR 702.171) and Mounts
+# --------------------------------------------------------------------------
+
+
+def saddle_number(card: Card) -> int | None:
+    """The N of "Saddle N", or None when the card has no saddle ability (CR
+    702.171a) - read off the keyword line, reminder text or not."""
+    ability = _keyword(card, "saddle")
+    if ability is None:
+        return None
+    printed = (ability.cost or ability.parameter or "").strip()
+    if not printed and ability.count is not None:
+        return ability.count
+    return int(printed) if printed.isdigit() else None
+
+
+def saddle_offer(mount: CardState) -> ObjectOffer:
+    """CR 702.171a: "Tap any number of other untapped creatures you control" -
+    the same object cost crew spends, keyed to saddle's own rule."""
+    return ObjectOffer(
+        keyword="saddle",
+        rule=str(KeywordRule.SADDLE),
+        action=ObjectAction.TAP,
+        zone=Zone.BATTLEFIELD,
+        permitted_types=frozenset({Type.CREATURE}),
+        untapped_only=True,
+        excluding=mount.id,
+    )
+
+
+def saddle_activation(
+    game: Any, mount: CardState, saddling: Sequence[CardState], player: str
+) -> KeywordActivation:
+    """Build the activation for a Mount's saddle ability (CR 702.171a).
+
+    "'Saddle N' means 'Tap any number of other untapped creatures you
+    control with total power N or greater: This permanent becomes saddled
+    until end of turn. Activate only as a sorcery.'" `saddling` are the
+    creatures chosen to tap - each checked by the shared object-cost offer
+    (other, untapped, a creature, yours) and their total power read off the
+    computed board (CR 613.5), exactly the three checks `crew_activation`
+    makes, since the cost is the same one. The Mount's own {T} is not part of
+    the cost, so neither the Mount nor the creatures tapping for it are held
+    back by summoning sickness (CR 302.6 restricts a creature's own {T}
+    abilities)."""
+    number = saddle_number(mount.card)
+    if number is None:
+        raise ValueError(f"{mount.name} has no saddle ability ({KeywordRule.SADDLE})")
+    chosen = list(saddling)
+    offer = saddle_offer(mount)
+    seen: set[UUID] = set()
+    for creature in chosen:
+        refusal = offer.why_not(creature, player, game)
+        if refusal is not None:
+            raise ValueError(refusal)
+        if creature.id in seen:
+            raise ValueError(
+                f"{creature.name} was chosen twice to saddle {mount.name}, but it has "
+                f"only one untap to spend ({KeywordRule.SADDLE}, CR 118.3)"
+            )
+        seen.add(creature.id)
+    have = total_power(chosen, game)
+    if have < number:
+        listing = ", ".join(f"{c.name} ({power_of(c, game)})" for c in chosen) or "nothing"
+        raise ValueError(
+            f"saddling {mount.name} needs total power {number} or greater, but "
+            f"{listing} totals {have} ({KeywordRule.SADDLE})"
+        )
+    ability = _keyword(mount.card, "saddle")
+    assert ability is not None  # `saddle_number` already found it
+    cost = TotalCost(components=[offer.component(creature, player) for creature in chosen])
+    return KeywordActivation(
+        card=mount,
+        player=player,
+        keyword="Saddle",
+        rule=str(KeywordRule.SADDLE),
+        zone=Zone.BATTLEFIELD,
+        cost=cost,
+        sorcery_only=True,
+        ability=_synthetic_ability(
+            ability,
+            cost_text=(
+                f"Tap any number of other untapped creatures you control "
+                f"with total power {number} or greater"
+            ),
+            effect="This permanent becomes saddled until end of turn.",
+        ),
+        game=game,
+    )
+
+
+def _saddle_effect(activation: KeywordActivation) -> CardState | None:
+    """The Mount becomes saddled until end of turn (CR 702.171a/b), and each
+    creature tapped to pay the cost saddled it (CR 702.171c).
+
+    Re-read off `game` by id, as `_crew_effect` does: a Mount that left the
+    battlefield in response is a new object (CR 400.7) and does not become
+    saddled - the ability still resolves (CR 113.7a) and does nothing. The
+    designation ends in the cleanup step (`machines/layers.ContinuousEffects.
+    end_the_turn`, CR 514.2) or as the Mount leaves (`CardState.move_to`)."""
+    game = activation.game
+    mount = game.find_by_id(activation.card.id)
+    if not isinstance(mount, CardState) or mount.zone is not Zone.BATTLEFIELD:
+        return None
+    if mount.zone_change_stamp != activation.card.zone_change_stamp:
+        return None
+    tapped = tuple(card.id for component in activation.cost.components for card in component.cards)
+    mount.saddled = True
+    mount.saddled_by = (*mount.saddled_by, *(i for i in tapped if i not in mount.saddled_by))
+    return mount
 
 
 # --------------------------------------------------------------------------
@@ -5558,6 +5717,7 @@ def keyword_effect_for(ability: AbilityOnStack) -> Callable[[Any, AbilityOnStack
 KEYWORD_EFFECTS: dict[str, Callable[[KeywordActivation], Any]] = {
     "equip": _equip_effect,
     "crew": _crew_effect,
+    "saddle": _saddle_effect,
     "unearth": _unearth_effect,
     "transmute": _transmute_effect,
     "station": _station_effect,

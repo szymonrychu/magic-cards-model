@@ -1,0 +1,136 @@
+{
+  "object": "card",
+  "id": "07a2c7fa-7aea-4da4-b7d5-9c24f5024c74",
+  "oracle_id": "7aa5db50-5057-45fd-bce9-fb4a5e874263",
+  "multiverse_ids": [
+    482704
+  ],
+  "tcgplayer_id": 212209,
+  "cardmarket_id": 452313,
+  "name": "Astral Drift",
+  "lang": "en",
+  "released_at": "2020-04-17",
+  "uri": "https://api.scryfall.com/cards/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74",
+  "scryfall_uri": "https://scryfall.com/card/c20/76/astral-drift?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:26:43Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.jpg?1783931203",
+    "normal": "https://cards.scryfall.io/normal/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.jpg?1783931203",
+    "large": "https://cards.scryfall.io/large/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.jpg?1783931203",
+    "png": "https://cards.scryfall.io/png/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.png?1783931203",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.jpg?1783931203",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.jpg?1783931203",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.webp?1783931203",
+    "grid": "https://cards.scryfall.io/grid/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.webp?1783931203",
+    "display": "https://cards.scryfall.io/display/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.webp?1783931203",
+    "art": "https://cards.scryfall.io/art/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.webp?1783931203",
+    "crop": "https://cards.scryfall.io/crop/front/0/7/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74.webp?1783931203"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Enchantment",
+  "oracle_text": "Whenever you cycle this card or cycle another card while this enchantment is on the battlefield, you may exile target creature. If you do, return that card to the battlefield under its owner's control at the beginning of the next end step.\nCycling {2}{W} ({2}{W}, Discard this card: Draw a card.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Cycling"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set": "c20",
+  "set_name": "Commander 2020",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/07a2c7fa-7aea-4da4-b7d5-9c24f5024c74/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7aa5db50-5057-45fd-bce9-fb4a5e874263&unique=prints",
+  "collector_number": "76",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anna Steinbauer",
+  "artist_ids": [
+    "3516496c-c279-4b56-8239-720683d03ae0"
+  ],
+  "illustration_id": "47125eca-03e7-4994-9a12-1bbb5dc49bab",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 9195,
+  "penny_rank": 2269,
+  "preview": {
+    "source": "EDHREC",
+    "source_uri": "https://articles.edhrec.com/edhrec-exclusive-ikoria-commander-preview-cards/",
+    "previewed_at": "2020-04-05"
+  },
+  "prices": {
+    "usd": "0.35",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=482704&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAstral%2BDrift",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAstral%2BDrift",
+    "edhrec": "https://edhrec.com/route/?cc=Astral+Drift"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212209%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=452313&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Astral+Drift&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

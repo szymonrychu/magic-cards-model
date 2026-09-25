@@ -616,6 +616,23 @@ def _parse_switch_power_toughness_then_draw_clause(text: str) -> Effect | None:
     return sequence(create_continuous_effect, draw_cards(count))
 
 
+def _effect_condition_is_readable(condition: str) -> bool:
+    """`condition_is_readable` for a resolving effect's own "if" (CR 608.2c):
+    a clause the shared condition readers claim only through an anaphor
+    ("if it's a creature", "if that creature is a Bear") is not read here -
+    the anaphor names an object an earlier instruction chose (a target, a
+    revealed card), which `Game.condition_holds` has no way to know
+    (`machines/conditions/objects.names_an_anaphor`)."""
+    from ..models.game import builtin_condition_readable, condition_is_readable
+    from .conditions.objects import names_an_anaphor
+
+    if not condition_is_readable(condition):
+        return False
+    return builtin_condition_readable(condition.strip().rstrip(".").strip()) or not (
+        names_an_anaphor(condition)
+    )
+
+
 def layer_context_for(game: "Game", controller: Player) -> LayerContext:
     """The graveyards a resolving effect may need to count (CR 205.2a card types)."""
     everyone: list[CardState] = []
@@ -9096,14 +9113,15 @@ def _parse_discard_unless_condition_clause(clause: str) -> ClauseEffect | None:
     "this creature entered this turn" reads its last known state when it has
     left the battlefield (CR 608.2h). An answer `condition_holds` still cannot
     give records a `ConditionalClauseNotice` and discards nothing."""
-    from ..models.game import condition_is_readable
 
     match = _DISCARD_UNLESS_CONDITION_RE.fullmatch(clause)
     if match is None:
         return None
     discard_text = match.group("discard").strip()
     condition = match.group("condition").strip()
-    if _DISCARD_A_CARD_RE.fullmatch(discard_text) is None or not condition_is_readable(condition):
+    if _DISCARD_A_CARD_RE.fullmatch(discard_text) is None or not _effect_condition_is_readable(
+        condition
+    ):
         return None
     discard = parse_clause_effect(discard_text)
     if discard is None:
@@ -9905,10 +9923,11 @@ _CONDITIONAL_CANT_BE_COUNTERED_LINE_RE = re.compile(
 
 
 def _strip_conditional_cant_be_countered_line(text: str) -> str:
-    from ..models.game import condition_is_readable
 
     return _CONDITIONAL_CANT_BE_COUNTERED_LINE_RE.sub(
-        lambda found: "" if condition_is_readable(found.group("condition")) else found.group(0),
+        lambda found: (
+            "" if _effect_condition_is_readable(found.group("condition")) else found.group(0)
+        ),
         text,
     )
 
@@ -15020,7 +15039,6 @@ _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
 
 def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Effect | None:
     """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape."""
-    from ..models.game import condition_is_readable
 
     whole = _strip_non_effect_preamble(effect_text).strip()
     match = _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE.fullmatch(whole)
@@ -15029,7 +15047,7 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Eff
     if not _targets_understood(match.group("phrase")):
         return None
     condition_text = match.group("condition").strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
     base_amount = int(match.group("n"))
     extra_amount = int(match.group("extra_n"))
@@ -15875,7 +15893,6 @@ def _parse_reveal_top_n_may_battlefield_creature_teamwork_clause(text: str) -> E
     creatures - Reality Smasher's own "put the rest into your graveyard"
     twin already reads "the rest" as every card the earlier pick did not
     take, creature or not)."""
-    from ..models.game import condition_is_readable
 
     whole = _strip_non_effect_preamble(text).strip()
     match = _REVEAL_TOP_N_MAY_BATTLEFIELD_CREATURE_TEAMWORK_RE.fullmatch(whole)
@@ -15885,7 +15902,7 @@ def _parse_reveal_top_n_may_battlefield_creature_teamwork_clause(text: str) -> E
     if n is None:
         return None
     condition_text = match.group("condition").strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
 
     def effect(game: "Game", spell: CardState) -> None:
@@ -16713,7 +16730,6 @@ def _merge_destroy_then_damage_controller_clauses(
 ) -> tuple[int, TargetedClause] | None:
     """`_DESTROY_TARGET_CLAUSE_RE` + `_DAMAGE_THAT_PERMANENTS_CONTROLLER_RE`,
     read as one CR 608.2c instruction; see the banner above."""
-    from ..models.game import condition_is_readable
 
     if index + 1 >= len(clauses):
         return None
@@ -16723,7 +16739,7 @@ def _merge_destroy_then_damage_controller_clauses(
     if match is None or re.search(r"\btarget\b", match.group("subject"), re.IGNORECASE):
         return None
     condition = match.group("condition")
-    if condition is not None and not condition_is_readable(condition):
+    if condition is not None and not _effect_condition_is_readable(condition):
         return None
     amount = parse_count(match.group("n"))
     if amount is None:
@@ -17235,7 +17251,9 @@ _TARGET_CANT_BE_BLOCKED_RE = re.compile(
 #: self line "This creature can't block." that `machines/combat.py`'s own
 #: blocker restriction already reads, for the rest of the turn.
 _TARGET_CANT_BLOCK_RE = re.compile(
-    r"^(?P<phrase>(?:another )?target .+) can'?t block this turn\.?$", re.IGNORECASE
+    r"^(?P<phrase>(?:another )?target .+?) can'?t (?P<what>attack or block|attack|block) "
+    r"(?P<duration>this turn|until your next turn)\.?$",
+    re.IGNORECASE,
 )
 
 #: "`<target phrase>` phases out." (CR 702.26b) - Teferi, Master of Time's
@@ -17338,21 +17356,37 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
             return None
 
+        # "can't attack" (CR 508.1c) as well as "can't block" (CR 509.1b),
+        # each granted as the self line `machines/combat.py` reads, "this
+        # turn" or "until your next turn" (CR 611.2a, Tomb of the Mad Mage's
+        # Twisted Caverns: "Target creature can't attack until your next
+        # turn.").
+        what = match.group("what").lower()
+        granted = [f"This creature can't {verb}." for verb in ("attack", "block") if verb in what]
+        until_next_turn = match.group("duration").lower() == "until your next turn"
+
         def cant_block_targets(game: "Game", stack_object: "StackObject") -> None:
             effects = game.continuous_effects
+            controller = game.controller_of(stack_object).username
             for target in game.resolve_targets(stack_object):
                 if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
                     continue
-                effects.add(
-                    ContinuousEffect(
-                        description=f"{target.name} can't block this turn",
-                        layer=Layer.ABILITY,
-                        timestamp=effects.tick(),
-                        duration=Duration.UNTIL_END_OF_TURN,
-                        selector=only_this_incarnation(target, target.zone_change_stamp),
-                        modification=grant_ability("This creature can't block."),
+                for text in granted:
+                    effects.add(
+                        ContinuousEffect(
+                            description=f"{target.name}: {text[len('This creature ') :]}",
+                            layer=Layer.ABILITY,
+                            timestamp=effects.tick(),
+                            duration=(
+                                Duration.UNTIL_YOUR_NEXT_TURN
+                                if until_next_turn
+                                else Duration.UNTIL_END_OF_TURN
+                            ),
+                            until_next_turn_of=controller if until_next_turn else None,
+                            selector=only_this_incarnation(target, target.zone_change_stamp),
+                            modification=grant_ability(text),
+                        )
                     )
-                )
 
         return cant_block_targets
 
@@ -22184,13 +22218,12 @@ def _parse_then_exile_self_and_return_clause(text: str) -> AbilityEffect | None:
     712.14) or back face up when the sentence says "transformed" (CR
     712.14a).
     """
-    from ..models.game import condition_is_readable
 
     match = _THEN_EXILE_SELF_AND_RETURN_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
     condition = match.group("condition")
-    if condition is not None and not condition_is_readable(condition):
+    if condition is not None and not _effect_condition_is_readable(condition):
         return None
     name_text = match.group("name").strip()
     named = (
@@ -26949,6 +26982,61 @@ def _discard_at_random(game: "Game", player: Player, count: int, source: str) ->
     game.discard_cards(player.username, hand[:count], source=source)
 
 
+#: A third-person life clause - "loses 1 life", "gains 3 life".
+_THIRD_PERSON_LIFE_RE = re.compile(rf"^(?:loses|gains) (?:{COUNT}) life$", re.IGNORECASE)
+
+#: "loses N life unless they <action>" - the punisher step of an "each player
+#: ..." sentence (Tomb of Annihilation's Veils of Fear: "Each player loses 2
+#: life unless they discard a card."; Sandfall Cell: "... unless they sacrifice
+#: a creature, artifact, or land of their choice.").
+_LOSES_LIFE_UNLESS_RE = re.compile(
+    rf"^loses (?P<n>{COUNT}) life unless (?:they|he or she) "
+    r"(?P<action>discards? a card|sacrifices? (?:an? )?(?P<description>.+?)"
+    r"(?: of their choice)?)$",
+    re.IGNORECASE,
+)
+
+
+def _loses_life_unless_step(match: re.Match[str]) -> ClauseEffect | None:
+    """`_LOSES_LIFE_UNLESS_RE`'s step, for one player: they choose whether to
+    take the action instead (CR 608.2d - offered only when they can, since
+    CR 608.2d offers no impossible choice), and lose the life if they do not
+    (CR 119.3)."""
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    description = match.group("description")
+    discards = description is None
+    requirement = None
+    if not discards:
+        requirement = permanent_description(description.strip())
+        if requirement is None:
+            return None
+        sacrifice = _sacrifice_of_choice_clause_effect(
+            description.strip(), 1, with_indefinite_article(description.strip())
+        )
+
+    def step(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        if discards:
+            able = bool(player.hand)
+            prompt = f"discard a card rather than lose {amount} life"
+        else:
+            able = any(
+                requirement.rejects(permanent, player.username, game) is None  # type: ignore[union-attr]
+                for permanent in game.permanents_controlled_by(player.username)
+            )
+            prompt = f"sacrifice {with_indefinite_article(description.strip())} rather than lose {amount} life"  # noqa: E501
+        if able and game.may(player, prompt, source=source, source_id=source_id):
+            if discards:
+                _discard_cards(game, player, 1, source, source_id=source_id)
+            else:
+                sacrifice(game, player, source, source_id)
+            return
+        game.lose_life(player, amount)
+
+    return step
+
+
 def _parse_each_player_step(text: str) -> ClauseEffect | None:
     """One step of an "each player ..." sentence, as something to run for a
     single player - or `None` if this engine cannot read it, which fails the
@@ -27070,7 +27158,16 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
 
         return search_and_put
 
+    if match := _LOSES_LIFE_UNLESS_RE.fullmatch(clause):
+        return _loses_life_unless_step(match)
+
     plain = parse_clause_effect(clause)
+    if plain is None and _THIRD_PERSON_LIFE_RE.fullmatch(clause):
+        # "Each player loses 1 life." (Tomb of Annihilation's Trapped Entry):
+        # the step's own subject is the player it runs for, so the life
+        # clause is the one the controller would read with "you" - `_LOSE_
+        # LIFE_RE`/`_GAIN_LIFE_RE` already accept the third-person verb.
+        plain = parse_clause_effect(f"you {clause}")
     if plain is not None:
         return plain
 
@@ -29189,7 +29286,6 @@ def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | Non
     `ConditionalClauseNotice`, the same channel `_parse_condition_clause`
     uses.
     """
-    from ..models.game import condition_is_readable
 
     match = _CONDITIONAL_REFERENT_LEADING_RE.fullmatch(rider)
     if match is None:
@@ -29197,7 +29293,7 @@ def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | Non
     if match is None:
         return None
     condition_text = match.group("condition").strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
     body = _RIDER_ALSO_RE.sub(lambda found: found.group("anaphor"), match.group("rider").strip())
     inner = _parse_referent_object_clause(body)
@@ -33883,6 +33979,303 @@ def _parse_counter_each_creature_target_player_clause(
             game.add_counters(permanent, kind, amount)
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# "Sacrifice a creature, an artifact, and a land." (CR 701.21a)
+# --------------------------------------------------------------------------
+
+#: One item of a sacrifice list, article included: "a creature", "an
+#: artifact", "a land".
+_SACRIFICE_LIST_ITEM_RE = re.compile(r"^(?:and )?an? (?P<description>[a-z][a-z -]*?),?$")
+
+
+def _merge_sacrifice_one_of_each_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """ "sacrifice a creature, an artifact, and a land" (Tomb of Annihilation's
+    Oubliette) - the controller sacrifices one permanent of each description,
+    each their own choice (CR 701.21a, CR 608.2d), no permanent twice.
+    `_prepare_effect_clauses` cuts the list at its serial comma, so its pieces
+    are taken back here; each item is read by `targeting.permanent_description`
+    or the whole instruction is refused."""
+    first = clauses[index].strip().rstrip(".")
+    head = re.match(r"^sacrifice (?P<rest>an? .+)$", first, re.IGNORECASE)
+    if head is None:
+        return None
+    pieces = [part.strip() for part in head.group("rest").split(",") if part.strip()]
+    consumed = 1
+    while index + consumed < len(clauses) and _SACRIFICE_LIST_ITEM_RE.fullmatch(
+        clauses[index + consumed].strip().rstrip(".").lower()
+    ):
+        pieces.append(clauses[index + consumed].strip().rstrip("."))
+        consumed += 1
+    descriptions: list[str] = []
+    for piece in pieces:
+        item = _SACRIFICE_LIST_ITEM_RE.fullmatch(piece.lower())
+        if item is None:
+            return None
+        descriptions.append(item.group("description").strip())
+    if len(descriptions) < 2:
+        return None
+    requirements = [permanent_description(description) for description in descriptions]
+    if any(requirement is None for requirement in requirements):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        chosen: list[CardState] = []
+        for description, requirement in zip(descriptions, requirements, strict=True):
+            assert requirement is not None
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if permanent not in chosen
+                and requirement.rejects(permanent, player.username, game) is None
+            ]
+            if not candidates:
+                continue
+            if len(candidates) == 1:
+                chosen.append(candidates[0])
+                continue
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=player.username,
+                    prompt=f"sacrifice {with_indefinite_article(description)}",
+                    source=source,
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in candidates),
+                    source_id=source_id_of(stack_object),
+                )
+            )
+            by_id = {permanent.id: permanent for permanent in candidates}
+            chosen.extend(by_id[card_id] for card_id in answer if card_id in by_id)
+        for permanent in chosen:
+            if permanent.zone is Zone.BATTLEFIELD:
+                game.sacrifice(permanent)
+
+    return consumed, effect
+
+
+# --------------------------------------------------------------------------
+# "Draw N cards and reveal them. You may cast one of them without paying its
+# mana cost." (CR 608.2g)
+# --------------------------------------------------------------------------
+
+_DRAW_N_RE = re.compile(rf"^draw (?P<n>{COUNT}) cards?$", re.IGNORECASE)
+_CAST_ONE_OF_THEM_FREE_RE = re.compile(
+    r"^you may cast (?:one|up to one) of them without paying its mana cost$", re.IGNORECASE
+)
+
+
+def _merge_draw_reveal_cast_one_free_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """Dungeon of the Mad Mage's Mad Wizard's Lair: draw the cards, reveal
+    them, and cast up to one of them during the resolution without paying
+    its mana cost (CR 608.2g, CR 118.9)."""
+    if index + 2 >= len(clauses):
+        return None
+    draw = _DRAW_N_RE.fullmatch(clauses[index].strip().rstrip("."))
+    if draw is None or clauses[index + 1].strip().rstrip(".").lower() != "reveal them":
+        return None
+    if _CAST_ONE_OF_THEM_FREE_RE.fullmatch(clauses[index + 2].strip().rstrip(".")) is None:
+        return None
+    amount = parse_count(draw.group("n"))
+    if amount is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        drawn = game.draw_cards(player.username, amount)
+        for card in drawn:
+            game.reveal(card, source=source)
+        _offer_free_casts_from_among(
+            game,
+            list(drawn),
+            player.username,
+            source_name=source,
+            source_id=source_id_of(stack_object),
+            play=False,
+            limit=1,
+            zone=Zone.HAND,
+        )
+
+    return 3, effect
+
+
+# --------------------------------------------------------------------------
+# Venture into the dungeon (CR 701.49)
+# --------------------------------------------------------------------------
+
+#: "venture into the dungeon" (CR 701.49a-c) and "venture into <quality>" (CR
+#: 701.49d) - the resolving object's controller ventures (CR 109.5).
+_VENTURE_RE = re.compile(
+    r"^(?:you )?venture into (?:the dungeon|(?P<quality>[A-Z][A-Za-z' -]+?))\.?$", re.IGNORECASE
+)
+
+
+def _parse_venture_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "Venture into the dungeon." (Veteran Dungeoneer, Dungeon Map, Bar the
+    Gate) - `machines/dungeon.venture` for the resolving object's controller."""
+    match = _VENTURE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    quality = match.group("quality")
+
+    def venture_effect(game: "Game", stack_object: "StackObject") -> None:
+        from .dungeon import venture
+
+        player = game.controller_of(stack_object).username
+        venture(
+            game,
+            player,
+            source_name=stack_object.name,
+            source_id=source_id_of(stack_object),
+            quality=quality,
+        )
+
+    return venture_effect
+
+
+# --------------------------------------------------------------------------
+# Suspect (CR 701.60)
+# --------------------------------------------------------------------------
+#
+# CR 701.60a: "Certain spells and abilities instruct a player to suspect a
+# creature. That creature becomes suspected until it leaves the battlefield or
+# until a spell or ability causes it to no longer be suspected." The
+# designation is `CardState.suspected` (CR 701.60b); its menace and "can't
+# block" are `machines/layers._suspected_abilities` (CR 701.60c). Read here:
+#
+# - "suspect it" / "suspect this creature" (Barbed Servitor, Person of
+#   Interest, Rubblebelt Braggart's "you may suspect it") - the trigger's own
+#   subject, or its source when the event names none;
+# - "suspect enchanted creature" (Convenient Target) - what the source is
+#   attached to;
+# - "suspect [up to one] [other] target creature ..." (Clandestine Meddler,
+#   Absolving Lammasu) - each still-legal target (CR 608.2b);
+# - "<it | this creature | that creature> is no longer suspected" and "all
+#   suspected creatures are no longer suspected" (Frantic Scapegoat, Absolving
+#   Lammasu).
+_SUSPECT_TARGET_RE = re.compile(
+    r"^suspect (?P<phrase>(?:up to \S+ |another )?(?:other )?target .+?)\.?$", re.IGNORECASE
+)
+_SUSPECT_OBJECT_RE = re.compile(
+    r"^suspect (?P<object>it|this creature|that creature|enchanted creature|equipped creature)"
+    r"\.?$",
+    re.IGNORECASE,
+)
+_NO_LONGER_SUSPECTED_RE = re.compile(
+    r"^(?:(?P<object>it|this creature|that creature|enchanted creature)(?:'s| is)"
+    r"|(?P<all>all suspected creatures are|each suspected creature is)) no longer suspected\.?$",
+    re.IGNORECASE,
+)
+
+
+def suspect(game: "Game", permanent: CardState) -> bool:
+    """CR 701.60a: suspect a creature - only a creature on the battlefield can
+    be (CR 701.60b: only permanents have the designation), judged on the
+    computed board (CR 613.5). Returns whether it became suspected."""
+    if permanent.zone is not Zone.BATTLEFIELD:
+        return False
+    if not game.characteristics_of(permanent).is_creature:
+        return False
+    permanent.suspected = True
+    return True
+
+
+def _named_object(game: "Game", stack_object: "StackObject", word: str) -> CardState | None:
+    """The one object "it"/"this creature"/"that creature"/"enchanted
+    creature" names for a resolving ability: the trigger event's subject, the
+    source, or what the source is attached to."""
+    word = word.lower()
+    source = stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else None
+    if word in ("enchanted creature", "equipped creature"):
+        if source is None or source.attached_to is None:
+            return None
+        found = game.find_by_id(source.attached_to)
+        return found if isinstance(found, CardState) else None
+    if word == "this creature":
+        return source
+    event = getattr(stack_object, "event", None)
+    if event is not None and event.subject_id is not None:
+        found = game.find_by_id(event.subject_id)
+        if isinstance(found, CardState):
+            return found
+    return source
+
+
+def _parse_suspect_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """The suspect family - see the banner above."""
+    text = clause.strip()
+    if match := _SUSPECT_TARGET_RE.fullmatch(text):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+
+        def suspect_targets(game: "Game", stack_object: "StackObject") -> None:
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, CardState):
+                    suspect(game, target)
+
+        return suspect_targets
+    if for_spell:
+        return None
+    if match := _SUSPECT_OBJECT_RE.fullmatch(text):
+        word = match.group("object")
+
+        def suspect_object(game: "Game", stack_object: "StackObject") -> None:
+            found = _named_object(game, stack_object, word)
+            if found is not None:
+                suspect(game, found)
+
+        return suspect_object
+    if match := _NO_LONGER_SUSPECTED_RE.fullmatch(text):
+        word = match.group("object")
+
+        def no_longer_suspected(game: "Game", stack_object: "StackObject") -> None:
+            if word is None:
+                for permanent in game.battlefield:
+                    permanent.suspected = False
+                return
+            found = _named_object(game, stack_object, word)
+            if found is not None:
+                found.suspected = False
+
+        return no_longer_suspected
+    return None
+
+
+#: CR 702.112a's own effect, as `machines/keywords._renown_ability` writes it
+#: out: "put N +1/+1 counters on it and it becomes renowned" - the counters are
+#: the ordinary put-counters clause; this reads the second half.
+_BECOMES_RENOWNED_RE = re.compile(r"^(?:it|this creature) becomes renowned\.?$", re.IGNORECASE)
+
+
+def _parse_renown_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """ "It becomes renowned" (CR 702.112a/b): the ability's source becomes
+    renowned - if it is still the permanent the ability came from (CR 400.7),
+    otherwise nothing."""
+    if for_spell or _BECOMES_RENOWNED_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def renown(game: "Game", stack_object: "StackObject") -> None:
+        source = stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else None
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        stamp = getattr(stack_object, "source_stamp", None)
+        if stamp is not None and source.zone_change_stamp != stamp:
+            return
+        source.renowned = True
+
+    return renown
 
 
 # --------------------------------------------------------------------------
@@ -40032,6 +40425,13 @@ def _permission_duration(match: re.Match[str]) -> PermissionDuration | None:
     it printed none or two."""
     leading = (match.group("leading") or "").strip().rstrip(",").lower()
     trailing = (match.group("trailing") or "").strip().lower()
+    if not leading and not trailing and match.group("action").lower() == "play":
+        # "You may play them." with no duration (Dungeon of the Mad Mage's
+        # Runestone Caverns): CR 611.2a - no stated duration lasts until the
+        # end of the game, and CR 400.7 ends it the moment the card leaves
+        # exile. "Play" cannot be a CR 608.2g play during the resolution (a
+        # land is never played then), so this is the permission.
+        return PermissionDuration.WHILE_EXILED
     if bool(leading) == bool(trailing):
         return None
     phrase = leading or trailing
@@ -40747,6 +41147,7 @@ def _offer_free_casts_from_among(
     source_id: str | None,
     play: bool,
     limit: int | None = None,
+    zone: Zone = Zone.EXILE,
 ) -> None:
     """CR 608.2g's "you may [play lands and] cast [any number of] spells from
     among <cards> without paying their mana costs", one card at a time until
@@ -40762,7 +41163,7 @@ def _offer_free_casts_from_among(
     `can_cast_during_resolution` (CR 601.2c's targets, CR 700.2a's modes,
     CR 118.3's cost).
     """
-    remaining = [card for card in cards if card.zone is Zone.EXILE]
+    remaining = [card for card in cards if card.zone is zone]
     taken_count = 0
     while remaining and (limit is None or taken_count < limit):
         legal = [
@@ -40945,10 +41346,9 @@ def _parse_exile_top_instead_clause(
     clause: str,
 ) -> "tuple[str, ExileAntecedent] | None":
     """`_EXILE_TOP_INSTEAD_RE`'s condition and the alternative exile, or `None`."""
-    from ..models.game import condition_is_readable
 
     match = _EXILE_TOP_INSTEAD_RE.fullmatch(clause.strip().rstrip("."))
-    if match is None or not condition_is_readable(match.group("condition")):
+    if match is None or not _effect_condition_is_readable(match.group("condition")):
         return None
     alternative = _parse_exile_antecedent(f"exile the top {match.group('n')} cards of your library")
     if alternative is None:
@@ -43176,14 +43576,13 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     phrase, which `_resolve_instead_alternative` reads. Both halves must
     read whole, or the card is left unread rather than half-run.
     """
-    from ..models.game import condition_is_readable
 
     whole = " ".join(_strip_non_effect_preamble(effect_text).split())
     match = _CONDITION_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
     condition_text = (match.group("condition_leading") or match.group("condition_elided")).strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
     base_text = match.group("base")
     base = _instead_branch_effect(base_text)
@@ -43244,14 +43643,13 @@ def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffe
     `_compose_layer_effect_with_remainder_for_ability`, which already reads
     its counter upgrade.
     """
-    from ..models.game import condition_is_readable
 
     whole = " ".join(_strip_non_effect_preamble(effect_text).split())
     match = _CONDITION_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
     condition_text = (match.group("condition_leading") or match.group("condition_elided")).strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
     base_text = match.group("base").strip()
     if is_genuine_resolution_layer_sentence(_as_sentence(base_text)):
@@ -46031,6 +46429,14 @@ def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | Non
     if event is None:
         return found
     stamp = event.zone_change_stamp
+    if stamp is None and found.zone is Zone.BATTLEFIELD:
+        # An event that moved nothing (Shatterskull Charger's "At the
+        # beginning of your end step, ... return it to its owner's hand"):
+        # "it" is the source still on the battlefield - the same object the
+        # ability came from (CR 113.7a, CR 400.7), or nothing.
+        if ability.source_stamp is None or found.zone_change_stamp == ability.source_stamp:
+            return found
+        return None
     if stamp is None or found.zone is not Zone.GRAVEYARD or found.zone_change_stamp != stamp:
         return None
     return found
@@ -46827,7 +47233,6 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     recorded as a `ConditionalClauseNotice` instead, the same class `_parse_
     condition_instead_clause` uses for its own equivalent case.
     """
-    from ..models.game import condition_is_readable
 
     stripped = clause.strip()
     leading = _LEADING_IF_CLAUSE_RE.fullmatch(stripped)
@@ -46846,7 +47251,7 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             return None
         condition_text = trailing.group("condition").strip()
         consequence_text = trailing.group("consequence").strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
     consequence = (
         parse_mixed_effect_for_spell(consequence_text)
@@ -47637,6 +48042,15 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     goad = _parse_goad_clause(clause, for_spell=for_spell)
     if goad is not None:
         return goad
+    suspect_clause = _parse_suspect_clause(clause, for_spell=for_spell)
+    if suspect_clause is not None:
+        return suspect_clause
+    venture_clause = _parse_venture_clause(clause, for_spell=for_spell)
+    if venture_clause is not None:
+        return venture_clause
+    renown = _parse_renown_clause(clause, for_spell=for_spell)
+    if renown is not None:
+        return renown
     additional_combat_and_main_phase = _parse_additional_combat_and_main_phase_clause(clause)
     if additional_combat_and_main_phase is not None:
         return additional_combat_and_main_phase  # type: ignore[return-value]
@@ -49258,6 +49672,18 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         # -- end Wave W6 multi-clause merges ----------------------------------
+        merged = _merge_sacrifice_one_of_each_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_draw_reveal_cast_one_free_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
         # -- G1c's own multi-clause merge (CR 108.3, CR 115.6, CR 401.2/609.3) -
         merged = _merge_choose_target_then_owner_puts_it_into_library_clauses(
             clauses, index, for_spell=for_spell
@@ -51939,13 +52365,12 @@ def _parse_if_condition_players_cant_cast_clause(
     `Game.casting_rule_effects` since the spell or ability that made it is
     gone by the time anyone tries to cast, read back by `casting_restrictions.
     blanket_cant_cast_restriction`."""
-    from ..models.game import condition_is_readable
 
     match = _IF_CONDITION_PLAYERS_CANT_CAST_RE.fullmatch(clause.strip())
     if match is None:
         return None
     condition_text = match.group("condition").strip()
-    if not condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text):
         return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
@@ -55712,14 +56137,13 @@ def _parse_face_down_exile_play_clause(effect_text: str) -> TargetedClause | Non
     `condition_is_readable`, so an unread condition leaves the whole text
     unread rather than silently dropped.
     """
-    from ..models.game import condition_is_readable
 
     whole = " ".join(_strip_non_effect_preamble(effect_text).split())
     match = _FACE_DOWN_EXILE_PLAY_RE.fullmatch(whole)
     if match is None:
         return None
     condition = match.group("condition")
-    if condition is not None and not condition_is_readable(condition):
+    if condition is not None and not _effect_condition_is_readable(condition):
         return None
     count = parse_count(match.group("look_n") or match.group("n"))
     if count is None:
