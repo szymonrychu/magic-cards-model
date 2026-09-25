@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "1f643d78-d8d8-4645-9357-a68ebd0d3517",
+  "oracle_id": "1d078108-f88c-4a32-a28f-bae5182b2f53",
+  "multiverse_ids": [
+    574675
+  ],
+  "mtgo_id": 102866,
+  "arena_id": 82247,
+  "tcgplayer_id": 283528,
+  "cardmarket_id": 672693,
+  "name": "Baird, Argivian Recruiter",
+  "lang": "en",
+  "released_at": "2022-09-09",
+  "uri": "https://api.scryfall.com/cards/1f643d78-d8d8-4645-9357-a68ebd0d3517",
+  "scryfall_uri": "https://scryfall.com/card/dmu/195/baird-argivian-recruiter?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:41:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.jpg?1783921287",
+    "normal": "https://cards.scryfall.io/normal/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.jpg?1783921287",
+    "large": "https://cards.scryfall.io/large/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.jpg?1783921287",
+    "png": "https://cards.scryfall.io/png/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.png?1783921287",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.jpg?1783921287",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.jpg?1783921287",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.webp?1783921287",
+    "grid": "https://cards.scryfall.io/grid/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.webp?1783921287",
+    "display": "https://cards.scryfall.io/display/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.webp?1783921287",
+    "art": "https://cards.scryfall.io/art/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.webp?1783921287",
+    "crop": "https://cards.scryfall.io/crop/front/1/f/1f643d78-d8d8-4645-9357-a68ebd0d3517.webp?1783921287"
+  },
+  "mana_cost": "{R}{W}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Soldier",
+  "oracle_text": "At the beginning of your end step, if you control a creature with power greater than its base power, create a 1/1 white Soldier creature token.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "14ba3078-c06e-41d1-a574-1a2ff09c63d9",
+      "component": "combo_piece",
+      "name": "Baird, Argivian Recruiter",
+      "type_line": "Legendary Creature \u2014 Human Soldier",
+      "uri": "https://api.scryfall.com/cards/14ba3078-c06e-41d1-a574-1a2ff09c63d9"
+    },
+    {
+      "object": "related_card",
+      "id": "8c4b0257-2ca5-4015-9d63-d7cf6e87ab9d",
+      "component": "token",
+      "name": "Soldier",
+      "type_line": "Token Creature \u2014 Soldier",
+      "uri": "https://api.scryfall.com/cards/8c4b0257-2ca5-4015-9d63-d7cf6e87ab9d"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set": "dmu",
+  "set_name": "Dominaria United",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Admu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dmu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1f643d78-d8d8-4645-9357-a68ebd0d3517/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1d078108-f88c-4a32-a28f-bae5182b2f53&unique=prints",
+  "collector_number": "195",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Fear doesn't make you a coward; giving in to it does. Now take up your sword and fight!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jarel Threat",
+  "artist_ids": [
+    "0fd89fbd-bd59-4ded-890e-731a8982f278"
+  ],
+  "illustration_id": "b0220ca6-2d66-4bad-b6ab-e2e30ee9741e",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8686,
+  "penny_rank": 1018,
+  "prices": {
+    "usd": "0.25",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=574675&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBaird%252C%2BArgivian%2BRecruiter",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBaird%252C%2BArgivian%2BRecruiter",
+    "edhrec": "https://edhrec.com/route/?cc=Baird%2C+Argivian+Recruiter"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F283528%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=672693&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102866?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

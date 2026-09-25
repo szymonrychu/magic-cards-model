@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "7e55e213-6eab-4086-96cd-024de6150fbe",
+  "oracle_id": "fc1020b7-086e-41d6-a9ae-1c6c72cf820c",
+  "multiverse_ids": [
+    394710
+  ],
+  "mtgo_id": 56136,
+  "mtgo_foil_id": 56137,
+  "tcgplayer_id": 96367,
+  "cardmarket_id": 273086,
+  "name": "Stampeding Elk Herd",
+  "lang": "en",
+  "released_at": "2015-03-27",
+  "uri": "https://api.scryfall.com/cards/7e55e213-6eab-4086-96cd-024de6150fbe",
+  "scryfall_uri": "https://scryfall.com/card/dtk/208/stampeding-elk-herd?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:29:35Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.jpg?1783938575",
+    "normal": "https://cards.scryfall.io/normal/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.jpg?1783938575",
+    "large": "https://cards.scryfall.io/large/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.jpg?1783938575",
+    "png": "https://cards.scryfall.io/png/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.png?1783938575",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.jpg?1783938575",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.jpg?1783938575",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.webp?1783938575",
+    "grid": "https://cards.scryfall.io/grid/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.webp?1783938575",
+    "display": "https://cards.scryfall.io/display/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.webp?1783938575",
+    "art": "https://cards.scryfall.io/art/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.webp?1783938575",
+    "crop": "https://cards.scryfall.io/crop/front/7/e/7e55e213-6eab-4086-96cd-024de6150fbe.webp?1783938575"
+  },
+  "mana_cost": "{3}{G}{G}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Elk",
+  "oracle_text": "Formidable \u2014 Whenever this creature attacks, if creatures you control have total power 8 or greater, creatures you control gain trample until end of turn.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Formidable"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "7e72625f-f320-4552-a719-d11e2f1853bd",
+  "set": "dtk",
+  "set_name": "Dragons of Tarkir",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/7e72625f-f320-4552-a719-d11e2f1853bd",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adtk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dtk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/7e55e213-6eab-4086-96cd-024de6150fbe/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afc1020b7-086e-41d6-a9ae-1c6c72cf820c&unique=prints",
+  "collector_number": "208",
+  "digital": false,
+  "rarity": "common",
+  "watermark": "atarka",
+  "flavor_text": "The Atarka use them not just for food, but also to clear away snow, trees, and enemy forces.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Carl Frank",
+  "artist_ids": [
+    "fde6429d-2768-4573-a54d-42694e145079"
+  ],
+  "illustration_id": "2c7a7ca8-c28c-42ee-bb46-12d1c28929c0",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21969,
+  "penny_rank": 13760,
+  "prices": {
+    "usd": "0.06",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.25",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=394710&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStampeding%2BElk%2BHerd",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStampeding%2BElk%2BHerd",
+    "edhrec": "https://edhrec.com/route/?cc=Stampeding+Elk+Herd"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F96367%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=273086&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/56136?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -427,7 +427,7 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
     # Every printing whose Scryfall keywords name one of the family is read.
     by_keyword = {
         name: {keyword.lower() for keyword in card.keywords}
-        & {"kicker", "multikicker", "replicate", "offspring", "gift"}
+        & {"kicker", "multikicker", "replicate", "offspring", "gift", "bargain"}
         for name, card in pool().items()
     }
     for name, keywords in by_keyword.items():
@@ -454,6 +454,11 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
         ("offspring", "CR 702.175a", False),
         ("gift", "CR 702.174a", False),
         ("blight", "CR 701.68a", False),
+        # CR 702.166a's bargain, and the two "you may ..." sentences Casting
+        # charges: CR 701.59a's collect evidence and a reveal (CR 701.20a).
+        ("bargain", "CR 702.166a", False),
+        ("collect evidence", "CR 701.59a", False),
+        ("reveal", "CR 701.20a", False),
         (None, "CR 118.8b", False),
         # Redirect Lightning's "pay 5 life or pay {2}": which half is paid is
         # CR 601.2b's announcement (`life_or_mana_additional_costs`).

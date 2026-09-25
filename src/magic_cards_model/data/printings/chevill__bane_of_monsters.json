@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "fecbf0a3-ebe1-43b6-a720-462ba19002eb",
+  "oracle_id": "50863075-a30b-4238-8e31-5af32a39d886",
+  "multiverse_ids": [
+    479701
+  ],
+  "mtgo_id": 80371,
+  "arena_id": 71248,
+  "tcgplayer_id": 212116,
+  "cardmarket_id": 451713,
+  "name": "Chevill, Bane of Monsters",
+  "lang": "en",
+  "released_at": "2020-04-24",
+  "uri": "https://api.scryfall.com/cards/fecbf0a3-ebe1-43b6-a720-462ba19002eb",
+  "scryfall_uri": "https://scryfall.com/card/iko/181/chevill-bane-of-monsters?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:23:48Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.jpg?1783931028",
+    "normal": "https://cards.scryfall.io/normal/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.jpg?1783931028",
+    "large": "https://cards.scryfall.io/large/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.jpg?1783931028",
+    "png": "https://cards.scryfall.io/png/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.png?1783931028",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.jpg?1783931028",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.jpg?1783931028",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.webp?1783931028",
+    "grid": "https://cards.scryfall.io/grid/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.webp?1783931028",
+    "display": "https://cards.scryfall.io/display/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.webp?1783931028",
+    "art": "https://cards.scryfall.io/art/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.webp?1783931028",
+    "crop": "https://cards.scryfall.io/crop/front/f/e/fecbf0a3-ebe1-43b6-a720-462ba19002eb.webp?1783931028"
+  },
+  "mana_cost": "{B}{G}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Rogue",
+  "oracle_text": "Deathtouch\nAt the beginning of your upkeep, if your opponents control no permanents with bounty counters on them, put a bounty counter on target creature or planeswalker an opponent controls.\nWhenever a permanent an opponent controls with a bounty counter on it dies, you gain 3 life and draw a card.",
+  "power": "1",
+  "toughness": "3",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [
+    "Deathtouch"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set": "iko",
+  "set_name": "Ikoria: Lair of Behemoths",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aiko&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/iko?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fecbf0a3-ebe1-43b6-a720-462ba19002eb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A50863075-a30b-4238-8e31-5af32a39d886&unique=prints",
+  "collector_number": "181",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Yongjae Choi",
+  "artist_ids": [
+    "5ab91c3b-a6da-4751-a56e-81d0f61a67ab"
+  ],
+  "illustration_id": "f011b5c8-c052-4d1b-ae67-430485d40723",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8326,
+  "penny_rank": 2137,
+  "preview": {
+    "source": "LADbible",
+    "source_uri": "https://www.ladbible.com/technology/gaming-magic-the-gathering-check-out-our-exclusive-new-card-reveal-20200403?source=gamingbible",
+    "previewed_at": "2020-04-03"
+  },
+  "prices": {
+    "usd": "1.55",
+    "usd_foil": "1.57",
+    "usd_etched": null,
+    "eur": "2.02",
+    "eur_foil": "2.91",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479701&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChevill%252C%2BBane%2Bof%2BMonsters",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChevill%252C%2BBane%2Bof%2BMonsters",
+    "edhrec": "https://edhrec.com/route/?cc=Chevill%2C+Bane+of+Monsters"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212116%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=451713&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/80371?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

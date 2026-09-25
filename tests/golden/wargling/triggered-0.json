@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Wargling", "Intangible Virtue", "Serra Angel", "Mountain", "Mountain", "Mountain", "Mountain", "Mountain", "Snow-Covered Forest", "Snow-Covered Forest", "Snow-Covered Forest"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Wargling", "Abhorrent Oculus"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Giant Growth", "Memnite", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -29,7 +29,7 @@
     "step": "declare_attackers",
     "tapped": [],
     "tokens": [],
-    "variant": "busy",
+    "variant": "quiet",
     "war_turn": false
   },
   "card": "Wargling",
@@ -39,6 +39,12 @@
     "fields_changed": ["continuous_effects"],
     "notices": {},
     "objects": {
+      "Abhorrent Oculus@alice#1": {
+        "granted": [
+          [],
+          ["Trample"]
+        ]
+      },
       "Icehide Golem@alice#1": {
         "granted": [
           [],
@@ -46,12 +52,6 @@
         ]
       },
       "Memnite@alice#1": {
-        "granted": [
-          [],
-          ["Trample"]
-        ]
-      },
-      "Serra Angel@alice#1": {
         "granted": [
           [],
           ["Trample"]
@@ -76,6 +76,6 @@
     "attempt": "combat",
     "index": 0,
     "params": {},
-    "variant": "busy"
+    "variant": "quiet"
   }
 }

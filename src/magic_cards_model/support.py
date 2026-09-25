@@ -599,6 +599,13 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "compleated" for k in printing.keywords):
         found["compleated"] = "machines/replacement.py (_compleated_modifier, CR 702.150a)"
 
+    # Tribute (CR 702.104a) is the same "read off the keyword" entering
+    # replacement as Sunburst and Compleated: `_tribute_modifier` asks the
+    # chosen opponent and places the counters as theirs (CR 702.104b's "if
+    # tribute wasn't paid" reads that back).
+    if any(k.lower() == "tribute" for k in printing.keywords):
+        found["tribute"] = "machines/replacement.py (_tribute_modifier, CR 702.104a)"
+
     # Affinity (CR 702.41a) is a cost *reduction* read off the spell's own
     # text ("Affinity for [text]") - `Game.cost_reduction_for`'s `_AFFINITY_RE`
     # counts matching permanents and folds the result into `Casting.

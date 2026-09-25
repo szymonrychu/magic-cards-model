@@ -82,7 +82,7 @@ from uuid import NAMESPACE_OID, uuid5
 import pytest
 
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
-from magic_cards_model.machines import Step
+from magic_cards_model.machines import Step, conditions
 from magic_cards_model.machines.abilities import (
     ActivatedAbility,
     TriggeredAbility,
@@ -92,7 +92,14 @@ from magic_cards_model.machines.abilities import (
     parse_abilities,
     self_reference_names,
 )
-from magic_cards_model.machines.casting import MarkedExile
+from magic_cards_model.machines.casting import (
+    MarkedExile,
+    keyword_cast_options,
+    kicker_costs,
+    optional_additional_costs,
+)
+from magic_cards_model.machines.conditions import board as board_conditions
+from magic_cards_model.machines.conditions import cast_record as cast_record_conditions
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
 from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.effects import transform_permanent
@@ -104,6 +111,13 @@ from magic_cards_model.machines.keywords import (
     cycling_activation,
     off_zone_abilities,
     off_zone_activation,
+)
+from magic_cards_model.machines.layers import (
+    ContinuousEffect,
+    Duration,
+    Layer,
+    only_this_incarnation,
+    set_controller,
 )
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.machines.targeting import (
@@ -214,6 +228,14 @@ _TARGETING_TOOL = "Icy Manipulator"
 #: sickness stops (CR 602.5a names only {T}/{Q} costs).
 _CREATURE_TARGETING_TOOL = "Mogg Fanatic"
 _ADVENTURER = "Bonecrusher Giant"
+#: Stock probes for a condition on how the cast spell was paid for
+#: (`machines/conditions/cast_record.py`): a kicker spell cast kicked (CR
+#: 702.33d), a creature spell paid with mana from creatures, and an affinity
+#: spell the stock artifacts make cheaper than its mana value (CR 702.41a).
+_KICKER_PROBE = "Skizzik"
+_MANA_CREATURE = "Llanowar Elves"
+_CREATURE_MANA_PROBE = "Serra Angel"
+_DISCOUNTED_PROBE = "Frogmite"
 
 
 # ---------------------------------------------------------------------------
@@ -758,6 +780,7 @@ def _cast(
     paying_with: str | None = None,
     from_zone: Zone = Zone.HAND,
     x_value: int | None = None,
+    announce: Callable[[Any], Any] | None = None,
 ) -> CardState:
     """Cast `name` (CR 601.2) for its mana cost - face down with `keyword`
     (morph, CR 702.37c), kicked with `kicked` (CR 702.33a) - naming the
@@ -776,10 +799,22 @@ def _cast(
     )
     try:
         casting = scenario.cast(spell.name, username, from_zone=from_zone, targets=targets or None)
-        if keyword is not None:
+        if announce is not None:
+            # CR 601.2b: the caller's own announcement of an optional or
+            # alternative cost, with the objects it names.
+            announce(casting)
+        elif keyword is not None:
             casting.use_keyword(keyword)
         if kicked:
-            casting.pay_kicker(1)
+            # CR 702.33b: "Kicker [A] and/or [B]" is two kicker costs - kick
+            # with every one, so each linked "kicked with its [A] kicker"
+            # (CR 702.33f) and "kicked twice" is true.
+            costs = kicker_costs(spell.card)
+            if len(costs) > 1:
+                for cost in costs:
+                    casting.pay_kicker(1, which=cost)
+            else:
+                casting.pay_kicker(1)
         if x_value is not None:
             # CR 107.3a: the X announced for an {X} spell.
             casting.determine_cost(x_value=x_value)
@@ -1003,6 +1038,199 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Board conditions: "you control N <quality>" and "N colors among permanents
+# you control" (`machines/conditions/board.py`), made true on the board a
+# case runs on - judged by the engine's own reader and its own quality test,
+# never by reading the words here.
+# ---------------------------------------------------------------------------
+
+
+def _clause(condition: str) -> str:
+    return " ".join(condition.strip().rstrip(".").split()).lower()
+
+
+@cache
+def _board_clause(condition: str) -> tuple[str, Any, Any] | None:
+    """`("control", test, amount)` for a "you control <amount> <quality>"
+    clause and `("colors", test, None)` for "there are N colors among
+    <quality> you control" - `test` the engine's own per-permanent quality
+    test (`board.quality`), `amount` its own count test - or None for any
+    other clause."""
+    text = _clause(condition)
+    for reader in board_conditions.READERS:
+        match = reader.pattern.fullmatch(text)
+        if match is None:
+            continue
+        if reader.read is board_conditions._controls and match.group("who") == "you":
+            core, _grouping = board_conditions._split_quality(match.group("quality"))
+            test = board_conditions.quality(core)
+            amount = board_conditions._amount_test(match.group("amount"))
+            if test is None or amount is None:
+                return None
+            return ("control", test, amount)
+        if reader.read is board_conditions._colors_among:
+            test = board_conditions.quality(match.group("quality"))
+            return ("colors", test, None) if test is not None else None
+    return None
+
+
+def _board_holds(game: Any, source: CardState | None, condition: str) -> bool:
+    context = conditions.ConditionContext(game=game, controller=ALICE, source=source)
+    return conditions.read_condition(context, condition) is True
+
+
+def _passes(game: Any, source: CardState | None, test: Any, state: CardState) -> bool:
+    context = conditions.ConditionContext(game=game, controller=ALICE, source=source)
+    try:
+        return bool(test(context, state, game.characteristics_of(state)))
+    except Exception:  # noqa: BLE001 - a candidate the test cannot read is no candidate
+        return False
+
+
+def _board_threshold(scenario: PlayedScenario, source: CardState | None, condition: str) -> None:
+    """A "you control <amount> <quality>" condition (CR 603.4, CR 602.5b)
+    the board does not meet yet is made true on it, each step judged by the
+    engine: a +1/+1 counter on each of the controller's other creatures the
+    counter makes pass the quality ("a creature with a +1/+1 counter on it",
+    "an attacking modified creature", CR 700.9); then the controller's
+    permanents that pass it exiled one at a time ("no artifacts", "exactly
+    one creature", "no other creatures"); then the opponent's permanents
+    that pass it gained control of (layer 2, CR 613.1b - "permanents you
+    don't own"), each stopping as soon as the condition holds."""
+    found = _board_clause(condition or "")
+    if found is None or found[0] != "control":
+        return
+    _kind, test, amount = found
+    game = scenario.game
+    if _board_holds(game, source, condition):
+        return
+    own = _STAGING.case.card if _STAGING.case is not None else ""
+
+    def others(username: str) -> list[CardState]:
+        return [
+            permanent
+            for permanent in game.permanents_controlled_by(username)
+            if permanent is not source and not _named(permanent, own)
+        ]
+
+    for permanent in others(ALICE):
+        if Type.CREATURE not in game.characteristics_of(permanent).types:
+            continue
+        if _passes(game, source, test, permanent):
+            continue
+        permanent.add_counters("+1/+1", 1)
+        if not _passes(game, source, test, permanent):
+            permanent.remove_counters("+1/+1", 1)
+            continue
+        if _board_holds(game, source, condition):
+            return
+    passing = [p for p in others(ALICE) if _passes(game, source, test, p)]
+    if any(amount(count) for count in range(len(passing))):
+        # Fewer is what the amount asks for ("no", "exactly one").
+        for permanent in passing:
+            game.exile_cards([permanent])
+            if _board_holds(game, source, condition):
+                return
+    store = game.continuous_effects
+    for permanent in others(BOB):
+        if permanent.card.is_land or not _passes(game, source, test, permanent):
+            continue
+        store.add(
+            ContinuousEffect(
+                description=f"behavioural sweep: {ALICE} gains control of {permanent.name}",
+                layer=Layer.CONTROL,
+                timestamp=store.tick(),
+                duration=Duration.INDEFINITE,
+                selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                modification=set_controller(ALICE),
+            ),
+            game,
+        )
+        if _passes(game, source, test, permanent) and _board_holds(game, source, condition):
+            return
+
+
+@cache
+def _board_candidates() -> tuple[str, ...]:
+    """Nonlegendary single-faced permanent printings of the pool, for a
+    quality the stock board has too few of."""
+    return tuple(
+        card.name
+        for card in _format_pool()
+        if not card.card_faces
+        and set(card.types) & _PERMANENT_TYPES
+        and "Legendary" not in (card.type_line or "")
+        and not card.is_land
+    )
+
+
+@cache
+def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
+    """Real printings (or predefined tokens, CR 111.10) that, added to the
+    controller's side of the stock board, make a board condition true there
+    after `_board_threshold` - the fewest copies of the first candidate the
+    engine's own quality test accepts, confirmed by the engine's own reader
+    on a built board. For "N colors among permanents you control" (CR
+    105.2), one permanent of each missing color."""
+    found = _board_clause(condition or "")
+    if found is None:
+        return ()
+    kind, test, _amount = found
+    saved = _STAGING.variant, _STAGING.material
+    _STAGING.variant = QUIET
+
+    def confirmed(material: tuple[Material, ...]) -> bool:
+        _STAGING.material = material
+        scenario = _board(battlefield=(card_name,))
+        source = _last(scenario, card_name, Zone.BATTLEFIELD, ALICE)
+        _board_threshold(scenario, source, condition)
+        return _board_holds(scenario.game, source, condition)
+
+    try:
+        if confirmed(()):
+            return ()
+        _STAGING.material = ()
+        stock = _board(battlefield=(card_name,))
+        game = stock.game
+        source = _last(stock, card_name, Zone.BATTLEFIELD, ALICE)
+        if kind == "colors":
+            have: set[Color] = set()
+            for permanent in game.permanents_controlled_by(ALICE):
+                if _passes(game, source, test, permanent):
+                    have |= set(game.characteristics_of(permanent).colors)
+            material: list[Material] = []
+            for color in Color:
+                if color in have or color is Color.COLORLESS:
+                    continue
+                name = next(
+                    (
+                        name
+                        for name in _board_candidates()
+                        if list(pool()[name].colors or ()) == [color]
+                        and _passes(game, source, test, card_state(name))
+                    ),
+                    None,
+                )
+                if name is not None:
+                    material.append(Material(name, ALICE, Zone.BATTLEFIELD))
+            return tuple(material) if material and confirmed(tuple(material)) else ()
+        names = [
+            name for name in _board_candidates() if _passes(game, source, test, card_state(name))
+        ][:6]
+        for name in [*names, *PREDEFINED]:
+            for copies in (1, 2, 3):
+                material = tuple(Material(name, ALICE, Zone.BATTLEFIELD) for _ in range(copies))
+                try:
+                    if confirmed(material):
+                        return material
+                except (_Unavailable, ValueError, KeyError):
+                    break
+        return ()
+    finally:
+        _STAGING.variant, _STAGING.material = saved
+
+
 def _stack_material(scenario: PlayedScenario) -> None:
     """A spell for a "target spell" requirement to aim at (CR 115.1)."""
     for name, owner, zone, _, _ in _STAGING.material:
@@ -1086,6 +1314,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         scenario.game.harness(source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _board_threshold(scenario, source, getattr(ability, "intervening_if", None) or "")
     _chosen_parity(source, getattr(ability, "condition", None))
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
@@ -1107,6 +1336,16 @@ def _history_threshold(scenario: PlayedScenario, source: CardState, condition: s
         graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
         if graveyard:
             game.exile_cards([graveyard[-1]])
+    if "no creatures are on the battlefield" in lowered:
+        # EC3's board reader (CR 613.5): every creature on the stock board
+        # but the source is exiled, so the count is zero.
+        creatures = [
+            permanent
+            for permanent in game.battlefield
+            if permanent is not source and game.characteristics_of(permanent).is_creature
+        ]
+        if creatures:
+            game.exile_cards(creatures)
 
 
 def _activation_step(ability: ActivatedAbility) -> Step:
@@ -1346,6 +1585,7 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         def put(tapped: bool = tapped) -> tuple[PlayedScenario, Any]:
             scenario = _board(hand=(card.name,))
             _stack_material(scenario)
+            _board_threshold(scenario, None, ability.intervening_if or "")
             source = _last(scenario, card.name, Zone.HAND, ALICE)
             try:
                 entered = scenario.game.put_onto_battlefield(
@@ -1395,10 +1635,13 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             def cast(kicked: bool = kicked, paying_with: str | None = paying_with):
                 scenario = _board(hand=(card.name,), battlefield=_extra_lands_for(card))
                 _stack_material(scenario)
+                _board_threshold(scenario, None, ability.intervening_if or "")
                 _cast(scenario, card.name, kicked=kicked, paying_with=paying_with)
                 return scenario, None
 
             yield cast
+
+    yield from _paid_cost_casts(case, ability)
 
     if "{X}" in (card.mana_cost or "") and re.search(r"\bX\b", ability.effect or ""):
         # CR 107.3m: an enters ability that refers to X reads the X its spell
@@ -1425,6 +1668,198 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             return scenario, None
 
         yield cast_with_treasure
+
+
+# ---------------------------------------------------------------------------
+# Paid-cost conditions (`machines/conditions/cast_record.py`): "if its surge
+# cost was paid", "if it was bargained", "if evidence was collected" - the
+# source is cast every way its own printed alternative and optional costs let
+# it be (the engine's `keyword_cast_options`/`optional_additional_costs`),
+# each staged by what the engine's own option says it needs.
+# ---------------------------------------------------------------------------
+
+#: The optional additional costs a paid-cost cast announces here, by the
+#: engine's own keyword for each (`OptionalAdditionalCost.keyword`).
+_PAID_OPTIONAL_COSTS = ("bargain", "collect evidence", "reveal")
+
+
+def _claims_cast_record(condition: str) -> bool:
+    text = _clause(condition)
+    return any(reader.pattern.fullmatch(text) for reader in cast_record_conditions.READERS)
+
+
+@cache
+def _type_sharer(card_name: str) -> str | None:
+    """A nonlegendary pool creature sharing a creature type with the card -
+    the creature whose combat damage enables prowl (CR 702.76a)."""
+    subtypes = {subtype.lower() for subtype in pool()[card_name].subtypes}
+    return next(
+        (
+            name
+            for name in _board_candidates()
+            if name != card_name
+            and _is(pool()[name], Type.CREATURE)
+            and subtypes & {subtype.lower() for subtype in pool()[name].subtypes}
+        ),
+        None,
+    )
+
+
+@cache
+def _revealable(phrase: str) -> tuple[str, ...]:
+    """Pool cards of a subtype a "reveal a <Subtype> card" phrase names - read
+    the way `_probes` reads a subtype named in a condition."""
+    names: list[str] = []
+    for word in re.findall(r"\b([A-Z][a-z]+)\b", phrase):
+        subtype = _singular_subtype(word) or word
+        names += [
+            name
+            for name in _board_candidates()
+            if subtype.lower() in {s.lower() for s in pool()[name].subtypes}
+        ][:2]
+    return tuple(names)
+
+
+def _deal_combat_damage_with(scenario: PlayedScenario, name: str) -> None:
+    """`name` attacks the opponent unblocked and deals its combat damage (CR
+    510.1), then the turn moves on to the postcombat main phase."""
+    attacker = _first(scenario, name, ALICE)
+    scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
+    scenario.game.sync_priority_with_step()
+    try:
+        scenario.attack_with(attacker, defending=BOB)
+        _settle(scenario)
+        while scenario.game.stack:
+            scenario.game.resolve_top()
+        scenario.no_blocks()
+        scenario.combat_damage()
+    except (ValueError, AssertionError) as error:
+        raise _Unavailable(f"combat: {error}") from error
+    _settle(scenario)
+    while scenario.game.stack:
+        scenario.game.resolve_top()
+    scenario.turn.advance_to(Step.POSTCOMBAT_MAIN)
+    scenario.game.sync_priority_with_step()
+
+
+def _paid_cost_casts(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    if not _claims_cast_record(ability.intervening_if or ""):
+        return
+    card = case.printing
+    lands = _extra_lands_for(card)
+
+    for option in keyword_cast_options(card):
+        keyword = option.keyword
+
+        def alternative(option: Any = option, keyword: str = keyword):
+            sharer = _type_sharer(card.name) if option.prowl else None
+            battlefield = (*lands, *((sharer,) if sharer else ()))
+            step = Step.DECLARE_ATTACKERS if option.returns_unblocked_creature else None
+            scenario = _board(
+                hand=(card.name,),
+                battlefield=battlefield,
+                **({"step": step} if step else {}),
+            )
+            game = scenario.game
+            if option.surge or option.spectacle:
+                # CR 702.117a: another spell cast this turn; CR 702.137a: an
+                # opponent lost life this turn - one Lightning Bolt does both.
+                _cast(scenario, "Lightning Bolt", prefer=BOB)
+                while game.stack:
+                    game.resolve_top()
+            if option.prowl:
+                if sharer is None:
+                    raise _Unavailable("no creature shares a type with it for prowl")
+                _deal_combat_damage_with(scenario, sharer)
+            choosing = None
+            if option.returns_tapped_creature:
+                # CR 702.188a: a tapped creature returned to its owner's hand.
+                creature = _first(scenario, "Memnite", ALICE)
+                game.tap_permanent(creature)
+                choosing = [creature]
+            if option.returns_unblocked_creature:
+                # CR 702.190a: an unblocked attacker returned to its owner's hand.
+                attacker = _first(scenario, "Memnite", ALICE)
+                try:
+                    scenario.attack_with(attacker, defending=BOB)
+                    scenario.turn.advance_to(Step.DECLARE_BLOCKERS)
+                    game.sync_priority_with_step()
+                    scenario.no_blocks()
+                    game.cast(
+                        _last(scenario, card.name, Zone.HAND, ALICE),
+                        ALICE,
+                        keyword=keyword,
+                        choosing=[attacker],
+                        mana_sources=game.permanents_controlled_by(ALICE),
+                    )
+                except (ValueError, AssertionError) as error:
+                    raise _Unavailable(f"{keyword}: {error}") from error
+                return scenario, None
+            zone = Zone.HAND
+            if option.zone is Zone.EXILE:
+                # CR 702.35a: madness exiles the card as it is discarded.
+                spell = _last(scenario, card.name, Zone.HAND, ALICE)
+                game.discard_cards(ALICE, [spell])
+                zone = spell.zone
+            _cast(
+                scenario,
+                card.name,
+                keyword=keyword,
+                from_zone=zone,
+                announce=(lambda casting: casting.use_keyword(keyword, choosing=choosing))
+                if choosing
+                else None,
+            )
+            return scenario, None
+
+        yield alternative
+
+    for option in optional_additional_costs(card):
+        if option.keyword not in _PAID_OPTIONAL_COSTS:
+            continue
+
+        def optional(option: Any = option) -> tuple[PlayedScenario, Any]:
+            revealed = _revealable(option.cost) if option.keyword == "reveal" else ()
+            scenario = _board(hand=(card.name, *revealed), battlefield=lands)
+            game = scenario.game
+
+            def announce(casting: Any) -> None:
+                if option.keyword == "collect evidence":
+                    casting.collect_evidence()
+                    return
+                if option.keyword == "bargain":
+                    candidates = [
+                        p for p in game.permanents_controlled_by(ALICE) if not p.card.is_land
+                    ]
+                    pay = casting.pay_bargain
+                else:
+                    candidates = [c for c in game.player(ALICE).hand if not _named(c, card.name)]
+                    pay = casting.reveal_for_cost
+                for candidate in candidates:
+                    # The engine judges each: the first it accepts is paid.
+                    with contextlib.suppress(ValueError):
+                        pay(candidate)
+                        return
+                raise ValueError(f"nothing on the board pays {option.keyword}")
+
+            _cast(scenario, card.name, announce=announce)
+            return scenario, None
+
+        yield optional
+
+    def declined() -> tuple[PlayedScenario, Any]:
+        # A cost an opponent chooses whether to pay as the source enters -
+        # CR 702.104a's tribute - declined, for "if tribute wasn't paid" (CR
+        # 702.104b): the opponent answers no to every "may".
+        scenario = _board(hand=(card.name,))
+        scenario.will_take_the_may(False, username=BOB, times=None)
+        try:
+            scenario.game.put_onto_battlefield(_last(scenario, card.name, Zone.HAND, ALICE), ALICE)
+        except ValueError as error:
+            raise _Unavailable(str(error)) from error
+        return scenario, None
+
+    yield declined
 
 
 def _other_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
@@ -1837,6 +2272,54 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 return scenario, source_id
 
             yield cast_probe
+
+    if ALICE in casters and _claims_cast_record(ability.intervening_if or ""):
+        yield from _paid_probes(case, ability)
+
+
+def _paid_probes(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """A probe spell cast by the controller for a condition on how it was
+    paid for: kicked, with mana from creatures first, or for less than its
+    mana value."""
+
+    def kicked_probe() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, hand=(_KICKER_PROBE,))
+        _cast(scenario, _KICKER_PROBE, kicked=True)
+        return scenario, source_id
+
+    yield kicked_probe
+
+    def creature_mana_probe() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(
+            case,
+            ability,
+            hand=(_CREATURE_MANA_PROBE,),
+            battlefield=(_MANA_CREATURE,) * 5,
+        )
+        game = scenario.game
+        casting = scenario.cast(_CREATURE_MANA_PROBE, ALICE)
+        payment = casting.begin_paying()
+        try:
+            # CR 106.3: each creature's mana ability is the mana's source.
+            for creature in [
+                p for p in game.permanents_controlled_by(ALICE) if _named(p, _MANA_CREATURE)
+            ]:
+                payment.tap_for_mana(creature, mana_from(creature))
+            payment.auto_tap(game.permanents_controlled_by(ALICE))
+            payment.pay()
+            scenario.put_on_stack(casting)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"casting {_CREATURE_MANA_PROBE}: {error}") from error
+        return scenario, source_id
+
+    yield creature_mana_probe
+
+    def discounted_probe() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, hand=(_DISCOUNTED_PROBE,))
+        _cast(scenario, _DISCOUNTED_PROBE)
+        return scenario, source_id
+
+    yield discounted_probe
 
 
 def _treasure_mana_for(scenario: PlayedScenario, probe: str, username: str) -> None:
@@ -2651,6 +3134,9 @@ TRIGGER_KIND_SKIPS: dict[str, str] = {}
 # ---------------------------------------------------------------------------
 
 KNOWN_ENGINE_GAPS: dict[str, str] = {
+    "Sunstar Chaplain #0 [activated]": (
+        "cost 'Remove a +1/+1 counter from a creature you control' cannot be built"
+    ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
     ),
@@ -2870,8 +3356,10 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
         if only is not None and variant != only["variant"]:
             continue
         _STAGING.variant, _STAGING.case = variant, case
-        _STAGING.material = _target_material(ability.text) + _precondition_material(
-            ability.intervening_if or ""
+        _STAGING.material = (
+            _target_material(ability.text)
+            + _precondition_material(ability.intervening_if or "")
+            + _board_material(case.card, ability.intervening_if or "")
         )
         try:
             for index, attempt in enumerate(_attempts(case)):
@@ -2988,6 +3476,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     game = scenario.game
     for condition in read_activation_instructions(ability.instructions).conditions:
         _history_threshold(scenario, source, condition)
+        _board_threshold(scenario, source, condition)
     cost = ability.cost.lower()
     if "{e}" in cost:
         game.add_player_counters(ALICE, "energy", 10)
@@ -3370,12 +3859,25 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
     in_combat = any(
         r.combat_states or getattr(r, "must_be_attacking_alone", False)
         for r in profile.requirements
+    ) or any(
+        # "Activate only if you control an attacking ... creature" (CR 602.5b,
+        # CR 508.1a): the stock attacker is attacking as it is activated.
+        "attacking" in condition.lower()
+        for condition in read_activation_instructions(ability.instructions).conditions
     )
     for variant in VARIANTS:
         if only is not None and variant != only["variant"]:
             continue
         _STAGING.variant, _STAGING.case = variant, case
-        _STAGING.material = _target_material(ability.effect) + _cost_material(case)
+        _STAGING.material = (
+            _target_material(ability.effect)
+            + _cost_material(case)
+            + tuple(
+                material
+                for condition in read_activation_instructions(ability.instructions).conditions
+                for material in _board_material(case.card, condition)
+            )
+        )
         try:
             for enters in [False, True]:
                 if only is not None and enters != only["enters"]:

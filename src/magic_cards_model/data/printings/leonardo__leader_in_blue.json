@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "d6eaae35-d513-43d8-be2d-b97c15e25937",
+  "oracle_id": "348c7e22-2179-41b8-a5d2-8dd488e7e66d",
+  "multiverse_ids": [],
+  "resource_id": "FE3F5519CA7C754CCB64CCCBA9C68C80D7089D07D6D089208AB613DF73513B83",
+  "mtgo_id": 147655,
+  "arena_id": 100473,
+  "tcgplayer_id": 679768,
+  "cardmarket_id": 873761,
+  "name": "Leonardo, Leader in Blue",
+  "lang": "en",
+  "released_at": "2026-03-06",
+  "uri": "https://api.scryfall.com/cards/d6eaae35-d513-43d8-be2d-b97c15e25937",
+  "scryfall_uri": "https://scryfall.com/card/tmt/16/leonardo-leader-in-blue?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:55:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.jpg?1783904123",
+    "normal": "https://cards.scryfall.io/normal/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.jpg?1783904123",
+    "large": "https://cards.scryfall.io/large/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.jpg?1783904123",
+    "png": "https://cards.scryfall.io/png/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.png?1783904123",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.jpg?1783904123",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.jpg?1783904123",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.webp?1783904123",
+    "grid": "https://cards.scryfall.io/grid/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.webp?1783904123",
+    "display": "https://cards.scryfall.io/display/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.webp?1783904123",
+    "art": "https://cards.scryfall.io/art/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.webp?1783904123",
+    "crop": "https://cards.scryfall.io/crop/front/d/6/d6eaae35-d513-43d8-be2d-b97c15e25937.webp?1783904123"
+  },
+  "mana_cost": "{W}",
+  "cmc": 1.0,
+  "type_line": "Legendary Creature \u2014 Mutant Ninja Turtle",
+  "oracle_text": "Sneak {3}{W}{W} (You may cast this spell for {3}{W}{W} if you also return an unblocked attacker you control to hand during the declare blockers step. He enters tapped and attacking.)\nWhen Leonardo enters, if his sneak cost was paid, creatures you control get +2/+0 until end of turn.\n{1}{W}: Leonardo gains first strike until end of turn.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Sneak"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set": "tmt",
+  "set_name": "Teenage Mutant Ninja Turtles",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atmt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tmt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d6eaae35-d513-43d8-be2d-b97c15e25937/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A348c7e22-2179-41b8-a5d2-8dd488e7e66d&unique=prints",
+  "collector_number": "16",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Nicholas Gregory",
+  "artist_ids": [
+    "a1bba8ff-63b4-4786-b1c4-f1bfe5d3ab1c"
+  ],
+  "illustration_id": "09afd2e2-0fbd-43b7-b9c4-7a5ae7467835",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 16590,
+  "penny_rank": 803,
+  "prices": {
+    "usd": "0.18",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.10",
+    "eur_foil": "0.16",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLeonardo%252C%2BLeader%2Bin%2BBlue",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLeonardo%252C%2BLeader%2Bin%2BBlue",
+    "edhrec": "https://edhrec.com/route/?cc=Leonardo%2C+Leader+in+Blue"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F679768%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=873761&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/147655?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

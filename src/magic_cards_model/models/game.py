@@ -109,6 +109,7 @@ from ..machines.cost import (
     discard_cost,
     exile_cost,
     increase,
+    is_creature_source,
     is_treasure_source,
     looks_like_unparsed_cost_modifier,
     loyalty_cost,
@@ -2245,9 +2246,47 @@ class CastRecord(EngineModel):
     for a card can be forgotten at once (`Game.forget_cast_record`) after the
     object has moved on and its stamp no longer matches the key."""
 
+    kicker_costs_paid: list[str] = Field(default_factory=list)
+    """Which of the spell's kicker costs were paid, each as printed ("{2}{U}"),
+    in announcement order (CR 702.33b: "Kicker [cost 1] and/or [cost 2]" is
+    two kicker costs) - CR 702.33f's "if it was kicked with its [A] kicker"
+    asks which, `kicked` only how many times. Copied from `Casting.
+    kicker_costs_paid`."""
+    bargained: bool = False
+    """Whether the spell's bargain cost was paid (CR 702.166b: it "has been
+    'bargained'"), copied from `Casting.bargained`."""
+    evidence_collected: bool = False
+    """Whether evidence was collected as an optional additional cost (CR
+    701.59c's linked "if evidence was collected"), copied from `Casting.
+    evidence_collected`."""
+    revealed_for_cost: bool = False
+    """Whether a card was revealed from hand for an optional "you may reveal a
+    <quality> card from your hand" additional cost (CR 118.8b) - Orator of
+    Ojutai's "if you revealed a Dragon card", copied from `Casting.
+    revealed_for_cost`."""
+    controlled_subtypes_as_cast: tuple[str, ...] = ()
+    """Every subtype among the permanents the caster controlled as the spell
+    became cast (CR 601.2i), lowercased - "or controlled a Dragon as you cast
+    this spell". Empty for a copy, which was never cast (CR 707.10)."""
+    creature_mana_spent: int = 0
+    """How much of `mana_spent` came from creatures (CR 106.3), from
+    `ManaPayment.creature_spent` - "three or more mana from creatures was
+    spent to cast it"."""
+    snow_mana_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much of `mana_spent` came from snow sources, by colour (CR 107.4h's
+    {S}), from `ManaPayment.snow_spent` - "{S} of any of that spell's colors
+    was spent to cast it"."""
+
     def mana_of_color_spent(self, color: Color) -> int:
         """How much mana of this colour was spent paying the total cost (CR 601.2h)."""
         return self.mana_spent.get(color, 0)
+
+    @property
+    def total_mana_spent(self) -> int:
+        """CR 601.2h: how much mana in all was spent paying the total cost -
+        not the mana value (CR 202.3), which a reduction or life paid for a
+        Phyrexian symbol does not change."""
+        return sum(self.mana_spent.values())
 
     @property
     def any_mana_spent(self) -> bool:
@@ -3835,7 +3874,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 81
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 82
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3886,6 +3925,11 @@ class Game(EngineModel):
     #: `cast_step`/`cast_during_turn_of`, and `machines/triggers.GameEvent`
     #: gained `declared_attacker` (EC2's condition reader;
     #: renumbered from 74 at the EC round 1 merge).
+    #: 82: `CastRecord` gained `kicker_costs_paid`, `bargained`,
+    #: `evidence_collected`, `revealed_for_cost`,
+    #: `controlled_subtypes_as_cast`, `creature_mana_spent` and
+    #: `snow_mana_spent`, and `ManaPool`/`ManaPayment` gained `creature`/
+    #: `creature_spent` (EC3's cast-record condition readers).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6336,6 +6380,13 @@ class Game(EngineModel):
         additional_cost_mana_values: list[float] | None = None,
         is_copy: bool = False,
         sneak_defender: TargetRef | None = None,
+        kicker_costs_paid: list[str] | None = None,
+        bargained: bool = False,
+        evidence_collected: bool = False,
+        revealed_for_cost: bool = False,
+        creature_mana_spent: int = 0,
+        snow_mana_spent: dict[Color, int] | None = None,
+        controlled_subtypes_as_cast: Sequence[str] = (),
     ) -> "CastRecord":
         """Record how a spell was cast, for the rules that ask afterwards.
 
@@ -6408,6 +6459,13 @@ class Game(EngineModel):
             sneak_defender=sneak_defender,
             cast_step=None if is_copy or self.turn is None else self.turn.step,
             cast_during_turn_of=(None if is_copy or self.turn is None else self.turn.active_player),
+            kicker_costs_paid=list(kicker_costs_paid or []),
+            bargained=bargained,
+            evidence_collected=evidence_collected,
+            revealed_for_cost=revealed_for_cost,
+            controlled_subtypes_as_cast=() if is_copy else tuple(controlled_subtypes_as_cast),
+            creature_mana_spent=0 if is_copy else creature_mana_spent,
+            snow_mana_spent={} if is_copy else dict(snow_mana_spent or {}),
         )
         self.forget_cast_record(spell)
         self.cast_records[spell.zone_change_stamp] = record
@@ -7997,14 +8055,29 @@ class Game(EngineModel):
         enumeration `legal_actions` fills `Action.additional_cost_options`
         from, so what a seat is *told* it may announce and what the engine
         offers a cast it makes on that seat's behalf cannot drift apart."""
-        printed = {option.keyword: option for option in optional_additional_costs(card.card)}
+        options = optional_additional_costs(card.card)
+        printed = {option.keyword: option for option in options}
+        kickers = [option for option in options if option.keyword == "kicker"]
+        if len(kickers) > 1:
+            # CR 702.33b: "Kicker [cost 1] and/or [cost 2]" - each kicker cost
+            # is its own announcement, paid at most once.
+            for option in kickers:
+                extra = total_cost_for_phrase(option.cost, caster)
+                if extra is not None and self._offer_additional_cost(
+                    casting, card, caster, "kicker", extra, taken
+                ):
+                    casting.pay_kicker(
+                        1,
+                        which=option.cost,
+                        choosing=self._choose_cost_objects(extra, caster, card, taken),
+                    )
         for keyword, pay in (
             ("kicker", casting.pay_kicker),
             ("multikicker", casting.pay_kicker),
             ("replicate", casting.pay_replicate),
         ):
             option = printed.get(keyword)
-            if option is None:
+            if option is None or (keyword == "kicker" and len(kickers) > 1):
                 continue
             # CR 702.33a's plain kicker is announced once; CR 702.33c's
             # multikicker and CR 702.56a's replicate are "any number of
@@ -8053,6 +8126,7 @@ class Game(EngineModel):
                         )
                     )
                 casting.pay_gift(opponent)
+        self._announce_bargain_evidence_and_reveal(casting, card, caster, printed)
         blights = [_BLIGHT_PHRASE.match(p) for p in additional_cost_phrases(card.card)]
         # Only the optional "you may blight N" is a `MAY` here. A mandatory
         # "blight X" and "blight 2 or pay {1}" are left to the printed cost:
@@ -8085,6 +8159,77 @@ class Game(EngineModel):
                     )
                 )
                 casting.pay_blight(next(state for state in creatures if state.id == answer[0]))
+
+    def _announce_bargain_evidence_and_reveal(
+        self, casting: Casting, card: CardState, caster: str, printed: dict
+    ) -> None:
+        """CR 601.2b's announcement of the optional additional costs a cast
+        made on a player's behalf may carry beyond the keyword-line ones:
+        bargain (CR 702.166a), "you may collect evidence N" (CR 701.59a) and
+        "you may reveal a <quality> card from your hand" (CR 701.20a). Each is
+        a `MAY`, legal only when something could pay it."""
+
+        def offered(prompt: str, legal: bool) -> bool:
+            return bool(
+                self.ask(
+                    Decision(
+                        kind=DecisionKind.MAY,
+                        player=caster,
+                        prompt=f"{prompt} as you cast {card.name}",
+                        source=card.name,
+                        source_id=source_id_of(card),
+                        affirmative_is_legal=legal,
+                    )
+                )
+            )
+
+        def choose(prompt: str, candidates: list[CardState]) -> CardState:
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=prompt,
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            return next(state for state in candidates if state.id == answer[0])
+
+        if "bargain" in printed:
+            board = self.computed_board()
+            fodder = [
+                state
+                for state in self.permanents_controlled_by(caster)
+                if state.token
+                or Type.ARTIFACT in board.of(state).types
+                or Type.ENCHANTMENT in board.of(state).types
+            ]
+            if offered("bargain (sacrifice an artifact, enchantment, or token)", bool(fodder)):
+                casting.pay_bargain(
+                    choose(f"choose what to sacrifice for {card.name}'s bargain", fodder)
+                )
+        if "collect evidence" in printed:
+            wanted = re.search(r"\d+", printed["collect evidence"].cost)
+            total = sum(state.mana_value for state in self.player(caster).graveyard)
+            if offered(
+                printed["collect evidence"].cost,
+                wanted is not None and total >= int(wanted.group()),
+            ):
+                casting.collect_evidence()
+        if "reveal" in printed:
+            quality = re.search(r"reveal an? ([\w-]+) card", printed["reveal"].cost, re.IGNORECASE)
+            subtype = quality.group(1).lower() if quality else ""
+            revealable = [
+                state
+                for state in self.player(caster).hand
+                if state.id != card.id and any(each.lower() == subtype for each in state.subtypes)
+            ]
+            if offered(printed["reveal"].cost, bool(revealable)):
+                casting.reveal_for_cost(
+                    choose(f"choose a card to reveal for {card.name}", revealable)
+                )
 
     def _announce_mandatory_costs(
         self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
@@ -8360,6 +8505,11 @@ class Game(EngineModel):
                 additional_cost_cards=list(original_record.additional_cost_cards),
                 additional_cost_mana_values=list(original_record.additional_cost_mana_values),
                 is_copy=True,
+                # CR 707.10: the additional and alternative cost decisions.
+                kicker_costs_paid=list(original_record.kicker_costs_paid),
+                bargained=original_record.bargained,
+                evidence_collected=original_record.evidence_collected,
+                revealed_for_cost=original_record.revealed_for_cost,
             )
             return copy
 
@@ -10873,6 +11023,9 @@ class Game(EngineModel):
                 # CR 122.6a: no effect here names a putter, so it is the
                 # entering object's controller.
                 self.add_counters(card_state, kind, amount, putter=card_state.controller)
+            for kind, putter, amount in event.counters_put_by:
+                # CR 702.104a's tribute: the opponent is the one who puts them.
+                self.add_counters(card_state, kind, amount, putter=putter)
 
             if event.loyalty_reduction:
                 # CR 702.150a (compleated): "minus two for each" of the
@@ -17244,7 +17397,14 @@ class Game(EngineModel):
         """
         return board_snapshot(self)
 
-    def _compute_board(self) -> ComputedBoard:
+    def base_power_toughness_board(self) -> ComputedBoard:
+        """The board as CR 208.4b's "base power and toughness" sees it: every
+        continuous effect applied except sublayers 7c and 7d, and no counters -
+        Baird, Argivian Recruiter's "a creature with power greater than its
+        base power". Computed afresh on every call, never cached."""
+        return self._compute_board(base_power_toughness=True)
+
+    def _compute_board(self, *, base_power_toughness: bool = False) -> ComputedBoard:
         """`computed_board`, always computed afresh."""
         self.continuous_effects.note(self.battlefield)
         context = LayerContext(
@@ -17316,7 +17476,9 @@ class Game(EngineModel):
 
         token = install_id_allocator(board_effect_id)
         try:
-            return self.continuous_effects.board(self.battlefield, context, self)
+            return self.continuous_effects.board(
+                self.battlefield, context, self, base_power_toughness=base_power_toughness
+            )
         finally:
             reset_id_allocator(token)
 
@@ -19306,6 +19468,10 @@ class Game(EngineModel):
         gift: str | None = None,
         harmonize_creature: CardState | None = None,
         pay_life_for_additional_cost: bool = False,
+        kicker_costs: Sequence[str] | None = None,
+        bargain: CardState | None = None,
+        collect_evidence: bool = False,
+        reveal_for_cost: CardState | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -19371,6 +19537,12 @@ class Game(EngineModel):
         refuses a second announcement rather than charging for it). `kicker`
         covers multikicker too, which CR 702.33c makes a variant of kicker
         and not a second keyword - "A multikicker cost is a kicker cost".
+        `kicker_costs` names each kicker cost paid on a card that prints two
+        (CR 702.33b's "Kicker [cost 1] and/or [cost 2]"), as printed.
+        `bargain` is the artifact, enchantment or token sacrificed for CR
+        702.166a's bargain; `collect_evidence` pays a printed "you may collect
+        evidence N" (CR 701.59a); `reveal_for_cost` is the card revealed for a
+        printed "you may reveal a <quality> card from your hand".
         They join `offspring`, `blight` and `gift` as this method's whole
         CR 601.2b announcement; `machines/casting.optional_additional_costs`
         is what tells a caller which of them a given card actually prints,
@@ -19418,6 +19590,15 @@ class Game(EngineModel):
                 casting.splice_by_id(card_id)
             if kicker:
                 casting.pay_kicker(kicker)
+            for cost in kicker_costs or ():
+                # CR 702.33b: a card with two kicker costs names each one paid.
+                casting.pay_kicker(1, which=cost)
+            if bargain is not None:
+                casting.pay_bargain(bargain)
+            if collect_evidence:
+                casting.collect_evidence()
+            if reveal_for_cost is not None:
+                casting.reveal_for_cost(reveal_for_cost)
             if replicate:
                 casting.pay_replicate(replicate)
             if offspring:
@@ -23002,12 +23183,14 @@ class Game(EngineModel):
                     else None
                 )
                 from_treasure = is_treasure_source(permanent, self)
+                from_creature = is_creature_source(permanent, self)
                 for produced in produced_mana:
                     self.player(controller).mana_pool.add(
                         produced,
                         restriction=restriction,
                         spend_effect=spend_effect,
                         treasure=from_treasure,
+                        creature=from_creature,
                     )
                 # CR 405.6c: "If a mana ability both produces mana and has
                 # another effect, the mana is produced and the other effect

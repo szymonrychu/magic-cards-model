@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "31276460-fa9d-47da-85c5-c4baa8074d0d",
+  "oracle_id": "9fee2572-8864-475c-bade-a64e36ef69c4",
+  "multiverse_ids": [
+    693567
+  ],
+  "mtgo_id": 139125,
+  "arena_id": 95606,
+  "tcgplayer_id": 624729,
+  "cardmarket_id": 818139,
+  "name": "Rot-Curse Rakshasa",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/31276460-fa9d-47da-85c5-c4baa8074d0d",
+  "scryfall_uri": "https://scryfall.com/card/tdm/87/rot-curse-rakshasa?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T01:49:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.jpg?1783907372",
+    "normal": "https://cards.scryfall.io/normal/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.jpg?1783907372",
+    "large": "https://cards.scryfall.io/large/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.jpg?1783907372",
+    "png": "https://cards.scryfall.io/png/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.png?1783907372",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.jpg?1783907372",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.jpg?1783907372",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.webp?1783907372",
+    "grid": "https://cards.scryfall.io/grid/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.webp?1783907372",
+    "display": "https://cards.scryfall.io/display/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.webp?1783907372",
+    "art": "https://cards.scryfall.io/art/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.webp?1783907372",
+    "crop": "https://cards.scryfall.io/crop/front/3/1/31276460-fa9d-47da-85c5-c4baa8074d0d.webp?1783907372"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Creature \u2014 Demon",
+  "oracle_text": "Trample\nDecayed (This creature can't block. When it attacks, sacrifice it at end of combat.)\nRenew \u2014 {X}{B}{B}, Exile this card from your graveyard: Put a decayed counter on each of X target creatures. Activate only as a sorcery.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Renew",
+    "Trample",
+    "Decayed"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set": "tdm",
+  "set_name": "Tarkir: Dragonstorm",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/31276460-fa9d-47da-85c5-c4baa8074d0d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9fee2572-8864-475c-bade-a64e36ef69c4&unique=prints",
+  "collector_number": "87",
+  "digital": false,
+  "rarity": "mythic",
+  "watermark": "sultai",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "891b374d-6063-4468-b9c4-3d63ea06888a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 6294,
+  "penny_rank": 8458,
+  "preview": {
+    "source": "Gameshub",
+    "source_uri": "https://www.gameshub.com/news/features/tarkir-dragonstorm-card-preview-2690247/",
+    "previewed_at": "2025-03-23"
+  },
+  "prices": {
+    "usd": "2.53",
+    "usd_foil": "2.11",
+    "usd_etched": null,
+    "eur": "1.80",
+    "eur_foil": "2.29",
+    "tix": "0.06"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693567&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRot-Curse%2BRakshasa",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRot-Curse%2BRakshasa",
+    "edhrec": "https://edhrec.com/route/?cc=Rot-Curse+Rakshasa"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F624729%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=818139&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/139125?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
