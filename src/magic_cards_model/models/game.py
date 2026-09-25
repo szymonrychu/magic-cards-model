@@ -17244,7 +17244,14 @@ class Game(EngineModel):
         """
         return board_snapshot(self)
 
-    def _compute_board(self) -> ComputedBoard:
+    def base_power_toughness_board(self) -> ComputedBoard:
+        """The board as CR 208.4b's "base power and toughness" sees it: every
+        continuous effect applied except sublayers 7c and 7d, and no counters -
+        Baird, Argivian Recruiter's "a creature with power greater than its
+        base power". Computed afresh on every call, never cached."""
+        return self._compute_board(base_power_toughness=True)
+
+    def _compute_board(self, *, base_power_toughness: bool = False) -> ComputedBoard:
         """`computed_board`, always computed afresh."""
         self.continuous_effects.note(self.battlefield)
         context = LayerContext(
@@ -17316,7 +17323,9 @@ class Game(EngineModel):
 
         token = install_id_allocator(board_effect_id)
         try:
-            return self.continuous_effects.board(self.battlefield, context, self)
+            return self.continuous_effects.board(
+                self.battlefield, context, self, base_power_toughness=base_power_toughness
+            )
         finally:
             reset_id_allocator(token)
 

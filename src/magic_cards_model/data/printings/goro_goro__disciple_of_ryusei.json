@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0",
+  "oracle_id": "b80df711-af51-4f9a-9a3f-f7a4cddc9c2c",
+  "multiverse_ids": [
+    548448
+  ],
+  "mtgo_id": 97220,
+  "arena_id": 79575,
+  "tcgplayer_id": 262056,
+  "cardmarket_id": 607036,
+  "name": "Goro-Goro, Disciple of Ryusei",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0",
+  "scryfall_uri": "https://scryfall.com/card/neo/145/goro-goro-disciple-of-ryusei?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:24:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.jpg?1783923865",
+    "normal": "https://cards.scryfall.io/normal/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.jpg?1783923865",
+    "large": "https://cards.scryfall.io/large/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.jpg?1783923865",
+    "png": "https://cards.scryfall.io/png/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.png?1783923865",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.jpg?1783923865",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.jpg?1783923865",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.webp?1783923865",
+    "grid": "https://cards.scryfall.io/grid/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.webp?1783923865",
+    "display": "https://cards.scryfall.io/display/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.webp?1783923865",
+    "art": "https://cards.scryfall.io/art/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.webp?1783923865",
+    "crop": "https://cards.scryfall.io/crop/front/1/c/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0.webp?1783923865"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Goblin Samurai",
+  "oracle_text": "{R}: Creatures you control gain haste until end of turn.\n{3}{R}{R}: Create a 5/5 red Dragon Spirit creature token with flying. Activate only if you control an attacking modified creature. (Equipment, Auras you control, and counters are modifications.)",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "a4c06e08-2026-471d-a6d0-bbb0f040420a",
+      "component": "token",
+      "name": "Dragon Spirit",
+      "type_line": "Token Creature \u2014 Dragon Spirit",
+      "uri": "https://api.scryfall.com/cards/a4c06e08-2026-471d-a6d0-bbb0f040420a"
+    },
+    {
+      "object": "related_card",
+      "id": "d398246a-dc65-4096-b4b7-46ddff38372e",
+      "component": "combo_piece",
+      "name": "Goro-Goro, Disciple of Ryusei",
+      "type_line": "Legendary Creature \u2014 Goblin Samurai",
+      "uri": "https://api.scryfall.com/cards/d398246a-dc65-4096-b4b7-46ddff38372e"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1ca736c7-35a9-48c7-b5a9-69b2a6e33ad0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ab80df711-af51-4f9a-9a3f-f7a4cddc9c2c&unique=prints",
+  "collector_number": "145",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mike Jordana",
+  "artist_ids": [
+    "342d3a1e-0ddf-4823-af83-e13be8152b3f"
+  ],
+  "illustration_id": "44723c9c-80d6-4b63-958a-2c08840f0bc7",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3195,
+  "penny_rank": 4474,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/1277767538",
+    "previewed_at": "2022-01-27"
+  },
+  "prices": {
+    "usd": "1.28",
+    "usd_foil": "1.28",
+    "usd_etched": null,
+    "eur": "0.84",
+    "eur_foil": "1.29",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548448&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGoro-Goro%252C%2BDisciple%2Bof%2BRyusei",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGoro-Goro%252C%2BDisciple%2Bof%2BRyusei",
+    "edhrec": "https://edhrec.com/route/?cc=Goro-Goro%2C+Disciple+of+Ryusei"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262056%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607036&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/97220?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

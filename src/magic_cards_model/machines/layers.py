@@ -2469,6 +2469,8 @@ def compute_board(
     permanents: Iterable[CardState],
     effects: Iterable[ContinuousEffect] = (),
     counters: Mapping[UUID, Mapping[str, int]] | None = None,
+    *,
+    base_power_toughness: bool = False,
 ) -> ComputedBoard:
     """Apply every continuous effect to every permanent, in layer order (CR 613).
 
@@ -2489,6 +2491,14 @@ def compute_board(
     permanent named there is computed with exactly those counters and one that
     is not keeps its own. That is for asking hypotheticals, not for running the
     board - a real board needs no argument at all.
+
+    `base_power_toughness` asks CR 208.4b's question instead: "Some effects
+    check a creature's base power and/or toughness. These effects see that
+    creature's characteristics after applying any characteristic-defining
+    abilities and abilities that set power and/or toughness, ignoring any
+    effects and counters that modify power and/or toughness without setting
+    them." Sublayers 7c (counters included, CR 613.4c) and 7d are skipped;
+    everything else applies as usual.
     """
     counters = counters or {}
     board: dict[UUID, Characteristics] = {}
@@ -2510,6 +2520,12 @@ def compute_board(
             # decides whether an object has changeling by now (CR 604.3a).
             all_effects += _changeling_effects(board)
         for sublayer in _sublayers_of(layer):
+            if (
+                base_power_toughness
+                and layer is Layer.POWER_TOUGHNESS
+                and sublayer in (Sublayer.MODIFY, Sublayer.SWITCH)
+            ):
+                continue
             group = [e for e in all_effects if e.layer is layer and e.sublayer is sublayer]
             if not group:
                 continue
@@ -13525,10 +13541,19 @@ class ContinuousEffects(EngineModel):
         permanents: Sequence[CardState],
         context: LayerContext | None = None,
         game: Game | None = None,
+        *,
+        base_power_toughness: bool = False,
     ) -> ComputedBoard:
         """What the board is, with everything applied (CR 613.5). Emblems are
         on it too - they have no types, so no permanent-reading question sees
         them - because an effect's source must be on the board for CR 613.6's
-        "does its ability still exist" check (`_still_exists`)."""
+        "does its ability still exist" check (`_still_exists`).
+
+        `base_power_toughness` is `compute_board`'s own flag: CR 208.4b's base
+        power and toughness rather than the full board."""
         effects = self.all_effects(permanents, context, game)
-        return compute_board([*permanents, *_emblems_in(game)], effects)
+        return compute_board(
+            [*permanents, *_emblems_in(game)],
+            effects,
+            base_power_toughness=base_power_toughness,
+        )

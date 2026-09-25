@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "689a6390-894a-4d31-87c2-f9cec3b187a7",
+  "oracle_id": "2f6f49a4-f2ea-4147-a6d3-69cf875c302e",
+  "multiverse_ids": [
+    394553
+  ],
+  "mtgo_id": 56308,
+  "mtgo_foil_id": 56309,
+  "tcgplayer_id": 96729,
+  "cardmarket_id": 273428,
+  "name": "Dragon-Scarred Bear",
+  "lang": "en",
+  "released_at": "2015-03-27",
+  "uri": "https://api.scryfall.com/cards/689a6390-894a-4d31-87c2-f9cec3b187a7",
+  "scryfall_uri": "https://scryfall.com/card/dtk/183/dragon-scarred-bear?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:29:40Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.jpg?1783938580",
+    "normal": "https://cards.scryfall.io/normal/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.jpg?1783938580",
+    "large": "https://cards.scryfall.io/large/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.jpg?1783938580",
+    "png": "https://cards.scryfall.io/png/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.png?1783938580",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.jpg?1783938580",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.jpg?1783938580",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.webp?1783938580",
+    "grid": "https://cards.scryfall.io/grid/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.webp?1783938580",
+    "display": "https://cards.scryfall.io/display/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.webp?1783938580",
+    "art": "https://cards.scryfall.io/art/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.webp?1783938580",
+    "crop": "https://cards.scryfall.io/crop/front/6/8/689a6390-894a-4d31-87c2-f9cec3b187a7.webp?1783938580"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Bear",
+  "oracle_text": "Formidable \u2014 {1}{G}: Regenerate this creature. Activate only if creatures you control have total power 8 or greater.",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Regenerate",
+    "Formidable"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "7e72625f-f320-4552-a719-d11e2f1853bd",
+  "set": "dtk",
+  "set_name": "Dragons of Tarkir",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/7e72625f-f320-4552-a719-d11e2f1853bd",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adtk&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dtk?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/689a6390-894a-4d31-87c2-f9cec3b187a7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2f6f49a4-f2ea-4147-a6d3-69cf875c302e&unique=prints",
+  "collector_number": "183",
+  "digital": false,
+  "rarity": "common",
+  "watermark": "atarka",
+  "flavor_text": "Bears are a delicacy for the Atarka. The few that remain are the toughest of their species.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lars Grant-West",
+  "artist_ids": [
+    "21ed6499-c4d3-4965-ab02-6c7228275bec"
+  ],
+  "illustration_id": "cc73b1d7-ac93-46e4-aa80-082613a0c490",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12879,
+  "penny_rank": 15565,
+  "prices": {
+    "usd": "0.19",
+    "usd_foil": "1.43",
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": "0.74",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=394553&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDragon-Scarred%2BBear",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDragon-Scarred%2BBear",
+    "edhrec": "https://edhrec.com/route/?cc=Dragon-Scarred+Bear"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F96729%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=273428&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/56308?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
