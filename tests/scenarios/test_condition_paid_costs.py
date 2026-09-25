@@ -625,3 +625,13 @@ def test_the_controllers_own_counters_are_not_tribute():
     )
     scenario.game.add_counters(scenario.creature("Snake of the Golden Grove"), "+1/+1", 3)
     assert _triggers(scenario) == ["Snake of the Golden Grove's triggered ability"]
+
+
+def test_it_was_kicked_is_false_for_a_permanent_that_was_never_cast():
+    """Archangel of Wrath: "When this creature enters, if it was kicked, it
+    deals 2 damage to any target." Put onto the battlefield without being
+    cast, no kicker cost was ever declared (CR 702.33d), so the intervening
+    if is false and the ability never triggers (CR 603.4) - no notice."""
+    scenario = _board([], hand=["Archangel of Wrath"])
+    scenario.put_onto_battlefield("Archangel of Wrath", "alice")
+    _no_trigger(scenario)

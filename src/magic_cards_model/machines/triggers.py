@@ -4456,15 +4456,8 @@ def _first_spell_this_turn_holds(
     return False
 
 
-#: CR 702.33d's "if it was kicked" (Sowing Mycospawn) and CR 702.33f's
-#: per-kicker variant, "if it was kicked with its [quality] kicker" - not in
-#: the pool, so only the plain form is matched; a named-kicker clause falls
-#: through to the fail-closed default rather than being misread as the plain
-#: form.
-_KICKED_CLAUSE = re.compile(r"^it was kicked$")
-
 #: `machines/teamwork.py`'s own intervening *if*, the same shape as
-#: `_KICKED_CLAUSE` for a card whose "If this spell was cast using
+#: `conditions/cast_record.py`'s kicked reader for a card whose "If this spell was cast using
 #: teamwork" rider is written as a trailing intervening if instead of a
 #: leading "If ..." sentence - none in this pool yet, but the reader is
 #: general rather than tied to the one shape the pool happens to print.
@@ -5033,16 +5026,9 @@ def intervening_if_answer(
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         return record is not None and record.offspring_paid
 
-    if _KICKED_CLAUSE.match(clause):
-        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
-        if record is None:
-            return _fail_closed(game, ability, source)
-        return record.kicked > 0
-
     if _CAST_USING_TEAMWORK_CLAUSE.match(clause):
-        # `machines/teamwork.py`'s own additional cost - the identical shape
-        # `_KICKED_CLAUSE` reads just above, off `CastRecord.cast_using_
-        # teamwork` instead of `.kicked`.
+        # `machines/teamwork.py`'s own additional cost, read off
+        # `CastRecord.cast_using_teamwork`.
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)
         if record is None:
             return _fail_closed(game, ability, source)
