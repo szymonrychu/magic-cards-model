@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "b3d878fc-cc21-407f-b3cc-95bf2d717a80",
+  "oracle_id": "94779ca4-c202-4163-9c77-1036921a34bc",
+  "multiverse_ids": [
+    667658
+  ],
+  "mtgo_id": 128102,
+  "tcgplayer_id": 556317,
+  "cardmarket_id": 775453,
+  "name": "Adrestia",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/b3d878fc-cc21-407f-b3cc-95bf2d717a80",
+  "scryfall_uri": "https://scryfall.com/card/acr/68/adrestia?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:49:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.jpg?1783910967",
+    "normal": "https://cards.scryfall.io/normal/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.jpg?1783910967",
+    "large": "https://cards.scryfall.io/large/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.jpg?1783910967",
+    "png": "https://cards.scryfall.io/png/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.png?1783910967",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.jpg?1783910967",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.jpg?1783910967",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.webp?1783910967",
+    "grid": "https://cards.scryfall.io/grid/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.webp?1783910967",
+    "display": "https://cards.scryfall.io/display/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.webp?1783910967",
+    "art": "https://cards.scryfall.io/art/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.webp?1783910967",
+    "crop": "https://cards.scryfall.io/crop/front/b/3/b3d878fc-cc21-407f-b3cc-95bf2d717a80.webp?1783910967"
+  },
+  "mana_cost": "{3}",
+  "cmc": 3.0,
+  "type_line": "Legendary Artifact \u2014 Vehicle",
+  "oracle_text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)\nWhenever Adrestia attacks, if an Assassin crewed it this turn, draw a card. Adrestia becomes an Assassin in addition to its other types until end of turn.\nCrew 1",
+  "power": "4",
+  "toughness": "3",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [
+    "Landwalk",
+    "Crew",
+    "Islandwalk"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b3d878fc-cc21-407f-b3cc-95bf2d717a80/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A94779ca4-c202-4163-9c77-1036921a34bc&unique=prints",
+  "collector_number": "68",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mintautas \u0160ukys",
+  "artist_ids": [
+    "33147af8-b09e-4cb3-8e21-5271314c3c1e"
+  ],
+  "illustration_id": "80a7c175-2638-4751-93a8-e18fb44b4eed",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8497,
+  "prices": {
+    "usd": "0.31",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.16",
+    "tix": "0.42"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=667658&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAdrestia",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAdrestia",
+    "edhrec": "https://edhrec.com/route/?cc=Adrestia"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F556317%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775453&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/128102?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

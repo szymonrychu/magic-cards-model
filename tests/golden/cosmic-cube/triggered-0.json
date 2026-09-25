@@ -55,7 +55,7 @@
         "source": "Cosmic Cube"
       }
     ],
-    "fields_changed": ["cast_records", "library_orders_kept", "reveals", "shuffles_performed", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "library_orders_kept", "reveals", "shuffles_performed", "spells_cast_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Opt@alice#3": {

@@ -55,7 +55,7 @@
         "source": "Troop of Ponies"
       }
     ],
-    "fields_changed": ["continuous_effects", "known_carries", "reveals", "shuffles_performed", "turn_facts"],
+    "fields_changed": ["continuous_effects", "known_carries", "reveals", "shuffles_performed", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

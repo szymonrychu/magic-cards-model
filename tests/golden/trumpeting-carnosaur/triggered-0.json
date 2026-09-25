@@ -46,7 +46,7 @@
         "source": "Trumpeting Carnosaur"
       }
     ],
-    "fields_changed": ["cast_records", "reveals", "shuffles_performed", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "exile_residents_seen", "reveals", "shuffles_performed", "spells_cast_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#3": {

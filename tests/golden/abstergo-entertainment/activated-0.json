@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["known_carries", "turn_counts"],
+    "fields_changed": ["exile_residents_seen", "known_carries", "turn_counts"],
     "notices": {},
     "objects": {
       "Bonesplitter@alice#2": {

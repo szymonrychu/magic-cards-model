@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "spell_cost_reduction_grants"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "spell_cost_reduction_grants", "turn_history"],
     "notices": {},
     "objects": {
       "Ballad of the Black Flag@alice#1": {

@@ -62,7 +62,7 @@
         "source": "Kavaron Harrier"
       }
     ],
-    "fields_changed": ["became_tapped_count_this_turn", "combat", "continuous_effects", "delayed_triggers", "turn_facts"],
+    "fields_changed": ["became_tapped_count_this_turn", "combat", "continuous_effects", "delayed_triggers", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Swamp@alice#1": {

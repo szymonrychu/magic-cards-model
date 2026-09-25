@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "d2ef31b4-24fa-4443-9f05-c8e99c3522e5",
+  "oracle_id": "97e1fcdf-04e8-40cf-b04a-8505d9b7cecc",
+  "multiverse_ids": [],
+  "resource_id": "D754EE02693EC93ADB9929210C1E21BEFBBC4DC645EFF50DCDB0736DC3D25412",
+  "mtgo_id": 149527,
+  "arena_id": 102473,
+  "tcgplayer_id": 689046,
+  "cardmarket_id": 882861,
+  "name": "Ennis, Debate Moderator",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/d2ef31b4-24fa-4443-9f05-c8e99c3522e5",
+  "scryfall_uri": "https://scryfall.com/card/sos/14/ennis-debate-moderator?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:48:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.jpg?1783903705",
+    "normal": "https://cards.scryfall.io/normal/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.jpg?1783903705",
+    "large": "https://cards.scryfall.io/large/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.jpg?1783903705",
+    "png": "https://cards.scryfall.io/png/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.png?1783903705",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.jpg?1783903705",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.jpg?1783903705",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.webp?1783903705",
+    "grid": "https://cards.scryfall.io/grid/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.webp?1783903705",
+    "display": "https://cards.scryfall.io/display/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.webp?1783903705",
+    "art": "https://cards.scryfall.io/art/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.webp?1783903705",
+    "crop": "https://cards.scryfall.io/crop/front/d/2/d2ef31b4-24fa-4443-9f05-c8e99c3522e5.webp?1783903705"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Cleric",
+  "oracle_text": "When Ennis enters, exile up to one other target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.\nAt the beginning of your end step, if one or more cards were put into exile this turn, put a +1/+1 counter on Ennis.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set": "sos",
+  "set_name": "Secrets of Strixhaven",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d2ef31b4-24fa-4443-9f05-c8e99c3522e5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A97e1fcdf-04e8-40cf-b04a-8505d9b7cecc&unique=prints",
+  "collector_number": "14",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "silverquill",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Marie Magny",
+  "artist_ids": [
+    "fa463dea-41ba-4c0d-9277-c176d2b2509f"
+  ],
+  "illustration_id": "0df334b1-5670-495b-a442-773593656859",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 15234,
+  "penny_rank": 3034,
+  "preview": {
+    "source": "Based Deck Department",
+    "source_uri": "https://bsky.app/profile/baseddeckdept.bsky.social/post/3mizgm33qmk2u",
+    "previewed_at": "2026-04-08"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.14",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEnnis%252C%2BDebate%2BModerator",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEnnis%252C%2BDebate%2BModerator",
+    "edhrec": "https://edhrec.com/route/?cc=Ennis%2C+Debate+Moderator"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F689046%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882861&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149527?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["casting_rule_effects", "permanents_left_battlefield_this_turn", "turn_facts"],
+    "fields_changed": ["casting_rule_effects", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "The Great Work@alice#1": {

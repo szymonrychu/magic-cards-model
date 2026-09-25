@@ -77,7 +77,7 @@
         "source": "Baron Helmut Zemo"
       }
     ],
-    "fields_changed": ["cast_records", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "exile_residents_seen", "spells_cast_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {},

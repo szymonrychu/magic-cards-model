@@ -1331,6 +1331,12 @@ _CONDITION_LAND_ENTERED_THIS_TURN = re.compile(
 )
 
 
+#: `Game.turn_counts` key for the energy counters a player removed from
+#: themselves this turn to pay {E} (CR 107.14) - Izzet Generatorium's "if
+#: you've paid or lost four or more {E} this turn".
+ENERGY_PAID_OR_LOST = "energy_paid_or_lost"
+
+
 def entered_type_facts(types: object, subtypes: object) -> list[str]:
     """The `turn_facts` keys an entering permanent records for its controller:
     one per card type (CR 205.2a) and one per subtype (CR 205.3), lowercased
@@ -2546,6 +2552,58 @@ class DamageDealt(EngineModel):
     recipient_player: str | None = None
     amount: int = 0
     combat: bool = False
+    source_supertypes: tuple[Supertype, ...] = ()
+    """The source's supertypes as it dealt the damage - "a legendary
+    creature" (Blitzball)."""
+    source_colors: tuple[Color, ...] = ()
+    """The source's colors as it dealt the damage - "red sources you
+    controlled" (Temple of Power)."""
+    recipient_types: tuple[Type, ...] = ()
+    """The permanent recipient's types as it was dealt the damage - "combat
+    damage to a creature" (Thirsting Axe). Empty for a player."""
+    recipient_controller: str | None = None
+    """The permanent recipient's controller as it was dealt the damage - "a
+    creature ... an opponent controlled" (Rith, Liberated Primeval)."""
+    excess: int = 0
+    """CR 120.10's excess damage this event dealt to a creature or
+    planeswalker, worked out by `Game.deal_damage` from the recipient as it
+    was before the damage."""
+
+
+class TurnHistoryEntry(EngineModel):
+    """One thing that happened this turn that a turn-history condition
+    (`machines/conditions/history.py`) asks about afterwards and no narrower
+    ledger keeps with the characteristics it needs: a permanent entering, a
+    permanent going to a graveyard or a hand from the battlefield, a
+    sacrifice, an attack, a crew.
+
+    `characteristics` is the object as it was at that moment (CR 603.10a's
+    look-back for a departure, the computed types of an entering or attacking
+    permanent), so "a non-Skeleton creature died under your control" is read
+    off what the creature was then, not what the card is now. Written by
+    `machines/conditions/history.record` from the event that carries it;
+    `Game.turn_history` is this turn's and `Game.turn_history_last_turn` the
+    previous turn's, rolled where every other per-turn ledger is.
+    """
+
+    kind: str
+    """What happened: "entered", "to_graveyard" (CR 700.4's put into a
+    graveyard from the battlefield), "to_hand", "sacrificed", "attacked",
+    "crewed"."""
+    player: str | None = None
+    """Whose it was: the controller of the permanent (entered, to_graveyard,
+    to_hand, attacked), the player who sacrificed it (CR 701.21a) or crewed
+    with it (CR 702.122b)."""
+    owner: str | None = None
+    """The owner of the card - whose graveyard or hand it went to (CR 108.3)."""
+    object_id: UUID | None = None
+    related_id: UUID | None = None
+    """For "crewed", the Vehicle it crewed."""
+    characteristics: Characteristics | None = None
+    face_down: bool = False
+    combat: int = 0
+    """For "attacked", which combat phase of the turn (CR 500.8 can add more
+    than one), counted by `Game.turn_count("combat_phases", ...)`."""
 
 
 #: CR 701.54c: "they get an emblem named The Ring".
@@ -3498,6 +3556,36 @@ class Game(EngineModel):
     as it dealt the damage (`DamageDealt`). Written by `machines/conditions/
     history.record`; cleared when a new turn begins."""
 
+    turn_history: list[TurnHistoryEntry] = Field(default_factory=list)
+    """This turn's entries, attacks, departures, sacrifices and crews, each
+    with the object's characteristics at that moment (`TurnHistoryEntry`).
+    Written by `machines/conditions/history.record`; rolled into
+    `turn_history_last_turn` when a new turn begins."""
+
+    turn_history_last_turn: list[TurnHistoryEntry] = Field(default_factory=list)
+    """What `turn_history` held during the turn before this one - Ephara, God
+    of the Polis's "if you had another creature enter the battlefield under
+    your control last turn"."""
+
+    exile_residents_seen: SortedSet[str] = Field(default_factory=set)
+    """Every object ("<id>/<zone change stamp>", CR 400.7) this turn has seen
+    in exile, seeded with the exile zone's residents when the turn began - a
+    card in exile that is not in it was put there this turn, and is counted
+    once in `turn_counts["cards_put_into_exile"]` (`machines/conditions/
+    history.note_exile_arrivals`)."""
+
+    dealt_combat_damage_since_their_turn: SortedSet[str] = Field(default_factory=set)
+    """The players dealt combat damage (CR 120.2a) since their own most
+    recent turn ended - Marchesa, Resolute Monarch's "if you haven't been
+    dealt combat damage since your last turn". A player joins on the damage
+    and leaves as their own turn ends."""
+
+    _pending_damage_excess: int = PrivateAttr(default=0)
+    """CR 120.10's excess for the damage event now being raised, worked out by
+    `deal_damage` before the damage changed the recipient and read by
+    `machines/conditions/history.record` inside that event's `emit`. Not
+    persisted: it lives only between the two."""
+
     graveyard_arrivals_this_turn: list[GraveyardArrival] = Field(default_factory=list)
     """Every card that arrived at a graveyard this turn (CR 400.6), one entry
     per arrival - see `GraveyardArrival`'s own docstring for why this is one
@@ -3835,7 +3923,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 81
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 82
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -3886,6 +3974,11 @@ class Game(EngineModel):
     #: `cast_step`/`cast_during_turn_of`, and `machines/triggers.GameEvent`
     #: gained `declared_attacker` (EC2's condition reader;
     #: renumbered from 74 at the EC round 1 merge).
+    #: 82: `Game` gained `turn_history`/`turn_history_last_turn`
+    #: (`TurnHistoryEntry`), `exile_residents_seen` and
+    #: `dealt_combat_damage_since_their_turn`, and `DamageDealt` gained
+    #: `source_supertypes`/`source_colors`/`recipient_types`/
+    #: `recipient_controller`/`excess` (EC4's turn-history readers).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6521,6 +6614,11 @@ class Game(EngineModel):
         self.spells_cast_this_turn.setdefault(controller, []).append(card_state)
         if origin_zone is Zone.HAND:
             self.record_turn_fact("cast_spell_from_hand", controller)
+        # CR 700.13: casting a spell that targets an opponent or what they
+        # control is a crime, committed as the spell becomes cast.
+        from ..machines.conditions import history as condition_history
+
+        condition_history.record_crime(self, controller, card_state.targets)
 
         if card_state.prepare_spell_face:
             # CR 601.2i: "That permanent loses the prepared designation at
@@ -9925,7 +10023,14 @@ class Game(EngineModel):
         filter the spell twin applies, since every condition in this pool is
         about a permanent (or a player, which carries no `card_id` to ask
         about) becoming a target.
+
+        CR 700.13's crime is committed here too, for every kind of target: an
+        ability activated or put on the stack that targets an opponent, what an
+        opponent controls, or a card in an opponent's graveyard.
         """
+        from ..machines.conditions import history as condition_history
+
+        condition_history.record_crime(self, ability.controller, ability.targets)
         for target in ability.targets:
             if not target.is_card or target.card_id is None:
                 continue
@@ -10501,7 +10606,15 @@ class Game(EngineModel):
             self._before_priority()
 
     def _take_out_of_every_zone(self, card_state: CardState) -> None:
-        """Lift a card out of wherever it currently is, shared zones included."""
+        """Lift a card out of wherever it currently is, shared zones included.
+
+        A card about to leave exile is noted as having been put there first
+        (`machines/conditions/history.note_exile_arrivals`), so a card exiled
+        and taken back out before anything else happened still counts."""
+        if card_state.zone is Zone.EXILE:
+            from ..machines.conditions import history as condition_history
+
+            condition_history.note_exile_arrivals(self)
         for player in self.players:
             for zone_cards in player.zones.values():
                 if card_state in zone_cards:
@@ -12045,6 +12158,9 @@ class Game(EngineModel):
             return False
         if amount > 0:
             player.remove_counters(Counter.ENERGY, amount)
+            # CR 107.14: paying {E} removes energy counters - "you've paid or
+            # lost N or more {E} this turn" counts them.
+            self.note_turn_count(ENERGY_PAID_OR_LOST, player.username, amount)
         return True
 
     def may_pay_mana(
@@ -12251,6 +12367,7 @@ class Game(EngineModel):
         assert isinstance(paid, int)
         if paid > 0:
             player.remove_counters(Counter.ENERGY, paid)
+            self.note_turn_count(ENERGY_PAID_OR_LOST, player.username, paid)
         return paid
 
     def pay_any_amount_of_life(
@@ -15609,6 +15726,14 @@ class Game(EngineModel):
                 else:
                     self.deal_damage_to_player(target, event.amount)
             else:
+                # CR 120.10: excess is measured against the recipient as it
+                # was before this damage, so it is worked out now and carried
+                # to the event raised below.
+                from ..machines.conditions import history as condition_history
+
+                self._pending_damage_excess = condition_history.excess_damage(
+                    self, target, event.amount, source
+                )
                 self._apply_damage_to_permanent(target, event.amount, as_counters=infect or wither)
                 ledger = self._combat_damage_this_step
                 if event.combat and ledger is not None and not (infect or wither):
@@ -15660,6 +15785,7 @@ class Game(EngineModel):
                     amount=event.amount,
                 )
             )
+            self._pending_damage_excess = 0
             if damaged_player is not None and not event.combat:
                 # Master of Barbs' and Massacre Girl, Most Wanted's own
                 # "whenever [an/one or more] opponent[s] [is/are] dealt
@@ -23657,6 +23783,14 @@ class Game(EngineModel):
         )
 
         if self.turn.turns_taken != previous_turns_taken:
+            # The turn that just ended is closed off first, while its own
+            # per-turn fields still hold it: its life lost and gained into
+            # the count ledger rolled below, the exile zone's residents as
+            # the new turn's baseline (`machines/conditions/history.
+            # end_turn`).
+            from ..machines.conditions import history as condition_history
+
+            condition_history.end_turn(self, previous_turns_taken, previous_active_player)
             # A new turn: land drops reset and the new active player gets
             # priority. `turns_taken` is the signal rather than the active seat
             # or the turn number, because an extra turn (CR 500.7) moves
@@ -23690,6 +23824,8 @@ class Game(EngineModel):
             self.turn_facts = {}
             self.turn_counts_last_turn = self.turn_counts
             self.turn_counts = {}
+            self.turn_history_last_turn = self.turn_history
+            self.turn_history = []
             self.combat_damage_dealt_this_turn_by = set()
             self.combat_damage_to_players_this_turn = []
             self.counters_put_this_turn = []

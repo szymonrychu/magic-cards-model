@@ -46,7 +46,7 @@
         "source": "Containment Construct"
       }
     ],
-    "fields_changed": ["play_permissions", "turn_counts"],
+    "fields_changed": ["exile_residents_seen", "play_permissions", "turn_counts"],
     "notices": {},
     "objects": {
       "Opt@alice#2": {

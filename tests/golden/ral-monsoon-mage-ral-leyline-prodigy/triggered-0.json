@@ -46,7 +46,7 @@
         "source": "Ral, Monsoon Mage"
       }
     ],
-    "fields_changed": ["coin_flips_performed", "counters_put_this_turn", "permanents_left_battlefield_this_turn", "turn_facts"],
+    "fields_changed": ["coin_flips_performed", "counters_put_this_turn", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Ral, Monsoon Mage@alice#1": {

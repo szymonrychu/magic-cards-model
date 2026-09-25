@@ -55,7 +55,7 @@
         "source": "Uro, Titan of Nature's Wrath"
       }
     ],
-    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts"],
+    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#4": {

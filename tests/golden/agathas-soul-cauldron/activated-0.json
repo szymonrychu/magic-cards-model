@@ -46,7 +46,7 @@
         "source": "Agatha's Soul Cauldron"
       }
     ],
-    "fields_changed": ["delayed_triggers", "turn_counts"],
+    "fields_changed": ["delayed_triggers", "exile_residents_seen", "turn_counts"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#2": {

@@ -46,7 +46,7 @@
         "source": "Earthbender Ascension"
       }
     ],
-    "fields_changed": ["continuous_effects", "counters_put_this_turn", "delayed_triggers", "shuffles_performed", "turn_facts"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn", "delayed_triggers", "shuffles_performed", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

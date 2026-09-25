@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["delayed_triggers", "permanents_left_battlefield_this_turn"],
+    "fields_changed": ["delayed_triggers", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Kaito, Bane of Nightmares@bob#1": {

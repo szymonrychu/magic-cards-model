@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["melded_pairs", "permanents_left_battlefield_this_turn", "turn_facts"],
+    "fields_changed": ["exile_residents_seen", "melded_pairs", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Graf Rats@alice#1": {

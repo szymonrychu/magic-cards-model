@@ -55,7 +55,7 @@
         "source": "Lightning Bolt"
       }
     ],
-    "fields_changed": ["cast_records", "spells_cast_this_turn"],
+    "fields_changed": ["cast_records", "spells_cast_this_turn", "turn_facts"],
     "notices": {},
     "objects": {
       "Lightning Bolt@alice#2": {

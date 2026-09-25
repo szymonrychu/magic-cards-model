@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "turn_facts"],
+    "fields_changed": ["continuous_effects", "exile_residents_seen", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {},

@@ -112,7 +112,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Lightning Coils@alice#1": {

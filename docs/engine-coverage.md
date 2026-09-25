@@ -5630,3 +5630,51 @@ for: an activation runs at the step its "Activate only during ..." names
 (`_activation_step`), and "an opponent lost life this turn" / "a card left
 your graveyard this turn" are made true on the stock board before the case
 (`_history_threshold`).
+
+### EC4: turn-history conditions (clusters H1-H5)
+
+Every turn-history clause below is read by `machines/conditions/history.py`
+for both an intervening "if" (CR 603.4, rechecked by CR 608.2a) and an
+"Activate only if" restriction (CR 602.5b). The facts come from
+`history.record` (every `Game.emit`) into `Game.turn_history`
+(`TurnHistoryEntry`: entered, to_graveyard, to_hand, sacrificed, attacked,
+crewed - each with the object's characteristics at that moment),
+`turn_counts`, `turn_facts` and `damage_dealt_this_turn`; a crime (CR 700.13)
+is recorded where a spell or ability with its targets goes on the stack,
+energy paid (CR 107.14) in `Game.may_pay_energy`/`pay_any_amount_of_energy`,
+excess damage (CR 120.10) in `Game.deal_damage`, exile arrivals by
+object identity (CR 400.7) on every event and before any card leaves exile.
+"Last turn" reads the rolled ledgers (`history.end_turn`). Schema 82.
+`scripts/condition_inventory.py --clusters H1,H2,H3,H4,H5` reports 0 unread.
+
+| Template | Proof printing(s) | Second printing | Test |
+|---|---|---|---|
+| "<this creature / name> attacked / didn't attack this turn / this combat" | Riders of the Mark, Tolsimir | Homicidal Brute | `test_condition_attack_history.py` |
+| "you attacked with exactly N [other] creatures this combat" | Creepy Puppeteer | - (only printing) | same |
+| "you didn't attack with a creature this turn" | See Red | Curious Obsession | same |
+| "a <q> and a <q> attacked this combat" | Fearless Swashbuckler | - (only printing) | same |
+| "<name> and at least N other creatures attacked this combat" | Kytheon, Hero of Akros (read at end of combat; the "at end of combat" event itself is not raised by `triggers.py` yet) | - (only printing) | same |
+| "a <q> crewed it this turn" (CR 702.122b) | Adrestia | - (only printing) | same |
+| "a [non-X] creature died under your / an opponent's control this turn" | Cult Conscript | Essenceknit Scholar, Sidequest: Hunt the Mark | `test_condition_zone_change_history.py` |
+| "a <q> was put into a / your graveyard from the battlefield this turn" | Ichor Shade | Kami of Transience | same |
+| "a permanent was put into your hand from the battlefield this turn" | Barrin, Tolarian Archmage | - (only printing) | same |
+| "one or more cards were put into exile this turn" | Ennis, Debate Moderator | - (Ashiok's token ability) | same |
+| "you / that player had [another] <q> enter ... this / last turn" | Zhalfirin Decoy (control change), Tunnel Ignus, Ephara | Cleaving Reaper, Confounding Conundrum | `test_condition_entered_history.py` |
+| "N or more <q> entered ... this turn", "a face-down creature entered ..." | Lady of Laughter, Malcator, Tunnel Tipster | Pests of Honor, Spider-UK | same |
+| "this <type> or another <type> entered ..." | Master's Manufactory | - (only printing) | same |
+| "<subject> entered / didn't enter this turn", "that creature entered this turn" | Cactuar, Samut | Kaito Shizuki | same |
+| "<who> gained / lost [N or more] life this / last turn", "gained and/or lost", "didn't lose life" | Griffin Aerie, First Response, Luminarch Ascension (CR 608.2a), Lunar Convocation | Angelic Accord, Brackish Trudge, Bloodchief Ascension, Sygg, Knight of the Ebon Legion, The Book of Vile Darkness, Paladin of Atonement, Feast on the Fallen, Star Charter, Starlit Soothsayer | `test_condition_life_damage_history.py` |
+| "<who> was dealt [N or more] [combat] damage [by <source>] this turn" | Blitzball, Boarded Window | Skarrgan Firebird, Sidequest: Play Blitzball (read at end of combat) | same |
+| "<color> sources you controlled dealt N or more noncombat damage" | Temple of Power | - (only printing) | same |
+| "N or more damage was dealt to it", "this creature dealt damage to an opponent", "it has dealt N or more damage to that player", "equipped creature didn't deal combat damage to a creature" | Burning-Eye Zubera, Dunerider Outlaw, Vessel of the All-Consuming, Thirsting Axe | Rushing-Tide Zubera, Whirling Dervish | same |
+| "a creature or planeswalker an opponent controlled was dealt excess damage" (CR 120.10) | Rith, Liberated Primeval | - (only printing) | same |
+| "you haven't been dealt combat damage since your last turn" | Marchesa, Resolute Monarch | - (only printing) | same |
+| "you've paid or lost N or more {E} this turn" (CR 107.14) | Izzet Generatorium | - (only printing) | same |
+| "you['ve] sacrificed <q> / N or more <q> this turn" | Detective's Satchel (control change) | Elanor Gardner, Briarbridge Patrol | `test_condition_action_history.py` |
+| "<who> discarded a card", "you drew N or more cards" | Gilt-Blade Prowler, Archmage Ascension | Ragged Recluse, The Raven Man | same |
+| "<who> cast / didn't cast a <q> spell", "a spell with mana value N or greater", "it was the Nth spell you cast" | Potioner's Trove, Rhino, Codespell Cleric, Predatory Advantage | Sanar | same |
+| "it's the first time [<kind>] counters have been put on that <permanent>" (event-anchored, CR 608.2a) | Botanical Brawler (read on the real event; the trigger event itself is not matched by `triggers.py` yet) | Stalwart Successor | same |
+| "a <kind> counter was put on a permanent under your control", "you put a counter on this creature / a creature" (CR 122.6a) | Fairgrounds Trumpeter, Fractal Tender | Lasting Tarfire | same |
+| "you've committed a crime this turn" (CR 700.13: spell, activated ability, trigger) | Servant of the Stinger | - (the other printings are statics) | same |
+| "you've played a land or cast a spell from anywhere other than your hand", "you didn't play a card from exile" | Spider-Man 2099, Visions of Phyrexia | - | same |
+| "you didn't activate a loyalty ability [of a planeswalker] this turn" | The Chain Veil | - | same |

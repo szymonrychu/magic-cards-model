@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Greasefang, Okiba Boss@alice#1",
-    "targets": ["Boommobile@alice#1"],
+    "targets": ["Adrestia@alice#1"],
     "x": 0
   },
   "board": {
@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Greasefang, Okiba Boss"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Boommobile"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Adrestia"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -36,15 +36,15 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
-      "Boommobile@alice#1": {
+      "Adrestia@alice#1": {
         "zone": ["graveyard", "battlefield"]
       }
     },
     "players": {},
-    "stack": ["ability of Boommobile@alice#1: When this Vehicle enters, add four mana of any one color. Spend this mana only to activate abilities."]
+    "stack": []
   },
   "family": "triggered",
   "format": 1,

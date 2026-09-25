@@ -1093,20 +1093,222 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
 
 
 def _history_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:
-    """A this-turn condition the stock board has not met yet is made true on
-    it, read off the condition's own words: "an opponent lost life this turn"
-    (the opponent loses 1 life, CR 119.3) and "a card left your graveyard
-    this turn" (a stock graveyard card other than the source is exiled, CR
-    603.10a). For an intervening "if" (CR 603.4) and an "Activate only if"
-    (CR 602.5b) alike."""
+    """A this-turn (or last-turn) condition the stock board has not met yet is
+    made true on it, read off the condition's own words - by playing the
+    history it asks about through the engine (life gained or lost, CR 119.3;
+    damage dealt, CR 120.1; a card leaving a graveyard or put into exile, CR
+    603.10a/400.7; a permanent bounced, sacrificed or put into a graveyard
+    from the battlefield, CR 701.21a/700.4; tokens entering; counters put, CR
+    122.6; energy paid, CR 107.14; an Equipment attached), or, for what the
+    turn before this one held, by staging last turn's own ledger the way the
+    board itself is staged. For an intervening "if" (CR 603.4) and an
+    "Activate only if" (CR 602.5b) alike."""
     lowered = (condition or "").lower()
+    if not lowered:
+        return
     game = scenario.game
+    count = _history_count(lowered)
     if "an opponent lost life this turn" in lowered:
         game.lose_life(BOB, 1)
     if "left your graveyard this turn" in lowered:
         graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
         if graveyard:
             game.exile_cards([graveyard[-1]])
+    _life_history(scenario, lowered, count)
+    _damage_history(scenario, source, lowered, count)
+    _zone_history(scenario, source, lowered, count)
+    _action_history(scenario, source, lowered, count)
+
+
+_COLOR_OF = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def count_word(word: str) -> int:
+    return int(word) if word.isdigit() else parse_count(word, article=False) or 1
+
+
+def _history_count(lowered: str) -> int:
+    """The "N" of an "N or more" in the condition, 1 without one."""
+    match = re.search(r"\b(\w+) or more\b", lowered)
+    if match is None:
+        return 1
+    word = match.group(1)
+    return int(word) if word.isdigit() else parse_count(word, article=False) or 1
+
+
+def _other_permanent(scenario: PlayedScenario, source: CardState, card_type: Type | None):
+    for permanent in scenario.game.permanents_controlled_by(ALICE):
+        if permanent is source or permanent.card.is_land:
+            continue
+        if card_type is None or card_type in permanent.types:
+            return permanent
+    return None
+
+
+def _life_history(scenario: PlayedScenario, lowered: str, count: int) -> None:
+    game = scenario.game
+    whose = BOB if re.search(r"\ban opponent\b", lowered) else ALICE
+    if re.search(r"\b(?:you|an opponent|a player) lost (?:\w+ or more )?life last turn", lowered):
+        from magic_cards_model.machines.conditions.history import LIFE_LOST
+
+        game.turn_counts_last_turn.setdefault(LIFE_LOST, {})[whose] = count
+        return
+    if re.search(r"\bgained(?: (?:and|or) lost)? (?:\w+ or more )?life this turn", lowered):
+        game.gain_life(ALICE, count)
+    if re.search(r"\b(?:and|or) lost life this turn", lowered) or re.search(
+        r"\b(?:you|a player) lost (?:\w+ or more )?life this turn", lowered
+    ):
+        game.lose_life(ALICE, count)
+    elif re.search(r"\ban opponent lost \w+ or more life this turn", lowered):
+        game.lose_life(BOB, count)
+
+
+def _damage_history(scenario: PlayedScenario, source: CardState, lowered: str, count: int) -> None:
+    game = scenario.game
+    if "this creature dealt damage to an opponent this turn" in lowered:
+        game.deal_damage(game.player(BOB), 1, source=source)
+    if re.search(r"\byou were dealt \w+ or more damage this turn", lowered):
+        game.deal_damage(game.player(ALICE), count)
+    if re.search(r"\ban opponent (?:was|has been) dealt damage this turn", lowered):
+        game.deal_damage(game.player(BOB), 1)
+    if re.search(r"damage was dealt to (?:it|this creature) this turn", lowered):
+        game.deal_damage(source, count)
+    if "was dealt excess damage this turn" in lowered:
+        victim = next(
+            (each for each in game.permanents_controlled_by(BOB) if Type.CREATURE in each.types),
+            None,
+        )
+        if victim is not None:
+            toughness = game.characteristics_of(victim).toughness or 0
+            game.deal_damage(victim, toughness + 1)
+    if re.search(r"paid or lost (\w+) or more \{e\}", lowered):
+        game.add_player_counters(ALICE, "energy", count)
+        game.may_pay_energy(ALICE, count)
+    if lowered.startswith("equipped creature") and source.attached_to is None:
+        wearer = _other_permanent(scenario, source, Type.CREATURE)
+        if wearer is not None:
+            source.attach_to(wearer)
+
+
+def _zone_history(scenario: PlayedScenario, source: CardState, lowered: str, count: int) -> None:
+    game = scenario.game
+    if "put into your hand from the battlefield this turn" in lowered:
+        bounced = _other_permanent(scenario, source, None)
+        if bounced is not None:
+            game.return_to_hand(bounced)
+    if "put into exile this turn" in lowered:
+        graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
+        if graveyard:
+            game.exile_cards([graveyard[-1]])
+    graveyard_from_battlefield = re.search(
+        r"an? (?P<types>[a-z ]+?) was put into (?:a|your) graveyard from the battlefield", lowered
+    )
+    if graveyard_from_battlefield is not None:
+        for word in re.split(r" or ", graveyard_from_battlefield.group("types")):
+            card_type = next((each for each in Type if each.value == word.strip()), None)
+            victim = _other_permanent(scenario, source, card_type)
+            if victim is not None:
+                game.destroy(victim)
+                break
+    entered = re.search(
+        r"(?:\w+ or more |an? |another )(?P<quality>[a-z -]+?) entered the battlefield "
+        r"under your control this turn",
+        lowered,
+    )
+    if entered is not None and not re.search(r"\b(?:creature|land)s?\b", entered.group("quality")):
+        # Artifacts, nonland permanents, permanents: Treasures entering.
+        create_predefined_tokens(game, "Treasure", ALICE, count)
+    if entered is not None and "face-down" in entered.group("quality"):
+        from magic_cards_model.machines.effects import manifest
+
+        top = game.player(ALICE).library[0]
+        manifest(game, ALICE, top)
+    if "that player had another land enter" in lowered:
+        lands = [card for card in game.player(BOB).hand if card.card.is_land]
+        if lands:
+            game.put_onto_battlefield(lands[0], BOB)
+    had = re.search(r"you had an? (?P<list>[a-z ]+?) enter the battlefield", lowered)
+    if had is not None:
+        wanted = [word.strip() for word in had.group("list").split(" or ")]
+        entering = next(
+            (
+                printing
+                for printing in pool().values()
+                if printing.is_creature
+                and any(word.capitalize() in printing.subtypes for word in wanted)
+                and in_target_formats(printing)
+            ),
+            None,
+        )
+        if entering is not None:
+            arriving = card_state(entering.name)
+            game.player(ALICE).add(arriving, Zone.HAND)
+            game.put_onto_battlefield(arriving, ALICE)
+
+
+def _action_history(scenario: PlayedScenario, source: CardState, lowered: str, count: int) -> None:
+    game = scenario.game
+    sacrificed = re.search(r"sacrificed (?:\w+ or more |an? )(?P<what>\w+?)s? this turn", lowered)
+    if sacrificed is not None:
+        what = sacrificed.group("what").capitalize()
+        token = what if what in PREDEFINED else "Clue"
+        for each in create_predefined_tokens(game, token, ALICE, count):
+            game.sacrifice(each)
+    if re.search(r"counter was put on a permanent under your control this turn", lowered) or (
+        "you put a counter on this creature this turn" in lowered
+    ):
+        game.add_counters(source, "+1/+1", 1)
+    if "you put a counter on a creature this turn" in lowered:
+        creature = _other_permanent(scenario, source, Type.CREATURE)
+        if creature is not None:
+            game.add_counters(creature, "+1/+1", 1, putter=ALICE)
+    if "committed a crime this turn" in lowered:
+        from magic_cards_model.machines.conditions.history import record_crime
+
+        record_crime(game, ALICE, [TargetRef.to_player(BOB)])
+    mana_value = re.search(r"cast a spell with mana value (\w+) or greater this turn", lowered)
+    if mana_value is not None:
+        # The history the sweep has no casting driver for, staged as last
+        # turn's is: a real printing of that mana value, cast this turn.
+        big = next(
+            printing
+            for printing in pool().values()
+            if printing.cmc >= count_word(mana_value.group(1)) and not printing.is_land
+        )
+        game.spells_cast_this_turn.setdefault(ALICE, []).append(card_state(big.name, Zone.STACK))
+    dealt = re.search(
+        r"an opponent was dealt combat damage by an? (?P<quality>[a-z ]+?) this turn", lowered
+    ) or re.search(
+        r"(?P<color>white|blue|black|red|green) sources you controlled dealt (\w+) or more "
+        r"noncombat damage this turn",
+        lowered,
+    )
+    if dealt is not None:
+        from magic_cards_model.models.card import Supertype
+        from magic_cards_model.models.game import DamageDealt
+
+        color = dealt.groupdict().get("color")
+        game.damage_dealt_this_turn.append(
+            DamageDealt(
+                source_controller=ALICE,
+                source_types=(Type.CREATURE,),
+                source_supertypes=(Supertype.LEGENDARY,) if color is None else (),
+                source_colors=(_COLOR_OF[color],) if color is not None else (),
+                recipient_player=BOB,
+                amount=count,
+                combat=color is None,
+            )
+        )
+    if "from anywhere other than your hand" in lowered:
+        from magic_cards_model.machines.conditions.history import PLAYED_NOT_FROM_HAND
+
+        game.record_turn_fact(PLAYED_NOT_FROM_HAND, ALICE)
 
 
 def _activation_step(ability: ActivatedAbility) -> Step:
@@ -1172,7 +1374,13 @@ def _home(case: Case, ability: TriggeredAbility, **extra: Any) -> tuple[PlayedSc
     graveyard" abilities."""
     card = case.printing
     if _functions_from_graveyard(card, ability):
-        scenario = _board(graveyard=(card.name, *extra.pop("graveyard", ())), **extra)
+        scenario = _board(
+            graveyard=(card.name, *extra.pop("graveyard", ())),
+            before=lambda played: _history_threshold(
+                played, _last(played, card.name, Zone.GRAVEYARD, ALICE), ability.intervening_if
+            ),
+            **extra,
+        )
         return scenario, _last(scenario, card.name, Zone.GRAVEYARD, ALICE).id
     battlefield = (
         card.name,
@@ -2651,6 +2859,16 @@ TRIGGER_KIND_SKIPS: dict[str, str] = {}
 # ---------------------------------------------------------------------------
 
 KNOWN_ENGINE_GAPS: dict[str, str] = {
+    "Botanical Brawler #0 [counters_put]": (
+        "'Whenever one or more +1/+1 counters are put on another permanent you control' "
+        "is not matched by machines/triggers.py"
+    ),
+    "Luminarch Ascension #0 [activated]": (
+        "'Activate only if this enchantment has four or more quest counters on it' is not read"
+    ),
+    "Hidetsugu Consumes All // Vessel of the All-Consuming #3 [deals_damage]": (
+        "the Saga's transformed creature face is never staged as a combatant"
+    ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
     ),
@@ -2693,7 +2911,23 @@ class DriverGap:
         return f"sweep has no driver for {self.event} yet"
 
 
-SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = ()
+SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    DriverGap(
+        "attacks",
+        "an attack declared with a chosen set of other attackers",
+        r"attacked with exactly|and an? \w+ attacked this combat",
+    ),
+    DriverGap(
+        "deals_damage",
+        "combat damage from a creature that entered this turn",
+        r"that creature entered this turn",
+    ),
+    DriverGap(
+        "enters_the_battlefield",
+        "the source entering as a spell cast after another this turn",
+        r"it was the \w+ spell you cast this turn",
+    ),
+)
 
 
 def _driver_gap(case: Case) -> DriverGap | None:
@@ -2987,6 +3221,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     this-turn "Activate only if" condition (`_history_threshold`)."""
     game = scenario.game
     for condition in read_activation_instructions(ability.instructions).conditions:
+        _counter_threshold(scenario, source, condition)
         _history_threshold(scenario, source, condition)
     cost = ability.cost.lower()
     if "{e}" in cost:

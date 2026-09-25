@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "6e761fb2-ae4f-4d72-a142-f7e9bd681303",
+  "oracle_id": "19918740-f6e3-40cd-9848-3c7a852a6c2a",
+  "multiverse_ids": [
+    574583
+  ],
+  "mtgo_id": 102682,
+  "arena_id": 82155,
+  "tcgplayer_id": 282742,
+  "cardmarket_id": 671347,
+  "name": "The Raven Man",
+  "lang": "en",
+  "released_at": "2022-09-09",
+  "uri": "https://api.scryfall.com/cards/6e761fb2-ae4f-4d72-a142-f7e9bd681303",
+  "scryfall_uri": "https://scryfall.com/card/dmu/103/the-raven-man?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T05:42:07Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.jpg?1783921327",
+    "normal": "https://cards.scryfall.io/normal/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.jpg?1783921327",
+    "large": "https://cards.scryfall.io/large/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.jpg?1783921327",
+    "png": "https://cards.scryfall.io/png/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.png?1783921327",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.jpg?1783921327",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.jpg?1783921327",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.webp?1783921327",
+    "grid": "https://cards.scryfall.io/grid/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.webp?1783921327",
+    "display": "https://cards.scryfall.io/display/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.webp?1783921327",
+    "art": "https://cards.scryfall.io/art/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.webp?1783921327",
+    "crop": "https://cards.scryfall.io/crop/front/6/e/6e761fb2-ae4f-4d72-a142-f7e9bd681303.webp?1783921327"
+  },
+  "mana_cost": "{1}{B}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Wizard",
+  "oracle_text": "At the beginning of each end step, if a player discarded a card this turn, create a 1/1 black Bird creature token with flying and \"This token can't block.\"\n{3}{B}, {T}: Each opponent discards a card. Activate only as a sorcery.",
+  "power": "2",
+  "toughness": "1",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "eee62bdd-3e29-442b-9ce4-1c66d12a5877",
+      "component": "combo_piece",
+      "name": "The Raven Man",
+      "type_line": "Legendary Creature \u2014 Human Wizard",
+      "uri": "https://api.scryfall.com/cards/eee62bdd-3e29-442b-9ce4-1c66d12a5877"
+    },
+    {
+      "object": "related_card",
+      "id": "8dce95d5-2ae7-4bd9-92f4-1cb3bed5f733",
+      "component": "token",
+      "name": "Bird",
+      "type_line": "Token Creature \u2014 Bird",
+      "uri": "https://api.scryfall.com/cards/8dce95d5-2ae7-4bd9-92f4-1cb3bed5f733"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set": "dmu",
+  "set_name": "Dominaria United",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/4e47a6cd-cdeb-4b0f-8f24-cfe1a0127cb3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Admu&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dmu?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6e761fb2-ae4f-4d72-a142-f7e9bd681303/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A19918740-f6e3-40cd-9848-3c7a852a6c2a&unique=prints",
+  "collector_number": "103",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Rahn",
+  "artist_ids": [
+    "7742047e-0f80-4c0f-a530-d07460165e86"
+  ],
+  "illustration_id": "f5b87e7f-880d-46b0-9c2d-a6bf9315065a",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4723,
+  "penny_rank": 3879,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.twitch.tv/videos/1565562937",
+    "previewed_at": "2022-08-18"
+  },
+  "prices": {
+    "usd": "0.43",
+    "usd_foil": "0.81",
+    "usd_etched": null,
+    "eur": "0.48",
+    "eur_foil": "0.75",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=574583&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BRaven%2BMan",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BRaven%2BMan",
+    "edhrec": "https://edhrec.com/route/?cc=The+Raven+Man"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F282742%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=671347&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/102682?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
