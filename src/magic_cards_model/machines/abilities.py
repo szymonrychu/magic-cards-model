@@ -3626,6 +3626,11 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     lowered = condition.lower()
     if lowered.startswith("the beginning of"):
         return TriggerEvent.BEGINNING_OF_STEP
+    # CR 511.2: "Abilities that trigger 'at end of combat' trigger as the end
+    # of combat step begins" - Kytheon's "At end of combat" and Sidequest:
+    # Play Blitzball's "At the end of combat on your turn".
+    if re.match(r"^(?:the )?end of combat\b", lowered):
+        return TriggerEvent.BEGINNING_OF_STEP
     if _TRANSFORMS_INTO_LEAD.match(lowered):
         return TriggerEvent.TRANSFORMS
     # Before the "becomes blocked" test below, which would otherwise claim

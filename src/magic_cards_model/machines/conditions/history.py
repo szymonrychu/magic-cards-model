@@ -1181,15 +1181,19 @@ def _first_time_counters(context: "ConditionContext", match: re.Match[str]) -> b
     found = context.game.find_by_id(event.subject_id)
     stamp = found.zone_change_stamp if _is_card_state(found) else None
     placements = [
-        record
-        for record in _counter_records(context)
+        (index, record)
+        for index, record in enumerate(_counter_records(context))
         if record.card_id == event.subject_id
         and (stamp is None or record.zone_change_stamp in (None, stamp))
         and (kind is None or record.kind == kind)
     ]
     if not placements:
         return False
-    first = placements[0]
+    first_index, first = placements[0]
+    if event.counters_put_index is not None:
+        # The event names its own placement: first exactly when it is the
+        # earliest one on that object this turn.
+        return first_index == event.counters_put_index
     return (
         (event.counter_kind is None or first.kind == event.counter_kind)
         and (event.amount is None or first.amount == event.amount)

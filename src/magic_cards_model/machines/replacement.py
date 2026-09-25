@@ -6455,6 +6455,51 @@ def _impending_entering_counters(game: "Game", event: ReplaceableEvent) -> list[
     ]
 
 
+def _bloodthirst_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """CR 702.54a: "'Bloodthirst N' means 'If an opponent was dealt damage
+    this turn, this permanent enters with N +1/+1 counters on it.'" - a CR
+    614.1c "enters with" replacement on the entering permanent itself, cast
+    or not. The condition is the turn-history clause the condition reader
+    already reads (`machines/conditions/history.py`), asked for the entering
+    permanent's controller; N is the printed keyword's own count
+    (`KeywordAbility.count`). Each instance applies separately."""
+    from ..models.card_state import Counter
+    from .abilities import keyword_abilities
+    from .conditions import ConditionContext, read_condition
+
+    entering = event.card
+    if entering is None:
+        return []
+    amounts = [
+        ability.count
+        for ability in keyword_abilities(entering.card)
+        if ability.canonical.lower() == "bloodthirst" and ability.count is not None
+    ]
+    if not amounts:
+        return []
+    controller = entering.controller or entering.owner
+    context = ConditionContext(game=game, controller=controller, source=entering)
+    if read_condition(context, "an opponent was dealt damage this turn") is not True:
+        return []
+    found = []
+    for index, amount in enumerate(amounts):
+
+        def apply(
+            game: "Game", source: CardState, event: ReplaceableEvent, n: int = amount
+        ) -> None:
+            event.counters[Counter.PLUS_ONE] = event.counters.get(Counter.PLUS_ONE, 0) + n
+
+        found.append(
+            ApplicableEffect(
+                key=f"{entering.id}:bloodthirst:{index}",
+                source=entering,
+                label=f"bloodthirst: enters with {amount} +1/+1 counters (CR 702.54a)",
+                apply=apply,
+            )
+        )
+    return found
+
+
 def _protection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Protection preventing damage from a source with the stated quality.
 
@@ -7147,6 +7192,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
                 )
             )
         found.extend(_impending_entering_counters(game, event))
+        found.extend(_bloodthirst_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
 

@@ -2387,6 +2387,10 @@ class CardRequirement(EngineModel):
     activation_cost` rather than by the reader that builds this
     `CardRequirement` - the reader never sees a live board, only the
     printed phrase."""
+    tapped: bool | None = None
+    """Web-slinging's "return a *tapped* creature you control" (CR
+    702.188a): True asks for a tapped permanent, False an untapped one, None
+    either (CR 110.5's status)."""
 
     @property
     def is_empty(self) -> bool:
@@ -2397,6 +2401,7 @@ class CardRequirement(EngineModel):
             or self.supertypes
             or self.same_name_as
             or self.mana_value is not None
+            or self.tapped is not None
         )
 
     def why_not(self, card: CardState, game: Any = None, payer: str | None = None) -> str | None:
@@ -2426,6 +2431,8 @@ class CardRequirement(EngineModel):
         """
         if self.excludes_source and self.source_id is not None and card.id == self.source_id:
             return f"{self.description or 'this cost'} excludes the ability's own source"
+        if self.tapped is not None and card.tapped != self.tapped:
+            return f"{card.name} is not {'tapped' if self.tapped else 'untapped'}"
         if game is not None and card.zone is Zone.BATTLEFIELD:
             try:
                 characteristics = game.characteristics_of(card)
@@ -4962,12 +4969,18 @@ def _requirement(quality: str) -> CardRequirement | None:
     types: list[Type] = []
     subtypes: list[str] = []
     supertypes: list[Supertype] = []
+    tapped: bool | None = None
     for raw_word in words:
         word = raw_word.strip(",")
         if not word:
             continue
         lowered = word.lower().rstrip("s")
         if lowered in _QUALITY_CONNECTORS:
+            continue
+        if lowered in ("tapped", "untapped"):
+            # CR 110.5's status: web-slinging's "a tapped creature you
+            # control" (CR 702.188a).
+            tapped = lowered == "tapped"
             continue
         if lowered == "permanent":
             # CR 110.1 makes everything on the battlefield a permanent
@@ -5000,6 +5013,7 @@ def _requirement(quality: str) -> CardRequirement | None:
         subtypes=subtypes,
         supertypes=supertypes,
         description=quality.strip(),
+        tapped=tapped,
     )
 
 

@@ -290,6 +290,28 @@ def test_a_source_that_did_not_enter_this_turn_triggers():
     assert _triggered(scenario, "Cactuar")
     assert scenario.game.intervening_if_notices == []
 
+    scenario.pass_until_resolved()  # true at both checks (CR 608.2a): it resolves
+    assert scenario.find("Cactuar", Zone.HAND, "alice") is not None
+    assert "Cactuar" not in scenario.battlefield_names()
+
+
+def test_a_source_flickered_in_response_is_a_new_object_and_stays():
+    """True as the end step began; in response Cactuar is exiled and returned
+    - a new object that entered this turn (CR 400.7). On resolution the
+    ability's "it" no longer exists on the battlefield (CR 608.2a, CR 113.7a),
+    so the Cactuar that is there now stays."""
+    scenario = Scenario().player("alice", battlefield=["Cactuar"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _to_end_step(scenario)
+    assert _triggered(scenario, "Cactuar")
+
+    cactuar = scenario.creature("Cactuar", "alice")
+    exiled = scenario.game.exile_permanent(cactuar)
+    scenario.game.put_onto_battlefield(exiled, "alice")
+    scenario.pass_until_resolved()
+
+    assert "Cactuar" in scenario.battlefield_names()
+
 
 def test_a_source_that_entered_this_turn_does_not():
     scenario = Scenario().player("alice", hand=["Cactuar"]).player("bob").build()

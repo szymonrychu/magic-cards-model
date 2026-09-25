@@ -567,6 +567,13 @@ class GameEvent(EngineModel):
     so (Elrond, Moon-Reader's "Whenever you activate an ability of a
     creature") does."""
 
+    counters_put_index: int | None = None
+    """For a `COUNTERS_PUT` event, which of `Game.counters_put_this_turn`'s
+    placements it reports (its position there) - what "if it's the first
+    time counters have been put on that permanent this turn" (CR 122.6) asks
+    of the event, and still asks on resolution (CR 608.2a) after more
+    placements, identical in kind, amount and putter, may have followed."""
+
     zone_change_stamp: UUID | None = None
     """For a `TriggerEvent.DIES` event, `subject_id`'s own `CardState.
     zone_change_stamp` as it was the instant CR 700.4's move landed it in
@@ -1249,6 +1256,9 @@ _STEP_PHRASES: tuple[tuple[str, Step], ...] = (
     # has been skipped") does not arise here: this engine's turn machine has
     # exactly the two main phases CR 500.1 lists.
     ("second main phase", Step.POSTCOMBAT_MAIN),
+    # CR 511.2: "at end of combat" is the end of combat step's beginning -
+    # ahead of the bare "combat" below, which it contains.
+    ("end of combat", Step.END_OF_COMBAT),
     ("combat", Step.BEGINNING_OF_COMBAT),
 )
 
@@ -3308,7 +3318,15 @@ def _targeting_object_matches(game: "Game", condition: str, event: GameEvent) ->
 #: counters are put on this creature" (CR 122.6). The kind is captured so a
 #: condition naming +1/+1 is not fired by a charge counter.
 _COUNTERS_PUT_CONDITION = re.compile(
-    r"^one or more (?P<kind>\S+) counters are put on (?P<subject>.+)$"
+    r"^one or more (?:(?P<kind>\S+) )?counters are put on (?P<subject>.+)$"
+)
+
+#: The subject of a `_COUNTERS_PUT_CONDITION` that is not the source itself:
+#: Botanical Brawler's "another permanent you control", Stalwart Successor's
+#: "a creature you control" - a quality (`models.game._permanent_quality`)
+#: of a permanent its controller controls, "another" excluding the source.
+_COUNTERS_PUT_ON_QUALITY_SUBJECT = re.compile(
+    r"^(?P<article>another|an?) (?P<quality>[a-z -]+?) you control$"
 )
 
 #: Fabrication Module's and Territorial Gorger's condition: "you get one or
@@ -3885,12 +3903,28 @@ def _unread_condition_matches(
     if match is not None:
         if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
             return False
-        if event.counter_kind != match.group("kind"):
+        # No kind ("one or more counters") is every kind (CR 122.1).
+        if match.group("kind") is not None and event.counter_kind != match.group("kind"):
             return False
-        # CR 122.6 is about counters put on *an object*, and every printing in
-        # the pool names itself as that object ("on this creature"). A
-        # condition naming something else is not read at all.
-        return mine and event.subject_id == source.id
+        # CR 122.6 is about counters put on *an object*: the source itself
+        # ("on this creature"), or any permanent its controller controls with
+        # the named quality ("on another permanent you control").
+        subject = _COUNTERS_PUT_ON_QUALITY_SUBJECT.match(match.group("subject"))
+        if subject is None:
+            return mine and event.subject_id == source.id
+        from ..models.game import _permanent_quality
+
+        quality = _permanent_quality(subject.group("quality"))
+        if quality is None:
+            return False
+        if subject.group("article") == "another" and event.subject_id == source.id:
+            return False
+        permanent = game.find_by_id(event.subject_id) if event.subject_id else None
+        if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if game.controller_of(permanent).username != controller:
+            return False
+        return quality(game.characteristics_of(permanent))
 
     match = _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(condition)
     if match is not None:
@@ -4527,6 +4561,17 @@ _COLOR_LETTERS: dict[str, Color] = {
 }
 
 
+#: CR 702.191a's increment clause - "[this permanent is a creature and ]the
+#: amount of mana [you ]spent[ to cast that spell] is greater than this
+#: creature's power or [this creature's ]toughness" - the rule's wording and
+#: the reminder text's.
+_INCREMENT_CLAUSE = re.compile(
+    r"^(?P<creature>this permanent is a creature and )?the amount of mana (?:you )?spent"
+    r"(?: to cast that spell)? is greater than this creature's power or"
+    r" (?:this creature's )?toughness$"
+)
+
+
 def _cast_record_for_clause(
     game: "Game",
     ability: TriggeredAbility,
@@ -5006,6 +5051,23 @@ def intervening_if_answer(
             and (source.cast_with_keyword or "").lower() == paid_with_counter.group("keyword")
             and source.counter_count(paid_with_counter.group("kind")) > 0
         )
+
+    increment = _INCREMENT_CLAUSE.fullmatch(clause)
+    if increment is not None:
+        # CR 702.191a's own intervening "if" (`machines/keywords.
+        # _increment_ability`), and the reminder text's shorter wording of
+        # it. "That spell" is the trigger event's own subject, whose mana
+        # spent is its `CastRecord` (CR 601.2h); the source's power and
+        # toughness are its computed ones now (CR 613.5). A spell whose
+        # record is gone (countered in response) fails closed.
+        characteristics = game.characteristics_of(source)
+        if increment.group("creature") is not None and not characteristics.is_creature:
+            return False
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        spent = sum(record.mana_spent.values())
+        return spent > (characteristics.power or 0) or spent > (characteristics.toughness or 0)
 
     if clause == "its evoke cost was paid":
         # CR 702.74a's own intervening *if*, written out by

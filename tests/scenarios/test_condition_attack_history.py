@@ -15,6 +15,14 @@ Rules verified with `mise run rules:find` in the session that wrote this file:
   "this combat" is not "this turn".
 - **CR 702.122a** / **CR 702.122b** - "A creature 'crews a Vehicle' when it's
   tapped to pay the cost to activate a Vehicle's crew ability."
+- **CR 511.2** - "Abilities that trigger 'at end of combat' trigger as the end
+  of combat step begins."
+- **CR 608.2a** / **CR 400.7** - an intervening "if" is rechecked on
+  resolution. What attacked this turn or this combat never un-happens, and no
+  attack can be declared while a trigger waits on the stack (CR 500.2, CR
+  508.1), so no H1 clause - negated or not - turns false by resolution on its
+  own; the one way the ability is left with nothing is its source becoming a
+  new object in response (Riders of the Mark flickered: it does nothing).
 
 Every clause here failed closed (`InterveningIfNotice`, never triggering)
 before `machines/conditions/history.py` read it.
@@ -88,6 +96,36 @@ def test_a_creature_that_attacked_this_turn_triggers_at_the_end_step():
 
     assert _triggered(scenario, "Riders of the Mark")
     assert scenario.game.intervening_if_notices == []
+
+    # True at both checks (CR 608.2a): it resolves - back to hand, and as
+    # many 1/1 Human Soldiers as its toughness (CR 608.2h: the last known
+    # toughness of the object that left).
+    scenario.pass_until_resolved()
+    assert scenario.find("Riders of the Mark", Zone.HAND, "alice") is not None
+    soldiers = [state for state in scenario.game.battlefield if state.token]
+    assert len(soldiers) == 4
+    assert all({"Human", "Soldier"} <= set(state.subtypes) for state in soldiers)
+
+
+def test_a_creature_that_left_and_came_back_is_not_returned():
+    """Riders of the Mark attacked and triggered; in response it is exiled and
+    returned - a new object (CR 400.7). The ability finds nothing to return,
+    so "if you do" is false and no Soldier is made (CR 608.2a, CR 118.12)."""
+    scenario = _riders_board()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Riders of the Mark", "alice"))
+    scenario.no_blocks()
+    scenario.combat_damage()
+    _to_end_step(scenario)
+    assert _triggered(scenario, "Riders of the Mark")
+
+    riders = scenario.creature("Riders of the Mark", "alice")
+    exiled = scenario.game.exile_permanent(riders)
+    scenario.game.put_onto_battlefield(exiled, "alice")
+    scenario.pass_until_resolved()
+
+    assert "Riders of the Mark" in scenario.battlefield_names()
+    assert not [state for state in scenario.game.battlefield if state.token]
 
 
 def test_a_creature_that_did_not_attack_never_triggers():
@@ -260,6 +298,10 @@ def test_see_red_is_sacrificed_after_a_turn_with_no_attack():
     assert _triggered(scenario, "See Red")
     assert scenario.game.intervening_if_notices == []
 
+    scenario.pass_until_resolved()  # true at both checks (CR 608.2a): it resolves
+    assert "See Red" not in scenario.battlefield_names()
+    assert scenario.find("See Red", Zone.GRAVEYARD, "alice") is not None
+
 
 def test_see_red_stays_after_an_attack():
     scenario, bears = _aura_board("See Red")
@@ -375,17 +417,26 @@ def _kytheon_attack(bears: int):
 def test_kytheon_and_two_others_attacking_this_combat():
     """Kytheon: "At end of combat, if Kytheon and at least two other creatures
     attacked this combat, exile Kytheon, then return him ... transformed." -
-    read at the end of combat step (the "at end of combat" event itself is not
-    raised by `machines/triggers.py` yet)."""
+    CR 511.2: an "at end of combat" ability triggers as the end of combat
+    step begins."""
     scenario = _kytheon_attack(2)
     kytheon = scenario.find("Kytheon, Hero of Akros", Zone.BATTLEFIELD, "alice")
     assert _clause_holds(scenario, kytheon) is True
+    assert _triggered(scenario, "Kytheon, Hero of Akros")
+    assert scenario.game.intervening_if_notices == []
+
+    scenario.pass_until_resolved()
+
+    gideon = scenario.find("Gideon, Battle-Forged", Zone.BATTLEFIELD, "alice")
+    assert gideon.transformed
 
 
 def test_kytheon_and_one_other_attacking_is_not_enough():
     scenario = _kytheon_attack(1)
     kytheon = scenario.find("Kytheon, Hero of Akros", Zone.BATTLEFIELD, "alice")
     assert _clause_holds(scenario, kytheon) is False
+    assert not _triggered(scenario, "Kytheon, Hero of Akros")
+    assert scenario.game.intervening_if_notices == []
 
 
 def test_kytheon_not_attacking_is_not_enough():

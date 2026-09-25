@@ -14,7 +14,18 @@ Rules verified with `mise run rules:find` in the session that wrote this file:
 - **CR 400.7** - an object that moves from one zone to another becomes a new
   object; a card already in exile when the turn began was not put there this
   turn.
-- **CR 603.4** and **CR 602.5b** as above.
+- **CR 603.4** and **CR 602.5b** as above; **CR 608.2a** rechecks an
+  intervening "if" on resolution. Every H2 clause is monotonic within a turn
+  (a death, a bounce or an exile that happened stays happened), and CR 500.2
+  keeps a trigger from outliving its step, so "true when it triggers, false by
+  resolution" cannot arise for them; the recheck is proven true at both checks
+  (Essenceknit Scholar draws).
+- **CR 108.4a** - a card in a graveyard has no controller; asked for one, its
+  owner answers. Cult Conscript's restriction is on an ability that works from
+  the graveyard, so its own control never changes (CR 602.5b's control-change
+  case is not reachable); what control decides is whose control the *dying*
+  creature was under (CR 700.4, CR 603.10a) - Act of Treason's stolen creature
+  is proven both ways.
 
 Every clause here failed closed before `machines/conditions/history.py` read
 it: the triggers recorded `InterveningIfNotice` and never fired, and Cult
@@ -95,6 +106,58 @@ def test_an_opponents_creature_dying_does_not_meet_under_your_control():
     assert refusal is not None and "not met" in refusal
 
 
+def _steal_and_kill(thief: str, victim: str):
+    """`thief` casts Act of Treason on `victim`'s Grizzly Bears (CR 108.4:
+    owned by `victim`, controlled by `thief`), then the Bears dies."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            graveyard=["Cult Conscript"],
+            battlefield=["Grizzly Bears", "Swamp", "Swamp", *["Mountain"] * 3],
+            hand=["Act of Treason"],
+        )
+        .player(
+            "bob",
+            battlefield=["Grizzly Bears", *["Mountain"] * 3],
+            hand=["Act of Treason"],
+            library=["Plains"] * 4,
+        )
+        .build()
+    )
+    if thief == "bob":
+        scenario.start_at(Step.PRECOMBAT_MAIN)
+        scenario.turn.advance_to(Step.CLEANUP)
+        scenario.advance()
+        scenario.advance()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", victim)
+    scenario.cast_and_resolve(
+        "Act of Treason",
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain", username=thief),
+        targets=[bears],
+        username=thief,
+    )
+    assert scenario.game.controller_of(bears).username == thief
+    scenario.game.destroy(bears)
+    return scenario, scenario.find("Cult Conscript", Zone.GRAVEYARD, "alice")
+
+
+def test_a_stolen_creature_dying_under_your_control_meets_it():
+    """Bob's Bears, stolen by alice, died under alice's control (CR 700.4,
+    CR 603.10a): alice's Cult Conscript may return."""
+    scenario, conscript = _steal_and_kill("alice", "bob")
+    assert scenario.why_cannot_activate(conscript, 0, "alice") is None
+
+
+def test_your_creature_dying_under_an_opponents_control_does_not():
+    """Alice's own Bears, stolen by bob, died under bob's control - not
+    alice's, though she owns it."""
+    scenario, conscript = _steal_and_kill("bob", "alice")
+    refusal = scenario.why_cannot_activate(conscript, 0, "alice")
+    assert refusal == "Cult Conscript's activation restriction is not met (CR 602.5b)"
+
+
 def _died_under(card: str, dying_owner: str):
     scenario = (
         Scenario()
@@ -115,6 +178,10 @@ def test_essenceknit_scholar_draws_after_a_creature_of_yours_died():
     scenario = _died_under("Essenceknit Scholar", "alice")
     assert _triggered(scenario, "Essenceknit Scholar")
     assert scenario.game.intervening_if_notices == []
+
+    hand = len(scenario.player("alice").hand)
+    scenario.pass_until_resolved()  # true at both checks (CR 608.2a): it resolves
+    assert len(scenario.player("alice").hand) == hand + 1
 
 
 def test_an_opponents_creature_dying_is_not_under_your_control():

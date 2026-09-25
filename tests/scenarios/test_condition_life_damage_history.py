@@ -410,9 +410,8 @@ def _blitzball_sidequest(bears: int):
 def test_a_player_dealt_six_or_more_combat_damage():
     """Sidequest: Play Blitzball: "At the end of combat on your turn, if a
     player was dealt 6 or more combat damage this turn, transform this
-    enchantment, ..." - read at the end of combat step (the "at the end of
-    combat on your turn" event itself is not raised by `machines/triggers.py`
-    yet)."""
+    enchantment, then attach it to a creature you control." - CR 511.2: it
+    triggers as the end of combat step begins."""
 
     def holds(bears: int) -> bool | None:
         scenario = _blitzball_sidequest(bears)
@@ -421,6 +420,43 @@ def test_a_player_dealt_six_or_more_combat_damage():
 
     assert holds(3) is True
     assert holds(2) is False
+
+    scenario = _blitzball_sidequest(3)
+    assert _triggered(scenario, "Sidequest: Play Blitzball")
+    scenario.pass_until_resolved()
+    champion = scenario.find("World Champion, Celestial Weapon", Zone.BATTLEFIELD, "alice")
+    assert champion.transformed
+    bears = {state.id for state in scenario.game.battlefield if state.name == "Grizzly Bears"}
+    assert champion.attached_to in bears
+
+    scenario = _blitzball_sidequest(2)
+    assert not _triggered(scenario, "Sidequest: Play Blitzball")
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_the_end_of_combat_on_your_turn_is_not_an_opponents():
+    """ "on your turn": the opponent's end of combat step does not trigger it,
+    however much combat damage was dealt."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Grizzly Bears"] * 3, library=["Plains"] * 4)
+        .player(
+            "bob",
+            battlefield=["Sidequest: Play Blitzball // World Champion, Celestial Weapon"],
+            library=["Plains"] * 4,
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(*[s for s in scenario.game.battlefield if s.name == "Grizzly Bears"])
+    scenario.no_blocks()
+    scenario.combat_damage()
+    scenario.turn.advance_to(Step.COMBAT_DAMAGE)
+    scenario.game.sync_priority_with_step()
+    scenario.advance()
+    scenario.game.put_triggers_on_stack()
+    assert not _triggered(scenario, "Sidequest: Play Blitzball")
 
 
 def _dealt_damage_to_an_opponent(card: str, *, attack: bool):

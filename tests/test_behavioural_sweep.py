@@ -1621,6 +1621,30 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
         yield cast_with_x
 
+    nth = re.search(r"\bit was the (\w+) spell you cast this turn\b", lowered)
+    if nth is not None:
+        # "if it was the second spell you cast this turn" (Codespell Cleric):
+        # that many spells before it are cast first (CR 601.2i), on a board
+        # with no other turn played.
+        before = (parse_ordinal(nth.group(1)) or 1) - 1
+
+        def cast_after_others() -> tuple[PlayedScenario, Any]:
+            scenario = _board(
+                hand=(card.name, *(["Opt"] * before)),
+                battlefield=_extra_lands_for(card),
+                busy=False,
+            )
+            game = scenario.game
+            for _ in range(before):
+                _cast(scenario, "Opt")
+                while game.stack:
+                    game.resolve_top()
+            _stack_material(scenario)
+            _cast(scenario, card.name)
+            return scenario, None
+
+        yield cast_after_others
+
     if "mana from a treasure" in lowered:
         # "if mana from a Treasure was spent to cast it" (CR 106.3): a
         # Treasure's mana floats first, and the pool pays before the lands.
@@ -1764,13 +1788,17 @@ def _combat_sides(ability: TriggeredAbility) -> list[str]:
     return [ALICE]
 
 
-def _crew(scenario: PlayedScenario, vehicle: CardState) -> None:
-    """Crew a Vehicle (CR 702.122a) with the controller's other creatures."""
+def _crew(scenario: PlayedScenario, vehicle: CardState, only: tuple[str, ...] = ()) -> None:
+    """Crew a Vehicle (CR 702.122a) with the controller's other creatures -
+    only the ones named in `only`, when it names any."""
     controller = vehicle.controller
     crew = [
         p
         for p in scenario.game.permanents_controlled_by(controller)
-        if Type.CREATURE in p.types and p is not vehicle and not p.tapped
+        if Type.CREATURE in p.types
+        and p is not vehicle
+        and not p.tapped
+        and (not only or p.name in only)
     ]
     try:
         activation = crew_activation(scenario.game, vehicle, crew, controller)
@@ -1806,15 +1834,50 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         if re.search(r"\banother target attacking creature\b", ability.effect or "", re.I)
         else ()
     )
+    # "if you attacked with exactly N other creatures this combat" (Creepy
+    # Puppeteer): N vanilla partners attack alongside the source.
+    exactly = re.search(
+        r"\battacked with exactly (\w+) other creatures?\b", (ability.intervening_if or "").lower()
+    )
+    if exactly is not None and not partners:
+        partners = ("Grizzly Bears",) * (parse_count(exactly.group(1), article=False) or 1)
+    # "if a Pirate and a Vehicle attacked this combat" (Fearless
+    # Swashbuckler): each kind the source is not attacks alongside it - a
+    # crewed Vehicle (CR 702.122a), or the simplest creature of that subtype.
+    crewers: tuple[str, ...] = ()
+    composition = re.search(
+        r"\ban? (\w+) and an? (\w+) attacked this combat\b", (ability.intervening_if or "").lower()
+    )
+    if composition is not None and not partners:
+        wanted: list[str] = []
+        for word in composition.groups():
+            if word.lower() in {subtype.lower() for subtype in card.subtypes}:
+                continue
+            if word == "vehicle":
+                wanted.append(_VEHICLE)
+                crewers = (_VEHICLE_CREW,)
+                continue
+            kin = _simplest_creature_of(word)
+            if kin is None:
+                break
+            wanted.append(kin)
+        else:
+            partners = tuple(wanted)
     # "Whenever an equipped creature you control attacks" on a non-Equipment
     # source (Swordsman, Sharp Scoundrel, CR 301.5a): a real Equipment is
     # staged and attached to the attacker.
     equipment: tuple[str, ...] = (
         (_EQUIPMENT,) if "an equipped creature" in lowered and not _is_equipment(card) else ()
     )
+    # A transforming card whose ability is printed on a creature back face
+    # (Hidetsugu Consumes All's Vessel of the All-Consuming) fights as that
+    # face: `_source` stages it transformed (CR 712.8e).
+    back_creature = _back_face(card, ability) and "Creature" in (
+        (card.card_faces or [])[1].type_line or ""
+    )
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
-        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle):
+        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
             attackers.append(None)
         if not is_vehicle:
             attackers += [p for p in _probes(case, ability, entering=False) if p != card.name]
@@ -1830,6 +1893,7 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                             case.card,
                             *extra,
                             *partners,
+                            *crewers,
                             *equipment,
                             *_equipment_partner(ability),
                         ),
@@ -1855,6 +1919,9 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                     if side == ALICE
                     else []
                 )
+                for partner in alongside:
+                    if crew_number(partner.card) is not None:
+                        _crew(scenario, partner, crewers)
                 try:
                     scenario.attack_with(attacker, *alongside, defending=defender)
                 except (ValueError, AssertionError) as error:
@@ -1862,6 +1929,54 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                 return scenario, source, attacker, defender
 
             yield _combat_stages(case, fight, lowered)
+
+    if re.search(
+        r"\bthat creature entered (?:the battlefield )?this turn\b",
+        (ability.intervening_if or "").lower(),
+    ):
+        # "Whenever a creature you control deals combat damage to a player, if
+        # that creature entered this turn" (Samut, Vizier of Naktamun): a
+        # hasty creature enters this turn, then attacks (CR 702.10b).
+
+        def fresh_attacker() -> tuple[Any, ...]:
+            scenario = _board(battlefield=(case.card,), hand=(_HASTY,), step=Step.DECLARE_ATTACKERS)
+            source = _source(scenario, case, ability)
+            try:
+                fresh = scenario.game.put_onto_battlefield(
+                    _last(scenario, _HASTY, Zone.HAND, ALICE), ALICE
+                )
+                scenario.attack_with(fresh, defending=BOB)
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(str(error)) from error
+            return scenario, source, fresh, BOB
+
+        yield _combat_stages(case, fresh_attacker, lowered)
+
+
+#: A Vehicle with nothing but crew (CR 702.122a), and a creature that crews
+#: it alone, for "a Vehicle attacked this combat".
+_VEHICLE = "Consulate Dreadnought"
+_VEHICLE_CREW = "Craw Wurm"
+#: A vanilla creature with haste (CR 702.10b), for an attacker that entered
+#: this turn.
+_HASTY = "Raging Goblin"
+
+
+def _simplest_creature_of(subtype_word: str) -> str | None:
+    """The shortest-texted single-faced creature in the pool with this
+    subtype, or None."""
+    subtype = singular_subtype(subtype_word.capitalize()) or subtype_word.capitalize()
+    candidates = sorted(
+        (
+            card
+            for card in _format_pool()
+            if Type.CREATURE in card.types
+            and subtype.lower() in {word.lower() for word in card.subtypes}
+            and not card.card_faces
+        ),
+        key=lambda card: (len(card.oracle_text or ""), card.name),
+    )
+    return candidates[0].name if candidates else None
 
 
 def _combat_stages(case: Case, fight: Callable[[], tuple[Any, ...]], lowered: str) -> Attempt:
@@ -1924,6 +2039,42 @@ def _turns(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         return scenario, source_id
 
     yield staged
+
+    if re.search(r"\battack|\bcombat damage\b", (ability.intervening_if or "").lower()):
+        # "if this creature attacked this turn", "if Kytheon and at least two
+        # other creatures attacked this combat", "if a player was dealt 6 or
+        # more combat damage this turn": a combat is fought first - every
+        # creature the controller can attack with attacks, unblocked, and
+        # deals its damage (CR 508.1, CR 510) - then the turn plays on into
+        # the end of combat and end steps.
+
+        def fought() -> tuple[PlayedScenario, Any]:
+            scenario, source_id = _home(case, ability, step=Step.PRECOMBAT_MAIN, busy=False)
+            game = scenario.game
+            scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
+            game.sync_priority_with_step()
+            attackers = [
+                permanent
+                for permanent in game.permanents_controlled_by(ALICE)
+                if game.characteristics_of(permanent).is_creature and scenario.can_attack(permanent)
+            ]
+            if not attackers:
+                raise _Unavailable("nothing can attack")
+            # Staged deep enough to survive the whole board attacking, so the
+            # game goes on to the steps the ability waits for.
+            game.player(BOB).life = 1000
+            try:
+                scenario.attack_with(*attackers)
+                _settle(scenario)
+                while game.stack:
+                    game.resolve_top()
+                scenario.no_blocks()
+                scenario.combat_damage()
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(str(error)) from error
+            return scenario, source_id
+
+        yield fought
 
     if set(card.types) & _PERMANENT_TYPES:
 
@@ -2181,10 +2332,18 @@ def _counters_you_put(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
         r"\byou put (?:an?|one or more) (\+1/\+1|-1/-1|[a-z]+) counters? on (.+)$",
         ability.condition,
         re.IGNORECASE,
+    ) or re.search(
+        # The passive "one or more [<kind>] counters are put on another
+        # permanent you control" / "a creature you control" (Botanical
+        # Brawler, Stalwart Successor): no kind is any kind, a +1/+1 counter.
+        r"^one or more (?:(\+1/\+1|-1/-1|[a-z]+) )?counters are put on"
+        r" ((?:another|an?) [a-z ]+ you control)$",
+        ability.condition,
+        re.IGNORECASE,
     )
     if match is None:
         return
-    kind = match.group(1)
+    kind = match.group(1) or "+1/+1"
     partner = "Grizzly Bears"
     for word in re.findall(r"\b[A-Z][a-z]+\b", match.group(2)):
         subtype = singular_subtype(word)
@@ -2839,7 +2998,7 @@ def _attempts(case: Case) -> Iterator[Attempt]:
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
 #: `_drive` keeps playing forward after them.
-_ADVANCING = {"staged", "entered", "run"}
+_ADVANCING = {"staged", "entered", "run", "fought"}
 
 
 # ---------------------------------------------------------------------------
@@ -2859,15 +3018,9 @@ TRIGGER_KIND_SKIPS: dict[str, str] = {}
 # ---------------------------------------------------------------------------
 
 KNOWN_ENGINE_GAPS: dict[str, str] = {
-    "Botanical Brawler #0 [counters_put]": (
-        "'Whenever one or more +1/+1 counters are put on another permanent you control' "
-        "is not matched by machines/triggers.py"
-    ),
     "Luminarch Ascension #0 [activated]": (
-        "'Activate only if this enchantment has four or more quest counters on it' is not read"
-    ),
-    "Hidetsugu Consumes All // Vessel of the All-Consuming #3 [deals_damage]": (
-        "the Saga's transformed creature face is never staged as a combatant"
+        "'Activate only if this enchantment has four or more quest counters on it' is not read "
+        "- cluster O1's object-state reader (EC6), not a turn-history clause"
     ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
@@ -2911,23 +3064,7 @@ class DriverGap:
         return f"sweep has no driver for {self.event} yet"
 
 
-SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
-    DriverGap(
-        "attacks",
-        "an attack declared with a chosen set of other attackers",
-        r"attacked with exactly|and an? \w+ attacked this combat",
-    ),
-    DriverGap(
-        "deals_damage",
-        "combat damage from a creature that entered this turn",
-        r"that creature entered this turn",
-    ),
-    DriverGap(
-        "enters_the_battlefield",
-        "the source entering as a spell cast after another this turn",
-        r"it was the \w+ spell you cast this turn",
-    ),
-)
+SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = ()
 
 
 def _driver_gap(case: Case) -> DriverGap | None:

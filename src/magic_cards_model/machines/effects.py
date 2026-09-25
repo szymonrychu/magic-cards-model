@@ -29329,6 +29329,82 @@ def _parse_if_type_may_attach_equipment_referent_clause(rider: str) -> ReferentO
     return rider_effect
 
 
+#: "[you may ]attach it to a creature you control" - Sidequest: Play
+#: Blitzball's "transform this enchantment, then attach it to a creature you
+#: control": CR 701.3a's attach of the antecedent's own object (the source,
+#: an Equipment once transformed) to a permanent its controller chooses as
+#: the ability resolves (CR 608.2d - "a", not "target"), of the quality the
+#: sentence names.
+_RIDER_ATTACH_TO_CHOSEN_RE = re.compile(
+    r"^(?P<may>you may )?attach it to an? (?P<quality>[a-z -]+?) you control$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attach_referent_to_chosen_clause(rider: str) -> ReferentObjectClause | None:
+    """`_RIDER_ATTACH_TO_CHOSEN_RE`'s shape. The host is chosen among the
+    permanents the ability's controller controls that have the named
+    quality (`models.game._permanent_quality`), never the referent itself
+    (CR 301.5c: "An Equipment can't equip itself"); CR 701.3b's refusals are
+    `attach_permanent`'s own. Nothing to choose, or a declined "may", leaves
+    the referent where it is."""
+    from ..models.game import _permanent_quality
+
+    match = _RIDER_ATTACH_TO_CHOSEN_RE.fullmatch(rider)
+    if match is None:
+        return None
+    quality = _permanent_quality(match.group("quality"))
+    if quality is None:
+        return None
+    optional = match.group("may") is not None
+
+    def rider_effect(game: "Game", referents: list[CardState], stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name  # type: ignore[union-attr]
+        )
+        for referent in referents:
+            if referent.zone is not Zone.BATTLEFIELD:
+                continue
+            hosts = [
+                permanent
+                for permanent in game.permanents_controlled_by(controller)
+                if permanent is not referent and quality(game.characteristics_of(permanent))
+            ]
+            if not hosts:
+                continue
+            if optional and not game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller,
+                    prompt=f"attach {referent.name} to {match.group('quality')} you control",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    affirmative_is_legal=True,
+                )
+            ):
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller,
+                    prompt=f"choose {with_indefinite_article(match.group('quality'))} "
+                    f"you control to attach {referent.name} to",
+                    source=source_name,
+                    source_id=source_id_of(stack_object),
+                    amount=1,
+                    cards=tuple(permanent.id for permanent in hosts),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {permanent.id: permanent for permanent in hosts}
+            host = by_id.get(chosen_ids[0]) if chosen_ids else None
+            if host is not None:
+                attach_permanent(game, referent, host)
+
+    return rider_effect
+
+
 def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     """A rider sentence read as something to do to the objects its antecedent
     found, or `None` when this wave cannot read it - in which case the pair is
@@ -29342,6 +29418,10 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
     may_attach_if_type = _parse_if_type_may_attach_equipment_referent_clause(rider)
     if may_attach_if_type is not None:
         return may_attach_if_type
+
+    attach_to_chosen = _parse_attach_referent_to_chosen_clause(rider)
+    if attach_to_chosen is not None:
+        return attach_to_chosen
 
     conditional = _parse_conditional_referent_clause(rider)
     if conditional is not None:
@@ -44211,6 +44291,88 @@ def _merge_return_target_then_if_you_do_self_counter_clauses(
     return 2, effect
 
 
+#: "Return it to its owner's hand. If you do, `<consequence>`." - Riders of
+#: the Mark's end step trigger ("... if this creature attacked this turn,
+#: return it to its owner's hand. If you do, create a number of 1/1 white
+#: Human Soldier creature tokens equal to its toughness."). CR 118.12's "if
+#: you do" asks whether the return happened; the self-return is whichever of
+#: the two self-return clause parsers reads the first sentence.
+_RETURN_SELF_TO_HAND_LEAD_RE = re.compile(
+    r"^return (?:it|this (?:creature|permanent|artifact|enchantment|land|planeswalker))"
+    r" to its owner'?s hand\.?$",
+    re.IGNORECASE,
+)
+
+#: "create a number of `<descriptor>` tokens equal to its power|toughness" -
+#: the returned object's own number, read from its last existence on the
+#: battlefield (CR 608.2h).
+_TOKENS_EQUAL_TO_ITS_STAT_RE = re.compile(
+    r"^create a number of (?P<desc>.+?) tokens equal to its (?P<stat>power|toughness)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_return_self_then_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_RETURN_SELF_TO_HAND_LEAD_RE`, then "If you do, `<consequence>`" -
+    the consequence runs only when the source really went to its owner's
+    hand (CR 118.12), and "its" in it is the returned object as it last
+    existed on the battlefield (CR 608.2h)."""
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    first = clauses[index].strip()
+    if _RETURN_SELF_TO_HAND_LEAD_RE.fullmatch(first) is None:
+        return None
+    returning = _parse_return_self_to_owners_hand_clause(
+        first, for_spell=False
+    ) or _parse_return_dead_self_to_hand_clause(first.rstrip("."), for_spell=False)
+    if returning is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    consequence_text = if_match.group("consequence").strip()
+    stat_match = _TOKENS_EQUAL_TO_ITS_STAT_RE.fullmatch(consequence_text)
+    template = None
+    consequence = None
+    if stat_match is not None:
+        template = _parse_token_clause(
+            f"create a {stat_match.group('desc')} token", for_spell=False
+        )
+        if template is None:
+            return None
+    else:
+        consequence = parse_mixed_effect(consequence_text)
+        if consequence is None:
+            return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        characteristics = game.characteristics_of(source)
+        returning(game, stack_object)
+        moved = game.find_by_id(source.id)
+        if not isinstance(moved, CardState) or moved.zone is not Zone.HAND:
+            return
+        if template is not None:
+            assert stat_match is not None
+            stat = (
+                characteristics.power
+                if stat_match.group("stat").lower() == "power"
+                else characteristics.toughness
+            )
+            for _ in range(max(stat or 0, 0)):
+                template(game, stack_object)
+            return
+        assert consequence is not None
+        consequence(game, stack_object)  # type: ignore[arg-type]
+
+    return 2, effect
+
+
 #: The processor cost (CR 118.12's "[do something]" half): "you may put a
 #: card an opponent owns from exile into that player's graveyard" (Wasteland
 #: Strangler, Murk Strider, Mind Raker, Ulamog's Reclaimer, Ruin Processor)
@@ -46030,6 +46192,17 @@ def _dead_self_found(game: "Game", ability: "AbilityOnStack") -> CardState | Non
     event = ability.event
     if event is None:
         return found
+    if event.subject_id is None:
+        # An event about no object - a step beginning (Cactuar's "At the
+        # beginning of your end step, if this creature didn't enter the
+        # battlefield this turn, return it to its owner's hand"): "it" is the
+        # source itself, and only while it is still the object that
+        # triggered (CR 400.7) on the battlefield.
+        if found.zone is not Zone.BATTLEFIELD:
+            return None
+        if ability.source_stamp is not None and found.zone_change_stamp != ability.source_stamp:
+            return None
+        return found
     stamp = event.zone_change_stamp
     if stamp is None or found.zone is not Zone.GRAVEYARD or found.zone_change_stamp != stamp:
         return None
@@ -46314,7 +46487,13 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
     if match is None:
         return None
     noun = match.group("noun")
-    if noun is not None and noun.lower() not in _SACRIFICE_SELF_NOUNS:
+    # A subtype names the source as well as a card type does - See Red's
+    # "sacrifice this Aura" (CR 205.3).
+    if (
+        noun is not None
+        and noun.lower() not in _SACRIFICE_SELF_NOUNS
+        and canonical_subtype(noun) is None
+    ):
         return None
     unless_text = match.group("unless")
     unless = None
@@ -49058,6 +49237,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         merged = _merge_return_target_then_if_you_do_self_counter_clauses(
             clauses, index, for_spell=for_spell
         )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_return_self_then_if_you_do_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

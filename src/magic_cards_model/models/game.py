@@ -14188,6 +14188,7 @@ class Game(EngineModel):
         # computed ones, not the printed type line (CR 613.1's starting
         # point) - a land animated by earthbend is a creature only there.
         chars = self.characteristics_of(permanent)
+        placement = len(self.counters_put_this_turn)
         self.counters_put_this_turn.append(
             CountersPutRecord(
                 putter=putter or permanent.controller,
@@ -14212,6 +14213,7 @@ class Game(EngineModel):
                 amount=amount,
                 # CR 122.6a: who put them - "whenever you put ..." asks this.
                 player=putter or permanent.controller,
+                counters_put_index=placement,
             )
         )
 
@@ -20931,8 +20933,14 @@ class Game(EngineModel):
         object specifically says otherwise", and CR 602.1b is where it says
         so - "Only your opponents may activate this ability" (Knight of the
         Holy Nimbus; "your" is the object's controller, CR 109.5) and "Any
-        player may activate this ability" (Oona's Prowler)."""
-        controller = self.controller_of(permanent).username
+        player may activate this ability" (Oona's Prowler).
+
+        A card that is not a permanent or spell has no controller; CR 108.4a
+        asks its owner instead - Cult Conscript's graveyard ability is its
+        owner's to activate on any player's turn, not the active player's."""
+        controller = (
+            permanent.controller or permanent.owner or self.controller_of(permanent).username
+        )
         who = read_activation_instructions(ability.instructions).who
         if who == "any":
             return None

@@ -36,9 +36,13 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["known_carries", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Cactuar@alice#1": {
+        "zone": ["battlefield", "hand"]
+      }
+    },
     "players": {},
     "stack": []
   },

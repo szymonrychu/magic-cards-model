@@ -308,10 +308,39 @@ def test_that_player_did_not_cast_a_creature_spell():
     """Predatory Advantage: "At the beginning of each opponent's end step, if
     that player didn't cast a creature spell this turn, create a 2/2 green
     Lizard creature token." """
-    assert _triggered(_predatory_advantage(bob_casts=False), "Predatory Advantage")
+    scenario = _predatory_advantage(bob_casts=False)
+    assert _triggered(scenario, "Predatory Advantage")
+    scenario.pass_until_resolved()  # true at both: it resolves
+    assert [p for p in scenario.game.permanents_controlled_by("alice") if "Lizard" in p.subtypes]
     scenario = _predatory_advantage(bob_casts=True)
     assert not _triggered(scenario, "Predatory Advantage")
     assert scenario.game.intervening_if_notices == []
+
+
+def test_predatory_advantage_does_nothing_after_a_creature_is_flashed_in_response():
+    """True as it triggers, false by resolution: the opponent casts a creature
+    spell with flash (CR 702.8a) in response during their own end step, so CR
+    608.2a removes the trigger and no Lizard is made."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", battlefield=["Forest", "Forest"], hand=["Ambush Viper"])
+        .player("alice", battlefield=["Predatory Advantage"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _to_end_step(scenario)
+    assert _triggered(scenario, "Predatory Advantage")
+    scenario.cast_and_resolve(
+        "Ambush Viper",
+        *scenario.untapped_sources("Forest", "Forest", username="bob"),
+        username="bob",
+    )
+    scenario.pass_until_resolved()
+    assert not scenario.game.stack
+    assert not [
+        p for p in scenario.game.permanents_controlled_by("alice") if "Lizard" in p.subtypes
+    ]
 
 
 def test_a_spell_cast_from_anywhere_other_than_your_hand():
@@ -396,6 +425,68 @@ def test_the_first_time_still_holds_as_it_resolves():
     first = _counters_put(scenario, bears, "+1/+1")
     _counters_put(scenario, bears, "+1/+1", 2)
     assert _first_time_holds(scenario, "Botanical Brawler", first) is True
+
+
+def _resolve_all(scenario) -> None:
+    scenario.game.put_triggers_on_stack()
+    while scenario.game.stack:
+        scenario.pass_until_resolved()
+        scenario.game.put_triggers_on_stack()
+
+
+def test_botanical_brawler_triggers_on_another_permanents_first_counters():
+    """The trigger itself (CR 122.6's counters put on an object, CR 603.2):
+    the first +1/+1 counters on another permanent you control trigger it and
+    it resolves, a second batch on that permanent the same turn never
+    triggers (CR 603.4)."""
+    scenario = _board(["Botanical Brawler", "Grizzly Bears"])
+    brawler = scenario.creature("Botanical Brawler", "alice")
+    # The staged 0/0 gets the two counters it enters with; counters on the
+    # Brawler itself are not "another permanent".
+    scenario.game.add_counters(brawler, "+1/+1", 2, putter="alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    before = brawler.counter_count("+1/+1")
+
+    scenario.game.add_counters(bears, "+1/+1", 1, putter="alice")
+    scenario.game.put_triggers_on_stack()
+    assert _triggered(scenario, "Botanical Brawler")
+    _resolve_all(scenario)
+    brawler = scenario.creature("Botanical Brawler", "alice")
+    assert brawler.counter_count("+1/+1") == before + 1
+
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, "+1/+1", 1, putter="alice")
+    scenario.game.put_triggers_on_stack()
+    assert not _triggered(scenario, "Botanical Brawler")
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_botanical_brawler_ignores_itself_and_an_opponents_permanent():
+    """ "another permanent you control": not the Brawler itself, not a
+    permanent an opponent controls, and not a counter of another kind."""
+    scenario = _board(["Botanical Brawler", "Grizzly Bears"], ["Grizzly Bears"])
+    brawler = scenario.creature("Botanical Brawler", "alice")
+    scenario.game.add_counters(brawler, "+1/+1", 1, putter="alice")
+    scenario.game.add_counters(scenario.creature("Grizzly Bears", "bob"), "+1/+1", 1)
+    scenario.game.add_counters(scenario.creature("Grizzly Bears", "alice"), "shield", 1)
+    scenario.game.put_triggers_on_stack()
+    assert not _triggered(scenario, "Botanical Brawler")
+
+
+def test_stalwart_successor_puts_a_counter_on_that_creature():
+    """Stalwart Successor: "Whenever one or more counters are put on a
+    creature you control, if it's the first time counters have been put on
+    that creature this turn, put a +1/+1 counter on that creature." - any
+    kind of counter, and its own +1/+1 counter is not a first time, so it
+    does not trigger again."""
+    scenario = _board(["Stalwart Successor", "Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, "shield", 1, putter="alice")
+    scenario.game.put_triggers_on_stack()
+    assert _triggered(scenario, "Stalwart Successor")
+    _resolve_all(scenario)
+    assert scenario.creature("Grizzly Bears", "alice").counter_count("+1/+1") == 1
+    assert scenario.game.intervening_if_notices == []
 
 
 def test_a_counter_of_another_kind_first_does_not_make_plus_one_counters_second():
@@ -501,6 +592,10 @@ def test_visions_of_phyrexia_makes_a_powerstone_when_nothing_was_played_from_exi
     play a card from exile this turn, create a tapped Powerstone token." """
     scenario = _visions(play_it=False)
     assert _triggered(scenario, "Visions of Phyrexia")
+    scenario.pass_until_resolved()  # true at both: it resolves
+    assert [
+        p for p in scenario.game.permanents_controlled_by("alice") if "Powerstone" in p.subtypes
+    ]
 
 
 def test_visions_of_phyrexia_does_nothing_after_playing_the_exiled_land():
@@ -571,3 +666,36 @@ def test_an_activated_ability_targeting_an_opponent_is_a_crime():
     assert scenario.game.condition_holds("bob", "you've committed a crime this turn", ballista) is (
         False
     )
+
+
+def test_visions_of_phyrexia_does_nothing_after_the_exiled_card_is_cast_in_response():
+    """True as it triggers, false by resolution: the exiled instant is cast
+    from exile with the end-step trigger on the stack, so CR 608.2a removes
+    the trigger and no Powerstone is made."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Visions of Phyrexia", "Mountain"],
+            library=["Lightning Bolt"] * 4,
+        )
+        .player("bob", library=["Plains"] * 4)
+        .build()
+    )
+    scenario.game.untap_step()
+    scenario.advance()  # upkeep: Visions exiles the top card, playable this turn
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _to_end_step(scenario)
+    assert _triggered(scenario, "Visions of Phyrexia")
+    casting = scenario.cast("Lightning Bolt", from_zone=Zone.EXILE, targets=["bob"])
+    scenario.pay_with(casting.begin_paying(), *scenario.untapped_sources("Mountain"))
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()  # the Bolt
+    scenario.pass_until_resolved()  # the trigger
+    assert not scenario.game.stack
+    assert not [
+        p for p in scenario.game.permanents_controlled_by("alice") if "Powerstone" in p.subtypes
+    ]

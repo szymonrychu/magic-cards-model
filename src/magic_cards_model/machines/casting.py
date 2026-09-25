@@ -440,6 +440,28 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             understood=cost is not None,
         )
 
+    if canonical == "web-slinging":
+        # CR 702.188a: "'Web-slinging [cost]' means 'You may cast this spell
+        # by paying [cost] and returning a tapped creature you control to its
+        # owner's hand rather than paying its mana cost.'" The return is one
+        # more component of the alternative cost, chosen as the cost is
+        # chosen (CR 601.2b) and paid with the rest (CR 601.2h).
+        cost = (
+            total_cost_for_phrase(
+                f"{printed}, Return a tapped creature you control to its owner's hand"
+            )
+            if printed
+            else None
+        )
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.188a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            understood=cost is not None,
+        )
+
     if canonical == "flashback":
         # CR 702.34a: two static abilities, one functioning in the graveyard.
         # The graveyard half is what makes this permission and not a discount.
