@@ -76,7 +76,7 @@ def test_every_golden_names_the_ability_the_sweep_ran():
 
 @pytest.mark.parametrize(
     ("card", "family", "number"),
-    [("Arclight Phoenix", "triggered", 0), ("Baxter Building", "activated", 0)],
+    [("Arclight Phoenix", "triggered", 0), ("Xerex Strobe-Knight", "activated", 0)],
 )
 def test_a_busy_golden_builds_the_board_after_its_eventful_turn(card, family, number):
     golden = load(golden_path(card, family, number))
