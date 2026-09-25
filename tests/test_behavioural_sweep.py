@@ -93,6 +93,7 @@ from magic_cards_model.machines.abilities import (
     self_reference_names,
 )
 from magic_cards_model.machines.casting import MarkedExile
+from magic_cards_model.machines.conditions.player import _QUANTITY, _SUBJECT, _quantity_test
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
 from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.effects import transform_permanent
@@ -926,6 +927,21 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
     [lands/creatures/artifacts] than you" (CR 603.4) true on the stock board:
     the opponent gets one more of that type than the controller has, counted
     on the stock board by the engine itself."""
+    subtype_card = re.search(
+        r"there(?:'s| is) an? (?P<subtype>[\w-]+) card in your graveyard", condition.lower()
+    )
+    if subtype_card is not None:
+        wanted_subtype = subtype_card.group("subtype")
+        found = next(
+            (
+                card.name
+                for card in _format_pool()
+                if not card.card_faces
+                and wanted_subtype in (subtype.lower() for subtype in card.subtypes)
+            ),
+            None,
+        )
+        return (Material(found, ALICE, Zone.GRAVEYARD),) if found else ()
     match = re.search(r"an opponent controls more (\w+) than you", condition.lower())
     if match is None:
         return ()
@@ -1086,6 +1102,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         scenario.game.harness(source)
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _player_state_threshold(scenario, getattr(ability, "intervening_if", None))
     _chosen_parity(source, getattr(ability, "condition", None))
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
@@ -1107,6 +1124,108 @@ def _history_threshold(scenario: PlayedScenario, source: CardState, condition: s
         graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
         if graveyard:
             game.exile_cards([graveyard[-1]])
+
+
+#: `machines/conditions/player.py`'s own grammar, read here to stage a
+#: player-state condition true on the stock board.
+_HAND_CONDITION = re.compile(
+    rf"(?P<who>{_SUBJECT}) (?:has|have) (?P<quantity>{_QUANTITY}) cards? in "
+    r"(?:(?:your|their) )?hand"
+)
+_LIFE_CONDITION = re.compile(
+    rf"(?P<who>{_SUBJECT}) (?:has|have) (?P<quantity>{_QUANTITY}) life(?! (?:more|less|fewer))"
+)
+_POISON_CONDITION = re.compile(
+    rf"(?P<who>{_SUBJECT}) (?:has|have) (?P<quantity>{_QUANTITY}) poison counters?"
+)
+
+
+def _players_named(who: str) -> list[str]:
+    """The seats a staged player-state condition is about: "you" is the
+    controller, "each player" both, every other subject the opponent (the
+    player whose upkeep it is, the defending player)."""
+    if who == "you":
+        return [ALICE]
+    if who == "each player":
+        return [ALICE, BOB]
+    return [BOB]
+
+
+def _hand_of_size(scenario: PlayedScenario, username: str, size: int) -> None:
+    game = scenario.game
+    hand = list(game.player(username).hand)
+    if len(hand) > size:
+        game.put_cards_into_library(hand[size:], to_bottom=True)
+    elif len(hand) < size:
+        game.draw_cards(username, size - len(hand))
+
+
+def _player_state_threshold(scenario: PlayedScenario, condition: str | None) -> None:
+    """A hand, life or poison condition (CR 402.1, 103.4, 122.1f) the stock
+    board does not meet is made true on it, read off the condition's own
+    words with the reader's own count grammar: a hand trimmed or drawn up to
+    the nearest size it allows (a hand that already fits is left alone), a
+    life total moved to the nearest one it allows, poison counters given,
+    one more card or life than the player it is compared with. For an
+    intervening "if" (CR 603.4) and an "Activate only if" (CR 602.5b)
+    alike."""
+    lowered = (condition or "").lower()
+    if not lowered:
+        return
+    game = scenario.game
+    for match in _HAND_CONDITION.finditer(lowered):
+        test = _quantity_test(match.group("quantity"))
+        if test is None:
+            continue
+        for username in _players_named(match.group("who")):
+            held = len(game.player(username).hand)
+            sizes = [n for n in range(12) if test(n)]
+            if sizes:
+                _hand_of_size(scenario, username, min(sizes, key=lambda n: (abs(n - held), n)))
+    comparison = re.search(
+        rf"(?P<who>{_SUBJECT}) (?:has|have) more cards in hand than "
+        rf"(?P<other>{_SUBJECT}|each other player)",
+        lowered,
+    )
+    if comparison is not None:
+        ahead = ALICE if comparison.group("who") in ("you", "a player") else BOB
+        behind = BOB if ahead == ALICE else ALICE
+        _hand_of_size(scenario, ahead, len(game.player(behind).hand) + 1)
+    for match in _LIFE_CONDITION.finditer(lowered):
+        test = _quantity_test(match.group("quantity"))
+        if test is None:
+            continue
+        for username in _players_named(match.group("who")):
+            life = game.player(username).life
+            wanted = min((n for n in range(1, 61) if test(n)), key=lambda n: abs(n - life))
+            if wanted < life:
+                game.lose_life(username, life - wanted)
+            elif wanted > life:
+                game.gain_life(username, wanted - life)
+    below = re.search(
+        r"life total is less than (?:(?P<number>\d+)|your starting life total)", lowered
+    )
+    if below is not None:
+        player = game.player(ALICE)
+        bar = int(below.group("number")) if below.group("number") else player.starting_life
+        if player.life >= bar:
+            game.lose_life(ALICE, player.life - bar + 1)
+    above = re.search(r"at least (\d+) life more than your starting life total", lowered)
+    if above is not None:
+        player = game.player(ALICE)
+        missing = player.starting_life + int(above.group(1)) - player.life
+        if missing > 0:
+            game.gain_life(ALICE, missing)
+    if re.search(r"you have (?:more life than an opponent|the most life)", lowered):
+        game.lose_life(BOB, 1)
+    if re.search(rf"(?:{_SUBJECT}) (?:is|are) poisoned", lowered):
+        game.add_player_counters(BOB, "poison", 1)
+    for match in _POISON_CONDITION.finditer(lowered):
+        test = _quantity_test(match.group("quantity"))
+        wanted = next((n for n in range(11) if test(n)), None) if test else None
+        if wanted:
+            for username in _players_named(match.group("who")):
+                game.add_player_counters(username, "poison", wanted)
 
 
 def _activation_step(ability: ActivatedAbility) -> Step:
@@ -1346,6 +1465,7 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         def put(tapped: bool = tapped) -> tuple[PlayedScenario, Any]:
             scenario = _board(hand=(card.name,))
             _stack_material(scenario)
+            _player_state_threshold(scenario, ability.intervening_if)
             source = _last(scenario, card.name, Zone.HAND, ALICE)
             try:
                 entered = scenario.game.put_onto_battlefield(
@@ -1395,6 +1515,7 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             def cast(kicked: bool = kicked, paying_with: str | None = paying_with):
                 scenario = _board(hand=(card.name,), battlefield=_extra_lands_for(card))
                 _stack_material(scenario)
+                _player_state_threshold(scenario, ability.intervening_if)
                 _cast(scenario, card.name, kicked=kicked, paying_with=paying_with)
                 return scenario, None
 
@@ -1606,7 +1727,12 @@ def _combat(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     )
     for side in _combat_sides(ability):
         attackers: list[str | None] = []
-        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle):
+        # A transforming card's creature back face (CR 712.8e) attacks
+        # itself too: `_prime` stages the source transformed.
+        back_creature = _back_face(card, ability) and "Creature" in (
+            card.card_faces[1].type_line or ""
+        )
+        if side == ALICE and (_is(card, Type.CREATURE) or is_vehicle or back_creature):
             attackers.append(None)
         if not is_vehicle:
             attackers += [p for p in _probes(case, ability, entering=False) if p != card.name]
@@ -2988,6 +3114,7 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
     game = scenario.game
     for condition in read_activation_instructions(ability.instructions).conditions:
         _history_threshold(scenario, source, condition)
+        _player_state_threshold(scenario, condition)
     cost = ability.cost.lower()
     if "{e}" in cost:
         game.add_player_counters(ALICE, "energy", 10)
@@ -3375,7 +3502,15 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
         if only is not None and variant != only["variant"]:
             continue
         _STAGING.variant, _STAGING.case = variant, case
-        _STAGING.material = _target_material(ability.effect) + _cost_material(case)
+        _STAGING.material = (
+            _target_material(ability.effect)
+            + _cost_material(case)
+            + tuple(
+                material
+                for condition in read_activation_instructions(ability.instructions).conditions
+                for material in _precondition_material(condition)
+            )
+        )
         try:
             for enters in [False, True]:
                 if only is not None and enters != only["enters"]:

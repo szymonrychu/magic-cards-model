@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "de1365aa-e814-471b-8c9e-cf4c5011bcc3",
+  "oracle_id": "3dcbbbeb-4efe-4363-bfb4-b7d7f803bafa",
+  "multiverse_ids": [
+    522090
+  ],
+  "mtgo_id": 90397,
+  "tcgplayer_id": 239960,
+  "cardmarket_id": 566473,
+  "name": "Glorious Enforcer",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/de1365aa-e814-471b-8c9e-cf4c5011bcc3",
+  "scryfall_uri": "https://scryfall.com/card/mh2/14/glorious-enforcer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:52Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.jpg?1783926892",
+    "normal": "https://cards.scryfall.io/normal/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.jpg?1783926892",
+    "large": "https://cards.scryfall.io/large/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.jpg?1783926892",
+    "png": "https://cards.scryfall.io/png/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.png?1783926892",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.jpg?1783926892",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.jpg?1783926892",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.webp?1783926892",
+    "grid": "https://cards.scryfall.io/grid/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.webp?1783926892",
+    "display": "https://cards.scryfall.io/display/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.webp?1783926892",
+    "art": "https://cards.scryfall.io/art/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.webp?1783926892",
+    "crop": "https://cards.scryfall.io/crop/front/d/e/de1365aa-e814-471b-8c9e-cf4c5011bcc3.webp?1783926892"
+  },
+  "mana_cost": "{5}{W}{W}",
+  "cmc": 7.0,
+  "type_line": "Creature \u2014 Angel",
+  "oracle_text": "Flying, lifelink\nAt the beginning of each combat, if you have more life than an opponent, this creature gains double strike until end of turn.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Lifelink"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/de1365aa-e814-471b-8c9e-cf4c5011bcc3/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A3dcbbbeb-4efe-4363-bfb4-b7d7f803bafa&unique=prints",
+  "collector_number": "14",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"You are unworthy of life, but take heart. You have earned a clean death.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Eric Deschamps",
+  "artist_ids": [
+    "37970e22-9cee-44c1-af44-5ee27cf26b76"
+  ],
+  "illustration_id": "01a5976a-9d99-4d1a-8577-08224b2beb89",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17322,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.instagram.com/p/CPYw7h5Aw7Y/",
+    "previewed_at": "2021-05-27"
+  },
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.21",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.15",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522090&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGlorious%2BEnforcer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGlorious%2BEnforcer",
+    "edhrec": "https://edhrec.com/route/?cc=Glorious+Enforcer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F239960%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566473&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90397?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

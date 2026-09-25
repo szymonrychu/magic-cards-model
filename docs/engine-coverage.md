@@ -5630,3 +5630,40 @@ for: an activation runs at the step its "Activate only during ..." names
 (`_activation_step`), and "an opponent lost life this turn" / "a card left
 your graveyard this turn" are made true on the stock board before the case
 (`_history_threshold`).
+
+## Player-state conditions (EC5: hand, graveyard/exile, life, poison, library)
+
+`machines/conditions/player.py` reads every S1-S3 clause as one grammar - a
+subject ("you", "that player"/"they" = the trigger event's player, "defending
+player" CR 506.2/508.5, "an opponent"/"a player" = any, "each opponent"/"each
+player" = every), a count ("no", "a", "exactly N [or M]", "N or more/fewer/
+less", "fewer/more than N", "at least/most N", via `magic_cards_model.numbers`)
+or a comparison between players, and a zone. Card qualities go through
+`game._card_quality`, permanents through `game._permanent_quality`. Used as an
+intervening if (CR 603.4/608.2a) and as "Activate only if" (CR 602.5b) alike.
+The starting life total (CR 103.4) is recorded on `Player.starting_life` as
+the player is made, from the life it is made with - never assumed to be 20.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "`<subject>` has/have `<count>` [`<quality>`] cards in `<their>` hand / library / graveyard" (CR 402.1, 401.1, 404.1) | `_player_has_cards` | Ragamuffyn, Lavaborn Muse | Keldon Megaliths, Shrieking Affliction, Hollowborn Barghest, Imaginary Pet, Reaper of Night, Magus of the Library, The Biblioplex ("exactly zero or seven"), Pit Keeper, Battle of Wits | `test_condition_hand_size.py`, `test_condition_graveyard_contents.py`, `test_condition_life_and_poison.py` |
+| "`<subject>` has more/fewer `<cards in hand / life / poison counters>` than `<you / each opponent / an opponent / each other player>`" - strict, a tie is not more | `_more_than` | Kitsune Bonesetter | Robber of the Rich, Glorious Enforcer (Sokenzan Renegade's "a player has more ... than each other player" read on a bare board) | `test_condition_hand_size.py`, `test_condition_life_and_poison.py` |
+| "there's/there is/are `<count>` [`<quality>`] cards in your graveyard", "`<count>` cards are in your graveyard" | `_cards_in_your_zone` | Walltop Sentries | Lys Alana Dignitary, Shadowborn Demon, Wall of Forgotten Pharaohs / Sand Strangler (the Desert half of the C1 compound) | `test_condition_graveyard_contents.py` |
+| "there are `<count>` mana values among cards in your graveyard" (distinct CR 202.3 values) | `_mana_values_among` | Sanguine Spy | - (only intervening-if printing; the rest are statics) | `test_condition_graveyard_contents.py` |
+| "you own `<count>` cards in exile" (CR 108.3, 406.1) | `_owns_cards_in_exile` | Dreadlight Monstrosity | - (only printing) | `test_condition_graveyard_contents.py` |
+| "`<this object / its name>` is in your graveyard / on the battlefield / in exile [or ...]" (CR 700.7; CR 400.7 - a recheck reads the source only while its zone-change stamp is the ability's) | `_self_in_zone` | Master of Death | Firemane Angel, Skyblade's Boon | `test_condition_graveyard_contents.py` |
+| "this card is the only `<quality>` card in your graveyard" | `_self_only_card_in_graveyard` | Nether Spirit | - (only printing) | `test_condition_graveyard_contents.py` |
+| "the number of [other] `<quality>` you control plus the number of `<quality>` cards in your graveyard is `<count>`" | `_sum_of_counts` | Cavernous Maw | - (only printing) | `test_condition_graveyard_contents.py` |
+| "it doesn't have the same name as another `<quality>` you control or a `<quality>` card in your graveyard" (CR 201.2a, 709.4; "it" = the event's subject, by last known information once gone) | `_same_name_as` | Guardian Project | - (only printing) | `test_condition_graveyard_contents.py` |
+| "`<subject>` has `<count>` life" | `_player_has_life` | Near-Death Experience | Arguel's Blood Fast, Cryptolith Fragment | `test_condition_life_and_poison.py` |
+| "`<subject>` has at least N life more than your starting life total" (CR 103.4) | `_life_against_starting` | Speaker of the Heavens | (Ayli, Angel of Destiny read by the same reader) | `test_condition_life_and_poison.py` |
+| "your life total is less than N / less than your starting life total" (CR 103.4) | `_life_total_is` | Resolute Archangel | Elderscale Wurm | `test_condition_life_and_poison.py` |
+| "`<subject>` has the most life or is tied for most life" | `_the_most` | Preacher of the Schism | - (only printing) | `test_condition_life_and_poison.py` |
+| "`<subject>` is poisoned" (CR 122.1f), "`<subject>` has `<count>` poison counters" | `_poisoned`, `_player_has_poison` | Septic Rats | Vivisection Evangelist | `test_condition_life_and_poison.py` |
+
+Not closed here (outside this task's files): `triggers.zones_ability_functions_in`
+reads only the trigger condition, so an ability whose intervening if is "if this
+card is in your graveyard" (Master of Death, Nether Spirit, Bridge from Below,
+Genesis, ...) is never asked for from the graveyard (CR 113.6b) - the clause
+reads, the trigger never fires; pinned by two strict `xfail`s in
+`test_condition_graveyard_contents.py`.

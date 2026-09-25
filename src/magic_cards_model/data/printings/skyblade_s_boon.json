@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "e5705397-525b-4106-92ab-fe8ec9f561a2",
+  "oracle_id": "a03a9ddb-595a-4dff-b7cb-7ad60655f1ee",
+  "multiverse_ids": [
+    522107
+  ],
+  "mtgo_id": 90431,
+  "tcgplayer_id": 240162,
+  "cardmarket_id": 566691,
+  "name": "Skyblade's Boon",
+  "lang": "en",
+  "released_at": "2021-06-18",
+  "uri": "https://api.scryfall.com/cards/e5705397-525b-4106-92ab-fe8ec9f561a2",
+  "scryfall_uri": "https://scryfall.com/card/mh2/31/skyblades-boon?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:14:44Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.jpg?1783926884",
+    "normal": "https://cards.scryfall.io/normal/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.jpg?1783926884",
+    "large": "https://cards.scryfall.io/large/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.jpg?1783926884",
+    "png": "https://cards.scryfall.io/png/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.png?1783926884",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.jpg?1783926884",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.jpg?1783926884",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.webp?1783926884",
+    "grid": "https://cards.scryfall.io/grid/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.webp?1783926884",
+    "display": "https://cards.scryfall.io/display/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.webp?1783926884",
+    "art": "https://cards.scryfall.io/art/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.webp?1783926884",
+    "crop": "https://cards.scryfall.io/crop/front/e/5/e5705397-525b-4106-92ab-fe8ec9f561a2.webp?1783926884"
+  },
+  "mana_cost": "{1}{W}",
+  "cmc": 2.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant creature\nEnchanted creature gets +1/+1 and has flying.\n{2}{W}: Return Skyblade's Boon to its owner's hand. Activate only if Skyblade's Boon is on the battlefield or in your graveyard.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set": "mh2",
+  "set_name": "Modern Horizons 2",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/c1c7eb8c-f205-40ab-a609-767cb296544e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e5705397-525b-4106-92ab-fe8ec9f561a2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa03a9ddb-595a-4dff-b7cb-7ad60655f1ee&unique=prints",
+  "collector_number": "31",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David Gaillet",
+  "artist_ids": [
+    "3496c5b4-57bf-4e5e-8bac-a1e05a911a2d"
+  ],
+  "illustration_id": "4a072ab9-5aba-40a2-9529-f1d93680c49c",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14594,
+  "penny_rank": 9951,
+  "preview": {
+    "source": "Gaby Spartz",
+    "source_uri": "https://twitter.com/GabySpartz/status/1399085439969939457",
+    "previewed_at": "2021-05-30"
+  },
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.26",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.17",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=522107&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSkyblade%2527s%2BBoon",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSkyblade%2527s%2BBoon",
+    "edhrec": "https://edhrec.com/route/?cc=Skyblade%27s+Boon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F240162%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=566691&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/90431?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

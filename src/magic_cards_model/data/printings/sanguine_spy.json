@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "2d52ea1e-5b66-47c7-9a6d-95f5996565d8",
+  "oracle_id": "03af4b10-900e-4013-bd5d-dd8d132d50fb",
+  "multiverse_ids": [
+    555294
+  ],
+  "mtgo_id": 98405,
+  "arena_id": 80244,
+  "tcgplayer_id": 268781,
+  "cardmarket_id": 651839,
+  "name": "Sanguine Spy",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/2d52ea1e-5b66-47c7-9a6d-95f5996565d8",
+  "scryfall_uri": "https://scryfall.com/card/snc/93/sanguine-spy?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:12:04Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.jpg?1783923124",
+    "normal": "https://cards.scryfall.io/normal/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.jpg?1783923124",
+    "large": "https://cards.scryfall.io/large/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.jpg?1783923124",
+    "png": "https://cards.scryfall.io/png/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.png?1783923124",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.jpg?1783923124",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.jpg?1783923124",
+    "thumb": "https://cards.scryfall.io/thumb/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.webp?1783923124",
+    "grid": "https://cards.scryfall.io/grid/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.webp?1783923124",
+    "display": "https://cards.scryfall.io/display/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.webp?1783923124",
+    "art": "https://cards.scryfall.io/art/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.webp?1783923124",
+    "crop": "https://cards.scryfall.io/crop/front/2/d/2d52ea1e-5b66-47c7-9a6d-95f5996565d8.webp?1783923124"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Vampire Rogue",
+  "oracle_text": "Menace, lifelink\n{1}, Sacrifice another creature: Surveil 1. (Look at the top card of your library. You may put that card into your graveyard.)\nAt the beginning of your end step, if there are five or more mana values among cards in your graveyard, you may pay 2 life. If you do, draw a card.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Surveil",
+    "Lifelink",
+    "Menace"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "df837242-8c15-42e4-b049-c933a02dc501",
+  "set": "snc",
+  "set_name": "Streets of New Capenna",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/df837242-8c15-42e4-b049-c933a02dc501",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asnc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/snc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/2d52ea1e-5b66-47c7-9a6d-95f5996565d8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A03af4b10-900e-4013-bd5d-dd8d132d50fb&unique=prints",
+  "collector_number": "93",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David Palumbo",
+  "artist_ids": [
+    "04ce1c75-e30c-4b7a-8cb0-b53e4ecc2f39"
+  ],
+  "illustration_id": "851e1887-7b79-4135-a267-c548f12b6d3a",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13704,
+  "penny_rank": 12442,
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.41",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.33",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555294&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSanguine%2BSpy",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSanguine%2BSpy",
+    "edhrec": "https://edhrec.com/route/?cc=Sanguine+Spy"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F268781%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=651839&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/98405?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

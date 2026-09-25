@@ -1,0 +1,130 @@
+{
+  "object": "card",
+  "id": "da7c4600-1dc3-4a9d-a112-1b70abcb8951",
+  "oracle_id": "ec0ea7f7-52ce-40d1-b34c-e36dd4b26120",
+  "multiverse_ids": [
+    393852
+  ],
+  "tcgplayer_id": 93797,
+  "cardmarket_id": 270032,
+  "name": "Keldon Megaliths",
+  "lang": "en",
+  "released_at": "2014-12-05",
+  "uri": "https://api.scryfall.com/cards/da7c4600-1dc3-4a9d-a112-1b70abcb8951",
+  "scryfall_uri": "https://scryfall.com/card/jvc/58/keldon-megaliths?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:32:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.jpg?1783938735",
+    "normal": "https://cards.scryfall.io/normal/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.jpg?1783938735",
+    "large": "https://cards.scryfall.io/large/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.jpg?1783938735",
+    "png": "https://cards.scryfall.io/png/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.png?1783938735",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.jpg?1783938735",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.jpg?1783938735",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.webp?1783938735",
+    "grid": "https://cards.scryfall.io/grid/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.webp?1783938735",
+    "display": "https://cards.scryfall.io/display/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.webp?1783938735",
+    "art": "https://cards.scryfall.io/art/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.webp?1783938735",
+    "crop": "https://cards.scryfall.io/crop/front/d/a/da7c4600-1dc3-4a9d-a112-1b70abcb8951.webp?1783938735"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land",
+  "oracle_text": "This land enters tapped.\n{T}: Add {R}.\nHellbent \u2014 {1}{R}, {T}: This land deals 1 damage to any target. Activate only if you have no cards in hand.",
+  "colors": [],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Hellbent"
+  ],
+  "produced_mana": [
+    "R"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "37832684-2fe0-4b06-842b-eec06e5a17cb",
+  "set": "jvc",
+  "set_name": "Duel Decks Anthology: Jace vs. Chandra",
+  "set_type": "duel_deck",
+  "set_uri": "https://api.scryfall.com/sets/37832684-2fe0-4b06-842b-eec06e5a17cb",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ajvc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/jvc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/da7c4600-1dc3-4a9d-a112-1b70abcb8951/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aec0ea7f7-52ce-40d1-b34c-e36dd4b26120&unique=prints",
+  "collector_number": "58",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Philip Straub",
+  "artist_ids": [
+    "43cdce85-e4bc-424e-ac95-fd0886b66ff3"
+  ],
+  "illustration_id": "c2301508-0f31-480d-b7cf-a7c0faffb1fd",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 18523,
+  "penny_rank": 1331,
+  "prices": {
+    "usd": "0.33",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.23",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=393852&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKeldon%2BMegaliths",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKeldon%2BMegaliths",
+    "edhrec": "https://edhrec.com/route/?cc=Keldon+Megaliths"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F93797%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=270032&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Keldon+Megaliths&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
