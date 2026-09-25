@@ -35,6 +35,9 @@
         "counters": {},
         "life": 20,
         "mana_pool": {
+          "creature": {
+            "G": 1
+          },
           "floating": {
             "G": 2
           }

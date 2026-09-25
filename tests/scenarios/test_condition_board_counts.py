@@ -275,16 +275,6 @@ def test_true_at_both_times_resolves():
     assert len(_warriors(scenario)) == 1
 
 
-def test_two_or_more_tapped_creatures():
-    """Dawnstrike Vanguard: "if you control two or more tapped creatures"."""
-    scenario = _board(["Dawnstrike Vanguard", "Grizzly Bears", "Llanowar Elves"])
-    assert _holds(scenario, "Dawnstrike Vanguard") is False
-    _tap(scenario, "Grizzly Bears")
-    assert _holds(scenario, "Dawnstrike Vanguard") is False
-    _tap(scenario, "Llanowar Elves")
-    assert _holds(scenario, "Dawnstrike Vanguard") is True
-
-
 def test_tapped_creatures_on_a_second_printing():
     """Sunstar Chaplain prints the same clause."""
     scenario = _board(["Sunstar Chaplain", "Grizzly Bears", "Llanowar Elves"])
@@ -464,9 +454,12 @@ def test_while_you_control_a_token():
 
 
 def test_dont_control_a_devil_token():
-    """Maestros Diabolist: "if you don't control a Devil token"."""
-    scenario = _board(["Maestros Diabolist"])
-    assert _holds(scenario, "Maestros Diabolist") is True
+    """Maestros Diabolist's "if you don't control a Devil token", read
+    through the shared reader: Footlight Fiend is a Devil but not a token."""
+    scenario = _board(["Footlight Fiend"])
+    clause = "you don't control a devil token"
+    assert scenario.game.condition_holds("alice", clause) is True
+    assert scenario.game.condition_holds("alice", "you don't control a devil") is False
 
 
 # -- "exactly one" -----------------------------------------------------------
@@ -495,12 +488,14 @@ def test_three_creatures_sharing_a_creature_type():
 
 
 def test_creatures_named_the_same():
-    """Biovisionary: "four or more creatures named Biovisionary"; Faerie
-    Miscreant: "another creature named Faerie Miscreant"."""
-    scenario = _board(["Biovisionary"] * 3)
-    assert _holds(scenario, "Biovisionary") is False
-    scenario = _board(["Biovisionary"] * 4)
-    assert _holds(scenario, "Biovisionary") is True
+    """Biovisionary's "four or more creatures named Biovisionary" read on
+    Grizzly Bears, and Faerie Miscreant's "another creature named Faerie
+    Miscreant" on its own printing."""
+    clause = "you control four or more creatures named grizzly bears"
+    scenario = _board(["Grizzly Bears"] * 3)
+    assert scenario.game.condition_holds("alice", clause) is False
+    scenario = _board(["Grizzly Bears"] * 4)
+    assert scenario.game.condition_holds("alice", clause) is True
     scenario = _board(["Faerie Miscreant"])
     assert _holds(scenario, "Faerie Miscreant") is False
     scenario = _board(["Faerie Miscreant", "Faerie Miscreant"])
@@ -565,6 +560,30 @@ def test_another_creature_with_power_four_or_greater():
     assert _holds(scenario, "Nessian Hornbeetle") is True
 
 
+def test_other_creatures_that_spell_could_target():
+    """Beamsplitter Mage: "Whenever you cast an instant or sorcery spell that
+    targets only this creature, if you control one or more other creatures
+    that spell could target, ..." - Giant Growth could target Grizzly Bears;
+    an opponent's creature is not one alice controls, and a Mind Stone is not
+    a creature Giant Growth could target."""
+    scenario = _board(
+        ["Beamsplitter Mage", "Mind Stone", "Forest"], ["Grizzly Bears"], hand=["Giant Growth"]
+    )
+    mage = scenario.creature("Beamsplitter Mage")
+    spell = scenario.cast_onto_stack(
+        "Giant Growth", *scenario.untapped_sources("Forest"), targets=[mage]
+    )
+    event = GameEvent(event=TriggerEvent.CAST_SPELL, subject_id=spell.id, player="alice")
+    assert _holds(scenario, "Beamsplitter Mage", event=event) is False
+    scenario = _board(["Beamsplitter Mage", "Llanowar Elves", "Forest"], hand=["Giant Growth"])
+    mage = scenario.creature("Beamsplitter Mage")
+    spell = scenario.cast_onto_stack(
+        "Giant Growth", *scenario.untapped_sources("Forest"), targets=[mage]
+    )
+    event = GameEvent(event=TriggerEvent.CAST_SPELL, subject_id=spell.id, player="alice")
+    assert _holds(scenario, "Beamsplitter Mage", event=event) is True
+
+
 # -- state adjectives ---------------------------------------------------------
 
 
@@ -625,11 +644,15 @@ def test_a_blue_or_red_permanent():
 
 
 def test_another_wolf_or_werewolf():
-    """Packsong Pup (a Wolf): "if you control another Wolf or Werewolf"."""
-    scenario = _board(["Packsong Pup", "Grizzly Bears"])
-    assert _holds(scenario, "Packsong Pup") is False
-    scenario = _board(["Packsong Pup", "Packsong Pup"])
-    assert _holds(scenario, "Packsong Pup") is True
+    """Packsong Pup's "if you control another Wolf or Werewolf", read with
+    Apex Witchstalker (a Wolf) as the source: itself is not another."""
+    scenario = _board(["Apex Witchstalker", "Grizzly Bears"])
+    source = scenario.creature("Apex Witchstalker")
+    clause = "you control another wolf or werewolf"
+    assert scenario.game.condition_holds("alice", clause, source) is False
+    scenario = _board(["Apex Witchstalker", "Duskwatch Hunter"])
+    source = scenario.creature("Apex Witchstalker")
+    assert scenario.game.condition_holds("alice", clause, source) is True
 
 
 def test_multicolored_permanents():

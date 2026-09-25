@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ceaseless Searblades", "Cavalier of Flame"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ceaseless Searblades", "Blazing Bomb"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -44,7 +44,7 @@
       }
     },
     "players": {},
-    "stack": ["ability of Cavalier of Flame@alice#1: {1}{R}: Creatures you control get +1/+0 and gain haste until end of turn."]
+    "stack": ["ability of Blazing Bomb@alice#1: Blow Up — {T}, Sacrifice this creature: It deals damage equal to its power to target creature. Activate only as a sorcery."]
   },
   "family": "triggered",
   "format": 1,

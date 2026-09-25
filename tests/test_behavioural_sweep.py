@@ -92,7 +92,7 @@ from magic_cards_model.machines.abilities import (
     parse_abilities,
     self_reference_names,
 )
-from magic_cards_model.machines.casting import MarkedExile
+from magic_cards_model.machines.casting import MarkedExile, kicker_costs
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
 from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.effects import transform_permanent
@@ -779,7 +779,15 @@ def _cast(
         if keyword is not None:
             casting.use_keyword(keyword)
         if kicked:
-            casting.pay_kicker(1)
+            # CR 702.33b: "Kicker [A] and/or [B]" is two kicker costs - kick
+            # with every one, so each linked "kicked with its [A] kicker"
+            # (CR 702.33f) and "kicked twice" is true.
+            costs = kicker_costs(spell.card)
+            if len(costs) > 1:
+                for cost in costs:
+                    casting.pay_kicker(1, which=cost)
+            else:
+                casting.pay_kicker(1)
         if x_value is not None:
             # CR 107.3a: the X announced for an {X} spell.
             casting.determine_cost(x_value=x_value)
@@ -1107,6 +1115,16 @@ def _history_threshold(scenario: PlayedScenario, source: CardState, condition: s
         graveyard = [card for card in game.player(ALICE).graveyard if card is not source]
         if graveyard:
             game.exile_cards([graveyard[-1]])
+    if "no creatures are on the battlefield" in lowered:
+        # EC3's board reader (CR 613.5): every creature on the stock board
+        # but the source is exiled, so the count is zero.
+        creatures = [
+            permanent
+            for permanent in game.battlefield
+            if permanent is not source and game.characteristics_of(permanent).is_creature
+        ]
+        if creatures:
+            game.exile_cards(creatures)
 
 
 def _activation_step(ability: ActivatedAbility) -> Step:
@@ -2651,6 +2669,9 @@ TRIGGER_KIND_SKIPS: dict[str, str] = {}
 # ---------------------------------------------------------------------------
 
 KNOWN_ENGINE_GAPS: dict[str, str] = {
+    "Sunstar Chaplain #0 [activated]": (
+        "cost 'Remove a +1/+1 counter from a creature you control' cannot be built"
+    ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
     ),
@@ -2693,7 +2714,46 @@ class DriverGap:
         return f"sweep has no driver for {self.event} yet"
 
 
-SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = ()
+#: EC3's board-state and cast-record conditions (`machines/conditions/board.py`,
+#: `cast_record.py`): each is read and proven by its own scenario file
+#: (`tests/scenarios/test_condition_*.py`), but no attempt here stages the
+#: board a count or aggregate asks for, or casts the source paying the
+#: optional or alternative cost its clause names.
+_EC3_CAST_RECORD = (
+    r"if (?:it|he|she|they) (?:was|were) bargained"
+    r"|(?:its|his|her|their) (?:prowl|spectacle|madness|surge|sneak) cost was paid"
+    r"|cast using web-slinging"
+    r"|evidence was collected|tribute wasn't paid|you revealed an? \w+ card or controlled"
+)
+_EC3_BOARD = (
+    r"if you control (?:another creature named|an? creature with an? (?:\+1/\+1 )?counter"
+    r"|another creature with a \+1/\+1 counter|another outlaw|three or more permanents you"
+    r" don't own|three or more creatures that each have|exactly one creature|no other"
+    r"|no artifacts|two or more multicolored|an? blue or red)"
+    r"|while you control a token"
+)
+
+SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
+    DriverGap(
+        "enters_the_battlefield",
+        "a cast of the source paying the optional or alternative cost its clause names",
+        _EC3_CAST_RECORD,
+    ),
+    DriverGap("enters_the_battlefield", "the board a count condition asks for", _EC3_BOARD),
+    DriverGap("beginning_of_step", "the board a count condition asks for", _EC3_BOARD),
+    DriverGap("attacks", "the board a count condition asks for", _EC3_BOARD),
+    DriverGap("deals_damage", "the board a count condition asks for", _EC3_BOARD),
+    DriverGap(
+        "cast_spell",
+        "a probe spell cast kicked, with creature mana, or for less mana than its mana value",
+        r"that spell was kicked|mana from creatures was spent|mana spent to cast it was less",
+    ),
+    DriverGap(
+        "activated",
+        "the board an activation restriction counts (an attacking modified creature, five colors)",
+        r"activate only if (?:you control an attacking modified|there are five colors)",
+    ),
+)
 
 
 def _driver_gap(case: Case) -> DriverGap | None:

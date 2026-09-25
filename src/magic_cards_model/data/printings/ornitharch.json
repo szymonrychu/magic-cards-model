@@ -1,0 +1,154 @@
+{
+  "object": "card",
+  "id": "f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5",
+  "oracle_id": "19639595-c59b-4233-a167-f5cffcb0e38b",
+  "multiverse_ids": [
+    378395
+  ],
+  "mtgo_id": 51761,
+  "mtgo_foil_id": 51762,
+  "tcgplayer_id": 79136,
+  "cardmarket_id": 266016,
+  "name": "Ornitharch",
+  "lang": "en",
+  "released_at": "2014-02-07",
+  "uri": "https://api.scryfall.com/cards/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5",
+  "scryfall_uri": "https://scryfall.com/card/bng/23/ornitharch?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:46:16Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.jpg?1783939576",
+    "normal": "https://cards.scryfall.io/normal/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.jpg?1783939576",
+    "large": "https://cards.scryfall.io/large/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.jpg?1783939576",
+    "png": "https://cards.scryfall.io/png/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.png?1783939576",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.jpg?1783939576",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.jpg?1783939576",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.webp?1783939576",
+    "grid": "https://cards.scryfall.io/grid/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.webp?1783939576",
+    "display": "https://cards.scryfall.io/display/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.webp?1783939576",
+    "art": "https://cards.scryfall.io/art/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.webp?1783939576",
+    "crop": "https://cards.scryfall.io/crop/front/f/9/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5.webp?1783939576"
+  },
+  "mana_cost": "{3}{W}{W}",
+  "cmc": 5.0,
+  "type_line": "Creature \u2014 Archon",
+  "oracle_text": "Flying\nTribute 2 (As this creature enters, an opponent of your choice may put two +1/+1 counters on it.)\nWhen this creature enters, if tribute wasn't paid, create two 1/1 white Bird creature tokens with flying.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Tribute"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5",
+      "component": "combo_piece",
+      "name": "Ornitharch",
+      "type_line": "Creature \u2014 Archon",
+      "uri": "https://api.scryfall.com/cards/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5"
+    },
+    {
+      "object": "related_card",
+      "id": "c862470b-f273-4e01-945b-bf3697cd1359",
+      "component": "token",
+      "name": "Bird",
+      "type_line": "Token Creature \u2014 Bird",
+      "uri": "https://api.scryfall.com/cards/c862470b-f273-4e01-945b-bf3697cd1359"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "50a80fe4-a757-408f-ad23-52c5cc5f45cc",
+  "set": "bng",
+  "set_name": "Born of the Gods",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/50a80fe4-a757-408f-ad23-52c5cc5f45cc",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Abng&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/bng?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f95a0bf4-10c7-4afa-8cf6-e31196cc2bd5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A19639595-c59b-4233-a167-f5cffcb0e38b&unique=prints",
+  "collector_number": "23",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Clint Cearley",
+  "artist_ids": [
+    "03b75350-d5a0-4e3a-b3b4-8d4a5554385b"
+  ],
+  "illustration_id": "43665861-625a-4b07-84e7-fb7fb4087919",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 28210,
+  "penny_rank": 17464,
+  "prices": {
+    "usd": "0.15",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.26",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=378395&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOrnitharch",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOrnitharch",
+    "edhrec": "https://edhrec.com/route/?cc=Ornitharch"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F79136%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=266016&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/51761?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

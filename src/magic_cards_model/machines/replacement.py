@@ -1582,6 +1582,13 @@ class ReplaceableEvent:
     #: raises its own `ADD_COUNTERS` event - CR 616.1g's "event contained within
     #: the first event", and what lets Doubling Season see them (CR 122.6).
     counters: dict[str, int] = field(default_factory=dict)
+    #: Counters a player other than the entering object's controller puts on
+    #: it as it enters, as `(kind, putter, amount)` - CR 702.104a's tribute,
+    #: where "that player may put an additional N +1/+1 counters on it". Kept
+    #: apart from `counters` only for the putter (CR 122.6a), which the
+    #: counter history records and "if tribute wasn't paid" (CR 702.104b)
+    #: reads back.
+    counters_put_by: list[tuple[str, str, int]] = field(default_factory=list)
     #: Loyalty counters compleated takes back off a planeswalker's own CR
     #: 306.5b/CR 614.1c entering count (CR 702.150a), summed if more than one
     #: instance of the ability somehow applied. Deliberately not folded into
@@ -6015,7 +6022,79 @@ def _self_enters_modifiers(
     if compleated is not None:
         performable.append(compleated)
 
+    tribute = _tribute_modifier(game, card_state)
+    if tribute is not None:
+        performable.append(tribute)
+
     return performable
+
+
+def _tribute_modifier(game: "Game", card_state: CardState) -> tuple[str, Apply, str, bool] | None:
+    """Tribute (CR 702.104a), read off the keyword and its N rather than off a
+    sentence - its expansion is reminder text (CR 207.2): "Tribute N" means
+    "As this creature enters, choose an opponent. That player may put an
+    additional N +1/+1 counters on it as it enters."
+
+    A replacement effect on the entering event (CR 614.1c), so both choices
+    are made before the creature is on the battlefield (CR 614.12a): its
+    controller chooses the opponent, and that opponent is asked. The counters
+    are placed with the opponent as their putter (`counters_put_by`), which
+    is how "if tribute wasn't paid" (CR 702.104b) tells them from any other
+    +1/+1 counter. It works however the creature enters, cast or not."""
+    from .abilities import keyword_abilities
+
+    count = next(
+        (
+            ability.count
+            for ability in keyword_abilities(card_state.card)
+            if ability.canonical.lower() == "tribute" and ability.count
+        ),
+        None,
+    )
+    if count is None:
+        return None
+    amount = count
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        controller = source.controller if source is not None else None
+        if source is None or controller is None:
+            return
+        opponents = [
+            player.username for player in game.players_in_game if player.username != controller
+        ]
+        if not opponents:
+            return
+        opponent = opponents[0]
+        if len(opponents) > 1:
+            opponent = str(
+                game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=controller,
+                        prompt=f"choose an opponent for {source.name}'s tribute (CR 702.104a)",
+                        source=source.name,
+                        source_id=source_id_of(source),
+                        options=tuple(opponents),
+                        quality="opponent",
+                    )
+                )
+            )
+        paid = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=opponent,
+                prompt=(
+                    f"put {amount} +1/+1 counter{'s' if amount != 1 else ''} on "
+                    f"{source.name} as it enters (tribute, CR 702.104a)"
+                ),
+                source=source.name,
+                source_id=source_id_of(source),
+            )
+        )
+        if paid:
+            event.counters_put_by.append((str(Counter.PLUS_ONE), opponent, amount))
+
+    return ("self:tribute", apply, f"Tribute {amount} (CR 702.104a)", False)
 
 
 def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -> bool:

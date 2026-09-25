@@ -175,6 +175,11 @@ class KeywordCastOption(EngineModel):
     unavailable while the caster controls no unblocked creature (CR 509.1h),
     and `cost` carries a `ComponentKind.RETURN_TO_HAND` component the caster
     fills with the creature chosen (CR 601.2b's `choosing`)."""
+    returns_tapped_creature: bool = False
+    """True when the cost includes "returning a tapped creature you control to
+    its owner's hand" (CR 702.188a's web-slinging): unavailable while the
+    caster controls no tapped creature, and the chosen creature is checked
+    as it is chosen (CR 601.2b)."""
     prowl: bool = False
     """True for CR 702.76a's prowl: the alternative cost is available only "if
     a player was dealt combat damage this turn by a source that, at the time
@@ -189,6 +194,11 @@ class KeywordCastOption(EngineModel):
     `Game.spectacle_condition_holds` against `Player.life_lost_this_turn`
     (CR 119.2/118.3b/701.12c's gross per-turn loss) rather than a new
     per-turn record of its own."""
+    surge: bool = False
+    """True for CR 702.117a's surge: the alternative cost is available only
+    "if you or one of your teammates has cast another spell this turn",
+    checked by `why_not` against `Game.spells_cast_this_turn` - another
+    spell, so the one being cast never counts itself."""
     understood: bool = True
     """False when the keyword's printed cost could not be read into something
     payable. The option is still reported, so a sweep can see the gap."""
@@ -297,6 +307,27 @@ class KeywordCastOption(EngineModel):
                 f"no player was dealt combat damage this turn by a source {caster} "
                 f"controlled that shared a creature type with {spell.name}, so it cannot "
                 f"be cast for its {self.keyword} cost ({self.rule})"
+            )
+        if (
+            self.returns_tapped_creature
+            and game is not None
+            and not any(
+                permanent.tapped and game.characteristics_of(permanent).is_creature
+                for permanent in game.permanents_controlled_by(caster)
+            )
+        ):
+            return (
+                f"{caster} controls no tapped creature to return to its owner's hand, so "
+                f"{spell.name} cannot be cast with {self.keyword} ({self.rule})"
+            )
+        if (
+            self.surge
+            and game is not None
+            and not any(cast.id != spell.id for cast in game.spells_cast_this_turn.get(caster, []))
+        ):
+            return (
+                f"{caster} has not cast another spell this turn, so {spell.name} cannot be "
+                f"cast for its {self.keyword} cost ({self.rule})"
             )
         if self.spectacle and game is not None and not game.spectacle_condition_holds(caster):
             return (
@@ -737,6 +768,55 @@ def _option_from_keyword(ability: KeywordAbility) -> KeywordCastOption | None:
             cost=cost,
             pays_mana_cost=False,
             spectacle=True,
+            understood=cost is not None,
+        )
+
+    if canonical == "surge":
+        # CR 702.117a: "Surge is a static ability that functions while the
+        # spell with surge is on the stack. 'Surge [cost]' means 'You may pay
+        # [cost] rather than pay this spell's mana cost as you cast this spell
+        # if you or one of your teammates has cast another spell this turn.'"
+        # An alternative cost (CR 118.9) from the hand, the zone a card is
+        # cast from by default - the same reading spectacle's option makes -
+        # with its condition `why_not`'s, off `surge`.
+        cost = total_cost_for_phrase(printed) if printed else None
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.117a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            surge=True,
+            understood=cost is not None,
+        )
+
+    if canonical == "web-slinging":
+        # CR 702.188a: "'Web-slinging [cost]' means 'You may cast this spell
+        # by paying [cost] and returning a tapped creature you control to its
+        # owner's hand rather than paying its mana cost.'" An alternative cost
+        # (CR 118.9) from the hand, whose return half is sneak's and
+        # ninjutsu's `ComponentKind.RETURN_TO_HAND` with a "tapped creature"
+        # requirement instead of combat's unblocked attacker.
+        from .cost import CardRequirement
+
+        mana = total_cost_for_phrase(printed) if printed else None
+        cost = None
+        if mana is not None:
+            returning = return_to_hand_cost(
+                required=1,
+                description="Return a tapped creature you control to its owner's hand",
+            )
+            returning.requirement = CardRequirement(
+                types=[Type.CREATURE], description="tapped creature"
+            )
+            cost = TotalCost(mana=mana.mana, components=[*mana.components, returning])
+        return KeywordCastOption(
+            keyword=ability.canonical,
+            rule="CR 702.188a",
+            zone=Zone.HAND,
+            cost=cost,
+            pays_mana_cost=False,
+            returns_tapped_creature=True,
             understood=cost is not None,
         )
 
@@ -2003,7 +2083,38 @@ _COST_INCREASE_PER_TARGET_RE = re.compile(
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
-    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift", "teamwork"}
+    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift", "teamwork", "bargain"}
+)
+
+#: CR 702.166a: "'Bargain' means 'As an additional cost to cast this spell,
+#: you may sacrifice an artifact, enchantment, or token.'" - the cost a
+#: bargain line never prints, spelled out for `optional_additional_costs`.
+BARGAIN_COST = "Sacrifice an artifact, enchantment, or token"
+
+#: CR 702.33b: "The phrase 'Kicker [cost 1] and/or [cost 2]' means the same
+#: thing as 'Kicker [cost 1], kicker [cost 2].'"
+_KICKER_AND_OR = re.compile(r"\s+and/or\s+", re.IGNORECASE)
+
+
+def kicker_costs(card: Card) -> list[str]:
+    """Every kicker cost `card` prints, each as printed, in printed order -
+    CR 702.33b's "and/or" line is two of them, and CR 702.33f names them
+    "[A]" and "[B]" in this order. Multikicker has its one cost."""
+    costs: list[str] = []
+    for ability in keyword_abilities(card):
+        if ability.canonical.lower() not in ("kicker", "multikicker"):
+            continue
+        printed = ability.cost or ability.parameter or ""
+        costs.extend(part.strip() for part in _KICKER_AND_OR.split(printed) if part.strip())
+    return costs
+
+
+#: An optional additional-cost sentence this engine charges (CR 118.8b):
+#: CR 701.59a's "you may collect evidence N" and a "you may reveal a
+#: <quality> card from your hand" (CR 701.20a).
+_OPTIONAL_COLLECT_EVIDENCE = re.compile(r"^you may (?P<cost>collect evidence \d+)$", re.IGNORECASE)
+_OPTIONAL_REVEAL = re.compile(
+    r"^you may (?P<cost>reveal an? [\w-]+ card from your hand)$", re.IGNORECASE
 )
 
 
@@ -2089,6 +2200,13 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
         ability = _keyword(card, keyword)
         if ability is None:
             continue
+        if keyword == "kicker":
+            # CR 702.33b: one option per kicker cost, each announced on its own.
+            found.extend(
+                OptionalAdditionalCost(keyword=keyword, cost=cost, rule=rule)
+                for cost in kicker_costs(card)
+            )
+            continue
         # CR 702.174a's gift has no resource behind it - "you may choose an
         # opponent" - so what it prints after the keyword is the promise
         # ("a Food"), read off `parameter`, not a cost off `cost`.
@@ -2098,18 +2216,28 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
         found.append(
             OptionalAdditionalCost(keyword=keyword, cost=printed, rule=rule, repeatable=repeatable)
         )
+    if _keyword(card, "bargain") is not None:
+        found.append(
+            OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
+        )
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
             continue
         blight = _BLIGHT_PHRASE.match(phrase)
-        found.append(
-            OptionalAdditionalCost(
-                keyword="blight" if blight is not None else None,
-                cost=phrase,
-                rule="CR 701.68a" if blight is not None else "CR 118.8b",
-                understood=blight is not None,
+        if blight is not None:
+            found.append(OptionalAdditionalCost(keyword="blight", cost=phrase, rule="CR 701.68a"))
+        elif _OPTIONAL_COLLECT_EVIDENCE.match(phrase) is not None:
+            found.append(
+                OptionalAdditionalCost(keyword="collect evidence", cost=phrase, rule="CR 701.59a")
             )
-        )
+        elif _OPTIONAL_REVEAL.match(phrase) is not None:
+            found.append(OptionalAdditionalCost(keyword="reveal", cost=phrase, rule="CR 701.20a"))
+        else:
+            found.append(
+                OptionalAdditionalCost(
+                    keyword=None, cost=phrase, rule="CR 118.8b", understood=False
+                )
+            )
     printed = additional_cost_phrases(card)
     for index, _ in life_or_mana_additional_costs(card):
         # Not optional as a whole - one half or the other is paid - but which
@@ -3158,6 +3286,20 @@ class Casting(EngineModel):
     gift_promised: bool = False
     """Whether this spell's gift was promised (CR 702.174k), set by
     `pay_gift`."""
+    kicker_costs_paid: list[str] = Field(default_factory=list)
+    """Which kicker costs were paid, each as printed (CR 702.33b, CR 702.33f),
+    in announcement order - `pay_kicker` appends one per payment."""
+    bargained: bool = False
+    """Whether this spell's bargain cost was paid (CR 702.166b), set by
+    `pay_bargain`."""
+    evidence_collected: bool = False
+    """Whether evidence was collected for an optional "you may collect
+    evidence N" additional cost (CR 701.59a, CR 701.59c), set by
+    `collect_evidence`."""
+    revealed_for_cost: bool = False
+    """Whether a card was revealed for an optional "you may reveal a
+    <quality> card from your hand" additional cost (CR 118.8b), set by
+    `reveal_for_cost`."""
     gift_chosen_player: str | None = None
     """The opponent chosen when the gift was promised (CR 702.174a's own
     additional cost, "you may choose an opponent") - who "the chosen player"
@@ -4116,9 +4258,41 @@ class Casting(EngineModel):
         self.choose_alternative_cost(cost)
         if option.returns_unblocked_creature:
             self._note_returned_creature_defender(option)
+        if option.returns_tapped_creature:
+            self._check_returned_tapped_creature(option)
         if option.emerge_quality is not None:
             self._reduce_by_emerged_permanent(option)
         return self.step
+
+    def _check_returned_tapped_creature(self, option: KeywordCastOption) -> None:
+        """CR 702.188a: the creature chosen (CR 601.2b) to return for
+        web-slinging must be a tapped creature the caster controls - checked
+        now, so a wrong choice is refused with its own reason."""
+        assert self.alternative_cost is not None
+        component = next(
+            component
+            for component in self.alternative_cost.components
+            if component.kind is ComponentKind.RETURN_TO_HAND
+        )
+        if not component.cards:
+            raise ValueError(
+                f"{option.keyword} needs a tapped creature {self.caster} controls chosen to "
+                f"return to its owner's hand ({option.rule})"
+            )
+        chosen = component.cards[0]
+        is_creature = (
+            self.game.characteristics_of(chosen).is_creature
+            if self.game is not None and chosen.zone is Zone.BATTLEFIELD
+            else chosen.is_creature
+        )
+        if chosen.zone is not Zone.BATTLEFIELD or not is_creature or not chosen.tapped:
+            raise ValueError(
+                f"{chosen.name} is not a tapped creature, so it cannot be returned for "
+                f"{option.keyword} ({option.rule})"
+            )
+        reason = component.why_not(self.game)
+        if reason is not None:
+            raise ValueError(reason)
 
     def _reduce_by_emerged_permanent(self, option: KeywordCastOption) -> None:
         """CR 702.119a's second ability: the total cost is reduced by an
@@ -4740,7 +4914,13 @@ class Casting(EngineModel):
             self.add_additional_cost(cost)
         return self.step
 
-    def pay_kicker(self, times: int = 1, *, choosing: list[CardState] | None = None) -> CastingStep:
+    def pay_kicker(
+        self,
+        times: int = 1,
+        *,
+        choosing: list[CardState] | None = None,
+        which: str | None = None,
+    ) -> CastingStep:
         """CR 702.33a: pay this spell's kicker cost as an additional cost.
 
         "Kicker is a static ability that functions while the spell with kicker
@@ -4756,6 +4936,12 @@ class Casting(EngineModel):
         CR 702.33c's multikicker may be paid more than once; `times` is that.
         A card with plain kicker refuses a second payment rather than charging
         for it.
+
+        CR 702.33b's "Kicker [cost 1] and/or [cost 2]" is two kicker costs:
+        `which` names the one being paid (as printed, "{2}{U}"), each at most
+        once, and `kicker_costs_paid` records it for CR 702.33f's "if it was
+        kicked with its [A] kicker". A spell with two kicker costs paid both
+        has been kicked twice (CR 702.33d).
         """
         ability = _keyword(self.spell.card, "kicker") or _keyword(self.spell.card, "multikicker")
         if ability is None:
@@ -4763,7 +4949,27 @@ class Casting(EngineModel):
         if times < 1:
             raise ValueError("kicker is paid at least once or not at all")
         multi = ability.canonical.lower() == "multikicker"
-        if not multi and (times > 1 or self.kicked):
+        costs = kicker_costs(self.spell.card)
+        if which is None:
+            if len(costs) > 1:
+                raise ValueError(
+                    f"{self.spell.name} has {len(costs)} kicker costs ({' and '.join(costs)}); "
+                    f"name the one being paid (CR 702.33b)"
+                )
+            chosen = costs[0] if costs else (ability.cost or "")
+        else:
+            chosen = next((cost for cost in costs if cost.lower() == which.lower()), "")
+            if not chosen:
+                raise ValueError(
+                    f"{self.spell.name} has no kicker cost {which} (its kicker costs are "
+                    f"{' and '.join(costs) or 'unreadable'}, CR 702.33b)"
+                )
+        if not multi and len(costs) > 1 and (times > 1 or chosen in self.kicker_costs_paid):
+            raise ValueError(
+                f"{self.spell.name}'s kicker cost {chosen} was already paid; each kicker "
+                f"cost is paid at most once (CR 702.33a, CR 702.33b)"
+            )
+        if not multi and len(costs) <= 1 and (times > 1 or self.kicked):
             raise ValueError(
                 f"{self.spell.name} has plain kicker, which can only be paid once "
                 f"(CR 702.33a; multikicker is CR 702.33c)"
@@ -4771,10 +4977,10 @@ class Casting(EngineModel):
 
         remaining = list(choosing or [])
         for _ in range(times):
-            cost = total_cost_for_phrase(ability.cost or "", self.caster)
+            cost = total_cost_for_phrase(chosen, self.caster)
             if cost is None:
                 raise ValueError(
-                    f"{self.spell.name}'s kicker cost {ability.cost!r} could not be read, "
+                    f"{self.spell.name}'s kicker cost {chosen!r} could not be read, "
                     f"so it cannot be paid"
                 )
             for component in cost.components:
@@ -4783,6 +4989,116 @@ class Casting(EngineModel):
                     remaining = remaining[component.required :]
             self.add_additional_cost(cost)
             self.kicked += 1
+            self.kicker_costs_paid.append(chosen)
+        return self.step
+
+    def pay_bargain(self, permanent: CardState) -> CastingStep:
+        """CR 702.166a: "'Bargain' means 'As an additional cost to cast this
+        spell, you may sacrifice an artifact, enchantment, or token.'" -
+        paying it makes the spell "bargained" (CR 702.166b), which its linked
+        "if it was bargained" (CR 702.166c) reads off `CastRecord.bargained`.
+
+        The permanent is chosen now (CR 601.2b) and sacrificed with the rest
+        of the total cost at CR 601.2h; it is checked now as well - on the
+        battlefield, controlled by the caster (CR 701.21a), and an artifact,
+        an enchantment (on the computed board, CR 613.5) or a token (CR
+        111.1) - so a wrong choice is refused with its own reason.
+        """
+        from .cost import sacrifice_cost
+
+        if _keyword(self.spell.card, "bargain") is None:
+            raise ValueError(f"{self.spell.name} has no bargain ability (CR 702.166a)")
+        if self.bargained:
+            raise ValueError(f"{self.spell.name}'s bargain cost was already paid")
+        if permanent.zone is not Zone.BATTLEFIELD:
+            raise ValueError(
+                f"{permanent.name} is not a permanent, so it cannot be sacrificed (CR 701.21a)"
+            )
+        controller = (
+            self.game.controller_of(permanent).username
+            if self.game is not None
+            else permanent.controller
+        )
+        if controller != self.caster:
+            raise ValueError(
+                f"{self.caster} does not control {permanent.name}, so cannot sacrifice it "
+                f"(CR 701.21a)"
+            )
+        types = (
+            self.game.characteristics_of(permanent).types
+            if self.game is not None
+            else permanent.types
+        )
+        if not (permanent.token or Type.ARTIFACT in types or Type.ENCHANTMENT in types):
+            raise ValueError(
+                f"{permanent.name} is not an artifact, enchantment, or token, so it cannot "
+                f"pay {self.spell.name}'s bargain cost (CR 702.166a)"
+            )
+        component = sacrifice_cost(permanent, payer=self.caster, description=BARGAIN_COST)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.bargained = True
+        return self.step
+
+    def _optional_sentence(self, pattern: re.Pattern[str], what: str, rule: str) -> str:
+        """The cost of the card's own "As an additional cost to cast this
+        spell, you may <cost>" sentence matching `pattern` (CR 118.8b)."""
+        for phrase in additional_cost_phrases(self.spell.card):
+            match = pattern.match(phrase)
+            if match is not None:
+                return match.group("cost")
+        raise ValueError(f"{self.spell.name} has no optional {what} additional cost ({rule})")
+
+    def collect_evidence(self, cards: Sequence[CardState] | None = None) -> CastingStep:
+        """Pay a printed "you may collect evidence N" as the optional additional
+        cost it is (CR 118.8b): CR 701.59a's "exile any number of cards from
+        your graveyard with total mana value N or greater", checked and paid
+        with the rest of the total cost at CR 601.2h. `cards` names the cards;
+        left out, the payment picks them (`CostComponent._evidence_to_exile`).
+        `evidence_collected` is what the linked "if evidence was collected"
+        (CR 701.59c) reads."""
+        if self.evidence_collected:
+            raise ValueError(f"{self.spell.name}'s evidence was already collected")
+        phrase = self._optional_sentence(
+            _OPTIONAL_COLLECT_EVIDENCE, "collect evidence", "CR 701.59a"
+        )
+        component = cost_component_for_phrase(phrase, self.caster)
+        if component is None:
+            raise ValueError(f"{self.spell.name}'s {phrase!r} could not be read (CR 701.59a)")
+        if cards:
+            component.cards = list(cards)
+        if self.game is not None:
+            refusal = component.why_not(self.game)
+            if refusal is not None:
+                raise ValueError(refusal)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.evidence_collected = True
+        return self.step
+
+    def reveal_for_cost(self, card: CardState) -> CastingStep:
+        """Pay a printed "you may reveal a <quality> card from your hand" as the
+        optional additional cost it is (CR 118.8b, CR 701.20a) - Orator of
+        Ojutai's "a Dragon card". The card must be in the caster's hand and
+        have the quality; it is revealed at CR 601.2h and stays in hand.
+        `revealed_for_cost` is what "if you revealed a Dragon card" reads."""
+        if self.revealed_for_cost:
+            raise ValueError(f"{self.spell.name}'s reveal cost was already paid")
+        phrase = self._optional_sentence(_OPTIONAL_REVEAL, "reveal", "CR 701.20a")
+        component = cost_component_for_phrase(phrase, self.caster)
+        if component is None:
+            raise ValueError(f"{self.spell.name}'s {phrase!r} could not be read (CR 701.20a)")
+        component.cards = [card]
+        component.required = 1
+        component.source = self.spell.name
+        if card.zone is not Zone.HAND or card.owner != self.caster:
+            raise ValueError(
+                f"{card.name} is not in {self.caster}'s hand, so it cannot be revealed"
+            )
+        if self.game is not None:
+            refusal = component.why_not(self.game)
+            if refusal is not None:
+                raise ValueError(refusal)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.revealed_for_cost = True
         return self.step
 
     def pay_teamwork(self, creatures: Sequence[CardState]) -> CastingStep:
@@ -6103,6 +6419,24 @@ class Casting(EngineModel):
                 # number nothing else on the record can answer for.
                 exile_annotation=self.announced_exile_annotation,
                 sneak_defender=self.returned_creature_defender,
+                kicker_costs_paid=list(self.kicker_costs_paid),
+                controlled_subtypes_as_cast=self._controlled_subtypes(),
+                bargained=self.bargained,
+                evidence_collected=self.evidence_collected,
+                revealed_for_cost=self.revealed_for_cost,
+                # CR 106.3's source of the mana spent (a creature) and CR
+                # 107.4h's snow source, read off the settled payment at CR
+                # 601.2h like `treasure_mana_spent`.
+                creature_mana_spent=(
+                    sum(self.payment.mana_payment.creature_spent.values())
+                    if self.payment is not None and self.payment.mana_payment is not None
+                    else 0
+                ),
+                snow_mana_spent=(
+                    dict(self.payment.mana_payment.snow_spent)
+                    if self.payment is not None and self.payment.mana_payment is not None
+                    else {}
+                ),
                 additional_cost_cards=[
                     card.id
                     for extra in self.additional_costs
@@ -6116,6 +6450,23 @@ class Casting(EngineModel):
             if self.permission_used is not None:
                 self.game.spend_play_permission_choice(self.permission_used)
         return self.spell
+
+    def _controlled_subtypes(self) -> tuple[str, ...]:
+        """CR 601.2i: every subtype among the permanents the caster controls as
+        the spell becomes cast, lowercased and sorted, off the computed board
+        (CR 613.5) - "or controlled a Dragon as you cast this spell"."""
+        if self.game is None:
+            return ()
+        board = self.game.computed_board()
+        return tuple(
+            sorted(
+                {
+                    subtype.lower()
+                    for state in self.game.permanents_controlled_by(self.caster)
+                    for subtype in board.of(state).subtypes
+                }
+            )
+        )
 
     def _turn_face_down_if_cast_that_way(self) -> None:
         """CR 708.4: a card cast face down is turned face down before it is cast.

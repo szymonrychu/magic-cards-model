@@ -35,9 +35,9 @@ Rules verified with `mise run rules:find`:
   never counts colorless.
 - CR 506.2 / CR 508.5: the defending player is the player attacked, or the
   controller of the planeswalker or battle attacked.
-- CR 115.7 / CR 608.2b: whether "that spell could target" an object is asked
-  of the spell's own targeting requirement (`Game.legal_target`), protection,
-  shroud and hexproof included.
+- CR 601.2c / CR 608.2b: whether "that spell could target" an object is
+  asked of the spell's own targeting requirement as a target would be
+  checked (`Game.legal_target`).
 """
 
 import re

@@ -5630,3 +5630,44 @@ for: an activation runs at the step its "Activate only during ..." names
 (`_activation_step`), and "an opponent lost life this turn" / "a card left
 your graveyard this turn" are made true on the stock board before the case
 (`_history_threshold`).
+
+## EC3: board-state and cast-record conditions (B1-B3, K1)
+
+`machines/conditions/board.py` and `machines/conditions/cast_record.py` read
+every clause of clusters B1 (89), B2 (16), B3 (9) and K1 (67), intervening
+"if" and "Activate only if" alike (`scripts/condition_inventory.py --clusters
+B1,B2,B3,K1`: 0 unread). A board reader claims a clause only when every word
+of its quality is read (`board._ReadableTemplate`), so an unread quality still
+fails closed with a notice. Every count reads the computed board (CR 613.5)
+through `magic_cards_model.numbers`.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "`<who>` [don't] control(s) no / a / another / exactly N / N or more / N or fewer / fewer than N `<quality>`" - who is you, an opponent, a player, each opponent, your opponents, defending player (CR 506.2, 508.5), that player | `board._controls` | Bleachbone Verge | Gloomlake Verge, Thornspire Verge, Celestial Enforcer, Goblin Bird-Grabber, Haunted Plate Mail, Lone Revenant, Ophiomancer, Stenchskipper, Glimmervoid, Demonic Rising, Siege Dragon, Fear of the Dark, Sothera | `test_condition_board_counts.py`, `test_condition_other_players_board.py` |
+| Quality words beyond `_characteristic_word`: tapped/untapped, attacking/blocking, modified (CR 700.9), enchanted/equipped, token/nontoken (CR 111.1), outlaw (CR 700.12), multicolored, other/another; suffixes named `<name>`, you [don't] own (CR 108.3), you [don't] control, with a/N `<kind>` counter(s), with `<keyword>`, with power/toughness/mana value N or greater, toughness greater than power, power greater than its base power (CR 208.4b, `Game.base_power_toughness_board`), with the greatest `<stat>` [among ...] [or tied], that spell could target (`Game.legal_target`); "X or Y" / "X and/or Y" | `board.quality` | - | Supply Caravan, Zegana, Foundry Hornet, Delta Bloodflies, Martyr's Soul, Dust Stalker, Goro-Goro, Mine Raider, Moonlit Scavengers, Wandering Champion, Scuttling Butler, Baird, Padeem, Eomer, Jadar, Agent of Treachery, Beamsplitter Mage | `test_condition_board_counts.py` |
+| Groups: "with different powers / names", "that share a creature type", "that each have toughness greater than their power" | `board._grouped_measure` | Dawnhart Wardens | Candlelit Cavalry, Littjara Kinseekers (changeling), Liliana's Contract, Catapult Fodder | `test_condition_board_counts.py`, `test_condition_board_aggregates.py` |
+| "`<quality>` you control have total power/toughness N or greater" | `board._total` | Dragon-Scarred Bear | Atarka Beastbreaker, Stampeding Elk Herd, Betor | `test_condition_board_aggregates.py` |
+| "there are N colors among `<quality>` you control" (CR 105.2c) | `board._colors_among` | Puca's Eye | Happily Ever After (the half) | `test_condition_board_aggregates.py` |
+| "enchanted/equipped `<noun>` is a `<quality>`" | `board._attached_object_is` | Historian's Wisdom | - (only printing of the superlative) | `test_condition_board_aggregates.py` |
+| "no `<quality>` are on the battlefield", "all `<quality>` on the battlefield are `<quality>`", "N or more `<quality>` have a `<kind>` counter on them" | `board._on_the_battlefield`, `_all_are`, `_have_counters` | Call to the Grave | Pyrohemia, Quicksilver Fountain, Haphazard Bombardment, Chevill | `test_condition_other_players_board.py` |
+| "you [didn't] cast it from your hand / a graveyard" - the caster is "you" (CR 405.4) | `cast_record._cast_from` | Furnace Dragon | Coal Stoker, Wild Pair, Chainer, Phage | `test_condition_cast_record.py` |
+| "he/they was/were cast" | `cast_record._was_cast` | Anti-Venom | - | `test_condition_cast_record.py` |
+| Mana spent (CR 601.2h): at least N, compared with its mana value (CR 202.3e) or the source's power, N of the same color, no colored mana, `{C}` wasn't spent, N from creatures (CR 106.3; `ManaPool.creature`, `CastRecord.creature_mana_spent`), `{S}` of its colors (CR 107.4h; `CastRecord.snow_mana_spent`) | `cast_record` | Blazing Bomb | Prompto Argentum, Tokka & Rahzar, Liberator, Clockwork Servant, Void Mirror, Wumpus Aberration, Inga and Esika, Boreal Outrider | `test_condition_cast_record.py` |
+| Kicker: "was [not] kicked", "kicked twice", "kicked with its [A] kicker" (CR 702.33b/d/f) - `Casting.pay_kicker(which=...)`, `CastRecord.kicker_costs_paid`; "Kicker [A] and/or [B]" is now payable | `cast_record._kicked` | Archangel of Wrath | Josu Vess, Jace Mirror Mage, Skizzik, Bloodstone Goblin, Hallar, Thornscape and Ana Battlemage | `test_condition_paid_costs.py` |
+| Bargain (CR 702.166) built: `Casting.pay_bargain`, `CastRecord.bargained` | `cast_record._bargained` | Troublemaker Ouphe | Agatha's Champion | `test_condition_paid_costs.py` |
+| Surge (CR 702.117a) and web-slinging (CR 702.188a) built as alternative costs; "its `<keyword>` cost was paid" / "cast using `<keyword>`" for prowl, spectacle, madness, sneak too | `casting._option_from_keyword`, `cast_record._keyword_cost_paid` | Reckless Bushwhacker | Tyrant of Valakut, Spiders-Man, Latchkey Faerie, Rafter Demon, Grave Scrabbler, Leonardo | `test_condition_paid_costs.py` |
+| Optional "you may collect evidence N" (CR 701.59a/c) and "you may reveal a `<quality>` card from your hand" built: `Casting.collect_evidence`, `Casting.reveal_for_cost`; "controlled a `<subtype>` as you cast this spell" from `CastRecord.controlled_subtypes_as_cast` (CR 601.2i) | `cast_record._evidence_collected`, `_revealed_or_controlled` | Vitu-Ghazi Inspector, Orator of Ojutai | - (only printings of each linked clause) | `test_condition_paid_costs.py` |
+| Tribute (CR 702.104a/b) built: `replacement._tribute_modifier` asks the chosen opponent, the counters are that player's (`ReplaceableEvent.counters_put_by`, CR 122.6a); "tribute wasn't paid" reads the counter history | `cast_record._tribute_paid` | Oracle of Bones | Snake of the Golden Grove, Ornitharch | `test_condition_paid_costs.py` |
+
+Newly visible, not closed here (effect or static gaps on proof printings, all
+effects.py/layers.py work): Agent of Treachery's "gain control of target
+permanent", Beamsplitter Mage's copy, Betor's layered draw/untap/half-life,
+Liliana's Contract / Happily Ever After's "you win the game", Jadar's
+"token with decayed", Chainer's and Phage's effects, Wild Pair's search,
+Wumpus Aberration's "may put a creature card", Boreal Outrider's "enters with
+an additional counter", Historian's Wisdom's "as long as" static, Puca's
+Eye's "becomes the chosen color", Quicksilver Fountain, Haphazard
+Bombardment, Sothera, Siege Dragon's "each creature without flying that
+player controls", Haunted Plate Mail's animation, Anti-Venom's prevention
+replacement, Ana Battlemage's {1}{B} effect, Inga and Esika's granted mana
+ability.

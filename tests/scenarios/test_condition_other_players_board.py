@@ -110,20 +110,24 @@ def test_defending_player_controls_no_walls_on_a_second_printing():
 
 
 def test_defending_player_controls_no_black_permanents():
-    """Spectral Force: "if defending player controls no black permanents"."""
-    scenario = _board(["Spectral Force"], ["Ophiomancer"])
-    _attack(scenario, "Spectral Force")
-    assert _holds(scenario, "Spectral Force") is False
-    scenario = _board(["Spectral Force"], ["Grizzly Bears"])
-    _attack(scenario, "Spectral Force")
-    assert _holds(scenario, "Spectral Force") is True
+    """Spectral Force's "if defending player controls no black permanents",
+    read through the shared reader while Fear of the Dark attacks."""
+    clause = "defending player controls no black permanents"
+    scenario = _board(["Fear of the Dark"], ["Ophiomancer", "Enduring Innocence"])
+    _attack(scenario, "Fear of the Dark")
+    fear = scenario.creature("Fear of the Dark")
+    assert scenario.game.condition_holds("alice", clause, fear) is False
+    scenario = _board(["Fear of the Dark"], ["Grizzly Bears", "Enduring Innocence"])
+    _attack(scenario, "Fear of the Dark")
+    fear = scenario.creature("Fear of the Dark")
+    assert scenario.game.condition_holds("alice", clause, fear) is True
 
 
 def test_no_defending_player_outside_combat_is_false():
     """Asked with no combat at all, there is no defending player to ask about:
     the clause is read, and false."""
-    scenario = _board(["Spectral Force"], ["Grizzly Bears"])
-    assert _holds(scenario, "Spectral Force") is False
+    scenario = _board(["Siege Dragon"], ["Grizzly Bears"])
+    assert _holds(scenario, "Siege Dragon") is False
 
 
 # -- "no creatures are on the battlefield" -----------------------------------

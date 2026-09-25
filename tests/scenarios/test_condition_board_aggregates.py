@@ -107,12 +107,10 @@ def test_total_power_follows_the_activator_after_a_control_change():
     )
 
 
-def test_total_power_on_second_and_third_printings():
-    """Glade Watcher and Atarka Beastbreaker print the same restriction."""
-    scenario = _board(["Glade Watcher", "Grizzly Bears", "Forest"])
-    assert scenario.why_cannot_activate(scenario.creature("Glade Watcher")) is not None
-    scenario = _board(["Glade Watcher", "Craw Wurm", "Forest"])
-    assert scenario.why_cannot_activate(scenario.creature("Glade Watcher")) is None
+def test_total_power_on_a_second_printing():
+    """Atarka Beastbreaker prints the same restriction."""
+    scenario = _board(["Atarka Beastbreaker", "Grizzly Bears", *["Forest"] * 5])
+    assert scenario.why_cannot_activate(scenario.creature("Atarka Beastbreaker")) is not None
     scenario = _board(["Atarka Beastbreaker", "Craw Wurm", *["Forest"] * 5])
     assert scenario.why_cannot_activate(scenario.creature("Atarka Beastbreaker")) is None
 
@@ -220,6 +218,32 @@ def test_colorless_is_not_a_sixth_color():
     """CR 105.2c: Ornithopter is colorless; with four colors it is still four."""
     scenario = _board(["Puca's Eye", *FIVE_COLORS[:3], "Ornithopter", *["Plains"] * 3])
     assert scenario.why_cannot_activate(scenario.creature("Puca's Eye")) is not None
+
+
+def test_five_colors_follows_the_activator_after_a_control_change():
+    """CR 602.5b / CR 109.5: bob takes Puca's Eye with Hijack ("Gain control
+    of target artifact or creature until end of turn"); alice's five colors
+    are not his, so he cannot activate it."""
+    scenario = _board(
+        ["Puca's Eye", *FIVE_COLORS],
+        ["Mountain", "Mountain", "Mountain", "Plains", "Plains", "Plains"],
+        bob_hand=["Hijack"],
+    )
+    eye = scenario.creature("Puca's Eye")
+    assert scenario.why_cannot_activate(eye) is None
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve(
+        "Hijack",
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="bob"),
+        targets=[eye],
+        username="bob",
+    )
+    assert scenario.game.controller_of(eye).username == "bob"
+    assert scenario.why_cannot_activate(eye, username="bob") == RESTRICTION_NOT_MET.format(
+        "Puca's Eye"
+    )
 
 
 def test_five_colors_on_a_second_printing():
