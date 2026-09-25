@@ -1318,3 +1318,27 @@ def test_a_snapshot_written_before_the_starting_life_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_STARTING_LIFE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before EC6's object-state readers: `CardState.saddled`/
+#: `saddled_by`/`suspected`/`renowned`/`venture_room`/`dungeon_completions`/
+#: `last_known_attachments`.
+_SCHEMA_VERSION_BEFORE_OBJECT_STATE = 84
+
+
+def test_the_object_state_bump_moved_the_version_past_eighty_four() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_OBJECT_STATE
+
+
+def test_a_snapshot_written_before_the_object_state_is_refused() -> None:
+    """A version-84 dump has no renowned, suspected or saddled designation:
+    decoded as current, a renowned creature (CR 702.112b) would read as never
+    having become renowned, and "if it's saddled" as false."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_OBJECT_STATE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_OBJECT_STATE}",
+    ):
+        Game.model_validate(dumped)
