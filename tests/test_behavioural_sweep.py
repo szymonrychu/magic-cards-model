@@ -3861,7 +3861,7 @@ def run_activation_case(case: Case, only: dict[str, Any] | None = None) -> Outco
         for r in profile.requirements
     ) or any(
         # "Activate only if you control an attacking ... creature" (CR 602.5b,
-        # CR 506.4): the stock attacker is attacking as it is activated.
+        # CR 508.1a): the stock attacker is attacking as it is activated.
         "attacking" in condition.lower()
         for condition in read_activation_instructions(ability.instructions).conditions
     )
