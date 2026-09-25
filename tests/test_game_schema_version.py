@@ -1236,3 +1236,28 @@ def test_a_snapshot_written_before_the_condition_reader_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_CONDITION_READER}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before EC3's cast-record reader: `CastRecord.kicker_costs_paid`/
+#: `bargained`/`evidence_collected`/`revealed_for_cost`/
+#: `controlled_subtypes_as_cast`/`creature_mana_spent`/`snow_mana_spent`.
+_SCHEMA_VERSION_BEFORE_CAST_RECORD_READER = 81
+
+
+def test_the_cast_record_reader_bump_moved_the_version_past_eighty_one() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CAST_RECORD_READER
+
+
+def test_a_snapshot_written_before_the_cast_record_reader_is_refused() -> None:
+    """A version-81 dump is refused rather than decoded as current: its cast
+    records carry no kicker costs, bargain, collected evidence or creature/snow
+    mana spent, so "if it was bargained" or "if it was kicked twice" would read
+    a spell cast that way as one that was not."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CAST_RECORD_READER
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CAST_RECORD_READER}",
+    ):
+        Game.model_validate(dumped)
