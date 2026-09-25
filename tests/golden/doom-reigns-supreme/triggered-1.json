@@ -46,7 +46,7 @@
         "source": "Doom Reigns Supreme"
       }
     ],
-    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_facts", "turn_history"],
+    "fields_changed": ["delayed_triggers", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Doom Reigns Supreme@alice#1": {

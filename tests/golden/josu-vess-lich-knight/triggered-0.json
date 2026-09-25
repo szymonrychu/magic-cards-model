@@ -157,7 +157,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {},

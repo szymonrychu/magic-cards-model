@@ -50,6 +50,21 @@
         "transformed": false,
         "zone": "battlefield"
       },
+      "Elemental Token@alice+10": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      },
       "Elemental Token@alice+2": {
         "attached_to": null,
         "class_level": 1,
@@ -109,16 +124,76 @@
         "toughness": 1,
         "transformed": false,
         "zone": "battlefield"
+      },
+      "Elemental Token@alice+6": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      },
+      "Elemental Token@alice+7": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      },
+      "Elemental Token@alice+8": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      },
+      "Elemental Token@alice+9": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 3,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Lightning Coils@alice#1": {
         "counters": [
           {
-            "charge": 5
+            "charge": 10
           },
           {}
         ]
