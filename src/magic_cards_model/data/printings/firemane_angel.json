@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "16384575-d0bc-4826-966e-a4bf6ae6ab97",
+  "oracle_id": "837e4452-3002-41e3-890b-3d54b469e7b9",
+  "multiverse_ids": [
+    438765
+  ],
+  "mtgo_id": 66277,
+  "mtgo_foil_id": 66278,
+  "tcgplayer_id": 145469,
+  "cardmarket_id": 301512,
+  "name": "Firemane Angel",
+  "lang": "en",
+  "released_at": "2017-11-17",
+  "uri": "https://api.scryfall.com/cards/16384575-d0bc-4826-966e-a4bf6ae6ab97",
+  "scryfall_uri": "https://scryfall.com/card/ima/199/firemane-angel?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:38:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.jpg?1783935512",
+    "normal": "https://cards.scryfall.io/normal/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.jpg?1783935512",
+    "large": "https://cards.scryfall.io/large/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.jpg?1783935512",
+    "png": "https://cards.scryfall.io/png/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.png?1783935512",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.jpg?1783935512",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.jpg?1783935512",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.webp?1783935512",
+    "grid": "https://cards.scryfall.io/grid/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.webp?1783935512",
+    "display": "https://cards.scryfall.io/display/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.webp?1783935512",
+    "art": "https://cards.scryfall.io/art/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.webp?1783935512",
+    "crop": "https://cards.scryfall.io/crop/front/1/6/16384575-d0bc-4826-966e-a4bf6ae6ab97.webp?1783935512"
+  },
+  "mana_cost": "{3}{R}{W}{W}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Angel",
+  "oracle_text": "Flying, first strike\nAt the beginning of your upkeep, if Firemane Angel is in your graveyard or on the battlefield, you may gain 1 life.\n{6}{R}{R}{W}{W}: Return this card from your graveyard to the battlefield. Activate only during your upkeep.",
+  "power": "4",
+  "toughness": "3",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "First strike"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "741bcd30-7709-4133-8919-f4b46483bed7",
+  "set": "ima",
+  "set_name": "Iconic Masters",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/741bcd30-7709-4133-8919-f4b46483bed7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aima&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ima?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/16384575-d0bc-4826-966e-a4bf6ae6ab97/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A837e4452-3002-41e3-890b-3d54b469e7b9&unique=prints",
+  "collector_number": "199",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Matt Cavotta",
+  "artist_ids": [
+    "2e6a0611-9411-4ba4-98e3-c0e18cbf9f83"
+  ],
+  "illustration_id": "0544b80f-5b77-4145-962d-4e6fec5c49f9",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19217,
+  "penny_rank": 7962,
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.80",
+    "usd_etched": null,
+    "eur": "0.16",
+    "eur_foil": "0.57",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=438765&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DFiremane%2BAngel",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DFiremane%2BAngel",
+    "edhrec": "https://edhrec.com/route/?cc=Firemane+Angel"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F145469%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=301512&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/66277?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

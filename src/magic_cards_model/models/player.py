@@ -6,7 +6,7 @@ from random import Random
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AfterValidator, ConfigDict, Field
+from pydantic import AfterValidator, ConfigDict, Field, model_validator
 
 from ..machines.layers import Duration
 from ..numbers import COUNT, parse_count
@@ -154,6 +154,19 @@ class Player(EngineModel):
 
     username: str
     life: int = 20
+    starting_life: int = 20
+    """The life total this player began the game with (CR 103.4: "Each player
+    begins the game with a starting life total of 20. Some variant games have
+    different starting life totals." - 30 for a Two-Headed Giant team, 40 in
+    Commander, CR 103.4a-e).
+
+    Recorded once, as the player is made, from the `life` they are made with
+    (`_record_starting_life`), so it is never assumed: a game started at 30
+    life compares against 30. Read by `machines/conditions/player.py` for
+    "your life total is less than your starting life total" and "at least N
+    life more than your starting life total"; persisted, so a decoded game
+    keeps it."""
+
     counters: Counters = Field(default_factory=Counters)
     """Counters on the player, not on an object (CR 122.1).
 
@@ -377,6 +390,16 @@ class Player(EngineModel):
     a tree: `Game` already holds the players, and this would otherwise be a
     cycle. A player built outside a game has `None` here and every path that
     reads it falls back to the unreplaced behaviour."""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _record_starting_life(cls, data: Any) -> Any:
+        """CR 103.4: the starting life total is the life this player is made
+        with - a fresh `Player(life=30)` starts at 30. A snapshot carries its
+        own `starting_life` and keeps it."""
+        if isinstance(data, dict) and "starting_life" not in data:
+            return {**data, "starting_life": data.get("life", 20)}
+        return data
 
     @property
     def library(self) -> list[CardState]:
