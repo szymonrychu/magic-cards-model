@@ -5661,9 +5661,11 @@ the player is made, from the life it is made with - never assumed to be 20.
 | "`<subject>` has the most life or is tied for most life" | `_the_most` | Preacher of the Schism | - (only printing) | `test_condition_life_and_poison.py` |
 | "`<subject>` is poisoned" (CR 122.1f), "`<subject>` has `<count>` poison counters" | `_poisoned`, `_player_has_poison` | Septic Rats | Vivisection Evangelist | `test_condition_life_and_poison.py` |
 
-Not closed here (outside this task's files): `triggers.zones_ability_functions_in`
-reads only the trigger condition, so an ability whose intervening if is "if this
-card is in your graveyard" (Master of Death, Nether Spirit, Bridge from Below,
-Genesis, ...) is never asked for from the graveyard (CR 113.6b) - the clause
-reads, the trigger never fires; pinned by two strict `xfail`s in
-`test_condition_graveyard_contents.py`.
+An intervening if that says where its own source is ("if this card is in your
+graveyard", "if Firemane Angel is in your graveyard or on the battlefield", "if
+this card is the only creature card in your graveyard") is the zone statement of
+CR 113.6b: `triggers.zones_ability_functions_in` asks
+`conditions.player.zones_the_source_names` first, so Master of Death, Nether
+Spirit, Bridge from Below and Firemane Angel trigger from the graveyard, and a
+clause that only counts a pile (Sanguine Spy's "among cards in your graveyard")
+leaves its source on the battlefield.

@@ -54,6 +54,7 @@ from . import ConditionReader
 
 if TYPE_CHECKING:
     from ...models.card_state import CardState
+    from ...models.zone import Zone
     from . import ConditionContext
 
 #: The players a condition can be about, as printed.
@@ -608,6 +609,50 @@ _SELF = (
 _PLACE = r"in (?:your|its owner's|a) (?:graveyard|hand|library)|on the battlefield|in exile|exiled"
 
 
+_SELF_IN_PLACES = re.compile(
+    rf"{_SELF} is (?:still )?(?P<places>(?:{_PLACE})(?: or (?:{_PLACE}))*)"
+)
+_SELF_ONLY_IN_GRAVEYARD = re.compile(
+    rf"{_SELF} is the only (?:(?P<quality>{_CARD_QUALITY}) )?card in your graveyard"
+)
+
+
+def _place_zone(place: str) -> "Zone":
+    from ...models.zone import Zone
+
+    if place == "on the battlefield":
+        return Zone.BATTLEFIELD
+    if place in ("in exile", "exiled"):
+        return Zone.EXILE
+    return {"graveyard": Zone.GRAVEYARD, "hand": Zone.HAND, "library": Zone.LIBRARY}[
+        place.rpartition(" ")[2]
+    ]
+
+
+def zones_the_source_names(clause: str, source: "CardState") -> "frozenset[Zone] | None":
+    """The zones an intervening if says its own source is in - CR 113.6b's
+    "An ability that states which zones it functions in functions only from
+    those zones": Master of Death's "if this card is in your graveyard",
+    Firemane Angel's "if Firemane Angel is in your graveyard or on the
+    battlefield", Nether Spirit's "if this card is the only creature card in
+    your graveyard". None when the clause names no place for the source -
+    Sanguine Spy's "among cards in your graveyard" counts a pile and says
+    nothing about where the Spy itself functions."""
+    from ...models.game import _names_the_source
+    from ...models.zone import Zone
+
+    text = " ".join(clause.strip().rstrip(".").strip().split()).lower()
+    if (match := _SELF_IN_PLACES.fullmatch(text)) and _names_the_source(
+        match.group("self"), source
+    ):
+        return frozenset(_place_zone(place) for place in match.group("places").split(" or "))
+    if (match := _SELF_ONLY_IN_GRAVEYARD.fullmatch(text)) and _names_the_source(
+        match.group("self"), source
+    ):
+        return frozenset({Zone.GRAVEYARD})
+    return None
+
+
 READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(
@@ -692,16 +737,8 @@ READERS: tuple[ConditionReader, ...] = (
         ),
         _the_most,
     ),
-    ConditionReader(
-        re.compile(rf"{_SELF} is (?:still )?(?P<places>(?:{_PLACE})(?: or (?:{_PLACE}))*)"),
-        _self_in_zone,
-    ),
-    ConditionReader(
-        re.compile(
-            rf"{_SELF} is the only (?:(?P<quality>{_CARD_QUALITY}) )?card in your graveyard"
-        ),
-        _self_only_card_in_graveyard,
-    ),
+    ConditionReader(_SELF_IN_PLACES, _self_in_zone),
+    ConditionReader(_SELF_ONLY_IN_GRAVEYARD, _self_only_card_in_graveyard),
     ConditionReader(
         re.compile(
             r"the number of (?P<first>.+?) plus the number of (?P<second>.+?) "

@@ -342,15 +342,6 @@ def _master_board(*, graveyard=(), battlefield=(), exile=()):
     return scenario
 
 
-_GRAVEYARD_TRIGGER_ZONE = (
-    "machines/triggers.zones_ability_functions_in reads only the trigger "
-    "condition, not the intervening if, so an upkeep trigger whose clause is "
-    "'if this card is in your graveyard' is never asked for from the graveyard "
-    "(CR 113.6b); triggers.py is outside this task's files"
-)
-
-
-@pytest.mark.xfail(strict=True, reason=_GRAVEYARD_TRIGGER_ZONE)
 def test_this_card_in_your_graveyard_triggers():
     """Master of Death: "At the beginning of your upkeep, if this card is in
     your graveyard, you may pay 1 life. If you do, return it to your hand." """
@@ -359,6 +350,47 @@ def test_this_card_in_your_graveyard_triggers():
     _next_upkeep(scenario)
     assert scenario.stack_names() == ["Master of Death's triggered ability"]
     assert scenario.game.intervening_if_notices == []
+
+
+def test_this_card_in_your_graveyard_does_not_trigger_from_the_battlefield():
+    """CR 113.6b: an ability that states the zone it functions in functions
+    only from there - Master of Death on the battlefield asks nothing."""
+    scenario = _master_board(battlefield=["Master of Death"])
+    _next_upkeep(scenario)
+    _next_upkeep(scenario)
+    assert scenario.stack_names() == []
+    assert scenario.game.intervening_if_notices == []
+
+
+def test_firemane_angel_triggers_from_the_graveyard_too():
+    """Firemane Angel's "if Firemane Angel is in your graveyard or on the
+    battlefield" names both zones (CR 113.6b), by the card's own name (CR
+    201.5) - from the graveyard it triggers and resolves."""
+    scenario = _master_board(graveyard=["Firemane Angel"])
+    _next_upkeep(scenario)
+    _next_upkeep(scenario)
+    assert scenario.stack_names() == ["Firemane Angel's triggered ability"]
+    scenario.will_take_the_may()
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 21
+
+
+def test_a_graveyard_count_does_not_move_the_source_into_the_graveyard():
+    """Sanguine Spy's "among cards in your graveyard" counts the pile; it does
+    not say the Spy functions there, so a Spy in the graveyard never triggers."""
+    scenario = _master_board(
+        graveyard=[
+            "Sanguine Spy",
+            "Forest",
+            "Llanowar Elves",
+            "Grizzly Bears",
+            "Airbending Lesson",
+            "Soul Ransom",
+        ]
+    )
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()  # end step
+    assert scenario.stack_names() == []
 
 
 def test_this_card_is_a_new_object_once_it_has_left_the_graveyard():
@@ -439,7 +471,6 @@ def test_the_only_creature_card_in_your_graveyard():
     assert other.game.condition_holds("alice", clause, lonely) is False
 
 
-@pytest.mark.xfail(strict=True, reason=_GRAVEYARD_TRIGGER_ZONE)
 def test_the_only_creature_card_triggers_from_the_graveyard():
     scenario = _master_board(graveyard=["Nether Spirit", "Forest"])
     _next_upkeep(scenario)

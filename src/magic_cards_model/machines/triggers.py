@@ -4275,7 +4275,17 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
         return frozenset({Zone.COMMAND})
 
     # CR 113.6b: "An ability that states which zones it functions in functions
-    # only from those zones." A cast trigger's "from your graveyard" is not
+    # only from those zones." An intervening if (CR 603.4) that says where its
+    # own source is - "if this card is in your graveyard", "if Firemane Angel
+    # is in your graveyard or on the battlefield" - is that statement.
+    if ability.intervening_if is not None:
+        from .conditions.player import zones_the_source_names
+
+        named = zones_the_source_names(ability.intervening_if, source)
+        if named is not None:
+            return named
+
+    # CR 113.6b again, off the trigger condition. A cast trigger's "from your graveyard" is not
     # that: "Whenever you cast a Dragon creature spell from your graveyard"
     # (Rivaz of the Claw, Secrets of the Dead) says where the *spell* came
     # from - `_origin_zone_matches` reads it off the cast - and names no zone
