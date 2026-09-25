@@ -5741,7 +5741,8 @@ spells cast before an "it was the Nth spell" source, counters put on another
 permanent, and a transformed creature face as a combatant - `SWEEP_DRIVER_GAPS`
 is empty again. Luminarch Ascension's "Activate only if this enchantment has
 four or more quest counters on it" is cluster O1 (EC6), not a turn-history
-clause, and stays its strict `KNOWN_ENGINE_GAPS` entry until that reader lands.
+clause; EC6's object-state reader reads it, so the entry went at the EC
+round 2 merge.
 ## Player-state conditions (EC5: hand, graveyard/exile, life, poison, library)
 
 `machines/conditions/player.py` reads every S1-S3 clause as one grammar - a

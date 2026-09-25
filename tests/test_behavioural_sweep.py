@@ -3706,10 +3706,6 @@ KNOWN_ENGINE_GAPS: dict[str, str] = {
     "Sunstar Chaplain #0 [activated]": (
         "cost 'Remove a +1/+1 counter from a creature you control' cannot be built"
     ),
-    "Luminarch Ascension #0 [activated]": (
-        "'Activate only if this enchantment has four or more quest counters on it' is not read "
-        "- cluster O1's object-state reader (EC6), not a turn-history clause"
-    ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
     ),
@@ -3789,11 +3785,6 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="enters_the_battlefield",
         event="the source cast from a graveyard",
         precondition=r"if it was cast from your graveyard",
-    ),
-    DriverGap(
-        kind="beginning_of_step",
-        event="an equipped creature and the combat damage it did not deal",
-        precondition=r"equipped creature didn't deal combat damage",
     ),
     DriverGap(
         kind="activated",
