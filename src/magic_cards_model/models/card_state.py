@@ -247,6 +247,18 @@ def _counter_key(kind: CounterKind) -> str:
     return str(kind)
 
 
+def counters_removed_fact(kind: CounterKind) -> str:
+    """`Game.turn_counts` key: counters of `kind` removed this turn from
+    permanents a player controlled (`CardState.remove_counters`)."""
+    return f"counters_removed:{_counter_key(kind).lower()}"
+
+
+def graveyard_with_counter_fact(kind: CounterKind) -> str:
+    """`Game.turn_counts` key: permanents a player owned put into a graveyard
+    from the battlefield this turn with a counter of `kind` on them."""
+    return f"put_into_graveyard_with_counter:{_counter_key(kind).lower()}"
+
+
 class Counters(AnnouncesMutation, RootModel[dict[str, int]]):
     """The counters on one object or player, by kind (CR 122.1).
 
@@ -487,6 +499,9 @@ class ChoiceKind(StrEnum):
     CARD_NAME = "card_name"
     CREATURE_TYPE = "creature_type"
     ODD_OR_EVEN = "odd_or_even"
+    #: "choose two colors" (Tablet of the Guilds): `Choice.value` is every
+    #: chosen color's letter code, in the order chosen ("WU").
+    COLORS = "colors"
     """Gollum, Riddle Master's own "As Gollum enters, choose odd or even.
     (Zero is even.)" - a fourth "as [this] enters, choose ..." shape,
     `Choice.value` "odd" or "even". The parenthetical is the card's own
@@ -605,6 +620,19 @@ class ExileAnnotation(EngineModel):
             or stamp is None
             or self.linked_permanent_stamp == stamp
         )
+
+
+class AttachmentSnapshot(EngineModel):
+    """One Aura or Equipment attached to a permanent as that permanent left
+    the battlefield (CR 603.10a, CR 608.2h) - who controlled it and what it
+    was, read off the computed board while it still applied (CR 613.5)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    card_id: UUID
+    controller: str | None = None
+    types: tuple[Type, ...] = ()
+    subtypes: tuple[str, ...] = ()
 
 
 class CardState(EngineModel):
@@ -854,6 +882,50 @@ class CardState(EngineModel):
     count, which a static ability's own +1/+1 grant could otherwise have
     changed since. `None` while `monstrous` is `False`; both are cleared
     together."""
+    saddled: bool = False
+    """CR 702.171b's "saddled" designation: "Once a permanent has become
+    saddled, it stays saddled until the end of the turn or it leaves the
+    battlefield. Being saddled is not a part of the permanent's copiable
+    values." Set by the saddle ability's own effect (CR 702.171a,
+    `machines/keywords.saddle`); `machines/layers.ContinuousEffects.
+    end_the_turn` ends it with every other "until end of turn" effect (CR
+    514.2) and `move_to` off the battlefield ends it (CR 400.7)."""
+    saddled_by: tuple[UUID, ...] = ()
+    """CR 702.171c: "A creature 'saddles' a permanent as it's tapped to pay
+    the cost to activate a permanent's saddle ability." The creatures that
+    saddled this permanent this turn - what "a creature that saddled it this
+    turn" names - cleared with `saddled`."""
+    suspected: bool = False
+    """CR 701.60a/b's "suspected" designation: a permanent is suspected "until
+    it leaves the battlefield or until a spell or ability causes it to no
+    longer be suspected", and "Suspected is neither an ability nor part of the
+    permanent's copiable values". CR 701.60c's menace and "This creature
+    can't block" are layer 6 effects `machines/layers.py` builds off this
+    field while it is set (`_suspected_abilities`)."""
+    renowned: bool = False
+    """CR 702.112b's "renowned" designation: "Once a permanent becomes
+    renowned, it stays renowned until it leaves the battlefield. Renowned is
+    neither an ability nor part of the permanent's copiable values." Set by
+    renown's own trigger (CR 702.112a, `machines/effects.py`'s "it becomes
+    renowned"), cleared by `move_to` off the battlefield."""
+    venture_room: str | None = None
+    """For a dungeon card in the command zone (CR 309.4): the name of the
+    room its owner's venture marker is on. `machines/dungeon.py` is the only
+    writer. `None` for every other object."""
+    dungeon_completions: int = 0
+    """For a dungeon card: how many times its owner has completed it (CR
+    309.7: "A player completes a dungeon as that dungeon card is removed from
+    the game"). A completed dungeon is kept outside the game (CR 400.11a) with
+    this count, so "you've completed a dungeon" and "you haven't completed
+    Tomb of Annihilation" have something to read after it has gone."""
+    last_known_attachments: tuple["AttachmentSnapshot", ...] = ()
+    """The Auras and Equipment attached to this object the last time it left
+    the battlefield (CR 603.10a's look-back, CR 608.2h's last known
+    information): Koll, the Forgemaster's "if it was enchanted or equipped"
+    and Dawn Evangel's "if an Aura you controlled was attached to it" ask
+    about a creature that has died, whose attachments are no longer
+    attached to anything that exists. Taken with `last_known_power`, cleared
+    by any move that does not start on the battlefield."""
     goaded_by: list[str] = Field(default_factory=list)
     """CR 701.15b's "goaded" designation: the players who goaded this
     permanent, in the order they did, each at most once (CR 701.15d: "the
@@ -2378,7 +2450,7 @@ class CardState(EngineModel):
             # could have happened (CR 122.1d).
             return
         if self.counters[Counter.STUN] > 0:
-            self.counters.remove(Counter.STUN, 1)  # CR 122.1d
+            self.remove_counters(Counter.STUN, 1)  # CR 122.1d
             return
         self.tapped = False
 
@@ -2542,6 +2614,28 @@ class CardState(EngineModel):
         # (CR 707.2) is the one thing that makes it differ from the card's own.
         mana_value = None if computed is None else computed.mana_value
         self.last_known_mana_value = None if mana_value == self.mana_value else mana_value
+        self.last_known_attachments = self._attachments_now()
+
+    def _attachments_now(self) -> tuple[AttachmentSnapshot, ...]:
+        """Every permanent attached to this one right now, as the computed
+        board sees it (CR 613.5) - `last_known_attachments`' snapshot."""
+        game = self._board_source
+        if game is None:
+            return ()
+        snapshots = []
+        for permanent in getattr(game, "battlefield", ()):
+            if permanent.attached_to != self.id or permanent is self:
+                continue
+            chars = permanent.computed_characteristics
+            snapshots.append(
+                AttachmentSnapshot(
+                    card_id=permanent.id,
+                    controller=permanent.controller,
+                    types=tuple(permanent.types if chars is None else chars.types),
+                    subtypes=tuple(permanent.subtypes if chars is None else chars.subtypes),
+                )
+            )
+        return tuple(snapshots)
 
     @property
     def granted_as_it_left(self) -> tuple[str, ...]:
@@ -2587,7 +2681,18 @@ class CardState(EngineModel):
             self.last_known_types = None
             self.last_known_subtypes = None
             self.last_known_keywords = None
+            self.last_known_attachments = ()
             self._abilities_as_it_left = None
+        elif zone is not Zone.BATTLEFIELD:
+            # CR 702.171b, CR 701.60a, CR 702.112b: saddled, suspected and
+            # renowned each last until the permanent leaves the battlefield,
+            # and what arrives anywhere else is a new object (CR 400.7).
+            self.saddled = False
+            self.saddled_by = ()
+            self.suspected = False
+            self.renowned = False
+            if zone is Zone.GRAVEYARD:
+                self._note_put_into_graveyard_with_counters()
         self.zone_change_stamp = new_id()
         self.zone = zone
         self._granted_as_it_left = ()
@@ -2639,8 +2744,14 @@ class CardState(EngineModel):
             self.granted_rebound = False
         # CR 704.8 / CR 603.10a: an ability that looks back in time needs the
         # counters the object had as it left, and CR 122.2 has just taken them
-        # away. Persist is the card in the pool that asks (CR 702.79a).
-        self.last_known_counters = self.counters
+        # away. Persist is the card in the pool that asks (CR 702.79a). Only a
+        # move off the battlefield takes that snapshot: a look-back is about
+        # the permanent as it last existed there, so a dies trigger still on
+        # the stack reads the same answer after the card has been exiled from
+        # the graveyard in response (Promising Duskmage's "if it had a +1/+1
+        # counter on it").
+        if origin is Zone.BATTLEFIELD:
+            self.last_known_counters = self.counters
         self.counters = Counters()
         self.last_known_attached_to = self.attached_to if origin is Zone.BATTLEFIELD else None
         # A permanent that leaves the battlefield is no longer attached to
@@ -2709,7 +2820,35 @@ class CardState(EngineModel):
 
     def remove_counters(self, kind: CounterKind, amount: int = 1) -> int:
         """Take counters off, returning what is left. Raises if there are too few."""
-        return self.counters.remove(kind, amount)
+        left = self.counters.remove(kind, amount)
+        self._note_counters_removed(kind, amount)
+        return left
+
+    def _note_counters_removed(self, kind: CounterKind, amount: int) -> None:
+        """Count counters removed from this permanent this turn, for its
+        controller - "an oil counter was removed from a permanent you
+        controlled this turn" (Churning Reservoir). CR 122.2's counters that
+        "cease to exist" on a zone change are not removed, and never reach
+        here."""
+        game = self._board_source
+        if amount <= 0 or self.zone is not Zone.BATTLEFIELD or game is None:
+            return
+        note = getattr(game, "note_turn_count", None)
+        if note is not None and self.controller is not None:
+            note(counters_removed_fact(kind), self.controller, amount)
+
+    def _note_put_into_graveyard_with_counters(self) -> None:
+        """Count, for its owner, a permanent put into a graveyard from the
+        battlefield with counters on it, one fact per kind - "a permanent with
+        an oil counter on it was put into a graveyard this turn". Asked of the
+        permanent as it last existed (CR 603.10a), so before CR 122.2 takes
+        the counters away."""
+        game = self._board_source
+        note = getattr(game, "note_turn_count", None)
+        if note is None or self.owner is None:
+            return
+        for kind in self.counters:
+            note(graveyard_with_counter_fact(kind), self.owner, 1)
 
     def can_remove_counters(self, kind: CounterKind, amount: int = 1) -> bool:
         """Whether a cost that removes this many counters could be paid (CR 118.3)."""

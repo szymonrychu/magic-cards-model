@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["damage_dealt_this_turn"],
+    "fields_changed": ["damage_dealt_this_turn", "turn_counts"],
     "notices": {},
     "objects": {
       "Sorin, Vengeful Bloodlord@alice#1": {

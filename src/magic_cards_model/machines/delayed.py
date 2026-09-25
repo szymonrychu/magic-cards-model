@@ -1073,6 +1073,37 @@ class ReflexiveConsequence(DelayedEffectSpecBase):
             consequence_effect(game, ability)
 
 
+class DungeonRoomAbility(DelayedEffectSpecBase):
+    """A dungeon room's ability (CR 309.4c): "When you move your venture
+    marker into this room, [effect.]", queued by `machines/dungeon.venture`
+    as the marker moves in. The effect is the room's own printed text
+    (`trigger.text`), resolved through the triggered-ability dispatcher; a
+    room whose text nothing reads leaves an `UnmodeledTriggerEffectNotice`
+    rather than doing nothing silently. Once it has resolved, CR 309.6's
+    state-based action is performed for its dungeon (`machines/dungeon.
+    complete_finished_dungeons`)."""
+
+    kind: Literal["dungeon_room"] = "dungeon_room"
+    room: str
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .dungeon import complete_finished_dungeons
+        from .effects import UnmodeledTriggerEffectNotice, trigger_effect_for
+
+        effect = trigger_effect_for(trigger.source_name, None, trigger.text)
+        if effect is None:
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=trigger.source_id,
+                    source_name=trigger.source_name,
+                    text=trigger.text,
+                )
+            )
+        else:
+            effect(game, ability)
+        complete_finished_dungeons(game, resolving_id=ability.id)
+
+
 class ReflexivePayEnergyConsequence(DelayedEffectSpecBase):
     """ "You may pay `{E}{E}{E}`. When you do, `<consequence>`." (CR 603.12,
     CR 107.14, CR 118.3) - Guide of Souls' attack trigger,
@@ -1785,6 +1816,7 @@ DelayedEffectSpec = Annotated[
     | NextSpellCannotBeCountered
     | DelayedBlinkReturnWithRider
     | ReflexiveConsequence
+    | DungeonRoomAbility
     | ReflexivePayEnergyConsequence
     | ReflexivePayManaConsequence
     | ReflexiveMandatoryTokenDamageConsequence

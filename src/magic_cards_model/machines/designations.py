@@ -80,3 +80,46 @@ def split_if(text: str) -> tuple[str, str] | None:
     if match is None:
         return None
     return match["condition"].lower(), match["rest"].strip()
+
+
+#: CR 700.8: "A player's party consists of up to one Cleric creature that
+#: player controls, up to one Rogue creature they control, up to one Warrior
+#: creature they control, and up to one Wizard creature they control."
+PARTY_ROLES: tuple[str, ...] = ("Cleric", "Rogue", "Warrior", "Wizard")
+
+
+def party_size(game: Any, player: str) -> int:
+    """How many creatures are in `player`'s party (CR 700.8a: "a number
+    between zero and four"), read off the computed board (CR 613.5).
+
+    CR 700.8b: a creature with more than one of the four types counts for
+    only one of them, "counted in such a way to get the highest result" - a
+    maximum matching of creatures to roles, found by augmenting paths (at
+    most four roles, so this is tiny)."""
+    candidates: list[set[str]] = []
+    for permanent in game.permanents_controlled_by(player):
+        chars = game.characteristics_of(permanent)
+        if not chars.is_creature:
+            continue
+        roles = {role for role in PARTY_ROLES if role in chars.subtypes}
+        if roles:
+            candidates.append(roles)
+    holder: dict[str, int] = {}
+
+    def assign(index: int, seen: set[str]) -> bool:
+        for role in candidates[index]:
+            if role in seen:
+                continue
+            seen.add(role)
+            if role not in holder or assign(holder[role], seen):
+                holder[role] = index
+                return True
+        return False
+
+    return sum(1 for index in range(len(candidates)) if assign(index, set()))
+
+
+def has_full_party(game: Any, player: str) -> bool:
+    """CR 700.8c: "A player has a full party if there are four creatures in
+    that player's party." """
+    return party_size(game, player) == len(PARTY_ROLES)

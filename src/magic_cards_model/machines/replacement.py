@@ -4982,6 +4982,9 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
 #: new type, not a card carrying its own choice) is a *targeted* clause of a
 #: different shape entirely and is never routed through here.
 _CHOOSE_A_COLOR_RE = re.compile(r"^choose a color\.?$", re.IGNORECASE)
+#: "choose two colors" (Tablet of the Guilds) - the same CR 614.12a choice made
+#: that many times, each a color not already chosen.
+_CHOOSE_N_COLORS_RE = re.compile(rf"^choose (?P<count>{COUNT}) colors\.?$", re.IGNORECASE)
 #: "choose a card name" (Pithing Needle), and CR 201.4a's "choose a card name
 #: with certain characteristics" - "choose a nonland card name" (Phyrexian
 #: Revoker, Voidstone Gargoyle), "choose a nonbasic land card name" (Alpine
@@ -5296,6 +5299,39 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
             if refusal is not None:
                 raise ValueError(f"{card_name}: {refusal}")
         source.choice = Choice(kind=kind, value=value)
+        game.unwired_choice_notices.extend(_unwired_choice_notices(source.card, source.id))
+
+    return apply
+
+
+def _choose_colors(count: int, card_name: str) -> Apply:
+    """ "As [this] enters, choose two colors" - CR 614.12a's choice asked
+    `count` times, each answer one of CR 105.1's colors not already chosen,
+    recorded as one `ChoiceKind.COLORS` answer."""
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        who = source.controller if source is not None else None
+        if who is None or source is None:
+            return
+        chosen: list[str] = []
+        for _ in range(count):
+            options = tuple(letter for letter in _COLOR_OPTIONS if letter not in chosen)
+            if not options:
+                break
+            value = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=who,
+                    prompt="choose a color",
+                    source=card_name,
+                    source_id=source_id_of(source),
+                    options=options,
+                    quality=ChoiceKind.COLOR.value,
+                )
+            )
+            assert isinstance(value, str)
+            chosen.append(value)
+        source.choice = Choice(kind=ChoiceKind.COLORS, value="".join(chosen))
         game.unwired_choice_notices.extend(_unwired_choice_notices(source.card, source.id))
 
     return apply
@@ -5910,6 +5946,20 @@ def _self_enters_modifiers(
                             )
                         )
                         continue
+
+            colors_wanted = _CHOOSE_N_COLORS_RE.match((effect.replacement or "").strip())
+            if colors_wanted is not None and parse_count(colors_wanted.group("count")):
+                performable.append(
+                    (
+                        f"{key}:{index}",
+                        _choose_colors(
+                            parse_count(colors_wanted.group("count")) or 0, card_state.card.name
+                        ),
+                        effect.text,
+                        False,
+                    )
+                )
+                continue
 
             choice_kind = _classify_choice(effect.replacement or "")
             if choice_kind is not None:

@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "9018477f-a67b-4fa4-8661-11ab91fae863",
+  "oracle_id": "03c934a6-be57-480d-8c84-4e46d9ccb406",
+  "multiverse_ids": [],
+  "resource_id": "8E75C83673CB42E195540BE13AA81C9121950E901DC420B2CEAB792C87CB6CA4",
+  "mtgo_id": 152533,
+  "arena_id": 105068,
+  "tcgplayer_id": 697049,
+  "cardmarket_id": 891573,
+  "name": "Hulkling, Burgeoning Bruiser",
+  "lang": "en",
+  "released_at": "2026-06-26",
+  "uri": "https://api.scryfall.com/cards/9018477f-a67b-4fa4-8661-11ab91fae863",
+  "scryfall_uri": "https://scryfall.com/card/msh/173/hulkling-burgeoning-bruiser?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:35:17Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.jpg?1783902917",
+    "normal": "https://cards.scryfall.io/normal/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.jpg?1783902917",
+    "large": "https://cards.scryfall.io/large/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.jpg?1783902917",
+    "png": "https://cards.scryfall.io/png/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.png?1783902917",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.jpg?1783902917",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.jpg?1783902917",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.webp?1783902917",
+    "grid": "https://cards.scryfall.io/grid/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.webp?1783902917",
+    "display": "https://cards.scryfall.io/display/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.webp?1783902917",
+    "art": "https://cards.scryfall.io/art/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.webp?1783902917",
+    "crop": "https://cards.scryfall.io/crop/front/9/0/9018477f-a67b-4fa4-8661-11ab91fae863.webp?1783902917"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Kree Skrull Hero",
+  "oracle_text": "Vigilance\nWhenever another creature you control enters, if it has greater power or toughness than Hulkling, put a +1/+1 counter on Hulkling.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set": "msh",
+  "set_name": "Marvel Super Heroes",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/ba9bf625-681c-4a4e-ab48-399b2fecac6b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amsh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/msh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9018477f-a67b-4fa4-8661-11ab91fae863/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A03c934a6-be57-480d-8c84-4e46d9ccb406&unique=prints",
+  "collector_number": "173",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"We all named ourselves after the original Avengers. I picked the Hulk. Be honest. Wouldn't you?\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wero Gallo",
+  "artist_ids": [
+    "33e6c6ee-0d21-4834-a575-4dfefa5d77ce"
+  ],
+  "illustration_id": "9aabdc62-0359-483b-9de1-e45028c1ced1",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 22111,
+  "prices": {
+    "usd": "0.17",
+    "usd_foil": "0.25",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.10",
+    "tix": "0.01"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHulkling%252C%2BBurgeoning%2BBruiser",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHulkling%252C%2BBurgeoning%2BBruiser",
+    "edhrec": "https://edhrec.com/route/?cc=Hulkling%2C+Burgeoning+Bruiser"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F697049%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=891573&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/152533?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
