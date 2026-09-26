@@ -7744,6 +7744,102 @@ _LIFE_GATED_SELF_STATIC_TRAILING_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: A self pump/grant gated on Infusion's own turn-history fact (CR 207.2c)
+#: instead of a live life *total* - Tenured Concocter's and Ulna Alley
+#: Shopkeep's identical "This creature gets +2/+0 as long as you gained life
+#: this turn." `_LIFE_GATED_SELF_STATIC_LEADING_RE`/`_TRAILING_RE`'s own
+#: pair, with the condition swapped for `LayerContext.gained_life_this_turn`
+#: (the fact CR 604.2/611.3a re-reads on every board computation, same as
+#: the life-total gate above) in place of `life_of`.
+_GAINED_LIFE_GATED_SELF_STATIC_LEADING_RE = re.compile(
+    r"^as long as you gained life this turn, "
+    r"(?:this (?:creature|permanent|token)|it) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)|(?P<grant_only>has .+?))\.?$",
+    re.IGNORECASE,
+)
+_GAINED_LIFE_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    r"^this (?:creature|permanent|token) "
+    r"(?:gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>(?: and has [^.]+?)?)"
+    r"|(?P<grant_only>has .+?))"
+    r" as long as you gained life this turn\.?$",
+    re.IGNORECASE,
+)
+
+#: A *group* pump/keyword grant gated the same way - Thornfist Striker's
+#: "Creatures you control get +1/+0 and have trample as long as you gained
+#: life this turn." Unlike the self-only pair above (`_only(source.id)`),
+#: the affected group is every creature the controller controls (CR 611.3a's
+#: live "creatures you control", `creatures_controlled_by`), so this is its
+#: own builder (`_context_gated_group_pump_and_keyword_builder`) rather than
+#: reusing `_context_gated_self_pump_builder`.
+_GAINED_LIFE_GATED_GROUP_STATIC_RE = re.compile(
+    r"^creatures you control get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and (?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
+    r" as long as you gained life this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _context_gated_group_pump_and_keyword_builder(
+    condition: Callable[[CardState, LayerContext], bool],
+    power: int,
+    toughness: int,
+    granted: list[str],
+    *,
+    line: str,
+    description: str,
+) -> EffectBuilder:
+    """ "Creatures you control get +N/+N [and have `<keywords>`] as long as
+    `<condition>`." - `_context_gated_self_pump_builder`'s group-wide twin:
+    the same build-time gate (CR 604.2, CR 611.3a: absent outright, not
+    merely zeroed, while `condition` is false), over `creatures_controlled_
+    by(source.controller)` (CR 611.3a's live group) instead of the source
+    alone.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if not condition(source, context):
+            return []
+        selector = creatures_controlled_by(source.controller)
+        effects: list[ContinuousEffect] = []
+        if power or toughness:
+            effects.append(
+                ContinuousEffect(
+                    description=(
+                        f"{source.name}: creatures you control get "
+                        f"{power:+d}/{toughness:+d} {description}"
+                    ),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: creatures you control have {ability} {description}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(ability),
+            )
+            for ability in granted
+        )
+        return effects
+
+    return builder
+
+
 #: A Theros god's own type removal: "As long as your devotion to red and green
 #: is less than seven, Xenagos isn't a creature." (Xenagos, God of Revels);
 #: "As long as your devotion to blue is less than five, Thassa isn't a
@@ -11921,6 +12017,45 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         if not granted:
             return None
         return _group_quoted_ability_grant_builder(granted, line=sentence)
+    for gained_life_re in (
+        _GAINED_LIFE_GATED_SELF_STATIC_LEADING_RE,
+        _GAINED_LIFE_GATED_SELF_STATIC_TRAILING_RE,
+    ):
+        if match := gained_life_re.fullmatch(sentence):
+            grant_only = match.group("grant_only")
+            if grant_only is not None:
+                granted = _split_gated_grants(grant_only)
+                power = toughness = 0
+            else:
+                granted = _split_gated_grants(match.group("rest") or "")
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
+            if granted is None:
+                return None
+            return _context_gated_self_pump_builder(
+                lambda source, context: context.gained_life_this_turn(source.controller),
+                power,
+                toughness,
+                granted,
+                line=sentence,
+                description="while its controller gained life this turn",
+            )
+    if match := _GAINED_LIFE_GATED_GROUP_STATIC_RE.fullmatch(sentence):
+        granted = (
+            _split_and_validate_keywords(match.group("keywords"))
+            if match.group("keywords") is not None
+            else []
+        )
+        if granted is None:
+            return None
+        return _context_gated_group_pump_and_keyword_builder(
+            lambda source, context: context.gained_life_this_turn(source.controller),
+            int(match.group("power")),
+            int(match.group("toughness")),
+            granted,
+            line=sentence,
+            description="while you gained life this turn",
+        )
     return None
 
 
@@ -12380,6 +12515,27 @@ class LayerContext(EngineModel):
     #: read this rather than a stored flag, for the same live-recompute reason
     #: every other `LayerContext` field is.
     turn_facts: Mapping[str, frozenset[str]] = Field(default_factory=dict)
+
+    #: Which players have gained life this turn (`Game.life_gained_this_turn`)
+    #: - Infusion's own ability word (CR 207.2c), Tenured Concocter's "This
+    #: creature gets +2/+0 as long as you gained life this turn." and
+    #: Thornfist Striker's "Creatures you control get +1/+0 and have trample
+    #: as long as you gained life this turn." A dedicated field rather than
+    #: folded into `turn_facts` above: `Game.life_gained_this_turn` is its
+    #: own top-level ledger (Ocelot Pride's intervening *if* already reads it
+    #: directly, not through the generic `turn_facts`/`record_turn_fact`
+    #: dictionary), so this mirrors that ledger by name instead of asking
+    #: every caller to also write a `"life_gained"` `turn_facts` entry nobody
+    #: else keeps.
+    life_gained_this_turn: frozenset[str] = Field(default_factory=frozenset)
+
+    def gained_life_this_turn(self, player: str | None) -> bool:
+        """Whether `player` gained life this turn - `False` for a player this
+        context knows nothing about, the same empty-is-false default
+        `has_turn_fact` already uses."""
+        if player is None:
+            return False
+        return player in self.life_gained_this_turn
 
     #: The ids of every creature that has dealt combat damage this turn
     #: (`Game.combat_damage_dealt_this_turn_by`) - a per-object "this turn"

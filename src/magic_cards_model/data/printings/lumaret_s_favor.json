@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "c5e7c856-8b71-44e6-8998-0b0b3ff0ef99",
+  "oracle_id": "d514704b-4055-48ed-9da3-e4397fca7576",
+  "multiverse_ids": [],
+  "resource_id": "71E247796F80451F4CFAD0981791B58F6D53A2A62DB765875D718EDFEA6626DE",
+  "mtgo_id": 149805,
+  "arena_id": 102612,
+  "tcgplayer_id": 686579,
+  "cardmarket_id": 880510,
+  "name": "Lumaret's Favor",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99",
+  "scryfall_uri": "https://scryfall.com/card/sos/153/lumarets-favor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:47:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.jpg?1783903656",
+    "normal": "https://cards.scryfall.io/normal/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.jpg?1783903656",
+    "large": "https://cards.scryfall.io/large/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.jpg?1783903656",
+    "png": "https://cards.scryfall.io/png/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.png?1783903656",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.jpg?1783903656",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.jpg?1783903656",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.webp?1783903656",
+    "grid": "https://cards.scryfall.io/grid/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.webp?1783903656",
+    "display": "https://cards.scryfall.io/display/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.webp?1783903656",
+    "art": "https://cards.scryfall.io/art/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.webp?1783903656",
+    "crop": "https://cards.scryfall.io/crop/front/c/5/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99.webp?1783903656"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Infusion \u2014 When you cast this spell, copy it if you gained life this turn. You may choose new targets for the copy.\nTarget creature gets +2/+4 until end of turn.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Infusion"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set": "sos",
+  "set_name": "Secrets of Strixhaven",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c5e7c856-8b71-44e6-8998-0b0b3ff0ef99/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad514704b-4055-48ed-9da3-e4397fca7576&unique=prints",
+  "collector_number": "153",
+  "digital": false,
+  "rarity": "uncommon",
+  "watermark": "witherbloom",
+  "flavor_text": "Though the lumarets were ignored by the other Witherbloom students, it was clear to Lluwen they were much more complex than they seemed.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Mariah Tekulve",
+  "artist_ids": [
+    "1014b405-f81d-4f37-97df-e04ef62eacf4"
+  ],
+  "illustration_id": "0092358a-6858-4f01-8b8c-52d3cf1085ba",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 22424,
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.21",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.14",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLumaret%2527s%2BFavor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLumaret%2527s%2BFavor",
+    "edhrec": "https://edhrec.com/route/?cc=Lumaret%27s+Favor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686579%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=880510&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149805?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -261,8 +261,15 @@ def _parse_copy_it_n_times_clause(text: str) -> AbilityEffect | None:
 
 #: A spell's leading "When you cast this spell, ..." paragraph (CR 113.6k) is
 #: its own triggered ability, not part of what the spell does as it resolves.
+#: Social Snub's own trigger reads "When you cast this spell while you
+#: control a creature, you may copy this spell." - CR 603.4's intervening
+#: *if* ("while you control a creature", already split out and read
+#: generically by `machines/triggers.intervening_if_answer`) sits between
+#: "this spell" and the comma, which the bare form above never anticipated;
+#: the optional group here widens the match to admit it (and its "if ..."
+#: phrasing twin) without narrowing what already matched.
 _LEADING_CAST_TRIGGER_RE = re.compile(
-    r"^when you cast this spell, [^\n]+\n+(?P<rest>.+)$", re.I | re.S
+    r"^when you cast this spell(?: (?:while|if) [^,\n]+)?, [^\n]+\n+(?P<rest>.+)$", re.I | re.S
 )
 
 
