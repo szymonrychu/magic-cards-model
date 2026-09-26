@@ -481,7 +481,8 @@ class Action(EngineModel):
     """`ANSWER_DECISION` only, for a kind whose legal answers are few enough
     to enumerate outright: `"true"`/`"false"` for every boolean-shaped kind
     (`MAY`, `PAY_LIFE`, `PAY_ENERGY`, `PAY_MANA`, `PUT_ON_TOP_OR_BOTTOM`,
-    `CHOOSE_PILE`, `MULLIGAN`, `OPENING_HAND_ACTION`, and the two combat
+    `PUT_INTO_HAND_OR_GRAVEYARD`, `CHOOSE_PILE`, `MULLIGAN`,
+    `OPENING_HAND_ACTION`, and the two combat
     declarations' "declare nobody"), or one of `Decision.options` for
     `CHOOSE_A_QUALITY`/`CHOOSE_A_MODE`."""
     decision_seq: int | None = None
