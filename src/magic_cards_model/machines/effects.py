@@ -9211,6 +9211,54 @@ _GRAVEYARDS_WITH_N_OR_MORE_CARDS_RE = re.compile(
 )
 
 
+#: "card type(s) among [`<qualifier>`] spells you've cast this turn" - April
+#: O'Neil, Hacktivist's "draw a card for each card type among spells you've
+#: cast this turn" and Hurkyl, Master Wizard's "For each card type among
+#: noncreature spells you've cast this turn, ...". CR 205.2a's card types of
+#: every spell the player cast this turn (`Game.spells_cast_this_turn`, CR
+#: 601.2i), each counted once however many spells share it; CR 205.2b gives
+#: an artifact creature both.
+_CARD_TYPES_AMONG_SPELLS_CAST_RE = re.compile(
+    r"^card types? among (?:(?P<qualifier>[a-z-]+) )?spells you've cast this turn$",
+    re.IGNORECASE,
+)
+
+
+def card_types_among_spells_cast_reader(
+    phrase: str,
+) -> Callable[["Game", str], set[Type]] | None:
+    """`_CARD_TYPES_AMONG_SPELLS_CAST_RE`'s set of card types, as a
+    `(game, player) -> set[Type]` reader, or None for a phrase it does not
+    read. The qualifier is one card type, or "non" one ("noncreature"): a
+    spell that fails it adds none of its types, so an artifact creature
+    spell contributes nothing to Hurkyl's "noncreature spells"."""
+    from .casting import types_being_cast
+
+    match = _CARD_TYPES_AMONG_SPELLS_CAST_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    qualifier = (match.group("qualifier") or "").lower()
+    negated = qualifier.startswith("non")
+    word = qualifier.removeprefix("non").lstrip("-")
+    wanted: Type | None = None
+    if word:
+        try:
+            wanted = Type(word)
+        except ValueError:
+            return None
+
+    def read(game: "Game", player: str) -> set[Type]:
+        found: set[Type] = set()
+        for spell in game.spells_cast_this_turn.get(player, []):
+            types = set(spell.types_as_a_spell(types_being_cast(spell.card, spell.face_played)))
+            if wanted is not None and (wanted in types) is negated:
+                continue
+            found |= types
+        return found
+
+    return read
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -9226,6 +9274,10 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    types_among = card_types_among_spells_cast_reader(stripped)
+    if types_among is not None:
+        # CR 608.2h: counted once, as the effect applies.
+        return lambda game, controller, _source_id: len(types_among(game, controller))
     if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
         kind = _counter_kind(match.group("kind"))
 
@@ -48009,8 +48061,13 @@ _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE = re.compile(
 #: (Portent of Calamity) and "for each card type, you may put a card of that
 #: type from among the revealed cards into your hand" (Atraxa, Grand Unifier):
 #: one pick per CR 205.2a card type, taken to exile or to hand.
+#: Hurkyl, Master Wizard narrows the loop to the card types among the spells
+#: it names: "For each card type among noncreature spells you've cast this
+#: turn, you may put a card of that type ..." (`card_types_among_spells_cast_
+#: reader`).
 _FOR_EACH_CARD_TYPE_MAY_TAKE_RE = re.compile(
-    r"^for each card type, you may (?:(?P<exile>exile)|put) a card of that type from among "
+    r"^for each (?P<among>card type among [^,]+|card type), you may (?:(?P<exile>exile)|put) "
+    r"a card of that type from among "
     r"(?:them|the revealed cards)(?P<hand> into your hand)?$",
     re.IGNORECASE,
 )
@@ -48083,6 +48140,11 @@ def _merge_reveal_top_one_card_per_type_clauses(
     exiling = pick_match.group("exile") is not None
     if exiling == (pick_match.group("hand") is not None):
         return None
+    types_among = None
+    if pick_match.group("among").lower() != "card type":
+        types_among = card_types_among_spells_cast_reader(pick_match.group("among"))
+        if types_among is None:
+            return None
     rest_text = clauses[index + 2].strip()
     rest_match = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(rest_text)
     if rest_match is None or not rest_text.lower().startswith("put the rest"):
@@ -48119,7 +48181,10 @@ def _merge_reveal_top_one_card_per_type_clauses(
             game.reveal(state, source=source)
         remaining = list(revealed)
         taken: list[CardState] = []
+        allowed = set(Type) if types_among is None else types_among(game, player.username)
         for card_type in Type:
+            if card_type not in allowed:
+                continue
             candidates = [state for state in remaining if card_type in state.types]
             if not candidates:
                 continue
