@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "68ee92cd-51af-4de5-bcc8-34d0bb2fd398",
+  "oracle_id": "9c45682f-48b5-4e58-9277-ff4211f389ae",
+  "multiverse_ids": [],
+  "resource_id": "B5EAC94331BADF295BCEE0DC767C5997AE89883151897EF8B49AAD4683908AC7",
+  "mtgo_id": 149513,
+  "arena_id": 102466,
+  "tcgplayer_id": 688648,
+  "cardmarket_id": 882030,
+  "name": "Antiquities on the Loose",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/68ee92cd-51af-4de5-bcc8-34d0bb2fd398",
+  "scryfall_uri": "https://scryfall.com/card/sos/7/antiquities-on-the-loose?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:48:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.jpg?1783903707",
+    "normal": "https://cards.scryfall.io/normal/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.jpg?1783903707",
+    "large": "https://cards.scryfall.io/large/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.jpg?1783903707",
+    "png": "https://cards.scryfall.io/png/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.png?1783903707",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.jpg?1783903707",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.jpg?1783903707",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.webp?1783903707",
+    "grid": "https://cards.scryfall.io/grid/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.webp?1783903707",
+    "display": "https://cards.scryfall.io/display/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.webp?1783903707",
+    "art": "https://cards.scryfall.io/art/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.webp?1783903707",
+    "crop": "https://cards.scryfall.io/crop/front/6/8/68ee92cd-51af-4de5-bcc8-34d0bb2fd398.webp?1783903707"
+  },
+  "mana_cost": "{1}{W}{W}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Create two 2/2 red and white Spirit creature tokens. Then if this spell was cast from anywhere other than your hand, put a +1/+1 counter on each Spirit you control.\nFlashback {4}{W}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Flashback"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d0f3bd3d-08cf-4783-ae31-03770c8be69c",
+      "component": "token",
+      "name": "Spirit",
+      "type_line": "Token Creature \u2014 Spirit",
+      "uri": "https://api.scryfall.com/cards/d0f3bd3d-08cf-4783-ae31-03770c8be69c"
+    },
+    {
+      "object": "related_card",
+      "id": "fbeda63a-ce34-4d84-8306-cb48353a52f8",
+      "component": "combo_piece",
+      "name": "Antiquities on the Loose",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/fbeda63a-ce34-4d84-8306-cb48353a52f8"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set": "sos",
+  "set_name": "Secrets of Strixhaven",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/68ee92cd-51af-4de5-bcc8-34d0bb2fd398/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9c45682f-48b5-4e58-9277-ff4211f389ae&unique=prints",
+  "collector_number": "7",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "lorehold",
+  "flavor_text": "Raising spirits is easier than taming them.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Andreas Zafiratos",
+  "artist_ids": [
+    "e2f13a9a-57c5-40de-81d4-3b0723899cdf"
+  ],
+  "illustration_id": "13bb5514-0bf9-49b7-b604-c860848f25c0",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 15447,
+  "penny_rank": 3462,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://x.com/mtgjp/status/2040084482775200185/photo/1",
+    "previewed_at": "2026-04-03"
+  },
+  "prices": {
+    "usd": "0.23",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.20",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAntiquities%2Bon%2Bthe%2BLoose",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAntiquities%2Bon%2Bthe%2BLoose",
+    "edhrec": "https://edhrec.com/route/?cc=Antiquities+on+the+Loose"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F688648%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=882030&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149513?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
