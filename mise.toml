@@ -108,3 +108,11 @@ description = "Print a rule and its subrules in full: mise run rules:find 305.7"
 # A script rather than an inline body, so mise appends the rule number as an
 # argument instead of the body having to reach for a positional it never gets.
 run = "scripts/cr.sh"
+
+# --------------------------------------------------------------- regression --
+# Owner-approved hardening against a fix silently touching a previously fixed
+# card or a previously passing test. See scripts/regression_guard.py's own
+# docstring for what each of the two checks does.
+[tasks."regression:guard"]
+description = "Protected-test report (+ --ratchet for the card-status ratchet): mise run regression:guard -- --repo <path> --base <sha> [--ratchet]"
+run = "uv run python scripts/regression_guard.py"
