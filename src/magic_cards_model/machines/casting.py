@@ -2184,8 +2184,8 @@ class OptionalAdditionalCost(EngineModel):
     """False when the cost is printed and optional but nothing here can
     charge it, so a seat is told the option exists and told this engine
     cannot take it, rather than being quietly shown nothing (CR 118.8b).
-    Buyback, bargain and casualty are not read as additional costs at all and
-    so never reach this; what does are the "you may ..." sentences
+    Buyback and bargain are not read as additional costs at all and so never
+    reach this; what does are the "you may ..." sentences
     `additional_cost_phrases` returns that `Casting` has no `pay_*` for."""
 
 
