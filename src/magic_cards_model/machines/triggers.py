@@ -4336,7 +4336,9 @@ def resolution_key(ability: "AbilityOnStack") -> str:
     return f"{ability.source_id}:{ability.source_stamp}:{ability.ability.text}"
 
 
-def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> frozenset[Zone]:
+def zones_ability_functions_in(
+    ability: TriggeredAbility, source: CardState, game: "Game | None" = None
+) -> frozenset[Zone]:
     """Which zone(s) this printed ability functions from (CR 113.6).
 
     CR 113.6: "Abilities of an instant or sorcery spell usually function only
@@ -4454,7 +4456,20 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # either way the object just left is exactly what `Game.emit` widens
     # `sources` for.
     if ability.event in _LOOK_BACK_EVENTS:
-        return frozenset({Zone.BATTLEFIELD, source.zone})
+        # CR 603.10a looks back at the event the source was part of - it and
+        # whatever left in the same batch (its own example: a "whenever a
+        # creature dies" artifact destroyed together with two creatures
+        # triggers twice). A source that left in an earlier batch, or was
+        # never on the battlefield, is only a card in that zone and hears
+        # nothing (CR 113.6). A countered spell never left the battlefield.
+        if (
+            game is None
+            or source.zone is Zone.BATTLEFIELD
+            or ability.event is TriggerEvent.SPELL_IS_COUNTERED
+            or source.left_battlefield_in(game._departure_epoch)
+        ):
+            return frozenset({Zone.BATTLEFIELD, source.zone})
+        return frozenset({Zone.BATTLEFIELD})
     if ability.event is None and _returned_subject(lowered) is not None:
         # CR 603.10a's look-back for a returned-to-hand condition the parser
         # left unread: the source returned by the same event is in a hand
@@ -6823,7 +6838,7 @@ def abilities_triggered_by(
             for ability in triggered_abilities_on(game, source):
                 if not condition_matches(game, ability, source, controller, event):
                     continue
-                if source.zone not in zones_ability_functions_in(ability, source):
+                if source.zone not in zones_ability_functions_in(ability, source, game):
                     continue  # CR 113.6: doesn't function from the zone it's in.
                 if not event_qualifier_holds(game, ability, source, controller, event):
                     continue  # CR 603.2: the event did not happen that way.

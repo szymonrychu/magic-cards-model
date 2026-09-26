@@ -3240,6 +3240,15 @@ class Game(EngineModel):
     announcement is discarded and the next activation announces its own.
     Not persisted: both calls run inside one command, and a command that
     pauses is replayed from its start, `begin_activating` included."""
+    _departure_epoch: int = PrivateAttr(default=0)
+    """Which batch of simultaneous events the game is in, for CR 603.10a's
+    look-back: bumped as each resolution (CR 608.2) and each round of
+    state-based actions (CR 704.3) begins, so the permanents one of them
+    moves off the battlefield share it. A leaves-the-battlefield ability of
+    an object that left in the current batch still triggers on the others
+    (CR 603.10a's own example); one that left in an earlier batch is just a
+    card in a graveyard (CR 113.6). Not persisted: it only compares objects
+    within one command."""
     _left_battlefield_characteristics: dict[UUID, Characteristics] = PrivateAttr(
         default_factory=dict
     )
@@ -6779,6 +6788,8 @@ class Game(EngineModel):
         stack, **including the object that's resolving**." `Game.resolving` is
         that answer, live only for the length of one resolution.
         """
+        # CR 608.2: one resolution is one batch for CR 603.10a's look-back.
+        self._departure_epoch += 1
         self._refuse_if_over()
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
@@ -10326,10 +10337,28 @@ class Game(EngineModel):
         # (via CR 603.3d) fixes the number as it goes on the stack, and "that
         # many" is what the triggering event carried.
         text = event_count_target_text(text, ability.event)
-        profile = profile_for_text(text).for_event_player(_that_player_of(ability))
+        profile = (
+            profile_for_text(text)
+            .for_event_player(_that_player_of(ability))
+            .for_defending_player(self._defending_player_of(ability))
+        )
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
         )
+
+    def _defending_player_of(self, ability: Any) -> str | None:
+        """CR 508.5's defending player for a triggered ability whose event is
+        an attack: the player the attacker attacks, or the controller or
+        protector of the planeswalker or battle it attacks
+        (`combat.defending_player`, off `GameEvent.defender`). `None` for any
+        other ability - its "defending player" restriction stays unbound."""
+        from ..machines.combat import defending_player
+
+        event = getattr(ability, "event", None)
+        defender = getattr(event, "defender", None)
+        if defender is None:
+            return None
+        return defending_player(self, defender)
 
     def _ask_targets(
         self,
@@ -10851,6 +10880,7 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        permanent.note_departure_epoch(self._departure_epoch)
         if permanent in self.battlefield:
             self._left_battlefield_characteristics[permanent.id] = self.characteristics_of(
                 permanent
@@ -14917,7 +14947,11 @@ class Game(EngineModel):
                 and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
             )
-            profile = profile_for_text(ability_text).for_event_player(_that_player_of(spell))
+            profile = (
+                profile_for_text(ability_text)
+                .for_event_player(_that_player_of(spell))
+                .for_defending_player(self._defending_player_of(spell))
+            )
             if not profile.understood or not profile.requirements:
                 return thing
             caster = spell.controller
@@ -17904,6 +17938,8 @@ class Game(EngineModel):
         for CR 704.5e's own scope; CR 722.3c's exile copy is that rule's one
         written exception, and this method is not where the exception lives.
         """
+        # CR 704.3: the round is one simultaneous event (CR 603.10a).
+        self._departure_epoch += 1
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
         gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e/707.10a
         self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)

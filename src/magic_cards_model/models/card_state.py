@@ -1447,6 +1447,10 @@ class CardState(EngineModel):
     move just made. Never persisted: the departure event is raised and its
     triggers found within that same move."""
 
+    _left_in_epoch: int | None = PrivateAttr(default=None)
+    """`Game._departure_epoch` as this object last left the battlefield -
+    see `left_battlefield_in`. Never persisted."""
+
     _abilities_as_it_left: tuple[str, ...] | None = PrivateAttr(default=None)
     """The computed ability lines this object had as it last left the
     battlefield (CR 603.10a's look-back), taken by
@@ -2641,6 +2645,16 @@ class CardState(EngineModel):
     def granted_as_it_left(self) -> tuple[str, ...]:
         """See `_granted_as_it_left`."""
         return self._granted_as_it_left
+
+    def note_departure_epoch(self, epoch: int) -> None:
+        """Stamp the batch of simultaneous events this object left the
+        battlefield in (`Game._note_left_battlefield`)."""
+        self._left_in_epoch = epoch
+
+    def left_battlefield_in(self, epoch: int) -> bool:
+        """Whether this object left the battlefield in batch `epoch` - for CR
+        603.10a, whether it is looking back at an event it was part of."""
+        return self._left_in_epoch is not None and self._left_in_epoch == epoch
 
     @property
     def abilities_as_it_left(self) -> tuple[str, ...] | None:
