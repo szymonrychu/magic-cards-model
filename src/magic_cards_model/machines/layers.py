@@ -3598,6 +3598,25 @@ _TARGETED_LOSES_ALL_ABILITIES_RE = re.compile(
     r"^target .+? loses all abilities until end of turn\.?$", re.IGNORECASE
 )
 
+#: "This creature can't be blocked this turn." (Matterbending Mage's own
+#: {X}-cast trigger, Snooping Page's Repartee trigger) or the targeted
+#: "Target creature can't be blocked this turn." - CR 509.1a's restriction,
+#: granted for the stated duration rather than printed permanently the way
+#: `_CANT_BE_BLOCKED_ITEM_RE`'s indefinite "has hexproof and can't be
+#: blocked." already is. `_SUBJECT` is the shared "this creature"/"target
+#: [qualifier] creature[ you control]" grammar `_PUMP_RE` already reads, so
+#: this is the identical subject vocabulary, not a new one. The granted line
+#: itself drops "this turn" - `machines/combat.py`'s evasion reader
+#: (`_evasion_restriction_sentences`) already recognises the bare "This
+#: creature can't be blocked." sentence (the same text `_RIDER_CANT_BE_
+#: BLOCKED_RE`'s builder in `machines/effects.py` grants for an anaphoric
+#: rider) - the temporary span comes from this grant's own `Duration.
+#: UNTIL_END_OF_TURN`, not from repeating "this turn" inside the granted
+#: text.
+_SELF_OR_TARGET_CANT_BE_BLOCKED_EOT_RE = re.compile(
+    rf"^{_SUBJECT} can'?t be blocked this turn\.?$", re.IGNORECASE
+)
+
 #: Echoing Courage: "Target creature and all other creatures with the same name
 #: as that creature get +2/+2 until end of turn." A sibling of `_PUMP_RE` and
 #: not a widening of it, because the *subject* is two groups joined by a bare
@@ -5814,6 +5833,36 @@ def _targeted_loses_all_abilities_builder() -> EffectBuilder:
                 duration=Duration.UNTIL_END_OF_TURN,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
                 modification=lose_all_abilities,
+            )
+            for target in targets
+        ]
+
+    return builder
+
+
+def _cant_be_blocked_until_eot_builder() -> EffectBuilder:
+    """ "[This creature/Target creature] can't be blocked this turn." - CR
+    509.1a, layer 6 (CR 613.1f), one target's incarnation at a time, expiring
+    at cleanup (CR 514.2) like any other "until end of turn" grant. The
+    granted text itself is the plain, undated restriction -
+    `machines/combat.py`'s evasion reader already recognises it - so the only
+    thing this duration adds beyond the indefinite grant is when it ends.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{target.name} can't be blocked this turn",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=grant_ability("This creature can't be blocked."),
             )
             for target in targets
         ]
@@ -10778,6 +10827,8 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _TARGETED_LOSES_ALL_ABILITIES_RE.fullmatch(sentence):
         return _targeted_loses_all_abilities_builder()
+    if _SELF_OR_TARGET_CANT_BE_BLOCKED_EOT_RE.fullmatch(sentence):
+        return _cant_be_blocked_until_eot_builder()
     if match := _PUMP_RE.fullmatch(sentence):
         power_raw = match.group("power") or match.group("power2")
         toughness_raw = match.group("toughness") or match.group("toughness2")

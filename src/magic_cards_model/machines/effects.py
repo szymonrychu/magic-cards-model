@@ -139,6 +139,7 @@ from .counter_effects import parse_resolution_text as _parse_counter_resolution_
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
     ANAPHORIC_TIMING_STEPS,
+    AddManaAmountForController,
     AddManaWhenLandTapped,
     CombatDamageToPlayerDraw,
     CopyNextSpellYouCast,
@@ -644,6 +645,52 @@ def layer_context_for(game: "Game", controller: Player) -> LayerContext:
     )
 
 
+#: "..., where X is the amount of mana spent to cast that spell." - Aberrant
+#: Manawurm's and Shantotto, Tactician Magician's own cast-trigger pump: X is
+#: never the ability's own announced X (CR 107.3a - a triggered ability
+#: announces none) but CR 601.2h's mana spent on the spell that *triggered*
+#: it, `AbilityOnStack.event`'s own subject, read the same anaphoric way
+#: `machines/triggers.intervening_if_holds`'s self-referential "no mana was
+#: spent to cast it" already reads it for a different object.
+_CAST_TRIGGER_MANA_SPENT_WHERE_X_RE = re.compile(
+    r",?\s*where x is the amount of mana spent to cast that spell", re.IGNORECASE
+)
+
+
+def _cast_trigger_mana_spent_x_value(game: "Game", ability: AbilityOnStack) -> int | None:
+    """The mana spent (CR 601.2h) casting the spell that triggered `ability`,
+    or `None` when there is no cast-trigger event or no record of it."""
+    event = ability.event
+    if event is None or event.event is not TriggerEvent.CAST_SPELL or event.subject_id is None:
+        return None
+    spell = game.find_by_id(event.subject_id)
+    record = game.cast_record_of(spell) if spell is not None else None
+    return None if record is None else record.total_mana_spent
+
+
+def _cast_trigger_mana_spent_x_ability_text(game: "Game", ability: AbilityOnStack) -> str | None:
+    """`ability.ability.text` with X substituted for the mana spent on the
+    spell that triggered it, and the "where X is ..." definition dropped -
+    `_CAST_TRIGGER_MANA_SPENT_WHERE_X_RE`'s banner above - or `None` when the
+    text does not carry that definition at all, or the value cannot be
+    read (in which case the ordinary, unsubstituted path below is left to
+    fail closed exactly as it already does for any other unreadable X).
+
+    The definition is stripped *before* `substitute_x` runs, not after: once
+    substituted, "where X is ..." would read "where `<n>` is ..." and no
+    longer match `where_x_pattern()`'s own literal "where x is", which would
+    make `_PUMP_RE` refuse the whole sentence instead of reading the plain
+    "gets +`<n>`/+0 until end of turn." it has become.
+    """
+    text = getattr(ability.ability, "text", None)
+    if not isinstance(text, str) or _CAST_TRIGGER_MANA_SPENT_WHERE_X_RE.search(text) is None:
+        return None
+    x = _cast_trigger_mana_spent_x_value(game, ability)
+    if x is None:
+        return None
+    return substitute_x(_CAST_TRIGGER_MANA_SPENT_WHERE_X_RE.sub("", text), x)
+
+
 def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -> None:
     """The same for a resolving ability (CR 611.2 covers spells and abilities alike).
 
@@ -683,6 +730,24 @@ def create_continuous_effect_of_ability(game: "Game", ability: AbilityOnStack) -
     """
     source = ability.source(game)
     if source is None:
+        return
+    mana_spent_text = _cast_trigger_mana_spent_x_ability_text(game, ability)
+    if mana_spent_text is not None:
+        ability_text = mana_spent_text
+        profile = profile_for_text(ability_text)
+        requires_target = profile.understood and bool(profile.requirements)
+        if not requires_target and source.zone is not Zone.BATTLEFIELD:
+            return
+        targets = game.resolve_card_targets(ability) if requires_target else [source]
+        if not targets:
+            return
+        continuous_effects(game).create(
+            source,
+            targets=targets,
+            context=layer_context_for(game, game.controller_of(ability)),
+            ability_text=_as_sentence(ability_text),
+            game=game,
+        )
         return
     # `x_value` substituted in first when the ability's own printed cost
     # announces one (CR 107.3a, announced before targets are chosen -
@@ -1731,6 +1796,28 @@ def _amount_term(term: str) -> AmountReader | None:
         return lambda game, controller, _object, _x: (
             _greatest_mana_value_among_cards_in_your_graveyard(game, controller)
         )
+    if lowered == "the amount of mana spent to cast this spell":
+        # CR 601.2h, self-referential (CR 700.7's own "this spell") - Molten
+        # Note's own "deals damage ... equal to the amount of mana spent to
+        # cast this spell": `obj` is the resolving spell itself
+        # (`deal_damage_equal_to_expression`'s own docstring already
+        # documents that convention for every "this <noun>" term this
+        # function reads), whose `CastRecord` this reads directly rather
+        # than through `machines/conditions/cast_record`'s boolean-only
+        # "N or more mana was spent" reader - this term needs the number
+        # itself, not a threshold comparison. Flashback pays the flashback
+        # cost as the spell is cast (CR 702.34a), which `Casting`/`Game.
+        # note_cast` already record into the same `mana_spent` this reads,
+        # so a flashback-cast Molten Note counts what it actually paid.
+        def read_mana_spent_to_cast_this_spell(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            if obj is None:
+                return 0
+            record = game.cast_record_of(obj)
+            return record.total_mana_spent if record is not None else 0
+
+        return read_mana_spent_to_cast_this_spell
     if match := _OBJECT_CHARACTERISTIC_RE.fullmatch(text):
         # CR 208.1's power/toughness, CR 208.5's zero default for a value
         # that can't be determined (the object has already left the
@@ -23994,6 +24081,76 @@ def _parse_look_top_keep_one_on_top_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: Geometer's Arthropod's whole cast-trigger effect: "look at the top X cards
+#: of your library. Put one of them into your hand and the rest on the
+#: bottom of your library in a random order." X here is never the ability's
+#: own announced X (CR 107.3a - a triggered ability announces none) - it is
+#: the *triggering* spell's own announced X (CR 202.3e), read off that
+#: spell's `CastRecord.x_value` (`AbilityOnStack.event`'s own subject), the
+#: cast-trigger restriction "a spell with {X} in its mana cost" is what
+#: watched for in the first place (`machines/triggers.
+#: _CAST_SPELL_MANA_COST_SYMBOL_RE`).
+_CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE = re.compile(
+    r"^look at the top x cards of your library\.\s*"
+    r"put one of them into your hand and the rest on the bottom of your library "
+    r"in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_trigger_look_top_x_take_one_clause(effect_text: str) -> AbilityEffect | None:
+    """`_CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE`'s shape - see the banner above.
+
+    CR 701.20e's "look at", then a mandatory choice of one (CR 608.2d has no
+    "may" printed here, unlike `_parse_look_top_lands_take_to_hand`'s own
+    kicker-gated count), and the rest bottomed in a random order
+    (`_bottom_in_random_order`, not a shuffle - CR 701.24a's word is never
+    printed). X at 0 or less (no cast-trigger event, or the triggering spell
+    somehow announced none) looks at nothing, the same as any other "top N"
+    reader would for N=0.
+    """
+    match = _CAST_TRIGGER_LOOK_TOP_X_TAKE_ONE_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not is_ability(stack_object):
+            return
+        ability = stack_object
+        event = ability.event
+        spell = (
+            game.find_by_id(event.subject_id) if event is not None and event.subject_id else None
+        )
+        record = game.cast_record_of(spell) if spell is not None else None
+        x = record.x_value if record is not None else 0
+        if x <= 0:
+            return
+        controller = game.controller_of(ability)
+        looked = list(controller.library[:x])
+        if not looked:
+            return
+        for state in looked:
+            game.look(state, controller.username, source=ability.source_name)
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="put one of the cards looked at into your hand",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in looked),
+            )
+        )
+        by_id = {state.id: state for state in looked}
+        taken = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+        for state in taken:
+            controller.move(state, Zone.HAND)
+        _bottom_in_random_order(game, controller, [state for state in looked if state not in taken])
+
+    return effect
+
+
 def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     """`parse_mixed_effect` on `effect_text`, or - if that failed specifically
     on an unreadable anaphoric second clause - a stand-in effect that records
@@ -24156,6 +24313,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     look_top_keep_one_on_top = _parse_look_top_keep_one_on_top_clause(effect_text)
     if look_top_keep_one_on_top is not None:
         return look_top_keep_one_on_top
+    cast_trigger_look_top_x = _parse_cast_trigger_look_top_x_take_one_clause(effect_text)
+    if cast_trigger_look_top_x is not None:
+        return cast_trigger_look_top_x
     damage_target_player_and_theirs = _parse_damage_target_player_and_their_creatures_clause(
         effect_text
     )
@@ -30582,6 +30742,248 @@ def _parse_pump_then_fight_clause_pair(
     return effect
 
 
+#: Burrog Barrage: "Target creature you control gets +N/+N until end of turn
+#: if `<condition>`. Then it deals damage equal to its power to up to one
+#: target creature an opponent controls." A conditionally-pumped biter (CR
+#: 608.2c's own printed "if", checked once as this instruction resolves,
+#: through `Game.condition_holds` - the same reader every other printed
+#: condition here goes through) whose bite rider names its own victim
+#: target - the reason this needs its own pair parser rather than the
+#: general object-anaphor rider, exactly `_parse_pump_then_fight_clause_
+#: pair`'s own reasoning just above: the rider's own target would otherwise
+#: be conflated with the antecedent's.
+_CONDITIONAL_PUMP_TARGET_YOU_CONTROL_RE = re.compile(
+    r"^target creature you control gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn if (?P<condition>.+)$",
+    re.IGNORECASE,
+)
+#: "Then it deals damage equal to its power to up to one target creature an
+#: opponent controls." - `_RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE`'s own
+#: shape with an optional leading "then" admitted (CR 608.2c's own ordering
+#: word, never itself part of the instruction), since this rider always
+#: follows a pump rather than a "choose" antecedent.
+_CONDITIONAL_PUMP_BITE_RIDER_RE = re.compile(
+    rf"^(?:then )?{_OBJECT_ANAPHOR} deals damage equal to its power to (?P<phrase>.*\btarget\b.+)$",
+    re.IGNORECASE,
+)
+
+
+def _parse_conditional_pump_then_bite_clause_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Burrog Barrage's whole text as one CR 608.2c instruction pair - see
+    the banner above.
+
+    The pump applies only when the condition holds (an unreadable condition
+    fails closed with a `ConditionalClauseNotice`, the same treatment
+    `_parse_conditional_referent_clause` already gives an unreadable rider
+    condition). The bite always runs afterwards, off whatever power the
+    biter now has - `_resolve_bite_damage`, shared with `_parse_bite_damage_
+    clause`/`_parse_bite_damage_clause_pair` - so a pump that never fired
+    still lets a smaller creature bite for its own, unboosted power. A
+    target creature gone by resolution (CR 608.2b) skips whichever half
+    needed it, the same as every other bite reader.
+    """
+    stripped_first = first.strip().rstrip(".").strip()
+    stripped_second = second.strip().rstrip(".").strip()
+    pump = _CONDITIONAL_PUMP_TARGET_YOU_CONTROL_RE.fullmatch(stripped_first)
+    if pump is None:
+        return None
+    rider = _CONDITIONAL_PUMP_BITE_RIDER_RE.fullmatch(stripped_second)
+    if rider is None:
+        return None
+    condition_text = pump.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    if not _targets_understood("target creature you control", count_agnostic=True):
+        return None
+    if not _targets_understood(rider.group("phrase"), count_agnostic=True):
+        return None
+    power, toughness = pump.group("power"), pump.group("toughness")
+    builder = parsed_layer_effects(f"Target creature gets {power}/{toughness} until end of turn.")
+    if builder is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        mine = [t for t in targets if game.controller_of(t).username == controller.username]
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if mine and source is not None:
+            held = game.condition_holds(controller.username, condition_text, source)
+            if held is None:
+                notice = ConditionalClauseNotice(
+                    source_id=source_id_of(stack_object),
+                    source_name=(
+                        stack_object.name
+                        if isinstance(stack_object, CardState)
+                        else stack_object.source_name  # type: ignore[union-attr]
+                    ),
+                    text=first,
+                )
+                if notice not in game.conditional_clause_notices:
+                    game.conditional_clause_notices.append(notice)
+            elif held:
+                effects = game.continuous_effects
+                for built in builder(
+                    source, effects.tick(), mine[:1], layer_context_for(game, controller)
+                ):
+                    effects.add(built, game)
+        _resolve_bite_damage(game, stack_object, "power")
+
+    return effect
+
+
+#: "This creature gets +N/+N until end of turn." followed by "If `<condition>`,
+#: this creature gets +M/+M until end of turn instead." - Deluge Virtuoso's
+#: own Opus rider. "Instead" (CR 608.2c) replaces the base pump outright
+#: rather than adding to it (`_RIDER_ALSO_RE`'s own "also" is the additive
+#: counterpart, Expressive Firedancer's shape just below) - only one of the
+#: two ever actually pumps the creature.
+_SELF_PUMP_EOT_RE = re.compile(
+    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn$",
+    re.IGNORECASE,
+)
+_CONDITIONAL_SELF_PUMP_INSTEAD_RE = re.compile(
+    r"^if (?P<condition>[^,]+), this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn instead$",
+    re.IGNORECASE,
+)
+
+
+def _parse_conditional_self_pump_instead_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Deluge Virtuoso's whole Opus rider as one CR 608.2c instruction pair -
+    see the banner above. Ability-only: "this creature" is CR 700.7's own
+    self-reference, never a spell's own resolution text. The condition is
+    read once, as this instruction resolves (CR 608.2h), through the same
+    `Game.condition_holds` every other printed "if" here goes through, with
+    the resolving ability's own event threaded in so "that spell" resolves
+    to the cast trigger's own subject rather than the source
+    (`_condition_holds_for_stack_object`) - an unreadable condition fails
+    closed with a `ConditionalClauseNotice`, leaving the base pump as printed
+    rather than guessing at the upgrade.
+    """
+    if for_spell:
+        return None
+    base = _SELF_PUMP_EOT_RE.fullmatch(first.strip().rstrip(".").strip())
+    if base is None:
+        return None
+    upgrade = _CONDITIONAL_SELF_PUMP_INSTEAD_RE.fullmatch(second.strip().rstrip(".").strip())
+    if upgrade is None:
+        return None
+    condition_text = upgrade.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    base_builder = parsed_layer_effects(
+        f"This creature gets {base.group('power')}/{base.group('toughness')} until end of turn."
+    )
+    upgraded_builder = parsed_layer_effects(
+        f"This creature gets {upgrade.group('power')}/{upgrade.group('toughness')} "
+        "until end of turn."
+    )
+    if base_builder is None or upgraded_builder is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(stack_object)
+        held = _condition_holds_for_stack_object(game, stack_object, condition_text, source)
+        builder = base_builder
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=stack_object.source_name,
+                text=second,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+        elif held:
+            builder = upgraded_builder
+        effects = game.continuous_effects
+        for built in builder(source, effects.tick(), [source], layer_context_for(game, controller)):
+            effects.add(built, game)
+
+    return effect
+
+
+#: "This creature gets +N/+N until end of turn." followed by "If
+#: `<condition>`, this creature also gains `<keyword>` until end of turn." -
+#: Expressive Firedancer's own Opus rider: "also" (CR 608.2c) adds the
+#: keyword grant to the base pump rather than replacing it, the additive
+#: counterpart of `_parse_conditional_self_pump_instead_pair`'s "instead"
+#: just above - the base pump always runs, whether or not the condition
+#: holds.
+_CONDITIONAL_SELF_ALSO_GAINS_RE = re.compile(
+    r"^if (?P<condition>[^,]+), this creature also gains (?P<keyword>[a-z ]+) "
+    r"until end of turn$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_pump_then_conditional_also_gains_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Expressive Firedancer's whole Opus rider - see the banner above."""
+    if for_spell:
+        return None
+    base = _SELF_PUMP_EOT_RE.fullmatch(first.strip().rstrip(".").strip())
+    if base is None:
+        return None
+    also = _CONDITIONAL_SELF_ALSO_GAINS_RE.fullmatch(second.strip().rstrip(".").strip())
+    if also is None:
+        return None
+    condition_text = also.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    keyword_text = also.group("keyword").strip()
+    base_builder = parsed_layer_effects(
+        f"This creature gets {base.group('power')}/{base.group('toughness')} until end of turn."
+    )
+    keyword_builder = parsed_layer_effects(f"This creature gains {keyword_text} until end of turn.")
+    if base_builder is None or keyword_builder is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        source = stack_object.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(stack_object)
+        effects = game.continuous_effects
+        for built in base_builder(
+            source, effects.tick(), [source], layer_context_for(game, controller)
+        ):
+            effects.add(built, game)
+        held = _condition_holds_for_stack_object(game, stack_object, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=stack_object.source_name,
+                text=second,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if held:
+            for built in keyword_builder(
+                source, effects.tick(), [source], layer_context_for(game, controller)
+            ):
+                effects.add(built, game)
+
+    return effect
+
+
 def _parse_controller_split_target_clause_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -30913,6 +31315,100 @@ def _parse_counter_then_create_tokens_by_mana_value_pair(
             return
         mana_value = int(countered.card.cmc)
         create_tokens(game, definition, controller, mana_value)
+
+    return effect
+
+
+#: Mana Sculpt: "Counter target spell. If you control a Wizard, add an
+#: amount of `<color>` equal to the amount of mana spent to cast that spell
+#: at the beginning of your next main phase." "You control a Wizard" is
+#: already a generic board condition (`Game.builtin_condition_holds`'s own
+#: `_CONDITION_CONTROLS_A`), read here through `Game.condition_holds` like
+#: every other printed "if" - no new reader for it. The mana-spent amount is
+#: CR 601.2h's own already-readable condition family too
+#: (`machines/conditions/cast_record`), but here it names a *number*, not a
+#: boolean, so it is captured directly off the countered spell's own
+#: `CastRecord` rather than through that boolean reader.
+_COUNTER_THEN_CONDITIONAL_MANA_FROM_COUNTERED_RE = re.compile(
+    r"^if (?P<condition>[^,]+), add an amount of \{(?P<symbol>[wubrgc])\} equal to the "
+    r"amount of mana spent to cast that spell at the beginning of your next main phase$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_then_wizard_mana_from_countered_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """Mana Sculpt's whole text as one CR 608.2c instruction pair - see the
+    banner above.
+
+    CR 601.2h's mana spent is read off the countered spell's own `CastRecord`
+    *before* `Game.counter` moves it off the stack (CR 608.2b leaves nothing
+    behind to read once it has), and captured as a plain integer onto the
+    delayed trigger - the same "last known information, taken now" reasoning
+    `_parse_counter_then_create_tokens_by_mana_value_pair` already gives for
+    a countered spell's mana value.
+
+    "If you control a Wizard" gates whether the delayed trigger is created
+    at all, checked once as this spell resolves (CR 608.2c: instructions run
+    in the order written) - it is not itself a delayed condition rechecked
+    at the next main phase, since the printed sentence names no "still" or
+    "as long as". An unreadable condition fails closed with a
+    `ConditionalClauseNotice` rather than guessing; a spell whose target
+    already left the stack (CR 608.2b) is neither countered nor read for a
+    mana value, and no trigger is created.
+    """
+    if not for_spell:
+        return None
+    if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
+        return None
+    match = _COUNTER_THEN_CONDITIONAL_MANA_FROM_COUNTERED_RE.fullmatch(second.strip().rstrip("."))
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    color = Color(match.group("symbol").upper())
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        held = game.condition_holds(controller.username, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=spell.id, source_name=spell.card.name, text=second
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        countered: CardState | None = None
+        amount = 0
+        for reference in spell.targets:
+            if not reference.is_card:
+                continue
+            target = next((item for item in game.stack if item.id == reference.card_id), None)
+            if target is None:
+                continue
+            record = game.cast_record_of(target)
+            amount = record.total_mana_spent if record is not None else 0
+            countered = target
+            game.counter(target)
+        if held and countered is not None:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=(
+                        f"At the beginning of your next main phase, add an amount of "
+                        f"{{{color.value}}} equal to the amount of mana spent to cast "
+                        "that spell."
+                    ),
+                    effect=AddManaAmountForController(amount=amount, color=color),
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    any_main_phase=True,
+                    controller=controller.username,
+                    source_id=spell.id,
+                    source_name=spell.card.name,
+                    only_when_active=controller.username,
+                )
+            )
 
     return effect
 
@@ -41789,6 +42285,61 @@ def _parse_exile_then_play_permission_clauses(
     return consumed, effect
 
 
+#: "If `<condition>`, exile the top card of your library. You may play that
+#: card until the end of your next turn." - Elemental Mascot's own Opus
+#: rider. False, and CR 608.2c has nothing to run: nothing was exiled, so
+#: there is no "that card" for the permission sentence to name, exactly as
+#: if the whole two-sentence instruction had simply been skipped.
+_IF_CONDITION_LEADING_RE = re.compile(r"^if (?P<condition>[^,]+),\s*(?P<rest>.+)$", re.IGNORECASE)
+
+
+def _parse_conditional_exile_then_play_permission_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> "tuple[int, TargetedClause] | None":
+    """Elemental Mascot's whole Opus rider as one CR 608.2c instruction -
+    see the banner above. Reuses `_parse_exile_then_play_permission_clauses`
+    outright for the exile-and-permission half (on a rewritten clause list
+    with the leading "if `<condition>`," stripped from the first clause),
+    wrapped in the same resolution-time condition check every other printed
+    "if" here goes through - an unreadable condition fails closed with a
+    `ConditionalClauseNotice` rather than guessing.
+    """
+    match = _IF_CONDITION_LEADING_RE.fullmatch(clauses[index].strip())
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    rewritten = [match.group("rest").strip(), *clauses[index + 1 :]]
+    inner = _parse_exile_then_play_permission_clauses(rewritten, 0, for_spell=for_spell)
+    if inner is None:
+        return None
+    consumed, inner_effect = inner
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        held = _condition_holds_for_stack_object(game, stack_object, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=(
+                    stack_object.name
+                    if isinstance(stack_object, CardState)
+                    else stack_object.source_name  # type: ignore[union-attr]
+                ),
+                text=clauses[index],
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if held:
+            inner_effect(game, stack_object)
+
+    return consumed, effect
+
+
 def _parse_exile_then_play_permission_pair(
     first: str, second: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -42045,6 +42596,91 @@ def _parse_add_mana_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # goes into a player's mana pool."
         pool = game.controller_of(stack_object).mana_pool
         for color in colors:
+            pool.add(color)
+
+    return effect
+
+
+#: "If five or more mana was spent to cast that spell, add an amount of {R}
+#: equal to this creature's power." - Molten-Core Maestro's own Opus rider
+#: (CR 601.2h's mana-spent condition, already read generically through
+#: `Game.condition_holds`/`machines/conditions/cast_record._at_least_mana_
+#: spent` - no new condition reader, only a new consequence). CR 106.3: the
+#: mana enters the pool as this ability resolves, its amount computed then
+#: (CR 608.2h), off the object the expression names - `amount_expression`
+#: already reads "this creature's power"/"its power" generically
+#: (`_OBJECT_CHARACTERISTIC_RE`), so a future card naming a different count
+#: in this same position ("equal to the number of ... you control") reads
+#: for free.
+_IF_CONDITION_ADD_MANA_EQUAL_TO_RE = re.compile(
+    r"^if (?P<condition>[^,]+), add an amount of \{(?P<symbol>[wubrgc])\} equal to "
+    r"(?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _condition_holds_for_stack_object(
+    game: "Game", stack_object: "StackObject", condition_text: str, source: "CardState | None"
+) -> bool | None:
+    """`Game.condition_holds`, with a triggered ability's own `ability`/
+    `event`/`source_stamp` threaded through when `stack_object` is one - the
+    context an event-anchored clause needs to resolve an anaphor like "that
+    spell" correctly (`Game.condition_holds`'s own docstring), which a bare
+    3-argument call can never supply."""
+    controller = game.controller_of(stack_object).username
+    if isinstance(stack_object, AbilityOnStack):
+        return game.condition_holds(
+            controller,
+            condition_text,
+            source,
+            ability=stack_object.ability,
+            event=stack_object.event,
+            source_stamp=stack_object.source_stamp,
+        )
+    return game.condition_holds(controller, condition_text, source)
+
+
+def _parse_if_condition_add_mana_equal_to_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_IF_CONDITION_ADD_MANA_EQUAL_TO_RE`'s shape - see the banner above.
+    An unreadable condition fails closed with a `ConditionalClauseNotice`,
+    the same treatment every other printed "if" here gets."""
+    match = _IF_CONDITION_ADD_MANA_EQUAL_TO_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    color = Color(match.group("symbol").upper())
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        held = _condition_holds_for_stack_object(game, stack_object, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=(
+                    stack_object.name
+                    if isinstance(stack_object, CardState)
+                    else stack_object.source_name  # type: ignore[union-attr]
+                ),
+                text=clause,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if not held:
+            return
+        controller = game.controller_of(stack_object)
+        amount = reader(game, controller.username, source, 0)
+        pool = controller.mana_pool
+        for _ in range(max(amount, 0)):
             pool.add(color)
 
     return effect
@@ -48557,6 +49193,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if add_combination_mana is not None:
         return add_combination_mana
     # -- end Wave W11 single-clause addition -------------------------------
+    conditional_add_mana_equal_to = _parse_if_condition_add_mana_equal_to_clause(
+        clause, for_spell=for_spell
+    )
+    if conditional_add_mana_equal_to is not None:
+        return conditional_add_mana_equal_to
     # -- returning cards from a graveyard, and mass returns to hand --------
     return_self_from_graveyard = _parse_return_self_from_graveyard_to_battlefield_clause(
         clause, for_spell=for_spell
@@ -49949,6 +50590,29 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            # Same reason: the bite rider names its own victim target, and
+            # the antecedent's own pump is conditional (Burrog Barrage).
+            paired = _parse_conditional_pump_then_bite_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_conditional_self_pump_instead_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_self_pump_then_conditional_also_gains_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
             # Same reason: the bite rider names its own biter target.
             paired = _parse_bite_damage_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
@@ -50021,6 +50685,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            paired = _parse_counter_then_wizard_mana_from_countered_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
             paired = _parse_counter_then_recruit_by_mana_value_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
@@ -50041,6 +50712,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             if paired is not None:
                 parsed.append(paired)
                 index += 2
+                continue
+            merged = _parse_conditional_exile_then_play_permission_clauses(
+                clauses, index, for_spell=for_spell
+            )
+            if merged is not None:
+                consumed, effect = merged
+                parsed.append(effect)
+                index += consumed
                 continue
             merged = _parse_exile_then_play_permission_clauses(clauses, index, for_spell=for_spell)
             if merged is not None:

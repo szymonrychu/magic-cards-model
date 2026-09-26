@@ -1471,6 +1471,29 @@ def _worse(a: str, b: str) -> str:
     return min((a, b), key=lambda category: _SEVERITY[category])
 
 
+#: "..., where X is the amount of mana spent to cast that spell." - Aberrant
+#: Manawurm's and Shantotto, Tactician Magician's own cast-trigger pump: CR
+#: 601.2h's mana spent on the spell that *triggered* the ability, never CR
+#: 107.3a's announced kind, so `_etb_x_candidates` never probes it and
+#: `ability_text` reaches `_layer_category` unsubstituted. The exact same
+#: strip-then-substitute `machines/effects._cast_trigger_mana_spent_x_
+#: ability_text` runs at real resolution, mirrored here with a placeholder
+#: value so this static sweep judges the shape the same way the engine does.
+_CAST_TRIGGER_MANA_SPENT_WHERE_X_RE = re.compile(
+    r",?\s*where x is the amount of mana spent to cast that spell", re.IGNORECASE
+)
+
+
+def _mana_spent_x_pump_probe_text(text: str | None) -> str | None:
+    """`text` with `_CAST_TRIGGER_MANA_SPENT_WHERE_X_RE`'s own definition
+    substituted for a placeholder value and dropped, or `None` when `text`
+    carries no such definition (the common case, left for the caller's
+    ordinary reading)."""
+    if text is None or _CAST_TRIGGER_MANA_SPENT_WHERE_X_RE.search(text) is None:
+        return None
+    return substitute_x(_CAST_TRIGGER_MANA_SPENT_WHERE_X_RE.sub("", text), 1)
+
+
 def _layer_category(printing: Card, ability_text: str | None = None) -> str | None:
     """Handled/notice for this card's own continuous-effect text (CR 611.2,
     CR 611.3), read exactly the way the battlefield sweep
@@ -1497,6 +1520,9 @@ def _layer_category(printing: Card, ability_text: str | None = None) -> str | No
     for `activated_effect_for` keeps the two readings in step.
     """
     if ability_text is not None:
+        probed = _mana_spent_x_pump_probe_text(ability_text)
+        if probed is not None and parsed_layer_effects(probed, card_name=printing.name):
+            return HANDLED
         if parsed_layer_effects(ability_text, card_name=printing.name):
             return HANDLED
         if looks_like_unparsed_layer_effect(
@@ -1518,7 +1544,12 @@ def _layer_category(printing: Card, ability_text: str | None = None) -> str | No
     # creature"; without normalizing it the same way the real engine does,
     # this sweep would misjudge a trigger that resolves correctly in a real
     # game as an unrecognised shape.
-    if printing.name in LAYER_EFFECTS or parsed_layer_effects(text, card_name=printing.name):
+    probed = _mana_spent_x_pump_probe_text(text)
+    if (
+        printing.name in LAYER_EFFECTS
+        or parsed_layer_effects(text, card_name=printing.name)
+        or (probed is not None and parsed_layer_effects(probed, card_name=printing.name))
+    ):
         return HANDLED
     # `static_only=True` for the same reason the battlefield sweep passes it:
     # without it, a *triggered* ability's own effect sentence ("... gets +X/+X

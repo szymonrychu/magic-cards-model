@@ -1,0 +1,147 @@
+{
+  "object": "card",
+  "id": "eff984b2-6ea9-4471-91c5-99c47f87f10b",
+  "oracle_id": "381df197-5fb7-44ab-a31f-96c4993a0e53",
+  "multiverse_ids": [],
+  "resource_id": "13AAB007C24EA18D3F61587756B67359ACC6985ABEE09F557CADAABA147559AA",
+  "mtgo_id": 141445,
+  "arena_id": 96117,
+  "tcgplayer_id": 631011,
+  "cardmarket_id": 826134,
+  "name": "Shantotto, Tactician Magician",
+  "lang": "en",
+  "released_at": "2025-06-13",
+  "uri": "https://api.scryfall.com/cards/eff984b2-6ea9-4471-91c5-99c47f87f10b",
+  "scryfall_uri": "https://scryfall.com/card/fin/241/shantotto-tactician-magician?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:36:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.jpg?1783906563",
+    "normal": "https://cards.scryfall.io/normal/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.jpg?1783906563",
+    "large": "https://cards.scryfall.io/large/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.jpg?1783906563",
+    "png": "https://cards.scryfall.io/png/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.png?1783906563",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.jpg?1783906563",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.jpg?1783906563",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.webp?1783906563",
+    "grid": "https://cards.scryfall.io/grid/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.webp?1783906563",
+    "display": "https://cards.scryfall.io/display/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.webp?1783906563",
+    "art": "https://cards.scryfall.io/art/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.webp?1783906563",
+    "crop": "https://cards.scryfall.io/crop/front/e/f/eff984b2-6ea9-4471-91c5-99c47f87f10b.webp?1783906563"
+  },
+  "mana_cost": "{1}{U}{R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Dwarf Wizard",
+  "oracle_text": "Whenever you cast a noncreature spell, Shantotto gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell. If X is 4 or more, draw a card.",
+  "power": "0",
+  "toughness": "4",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set": "fin",
+  "set_name": "Final Fantasy",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/d7beb4b7-e1ff-4d35-ab07-5700f17ea1ea",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afin&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fin?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/eff984b2-6ea9-4471-91c5-99c47f87f10b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A381df197-5fb7-44ab-a31f-96c4993a0e53&unique=prints",
+  "collector_number": "241",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Ohohoho! I might be the harshest mistress in all of Vana'diel. But I may yet forgive you, if at my feet you kneel.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Joshua Raphael",
+  "artist_ids": [
+    "553b2a73-780f-414b-b2d7-3b7888821082"
+  ],
+  "illustration_id": "158a88f3-c77f-416c-89fa-d5c99cb00aeb",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond",
+    "ffxi"
+  ],
+  "edhrec_rank": 9856,
+  "preview": {
+    "source": "Final Fantasy XI Twitter",
+    "source_uri": "https://x.com/FFXI_JP/status/1920055179669614638",
+    "previewed_at": "2025-05-07"
+  },
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": "0.30",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.20",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DShantotto%252C%2BTactician%2BMagician",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DShantotto%252C%2BTactician%2BMagician",
+    "edhrec": "https://edhrec.com/route/?cc=Shantotto%2C+Tactician+Magician"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F631011%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=826134&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/141445?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

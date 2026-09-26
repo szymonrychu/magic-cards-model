@@ -3962,7 +3962,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 85
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 86
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4030,6 +4030,10 @@ class Game(EngineModel):
     #: `renowned`, `venture_room`, `dungeon_completions` and
     #: `last_known_attachments` (EC6's object-state readers - bumped at the
     #: EC round 2 merge).
+    #: 86: `machines/delayed.DelayedTrigger` gained `any_main_phase` and
+    #: `machines/delayed` gained the `add_mana_amount_for_controller` effect
+    #: kind (Mana Sculpt's own "at the beginning of your next main phase",
+    #: 273-sos T1).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -21310,7 +21314,14 @@ class Game(EngineModel):
         return self.condition_holds(controller, condition, source)
 
     def condition_holds(
-        self, controller: str, condition: str, source: CardState | None = None
+        self,
+        controller: str,
+        condition: str,
+        source: CardState | None = None,
+        *,
+        ability: Any = None,
+        event: Any = None,
+        source_stamp: UUID | None = None,
     ) -> bool | None:
         """Whether a printed board condition is true for `controller` right now,
         or None when this does not read it.
@@ -21330,6 +21341,19 @@ class Game(EngineModel):
         artifact has N or more ... counters on it"); without one those are not
         read.
 
+        `ability`/`event`/`source_stamp` are optional, additive context for a
+        resolution-time "if <condition>" printed on a *triggered* ability
+        whose condition needs to read the trigger's own event - "if five or
+        more mana was spent to cast that spell" (Molten-Core Maestro's own
+        Opus rider) resolves "that spell" to the cast event's own subject
+        (`machines/conditions/cast_record._cast_record_for_clause`), never to
+        `source` itself, and can only do that when the ability and its event
+        are threaded through the same way `machines/triggers.intervening_if_
+        answer` already threads them for a trigger's own intervening *if*.
+        Every existing caller passes none of the three and reads exactly as
+        before - only a caller that resolves a triggered ability's own rider
+        needs to supply them.
+
         A shape none of those patterns reads is handed to the shared reader,
         `machines/conditions.read_condition` - the registry every other
         condition-asking path falls back to as well - so a template read there
@@ -21340,7 +21364,17 @@ class Game(EngineModel):
             # The C1 rule every compound keeps (`machines/conditions`): read
             # only when every half is read - a true half does not stand in
             # for one nobody could check.
-            answers = [self.condition_holds(controller, part, source) for part in alternatives]
+            answers = [
+                self.condition_holds(
+                    controller,
+                    part,
+                    source,
+                    ability=ability,
+                    event=event,
+                    source_stamp=source_stamp,
+                )
+                for part in alternatives
+            ]
             if None in answers:
                 return None
             return any(answers)
@@ -21350,7 +21384,15 @@ class Game(EngineModel):
         from ..machines import conditions
 
         return conditions.read_condition(
-            conditions.ConditionContext(game=self, controller=controller, source=source), text
+            conditions.ConditionContext(
+                game=self,
+                controller=controller,
+                source=source,
+                ability=ability,
+                event=event,
+                source_stamp=source_stamp,
+            ),
+            text,
         )
 
     def builtin_condition_holds(

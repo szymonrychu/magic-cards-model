@@ -1342,3 +1342,44 @@ def test_a_snapshot_written_before_the_object_state_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_OBJECT_STATE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before Mana Sculpt's own delayed mana trigger:
+#: `machines/delayed.DelayedTrigger.any_main_phase`.
+_SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA = 85
+
+
+def test_the_any_main_phase_delayed_mana_bump_moved_the_version_past_eighty_five() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA
+
+
+def test_a_snapshot_written_before_any_main_phase_delayed_mana_is_refused() -> None:
+    """A version-85 pending `DelayedTrigger` has no `any_main_phase`: decoded
+    as current, Mana Sculpt's own "at the beginning of your next main phase"
+    trigger would read as `False` (the pre-existing single-`step` gate),
+    matching neither of the controller's own main phases at all - a mana
+    grant that was waiting to fire silently never does."""
+    game = _a_played_game()
+    from magic_cards_model.machines.abilities import TriggerEvent
+    from magic_cards_model.machines.delayed import AddManaAmountForController, DelayedTrigger
+    from magic_cards_model.models.card import Color
+
+    game.delayed_triggers.triggers.append(
+        DelayedTrigger(
+            text="At the beginning of your next main phase, add {C}.",
+            effect=AddManaAmountForController(amount=1, color=Color.COLORLESS),
+            event=TriggerEvent.BEGINNING_OF_STEP,
+            any_main_phase=True,
+            controller="alice",
+            source_name="Mana Sculpt",
+            only_when_active="alice",
+        )
+    )
+    dumped = game.model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA}",
+    ):
+        Game.model_validate(dumped)
