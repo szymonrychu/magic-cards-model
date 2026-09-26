@@ -17980,6 +17980,12 @@ _TOKEN_KEYWORDS = {
     # Crib Swap's Shapeshifter. The keyword line is all it takes; the creature
     # types are `CardState.subtypes`/`machines/layers._changeling_effects`.
     "changeling",
+    # CR 702.18a: "This permanent or player can't be the target of spells or
+    # abilities" - a static ability read the same bare-word way as every other
+    # entry here (`Game.hexproof_refusal`, the shared targeting check, already
+    # reads it off `has_keyword`/the computed board once it is on the token;
+    # Deadly Grub's own Insect is the pool's first token to print it).
+    "shroud",
 }
 
 _TOKEN_COLOR_WORDS = {

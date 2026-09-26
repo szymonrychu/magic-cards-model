@@ -155,6 +155,7 @@ class KeywordRule(StrEnum):
     RENOWN = "CR 702.112a"
     CRAFT = "CR 702.167a"
     FLANKING = "CR 702.25a"
+    VANISHING = "CR 702.63a"
 
 
 def executes(keyword: str) -> bool:
@@ -418,6 +419,12 @@ def executes(keyword: str) -> bool:
         # `machines/effects._parse_renown_clause`, and the designation is
         # `CardState.renowned` (CR 702.112b).
         "renown",
+        # CR 702.63a. Three abilities in two places: the entering time
+        # counters (numbered vanishing only, CR 702.63b) are `machines/
+        # replacement._vanishing_entering_counters`, and the upkeep tick plus
+        # the last-counter sacrifice are `_vanishing_abilities`/
+        # `_vanishing_effect` below (`_TRIGGER_EXPANSIONS`).
+        "vanishing",
     }
 
 
@@ -1313,6 +1320,59 @@ def _suspend_abilities(ability: KeywordAbility) -> list[TriggeredAbility]:
     ]
 
 
+def _vanishing_abilities(ability: KeywordAbility) -> list[TriggeredAbility]:
+    """CR 702.63a's *second and third* abilities. Vanishing is three abilities,
+    the same shape suspend is (`_suspend_abilities` above), over a battlefield
+    permanent instead of an exiled card.
+
+    "Vanishing is a keyword that represents three abilities. 'Vanishing N'
+    means 'This permanent enters with N time counters on it,' 'At the
+    beginning of your upkeep, if this permanent has a time counter on it,
+    remove a time counter from it,' and 'When the last time counter is removed
+    from this permanent, sacrifice it.'" CR 702.63b: vanishing printed with no
+    number is only these two triggered abilities - the first, entering-counters
+    ability is never part of it - which is exactly why `KeywordAbility.count`
+    being `None` is `machines/replacement._vanishing_entering_counters`'s own
+    signal to write nothing, not something read here.
+
+    The first ability is the CR 614.1c replacement effect
+    (`machines/replacement._vanishing_entering_counters`); it is not a
+    triggered ability at all, so it does not appear in this list.
+
+    Both abilities below function on the battlefield, the CR 113.6 default
+    `machines/triggers.zones_ability_functions_in` already applies when
+    neither the condition nor an intervening *if* names another zone - unlike
+    suspend's identical shape, nothing here has to widen `Game.emit`'s source
+    list, because a battlefield permanent is already offered for every
+    `TriggerEvent.BEGINNING_OF_STEP` event.
+
+    The third carries `event=None`, matched through `machines/triggers.
+    _unread_condition_matches` against `ExtraTriggerEvent.
+    LAST_TIME_COUNTER_REMOVED` - the same shape suspend's own third ability
+    takes, and `_LAST_TIME_COUNTER_CONDITION` accepts both "this card" and
+    "this permanent" so the one pattern serves both keywords.
+    """
+    return [
+        _expansion(
+            ability,
+            keyword="vanishing",
+            word=TriggerWord.AT,
+            condition="the beginning of your upkeep",
+            intervening_if="this permanent has a time counter on it",
+            effect="remove a time counter from it",
+            event=TriggerEvent.BEGINNING_OF_STEP,
+        ),
+        _expansion(
+            ability,
+            keyword="vanishing",
+            word=TriggerWord.WHEN,
+            condition="the last time counter is removed from this permanent",
+            effect="sacrifice it",
+            event=None,
+        ),
+    ]
+
+
 def _single(
     build: Callable[[KeywordAbility], TriggeredAbility],
 ) -> Callable[[KeywordAbility], list[TriggeredAbility]]:
@@ -1346,6 +1406,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "hideaway": _single(_hideaway_ability),
     "suspend": _suspend_abilities,
     "impending": _single(_impending_ability),
+    "vanishing": _vanishing_abilities,
     "battle cry": _single(_battle_cry_ability),
     "cumulative upkeep": _single(_cumulative_upkeep_ability),
     "partner with": _single(_partner_with_ability),
@@ -5624,6 +5685,68 @@ def _impending_effect(game: Any, ability: AbilityOnStack) -> int | None:
     return source.remove_counters(Counter.TIME, 1)
 
 
+def _remove_vanishing_time_counter(game: Any, source: CardState) -> int | None:
+    """CR 702.63a's second ability resolving: "remove a time counter from it."
+
+    The intervening *if* ("this permanent has a time counter on it") was
+    checked as it triggered (CR 603.4) and again as it resolves (CR 608.2a) by
+    `machines/triggers.intervening_if_answer`'s own clause for it, which is
+    what stops the tick once the counters are gone some other way - guarded
+    here too, the same defensive shape `_impending_effect` takes, so a direct
+    call cannot raise on an empty count or an off-battlefield permanent.
+
+    Taking the *last* counter off raises CR 702.63a's own third ability's
+    trigger condition (`ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED`), the
+    identical event `machines/casting.remove_suspend_time_counter` raises for
+    suspend's own last-counter ability.
+    """
+    if source.zone is not Zone.BATTLEFIELD or not source.can_remove_counters(Counter.TIME):
+        return None
+    remaining = source.remove_counters(Counter.TIME, 1)
+    if remaining == 0:
+        game.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED,
+                subject_id=source.id,
+                subject_name=source.name,
+                subject_card=source.card,
+                player=source.controller or source.owner,
+            )
+        )
+    return remaining
+
+
+def _sacrifice_when_vanished(game: Any, source: CardState) -> CardState | None:
+    """CR 702.63a's third ability resolving: "sacrifice it."
+
+    No intervening *if* is printed on this one (unlike suspend's own third
+    ability, which reads "if it's exiled" before its effect), so a permanent
+    that already left the battlefield some other way in response to the
+    trigger is not this ability breaking a rule - "sacrifice it" simply has
+    nothing left to act on, the same "the instruction is now impossible"
+    outcome `game.sacrifice` itself would refuse if asked to run on it.
+    """
+    if source.zone is not Zone.BATTLEFIELD:
+        return None
+    return game.sacrifice(source)
+
+
+def _vanishing_effect(game: Any, ability: AbilityOnStack) -> Any:
+    """CR 702.63a's second and third abilities, told apart by which one this
+    is - the same dispatch `_suspend_effect` above already uses for suspend's
+    identical two-triggered-abilities shape: the upkeep tick is
+    `TriggerEvent.BEGINNING_OF_STEP`, the last-counter sacrifice is the
+    unread condition, `event=None`.
+    """
+    source = ability.source(game)
+    if source is None:
+        return None
+    printed = ability.ability
+    if isinstance(printed, TriggeredAbility) and printed.event is TriggerEvent.BEGINNING_OF_STEP:
+        return _remove_vanishing_time_counter(game, source)
+    return _sacrifice_when_vanished(game, source)
+
+
 def _battle_cry_effect(game: Any, ability: AbilityOnStack) -> None:
     """CR 702.91a's effect: "each other attacking creature gets +1/+0 until
     end of turn."
@@ -5743,6 +5866,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "evoke": _evoke_effect,
     "suspend": _suspend_effect,
     "impending": _impending_effect,
+    "vanishing": _vanishing_effect,
     "mobilize": _mobilize_effect,
     "battle cry": _battle_cry_effect,
     "cumulative upkeep": _cumulative_upkeep_effect,
