@@ -61,6 +61,7 @@ from ..machines.casting import (
     split_second_restriction_source,
     static_free_cast_grants,
     static_free_cast_refusal,
+    static_zone_cast_permission,
     types_being_cast,
     usable_play_permission,
     why_cannot_cast_restriction,
@@ -2253,6 +2254,15 @@ class CastRecord(EngineModel):
     value on the battlefield (CR 707.2) is not its card's. Read through
     `Game.last_known_mana_value`, the same number either way."""
 
+    enters_with_counters: list[str] = Field(default_factory=list)
+    """One counter kind per counter the permanent this spell becomes enters
+    with because of how it was cast - a cast permission's own rider, "If you
+    cast a spell this way, that creature enters with a finality counter on
+    it." (Leonardo, Sewer Samurai; `KeywordCastOption.enters_with_counters`).
+    CR 614.1c makes it a replacement effect on the entering permanent,
+    applied by `machines/replacement._cast_permission_rider_modifiers`. Not
+    copied by `Game.copy_spell`: CR 707.10's copy was not cast this way."""
+
     sneak_defender: TargetRef | None = None
     """The player, planeswalker or battle the creature returned to pay this
     spell's sneak cost was attacking (CR 702.190b), copied from `Casting.
@@ -3998,7 +4008,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 89
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 90
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4080,6 +4090,10 @@ class Game(EngineModel):
     #: 89: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5), and
     #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5), carrying
     #: its `CastRecord` as JSON.
+    #: 90: `CastRecord` gained `enters_with_counters` (a cast permission's
+    #: CR 614.1c rider, tmt T6) and `Game` gained `next_spell_keyword_grants`
+    #: ("the next noncreature spell you cast this turn has affinity for
+    #: artifacts", CR 702.41a, tmt T6).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6531,6 +6545,7 @@ class Game(EngineModel):
         additional_cost_mana_values: list[float] | None = None,
         is_copy: bool = False,
         sneak_defender: TargetRef | None = None,
+        enters_with_counters: list[str] | None = None,
         kicker_costs_paid: list[str] | None = None,
         bargained: bool = False,
         evidence_collected: bool = False,
@@ -6609,6 +6624,7 @@ class Game(EngineModel):
             card_id=spell.id,
             is_copy=is_copy,
             sneak_defender=sneak_defender,
+            enters_with_counters=[] if is_copy else list(enters_with_counters or []),
             cast_step=None if is_copy or self.turn is None else self.turn.step,
             cast_during_turn_of=(None if is_copy or self.turn is None else self.turn.active_player),
             kicker_costs_paid=list(kicker_costs_paid or []),
@@ -19136,9 +19152,15 @@ class Game(EngineModel):
 
     def _plays_lands_from_top_of_library_line(self, text: str) -> bool:
         """Whether one static line is "You may play lands from the top of
-        your library."."""
+        your library." - or `casting.static_zone_cast_permission`'s "You may
+        play lands and cast `<quality>` spells from the top of your library."
+        (Mikey & Don, Party Planners; Traveling Chocobo), whose land half is
+        this same CR 305.1 permission."""
         stripped = self._static_line_without_ability_word(text)
-        return self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(stripped) is not None
+        if self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(stripped) is not None:
+            return True
+        permission = static_zone_cast_permission(stripped)
+        return permission is not None and permission.plays_lands and permission.zone is Zone.LIBRARY
 
     def controls_look_at_top_permission(self, username: str) -> bool:
         """Whether `username` controls a permanent granting CR 611.3d's "you

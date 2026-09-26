@@ -1,0 +1,135 @@
+{
+  "object": "card",
+  "id": "5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1",
+  "oracle_id": "a8fdbcdf-479d-4582-9ad5-9fbd4c740c29",
+  "multiverse_ids": [],
+  "tcgplayer_id": 695530,
+  "cardmarket_id": 904198,
+  "name": "Spectral Sailor",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1",
+  "scryfall_uri": "https://scryfall.com/card/fdn/746/spectral-sailor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-08-24T09:16:49Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.jpg?1787563009",
+    "normal": "https://cards.scryfall.io/normal/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.jpg?1787563009",
+    "large": "https://cards.scryfall.io/large/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.jpg?1787563009",
+    "png": "https://cards.scryfall.io/png/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.png?1787563009",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.jpg?1787563009",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.jpg?1787563009",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.webp?1787563009",
+    "grid": "https://cards.scryfall.io/grid/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.webp?1787563009",
+    "display": "https://cards.scryfall.io/display/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.webp?1787563009",
+    "art": "https://cards.scryfall.io/art/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.webp?1787563009",
+    "crop": "https://cards.scryfall.io/crop/front/5/e/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1.webp?1787563009"
+  },
+  "mana_cost": "{U}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Spirit Pirate",
+  "oracle_text": "Flash (You may cast this spell any time you could cast an instant.)\nFlying\n{3}{U}: Draw a card.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5ef30b6c-0806-4bf6-9a84-c2aea8d84cf1/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa8fdbcdf-479d-4582-9ad5-9fbd4c740c29&unique=prints",
+  "collector_number": "746",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Any ship that sails on these mean seas for long is bound to pick up a ghost or two.\"\n\u2014Admiral Beckett Brass",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Cristi Balanescu",
+  "artist_ids": [
+    "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
+  ],
+  "illustration_id": "fdf0b650-b66a-4e4e-94d7-a5f34c525e02",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "setextension"
+  ],
+  "edhrec_rank": 1961,
+  "penny_rank": 531,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.20",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpectral%2BSailor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpectral%2BSailor",
+    "edhrec": "https://edhrec.com/route/?cc=Spectral+Sailor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F695530%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=904198&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Spectral+Sailor&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

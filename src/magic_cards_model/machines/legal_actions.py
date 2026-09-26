@@ -1129,6 +1129,7 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
         card.zone is not Zone.HAND
         and game.play_permission_for(card, player, PlayAction.PLAY) is None
         and game.graveyard_land_permission(card, player) is None
+        and game.land_from_top_of_library_permission(card, player) is None
     ):
         return []
     actions: list[Action] = []
@@ -2037,6 +2038,14 @@ def _legal_actions(
         actions.extend(_cast_actions(game, player, card, candidate_scan))
         actions.extend(_land_actions(game, player, card))
         actions.extend(_off_zone_actions(game, player, card, candidate_scan))
+    if me.library:
+        # CR 601.3 / CR 305.1 opened to the top card of the library by a
+        # static permission ("You may play lands and cast `<quality>` spells
+        # from the top of your library.", "You may play lands from the top of
+        # your library.") - never deeper, so only the top card is asked.
+        top = me.library[0]
+        actions.extend(_cast_actions(game, player, top, candidate_scan))
+        actions.extend(_land_actions(game, player, top))
 
     # One board for the whole battlefield sweep (CR 613.5's answer is the same
     # for every permanent in it): `Game.computed_board` re-runs the entire
@@ -2123,6 +2132,8 @@ def _blocked_casts(
         if not isinstance(card, CardState):
             continue
         _cast_actions(game, player, card, candidate_scan, blocked=blocked)
+    if me.library:
+        _cast_actions(game, player, me.library[0], candidate_scan, blocked=blocked)
 
     # A card reachable through more than one live `PlayPermission`
     # (`_permission_cast_actions` loops over every one of them) can have the

@@ -6120,8 +6120,42 @@ def _self_enters_modifiers(
         performable.append(tribute)
 
     performable.extend(_riot_modifiers(game, card_state))
+    performable.extend(_cast_permission_rider_modifiers(game, card_state))
 
     return performable
+
+
+def _cast_permission_rider_modifiers(
+    game: "Game", card_state: CardState
+) -> list[tuple[str, Apply, str, bool]]:
+    """A cast permission's own "If you cast a spell this way, that creature
+    enters with a finality counter on it." (Leonardo, Sewer Samurai; Noctis,
+    Prince of Lucis; Mikey & Don, Party Planners' "an additional +1/+1
+    counter") - CR 614.1c's "enters with", applying to the permanent the
+    spell cast under that permission becomes. The permission recorded which
+    counters as the spell was cast (`CastRecord.enters_with_counters`), and
+    that record follows the spell onto the battlefield (CR 400.7d), so the
+    counters are on the permanent as it enters, not added a moment later."""
+    record = game.cast_record_of(card_state)
+    if record is None or not record.enters_with_counters:
+        return []
+    found: list[tuple[str, Apply, str, bool]] = []
+    for index, kind in enumerate(record.enters_with_counters):
+
+        def apply(
+            game: "Game", source: CardState | None, event: ReplaceableEvent, kind: str = kind
+        ) -> None:
+            event.counters[kind] = event.counters.get(kind, 0) + 1
+
+        found.append(
+            (
+                f"cast-permission-rider:{index}",
+                apply,
+                f"enters with a {kind} counter because it was cast this way (CR 614.1c)",
+                False,
+            )
+        )
+    return found
 
 
 def _riot_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str, bool]]:

@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "4f38126c-26a9-4447-801f-4f19e84c4aa5",
+  "oracle_id": "01758a4a-ac29-47ad-8e88-158374f1ae4c",
+  "multiverse_ids": [],
+  "resource_id": "9F2180DC6D94138F0CD7DFFAE98B4AE83193CE34A1ABEBF2B943FDDB22BEC6FA",
+  "mtgo_id": 147911,
+  "arena_id": 100601,
+  "tcgplayer_id": 673639,
+  "cardmarket_id": 868378,
+  "name": "Don & Raph, Hard Science",
+  "lang": "en",
+  "released_at": "2026-03-06",
+  "uri": "https://api.scryfall.com/cards/4f38126c-26a9-4447-801f-4f19e84c4aa5",
+  "scryfall_uri": "https://scryfall.com/card/tmt/144/don-&-raph-hard-science?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:54:38Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.jpg?1783904078",
+    "normal": "https://cards.scryfall.io/normal/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.jpg?1783904078",
+    "large": "https://cards.scryfall.io/large/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.jpg?1783904078",
+    "png": "https://cards.scryfall.io/png/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.png?1783904078",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.jpg?1783904078",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.jpg?1783904078",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.webp?1783904078",
+    "grid": "https://cards.scryfall.io/grid/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.webp?1783904078",
+    "display": "https://cards.scryfall.io/display/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.webp?1783904078",
+    "art": "https://cards.scryfall.io/art/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.webp?1783904078",
+    "crop": "https://cards.scryfall.io/crop/front/4/f/4f38126c-26a9-4447-801f-4f19e84c4aa5.webp?1783904078"
+  },
+  "mana_cost": "{1}{U/R}{U/R}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Mutant Ninja Turtle",
+  "oracle_text": "Menace\nWhenever Don & Raph attack, the next noncreature spell you cast this turn has affinity for artifacts. (It costs {1} less to cast for each artifact you control.)",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "R",
+    "U"
+  ],
+  "keywords": [
+    "Menace"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set": "tmt",
+  "set_name": "Teenage Mutant Ninja Turtles",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atmt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tmt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4f38126c-26a9-4447-801f-4f19e84c4aa5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A01758a4a-ac29-47ad-8e88-158374f1ae4c&unique=prints",
+  "collector_number": "144",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"Rest your brains, Donnie, I got my own idea.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Anthony Devine",
+  "artist_ids": [
+    "13a4bbe4-4e02-4403-8ecd-58f7744b994f"
+  ],
+  "illustration_id": "76be49f0-ff7d-4221-92f1-3b5d298a10d8",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 18591,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": "0.34",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.44",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDon%2B%2526%2BRaph%252C%2BHard%2BScience",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDon%2B%2526%2BRaph%252C%2BHard%2BScience",
+    "edhrec": "https://edhrec.com/route/?cc=Don+%26+Raph%2C+Hard+Science"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673639%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868378&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/147911?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
