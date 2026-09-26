@@ -156,6 +156,7 @@ class KeywordRule(StrEnum):
     CRAFT = "CR 702.167a"
     FLANKING = "CR 702.25a"
     VANISHING = "CR 702.63a"
+    DECAYED = "CR 702.147a"
 
 
 def executes(keyword: str) -> bool:
@@ -425,6 +426,14 @@ def executes(keyword: str) -> bool:
         # the last-counter sacrifice are `_vanishing_abilities`/
         # `_vanishing_effect` below (`_TRIGGER_EXPANSIONS`).
         "vanishing",
+        # CR 702.147a: two abilities, one per machine. The static "can't
+        # block" half is `machines/combat.block_refusal`'s own `has_keyword`
+        # check (credited to "machines/combat.py" first, since `printing.
+        # keywords` is walked against `combat.Keyword` before this set is
+        # ever asked); the triggered "sacrifice it at end of combat" half is
+        # `_decayed_ability` below (`_TRIGGER_EXPANSIONS`), whose effect text
+        # `machines/effects._parse_delayed_single_clause` reads.
+        "decayed",
     }
 
 
@@ -908,6 +917,33 @@ def _flanking_ability(ability: KeywordAbility) -> TriggeredAbility:
         condition="this creature becomes blocked by a creature without flanking",
         effect="the blocking creature gets -1/-1 until end of turn",
         event=TriggerEvent.BLOCKS,
+    )
+
+
+def _decayed_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.147a: "Decayed represents a static ability and a triggered
+    ability. 'Decayed' means 'This creature can't block' and 'When this
+    creature attacks, sacrifice it at end of combat.'"
+
+    Only the triggered half is written out here. The static "can't block"
+    half (CR 509.1b) is read directly off the keyword by `machines/combat.
+    block_refusal` (`has_keyword`), the same way flying/reach's own combat
+    rule is read there rather than as parsed ability-line text - so it needs
+    no `TriggeredAbility` of its own.
+
+    "Sacrifice it" is self-referential: `machines/effects.py`'s own
+    `_parse_delayed_single_clause` reads it off the ATTACKS event's own
+    `subject_id` (CR 508.1a), which for this ability is always this
+    creature, and creates the CR 603.7 delayed trigger that fires "at end of
+    combat" (CR 511.2).
+    """
+    return _expansion(
+        ability,
+        keyword="decayed",
+        word=TriggerWord.WHEN,
+        condition="this creature attacks",
+        effect="sacrifice it at end of combat",
+        event=TriggerEvent.ATTACKS,
     )
 
 
@@ -1415,6 +1451,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
     "flanking": _single(_flanking_ability),
+    "decayed": _single(_decayed_ability),
 }
 
 

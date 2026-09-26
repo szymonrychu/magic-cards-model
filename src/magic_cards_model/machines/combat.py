@@ -93,6 +93,15 @@ class Keyword(StrEnum):
     #: CR 702.3a-b: "Defender is a static ability. A creature with defender
     #: can't attack."
     DEFENDER = "defender"
+    #: CR 702.147a: "Decayed represents a static ability and a triggered
+    #: ability. 'Decayed' means 'This creature can't block' and 'When this
+    #: creature attacks, sacrifice it at end of combat.'" Only the static
+    #: half ("can't block", CR 509.1b) is read here, off `has_keyword` in
+    #: `block_refusal` below, so a printed, granted, or CR 122.1b keyword-
+    #: counter decayed all refuse a block the same way. The triggered half
+    #: ("sacrifice it at end of combat", CR 603.7/511.2) is
+    #: `machines/keywords.py::_decayed_ability`'s `_TRIGGER_EXPANSIONS` entry.
+    DECAYED = "decayed"
     #: CR 702.2a-c: a static ability that changes what counts as lethal damage
     #: when this creature assigns it, and adds a state-based action (CR 704.5h).
     DEATHTOUCH = "deathtouch"
@@ -1972,6 +1981,13 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     defending = defending_player(game, attack.defender)
     if game.controller_of(blocker).username != defending:
         return f"{blocker.name} is not controlled by {defending}"
+
+    if has_keyword(blocker, Keyword.DECAYED, game):
+        # CR 702.147a's static half: "'Decayed' means 'This creature can't
+        # block'" (CR 509.1b) - read off `has_keyword` rather than a printed
+        # "can't block" sentence, so a decayed keyword counter (CR 122.1b) or
+        # a grant refuses the block exactly like the printed keyword does.
+        return f"{blocker.name} has decayed and can't block (CR 702.147a)"
 
     if has_keyword(attacker, Keyword.FLYING, game) and not (
         has_keyword(blocker, Keyword.FLYING, game) or has_keyword(blocker, Keyword.REACH, game)
