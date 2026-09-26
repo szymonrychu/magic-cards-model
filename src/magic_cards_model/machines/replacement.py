@@ -5844,6 +5844,41 @@ def _self_enters_modifiers(
             for effect in parse_replacement_effects(card_state.card)
             if up_face_name is None or effect.face in (None, up_face_name)
         ]
+        if card_state.granted_ability_texts:
+            # CR 113.10a: a granted ability text "functions exactly as if it
+            # were printed on the object" - Wildgrowth Archaic's own cast
+            # trigger ("Whenever you cast a creature spell, that creature
+            # enters with X additional +1/+1 counters on it, where X is the
+            # number of colors of mana spent to cast it.") writes exactly
+            # such a sentence onto the *entering* object's own
+            # `CardState.granted_ability_texts` (see `machines/effects.
+            # _parse_grant_enters_with_colors_spent_counters_clause`) rather
+            # than the printed card, since the printed card carries no such
+            # line at all. `CardState.move_to`'s own docstring is why this
+            # is still there to read: stack-to-battlefield is the one zone
+            # change that keeps `granted_ability_texts` rather than clearing
+            # it (CR 400.7a/400.7b, the same exception `_carry_cast_record`
+            # relies on). Only an `ENTERS_WITH` line is read out of it - any
+            # other granted text (a spell's own "can't be countered", say)
+            # simply does not match `_ENTERS_WITH` and is ignored here, the
+            # same as any ordinary sentence this dispatcher was never asked
+            # about. Read *after* the card's own printed lines so a
+            # duplicate raw sentence (extremely unlikely, but CR 608.2c has
+            # no notion of merging two identical replacement effects into
+            # one) still becomes two independent `ENTERS_WITH` effects,
+            # which CR 616.1c's own "apply them in any order" already knows
+            # how to stack.
+            parsed = [
+                *parsed,
+                *(
+                    effect
+                    for text in card_state.granted_ability_texts
+                    for effect in _parse_oracle_text(
+                        text, face=None, names=_names_of(card_state.card)
+                    )
+                    if effect.kind is ReplacementKind.ENTERS_WITH
+                ),
+            ]
     else:
         key = "copy"
         copied_name, copied_lines = entering_as_copy

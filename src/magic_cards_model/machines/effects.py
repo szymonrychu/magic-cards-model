@@ -129,6 +129,7 @@ from .casting import (
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
 from .combat import has_keyword
 from .connive import parse_connive_clause
+from .converge import colors_of_mana_spent
 from .cost import (
     cost_announces_x,
     is_snow_source,
@@ -231,6 +232,7 @@ from .replacement import (
     DrawSkipReplacement,
     NextTimeDrawReplacement,
     created_replacement_spec,
+    strip_reminder_text,
 )
 from .targeting import (
     COMPARISON_CLAUSE_PATTERN,
@@ -1208,6 +1210,20 @@ _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE = re.compile(
 _COUNT_CARDS_DISCARDED_THIS_TURN_RE = re.compile(
     r"^(?:the number of )?cards? you(?:'ve| have)? discarded this turn$", re.IGNORECASE
 )
+#: "the number of cards you've drawn this turn" - Fractal Anomaly's own X.
+#: `Game.cards_drawn_this_turn` is EC4's own per-player running total,
+#: already read by `machines/conditions/history._drew`'s "you drew two or
+#: more cards this turn" (CR 121.2) - the identical fact, read here for a
+#: count instead of a threshold check.
+_COUNT_CARDS_DRAWN_THIS_TURN_RE = re.compile(
+    r"^(?:the number of )?cards? you(?:'ve| have)? drawn this turn$", re.IGNORECASE
+)
+#: "the number of differently named `<qualifier>` you control" - Emil,
+#: Vastlands Roamer's own "the number of differently named lands you
+#: control", generalised over the qualifier rather than fixed to lands.
+_DIFFERENTLY_NAMED_QUALIFIER_RE = re.compile(
+    r"^(?:the number of )?differently named (?P<qualifier>[a-z]+) you control$", re.IGNORECASE
+)
 #: "the number of cards in your graveyard" - Yuriko, Hope from the Shadows's
 #: own X. The unfiltered twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`: CR
 #: 500.2's graveyard has no type restriction of its own either, so every
@@ -1472,6 +1488,54 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
 
         return count_in_graveyard_unfiltered
 
+    if _COUNT_CARDS_DRAWN_THIS_TURN_RE.fullmatch(stripped):
+        # EC4's own running per-player total (`machines/conditions/history.
+        # _drew`'s identical read of `Game.cards_drawn_this_turn`, reused
+        # here for a count instead of a boolean) - Fractal Anomaly's own X:
+        # "Create a 0/0 green and blue Fractal creature token and put X
+        # +1/+1 counters on it, where X is the number of cards you've drawn
+        # this turn."
+        def cards_drawn_this_turn(game: "Game", controller: str) -> int:
+            return game.cards_drawn_this_turn.get(controller, 0)
+
+        return cards_drawn_this_turn
+
+    if match := _DIFFERENTLY_NAMED_QUALIFIER_RE.fullmatch(stripped):
+        # "the number of differently named `<qualifier>` you control" - Emil,
+        # Vastlands Roamer's own X for its Fractal token's counters ("the
+        # number of differently named lands you control"), generalised over
+        # the qualifier the same way `count_expression`'s other board reads
+        # are, rather than fixed to lands: CR 201.4a's own copiable name is
+        # what "differently named" compares (a token with no name of its own
+        # never joins any group, the same nameless-token reading `Game.
+        # legend_rule_groups` already gives CR 201.4a for the legend rule).
+        card_type = _singular_card_type(match.group("qualifier"))
+        subtype = (
+            None
+            if card_type is not None
+            else _singular_subtype_for_count_expression(match.group("qualifier"))
+        )
+        if card_type is None and subtype is None:
+            return None
+
+        def count_differently_named(game: "Game", controller: str) -> int:
+            board = game.computed_board()
+            names: set[str] = set()
+            for permanent in game.battlefield:
+                chars = board.of(permanent)
+                if chars.controller != controller:
+                    continue
+                if card_type is not None and card_type not in chars.types:
+                    continue
+                if subtype is not None and subtype not in {word.lower() for word in chars.subtypes}:
+                    continue
+                name = permanent.name
+                if name:
+                    names.add(name)
+            return len(names)
+
+        return count_differently_named
+
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
         card_type = _singular_card_type(match.group("qualifier"))
         if card_type is None:
@@ -1605,6 +1669,17 @@ _OBJECT_COUNTER_COUNT_RE = re.compile(
 )
 
 
+#: Converge's own "for each `<description>`"/"where X is `<expr>`" term:
+#: "color of mana spent to cast it" (Magmablood/Rancorous/Wildgrowth
+#: Archaic), and "colors of mana spent to cast this spell/creature" for a
+#: future printing that spells the count out that way instead of the "for
+#: each" shape. See `machines/converge.colors_of_mana_spent`.
+_COLORS_OF_MANA_SPENT_TO_CAST_IT_RE = re.compile(
+    r"^colors? of mana spent to cast (?:it|this (?:spell|creature|permanent))$",
+    re.IGNORECASE,
+)
+
+
 #: "the number of Equipment attached to him" (Whiplash, Vengeful Engineer;
 #: Shagrat, Loot Bearer's "... attached to Shagrat", its name already
 #: "this permanent") - a count of one subtype attached to the object the
@@ -1693,6 +1768,19 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
+    if _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE.fullmatch(text):
+        # Converge (CR 207.2c), the enters-with position: Magmablood/
+        # Rancorous/Wildgrowth Archaic's own "This creature enters with a
+        # +1/+1 counter on it for each color of mana spent to cast it." -
+        # `_COUNTER_FOR_EACH` (`machines/replacement.py`) already reads the
+        # "for each `<description>`" tail into this `amount_expression` call;
+        # what was missing was this one term, reusing the exact reader
+        # Prismatic Ending's own converge clause and CR 702.44b's Sunburst
+        # already carry (`machines/converge.colors_of_mana_spent`), off
+        # `obj` - the entering permanent, whose `Game.cast_record_of` still
+        # answers this once `Game._carry_cast_record` has re-keyed it from
+        # the spell that resolved into it (CR 400.7a/400.7b).
+        return lambda game, _controller, obj, _x: colors_of_mana_spent(game, obj)
     if match := _OBJECT_ATTACHED_COUNT_RE.fullmatch(text):
         attached_subtype = canonical_subtype(match.group("subtype"))
         if attached_subtype is None:
@@ -2676,6 +2764,69 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
                     source_id=ability.source_id, source_name=ability.source_name, text=remainder
                 )
             )
+
+    return effect
+
+
+#: Converge (CR 207.2c), a mass-pump trigger scaled by "that spell"'s own
+#: colors spent: Magmablood Archaic's own "Whenever you cast an instant or
+#: sorcery spell, creatures you control get +1/+0 until end of turn for each
+#: color of mana spent to cast that spell." Read as its own whole-text shape,
+#: ahead of `_mass_pump_ability_effect` (`_parse_mass_pump_clause`'s own
+#: "get +N/+N for each `<count>`" reader, `_MASS_PUMP_FOR_EACH_RE`), because
+#: this prints the duration *before* the "for each" tail rather than after
+#: it - the one word order `_MASS_PUMP_FOR_EACH_RE`'s lookahead does not
+#: reach - and because `MassPumpMagnitude`'s own `(game, controller,
+#: source_id) -> int` signature has no way to name "that spell" at all: its
+#: only handle on the board is the *ability's* own source (Magmablood
+#: itself), never the spell whose casting triggered it. Generalised over the
+#: printed subject ("creatures you control" / "other creatures you
+#: control") and the per-color unit pump, not fixed to +1/+0.
+_PUMP_FOR_EACH_COLOR_SPENT_ON_THAT_SPELL_RE = re.compile(
+    r"^(?P<subject>other creatures you control|creatures you control) get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn for each color of mana spent "
+    r"to cast (?:that|this) spell\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_pump_for_each_color_spent_on_that_spell_clause(effect_text: str) -> AbilityEffect | None:
+    """`_PUMP_FOR_EACH_COLOR_SPENT_ON_THAT_SPELL_RE`'s shape, or `None`.
+
+    The magnitude is worked out once, here, off "that spell"'s own
+    `CastRecord` (`ability.event.subject_id`, `machines/converge.colors_of_
+    mana_spent`) while it is still on the stack (CR 603.3b: the trigger
+    resolves before the spell that caused it), then handed to `_run_mass_
+    pump` as an already-substituted literal template - the identical
+    "compute it myself, then reuse the shared applier" shape `Toxic Deluge`'s
+    own additional-cost-X mass debuff already uses for a magnitude
+    `MassPumpMagnitude` cannot express.
+    """
+    match = _PUMP_FOR_EACH_COLOR_SPENT_ON_THAT_SPELL_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    unit_power = int(match.group("power"))
+    unit_toughness = int(match.group("toughness"))
+    subject = match.group("subject").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState):
+            return
+        colors_spent = colors_of_mana_spent(game, spell)
+        if colors_spent <= 0:
+            return
+        source = ability.source(game)
+        if source is None:
+            return
+        template = (
+            f"{subject} get {unit_power * colors_spent:+d}/{unit_toughness * colors_spent:+d} "
+            "until end of turn."
+        )
+        _run_mass_pump(game, source, ability.controller, template, None)
 
     return effect
 
@@ -24766,6 +24917,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     each_opponent_loses_life = _parse_each_opponent_loses_life_equal_to(effect_text)
     if each_opponent_loses_life is not None:
         return each_opponent_loses_life
+    pump_for_each_color_spent = _parse_pump_for_each_color_spent_on_that_spell_clause(effect_text)
+    if pump_for_each_color_spent is not None:
+        return pump_for_each_color_spent
     mass_pump = _mass_pump_ability_effect(effect_text)
     if mass_pump is not None:
         return mass_pump
@@ -27974,6 +28128,34 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     if x_life_mass_debuff is not None:
         return x_life_mass_debuff
     # -- end Wave W6 whole-text additions -----------------------------------
+    # -- sos-t2's own converge/Fractal/X-count whole-text additions --------
+    converge_discard = _parse_converge_discard_by_colors_spent(whole)
+    if converge_discard is not None:
+        return converge_discard
+    converge_damage_then_exile_excess = _parse_converge_damage_then_exile_excess_clause(whole)
+    if converge_damage_then_exile_excess is not None:
+        return converge_damage_then_exile_excess
+    converge_fractal_tokens_and_life = _parse_converge_fractal_tokens_and_life_clause(whole)
+    if converge_fractal_tokens_and_life is not None:
+        return converge_fractal_tokens_and_life
+    converge_draw_damage_life = _parse_converge_draw_damage_life_clause(whole)
+    if converge_draw_damage_life is not None:
+        return converge_draw_damage_life
+    converge_draw_and_lose_life = _parse_converge_draw_and_lose_life_clause(whole)
+    if converge_draw_and_lose_life is not None:
+        return converge_draw_and_lose_life
+    fractal_token_by_cards_drawn = _parse_fractal_token_by_cards_drawn_this_turn_clause(whole)
+    if fractal_token_by_cards_drawn is not None:
+        return fractal_token_by_cards_drawn
+    power_of_two_draw = _parse_power_of_two_draw_clause(whole)
+    if power_of_two_draw is not None:
+        return power_of_two_draw
+    tokens_then_counter_if_not_from_hand = _parse_tokens_then_counter_if_not_cast_from_hand_clause(
+        whole
+    )
+    if tokens_then_counter_if_not_from_hand is not None:
+        return tokens_then_counter_if_not_from_hand
+    # -- end sos-t2 whole-text additions -------------------------------------
     citys_blessing_instead = _parse_citys_blessing_instead_clause(whole)
     if citys_blessing_instead is not None:
         return citys_blessing_instead
@@ -28357,6 +28539,412 @@ def _parse_converge_exile_by_colors_spent(effect_text: str) -> Effect | None:
                 mana_value = game.characteristics_of(target).mana_value
                 if mana_value <= colors_spent:
                     game.exile_permanent(target)
+
+    return effect
+
+
+#: Converge (CR 207.2c): "Target player discards X cards, where X is the
+#: number of colors of mana spent to cast this spell." (Arcane Omens).
+#: `_targets_understood`'s own "target player" reading already accepts an
+#: opponent-restricted variant too, so `who` is read rather than fixed.
+_CONVERGE_DISCARD_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — )?target (?P<who>player|opponent) discards x cards?,\s*"
+    r"where x is the number of colors of mana spent to cast this spell\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_converge_discard_by_colors_spent(effect_text: str) -> Effect | None:
+    """`_CONVERGE_DISCARD_RE`'s shape, or `None` if this is not it. The
+    discard call itself is `_parse_target_player_discards_clause`'s own -
+    CR 701.9b's default chooser (the discarding player themselves) - reused
+    rather than reimplemented, once `machines/converge.colors_of_mana_spent`
+    has worked out how many cards that default chooser is discarding."""
+    match = _CONVERGE_DISCARD_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    phrase = f"target {match.group('who')}"
+    if not _targets_understood(phrase, allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = colors_of_mana_spent(game, spell)
+        if amount <= 0:
+            return
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, Player):
+                continue
+            needed = min(amount, len(target.hand))
+            if needed <= 0:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=target.username,
+                    prompt=f"discard {needed} card(s)",
+                    source=spell.name,
+                    amount=needed,
+                    cards=tuple(state.id for state in target.hand),
+                    source_id=source_id_of(spell),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in target.hand}
+            game.discard_cards(
+                target.username, [by_id[card_id] for card_id in chosen_ids], source=spell.name
+            )
+
+    return effect
+
+
+#: Converge (CR 207.2c): Archaic's Agony's own "Converge — `<name>` deals X
+#: damage to target creature, where X is the number of colors of mana spent
+#: to cast this spell. Exile cards from the top of your library equal to the
+#: excess damage dealt to that creature this way. You may play those cards
+#: until the end of your next turn." Read whole, the same reason `_DAMAGE_
+#: THEN_EMPOWER_IF_EXCESS_RE` above is: the second sentence's CR 120.10
+#: excess is measured against how much the first sentence actually dealt,
+#: and the third sentence's grant names exactly what the second exiled.
+#: `<name>` is read and thrown away - the source is always the resolving
+#: spell regardless of what it is printed to be named after.
+_CONVERGE_DAMAGE_THEN_EXILE_EXCESS_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — )?[A-Za-z][A-Za-z' -]*? deals x damage to target creature,\s*"
+    r"where x is the number of colors of mana spent to cast this spell\.\s*"
+    r"exile cards from the top of your library equal to the excess damage dealt to "
+    r"that creature this way\.\s*you may play (?:those|these) cards until the end of "
+    r"your next turn\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_converge_damage_then_exile_excess_clause(effect_text: str) -> Effect | None:
+    """`_CONVERGE_DAMAGE_THEN_EXILE_EXCESS_RE`'s shape, or `None`.
+
+    `_lethal_amount_before_damage` (CR 120.10, read just above for Violent
+    Echoes' own excess-damage empower) has to run *before* `Game.deal_damage`
+    marks the damage it measures against; `deal_damage`'s own return is the
+    amount actually dealt (CR 609.7b's own prevention/replacement effects
+    already applied), which is what CR 120.10's excess is measured against,
+    not the printed/computed X. The exiled cards' play grant mirrors
+    `_parse_exile_hand_draw_then_play_until_next_turn_clause`'s own
+    "until the end of your next turn" shape (`until_next_turn_of`).
+    """
+    match = _CONVERGE_DAMAGE_THEN_EXILE_EXCESS_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target creature"):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = colors_of_mana_spent(game, spell)
+        controller = game.controller_of(spell)
+        for target in game.resolve_targets(spell):
+            if not isinstance(target, CardState):
+                continue
+            pre_lethal = _lethal_amount_before_damage(game, target)
+            dealt = game.deal_damage(target, amount, source=spell)
+            if pre_lethal is None:
+                continue
+            excess = dealt - pre_lethal
+            if excess <= 0:
+                continue
+            top = list(controller.library[:excess])
+            if not top:
+                continue
+            for card in game.exile_cards(top):
+                game.grant_play_permission(
+                    card,
+                    controller.username,
+                    action=PlayAction.PLAY,
+                    pays_mana_cost=True,
+                    source_name=spell.name,
+                    zone=Zone.EXILE,
+                    rule="CR 601.3",
+                    until_next_turn_of=controller.username,
+                )
+
+    return effect
+
+
+#: Converge (CR 207.2c): Snarl Song's own "Converge — Create two 0/0 green
+#: and blue Fractal creature tokens. Put X +1/+1 counters on each of them and
+#: you gain X life, where X is the number of colors of mana spent to cast
+#: this spell." The token-creation half is `_parse_token_clause`'s own
+#: generic "create N `<desc>` token(s)" reader, reused whole rather than
+#: reimplemented (it already reads any count, colour pair, and creature type
+#: - nothing here is specific to a Fractal); what is new is the second
+#: sentence's compound rider, which `_parse_referent_object_clause`'s own
+#: `_RIDER_PUT_COUNTERS_RE`/`_RIDER_PUT_VARIABLE_COUNTERS_RE` cannot join to
+#: an "and you gain X life" tail sharing the same "where X is" definition.
+_CONVERGE_TOKENS_COUNTERS_AND_LIFE_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — )?(?P<token_clause>create [^.]+)\.\s*"
+    r"put x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each of them and you gain x life,\s*"
+    r"where x is the number of colors of mana spent to cast this spell\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_converge_fractal_tokens_and_life_clause(effect_text: str) -> Effect | None:
+    """`_CONVERGE_TOKENS_COUNTERS_AND_LIFE_RE`'s shape, or `None`.
+
+    The tokens actually created (a before/after id diff on `game.
+    battlefield`, the same technique `_parse_token_then_object_anaphor_
+    clause_pair` already uses for its own single-token rider) are each given
+    the counters; the life gain is unconditional on X alone (CR 608.2c: "you
+    gain X life" is its own instruction, not scaled by how many tokens
+    happened to survive to be counted).
+    """
+    match = _CONVERGE_TOKENS_COUNTERS_AND_LIFE_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    token_effect = _parse_token_clause(match.group("token_clause").strip(), for_spell=True)
+    if token_effect is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = colors_of_mana_spent(game, spell)
+        before_ids = {existing.id for existing in game.battlefield}
+        token_effect(game, spell)
+        if amount <= 0:
+            return
+        created = [state for state in game.battlefield if state.id not in before_ids]
+        for token in created:
+            game.add_counters(token, kind, amount)
+        game.gain_life(game.controller_of(spell), amount)
+
+    return effect
+
+
+#: Converge (CR 207.2c): Together as One's own "Converge — Target player
+#: draws X cards, `<name>` deals X damage to any target, and you gain X
+#: life, where X is the number of colors of mana spent to cast this spell."
+#: Three different actors (a targeted player, a targeted anything, and the
+#: caster) sharing one "where X is" definition in one CR 608.2c instruction -
+#: read whole for the identical reason `_parse_converge_draw_damage_life_
+#: clause`'s siblings above are, since `_CLAUSE_SEPARATOR`'s bare-comma/"and"
+#: split would otherwise cut the shared X definition away from two of its
+#: three uses. `spell.targets` is read by position rather than through the
+#: aggregate `Game.resolve_targets`, because that call alone cannot tell
+#: "target player" and "any target" apart once one becomes illegal and is
+#: dropped from it - the same reason `TargetRequirement.SOURCE_LOYALTY`
+#: reads its own count off `source_id` and not off a merged list. The
+#: position is **not** printed order: `machines/targeting._parse` collects
+#: every "any target" occurrence first, before its main left-to-right scan
+#: of the remaining "target `<phrase>`" occurrences (see its own source for
+#: why - `any_targets` is built and substituted out of the text before the
+#: ordinary scan ever starts), so "any target"'s own requirement is always
+#: `spell.targets[0]` here even though "target player" is printed first.
+_CONVERGE_DRAW_DAMAGE_LIFE_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — )?target player draws x cards,\s*"
+    r"[A-Za-z][A-Za-z' -]*? deals x damage to any target,\s*and you gain x life,\s*"
+    r"where x is the number of colors of mana spent to cast this spell\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_converge_draw_damage_life_clause(effect_text: str) -> Effect | None:
+    """`_CONVERGE_DRAW_DAMAGE_LIFE_RE`'s shape, or `None`."""
+    match = _CONVERGE_DRAW_DAMAGE_LIFE_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+    if not _targets_understood("any target", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = colors_of_mana_spent(game, spell)
+        controller = game.controller_of(spell)
+        refs = spell.targets
+        # "any target" is collected first (see the comment above), "target
+        # player" second.
+        damage_target = game.legal_target(spell, refs[0]) if len(refs) > 0 else None
+        player_target = game.legal_target(spell, refs[1]) if len(refs) > 1 else None
+        if amount <= 0:
+            return
+        if isinstance(player_target, Player):
+            game.draw_cards(player_target.username, amount)
+        if damage_target is not None and not isinstance(damage_target, AbilityOnStack):
+            game.deal_damage(damage_target, amount, source=spell)
+        game.gain_life(controller, amount)
+
+    return effect
+
+
+#: Converge (CR 207.2c), proof of generality: Painful Truths' own "You draw
+#: X cards and lose X life, where X is the number of colors of mana spent to
+#: cast this spell." - the same amount, in a plain untargeted "you" clause
+#: rather than any of Arcane Omens/Together as One's targeted shapes, proving
+#: `machines/converge.colors_of_mana_spent` generalises to a third effect
+#: position with no target at all.
+_CONVERGE_DRAW_AND_LOSE_LIFE_RE = re.compile(
+    r"^(?:[a-z][a-z '-]* — )?you draw x cards and lose x life,\s*"
+    r"where x is the number of colors of mana spent to cast this spell\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_converge_draw_and_lose_life_clause(effect_text: str) -> Effect | None:
+    """`_CONVERGE_DRAW_AND_LOSE_LIFE_RE`'s shape, or `None`."""
+    if _CONVERGE_DRAW_AND_LOSE_LIFE_RE.fullmatch(effect_text.strip()) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        amount = colors_of_mana_spent(game, spell)
+        if amount <= 0:
+            return
+        controller = game.controller_of(spell)
+        game.draw_cards(controller.username, amount)
+        game.lose_life(controller, amount)
+
+    return effect
+
+
+#: Fractal Anomaly: "Create a 0/0 green and blue Fractal creature token and
+#: put X +1/+1 counters on it, where X is the number of cards you've drawn
+#: this turn." One sentence joining the token-creation and counter-count
+#: templates `_parse_token_clause`/`count_expression` already read
+#: separately with "and" rather than the usual sentence break - generalised
+#: over both (any token description, any `count_expression` phrase), not
+#: fixed to a Fractal or to "cards you've drawn this turn": a future card
+#: sharing this exact "create ... and put X ..., where X is ..." shape with
+#: a different token or a different count is covered for free.
+_TOKEN_AND_PUT_X_COUNTERS_RE = re.compile(
+    r"^(?P<token_clause>create .+? tokens?) and put x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
+    r"on it,\s*where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_fractal_token_by_cards_drawn_this_turn_clause(effect_text: str) -> Effect | None:
+    """`_TOKEN_AND_PUT_X_COUNTERS_RE`'s shape, or `None`."""
+    match = _TOKEN_AND_PUT_X_COUNTERS_RE.fullmatch(effect_text.strip())
+    if match is None:
+        return None
+    counted = count_expression(match.group("expr"))
+    if counted is None:
+        return None
+    token_effect = _parse_token_clause(match.group("token_clause").strip(), for_spell=True)
+    if token_effect is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        amount = counted(game, controller.username)
+        before_ids = {existing.id for existing in game.battlefield}
+        token_effect(game, spell)
+        if amount <= 0:
+            return
+        created = [state for state in game.battlefield if state.id not in before_ids]
+        for token in created:
+            game.add_counters(token, kind, amount)
+
+    return effect
+
+
+#: Mathemagics: "Target player draws 2ˣ cards. (2⁰ = 1, 2¹ = 2, 2² = 4, ...)"
+#: - the one power-of-two amount in the pool, read off `CastRecord.x_value`
+#: (CR 107.3a, `{X}{X}{U}{U}` already carries an ordinary announced X) rather
+#: than a literal or a "where X is" expression. Matched against the literal
+#: printed superscript digit (U+00B2 etc.) `add_card.py` fetched verbatim
+#: from Scryfall, after `strip_reminder_text` drops the parenthetical - CR
+#: 207.2's reminder text is not part of the instruction.
+_POWER_OF_TWO_DRAW_RE = re.compile(r"^target player draws 2ˣ cards\.?$", re.IGNORECASE)
+
+
+def _parse_power_of_two_draw_clause(effect_text: str) -> Effect | None:
+    """`_POWER_OF_TWO_DRAW_RE`'s shape, or `None`."""
+    rules_text, _reminder = strip_reminder_text(effect_text.strip())
+    if _POWER_OF_TWO_DRAW_RE.fullmatch(rules_text.strip()) is None:
+        return None
+    if not _targets_understood("target player", allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        x_value = game.cast_record(spell).x_value
+        amount = 2**x_value if x_value >= 0 else 0
+        if amount <= 0:
+            return
+        for target in game.resolve_targets(spell):
+            if isinstance(target, Player):
+                game.draw_cards(target.username, amount)
+
+    return effect
+
+
+#: Antiquities on the Loose: "Create two 2/2 red and white Spirit creature
+#: tokens. Then if this spell was cast from anywhere other than your hand,
+#: put a +1/+1 counter on each Spirit you control." `CastRecord.origin_zone`
+#: (CR 601.2a) already carries exactly this fact - Rebound's own "cast from
+#: your hand" read the same field the other way - so no new cast-zone
+#: tracking is needed, only a reader of the existing one. Otterball Antics'
+#: own printing of the identical rider - "Create a 1/1 blue and red Otter
+#: creature token with prowess. If this spell was cast from anywhere other
+#: than your hand, put a +1/+1 counter on that creature." - proves this
+#: generalises to the *other* shape a card prints it in: a plural "each
+#: `<subtype>` you control" naming a whole board-wide group, or a singular
+#: "that creature"/"it" naming only the just-created token(s) (the same
+#: before/after id-diff `_parse_token_then_object_anaphor_clause_pair`
+#: already uses for its own single-sentence-pair rider). Generalised over
+#: the created token's own description and the counter kind/amount, not
+#: fixed to a Spirit or an Otter.
+_TOKENS_THEN_COUNTER_IF_NOT_CAST_FROM_HAND_RE = re.compile(
+    r"^(?P<token_clause>create [^.]+)\.\s*(?:then )?"
+    r"if this spell was cast from anywhere other than your hand,\s*"
+    r"put (?P<amount>a|an|\d+|[a-z]+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:each (?P<subtype>[a-z]+) you control|(?:that creature|it))\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_tokens_then_counter_if_not_cast_from_hand_clause(effect_text: str) -> Effect | None:
+    """`_TOKENS_THEN_COUNTER_IF_NOT_CAST_FROM_HAND_RE`'s shape, or `None`.
+
+    Otterball Antics' own reminder text for prowess (CR 207.2) sits inline,
+    right after this ability's own two sentences and before its Flashback
+    line - `strip_reminder_text` drops it the same way `_parse_oracle_text`
+    already does per paragraph, since this whole-text matcher never goes
+    through that reader itself.
+    """
+    rules_text, _reminder = strip_reminder_text(effect_text.strip())
+    match = _TOKENS_THEN_COUNTER_IF_NOT_CAST_FROM_HAND_RE.fullmatch(rules_text.strip())
+    if match is None:
+        return None
+    token_effect = _parse_token_clause(match.group("token_clause").strip(), for_spell=True)
+    if token_effect is None:
+        return None
+    amount = parse_count(match.group("amount"))
+    if amount is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    wanted_subtype = (
+        canonical_subtype(match.group("subtype")) if match.group("subtype") is not None else None
+    )
+    if match.group("subtype") is not None and wanted_subtype is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        before_ids = {existing.id for existing in game.battlefield}
+        token_effect(game, spell)
+        record = game.cast_record(spell)
+        if record.origin_zone is Zone.HAND and not record.is_copy:
+            return
+        if wanted_subtype is None:
+            for token in game.battlefield:
+                if token.id not in before_ids:
+                    game.add_counters(token, kind, amount)
+            return
+        controller = game.controller_of(spell).username
+        board = game.computed_board()
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if chars.controller != controller:
+                continue
+            if wanted_subtype not in {word.lower() for word in chars.subtypes}:
+                continue
+            game.add_counters(permanent, kind, amount)
 
     return effect
 
@@ -29103,6 +29691,22 @@ _RIDER_PUT_COUNTERS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Put X `<kind>` counters on it, where X is `<expr>`." - Emil, Vastlands
+#: Roamer's own "Put X +1/+1 counters on it, where X is the number of
+#: differently named lands you control." `_RIDER_PUT_COUNTERS_RE` above only
+#: reads a fixed count (or a spell's own {X}, already substituted to a
+#: literal number by `effect_for`'s `substitute_x` before this ever runs -
+#: Wild Hypothesis's identical-looking "Put X +1/+1 counters on it." is that
+#: case, not this one); this is the sibling for a card that spells its own X
+#: out with a "where X is ..." tail instead, read through `count_expression`
+#: the same way `_parse_draw_equal_to_then_lose_life_clause_pair` above
+#: already reads one for a draw amount rather than a counter one.
+_RIDER_PUT_VARIABLE_COUNTERS_RE = re.compile(
+    rf"^put x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on {_OBJECT_ANAPHOR},\s*"
+    r"where x is (?P<expr>.+?)$",
+    re.IGNORECASE,
+)
+
 #: "It gains `<keyword>` until end of turn." / "It gets +N/+N until end of
 #: turn." / "They gain ... " - The Wandering Emperor's `+1`.
 #:
@@ -29537,6 +30141,25 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                     game.add_counters(referent, kind, amount)
 
         return put_counters
+
+    if match := _RIDER_PUT_VARIABLE_COUNTERS_RE.fullmatch(rider):
+        kind = _counter_kind(match.group("kind"))
+        counted = count_expression(match.group("expr"))
+        if counted is None:
+            return None
+
+        def put_variable_counters(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            controller = game.controller_of(stack_object).username
+            amount = counted(game, controller)
+            if amount <= 0:
+                return
+            for referent in referents:
+                if referent.zone is Zone.BATTLEFIELD:
+                    game.add_counters(referent, kind, amount)
+
+        return put_variable_counters
 
     if _RIDER_CANT_BE_BLOCKED_RE.fullmatch(rider):
 
@@ -39865,6 +40488,70 @@ def _parse_it_gains_rebound_clause(clause: str, *, for_spell: bool) -> TargetedC
     return effect
 
 
+#: Converge (CR 207.2c), an enters-with replacement created by a cast
+#: trigger: Wildgrowth Archaic's own "Whenever you cast a creature spell,
+#: that creature enters with X additional +1/+1 counters on it, where X is
+#: the number of colors of mana spent to cast it." "That creature" is CR
+#: 607.1's anaphora back to the very spell whose casting made this ability
+#: trigger - `ability.event.subject_id`, the identical referent `_parse_it_
+#: gains_rebound_clause` just above already reads "it" against - not the
+#: source (Wildgrowth Archaic itself). Generalised over the printed counter
+#: kind, so a future card sharing this exact template with a different
+#: counter is covered for free.
+_GRANT_ENTERS_WITH_COLORS_SPENT_COUNTERS_RE = re.compile(
+    r"^that creature enters with x additional (?P<kind>[\w+/-]+) counters? on it,\s*"
+    r"where x is the number of colors of mana spent to cast it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_grant_enters_with_colors_spent_counters_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_GRANT_ENTERS_WITH_COLORS_SPENT_COUNTERS_RE`'s shape. Ability-only: a
+    spell has no `ability.event` to read "that creature" against.
+
+    The amount is resolved *now*, at the trigger's own resolution, off the
+    still-on-stack creature spell's own `CastRecord` (`machines/converge.
+    colors_of_mana_spent`) - the trigger goes on the stack above the spell
+    that caused it (CR 603.3b) and so resolves first, while that spell is
+    still there to read. The resolved number is then written as a plain,
+    literal "This creature enters with N `<kind>` counters on it." onto the
+    entering object's own `CardState.granted_ability_texts` (CR 113.10a),
+    which `machines/replacement._self_enters_modifiers` reads as an
+    independent `ENTERS_WITH` replacement effect once that creature spell
+    itself resolves - see that function's own docstring for why the grant
+    survives the stack-to-battlefield move. Written as its own counter grant
+    rather than folded into any `ENTERS_WITH` line the creature already
+    prints of its own: CR 616.1c lets its controller apply as many
+    replacement effects, in any order, as apply, so the two simply stack.
+    """
+    if for_spell:
+        return None
+    match = _GRANT_ENTERS_WITH_COLORS_SPENT_COUNTERS_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    kind = match.group("kind")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        spell = game.find_by_id(event.subject_id)
+        if not isinstance(spell, CardState) or spell.zone is not Zone.STACK:
+            return
+        amount = colors_of_mana_spent(game, spell)
+        if amount <= 0:
+            return  # CR 107.1b: zero counters is nothing to grant.
+        granted_text = f"This creature enters with {amount} {kind} counters on it."
+        if granted_text not in spell.granted_ability_texts:
+            spell.granted_ability_texts = (*spell.granted_ability_texts, granted_text)
+
+    return effect
+
+
 #: "This permanent/creature gains "`<ability>`" until end of turn." - Iron
 #: Fist, Living Weapon's own "Iron Fist gains "{T}: Iron Fist deals damage
 #: equal to his power to any other target" until end of turn." CR 201.5
@@ -44935,6 +45622,95 @@ def _merge_process_exile_if_you_do_clauses(
     return 2, effect
 
 
+#: Converge (CR 207.2c): Transcendent Archaic's own ETB trigger "you may draw
+#: X cards, where X is the number of colors of mana spent to cast this
+#: spell. If you draw one or more cards this way, discard two cards." Unlike
+#: Uncover the Moon-Letters' own "may draw ... If you do, discard" pair just
+#: below (whose X belongs to a *different*, still-on-stack spell the cast
+#: trigger watched), this X belongs to the entering creature itself -
+#: `AbilityOnStack.source`, already resolved onto the battlefield by the
+#: time this ETB trigger runs - so it is read off `machines/converge.
+#: colors_of_mana_spent(game, source)` rather than off `event.subject_id`.
+#: The consequence is conditioned on cards actually having been drawn
+#: ("this way", CR 608.2c anaphora), not merely on the "may" having been
+#: accepted - a hand-size-zero-cards-drawn corner (an empty library) still
+#: has to skip the discard, which is why `drawn` is checked rather than
+#: `amount` alone. The discard count is read, not fixed at two, so a future
+#: printing sharing this exact shape with a different discard count is
+#: covered for free.
+_CONVERGE_MAY_DRAW_CLAUSE_RE = re.compile(
+    r"^you may draw x cards,?\s*where x is the number of colors of mana spent to cast "
+    r"this (?:spell|creature)\.?$",
+    re.IGNORECASE,
+)
+_IF_YOU_DREW_CARDS_THIS_WAY_DISCARD_RE = re.compile(
+    rf"^if you draw (?:one or more|any) cards? this way,\s*discard (?P<n>{COUNT}) cards?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_converge_may_draw_then_discard_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_CONVERGE_MAY_DRAW_CLAUSE_RE` followed by `_IF_YOU_DREW_CARDS_THIS_
+    WAY_DISCARD_RE`. Ability-only: this X is CR 601.2h's own count on the
+    resolving *ability's own source*, which only an `AbilityOnStack` has -
+    nothing casts itself, so no spell reaches this shape at all.
+    """
+    if for_spell or index + 1 >= len(clauses):
+        return None
+    if _CONVERGE_MAY_DRAW_CLAUSE_RE.fullmatch(clauses[index].strip()) is None:
+        return None
+    discard_match = _IF_YOU_DREW_CARDS_THIS_WAY_DISCARD_RE.fullmatch(clauses[index + 1].strip())
+    if discard_match is None:
+        return None
+    discard_amount = parse_count(discard_match.group("n"))
+    if discard_amount is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        player = game.controller_of(ability)
+        source = ability.source(game)
+        amount = colors_of_mana_spent(game, source) if source is not None else 0
+        if amount <= 0:
+            return
+        if not game.may(
+            player,
+            f"draw {amount} cards",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        drawn = game.draw_cards(player.username, amount)
+        if not drawn:
+            return
+        needed = min(discard_amount, len(player.hand))
+        if needed <= 0:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"discard {needed} card(s)",
+                source=ability.source_name,
+                amount=needed,
+                cards=tuple(state.id for state in player.hand),
+                source_id=source_id_of(ability),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        by_id = {state.id: state for state in player.hand}
+        game.discard_cards(
+            player.username,
+            [by_id[card_id] for card_id in chosen_ids],
+            source=ability.source_name,
+        )
+
+    return 2, effect
+
+
 #: Uncover the Moon-Letters' whole cast trigger: "Whenever you cast a
 #: noncreature spell, you may draw X cards, where X is the amount of mana
 #: spent to cast that spell. If you do, discard two cards." X is not CR
@@ -48488,6 +49264,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     it_gains_rebound = _parse_it_gains_rebound_clause(clause, for_spell=for_spell)
     if it_gains_rebound is not None:
         return it_gains_rebound
+    grant_enters_with_colors_spent = _parse_grant_enters_with_colors_spent_counters_clause(
+        clause, for_spell=for_spell
+    )
+    if grant_enters_with_colors_spent is not None:
+        return grant_enters_with_colors_spent
     they_gain_or_lose_life = _parse_they_gain_or_lose_life_clause(clause, for_spell=for_spell)
     if they_gain_or_lose_life is not None:
         return they_gain_or_lose_life
@@ -49669,6 +50450,12 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_draw_mana_spent_then_discard_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_converge_may_draw_then_discard_clauses(clauses, index, for_spell=for_spell)
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

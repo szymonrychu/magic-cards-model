@@ -5813,3 +5813,71 @@ leaves its source on the battlefield.
 | Room effects built for the three dungeons: "each player loses N life", "each player loses N life unless they discard a card / sacrifice a `<quality>` of their choice", "sacrifice a creature, an artifact, and a land" (one of each, none twice), "target creature can't attack [or block] until your next turn / this turn" (combat now reads a creature's own "This creature can't attack."), "You may play them." with no duration (CR 611.2a), "Draw three cards and reveal them. You may cast one of them without paying its mana cost." (CR 608.2g) | `effects._loses_life_unless_step`, `_merge_sacrifice_one_of_each_clauses`, `_TARGET_CANT_BLOCK_RE`, `combat._self_attack_restriction_sentence`, `_permission_duration`, `_merge_draw_reveal_cast_one_free_clauses` | Tomb of Annihilation, Dungeon of the Mad Mage | - | `test_venture_into_the_dungeon.py` |
 
 Not read here, and why: "as long as you've completed a dungeon" statics (Nadaar, Selfless Paladin; Gloom Stalker) need a `LayerContext` field populated in `models/game.py` (EC4's); "Whenever you complete a dungeon" needs a trigger event in `machines/triggers.py` (closed after round 1); "an opponent attacks with creatures" (Tomik, Mangara) is matched per attacker by `triggers.condition_matches`, not once per declaration - the clause reads right, the trigger count is `triggers.py`'s; saddle is activated through `keywords.saddle_activation` but not yet offered by `Game.object_cost_offers`/`legal_actions` (game.py).
+
+## SoS round 2 (sos-t2): Converge in every position, X-count Fractal tokens, 2^X, cast-not-from-hand
+
+`machines/converge.py` is the one shared "colors of mana spent" reader
+(CR 207.2c's ability word; `colors_of_mana_spent(game, obj)`, distinct
+non-colorless colors off `CastRecord.mana_spent`) that Prismatic Ending's own
+converge clause and CR 702.44b's Sunburst already carried independently -
+every other converge printing in the Secrets of Strixhaven pool now reuses
+it, in three positions: an effect (read directly off the resolving spell), a
+target-legality comparison (`machines/targeting.ComparisonCount.
+SOURCE_COLORS_SPENT`, read off the ability's own source rather than the
+target - CR 603.3d puts a triggered ability's own targets on the stack only
+after its source has already finished being cast, unlike Prismatic Ending's
+own spell-position converge, which CR 601.2c/601.2h's ordering keeps
+unreadable as a restriction), and an enters-with-counters term
+(`machines/effects._amount_term`'s new "color[s] of mana spent to cast
+it/this spell/this creature" branch, read through `machines/replacement.
+_self_enters_modifiers`'s existing `_COUNTER_FOR_EACH` reader).
+
+Wildgrowth Archaic's own "Whenever you cast a creature spell, that creature
+enters with X additional +1/+1 counters on it" is a new capability: an
+enters-with replacement effect *created by a cast trigger* rather than
+printed on the entering object itself. The trigger resolves first
+(CR 603.3b: it goes on the stack above the spell that caused it) and writes
+a plain "This creature enters with N `<kind>` counters on it." sentence
+directly onto the still-on-stack creature spell's own
+`CardState.granted_ability_texts` (CR 113.10a: functions exactly as if
+printed). `_self_enters_modifiers` was extended, additively, to also read
+`ENTERS_WITH`-shaped lines off `granted_ability_texts` alongside the card's
+own printed text - the one zone change that keeps that field
+(stack-to-battlefield, the same exemption `_carry_cast_record` already
+relies on for `CastRecord`) is exactly the window this needs.
+
+Two new `count_expression` terms: "the number of cards you've drawn this
+turn" (EC4's own `Game.cards_drawn_this_turn`, already read as a boolean by
+`machines/conditions/history._drew`, reused here as a count) and "the number
+of differently named `<qualifier>` you control" (CR 201.4a's copiable name,
+generalised over any card type or subtype, not fixed to lands). A new
+`_parse_referent_object_clause` rider, `_RIDER_PUT_VARIABLE_COUNTERS_RE`
+("Put X `<kind>` counters on it, where X is `<expr>`"), threads either count
+through the existing `_parse_token_then_object_anaphor_clause_pair`
+two-sentence "Create ... token. `<rider>`." dispatch with no further
+per-card code.
+
+`CastRecord.origin_zone` (CR 601.2a), already used the other way by Ral,
+Monsoon Mage/Ojer Pakpatiq-style "cast from your hand" reads, is what
+answers "if this spell was cast from anywhere other than your hand" - no new
+cast-zone tracking, only a new reader of the existing field. Mathemagics'
+own "draws 2ˣ cards" is CR 107.3a's ordinary announced X, exponentiated
+rather than used literally.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| Converge (CR 207.2c) - the shared "colors of mana spent" reader, in an effect position: discard (Arcane Omens), damage-then-exile-excess (Archaic's Agony, CR 120.4a/120.10), token-creation-then-counters-and-life (Snarl Song), a three-actor compound draw/damage/life (Together as One), a target-less "you" clause | `converge.colors_of_mana_spent`; `effects._parse_converge_discard_by_colors_spent`, `_parse_converge_damage_then_exile_excess_clause`, `_parse_converge_fractal_tokens_and_life_clause`, `_parse_converge_draw_damage_life_clause`, `_parse_converge_draw_and_lose_life_clause` | Arcane Omens, Archaic's Agony, Snarl Song, Together as One | Painful Truths (the target-less "you draw X and lose X life" shape) | `test_converge_effect_shapes.py` |
+| Converge, the enters-with-counters position: "This creature enters with a +1/+1 counter on it for each color of mana spent to cast it." | `_COLORS_OF_MANA_SPENT_TO_CAST_IT_RE` in `effects._amount_term` | Magmablood Archaic, Rancorous Archaic, Wildgrowth Archaic | Skyrider Elf | `test_converge_effect_shapes.py` |
+| Converge, the target-legality position: "exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spent to cast this creature" | `targeting.ComparisonCount.SOURCE_COLORS_SPENT`, resolved in `TargetRequirement._counted_bound` off `source_id` | Sundering Archaic | - (reuses `exile_ability_targets`'s existing generic "exile target `<phrase>`" reader once the comparison itself is readable; no card-specific code) | `test_converge_effect_shapes.py` |
+| Converge, an ETB "you may draw X, where X is colors spent. If you draw one or more cards this way, discard N cards." | `effects._merge_converge_may_draw_then_discard_clauses` | Transcendent Archaic | - (only printing) | `test_converge_effect_shapes.py` |
+| An enters-with replacement created by a cast trigger: "Whenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it." | `effects._parse_grant_enters_with_colors_spent_counters_clause` (writes `CardState.granted_ability_texts`); `replacement._self_enters_modifiers`'s new granted-text read | Wildgrowth Archaic | - (only printing) | `test_converge_effect_shapes.py` |
+| A mass-pump trigger scaled by a *different* spell's own colors spent: "Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 until end of turn for each color of mana spent to cast that spell." | `effects._parse_pump_for_each_color_spent_on_that_spell_clause` (computes the magnitude off `ability.event.subject_id`'s own `CastRecord`, then calls `_run_mass_pump` with it substituted in) | Magmablood Archaic | - (only printing) | `test_converge_effect_shapes.py` |
+| "Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it, where X is `<count>`" - one sentence joining token creation and a variable counter count with "and" | `effects._parse_fractal_token_by_cards_drawn_this_turn_clause`; new `count_expression` term for "cards you've drawn this turn" (EC4 reuse) | Fractal Anomaly | - (only printing of the single-sentence "and put" shape) | `test_x_count_fractal_tokens.py` |
+| "Create a token. Put X `<kind>` counters on it, where X is `<expr>`." - a two-sentence pair | new `_parse_referent_object_clause` rider `_RIDER_PUT_VARIABLE_COUNTERS_RE`, threaded through the existing `_parse_token_then_object_anaphor_clause_pair`; new `count_expression` term for "differently named `<qualifier>` you control" | Emil, Vastlands Roamer ("differently named lands you control") | Body of Research ("cards in your library" - a pre-existing `count_expression` term, proving the new rider generalises to it with no further code) | `test_x_count_fractal_tokens.py` |
+| "Target player draws 2ˣ cards." - CR 107.3a's announced X, exponentiated | `effects._parse_power_of_two_draw_clause` | Mathemagics | - (only printing) | `test_power_of_two_draw.py` |
+| "Create `<tokens>`. [Then ]if this spell was cast from anywhere other than your hand, put `<n>` `<kind>` counter(s) on each `<subtype>` you control / on that creature." - `CastRecord.origin_zone` (CR 601.2a), an existing field, read the opposite way from Ojer Pakpatiq/Ral, Monsoon Mage's own "cast from your hand" | `effects._parse_tokens_then_counter_if_not_cast_from_hand_clause` | Antiquities on the Loose (the "each `<subtype>` you control" shape) | Otterball Antics (the "on that creature" shape - a genuinely different rider target, proving the reader generalises to both) | `test_cast_not_from_hand_rider.py` |
+
+`Emil, Vastlands Roamer`'s "Creatures you control with +1/+1 counters on them
+have trample." was already `handled` before this task (no new code): a
+pre-existing `machines/layers.py` static-grant reader already covers this
+plural "creatures ... with `<counter>` counters on them" phrasing.

@@ -111,6 +111,7 @@ from ..serialization import SortedFrozenSet
 from ..snapshot import EngineModel
 from .abilities import AbilityKind, TriggeredAbility, keyword_abilities, parse_abilities
 from .combat import has_keyword
+from .converge import colors_of_mana_spent
 from .keywords import keyword_triggered_abilities
 from .layers import BASIC_LAND_TYPES, CLOSED_SUBTYPE_LISTS
 from .modes import Mode, modal_profile, mode_rules_text
@@ -248,6 +249,27 @@ class ComparisonCount(StrEnum):
     name. Resolved in `TargetRequirement._counted_bound` off the requirement's
     own `source_id` (`Game.find_by_id`), never off `target` - it is the
     *ability's* loyalty, not the target's own."""
+
+    SOURCE_COLORS_SPENT = "source_colors_spent"
+    """Converge (CR 207.2c), the target-legality position: Sundering
+    Archaic's own "Converge — When this creature enters, exile target
+    nonland permanent an opponent controls with mana value less than or
+    equal to the number of colors of mana spent to cast this creature."
+
+    Unlike Prismatic Ending's own converge clause (whose count this class's
+    own docstring explains is *not* a `ComparisonCount` at all, because
+    CR 601.2c's target announcement happens before CR 601.2h pays the total
+    cost), this one genuinely is knowable while a target is being chosen:
+    the "target" here belongs to a *triggered* ability (CR 603.3d puts an
+    ETB ability's targets on the stack with it, after the creature that
+    triggered it has already resolved and finished being cast), so the
+    creature's own `CastRecord.mana_spent` is already fixed by the time
+    this restriction is ever asked. Resolved in `TargetRequirement.
+    _counted_bound` off `source_id` - the entering creature the ability is
+    on, via `Game.cast_record_of` (`machines/converge.colors_of_mana_
+    spent`) - the identical "read off the source, not the target" shape
+    `SOURCE_LOYALTY` just above already uses for Nahiri's own activated
+    ability."""
 
 
 class CombatState(StrEnum):
@@ -1347,6 +1369,14 @@ class TargetRequirement(EngineModel):
                 return None
             source = find_by_id(source_id)
             return None if source is None else source.loyalty
+        if self.comparison_count is ComparisonCount.SOURCE_COLORS_SPENT:
+            if source_id is None:
+                return None
+            find_by_id = getattr(game, "find_by_id", None)
+            if find_by_id is None:
+                return None
+            source = find_by_id(source_id)
+            return None if source is None else colors_of_mana_spent(game, source)
         return None
 
     def _defined_x(self, game: Any, caster: str | None) -> int | None:
@@ -4557,6 +4587,7 @@ _COMPARISON_ATTEMPT = re.compile(
 _COMPARISON_COUNTS = {
     "controllers_graveyard": ComparisonCount.CONTROLLERS_GRAVEYARD_CARDS,
     "source_loyalty": ComparisonCount.SOURCE_LOYALTY,
+    "colors_spent_source": ComparisonCount.SOURCE_COLORS_SPENT,
 }
 
 #: The comparison itself, once `_COMPARISON_ATTEMPT` says one is being made.
@@ -4575,8 +4606,9 @@ _COMPARISON_CLAUSE = re.compile(
     r"\s+(?:is\s+)?"
     r"(?:"
     r"(?P<num_or>x|\d+)\s+or\s+(?P<dir>less|greater)"
-    r"|(?P<count_dir>less|greater) than or equal to the number of cards in "
-    r"(?P<controllers_graveyard>its controller'?s? graveyard)\b"
+    r"|(?P<count_dir>less|greater) than or equal to the number of "
+    r"(?:cards in (?P<controllers_graveyard>its controller'?s? graveyard)"
+    r"|colors of mana spent to cast (?P<colors_spent_source>this creature|this spell|it))\b"
     r"|less than or equal to\s+(?P<le_num>x|\d+)\b"
     r"|greater than or equal to\s+(?P<ge_num>x|\d+)\b"
     r"|(?P<strict_dir>less|greater) than (?P<source_loyalty>.+?)'s loyalty\b"
