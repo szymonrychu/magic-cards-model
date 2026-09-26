@@ -65,10 +65,13 @@ def slug(card: str) -> str:
     return "-".join(re.findall(r"[a-z0-9]+", card.lower().replace("'", "")))
 
 
-def golden_path(card: str, family: str, number: int) -> Path:
+def golden_path(card: str, family: str, number: int, *, declined: bool = False) -> Path:
     """Where the golden for the `number`-th handled `family` clause of `card`
-    lives - `family` is "triggered" or "activated", as the sweep numbers them."""
-    return GOLDEN_DIR / slug(card) / f"{family}-{number}.json"
+    lives - `family` is "triggered" or "activated", as the sweep numbers them.
+    `declined` is the second golden of a trigger with an optional ("up to")
+    target (CR 115.6): the same recipe with no target chosen."""
+    suffix = ".no-targets" if declined else ""
+    return GOLDEN_DIR / slug(card) / f"{family}-{number}{suffix}.json"
 
 
 # ---------------------------------------------------------------------------
