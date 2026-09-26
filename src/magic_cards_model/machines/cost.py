@@ -1898,6 +1898,94 @@ def _chosen_alternative(
     return [], None
 
 
+def _exotic_choice_combos(
+    options: Sequence[PaymentOption],
+    exotic: list[tuple[CardState, list[_Alternative]]],
+    game: Any = None,
+) -> Iterable[tuple[_Alternative | None, ...]]:
+    """Every "not used / used for this alternative" reading of `exotic`, in
+    `product` order (all-`None` first), minus three kinds of redundant reading.
+
+    A group-granted multi-mana ability ("Lands you control have "{T}: Add two
+    mana of any one color ..."", Resonating Lute) makes every land exotic at
+    once, and the plain product over them is exponential in the number of
+    lands. So:
+
+    1. Alternatives of one source that make the same amount of one colour
+       nobody in `options` asks for, under the same restriction, can only
+       ever pay generic mana, so they are interchangeable - the first one is
+       kept.
+    2. Exotic sources with identical (so pruned) alternatives and the same
+       snow status are interchangeable, and one assignment per multiset of
+       choices is kept (a non-decreasing choice index across the group, which
+       for a group of one is exactly the old order).
+    3. A reading that commits more exotic sources than `options` has mana to
+       pay is never generated - each committed source that contributes pays
+       at least one mana, and one that contributes nothing is left out of the
+       plan anyway, so such a reading can never produce a plan the smaller
+       readings do not.
+
+    With no two identical exotic sources and nothing to prune, this yields
+    exactly `product(*[[None, *alternatives] ...])` in the same order.
+    """
+    owed = sum(option.generic + (1 if option.color is not None else 0) for option in options)
+    wanted = {option.color for option in options if option.color is not None}
+    groups: list[tuple[list[_Alternative], list[int]]] = []
+    for position, (source, alternatives) in enumerate(exotic):
+        pruned: list[_Alternative] = []
+        for option, restriction in alternatives:
+            colors = set(option)
+            if (
+                len(colors) == 1
+                and not colors & wanted
+                and any(
+                    len(kept) == len(option)
+                    and kept_restriction == restriction
+                    and len(set(kept)) == 1
+                    and not set(kept) & wanted
+                    for kept, kept_restriction in pruned
+                )
+            ):
+                continue
+            pruned.append((option, restriction))
+        snow = is_snow_source(source, game)
+        for group_alternatives, members in groups:
+            first = exotic[members[0]][0]
+            if group_alternatives == pruned and is_snow_source(first, game) == snow:
+                members.append(position)
+                break
+        else:
+            groups.append((pruned, [position]))
+
+    def group_picks(size: int, choices: int, budget: int) -> Iterable[tuple[int, ...]]:
+        """Non-decreasing index tuples (0 = unused) with at most `budget`
+        non-zero entries, in `combinations_with_replacement` order."""
+        for picks in combinations_with_replacement(range(choices + 1), size):
+            if size - picks.count(0) <= budget:
+                yield picks
+
+    def walk(
+        index: int, budget: int, combo: list[_Alternative | None]
+    ) -> Iterable[tuple[_Alternative | None, ...]]:
+        if index == len(groups):
+            yield tuple(combo)
+            return
+        alternatives, members = groups[index]
+        if budget == 0:
+            yield from walk(index + 1, 0, combo)
+            return
+        for picks in group_picks(len(members), len(alternatives), budget):
+            used = 0
+            for position, pick in zip(members, picks, strict=True):
+                combo[position] = alternatives[pick - 1] if pick else None
+                used += 1 if pick else 0
+            yield from walk(index + 1, budget - used, combo)
+        for position in members:
+            combo[position] = None
+
+    yield from walk(0, owed, [None] * len(exotic))
+
+
 def _best_flow_plan(
     options: Sequence[PaymentOption],
     simple: list[tuple[CardState, list[_Alternative]]],
@@ -1925,8 +2013,7 @@ def _best_flow_plan(
     """
     best: TapPlan | None = None
     best_size: int | None = None
-    exotic_choices = [[None, *alternatives] for _source, alternatives in exotic]
-    for choice_combo in product(*exotic_choices):
+    for choice_combo in _exotic_choice_combos(options, exotic, game):
         registry = list(pool_registry)
         sources_map: dict[Hashable, dict[_Bucket, int]] = {
             ("pool", bucket): {bucket: amount} for bucket, amount in pool_buckets.items()
