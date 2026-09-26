@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 5.5% |
-| Works (untested) | 99 | 45.6% |
+| Works (untested) | 100 | 46.1% |
 | Partial (unaudited) | 18 | 8.3% |
-| Not working | 88 | 40.6% |
+| Not working | 87 | 40.1% |
 
 ## Cards needing work
 
@@ -102,7 +102,6 @@
 | Wildwood Geist | silent | During your turn, this creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wingcrafter | silent | As long as this creature is paired with another creature, both creatures have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolfir Silverheart | silent | As long as this creature is paired with another creature, each of those creatures gets +4/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Death Wind | notice | Target creature gets -X/-X until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Defy Death | notice | Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Descent into Madness | notice | At the beginning of your upkeep, put a despair counter on this enchantment, then each player exiles X permanents they control and/or cards from their hand, wher | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eaten by Spiders | notice | Destroy target creature with flying and all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -151,6 +150,7 @@
 | Cursebreak | handled | Destroy target enchantment. You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dangerous Wager | handled | Discard your hand, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Impostor | handled | {4}{B}{B}: Exile target creature and put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Death Wind | handled | Target creature gets -X/-X until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desolate Lighthouse | handled | {1}{U}{R}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devastation Tide | handled | Return all nonland permanents to their owners' hands. Miracle {1}{U} (You may cast this card for its miracle cost when you draw it if it's the first card you dr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devout Chaplain | handled | {T}, Tap two untapped Humans you control: Exile target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -319,7 +319,6 @@
 | target creature gains flying until end of turn. prevent all damage that would be dealt to that creature ~. | 1 | Leap of Faith | avr |
 | target creature gets +N/+N until end of turn, where N is its power. | 1 | Rush of Blood | avr |
 | target creature gets +N/+N until end of turn. if it's paired with a creature, that creature also gets +N/+N until end of turn. | 1 | Joint Assault | avr |
-| target creature gets -N/-N until end of turn. | 1 | Death Wind | avr |
 | target creature you control gains hexproof until end of turn. you gain life equal to that creature"..."t be the target of spells or abilities your opponents con | 1 | Sheltering Word | avr |
 | target opponent reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Appetite for Brains | avr |
 | target player loses N life and you gain N life, where N is the greatest power among creatures you control. | 1 | Essence Harvest | avr |

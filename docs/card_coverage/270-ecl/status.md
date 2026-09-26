@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.1% |
-| Works (untested) | 114 | 45.2% |
+| Tested | 19 | 7.5% |
+| Works (untested) | 115 | 45.6% |
 | Partial (unaudited) | 18 | 7.1% |
-| Not working | 102 | 40.5% |
+| Not working | 100 | 39.7% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Abigale, Eloquent First-Year | silent | When Abigale enters, up to one other target creature loses all abilities. Put a flying counter, a first strike counter, and a lifelink counter on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ajani, Outland Chaperone | silent | −8: Look at the top X cards of your library, where X is your life total. You may put any number of nonland permanent cards with mana value 3 or less from among  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Appeal to Eirdu | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) One or two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ashling, Rekindled // Ashling, Rimebound | silent | Whenever this creature enters or transforms into Ashling, Rekindled, you may discard a card. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aurora Awakener | silent | Vivid — When this creature enters, reveal cards from the top of your library until you reveal X permanent cards, where X is the number of colors among permanent | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blighted Blackthorn | silent | Whenever this creature enters or attacks, you may blight 2. If you do, you draw a card and lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -61,7 +60,6 @@
 | Glister Bairn | silent | Vivid — At the beginning of combat on your turn, another target creature you control gets +X/+X until end of turn, where X is the number of colors among permane | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gloom Ripper | silent | When this creature enters, target creature you control gets +X/+0 until end of turn and up to one target creature an opponent controls gets -0/-X until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Goliath Daydreamer | silent | Whenever you cast an instant or sorcery spell from your hand, exile that card with a dream counter on it instead of putting it into your graveyard as it resolve | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gravelgill Scoundrel | silent | Whenever this creature attacks, you may tap another untapped creature you control. If you do, this creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Grub, Storied Matriarch // Grub, Notorious Auntie | silent | Whenever this creature enters or transforms into Grub, Storied Matriarch, return up to one target Goblin card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gutsplitter Gang | silent | At the beginning of your first main phase, you may blight 2. If you don't, you lose 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Harmonized Crescendo | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose a cr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -195,6 +193,7 @@
 | Glamermite | handled | When this creature enters, choose one — • Tap target creature. • Untap target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gnarlbark Elm | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goldmeadow Nomad | handled | {W}, Exile this card from your graveyard: Create a 1/1 green and white Kithkin creature token. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gravelgill Scoundrel | handled | Whenever this creature attacks, you may tap another untapped creature you control. If you do, this creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Great Forest Druid | handled |  |  | Y/Y/Y | not_tested |
 | Gristle Glutton | handled | {T}, Blight 1: Discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hovel Hurler | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -264,8 +263,9 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
+- Appeal to Eirdu
 - Ashling's Command
 - Auntie's Sentence
 - Boldwyr Aggressor
@@ -318,7 +318,6 @@
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."t share a creature type with the ch | 1 | Winnowing | ecl |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) choose a creature type. draw  | 1 | Harmonized Crescendo | ecl |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) choose a creature type. retur | 1 | Bloodline Bidding | ecl |
-| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) one or two target creatures e | 1 | Appeal to Eirdu | ecl |
 | create a token that's a copy of target creature you control, except it has haste and "..." flashback—{M}{M}, behold three elementals. (you may cast ~ from your  | 1 | Kindle the Inner Flame | ecl |
 | creature spells you cast have convoke. | 1 | Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight | ecl |
 | creatures you control get +N/+N, where N is the number of creatures that entered the battlefield under your control ~. | 1 | Kinbinding | ecl |
@@ -368,7 +367,6 @@
 | whenever ~ attacks, another target elf you control gets +N/+N until end of turn. | 1 | Vinebred Brawler | ecl |
 | whenever ~ attacks, blight N. | 1 | Shadow Urchin | ecl |
 | whenever ~ attacks, you may put a creature card with mana value N or less from your hand onto the battlefield tapped and attacking, where N is the number of att | 1 | Kinscaer Sentry | ecl |
-| whenever ~ attacks, you may tap another untapped creature you control. if you do, ~ can't be blocked ~. | 1 | Gravelgill Scoundrel | ecl |
 | whenever ~ attacks, you may tap another untapped merfolk you control. when you do, return target creature card with mana value N or less from your graveyard to  | 1 | Meanders Guide | ecl |
 | whenever ~ becomes tapped while it has a -N/-N counter on it, remove a -N/-N counter from it. | 1 | Encumbered Reejerey | ecl |
 | whenever ~ becomes tapped, another target merfolk you control gets +N/+N until end of turn. | 1 | Tributary Vaulter | ecl |

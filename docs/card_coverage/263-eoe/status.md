@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.5% |
-| Works (untested) | 121 | 48.0% |
-| Partial (unaudited) | 16 | 6.3% |
-| Not working | 91 | 36.1% |
+| Tested | 25 | 9.9% |
+| Works (untested) | 122 | 48.4% |
+| Partial (unaudited) | 15 | 6.0% |
+| Not working | 90 | 35.7% |
 
 ## Cards needing work
 
@@ -102,7 +102,6 @@
 | Brightspear Zealot | notice | This creature gets +2/+0 as long as you've cast two or more spells this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Depressurize | notice | Target creature gets -3/-0 until end of turn. Then if that creature's power is 0 or less, destroy it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Desculpting Blast | notice | Return target nonland permanent to its owner's hand. If it was attacking, create a 1/1 colorless Drone artifact creature token with flying and "This token can b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Devastating Onslaught | notice | Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the ne | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Divert Disaster | notice | Counter target spell unless its controller pays {2}. If they do, you create a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search your  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dual-Sun Technique | notice | Target creature you control gains double strike until end of turn. If it has a +1/+1 counter on it, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Emergency Eject | notice | Destroy target nonland permanent. Its controller creates a Lander token. (It's an artifact with "{2}, {T}, Sacrifice this token: Search your library for a basic | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -128,7 +127,6 @@
 | Luxknight Breacher | unaudited | This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Mm'menon, the Right Hand | unaudited | You may cast artifact spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Moonlit Meditation | unaudited | The first time you would create one or more tokens each turn, you may instead create that many tokens that are copies of enchanted permanent. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Sami, Wildcat Captain | unaudited | Spells you cast have affinity for artifacts. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tannuk, Steadfast Second | unaudited | Artifact cards and red creature cards in your hand have warp {2}{R}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tapestry Warden | unaudited | Each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Seriema | unaudited | Other tapped legendary creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -145,6 +143,7 @@
 | Cosmogrand Zenith | handled | Whenever you cast your second spell each turn, choose one — • Create two 1/1 white Human Soldier creature tokens. • Put a +1/+1 counter on each creature you con | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cryogen Relic | handled | When this artifact enters or leaves the battlefield, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dark Endurance | handled | This spell costs {1} less to cast if it targets a blocking creature. Target creature gets +2/+0 and gains indestructible until end of turn. (Damage and effects  | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Devastating Onslaught | handled | Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the ne | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diplomatic Relations | handled | Target creature you control gets +1/+0 and gains vigilance until end of turn. It deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Drill Too Deep | handled | Choose one — • Put five charge counters on target Spacecraft or Planet you control. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Drix Fatemaker | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -258,7 +257,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Bygone Colossus
 - Cerebral Download
@@ -274,6 +273,7 @@
 - Ouroboroid
 - Pinnacle Emissary
 - Quantum Riddler
+- Sami, Wildcat Captain
 - Starfield Shepherd
 - Starfield Vocalist
 - Sunset Saboteur
@@ -314,7 +314,6 @@
 | at the beginning of your end step, your life total becomes half your starting life total, rounded up. | 1 | The Endstone | eoe |
 | choose odd or even. destroy each creature with mana value of the chosen quality. then gain control of all creatures until end of turn. untap them. they gain has | 1 | Mutinous Massacre | eoe |
 | counter target spell unless its controller pays {M}. if they do, you create a lander token. (it's an artifact with "...") | 1 | Divert Disaster | eoe |
-| create N tokens that are copies of target artifact or creature you control. those tokens gain haste until end of turn. sacrifice them at the beginning of the ne | 1 | Devastating Onslaught | eoe |
 | create a lander token. then you may sacrifice an artifact. when you do, ~ deals N damage to each creature. (a lander token is an artifact with "...") | 1 | Lithobraking | eoe |
 | creature spells you control can't be countered. | 1 | Frenzied Baloth | eoe |
 | destroy all creatures with toughness N or less. you lose N life. if N is N or more, return a creature card put into a graveyard ~ to the battlefield under your  | 1 | Zero Point Ballad | eoe |
@@ -328,7 +327,6 @@
 | if one or more counters would be put on a creature, spacecraft, or planet you control, twice that many of each of those kinds of counters are put on it instead. | 1 | Loading Zone | eoe |
 | other tapped legendary creatures you control have indestructible. | 1 | The Seriema | eoe |
 | return target nonland permanent to its owner's hand. if it was attacking, create a N/N colorless drone artifact creature token with flying and "..." | 1 | Desculpting Blast | eoe |
-| spells you cast have affinity for artifacts. | 1 | Sami, Wildcat Captain | eoe |
 | station (tap another creature you control: put charge counters equal to its power on ~. station only as a sorcery. it's an artifact creature at N+.) N+ \| flyin | 1 | Galvanizing Sawship | eoe |
 | surveil N, then you draw a card and lose N life. (to surveil N, look at the top card of your library. you may put it into your graveyard.) void — if a nonland p | 1 | Hymn of the Faller | eoe |
 | target creature deals damage to itself equal to its power. if that creature has flying, it deals twice that much damage to itself instead. | 1 | Cut Propulsion | eoe |

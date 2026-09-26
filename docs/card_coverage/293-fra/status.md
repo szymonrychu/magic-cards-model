@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 209 | 78.0% |
+| Tested | 210 | 78.4% |
 | Works (untested) | 54 | 20.1% |
-| Partial (unaudited) | 4 | 1.5% |
+| Partial (unaudited) | 3 | 1.1% |
 | Not working | 1 | 0.4% |
 
 ## Cards needing work
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Clash of Elements | silent | Choose target nonland permanent. Its owner may put it on top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Null Summoner | unaudited | Threshold — As long as there are seven or more cards in your graveyard, you may cast the exiled card, and mana of any type can be spent to cast that spell. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Omnipresence | unaudited | You may cast spells with mana value less than or equal to the number of creatures you control from your hand without paying their mana costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Proft, Sinister Mastermind | unaudited | Threshold — You can't cast this spell unless there are seven or more cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sanctum Lurker | unaudited | Planeswalkers you control aren't put into their owners' graveyards for having 0 loyalty. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Afterthought Sentry | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -89,7 +88,7 @@
 ## Fully supported
 
 <details>
-<summary>209 cards</summary>
+<summary>210 cards</summary>
 
 - Academic Ascent
 - Aerid Konstrari
@@ -209,6 +208,7 @@
 - Mind Meanderer
 - Multiply by Zero
 - No Admittance
+- Omnipresence
 - Overwrite the Multiverse
 - Paradox Shaper // Omit Variables
 - Perfected Theory
@@ -310,7 +310,6 @@
 | Threshold | 2 | Null Summoner, Proft, Sinister Mastermind | fra |
 | choose target nonland permanent. its owner may put it on top of their library. if they do, ~ deals N damage to them. if they didn't put the card on top of their | 1 | Clash of Elements | fra |
 | planeswalkers you control aren"..." graveyards for having N loyalty. | 1 | Sanctum Lurker | fra |
-| you may cast spells with mana value less than or equal to the number of creatures you control from your hand without paying their mana costs. | 1 | Omnipresence | fra |
 
 ## Notes
 

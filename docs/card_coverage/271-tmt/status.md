@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 5.9% |
-| Works (untested) | 101 | 54.0% |
+| Works (untested) | 102 | 54.5% |
 | Partial (unaudited) | 8 | 4.3% |
-| Not working | 67 | 35.8% |
+| Not working | 66 | 35.3% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Dimensional Exile | silent | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Don & Leo, Problem Solvers | silent | At the beginning of your end step, exile up to one target artifact you control and up to one target creature you control. Then return them to the battlefield un | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Don & Raph, Hard Science | silent | Whenever Don & Raph attack, the next noncreature spell you cast this turn has affinity for artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Donatello, Mutant Mechanic | silent | Whenever an artifact you control is put into a graveyard from the battlefield, if it had counters on it, put those counters on up to one target artifact or crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Everything Pizza | silent | {2}{W}{U}{B}{R}{G}, {T}, Sacrifice this artifact: Target player gains 3 life and draws a card. Each of your opponents discards a card. This artifact deals 3 dam | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fugitive Droid | silent | {U}, Sacrifice this creature: Counter target spell that targets an artifact or creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Genghis Frog | silent | Whenever Genghis Frog or another Mutant you control enters, create a Mutagen token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -120,6 +119,7 @@
 | Does Machines | handled | When this Class enters, mill two cards, draw two cards, then discard two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello's Technique | handled | Sneak {U} (You may cast this spell for {U} if you also return an unblocked attacker you control to hand during the declare blockers step.) Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Gadget Master | handled | Whenever Donatello deals combat damage to a player, create a token that's a copy of target artifact you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Donatello, Mutant Mechanic | handled | {T}: Put three +1/+1 counters on target artifact you control. If it isn't a creature, it becomes a 0/0 Robot creature in addition to its other types. Activate o | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Turtle Techie | handled | When Donatello enters, if you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Way with Machines | handled | Whenever an artifact you control enters, put a +1/+1 counter on Donatello. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dream Beavers | handled | When this creature enters, each opponent loses 1 life and you gain 1 life. Scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -268,7 +268,6 @@
 | when ~ leaves the battlefield, create a mutagen token. | 1 | Zoo Escapees | tmt |
 | whenever a creature you control with a +N/+N counter on it leaves the battlefield, create a mutagen token for each +N/+N counter on it. | 1 | The Ooze | tmt |
 | whenever a ninja you control enters, you may attach ~ to it. | 1 | Quintessential Katana | tmt |
-| whenever an artifact you control is put into a graveyard from the battlefield, if it had counters on it, put those counters on up to one target artifact or crea | 1 | Donatello, Mutant Mechanic | tmt |
 | whenever another creature you control dies, you gain life equal to its toughness. | 1 | South Wind Avatar | tmt |
 | whenever another creature you control enters, you may pay life equal to its power. if you do, put that many +N/+N counters on it. | 1 | Madame Null, Power Broker | tmt |
 | whenever don & raph attack, the next noncreature spell you cast ~ has affinity for artifacts. | 1 | Don & Raph, Hard Science | tmt |

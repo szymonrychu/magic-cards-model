@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 1 | 3.7% |
-| Works (untested) | 7 | 25.9% |
+| Works (untested) | 8 | 29.6% |
 | Partial (unaudited) | 1 | 3.7% |
-| Not working | 18 | 66.7% |
+| Not working | 17 | 63.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Ancient Cornucopia | silent | Whenever you cast a spell that's one or more colors, you may gain 1 life for each of that spell's colors. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Collector's Cage | silent | {1}, {T}: Put a +1/+1 counter on target creature you control. Then if you control three or more creatures with different powers, you may play the exiled card wi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Esoteric Duplicator | silent | Whenever you sacrifice this artifact or another artifact, you may pay {2}. If you do, at the beginning of the next end step, create a token that's a copy of tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fomori Vault | silent | {3}, {T}, Discard a card: Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Generous Plunderer | silent | Whenever this creature attacks, it deals damage to defending player equal to the number of artifacts they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Harvester of Misery | silent | When this creature enters, other creatures get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Memory Vessel | silent | {T}, Exile this artifact: Each player exiles the top seven cards of their library. Until your next turn, players may play cards they exiled this way, and they c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -45,6 +44,7 @@
 | Molten Duplication | notice | Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. It gains haste until end of tur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Nexus of Becoming | notice | At the beginning of combat on your turn, draw a card. Then you may exile an artifact or creature card from your hand. If you do, create a token that's a copy of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Territory Forge | unaudited | This artifact has all activated abilities of the exiled card. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Fomori Vault | handled | {3}, {T}, Discard a card: Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Greed's Gambit | handled | When this enchantment enters, you draw three cards, gain 6 life, and create three 2/1 black Bat creature tokens with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hostile Investigator | handled | When this creature enters, target opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Legion Extruder | handled | When this artifact enters, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -79,7 +79,6 @@
 | whenever ~ attacks, it deals damage to defending player equal to the number of artifacts they control. | 1 | Generous Plunderer | big |
 | whenever ~ attacks, you may sacrifice a food. if you do, mill three cards. you may put a permanent card from among them into your hand. | 1 | Bristlebud Farmer | big |
 | {M}, exile ~: each player exiles the top seven cards of their library. until your next turn, players may play cards they exiled ~, and they can't play cards fro | 1 | Memory Vessel | big |
-| {M}, {M}, discard a card: look at the top N cards of your library, where N is the number of artifacts you control. put one of those cards into your hand and the | 1 | Fomori Vault | big |
 | {M}, {M}: for each color among monocolored permanents you control, add one mana of that color. | 1 | Tarnation Vista | big |
 | {M}, {M}: put a +N/+N counter on each creature token you control. they gain trample until end of turn. | 1 | Sandstorm Salvager | big |
 | {M}, {M}: put a +N/+N counter on target creature you control. then if you control three or more creatures with different powers, you may play the exiled card wi | 1 | Collector's Cage | big |

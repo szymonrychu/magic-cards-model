@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 1 | 3.2% |
-| Works (untested) | 18 | 58.1% |
+| Works (untested) | 19 | 61.3% |
 | Partial (unaudited) | 1 | 3.2% |
-| Not working | 11 | 35.5% |
+| Not working | 10 | 32.3% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Celestial Dawn | silent | Lands you control are Plains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Early Harvest | silent | Target player untaps all basic lands they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hammer of Bogardan | silent | Hammer of Bogardan deals 3 damage to any target. {2}{R}{R}{R}: Return this card from your graveyard to your hand. Activate only during your upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maro | silent | Maro's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Bend | silent | Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (For example, you may change  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sacred Mesa | silent | At the beginning of your upkeep, sacrifice this enchantment unless you sacrifice a Pegasus. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -45,6 +44,7 @@
 | Foratog | handled | {G}, Sacrifice a Forest: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Giant Mantis | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Goblin Elite Infantry | handled | Whenever this creature blocks or becomes blocked, it gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hammer of Bogardan | handled | Hammer of Bogardan deals 3 damage to any target. {2}{R}{R}{R}: Return this card from your graveyard to your hand. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Patagia Golem | handled | {3}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Vault | handled | {2}, {T}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rampant Growth | handled | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -80,7 +80,6 @@
 | target player untaps all basic lands they control. | 1 | Early Harvest | mir |
 | {M}, {M}, sacrifice ~: search target opponent"..."t played it, put it into its owner's graveyard. | 1 | Grinning Totem | mir |
 | {M}, {M}: put target creature you control on top of its owner's library. | 1 | Shadow Guildmage | mir |
-| ~ deals N damage to any target. {M}{M}{M}{M}: return ~ from your graveyard to your hand. activate only during your upkeep. | 1 | Hammer of Bogardan | mir |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Maro | mir |
 
 ## Notes

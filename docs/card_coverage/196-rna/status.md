@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 7.9% |
-| Works (untested) | 122 | 51.0% |
+| Works (untested) | 124 | 51.9% |
 | Partial (unaudited) | 10 | 4.2% |
-| Not working | 88 | 36.8% |
+| Not working | 86 | 36.0% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Frenzied Arynx | silent | Riot | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Galloping Lizrog | silent | When this creature enters, you may remove any number of +1/+1 counters from among creatures you control. If you do, put twice that many +1/+1 counters on this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gatebreaker Ram | silent | As long as you control two or more Gates, this creature has vigilance and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gateway Sneak | silent | Whenever a Gate you control enters, this creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ghor-Clan Wrecker | silent | Riot | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Glass of the Guildpact | silent | Multicolored creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Gathering | silent | Create a number of 1/1 red Goblin creature tokens equal to two plus the number of cards named Goblin Gathering in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -108,7 +107,6 @@
 | Code of Constraint | notice | Target creature gets -4/-0 until end of turn. Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap duri | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Deputy of Detention | notice | When this creature enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ethereal Absolution | notice | {2}{W}{B}: Exile target card from an opponent's graveyard. If it was a creature card, you create a 1/1 white and black Spirit creature token with flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Macabre Mockery | notice | Put target creature card from an opponent's graveyard onto the battlefield under your control. It gets +2/+0 and gains haste until end of turn. Sacrifice it at  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror March | notice | Whenever a nontoken creature you control enters, flip a coin until you lose a flip. For each flip you won, create a token that's a copy of that creature. Those  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Gates | notice | Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sphinx of Foresight | notice | You may reveal this card from your opening hand. If you do, scry 3 at the beginning of your first upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -170,6 +168,7 @@
 | Fireblade Artist | handled | At the beginning of your upkeep, you may sacrifice a creature. When you do, this creature deals 2 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frilled Mystic | handled | When this creature enters, you may counter target spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gate Colossus | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Gateway Sneak | handled | Whenever a Gate you control enters, this creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Get the Point | handled | Destroy target creature. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grasping Thrull | handled | When this creature enters, it deals 2 damage to each opponent and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gravel-Hide Goblin | handled | {3}{G}: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -186,6 +185,7 @@
 | Incubation Druid | handled | {3}{G}{G}: Adapt 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Judith, the Scourge Diva | handled | Other creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Justiciar's Portal | handled | Exile target creature you control, then return that card to the battlefield under its owner's control. It gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Macabre Mockery | handled | Put target creature card from an opponent's graveyard onto the battlefield under your control. It gets +2/+0 and gains haste until end of turn. Sacrifice it at  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mesmerizing Benthid | handled | When this creature enters, create two 0/2 blue Illusion creature tokens with "Whenever this token blocks a creature, that creature doesn't untap during its cont | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Noxious Groodion | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Orzhov Locket | handled | {W/B}{W/B}{W/B}{W/B}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -308,7 +308,6 @@
 | instant and sorcery spells you control have deathtouch. | 1 | Pestilent Spirit | rna |
 | multicolored creatures you control get +N/+N. | 1 | Glass of the Guildpact | rna |
 | put target attacking or blocking creature on top of its owner's library. | 1 | Warrant // Warden | rna |
-| put target creature card from an opponent's graveyard onto the battlefield under your control. it gets +N/+N and gains haste until end of turn. sacrifice it at  | 1 | Macabre Mockery | rna |
 | put up to one target tapped creature on top of its owner's library. you may search your library and/or graveyard for a card named dovin, architect of law, revea | 1 | Dovin's Dismissal | rna |
 | search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | Open the Gates | rna |
 | spells your opponents cast that target ~ cost {M} more to cast. | 1 | Sphinx of New Prahv | rna |
@@ -331,7 +330,6 @@
 | when ~ enters, you may search your library and/or graveyard for a card named domri, city smasher, reveal it, and put it into your hand. if you search your libra | 1 | Domri's Nodorog | rna |
 | whenever a creature you control attacks alone, it gets +N/+N until end of turn, where N is the number of creatures you control. | 1 | Angelic Exaltation | rna |
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Cavalcade of Calamity | rna |
-| whenever a gate you control enters, ~ can't be blocked ~. | 1 | Gateway Sneak | rna |
 | whenever a nontoken creature you control enters, flip a coin until you lose a flip. for each flip you won, create a token that's a copy of that creature. those  | 1 | Mirror March | rna |
 | whenever an opponent draws a card, that player may pay {M}. if the player doesn't, you create a treasure token. | 1 | Smothering Tithe | rna |
 | whenever one or more +N/+N counters are put on ~, you may search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Growth-Chamber Guardian | rna |

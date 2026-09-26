@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 4.2% |
-| Works (untested) | 64 | 44.8% |
-| Partial (unaudited) | 12 | 8.4% |
-| Not working | 61 | 42.7% |
+| Tested | 7 | 4.9% |
+| Works (untested) | 65 | 45.5% |
+| Partial (unaudited) | 11 | 7.7% |
+| Not working | 60 | 42.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Anathemancer | silent | When this creature enters, it deals damage to target player equal to the number of nonbasic lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ardent Plea | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Bant Sureblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cloven Casting | silent | Whenever you cast a multicolored instant or sorcery spell, you may pay {1}. If you do, copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crystallization | silent | When enchanted creature becomes the target of a spell or ability, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonspine Whip | silent | {X}: Equipped creature gets +X/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Double Negative | silent | Counter up to two target spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,7 +90,6 @@
 | Dragon Appeasement | unaudited | Skip your draw step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fieldmist Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Firewild Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Maelstrom Nexus | unaudited | The first spell you cast each turn has cascade. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mask of Riddles | unaudited | Equipped creature has fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mistvein Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sages of the Anima | unaudited | If you would draw a card, instead reveal the top three cards of your library. Put all creature cards revealed this way into your hand and the rest on the bottom | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -107,6 +105,7 @@
 | Breath of Malfegor | handled | Breath of Malfegor deals 5 damage to each opponent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Captured Sunlight | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cerodon Yearling | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
+| Cloven Casting | handled | Whenever you cast a multicolored instant or sorcery spell, you may pay {1}. If you do, copy that spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Colossal Might | handled | Target creature gets +4/+2 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dauntless Escort | handled | Sacrifice this creature: Creatures you control gain indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deadshot Minotaur | handled | When this creature enters, it deals 3 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -167,10 +166,11 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Architects of Will
 - Bloodbraid Elf
+- Maelstrom Nexus
 - Predatory Advantage
 - Putrid Leech
 - Sigil Captain
@@ -217,7 +217,6 @@
 | search your library for a permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Wargate | arb |
 | skip your draw step. | 1 | Dragon Appeasement | arb |
 | target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
-| the first spell you cast each turn has cascade. | 1 | Maelstrom Nexus | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
 | when karrthus enters, gain control of all dragons, then untap all dragons. | 1 | Karrthus, Tyrant of Jund | arb |
@@ -235,7 +234,6 @@
 | whenever a creature you control attacks alone, you may search your library for an aura card that could enchant that creature, put it onto the battlefield attach | 1 | Sovereigns of Lost Alara | arb |
 | whenever another artifact you control enters, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Glassdust Hulk | arb |
 | whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | 1 | Mage Slayer | arb |
-| whenever you cast a multicolored instant or sorcery spell, you may pay {M}. if you do, copy that spell. you may choose new targets for the copy. | 1 | Cloven Casting | arb |
 | whenever ~ attacks, defending player mills ten cards. | 1 | Nemesis of Reason | arb |
 | whenever ~ attacks, defending player sacrifices a creature of their choice. | 1 | Thraximundar | arb |
 | whenever ~ attacks, draw a card, then discard a card. ~ gets +N/+N until end of turn, where N is the discarded card's mana value. | 1 | Spellbound Dragon | arb |

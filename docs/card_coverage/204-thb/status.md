@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.5% |
-| Works (untested) | 123 | 50.0% |
+| Works (untested) | 125 | 50.8% |
 | Partial (unaudited) | 31 | 12.6% |
-| Not working | 76 | 30.9% |
+| Not working | 74 | 30.1% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Agonizing Remorse | silent | Target opponent reveals their hand. You choose a nonland card from it or a card from their graveyard. Exile that card. You lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Allure of the Unknown | silent | Reveal the top six cards of your library. An opponent exiles a nonland card from among them, then you put the rest into your hand. That opponent may cast the ex | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anax, Hardened in the Forge | silent | Whenever Anax or another nontoken creature you control dies, create a 1/1 red Satyr creature token with "This token can't block." If the creature had power 4 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aphemia, the Cacophony | silent | At the beginning of your end step, you may exile an enchantment card from your graveyard. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archon of Sun's Grace | silent | Pegasus creatures you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok's Forerunner | silent | When this creature enters, you may search your library and/or graveyard for a card named Ashiok, Sculptor of Fears, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Muse | silent | −3: Return target nonland permanent to its owner's hand, then that player exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +48,6 @@
 | Elspeth Conquers Death | silent | II — Noncreature spells your opponents cast cost {2} more to cast until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth's Devotee | silent | When this creature enters, you may search your library and/or graveyard for a card named Elspeth, Undaunted Hero, reveal it, and put it into your hand. If you s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth's Nightmare | silent | III — Exile target opponent's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elspeth, Sun's Nemesis | silent | −1: Up to two target creatures you control each get +2/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth, Undaunted Hero | silent | −2: Search your library and/or graveyard for a card named Sunlit Hoplite and put it onto the battlefield. If you search your library this way, shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erebos, Bleak-Hearted | silent | Whenever another creature you control dies, you may pay 2 life. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flummoxed Cyclops | silent | Whenever two or more creatures your opponents control attack, this creature can't block this combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,7 +61,7 @@
 | Kiora Bests the Sea God | silent | II — Tap all nonland permanents target opponent controls. They don't untap during their controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Labyrinth of Skophos | silent | {4}, {T}: Remove target attacking or blocking creature from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lagonna-Band Storyteller | silent | When this creature enters, you may put target enchantment card from your graveyard on top of your library. If you do, you gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Medomai's Prophecy | silent | II — Choose a card name. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Medomai's Prophecy | silent | III — When you cast a spell with the chosen name for the first time this turn, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Repeal | silent | Put target enchantment on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Boar | silent | Whenever this creature becomes blocked by a creature, that creature's controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Wanderer | silent | Constellation — Whenever an enchantment you control enters, look at the top three cards of your library. You may reveal a land card from among them and put that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -135,6 +133,7 @@
 | Woe Strider | unaudited | This creature escapes with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Acolyte of Affliction | handled | When this creature enters, mill two cards, then you may return a permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alseid of Life's Bounty | handled | {1}, Sacrifice this creature: Target creature or enchantment you control gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Aphemia, the Cacophony | handled | At the beginning of your end step, you may exile an enchantment card from your graveyard. If you do, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arasta of the Endless Web | handled | Whenever an opponent casts an instant or sorcery spell, create a 1/2 green Spider creature token with reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Archon of Falling Stars | handled | When this creature dies, you may return target enchantment card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arena Trickster | handled | Whenever you cast your first spell during each opponent's turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -157,6 +156,7 @@
 | Eidolon of Inspiration | handled | At the beginning of combat on your turn, target creature you control gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eidolon of Philosophy | handled | {6}{U}, Sacrifice this creature: Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elite Instructor | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elspeth, Sun's Nemesis | handled | −1: Up to two target creatures you control each get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Erebos's Intervention | handled | Choose one — • Target creature gets -X/-X until end of turn. You gain X life. • Exile up to twice X target cards from graveyards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Escape Velocity | handled | Enchanted creature gets +1/+0 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eutropia the Twice-Favored | handled | Constellation — Whenever an enchantment you control enters, put a +1/+1 counter on target creature. That creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -294,10 +294,8 @@
 | all creatures able to block ~ do so. | 1 | Treeshaker Chimera | thb |
 | as haktos enters, choose N, N, or N at random. | 1 | Haktos the Unscarred | thb |
 | at the beginning of your end step, if you control a creature with power N or greater, exile the top card of your library. you may play that card until you exile | 1 | Furious Rise | thb |
-| at the beginning of your end step, you may exile an enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Aphemia, the Cacophony | thb |
 | at the beginning of your end step, you may pay {M}{M} and sacrifice a nonland permanent. if you do, reveal cards from the top of your library until you reveal a | 1 | Dreamshaper Shaman | thb |
 | callaphe's power is equal to your devotion to blue. | 1 | Callaphe, Beloved of the Sea | thb |
-| choose a card name. | 1 | Medomai's Prophecy | thb |
 | create a N/N red satyr creature token with "..." escape—{M}{M}, exile two other cards from your graveyard. (you may cast ~ from your graveyard for its escape co | 1 | Satyr's Cunning | thb |
 | create a gold token. | 1 | The First Iroan Games | thb |
 | creatures you control get +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your d | 1 | Klothys's Design | thb |
@@ -335,6 +333,7 @@
 | until end of turn, target creature gains trample and gets +N/+N, where N is the number of lore counters on ~. | 1 | The Triumph of Anax | thb |
 | until your next turn, creatures your opponents control attack each combat if able. | 1 | The Akroan War | thb |
 | when atris enters, target opponent looks at the top three cards of your library and separates them into a face-down pile and a face-up pile. put one pile into y | 1 | Atris, Oracle of Half-Truths | thb |
+| when you cast a spell with the chosen name for the first time ~, draw two cards. | 1 | Medomai's Prophecy | thb |
 | when ~ dies, put all cards exiled with it onto the battlefield. | 1 | Underworld Sentinel | thb |
 | when ~ dies, return it to the battlefield. it's an aura enchantment with enchant creature you control and "..." and it loses all other abilities. | 1 | Bronzehide Lion | thb |
 | when ~ enters, create a number of N/N white human soldier creature tokens equal to your devotion to white. | 1 | Reverent Hoplite | thb |
@@ -383,7 +382,6 @@
 | −N: gain control of all creatures target opponent controls. | 1 | Ashiok, Sculptor of Fears | thb |
 | −N: return target nonland permanent to its owner's hand, then that player exiles a card from their hand. | 1 | Ashiok, Nightmare Muse | thb |
 | −N: search your library and/or graveyard for a card named sunlit hoplite and put it onto the battlefield. if you search your library ~, shuffle. | 1 | Elspeth, Undaunted Hero | thb |
-| −N: up to two target creatures you control each get +N/+N until end of turn. | 1 | Elspeth, Sun's Nemesis | thb |
 
 ## Notes
 

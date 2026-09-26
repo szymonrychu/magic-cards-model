@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 39 | 14.1% |
-| Works (untested) | 123 | 44.4% |
+| Works (untested) | 124 | 44.8% |
 | Partial (unaudited) | 22 | 7.9% |
-| Not working | 93 | 33.6% |
+| Not working | 92 | 33.2% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Firebender Ascension | silent | Whenever a creature you control attacking causes a triggered ability of that creature to trigger, put a quest counter on this enchantment. Then if it has four o | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Foggy Swamp Hunters | silent | As long as you've drawn two or more cards this turn, this creature has lifelink and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Foggy Swamp Visions | silent | Waterbend | no machine in the engine executes this keyword | Y/Y/Y | not_working |
-| Giant Koi | silent | Waterbend {3}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hama, the Bloodbender | silent | When Hama enters, target opponent mills three cards. Exile up to one noncreature, nonland card from that player's graveyard. For as long as you control Hama, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Invasion Submersible | silent | Exhaust — Waterbend {3}: This Vehicle becomes an artifact creature. Put three +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jet, Freedom Fighter | silent | When Jet enters, he deals damage equal to the number of creatures you control to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -183,6 +182,7 @@
 | Foggy Swamp Vinebender | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Forecasting Fortune Teller | handled | When this creature enters, create a Clue token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gather the White Lotus | handled | Create a 1/1 white Ally creature token for each Plains you control. Scry 2. (Look at the top two cards of your library, then put any number of them on the botto | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Giant Koi | handled | Waterbend {3}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glider Kids | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glider Staff | handled | When this Equipment enters, airbend up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Guru Pathik | handled | When Guru Pathik enters, look at the top five cards of your library. You may reveal a Lesson, Saga, or Shrine card from among them and put it into your hand. Pu | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -376,7 +376,6 @@
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
 | waterbend {M}: sacrifice ~. if you do, scry N. | 1 | Aang's Iceberg | tla |
-| waterbend {M}: ~ can't be blocked ~. | 1 | Giant Koi | tla |
 | when azula enters, target opponent exiles a nontoken creature they control, then they exile a nonland card from their graveyard. | 1 | Azula, Cunning Usurper | tla |
 | when bumi enters, choose up to N, where N is the number of lesson cards in your graveyard — • put three +N/+N counters on bumi. • target player scries N. • eart | 1 | Bumi, King of Three Trials | tla |
 | when hama enters, target opponent mills three cards. exile up to one noncreature, nonland card from that player's graveyard. for as long as you control hama, yo | 1 | Hama, the Bloodbender | tla |

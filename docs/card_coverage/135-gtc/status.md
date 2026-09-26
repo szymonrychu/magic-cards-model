@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 6 | 2.6% |
-| Works (untested) | 116 | 50.0% |
+| Works (untested) | 118 | 50.9% |
 | Partial (unaudited) | 9 | 3.9% |
-| Not working | 101 | 43.5% |
+| Not working | 99 | 42.7% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Hydroform | silent | Target land becomes a 3/3 Elemental creature with flying until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illness in the Ranks | silent | Creature tokens get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Illusionist's Bracers | silent | Whenever an ability of equipped creature is activated, if it isn't a mana ability, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Immortal Servitude | silent | Return each creature card with mana value X from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incursion Specialist | silent | Whenever you cast your second spell each turn, this creature gets +2/+0 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Keymaster Rogue | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Last Thoughts | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -121,7 +120,6 @@
 | Hellraiser Goblin | notice | Creatures you control have haste and attack each combat if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Homing Lightning | notice | Homing Lightning deals 4 damage to target creature and each other creature with the same name as that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Molten Primordial | notice | When this creature enters, for each opponent, gain control of up to one target creature that player controls until end of turn. Untap those creatures. They gain | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mugging | notice | Mugging deals 2 damage to target creature. That creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Obzedat, Ghost Council | notice | At the beginning of your end step, you may exile Obzedat. If you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orzhov Charm | notice | Choose one — • Return target creature you control and all Auras you control attached to it to their owner's hand. • Destroy target creature and you lose life eq | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rapid Hybridization | notice | Destroy target creature. It can't be regenerated. That creature's controller creates a 3/3 green Frog Lizard creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -187,6 +185,7 @@
 | High Priest of Penance | handled | Whenever this creature is dealt damage, you may destroy target nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Holy Mantle | handled | Enchanted creature gets +2/+2 and has protection from creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Horror of the Dim | handled | {U}: This creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Immortal Servitude | handled | Return each creature card with mana value X from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ivy Lane Denizen | handled | Whenever another green creature you control enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Killing Glare | handled | Destroy target creature with power X or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kingpin's Pet | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -204,6 +203,7 @@
 | Miming Slime | handled | Create an X/X green Ooze creature token, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindeye Drake | handled | When this creature dies, target player mills five cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mortus Strider | handled | When this creature dies, return it to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mugging | handled | Mugging deals 2 damage to target creature. That creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murder Investigation | handled | When enchanted creature dies, create X 1/1 white Soldier creature tokens, where X is its power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nav Squad Commandos | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature gets +1/+1 until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimbus Swimmer | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -311,7 +311,6 @@
 | put target nonland permanent on top of its owner's library. | 1 | Totally Lost | gtc |
 | remove two +N/+N counters from ~: regenerate it. | 1 | Experiment One | gtc |
 | return all attacking creatures to their owner's hand. | 1 | Aetherize | gtc |
-| return each creature card with mana value N from your graveyard to the battlefield. | 1 | Immortal Servitude | gtc |
 | sacrifice another creature: ~ gains protection from the color of your choice until end of turn. | 1 | Cartel Aristocrat | gtc |
 | sacrifice ~: counter target spell with {M} in its mana cost unless its controller pays {M}. | 1 | Frontline Medic | gtc |
 | search your library for three creature cards and reveal them. if you reveal three cards with different names, choose one of them at random and put that card int | 1 | Signal the Clans | gtc |
@@ -359,7 +358,6 @@
 | ~ can't be blocked except by rogues. | 1 | Deathcult Rogue | gtc |
 | ~ deals N damage divided as you choose among any number of targets. tap each creature dealt damage ~. players dealt damage ~ can't cast noncreature spells ~. | 1 | Aurelia's Fury | gtc |
 | ~ deals N damage to target creature and each other creature with the same name as that creature. | 1 | Homing Lightning | gtc |
-| ~ deals N damage to target creature. that creature can't block ~. | 1 | Mugging | gtc |
 | ~ gets +N/+N for each creature card in your opponents' graveyards. | 1 | Wight of Precinct Six | gtc |
 | ~"..." graveyards. | 1 | Consuming Aberration | gtc |
 

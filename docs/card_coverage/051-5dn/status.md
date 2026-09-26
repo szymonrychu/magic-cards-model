@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.6% |
-| Works (untested) | 91 | 56.2% |
-| Partial (unaudited) | 18 | 11.1% |
-| Not working | 44 | 27.2% |
+| Tested | 10 | 6.2% |
+| Works (untested) | 92 | 56.8% |
+| Partial (unaudited) | 17 | 10.5% |
+| Not working | 43 | 26.5% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Avarice Totem | silent | {5}: Exchange control of this artifact and target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Immortality | silent | Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Beacon of Unrest | silent | Put target artifact or creature card from a graveyard onto the battlefield under your control. Shuffle Beacon of Unrest into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinkmoth Infusion | silent | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bringer of the Black Dawn | silent | At the beginning of your upkeep, you may pay 2 life. If you do, search your library for a card, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosmic Larva | silent | At the beginning of your upkeep, sacrifice this creature unless you sacrifice two lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -79,7 +78,6 @@
 | Eon Hub | unaudited | Players skip their upkeep steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fist of Suns | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Brawler | unaudited | This creature can't be equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Joiner Adept | unaudited | Lands you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lantern of Insight | unaudited | Players play with the top card of their libraries revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mycosynth Golem | unaudited | Artifact creature spells you cast have affinity for artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Opaline Bracers | unaudited | Equipped creature gets +X/+X, where X is the number of charge counters on this Equipment. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -135,6 +133,7 @@
 | Into Thin Air | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Return target artifact to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ion Storm | handled | {1}{R}, Remove a +1/+1 counter or a charge counter from a permanent you control: This enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Iron-Barb Hellion | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Joiner Adept | handled | Lands you control have "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Engineers | handled | {R}, Sacrifice two artifacts: Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Ironworks | handled |  |  | Y/-/- | not_tested |
 | Krark-Clan Ogre | handled | {R}, Sacrifice an artifact: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -183,8 +182,9 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
+- Beacon of Unrest
 - Crucible of Worlds
 - Engineered Explosives
 - Eternal Witness
@@ -229,12 +229,10 @@
 | equipped creature gets +N/+N for each artifact you control. | 1 | Cranial Plating | 5dn |
 | equipped creature gets +N/+N, where N is the number of charge counters on ~. | 1 | Opaline Bracers | 5dn |
 | for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
-| lands you control have "..." | 1 | Joiner Adept | 5dn |
 | modular | 1 | Arcbound Wanderer | 5dn |
 | no more than one creature can attack each combat. | 1 | Silent Arbiter | 5dn |
 | players play with the top card of their libraries revealed. | 1 | Lantern of Insight | 5dn |
 | players skip their upkeep steps. | 1 | Eon Hub | 5dn |
-| put target artifact or creature card from a graveyard onto the battlefield under your control. shuffle ~ into its owner's library. | 1 | Beacon of Unrest | 5dn |
 | remove a +N/+N counter from ~: ~ gains your choice of flying, first strike, or haste until end of turn. | 1 | Lunar Avenger | 5dn |
 | remove two +N/+N counters from ~: remove a counter from target permanent. | 1 | Spinal Parasite | 5dn |
 | search target opponent's library for an artifact card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Acquire | 5dn |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 7.0% |
-| Works (untested) | 124 | 53.9% |
+| Works (untested) | 125 | 54.3% |
 | Partial (unaudited) | 23 | 10.0% |
-| Not working | 67 | 29.1% |
+| Not working | 66 | 28.7% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Urza's Ruinous Blast | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Exile all nonland permanents that aren't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urza's Tome | silent | {3}, {T}: Draw a card. Then discard a card unless you exile a historic card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warcry Phoenix | silent | Whenever you attack with three or more creatures, you may pay {2}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Yawgmoth's Vile Offering | silent | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Put up to one target creature or planeswalker card from a graveyard | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benalish Honor Guard | notice | This creature gets +1/+0 for each legendary creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blessing of Belzenlok | notice | Target creature gets +2/+1 until end of turn. If it's legendary, it also gains lifelink until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Champion of the Flame | notice | This creature gets +2/+2 for each Aura and Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -239,6 +238,7 @@
 | Wizard's Retort | handled | This spell costs {1} less to cast if you control a Wizard. Counter target spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yargle, Glutton of Urborg | handled |  |  | Y/Y/Y | not_tested |
 | Yavimaya Sapherd | handled | When this creature enters, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Yawgmoth's Vile Offering | handled | (You may cast a legendary sorcery only if you control a legendary creature or planeswalker.) Put up to one target creature or planeswalker card from a graveyard | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zhalfirin Void | handled | When this land enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
@@ -273,7 +273,6 @@
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Academy Drake, Stronghold Confessor | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) exile all nonland permanents that aren't legendary. | 1 | Urza's Ruinous Blast | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) look at the top N cards of your library. you may put any number of  | 1 | Kamahl's Druidic Vow | dom |
-| (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) put up to one target creature or planeswalker card from a graveyard | 1 | Yawgmoth's Vile Offering | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) return all legendary permanent cards from your graveyard to the bat | 1 | Primevals' Glorious Rebirth | dom |
 | (you may cast a legendary sorcery only if you control a legendary creature or planeswalker.) target player takes an extra turn after ~. return up to one target  | 1 | Karn's Temporal Sundering | dom |
 | +N: reveal the top two cards of your library. an opponent chooses one of them. put that card into your hand and exile the other with a silver counter on it. | 1 | Karn, Scion of Urza | dom |

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.4% |
-| Works (untested) | 49 | 33.1% |
+| Tested | 9 | 6.1% |
+| Works (untested) | 48 | 32.4% |
 | Partial (unaudited) | 6 | 4.1% |
 | Not working | 85 | 57.4% |
 
@@ -133,7 +133,6 @@
 | Game-Trail Changeling | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Heritage Druid | handled |  |  | Y/-/- | not_tested |
 | Idyllic Tutor | handled | Search your library for an enchantment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Indomitable Ancients | handled |  |  | Y/-/- | not_tested |
 | Inspired Sprite | handled | Whenever you cast a Wizard spell, you may untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kindled Fury | handled | Target creature gets +1/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lunk Errant | handled | Whenever this creature attacks alone, it gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -170,9 +169,10 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Deglamer
+- Indomitable Ancients
 - Latchkey Faerie
 - Meadowboon
 - Morsel Theft

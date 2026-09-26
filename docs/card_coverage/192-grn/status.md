@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 5.2% |
+| Tested | 13 | 5.6% |
 | Works (untested) | 129 | 55.4% |
-| Partial (unaudited) | 6 | 2.6% |
+| Partial (unaudited) | 5 | 2.1% |
 | Not working | 86 | 36.9% |
 
 ## Cards needing work
@@ -112,7 +112,6 @@
 | Mnemonic Betrayal | notice | Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ral's Dispersal | notice | Return target creature to its owner's hand. You may search your library and/or graveyard for a card named Ral, Caller of Storms, reveal it, and put it into your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Take Heart | notice | Target creature gets +2/+2 until end of turn. You gain 1 life for each attacking creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Chamber Sentry | unaudited | This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Crackling Drake | unaudited | Crackling Drake's power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Demotion | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ochran Assassin | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -251,10 +250,11 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Arclight Phoenix
 - Assassin's Trophy
+- Chamber Sentry
 - Conclave Tribunal
 - Deafening Clarion
 - Divine Visitation
@@ -341,7 +341,6 @@
 | ~ deals N damage to each creature your opponents control. creatures your opponents control can't block ~. | 1 | Cosmotronic Wave | grn |
 | ~ deals N damage to each opponent and you gain N life. when ~ is put into your graveyard from your library, you may exile it. if you do, ~ deals N damage to eac | 1 | Creeping Chill | grn |
 | ~ deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. jump-start (you may cast ~ from | 1 | Beacon Bolt | grn |
-| ~ enters with a +N/+N counter on it for each color of mana spent to cast it. | 1 | Chamber Sentry | grn |
 | ~ has flying as long as you've cast an instant or sorcery spell ~. | 1 | Leapfrog | grn |
 | ~'s power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | 1 | Crackling Drake | grn |
 | −N: for each creature card in your graveyard, put a +N/+N counter on each creature you control. | 1 | Vraska, Regal Gorgon | grn |

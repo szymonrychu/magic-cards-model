@@ -17,100 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.6% |
-| Works (untested) | 143 | 56.1% |
-| Partial (unaudited) | 9 | 3.5% |
-| Not working | 76 | 29.8% |
+| Tested | 114 | 44.7% |
+| Works (untested) | 141 | 55.3% |
+| Partial (unaudited) | 0 | 0.0% |
+| Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aberrant Manawurm | silent | Whenever you cast an instant or sorcery spell, this creature gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ambitious Augmenter | silent | When this creature dies, if it had one or more counters on it, create a 0/0 green and blue Fractal creature token, then put this creature's counters on that tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Antiquities on the Loose | silent | Create two 2/2 red and white Spirit creature tokens. Then if this spell was cast from anywhere other than your hand, put a +1/+1 counter on each Spirit you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Applied Geometry | silent | Create a token that's a copy of target non-Aura permanent you control, except it's a 0/0 Fractal creature in addition to its other types. Put six +1/+1 counters | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Arcane Omens | silent | Converge — Target player discards X cards, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Archaic's Agony | silent | Converge — Archaic's Agony deals X damage to target creature, where X is the number of colors of mana spent to cast this spell. Exile cards from the top of your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Aziza, Mage Tower Captain | silent | Whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. If you do, copy that spell. You may choose new targets for the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Blech, Loafing Pest | silent | Whenever you gain life, put a +1/+1 counter on each Pest, Bat, Insect, Snake, and Spider you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Brush Off | silent | This spell costs {1}{U} less to cast if it targets an instant or sorcery spell. Counter target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Diary of Dreams | silent | {5}, {T}: Draw a card. This ability costs {1} less to activate for each page counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dina's Guidance | silent | Search your library for a creature card, reveal it, put it into your hand or graveyard, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Echocasting Symposium | silent | Target player creates a token that's a copy of target creature you control. Paradigm (Then exile this spell. After you first resolve a spell with this name, you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Emeritus of Ideation // Ancestral Recall | silent | Whenever this creature attacks, you may exile eight cards from your graveyard. If you do, this creature becomes prepared. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Emeritus of Truce // Swords to Plowshares | silent | When this creature enters, target player creates a 1/1 white and black Inkling creature token with flying. Then if an opponent controls more creatures than you, | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Emil, Vastlands Roamer | silent | {4}{G}, {T}: Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of differently named lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| End of the Hunt | silent | Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fix What's Broken | silent | As an additional cost to cast this spell, pay X life. Return each artifact and creature card with mana value X from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Flow State | silent | Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. If there is an instant card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Follow the Lumarets | silent | Infusion — Look at the top four cards of your library. You may reveal a creature or land card from among them and put it into your hand. If you gained life this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fractal Anomaly | silent | Create a 0/0 green and blue Fractal creature token and put X +1/+1 counters on it, where X is the number of cards you've drawn this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fractalize | silent | Until end of turn, target creature becomes a green and blue Fractal with base power and toughness each equal to X plus 1. (It loses all other colors and creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Geometer's Arthropod | silent | Whenever you cast a spell with {X} in its mana cost, look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Grave Researcher // Reanimate | silent | Put target creature card from a graveyard onto the battlefield under your control. You lose life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Heated Argument | silent | Heated Argument deals 6 damage to target creature. You may exile a card from your graveyard. If you do, Heated Argument also deals 2 damage to that creature's c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Joined Researchers // Secret Rendezvous | silent | You and target opponent each draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lumaret's Favor | silent | Infusion — When you cast this spell, copy it if you gained life this turn. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mana Sculpt | silent | Counter target spell. If you control a Wizard, add an amount of {C} equal to the amount of mana spent to cast that spell at the beginning of your next main phas | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mathemagics | silent | Target player draws 2ˣ cards. (2⁰ = 1, 2¹ = 2, 2² = 4, 2³ = 8, 2⁴ = 16, 2⁵ = 32, and so on.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Matterbending Mage | silent | Whenever you cast a spell with {X} in its mana cost, this creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mind Roots | silent | Target player discards two cards. Put up to one land card discarded this way onto the battlefield tapped under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Molten Note | silent | Molten Note deals damage to target creature equal to the amount of mana spent to cast this spell. Untap all creatures you control. Flashback {6}{R}{W} (You may  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Molten-Core Maestro | silent | Opus — Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. If five or more mana was spent to cast that spell, add an amount of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Paradox Surveyor | silent | When this creature enters, look at the top five cards of your library. You may reveal a land card or a card with {X} in its mana cost from among them and put it | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Petrified Hamlet | silent | When this land enters, choose a land card name. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Poisoner's Apprentice | silent | Infusion — When this creature enters, target creature an opponent controls gets -4/-4 until end of turn if you gained life this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Pox Plague | silent | Each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. Round down each | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Rabid Attack | silent | Until end of turn, any number of target creatures you control each get +1/+0 and gain "When this creature dies, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ral Zarek, Guest Lecturer | silent | −1: Any number of target players each discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Scathing Shadelock // Venomous Words | silent | Target creature you control gets +2/+0 and gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Scolding Administrator | silent | When this creature dies, if it had counters on it, put those counters on up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Snarl Song | silent | Converge — Create two 0/0 green and blue Fractal creature tokens. Put X +1/+1 counters on each of them and you gain X life, where X is the number of colors of m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Snooping Page | silent | Repartee — Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Social Snub | silent | When you cast this spell while you control a creature, you may copy this spell. Each player sacrifices a creature of their choice. Each opponent loses 1 life an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spiritcall Enthusiast // Scrollboost | silent | One or two target creatures each get +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Stirring Honormancer | silent | When this creature enters, look at the top X cards of your library, where X is the number of creatures you control. Put one of those cards into your hand and th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Stress Dream | silent | Stress Dream deals 5 damage to up to one target creature. Look at the top two cards of your library. Put one of those cards into your hand and the other on the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sundering Archaic | silent | Converge — When this creature enters, exile target nonland permanent an opponent controls with mana value less than or equal to the number of colors of mana spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Suspend Aggression | silent | Exile target nonland permanent and the top card of your library. For each of those cards, its owner may play it until the end of their next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tenured Concocter | silent | Infusion — This creature gets +2/+0 as long as you gained life this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Thornfist Striker | silent | Infusion — Creatures you control get +1/+0 and have trample as long as you gained life this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Together as One | silent | Converge — Target player draws X cards, Together as One deals X damage to any target, and you gain X life, where X is the number of colors of mana spent to cast | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tragedy Feaster | silent | Infusion — At the beginning of your end step, sacrifice a permanent unless you gained life this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Transcendent Archaic | silent | Converge — When this creature enters, you may draw X cards, where X is the number of colors of mana spent to cast this spell. If you draw one or more cards this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ulna Alley Shopkeep | silent | Infusion — This creature gets +2/+0 as long as you gained life this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Visionary's Dance | silent | Create two 3/3 blue and red Elemental creature tokens with flying. {2}, Discard this card: Look at the top two cards of your library. Put one of them into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Wildgrowth Archaic | silent | Whenever you cast a creature spell, that creature enters with X additional +1/+1 counters on it, where X is the number of colors of mana spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Wisdom of Ages | silent | Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game. Exile Wisdom of Ages. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Zimone's Experiment | silent | Look at the top five cards of your library. You may reveal up to two creature and/or land cards from among them, then put the rest on the bottom of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Biblioplex Tomekeeper | notice | When this creature enters, choose up to one — • Target creature becomes prepared. • Target creature becomes unprepared. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Borrowed Knowledge | notice | Choose one — • Discard your hand, then draw cards equal to the number of cards in target opponent's hand. • Discard your hand, then draw cards equal to the numb | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Burrog Barrage | notice | Target creature you control gets +1/+0 until end of turn if you've cast another instant or sorcery spell this turn. Then it deals damage equal to its power to u | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Choreographed Sparks | notice | This spell can't be copied. Choose one or both — • Copy target instant or sorcery spell you control. You may choose new targets for the copy. • Copy target crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Comforting Counsel | notice | As long as there are five or more growth counters on this enchantment, creatures you control get +3/+3. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Deluge Virtuoso | notice | Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Duel Tactics | notice | Duel Tactics deals 1 damage to target creature. It can't block this turn. Flashback {1}{R} (You may cast this card from your graveyard for its flashback cost. T | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Elemental Mascot | notice | Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn. If five or more mana was spent to cast that spell, exile the t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Expressive Firedancer | notice | Opus — Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. If five or more mana was spent to cast that spell, this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Foolish Fate | notice | Destroy target creature. Infusion — If you gained life this turn, that creature's controller loses 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Growth Curve | notice | Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Mica, Reader of Ruins | notice | Whenever you cast an instant or sorcery spell, you may sacrifice an artifact. If you do, copy that spell and you may choose new targets for the copy. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Procrastinate | notice | Tap target creature. Put twice X stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Rapier Wit | notice | Tap target creature. If it's your turn, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Draw a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Root Manipulation | notice | Until end of turn, creatures you control get +2/+2 and gain menace and "Whenever this creature attacks, you gain 1 life." (A creature with menace can't be block | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Steal the Show | notice | Choose one or both — • Target player discards any number of cards, then draws that many cards. • Steal the Show deals damage equal to the number of instant and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Tester of the Tangential | notice | At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Witherbloom Charm | notice | Choose one — • You may sacrifice a permanent. If you do, draw two cards. • You gain 5 life. • Destroy target nonland permanent with mana value 2 or less. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Lorehold, the Historian | unaudited | Each instant and sorcery card in your hand has miracle {2}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Magmablood Archaic | unaudited | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Prismari, the Inspiration | unaudited | Instant and sorcery spells you cast have storm. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Quandrix, the Proof | unaudited | Instant and sorcery spells you cast from your hand have cascade. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Rancorous Archaic | unaudited | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Resonating Lute | unaudited | Lands you control have "{T}: Add two mana of any one color. Spend this mana only to cast instant and sorcery spells." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Silverquill, the Disputant | unaudited | Each instant and sorcery spell you cast has casualty 1. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Witherbloom, the Balancer | unaudited | Instant and sorcery spells you cast have affinity for creatures. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Zaffai and the Tempests | unaudited | Once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abigale, Poet Laureate // Heroic Stanza | handled | Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abstract Paintmage | handled | At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Additive Evolution | handled | When this enchantment enters, create a 0/0 green and blue Fractal creature token. Put three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -151,7 +66,6 @@
 | Fields of Strife | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Forum Necroscribe | handled | Repartee — Whenever you cast an instant or sorcery spell that targets a creature, return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Forum of Amity | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Fractal Mascot | handled | When this creature enters, tap target creature an opponent controls. Put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Garrison Excavator | handled | Whenever one or more cards leave your graveyard, create a 2/2 red and white Spirit creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glorious Decay | handled | Choose one — • Destroy target artifact. • Glorious Decay deals 4 damage to target creature with flying. • Exile target card from a graveyard. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin Glasswright // Craft with Pride | handled | Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -252,116 +166,133 @@
 | Wander Off | handled | Exile target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wild Hypothesis | handled | Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it. Surveil 2. (Look at the top two cards of your library, then put any number of th | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wilt in the Heat | handled | This spell costs {2} less to cast if one or more cards left your graveyard this turn. Wilt in the Heat deals 5 damage to target creature. If that creature would | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Withering Curse | handled | All creatures get -2/-2 until end of turn. Infusion — If you gained life this turn, destroy all creatures instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Zealous Lorecaster | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>114 cards</summary>
 
+- Aberrant Manawurm
+- Ambitious Augmenter
+- Antiquities on the Loose
+- Applied Geometry
+- Arcane Omens
+- Archaic's Agony
 - Artistic Process
+- Aziza, Mage Tower Captain
+- Biblioplex Tomekeeper
+- Blech, Loafing Pest
+- Borrowed Knowledge
+- Brush Off
+- Burrog Barrage
 - Cauldron of Essence
+- Choreographed Sparks
+- Comforting Counsel
 - Daydream
 - Decorum Dissertation
+- Deluge Virtuoso
+- Diary of Dreams
+- Dina's Guidance
+- Duel Tactics
+- Echocasting Symposium
+- Elemental Mascot
+- Emeritus of Ideation // Ancestral Recall
+- Emeritus of Truce // Swords to Plowshares
+- Emil, Vastlands Roamer
+- End of the Hunt
 - Ennis, Debate Moderator
 - Erode
 - Essenceknit Scholar
+- Expressive Firedancer
+- Fix What's Broken
 - Flashback
+- Flow State
+- Follow the Lumarets
+- Foolish Fate
+- Fractal Anomaly
+- Fractal Mascot
 - Fractal Tender
+- Fractalize
+- Geometer's Arthropod
 - Germination Practicum
+- Grave Researcher // Reanimate
 - Great Hall of the Biblioplex
+- Growth Curve
 - Hardened Academic
+- Heated Argument
 - Hungry Graffalon
 - Impractical Joke
 - Improvisation Capstone
+- Joined Researchers // Secret Rendezvous
 - Lecturing Scornmage
 - Living History
+- Lorehold, the Historian
+- Lumaret's Favor
+- Magmablood Archaic
+- Mana Sculpt
+- Mathemagics
+- Matterbending Mage
+- Mica, Reader of Ruins
+- Mind Roots
+- Molten Note
+- Molten-Core Maestro
+- Paradox Surveyor
+- Petrified Hamlet
+- Poisoner's Apprentice
 - Potioner's Trove
+- Pox Plague
 - Practiced Offense
+- Prismari, the Inspiration
+- Procrastinate
+- Quandrix, the Proof
+- Rabid Attack
+- Ral Zarek, Guest Lecturer
+- Rancorous Archaic
+- Rapier Wit
 - Rehearsed Debater
+- Resonating Lute
 - Restoration Seminar
+- Root Manipulation
 - Sanar, Unfinished Genius // Wild Idea
+- Scathing Shadelock // Venomous Words
+- Scolding Administrator
+- Silverquill, the Disputant
 - Slumbering Trudge
+- Snarl Song
+- Snooping Page
+- Social Snub
+- Spiritcall Enthusiast // Scrollboost
+- Steal the Show
+- Stirring Honormancer
 - Stirring Hopesinger
+- Stress Dream
+- Sundering Archaic
+- Suspend Aggression
 - Tablet of Discovery
+- Tenured Concocter
+- Tester of the Tangential
 - The Dawning Archaic
+- Thornfist Striker
+- Together as One
+- Tragedy Feaster
+- Transcendent Archaic
 - Traumatic Critique
+- Ulna Alley Shopkeep
+- Visionary's Dance
+- Wildgrowth Archaic
+- Wisdom of Ages
+- Witherbloom Charm
+- Witherbloom, the Balancer
+- Withering Curse
+- Zaffai and the Tempests
+- Zimone's Experiment
 
 </details>
 
 ## Missing mechanics
 
-| Mechanic (label / template) | Count | Example cards | Sets |
-|---|---|---|---|
-| Converge | 8 | Arcane Omens, Archaic's Agony, Magmablood Archaic, Rancorous Archaic, Snarl Song | sos |
-| Infusion | 7 | Follow the Lumarets, Lumaret's Favor, Poisoner's Apprentice, Tenured Concocter, Thornfist Striker | sos |
-| Opus | 4 | Deluge Virtuoso, Elemental Mascot, Expressive Firedancer, Molten-Core Maestro | sos |
-| Choose one | 2 | Borrowed Knowledge, Witherbloom Charm | sos |
-| Choose one or both | 1 | Steal the Show | sos |
-| Repartee | 1 | Snooping Page | sos |
-| as an additional cost to cast ~, pay N life. return each artifact and creature card with mana value N from your graveyard to the battlefield. | 1 | Fix What's Broken | sos |
-| as long as there are five or more growth counters on ~, creatures you control get +N/+N. | 1 | Comforting Counsel | sos |
-| at the beginning of combat on your turn, you may pay {M}. when you do, move N +N/+N counters from ~ onto another target creature. | 1 | Tester of the Tangential | sos |
-| counter target spell. if you control a wizard, add an amount of {M} equal to the amount of mana spent to cast that spell at the beginning of your next main phas | 1 | Mana Sculpt | sos |
-| create a N/N green and blue fractal creature token and put N +N/+N counters on it, where N is the number of cards you've drawn ~. | 1 | Fractal Anomaly | sos |
-| create a token that"..."s a N/N fractal creature in addition to its other types. put six +N/+N counters on it. | 1 | Applied Geometry | sos |
-| create two N/N blue and red elemental creature tokens with flying. {M}, discard ~: look at the top two cards of your library. put one of them into your hand and | 1 | Visionary's Dance | sos |
-| create two N/N red and white spirit creature tokens. then if ~ was cast from anywhere other than your hand, put a +N/+N counter on each spirit you control. flas | 1 | Antiquities on the Loose | sos |
-| destroy target creature. infusion — if you gained life ~, that creature's controller loses N life. | 1 | Foolish Fate | sos |
-| each instant and sorcery card in your hand has miracle {M}. | 1 | Lorehold, the Historian | sos |
-| each instant and sorcery spell you cast has casualty N. | 1 | Silverquill, the Disputant | sos |
-| each player loses half their life, then discards half the cards in their hand, then sacrifices half the permanents they control of their choice. round down each | 1 | Pox Plague | sos |
-| exile target nonland permanent and the top card of your library. for each of those cards, its owner may play it until the end of their next turn. | 1 | Suspend Aggression | sos |
-| instant and sorcery spells you cast from your hand have cascade. | 1 | Quandrix, the Proof | sos |
-| instant and sorcery spells you cast have affinity for creatures. | 1 | Witherbloom, the Balancer | sos |
-| instant and sorcery spells you cast have storm. | 1 | Prismari, the Inspiration | sos |
-| lands you control have "..." | 1 | Resonating Lute | sos |
-| look at the top five cards of your library. you may reveal up to two creature and/or land cards from among them, then put the rest on the bottom of your library | 1 | Zimone's Experiment | sos |
-| look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library in any order. if there is an instant card | 1 | Flow State | sos |
-| once during each of your turns, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Zaffai and the Tempests | sos |
-| one or two target creatures each get +N/+N until end of turn. | 1 | Spiritcall Enthusiast // Scrollboost | sos |
-| put a +N/+N counter on target creature you control, then double the number of +N/+N counters on that creature. | 1 | Growth Curve | sos |
-| put target creature card from a graveyard onto the battlefield under your control. you lose life equal to that card's mana value. | 1 | Grave Researcher // Reanimate | sos |
-| return all instant and sorcery cards from your graveyard to your hand. you have no maximum hand size for the rest of the game. exile ~. | 1 | Wisdom of Ages | sos |
-| search your library for a creature card, reveal it, put it into your hand or graveyard, then shuffle. | 1 | Dina's Guidance | sos |
-| tap target creature. if it's your turn, put a stun counter on it. (if a permanent with a stun counter would become untapped, remove one from it instead.) draw a | 1 | Rapier Wit | sos |
-| tap target creature. put twice N stun counters on it. (if a permanent with a stun counter would become untapped, remove one from it instead.) | 1 | Procrastinate | sos |
-| target creature you control gets +N/+N and gains deathtouch until end of turn. | 1 | Scathing Shadelock // Venomous Words | sos |
-| target creature you control gets +N/+N until end of turn if you've cast another instant or sorcery spell ~. then it deals damage equal to its power to up to one | 1 | Burrog Barrage | sos |
-| target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control. | 1 | End of the Hunt | sos |
-| target player creates a token that's a copy of target creature you control. paradigm (then exile ~. after you first resolve a spell with ~, you may cast a copy  | 1 | Echocasting Symposium | sos |
-| target player discards two cards. put up to one land card discarded ~ onto the battlefield tapped under your control. | 1 | Mind Roots | sos |
-| target player draws Nˣ cards. (N⁰ = N, N¹ = N, N² = N, N³ = N, N⁴ = N, N⁵ = N, and so on.) | 1 | Mathemagics | sos |
-| until end of turn, any number of target creatures you control each get +N/+N and gain "..." | 1 | Rabid Attack | sos |
-| until end of turn, creatures you control get +N/+N and gain menace and "..." (a creature with menace can't be blocked except by two or more creatures.) | 1 | Root Manipulation | sos |
-| until end of turn, target creature becomes a green and blue fractal with base power and toughness each equal to N plus N. (it loses all other colors and creatur | 1 | Fractalize | sos |
-| when you cast ~ while you control a creature, you may copy ~. each player sacrifices a creature of their choice. each opponent loses N life and you gain N life. | 1 | Social Snub | sos |
-| when ~ dies, if it had counters on it, put those counters on up to one target creature. | 1 | Scolding Administrator | sos |
-| when ~ dies, if it had one or more counters on it, create a N/N green and blue fractal creature token, then put ~ counters on that token. | 1 | Ambitious Augmenter | sos |
-| when ~ enters, choose a land card name. | 1 | Petrified Hamlet | sos |
-| when ~ enters, choose up to one — • target creature becomes prepared. • target creature becomes unprepared. | 1 | Biblioplex Tomekeeper | sos |
-| when ~ enters, look at the top N cards of your library, where N is the number of creatures you control. put one of those cards into your hand and the rest into  | 1 | Stirring Honormancer | sos |
-| when ~ enters, look at the top five cards of your library. you may reveal a land card or a card with {M} in its mana cost from among them and put it into your h | 1 | Paradox Surveyor | sos |
-| when ~ enters, target player creates a N/N white and black inkling creature token with flying. then if an opponent controls more creatures than you, ~ becomes p | 1 | Emeritus of Truce // Swords to Plowshares | sos |
-| whenever you cast a creature spell, that creature enters with N additional +N/+N counters on it, where N is the number of colors of mana spent to cast it. | 1 | Wildgrowth Archaic | sos |
-| whenever you cast a spell with {M} in its mana cost, look at the top N cards of your library. put one of them into your hand and the rest on the bottom of your  | 1 | Geometer's Arthropod | sos |
-| whenever you cast a spell with {M} in its mana cost, ~ can't be blocked ~. | 1 | Matterbending Mage | sos |
-| whenever you cast an instant or sorcery spell, you may sacrifice an artifact. if you do, copy that spell and you may choose new targets for the copy. | 1 | Mica, Reader of Ruins | sos |
-| whenever you cast an instant or sorcery spell, you may tap three untapped creatures you control. if you do, copy that spell. you may choose new targets for the  | 1 | Aziza, Mage Tower Captain | sos |
-| whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn, where N is the amount of mana spent to cast that spell. | 1 | Aberrant Manawurm | sos |
-| whenever you gain life, put a +N/+N counter on each pest, bat, insect, snake, and spider you control. | 1 | Blech, Loafing Pest | sos |
-| whenever ~ attacks, you may exile eight cards from your graveyard. if you do, ~ becomes prepared. | 1 | Emeritus of Ideation // Ancestral Recall | sos |
-| you and target opponent each draw three cards. | 1 | Joined Researchers // Secret Rendezvous | sos |
-| {M}, {M}: draw a card. ~ costs {M} less to activate for each page counter on ~. | 1 | Diary of Dreams | sos |
-| {M}{M}, {M}: create a N/N green and blue fractal creature token. put N +N/+N counters on it, where N is the number of differently named lands you control. | 1 | Emil, Vastlands Roamer | sos |
-| ~ can't be copied. choose one or both — • copy target instant or sorcery spell you control. you may choose new targets for the copy. • copy target creature spel | 1 | Choreographed Sparks | sos |
-| ~ costs {M}{M} less to cast if it targets an instant or sorcery spell. counter target spell. | 1 | Brush Off | sos |
-| ~ deals N damage to target creature. it can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Duel Tactics | sos |
-| ~ deals N damage to target creature. you may exile a card from your graveyard. if you do, ~ also deals N damage to that creature's controller. | 1 | Heated Argument | sos |
-| ~ deals N damage to up to one target creature. look at the top two cards of your library. put one of those cards into your hand and the other on the bottom of y | 1 | Stress Dream | sos |
-| ~ deals damage to target creature equal to the amount of mana spent to cast ~. untap all creatures you control. flashback {M}{M}{M} (you may cast ~ from your gr | 1 | Molten Note | sos |
-| −N: any number of target players each discard a card. | 1 | Ral Zarek, Guest Lecturer | sos |
+None.
 
 ## Notes
 

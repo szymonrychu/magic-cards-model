@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 171 | 63.3% |
-| Works (untested) | 99 | 36.7% |
+| Tested | 172 | 63.7% |
+| Works (untested) | 98 | 36.3% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
@@ -29,7 +29,6 @@
 | A.I.M. Labs | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | A.I.M. Synthoids | handled | When this creature enters, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agent 13, Sharon Carter | handled | Whenever a creature you control attacks alone, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Agent Phil Coulson | handled | {T}: Put a +1/+1 counter on each other Hero you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Agent of Atlas | handled | Prowess | machines/keywords.py | Y/Y/Y | not_tested |
 | Agents of HYDRA | handled | When this creature dies, create a 2/1 black Villain creature token with menace. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arc Reactor | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -129,13 +128,14 @@
 ## Fully supported
 
 <details>
-<summary>171 cards</summary>
+<summary>172 cards</summary>
 
 - A.I.M. Scientists
 - Abomination, Terrifying Titan
 - Absorbing Man
 - Aerial Doombot
 - Agent Maria Hill
+- Agent Phil Coulson
 - Agents of S.H.I.E.L.D.
 - Alien Invasion
 - Ant-Man's Army

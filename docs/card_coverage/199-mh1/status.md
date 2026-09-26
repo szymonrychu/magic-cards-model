@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 11.4% |
-| Works (untested) | 91 | 43.3% |
-| Partial (unaudited) | 16 | 7.6% |
-| Not working | 79 | 37.6% |
+| Tested | 25 | 11.9% |
+| Works (untested) | 92 | 43.8% |
+| Partial (unaudited) | 15 | 7.1% |
+| Not working | 78 | 37.1% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Sword of Truth and Justice | silent | Whenever equipped creature deals combat damage to a player, put a +1/+1 counter on a creature you control, then proliferate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Throatseeker | silent | Unblocked attacking Ninjas you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Throes of Chaos | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Thundering Djinn | silent | Whenever this creature attacks, it deals damage to any target equal to the number of cards you've drawn this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treefolk Umbra | silent | Enchanted creature gets +0/+2 and assigns combat damage equal to its toughness rather than its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trustworthy Scout | silent | {1}{W}, Exile this card from your graveyard: Search your library for a card named Trustworthy Scout, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unbound Flourishing | silent | Whenever you cast a permanent spell with a mana cost that contains {X}, double the value of X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -118,7 +117,6 @@
 | Spiteful Sliver | unaudited | Sliver creatures you control have "Whenever this creature is dealt damage, it deals that much damage to target player or planeswalker." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tectonic Reformation | unaudited | Each land card in your hand has cycling {R}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tempered Sliver | unaudited | Sliver creatures you control have "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| The First Sliver | unaudited | Sliver spells you cast have cascade. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Valiant Changeling | unaudited | This spell costs {1} less to cast for each creature type among creatures you control. This effect can't reduce the amount of mana this spell costs by more than  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter's Rest | unaudited | As long as you control another snow permanent, enchanted creature doesn't untap during its controller's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arcum's Astrolabe | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -196,6 +194,7 @@
 | Talisman of Curiosity | handled |  |  | Y/-/- | not_tested |
 | Talisman of Hierarchy | handled |  |  | Y/-/- | not_tested |
 | Thornado | handled | Destroy target creature with flying. Cycling {1}{G} ({1}{G}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thundering Djinn | handled | Whenever this creature attacks, it deals damage to any target equal to the number of cards you've drawn this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Treetop Ambusher | handled | Whenever this creature attacks, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trumpeting Herd | handled | Create a 3/3 green Elephant creature token. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twin-Silk Spider | handled | When this creature enters, create a 1/2 green Spider creature token with reach. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -216,7 +215,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
@@ -238,6 +237,7 @@
 - Sisay, Weatherlight Captain
 - Sunbaked Canyon
 - Talisman of Resilience
+- The First Sliver
 - Watcher for Tomorrow
 - Windcaller Aven
 - Wrenn and Six
@@ -294,7 +294,6 @@
 | sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
 | sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
 | sliver creatures you control have flying and haste. | 1 | Cloudshredder Sliver | mh1 |
-| sliver spells you cast have cascade. | 1 | The First Sliver | mh1 |
 | target creature gets -N/-N until end of turn for each swamp you control. | 1 | Defile | mh1 |
 | target creature you control gets +N/+N until end of turn if its power is N. then it fights target creature you don't control. (each deals damage equal to its po | 1 | Savage Swipe | mh1 |
 | target player mills four cards. you shuffle up to four cards from your graveyard into your library. replicate {M}{M}{M} (when you cast ~, copy it for each time  | 1 | Stream of Thought | mh1 |
@@ -316,7 +315,6 @@
 | whenever equipped creature deals combat damage to a player, put a +N/+N counter on a creature you control, then proliferate. | 1 | Sword of Truth and Justice | mh1 |
 | whenever you cast a permanent spell with a mana cost that contains {M}, double the value of N. | 1 | Unbound Flourishing | mh1 |
 | whenever you cycle ~ or cycle another card while ~ is on the battlefield, you may exile target creature. if you do, return that card to the battlefield under it | 1 | Astral Drift | mh1 |
-| whenever ~ attacks, it deals damage to any target equal to the number of cards you've drawn ~. | 1 | Thundering Djinn | mh1 |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Frostwalk Bastion | mh1 |
 | whenever ~ deals combat damage to a player, that player exiles the top two cards of their library. until end of turn, you may play those cards without paying th | 1 | Fallen Shinobi | mh1 |
 | you can't spend mana to cast ~. | 1 | Hogaak, Arisen Necropolis | mh1 |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 4.7% |
-| Works (untested) | 108 | 42.2% |
+| Works (untested) | 109 | 42.6% |
 | Partial (unaudited) | 18 | 7.0% |
-| Not working | 118 | 46.1% |
+| Not working | 117 | 45.7% |
 
 ## Cards needing work
 
@@ -139,7 +139,6 @@
 | Guardian Sunmare | notice | Whenever this creature attacks while saddled, search your library for a nonland permanent card with mana value 3 or less, put it onto the battlefield, then shuf | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | March of the World Ooze | notice | Creatures you control have base power and toughness 6/6 and are Oozes in addition to their other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Oildeep Gearhulk | notice | When this creature enters, look at target player's hand. You may choose a card from it. If you do, that player discards that card, then draws a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Pedal to the Metal | notice | Target creature gets +X/+0 and gains first strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Push the Limit | notice | Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become art | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Riptide Gearhulk | notice | When this creature enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Last Ride | notice | The Last Ride gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -224,6 +223,7 @@
 | Nimble Thopterist | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pacesetter Paragon | handled | Exhaust — {2}{R}: Put a +1/+1 counter on this creature. It gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pactdoll Terror | handled | Whenever this creature or another artifact you control enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pedal to the Metal | handled | Target creature gets +X/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Plow Through | handled | Choose one — • Target creature you control fights target creature an opponent controls. (Each deals damage equal to its power to the other.) • Destroy target Ve | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pothole Mole | handled | When this creature enters, mill three cards, then you may return a land card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prowcatcher Specialist | handled | Exhaust — {3}{R}: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -332,7 +332,6 @@
 | return up to one target creature card, up to one target mount card, up to one target vehicle card, and up to one target creature card with no abilities from you | 1 | Rise from the Wreck | dft |
 | sab-sunen can't attack or block unless it has an even number of counters on it. | 1 | Sab-Sunen, Luxa Embodied | dft |
 | tap three other untapped creatures you control: until end of turn, ~ becomes an artifact creature and gains flying. put a +N/+N counter on it. | 1 | Voyager Glidecar | dft |
-| target creature gets +N/+N and gains first strike until end of turn. | 1 | Pedal to the Metal | dft |
 | vehicle creatures you control are the chosen creature type in addition to their other types. | 1 | Lifecraft Engine | dft |
 | when aatchik enters, create a N/N green insect creature token for each artifact and/or creature card in your graveyard. | 1 | Aatchik, Emerald Radian | dft |
 | when mu yanling enters, create a N/N colorless vehicle artifact token with crew N. | 1 | Mu Yanling, Wind Rider | dft |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 5.6% |
-| Works (untested) | 54 | 33.3% |
+| Works (untested) | 55 | 34.0% |
 | Partial (unaudited) | 13 | 8.0% |
-| Not working | 86 | 53.1% |
+| Not working | 85 | 52.5% |
 
 ## Cards needing work
 
@@ -91,7 +91,6 @@
 | Sulfur Elemental | silent | White creatures get +1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synchronous Sliver | silent | All Sliver creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Temporal Extortion | silent | When you cast this spell, any player may pay half their life, rounded up. If a player does, counter Temporal Extortion. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Teneb, the Harvester | silent | Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tidewalker | silent | Tidewalker's power and toughness are each equal to the number of time counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timbermare | silent | When this creature enters, tap all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Uktabi Drake | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -175,6 +174,7 @@
 | Shade of Trokair | handled | {W}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shivan Meteor | handled | Shivan Meteor deals 13 damage to target creature. Suspend 2—{1}{R}{R} (Rather than cast this card from your hand, you may pay {1}{R}{R} and exile it with two ti | the engine reads this text and performs it | Y/-/- | not_tested |
 | Simian Spirit Guide | handled |  |  | Y/-/- | not_tested |
+| Teneb, the Harvester | handled | Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torchling | handled | {R}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vitaspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vorosh, the Hunter | handled | Whenever Vorosh deals combat damage to a player, you may pay {2}{G}. If you do, put six +1/+1 counters on Vorosh. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -268,7 +268,6 @@
 | whenever enchanted creature deals damage, you gain that much life. | 1 | Vampiric Link | plc |
 | whenever intet deals combat damage to a player, you may pay {M}{M}. if you do, exile the top card of your library face down. you may look at that card for as lo | 1 | Intet, the Dreamer | plc |
 | whenever oros deals combat damage to a player, you may pay {M}{M}. if you do, oros deals N damage to each nonwhite creature. | 1 | Oros, the Avenger | plc |
-| whenever teneb deals combat damage to a player, you may pay {M}{M}. if you do, put target creature card from a graveyard onto the battlefield under your control | 1 | Teneb, the Harvester | plc |
 | whenever you play a card, draw a card. | 1 | Null Profusion | plc |
 | white creatures get +N/-N. | 1 | Sulfur Elemental | plc |
 | {M}, {M}: search your library for a rebel permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Blightspeaker | plc |

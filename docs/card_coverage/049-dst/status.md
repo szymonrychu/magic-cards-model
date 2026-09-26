@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 2.5% |
-| Works (untested) | 71 | 43.8% |
+| Works (untested) | 73 | 45.1% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 76 | 46.9% |
+| Not working | 74 | 45.7% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Hallow | silent | Prevent all damage target spell would deal this turn. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karstoderm | silent | Whenever an artifact enters, remove a +1/+1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich's Tomb | silent | Whenever you lose life, sacrifice a permanent for each 1 life you lost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Machinate | silent | Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the rest on the bottom of you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Flux | silent | Artifact creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memnarch | silent | {1}{U}{U}: Target permanent becomes an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephitic Ooze | silent | Whenever this creature deals combat damage to a creature, destroy that creature. The creature can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,7 +77,6 @@
 | Rebuking Ceremony | silent | Put two target artifacts on top of their owners' libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Retract | silent | Return all artifacts you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrounge | silent | Target opponent chooses an artifact card in their graveyard. Put that card onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spincrusher | silent | Remove a +1/+1 counter from this creature: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stand Together | silent | Put two +1/+1 counters on target creature and two +1/+1 counters on another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sundering Titan | silent | When this creature enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Surestrike Trident | silent | Equipped creature has first strike and "{T}, Unattach Surestrike Trident: This creature deals damage equal to its power to target player or planeswalker." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -141,6 +139,7 @@
 | Leonin Battlemage | handled | {T}: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Bola | handled | Equipped creature has "{T}, Unattach Leonin Bola: Tap target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Mystic | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Machinate | handled | Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the rest on the bottom of you | the engine reads this text and performs it | Y/-/- | not_tested |
 | Metal Fatigue | handled | Tap all artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirrodin's Core | handled | {T}: Put a charge counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Moonvessel | handled | When this creature dies, add {C}. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -167,6 +166,7 @@
 | Spawning Pit | handled | Sacrifice a creature: Put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Specter's Shroud | handled | Equipped creature gets +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spellbinder | handled | Imprint — When this Equipment enters, you may exile an instant card from your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Spincrusher | handled | Whenever this creature blocks, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spire Golem | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Steelshaper Apprentice | handled | {W}, {T}, Return this creature to its owner's hand: Search your library for an Equipment card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sword of Light and Shadow | handled | Equipped creature gets +2/+2 and has protection from white and from black. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -233,14 +233,12 @@
 | equipped creature has first strike and "..." | 1 | Surestrike Trident | dst |
 | fear | 1 | Dross Golem | dst |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Darksteel Colossus | dst |
-| look at the top N cards of your library, where N is the number of artifacts you control. put one of those cards into your hand and the rest on the bottom of you | 1 | Machinate | dst |
 | myr creatures get +N/+N. | 1 | Myr Matrix | dst |
 | prevent all damage target spell would deal ~. you gain life equal to the damage prevented ~. | 1 | Hallow | dst |
 | prevent the next N damage that would be dealt to target creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Test of Faith | dst |
 | put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
 | put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
 | remove a +N/+N counter from ~: put target artifact card from your graveyard on top of your library. | 1 | Arcbound Reclaimer | dst |
-| remove a +N/+N counter from ~: ~ can't be blocked ~. | 1 | Spincrusher | dst |
 | remove all counters from all permanents and exile all tokens. | 1 | Aether Snap | dst |
 | return all artifacts you control to their owner's hand. | 1 | Retract | dst |
 | return target nonland permanent and all other permanents with the same name as that permanent to their owners' hands. | 1 | Echoing Truth | dst |

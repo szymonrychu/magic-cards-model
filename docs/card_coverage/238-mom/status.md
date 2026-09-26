@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.2% |
+| Tested | 18 | 6.6% |
 | Works (untested) | 109 | 40.1% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 136 | 50.0% |
+| Not working | 135 | 49.6% |
 
 ## Cards needing work
 
@@ -120,10 +120,8 @@
 | Sunfall | silent | Exile all creatures. Incubate X, where X is the number of creatures exiled this way. (Create an Incubator token with X +1/+1 counters on it and "{2}: Transform  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Surge of Salvation | silent | You and permanents you control gain hexproof until end of turn. Prevent all damage that black and/or red sources would deal to creatures you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword of Once and Future | silent | Whenever equipped creature deals combat damage to a player, surveil 2. Then you may cast an instant or sorcery spell with mana value 2 or less from your graveya | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tandem Takedown | silent | Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tangled Skyline | silent | When this enchantment enters, you gain 5 life and incubate 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thalia and The Gitrog Monster | silent | Whenever Thalia and The Gitrog Monster attacks, sacrifice a creature or land, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tidal Terror | silent | Whenever this creature attacks, you may tap two other untapped creatures you control. If you do, this creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tiller of Flesh | silent | Whenever you cast a spell that targets one or more permanents, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Traumatic Revelation | silent | Target opponent reveals their hand. You may choose a creature or battle card from it. If you do, that player discards that card. If you don't, incubate 3. (Crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unseal the Necropolis | silent | Each player mills three cards. Then you return up to two creature cards from your graveyard to your hand. (To mill three cards, a player puts the top three card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -158,6 +156,7 @@
 | Seedpod Caretaker | notice | When this creature enters, choose one — • Put a +1/+1 counter on target artifact or creature you control. • Transform target Incubator token you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swordsworn Cavalier | notice | This creature has first strike as long as another Knight entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Tandem Takedown | notice | Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tenured Oilcaster | notice | This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Terror of Towashi | notice | Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | War Historian | notice | This creature has indestructible as long as it attacked a battle this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -259,7 +258,6 @@
 | Scrappy Bruiser | handled | Whenever this creature attacks, up to one target attacking creature gets +2/+0 and gains trample until end of turn. Return that creature to its owner's hand at  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrollshift | handled | Exile up to one target artifact, creature, or enchantment you control, then return it to the battlefield under its owner's control. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seal from Existence | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| See Double | handled | This spell can't be copied. Choose one. If an opponent has eight or more cards in their graveyard, you may choose both instead. • Copy target spell. You may cho | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seer of Stolen Sight | handled | Whenever one or more artifacts and/or creatures you control are put into a graveyard from the battlefield, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seraph of New Capenna // Seraph of New Phyrexia | handled | {4}{B/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shatter the Source | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose one  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -271,6 +269,7 @@
 | Tarkir Duneshaper // Burnished Dunestomper | handled | {4}{G/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thrashing Frontliner | handled | Whenever this creature attacks a battle, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thunderhead Squadron | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Tidal Terror | handled | Whenever this creature attacks, you may tap two other untapped creatures you control. If you do, this creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Timberland Ancient | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Trailblazing Historian | handled | {T}: Another target creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Transcendent Message | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Draw X card | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -285,7 +284,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -297,6 +296,7 @@
 - Ichor Shade
 - Kami of Whispered Hopes
 - Sandstalker Moloch
+- See Double
 - Seed of Hope
 - Temporal Cleansing
 - Tribute to the World Tree
@@ -398,7 +398,6 @@
 | whenever ~ attacks, sacrifice a creature or land, then draw a card. | 1 | Thalia and The Gitrog Monster | mom |
 | whenever ~ attacks, up to one other target creature has base power and toughness N/N until end of turn. | 1 | Gnottvold Hermit // Chrome Host Hulk | mom |
 | whenever ~ attacks, you may pay {M}{M}. when you do, return target creature card from your graveyard to the battlefield. it's a phyrexian in addition to its oth | 1 | Terror of Towashi | mom |
-| whenever ~ attacks, you may tap two other untapped creatures you control. if you do, ~ can't be blocked ~. | 1 | Tidal Terror | mom |
 | whenever ~ becomes blocked by a creature, the blocking creature gets -N/-N until end of turn. | 1 | Order of the Mirror // Order of the Alabaster Host | mom |
 | whenever ~ deals combat damage to a player or battle, choose any number — • each player creates a treasure token. • each player sacrifices a creature of their c | 1 | Rankle and Torbran | mom |
 | whenever ~ deals combat damage to a player or battle, look at that many cards from the top of your library. you may reveal a creature or land card from among th | 1 | Doomskar Warrior | mom |

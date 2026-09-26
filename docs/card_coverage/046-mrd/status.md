@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 7.4% |
-| Works (untested) | 150 | 55.8% |
+| Works (untested) | 151 | 56.1% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 89 | 33.1% |
+| Not working | 88 | 32.7% |
 
 ## Cards needing work
 
@@ -91,7 +91,6 @@
 | Vulshok Battlemaster | silent | When this creature enters, attach all Equipment on the battlefield to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vulshok Gauntlets | silent | Equipped creature gets +4/+2 and doesn't untap during its controller's untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wanderguard Sentry | silent | When this creature enters, look at target opponent's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| War Elemental | silent | When this creature enters, sacrifice it unless an opponent was dealt damage this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wizard Replica | silent | {U}, Sacrifice this creature: Counter target spell unless its controller pays {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woebearer | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Worldslayer | silent | Whenever equipped creature deals combat damage to a player, destroy all permanents other than this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -274,6 +273,7 @@
 | Vulshok Battlegear | handled | Equipped creature gets +3/+3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vulshok Berserker | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Wall of Blood | handled | Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| War Elemental | handled | When this creature enters, sacrifice it unless an opponent was dealt damage this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wurmskin Forger | handled | When this creature enters, distribute three +1/+1 counters among one, two, or three target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
@@ -358,7 +358,6 @@
 | when ~ enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. they can't be regenerated. | 1 | Reiver Demon | mrd |
 | when ~ enters, look at target opponent's hand. | 1 | Wanderguard Sentry | mrd |
 | when ~ enters, put target artifact on top of its owner's library. | 1 | Looming Hoverguard | mrd |
-| when ~ enters, sacrifice it unless an opponent was dealt damage ~. | 1 | War Elemental | mrd |
 | when ~ enters, you may pay {M}. if you do, search your library for an equipment card with mana value N or less, put that card onto the battlefield, then shuffle | 1 | Taj-Nar Swordsmith | mrd |
 | whenever a creature dealt damage by equipped creature ~ dies, return that card to the battlefield under your control. attach ~ to that creature. | 1 | Scythe of the Wretched | mrd |
 | whenever a permanent becomes untapped, that permanent's controller mills a card. | 1 | Mesmeric Orb | mrd |

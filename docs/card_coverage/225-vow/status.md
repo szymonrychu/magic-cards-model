@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.3% |
-| Works (untested) | 69 | 27.3% |
+| Tested | 17 | 6.7% |
+| Works (untested) | 71 | 28.1% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 158 | 62.5% |
+| Not working | 155 | 61.3% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Ballista Watcher // Ballista Wielder | silent | {2}{R}: This creature deals 1 damage to any target. A creature dealt damage this way can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belligerent Guest | silent | Whenever this creature deals combat damage to a player, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Binding Geist // Spectral Binding | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Biolume Egg // Biolume Serpent | silent | Sacrifice two Islands: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Fountain | silent | When this artifact enters, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Petal Celebrant | silent | When this creature dies, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Servitor | silent | When this creature enters, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,7 +64,6 @@
 | Dorothea, Vengeful Victim // Dorothea's Retribution | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Dread Fugue | silent | Cleave {2}{B} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Target player reveals their hand. You choose a nonl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreadfeast Demon | silent | At the beginning of your end step, sacrifice a non-Demon creature. If you do, create a token that's a copy of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dreadlight Monstrosity | silent | {3}{U}{U}: This creature can't be blocked this turn. Activate only if you own a card in exile. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drogskol Infantry // Drogskol Armaments | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Faithbound Judge // Sinner's Judgment | silent | As long as this creature has three or more judgment counters on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Falkenrath Celebrants | silent | When this creature enters, create two Blood tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -102,7 +100,6 @@
 | Lantern Flare | silent | Cleave {X}{R}{W} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Lantern Flare deals X damage to target creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lantern of the Lost | silent | {1}, {T}, Exile this artifact: Exile all cards from all graveyards, then draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lunar Rejection | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Markov Waltzer | silent | At the beginning of combat on your turn, up to two target creatures you control each get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindleech Ghoul | silent | When this creature exploits a creature, each opponent exiles a card from their hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Mirrorhall Mimic // Ghastly Mimicry | silent | At the beginning of your upkeep, create a token that's a copy of enchanted creature, except it's a Spirit in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mischievous Catgeist // Catlike Curiosity | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -131,7 +128,6 @@
 | Rural Recruit | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sanguine Statuette | silent | When this artifact enters, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Savior of Ollenbock | silent | Whenever this creature trains, exile up to one other target creature from the battlefield or creature card from a graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Scattered Thoughts | silent | Look at the top four cards of your library. Put two of those cards into your hand and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigarda's Imprisonment | silent | {4}{W}: Exile enchanted creature. Create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigarda's Summons | silent | Creatures you control with +1/+1 counters on them have base power and toughness 4/4, have flying, and are Angels in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigardian Paladin | silent | As long as you've put one or more +1/+1 counters on a creature this turn, this creature has trample and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -163,6 +159,7 @@
 | Aim for the Head | notice | Choose one — • Exile target Zombie. • Target opponent exiles two cards from their hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ancestral Anger | notice | Target creature gains trample and gets +X/+0 until end of turn, where X is 1 plus the number of cards named Ancestral Anger in your graveyard. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Arm the Cathars | notice | Until end of turn, target creature gets +3/+3, up to one other target creature gets +2/+2, and up to one other target creature gets +1/+1. Those creatures gain  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Biolume Egg // Biolume Serpent | notice | When you sacrifice this creature, return it to the battlefield transformed under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bloody Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Blood token. (It's an artifact with "{1}, {T} | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Catapult Fodder // Catapult Captain | notice | {2}{B}, {T}, Sacrifice another creature: Target opponent loses life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cemetery Desecrator | notice | When this creature enters or dies, exile another card from a graveyard. When you do, choose one — • Remove X counters from target permanent, where X is the mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -231,6 +228,7 @@
 | Lambholt Raconteur // Lambholt Ravager | handled | Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Wolf | handled | {1}{R}: This creature gains first strike until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Markov Purifier | handled | At the beginning of your end step, if you gained life this turn, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Markov Waltzer | handled | At the beginning of combat on your turn, up to two target creatures you control each get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Massive Might | handled | Target creature gets +2/+2 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nebelgast Beguiler | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nurturing Presence | handled | Enchanted creature has "Whenever a creature you control enters, this creature gets +1/+1 until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -240,6 +238,7 @@
 | Pyre Spawn | handled | When this creature dies, it deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resistance Squad | handled | When this creature enters, if you control another Human, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanctify | handled | Destroy target artifact or enchantment. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Scattered Thoughts | handled | Look at the top four cards of your library. Put two of those cards into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selhoff Entomber | handled | {T}, Discard a creature card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shattered Sanctum | handled | This land enters tapped unless you control two or more other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sheltering Boughs | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -267,7 +266,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Ancient Lumberknot
 - Bleed Dry
@@ -276,6 +275,7 @@
 - Crawling Infestation
 - Creepy Puppeteer
 - Cultivator Colossus
+- Dreadlight Monstrosity
 - Edgar's Awakening
 - End the Festivities
 - Infestation Expert // Infested Werewolf
@@ -313,7 +313,6 @@
 | at the beginning of combat on your turn, put N +N/+N counters on another target creature you control, where N is halana and alena's power. that creature gains h | 1 | Halana and Alena, Partners | vow |
 | at the beginning of combat on your turn, put a +N/+N counter on target creature you control. then if that creature has toughness N or greater, transform ~. | 1 | Dormant Grove // Gnarled Grovestrider | vow |
 | at the beginning of combat on your turn, target wolf or werewolf you control gets +N/+N until end of turn. | 1 | Howling Moon | vow |
-| at the beginning of combat on your turn, up to two target creatures you control each get +N/+N until end of turn. | 1 | Markov Waltzer | vow |
 | at the beginning of each end step, put a slime counter on each creature you don't control. | 1 | Toxrill, the Corrosive | vow |
 | at the beginning of your end step, if there are three or more omen counters on ~, untap it, then transform it. | 1 | Foreboding Statue // Forsaken Thresher | vow |
 | at the beginning of your end step, if you gained life ~, create a blood token. | 1 | Restless Bloodseeker // Bloodsoaked Reveler | vow |
@@ -349,10 +348,8 @@
 | if you would draw a card, exile the top two cards of your library instead. you may play those cards ~. | 1 | Eruth, Tormented Prophet | vow |
 | it becomes night. discard any number of cards, then draw that many cards plus one. | 1 | Into the Night | vow |
 | katilda's power and toughness are each equal to the number of permanents you control that are spirits and/or enchantments. | 1 | Katilda, Dawnhart Martyr // Katilda's Rising Dawn | vow |
-| look at the top four cards of your library. put two of those cards into your hand and the rest into your graveyard. | 1 | Scattered Thoughts | vow |
 | other permanents you control have hexproof. | 1 | Avabruck Caretaker // Hollowhenge Huntmaster | vow |
 | return up to one target creature card and up to one target noncreature permanent card from your graveyard to your hand. exile ~. | 1 | Retrieve | vow |
-| sacrifice two islands: ~ can't be blocked ~. | 1 | Biolume Egg // Biolume Serpent | vow |
 | sacrifice ~: target creature you control with a +N/+N counter on it gains lifelink and indestructible until end of turn. | 1 | Ollenbock Escort | vow |
 | tap two untapped creatures you control: ~ becomes an artifact creature until end of turn. | 1 | Honeymoon Hearse | vow |
 | target creature gains trample and gets +N/+N until end of turn, where N is N plus the number of cards named ~ in your graveyard. draw a card. | 1 | Ancestral Anger | vow |
@@ -364,6 +361,7 @@
 | when enchanted creature dies, return ~ to the battlefield transformed under your control attached to target opponent. | 1 | Radiant Grace // Radiant Restraints | vow |
 | when odric enters, create N blood tokens, where N is the number of abilities from among flying, first strike, double strike, deathtouch, haste, hexproof, indest | 1 | Odric, Blood-Cursed | vow |
 | when runo enters, put up to one target creature card from your graveyard on top of your library. | 1 | Runo Stromkirk // Krothuss, Lord of the Deep | vow |
+| when you sacrifice ~, return it to the battlefield transformed under its owner's control at the beginning of the next end step. | 1 | Biolume Egg // Biolume Serpent | vow |
 | when ~ dies, create a blood token. | 1 | Blood Petal Celebrant | vow |
 | when ~ dies, you gain life equal to its power. | 1 | Packsong Pup | vow |
 | when ~ dies, you may exile it. when you do, return target creature card from your graveyard to your hand. | 1 | Undead Butler | vow |
@@ -420,7 +418,6 @@
 | {M}{M}: exile enchanted creature. create a blood token. | 1 | Sigarda's Imprisonment | vow |
 | {M}{M}: ~ deals N damage to any target. a creature dealt damage ~ can't block ~. | 1 | Ballista Watcher // Ballista Wielder | vow |
 | {M}{M}{M}: each creature you control with flying, deathtouch, and/or lifelink gets +N/+N until end of turn. | 1 | Henrika Domnathi // Henrika, Infernal Seer | vow |
-| {M}{M}{M}: ~ can't be blocked ~. activate only if you own a card in exile. | 1 | Dreadlight Monstrosity | vow |
 | ~ can block only creatures with flying. | 1 | Wanderlight Spirit | vow |
 | ~ can't attack alone. | 1 | Militia Rallier | vow |
 | ~ costs {M} less to cast if you control a spirit. it also costs {M} less to cast if you control an enchantment. counter target spell unless its controller pays  | 1 | Geistlight Snare | vow |

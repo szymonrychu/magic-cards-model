@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 8.4% |
-| Works (untested) | 119 | 55.3% |
+| Works (untested) | 121 | 56.3% |
 | Partial (unaudited) | 9 | 4.2% |
-| Not working | 69 | 32.1% |
+| Not working | 67 | 31.2% |
 
 ## Cards needing work
 
@@ -92,9 +92,7 @@
 | Argent Sphinx | notice | Metalcraft — {U}: Exile this creature. Return it to the battlefield under your control at the beginning of the next end step. Activate only if you control three | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flesh Allergy | notice | As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. Its controller loses life equal to the number of creatures that died th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quicksilver Gargantuan | notice | You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Razor Hippogriff | notice | When this creature enters, return target artifact card from your graveyard to your hand. You gain life equal to that card's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Turn to Slag | notice | Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Untamed Might | notice | Target creature gets +X/+X until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Echo Circlet | unaudited | Equipped creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Etched Champion | unaudited | Metalcraft — This creature has protection from each color as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Indomitable Archangel | unaudited | Metalcraft — Artifacts you control have shroud as long as you control three or more artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -183,6 +181,7 @@
 | Plated Seastrider | handled |  |  | Y/-/- | not_tested |
 | Putrefax | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ratchet Bomb | handled | {T}: Put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Razor Hippogriff | handled | When this creature enters, return target artifact card from your graveyard to your hand. You gain life equal to that card's mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razorfield Thresher | handled |  |  | Y/-/- | not_tested |
 | Razorverge Thicket | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Revoke Existence | handled | Exile target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -213,6 +212,7 @@
 | Trigon of Rage | handled | This artifact enters with three charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trigon of Thought | handled | This artifact enters with three charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tumble Magnet | handled | This artifact enters with three charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Untamed Might | handled | Target creature gets +X/+X until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vault Skyward | handled | Target creature gains flying until end of turn. Untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vector Asp | handled | {B}: This creature gains infect until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Certarch | handled | Metalcraft — {T}: Tap target artifact, creature, or land. Activate only if you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -278,13 +278,11 @@
 | prevent all damage one or two target creatures would deal ~. | 1 | Soul Parry | som |
 | reveal the top N cards of your library. you may put any number of permanent cards with mana value N or less from among them onto the battlefield. then put all c | 1 | Genesis Wave | som |
 | spells you cast that share a card type with the exiled card cost {M} less to cast. | 1 | Semblance Anvil | som |
-| target creature gets +N/+N until end of turn. | 1 | Untamed Might | som |
 | target opponent reveals the top card of their library. ~ deals damage equal to the revealed card"..."s hand. | 1 | Cerebral Eruption | som |
 | target player discards a card. if a land card is discarded ~, return ~ to its owner's hand. | 1 | Psychic Miasma | som |
 | target player sacrifices an attacking creature of their choice. metalcraft — that player sacrifices two attacking creatures of their choice instead if you contr | 1 | Dispense Justice | som |
 | the controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. that player puts that card | 1 | Shape Anew | som |
 | when ~ enters, destroy all tapped creatures. | 1 | Sunblast Angel | som |
-| when ~ enters, return target artifact card from your graveyard to your hand. you gain life equal to that card's mana value. | 1 | Razor Hippogriff | som |
 | when ~ enters, sacrifice it unless you return an artifact you control to its owner's hand. | 1 | Glint Hawk | som |
 | when ~ enters, you gain N life for each locus on the battlefield. | 1 | Glimmerpost | som |
 | whenever a creature you control dies, you may pay {M}. if you do, you gain N life. | 1 | Vigil for the Lost | som |

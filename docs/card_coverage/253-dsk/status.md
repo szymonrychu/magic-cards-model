@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.1% |
-| Works (untested) | 95 | 35.8% |
+| Works (untested) | 97 | 36.6% |
 | Partial (unaudited) | 18 | 6.8% |
-| Not working | 128 | 48.3% |
+| Not working | 126 | 47.5% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Growing Dread | silent | Whenever you turn a permanent face up, put a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Hauntwoods Shrieker | silent | {1}{G}: Reveal target face-down permanent. If it's a creature card, you may turn it face up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hedge Shredder | silent | Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Impossible Inferno | silent | Impossible Inferno deals 6 damage to target creature. Delirium — If there are four or more card types among cards in your graveyard, exile the top card of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Phantom | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, this creature gets +2/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Keys to the House | silent | {3}, {T}, Sacrifice this artifact: Lock or unlock a door of target Room you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Killer's Mask | silent | When this Equipment enters, manifest dread, then attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -134,7 +133,6 @@
 | Come Back Wrong | notice | Destroy target creature. If a creature card is put into a graveyard this way, return it to the battlefield under your control. Sacrifice it at the beginning of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dollmaker's Shop // Porcelain Gallery | notice | Creatures you control have base power and toughness each equal to the number of creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Don't Make a Sound | notice | Counter target spell unless its controller pays {2}. If they do, surveil 2. (Look at the top two cards of your library, then put any number of them into your gr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Enduring Vitality | notice | Creatures you control have "{T}: Add one mana of any color." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fear of Immobility | notice | When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Get Out | notice | Choose one — • Counter target creature or enchantment spell. • Return one or two target creatures and/or enchantments you own to your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Haunted Screen | notice | {7}: Put seven +1/+1 counters on this artifact. It becomes a 0/0 Spirit creature in addition to its other types. Activate only once. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -196,6 +194,7 @@
 | Diversion Specialist | handled | {1}, Sacrifice another creature or enchantment: Exile the top card of your library. You may play it this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Emerge from the Cocoon | handled | Return target creature card from your graveyard to the battlefield. You gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enduring Courage | handled | Whenever another creature you control enters, it gets +2/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Enduring Vitality | handled | Creatures you control have "{T}: Add one mana of any color." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enter the Enigma | handled | Target creature can't be blocked this turn. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Etched Cornfield | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Exorcise | handled | Exile target artifact, enchantment, or creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -217,6 +216,7 @@
 | Horrid Vigor | handled | Target creature gains deathtouch and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | House Cartographer | handled | Survival — At the beginning of your second main phase, if this creature is tapped, reveal cards from the top of your library until you reveal a land card. Put t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hushwood Verge | handled |  |  | Y/Y/Y | not_tested |
+| Impossible Inferno | handled | Impossible Inferno deals 6 damage to target creature. Delirium — If there are four or more card types among cards in your graveyard, exile the top card of your  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Innocuous Rat | handled | When this creature dies, manifest dread. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Insidious Fungus | handled | {2}, Sacrifice this creature: Choose one — • Destroy target artifact. • Destroy target enchantment. • Draw a card. Then you may put a land card from your hand o | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intruding Soulrager | handled | {T}, Sacrifice a Room: This creature deals 2 damage to each opponent. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -325,7 +325,6 @@
 | create three N/N red gremlin creature tokens. gremlins you control gain menace, lifelink, and haste until end of turn. (a creature with menace can't be blocked  | 1 | Midnight Mayhem | dsk |
 | creature spells you cast have convoke. | 1 | Dazzling Theater // Prop Room | dsk |
 | creatures you control are the chosen type in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Leyline of Transformation | dsk |
-| creatures you control have "..." | 1 | Enduring Vitality | dsk |
 | creatures you control have base power and toughness each equal to the number of creatures you control. | 1 | Dollmaker's Shop // Porcelain Gallery | dsk |
 | creatures your opponents control can be the targets of spells and abilities as though they didn"..."t trigger. | 1 | Nowhere to Run | dsk |
 | destroy target creature. if a creature card is put into a graveyard ~, return it to the battlefield under your control. sacrifice it at the beginning of your ne | 1 | Come Back Wrong | dsk |
@@ -413,7 +412,6 @@
 | {M}{M}{M}, {M}, sacrifice ~: create a number of N/N black and green insect creature tokens with flying equal to the number of card types among cards in your gra | 1 | Broodspinner | dsk |
 | {M}{M}{M}: shuffle enchanted creature into its owner's library, then manifest dread. activate only as a sorcery. | 1 | Stay Hidden, Stay Silent | dsk |
 | ~ can't be blocked by glimmers. | 1 | Cynical Loner | dsk |
-| ~ deals N damage to target creature. delirium — if there are four or more card types among cards in your graveyard, exile the top card of your library. you may  | 1 | Impossible Inferno | dsk |
 | ~ enters with two -N/-N counters on it if you cast it from your hand. | 1 | Patched Plaything | dsk |
 | ~ gets +N/+N as long as there are two or more unlocked doors among rooms you control. | 1 | Rampaging Soulrager | dsk |
 | ~ has first strike during your turn. | 1 | Razorkin Needlehead | dsk |

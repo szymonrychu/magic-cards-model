@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 5.3% |
-| Works (untested) | 136 | 60.2% |
-| Partial (unaudited) | 10 | 4.4% |
-| Not working | 68 | 30.1% |
+| Tested | 14 | 6.2% |
+| Works (untested) | 139 | 61.5% |
+| Partial (unaudited) | 6 | 2.7% |
+| Not working | 67 | 29.6% |
 
 ## Cards needing work
 
@@ -58,7 +58,6 @@
 | Mortuary Mire | silent | When this land enters, you may put target creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ondu Rising | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Painful Truths | silent | Converge — You draw X cards and lose X life, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Part the Waterveil | silent | Take an extra turn after this one. Exile Part the Waterveil. Awaken 6—{6}{U}{U}{U} (If you cast this spell for {6}{U}{U}{U}, also put six +1/+1 counters on targ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Planar Outburst | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Quarantine Field | silent | When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -96,14 +95,10 @@
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Breaker of Armies | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kor Castigator | unaudited | This creature can't be blocked by Eldrazi Scions. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Prism Array | unaudited | Converge — This enchantment enters with a crystal counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Reckless Cohort | unaudited | This creature attacks each combat if able unless you control another Ally. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Skyrider Elf | unaudited | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tajuru Stalwart | unaudited | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ulamog's Despoiler | unaudited | As this creature enters, you may put two cards your opponents own from exile into their owners' graveyards. If you do, this creature enters with four +1/+1 coun | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Undergrowth Champion | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Void Winnower | unaudited | Your opponents can't cast spells with even mana values. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Woodland Wanderer | unaudited | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adverse Conditions | handled | Devoid (This card has no color.) Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Create a 1/1 colorless E | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Firebird | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ally Encampment | handled | {1}, {T}, Sacrifice this land: Return target Ally you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -193,6 +188,7 @@
 | Pathway Arrows | handled | Equipped creature has "{2}, {T}: This creature deals 1 damage to target creature. If a colorless creature is dealt damage this way, tap it." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plated Crusher | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
 | Prairie Stream | handled | This land enters tapped unless you control two or more basic lands. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Prism Array | handled | Converge — This enchantment enters with a crystal counter on it for each color of mana spent to cast it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Processor Assault | handled | Devoid (This card has no color.) As an additional cost to cast this spell, put a card an opponent owns from exile into that player's graveyard. Processor Assaul | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reclaiming Vines | handled | Destroy target artifact, enchantment, or land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resolute Blademaster | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control gain double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,6 +219,7 @@
 | Swarm Surge | handled | Devoid (This card has no color.) Creatures you control get +2/+0 until end of turn. Colorless creatures you control also gain first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swell of Growth | handled | Target creature gets +2/+2 until end of turn. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajuru Beastmaster | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tajuru Stalwart | handled | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajuru Warcaller | handled | Rally — Whenever this creature or another Ally you control enters, creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tandem Tactics | handled | Up to two target creatures each get +1/+2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Touch of the Void | handled | Devoid (This card has no color.) Touch of the Void deals 3 damage to any target. If a creature dealt damage this way would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -239,12 +236,13 @@
 | Voracious Null | handled | {1}{B}, Sacrifice another creature: Put two +1/+1 counters on this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wave-Wing Elemental | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Windrider Patrol | handled | Whenever this creature deals combat damage to a player, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Woodland Wanderer | handled | Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zulaport Cutthroat | handled | Whenever this creature or another creature you control dies, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>14 cards</summary>
 
 - Blisterpod
 - Canopy Vista
@@ -252,8 +250,10 @@
 - Endless One
 - Kiora, Master of the Depths
 - Murk Strider
+- Painful Truths
 - Sanctum of Ugin
 - Shrine of the Forsaken Gods
+- Skyrider Elf
 - Sunken Hollow
 - Ulamog, the Ceaseless Hunger
 - Vampiric Rites
@@ -265,8 +265,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Converge | 12 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Painful Truths | bfz |
 | awaken | 11 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
+| Converge | 7 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Radiant Flames | bfz |
 | ingest | 6 | Benthic Infiltrator, Culling Drone, Mist Intruder, Salvage Drone, Sludge Crawler | bfz |
 | Landfall | 5 | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra | bfz |
 | other colorless creatures you control get +N/+N. | 2 | Ruination Guide, Tide Drifter | bfz |

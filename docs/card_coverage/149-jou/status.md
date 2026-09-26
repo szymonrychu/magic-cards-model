@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 4.3% |
-| Works (untested) | 88 | 54.7% |
+| Tested | 9 | 5.6% |
+| Works (untested) | 89 | 55.3% |
 | Partial (unaudited) | 7 | 4.3% |
-| Not working | 59 | 36.6% |
+| Not working | 56 | 34.8% |
 
 ## Cards needing work
 
@@ -68,9 +68,7 @@
 | Sage of Hours | silent | Remove all +1/+1 counters from this creature: For each five counters removed this way, take an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge of Fleets | silent | When this creature enters, return each creature your opponents control with toughness X or less to its owner's hand, where X is the number of Islands you contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sightless Brawler | silent | Enchanted creature gets +3/+2 and can't attack alone. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Solidarity of Heroes | silent | Strive — This spell costs {1}{G} more to cast for each target beyond the first. Choose any number of target creatures. Double the number of +1/+1 counters on ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirespine | silent | Enchanted creature gets +4/+1 and blocks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Spite of Mogis | silent | Spite of Mogis deals damage to target creature equal to the number of instant and sorcery cards in your graveyard. Scry 1. (Look at the top card of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonewise Fortifier | silent | {4}{W}: Prevent all damage that would be dealt to this creature by target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormchaser Chimera | silent | {2}{U}{R}: Scry 1, then reveal the top card of your library. This creature gets +X/+0 until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Swarmborn Giant | silent | When you're dealt combat damage, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -80,7 +78,6 @@
 | Flamespeaker's Will | notice | Whenever enchanted creature deals combat damage to a player, you may sacrifice this Aura. If you do, destroy target artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mortal Obstinacy | notice | Whenever enchanted creature deals combat damage to a player, you may sacrifice this Aura. If you do, destroy target enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nightmarish End | notice | Target creature gets -X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Setessan Tactics | notice | Strive — This spell costs {G} more to cast for each target beyond the first. Until end of turn, any number of target creatures each get +1/+1 and gain "{T}: Thi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Silence the Believers | notice | Strive — This spell costs {2}{B} more to cast for each target beyond the first. Exile any number of target creatures and all Auras attached to them. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Starfall | notice | Starfall deals 3 damage to target creature. If that creature is an enchantment, Starfall deals 3 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tormented Thoughts | notice | As an additional cost to cast this spell, sacrifice a creature. Target player discards a number of cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -164,6 +161,7 @@
 | Skybind | handled | Constellation — Whenever this enchantment or another enchantment you control enters, exile target nonenchantment permanent. Return that card to the battlefield  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyspear Cavalry | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Spawn of Thraxes | handled | When this creature enters, it deals damage to any target equal to the number of Mountains you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Spite of Mogis | handled | Spite of Mogis deals damage to target creature equal to the number of instant and sorcery cards in your graveyard. Scry 1. (Look at the top card of your library | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spiteful Blow | handled | Destroy target creature and target land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Squelching Leeches | handled | Squelching Leeches's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strength from the Fallen | handled | Constellation — Whenever this enchantment or another enchantment you control enters, target creature gets +X/+X until end of turn, where X is the number of crea | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -184,7 +182,7 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>9 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
@@ -193,6 +191,8 @@
 - Launch the Fleet
 - Mana Confluence
 - Master of the Feast
+- Setessan Tactics
+- Solidarity of Heroes
 
 </details>
 
@@ -200,7 +200,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Strive | 10 | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply | jou |
+| Strive | 8 | Blinding Flare, Colossal Heroics, Harness by Force, Hour of Need, Nature's Panoply | jou |
 | Constellation | 3 | Dreadbringer Lampads, Goldenhide Ox, Harvestguard Alseids | jou |
 | Inspired | 3 | Daring Thief, Disciple of Deceit, King Macar, the Gold-Cursed | jou |
 | Heroic | 1 | Akroan Line Breaker | jou |
@@ -252,7 +252,6 @@
 | {M}{M}{M}: scry N, then reveal the top card of your library. ~ gets +N/+N until end of turn, where N is that card's mana value. | 1 | Stormchaser Chimera | jou |
 | ~ can't attack unless defending player controls an enchantment or an enchanted permanent. | 1 | Godhunter Octopus | jou |
 | ~ deals N damage to target creature. if that creature is an enchantment, ~ deals N damage to that creature's controller. | 1 | Starfall | jou |
-| ~ deals damage to target creature equal to the number of instant and sorcery cards in your graveyard. scry N. (look at the top card of your library. you may put | 1 | Spite of Mogis | jou |
 
 ## Notes
 

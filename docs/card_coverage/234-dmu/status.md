@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.6% |
-| Works (untested) | 105 | 43.0% |
+| Tested | 18 | 7.4% |
+| Works (untested) | 107 | 43.9% |
 | Partial (unaudited) | 19 | 7.8% |
-| Not working | 104 | 42.6% |
+| Not working | 100 | 41.0% |
 
 ## Cards needing work
 
@@ -42,17 +42,14 @@
 | Coalition Warbrute | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Combat Research | silent | As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coral Colony | silent | {1}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cosmic Epiphany | silent | Draw cards equal to the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ertai's Scorn | silent | This spell costs {U} less to cast if an opponent cast two or more spells this turn. Counter target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evolved Sleeper | silent | {B}: This creature becomes a Human Cleric with base power and toughness 2/2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Extinguish the Light | silent | Destroy target creature or planeswalker. If its mana value was 3 or less, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garna, Bloodfist of Keld | silent | Whenever another creature you control dies, draw a card if it was attacking. Otherwise, Garna deals 1 damage to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guardian of New Benalia | silent | Whenever this creature enlists a creature, scry 2. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Herd Migration | silent | Domain — Create a 3/3 green Beast creature token for each basic land type among lands you control. {1}{G}, Discard this card: Search your library for a basic la | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero's Heirloom | silent | As long as equipped creature is legendary, it has trample and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hexbane Tortoise | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Inscribed Tablet | silent | {1}, {T}, Sacrifice this artifact: Reveal the top five cards of your library. Put a land card from among them into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,7 +61,7 @@
 | King Darien XLVIII | silent | {3}{G}{W}: Put a +1/+1 counter on King Darien and create a 1/1 white Soldier creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Linebreaker Baloth | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Llanowar Loamspeaker | silent | {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Love Song of Night and Day | silent | I — You and target opponent each draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Love Song of Night and Day | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Meria's Outrider | silent | Domain — When this creature enters, it deals damage to each opponent equal to the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Micromancer | silent | When this creature enters, you may search your library for an instant or sorcery card with mana value 1, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Monstrous War-Leech | silent | Monstrous War-Leech's power and toughness are each equal to the greatest mana value among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,7 +72,6 @@
 | Protect the Negotiators | silent | Kicker {W} (You may pay an additional {W} as you cast this spell.) If this spell was kicked, create a 1/1 white Soldier creature token. Counter target spell unl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quirion Beastcaller | silent | When this creature dies, distribute X +1/+1 counters among any number of target creatures you control, where X is the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Radha's Firebrand | silent | Whenever this creature attacks, target creature defending player controls with power less than this creature's power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Raff, Weatherlight Stalwart | silent | Whenever you cast an instant or sorcery spell, you may tap two untapped creatures you control. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ratadrabik of Urborg | silent | Whenever another legendary creature you control dies, create a token that's a copy of that creature, except it's not legendary and it's a 2/2 black Zombie in ad | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rulik Mons, Warren Chief | silent | Whenever Rulik Mons attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. If you didn't put a card ont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rundvelt Hordemaster | silent | Whenever this creature or another Goblin you control dies, exile the top card of your library. If it's a Goblin creature card, you may cast that card until the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -174,6 +170,7 @@
 | Electrostatic Infantry | handled | Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elfhame Wurm | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Elvish Hydromancer | handled | When this creature enters, if it was kicked, create a token that's a copy of target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ertai's Scorn | handled | This spell costs {U} less to cast if an opponent cast two or more spells this turn. Counter target spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fires of Victory | handled | Kicker {2}{U} (You may pay an additional {2}{U} as you cast this spell.) If this spell was kicked, draw a card. Fires of Victory deals damage to target creature | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Floriferous Vinewall | handled | When this creature enters, look at the top six cards of your library. You may reveal a land card from among them and put it into your hand. Put the rest on the  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flowstone Infusion | handled | Target creature gets +2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,6 +182,7 @@
 | Gibbering Barricade | handled | {2}{B}, Sacrifice a creature: You gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Picker | handled | {R}, {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunted Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Herd Migration | handled | Domain — Create a 3/3 green Beast creature token for each basic land type among lands you control. {1}{G}, Discard this card: Search your library for a basic la | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heroic Charge | handled | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Creatures you control get +2/+1 until end of turn. If this spell was kicked, those crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hurler Cyclops | handled | {1}, Sacrifice another creature: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hurloon Battle Hymn | handled | Kicker {W} (You may pay an additional {W} as you cast this spell.) Hurloon Battle Hymn deals 4 damage to target creature or planeswalker. If this spell was kick | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,12 +256,13 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Ajani, Sleeper Agent
 - Archangel of Wrath
 - Baird, Argivian Recruiter
 - Colossal Growth
+- Cosmic Epiphany
 - Cult Conscript
 - Ivy, Gleeful Spellthief
 - Lagomos, Hand of Hatred
@@ -271,6 +270,7 @@
 - Nemata, Primeval Warden
 - Nishoba Brawler
 - Prayer of Binding
+- Raff, Weatherlight Stalwart
 - Rith, Liberated Primeval
 - Rivaz of the Claw
 - Sheoldred, the Apocalypse
@@ -283,9 +283,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Domain | 15 | Artillery Blast, Bortuk Bonerattle, Briar Hydra, Drag to the Bottom, Herd Migration | dmu |
+| Domain | 14 | Artillery Blast, Bortuk Bonerattle, Briar Hydra, Drag to the Bottom, Llanowar Greenwidow | dmu |
 | enlist | 9 | Argivian Cavalier, Balduvian Berserker, Barkweave Crusher, Benalish Faithbonder, Coalition Skyknight | dmu |
-| read ahead | 3 | The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
+| read ahead | 4 | Love Song of Night and Day, The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Shalai's Acolyte, Viashino Branchrider | dmu |
 | Choose one | 1 | Twinferno | dmu |
 | as an additional cost to cast black permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of bl | 1 | Defiler of Flesh | dmu |
@@ -307,7 +307,6 @@
 | destroy all creatures. for each creature destroyed ~, its controller creates a N/N black phyrexian creature token. | 1 | The Phasing of Zhalfir | dmu |
 | destroy target creature or planeswalker. if its mana value was N or less, you gain N life. | 1 | Extinguish the Light | dmu |
 | destroy target creature with total power and toughness N or less. | 1 | Cut Down | dmu |
-| draw cards equal to the number of instant and sorcery cards in your graveyard. | 1 | Cosmic Epiphany | dmu |
 | enchantment creatures you control have deathtouch, lifelink, and hexproof. | 1 | Zur, Eternal Schemer | dmu |
 | equipment you control have equip {M}. | 1 | Astor, Bearer of Blades | dmu |
 | exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. for each  | 1 | Chaotic Transformation | dmu |
@@ -351,7 +350,6 @@
 | whenever you attack with three or more creatures, you may pay {M}{M}. if you do, return ~ from your graveyard to the battlefield tapped and attacking with a +N/ | 1 | Phoenix Chick | dmu |
 | whenever you cast a spell that targets only a single artifact or creature you control, create a token that"..."s not legendary. | 1 | Vesuvan Duplimancy | dmu |
 | whenever you cast an instant or sorcery spell, choose one — • ~ gets +N/+N until end of turn. • exile ~. return it to the battlefield under its owner's control  | 1 | Djinn of the Fountain | dmu |
-| whenever you cast an instant or sorcery spell, you may tap two untapped creatures you control. if you do, draw a card. | 1 | Raff, Weatherlight Stalwart | dmu |
 | whenever ~ attacks, exile each creature that crewed it ~. return them to the battlefield tapped under their owner's control at the beginning of the next end ste | 1 | Golden Argosy | dmu |
 | whenever ~ attacks, look at the top N cards of your library, where N is ~ power. you may exile an instant or sorcery card with mana value N or less from among t | 1 | Keldon Flamesage | dmu |
 | whenever ~ attacks, target creature defending player controls with power less than ~ power can't block ~. | 1 | Radha's Firebrand | dmu |
@@ -359,7 +357,6 @@
 | whenever ~ enlists a creature, scry N. | 1 | Guardian of New Benalia | dmu |
 | whenever ~ enters or attacks, you may put a land card from a graveyard onto the battlefield tapped under your control. | 1 | Soul of Windgrace | dmu |
 | whenever ~ or another goblin you control dies, exile the top card of your library. if it's a goblin creature card, you may cast that card until the end of your  | 1 | Rundvelt Hordemaster | dmu |
-| you and target opponent each draw two cards. | 1 | Love Song of Night and Day | dmu |
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
 | you may cast ~ as though it had flash if N is N or less. draw N cards. | 1 | Silver Scrutiny | dmu |
 | you may cast ~ from your graveyard by discarding two cards in addition to paying its other costs. | 1 | Rona, Sheoldred's Faithful | dmu |
@@ -375,7 +372,6 @@
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Coral Colony | dmu |
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
 | ~ can"..."ve cast an instant or sorcery spell ~. | 1 | Haunting Figment | dmu |
-| ~ costs {M} less to cast if an opponent cast two or more spells ~. counter target spell. | 1 | Ertai's Scorn | dmu |
 | ~ is the chosen type in addition to its other types. | 1 | Thran Portal | dmu |
 | ~'s power and toughness are each equal to the greatest mana value among cards in your graveyard. | 1 | Monstrous War-Leech | dmu |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Haughty Djinn | dmu |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 5.4% |
-| Works (untested) | 157 | 60.2% |
+| Tested | 16 | 6.1% |
+| Works (untested) | 158 | 60.5% |
 | Partial (unaudited) | 11 | 4.2% |
-| Not working | 79 | 30.3% |
+| Not working | 76 | 29.1% |
 
 ## Cards needing work
 
@@ -47,7 +47,6 @@
 | From Under the Floorboards | silent | Madness {X}{B}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Create three tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Furtive Homunculus | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Geier Reach Bandit // Vildin-Pack Alpha | silent | Whenever a Werewolf you control enters, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Geistblast | silent | Geistblast deals 2 damage to any target. {2}{U}, Exile this card from your graveyard: Copy target instant or sorcery spell you control. You may choose new targe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gone Missing | silent | Put target permanent on top of its owner's library. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hanweir Militia Captain // Westvale Cult Leader | silent | Westvale Cult Leader's power and toughness are each equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness the Storm | silent | Whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,7 +74,6 @@
 | Pick the Brain | silent | Target opponent reveals their hand. You choose a nonland card from it and exile that card. Delirium — If there are four or more card types among cards in your g | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pieces of the Puzzle | silent | Reveal the top five cards of your library. Put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rancid Rats | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Rise from the Tides | silent | Create a tapped 2/2 black Zombie creature token for each instant and sorcery card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage of Ancient Lore // Werewolf of Ancient Hunger | silent | Sage of Ancient Lore's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge Wolf | silent | Delirium — This creature has double strike as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasons Past | silent | Return any number of cards with different mana values from your graveyard to your hand. Put Seasons Past on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -83,7 +81,7 @@
 | Sin Prodder | silent | At the beginning of your upkeep, reveal the top card of your library. Any opponent may have you put that card into your graveyard. If a player does, this creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skin Invasion // Skin Shedder | silent | When enchanted creature dies, return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Grim Nemesis | silent | +1: Reveal the top card of your library and put that card into your hand. Each opponent loses life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Startled Awake // Persistent Nightmare | silent | Target opponent mills thirteen cards. {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Startled Awake // Persistent Nightmare | silent | {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stensia Masquerade | silent | Attacking creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thing in the Ice // Awoken Horror | silent | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,7 +95,6 @@
 | Avacyn's Judgment | notice | Madness {X}{R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Avacyn's Judgment dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Behind the Scenes | notice | Creatures you control have skulk. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Burn from Within | notice | Burn from Within deals X damage to any target. If a creature is dealt damage this way, it loses indestructible until end of turn. If that creature would die thi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Cryptolith Rite | notice | Creatures you control have "{T}: Add one mana of any color." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Declaration in Stone | notice | Exile target creature and all other creatures its controller controls with the same name as that creature. That player investigates for each nontoken creature e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -165,6 +162,7 @@
 | Foul Orchard | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Game Trail | handled | As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gatstaf Arsonists // Gatstaf Ravagers | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Geistblast | handled | Geistblast deals 2 damage to any target. {2}{U}, Exile this card from your graveyard: Copy target instant or sorcery spell you control. You may choose new targe | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ghoulcaller's Accomplice | handled | {3}{B}, Exile this card from your graveyard: Create a 2/2 black Zombie creature token. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ghoulsteed | handled | {2}{B}, Discard two cards: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gibbering Fiend | handled | When this creature enters, it deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -213,11 +211,11 @@
 | Press for Answers | handled | Tap target creature. It doesn't untap during its controller's next untap step. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this tok | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyre Hound | handled | Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quilled Wolf | handled | {5}{G}: This creature gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rabid Bite | handled | Target creature you control deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ravenous Bloodseeker | handled | Discard a card: This creature gets +2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reaper of Flight Moonsilver | handled | Delirium — Sacrifice another creature: This creature gets +2/+1 until end of turn. Activate only if there are four or more card types among cards in your gravey | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reduce to Ashes | handled | Reduce to Ashes deals 5 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relentless Dead | handled | When this creature dies, you may pay {B}. If you do, return it to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rise from the Tides | handled | Create a tapped 2/2 black Zombie creature token for each instant and sorcery card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Root Out | handled | Destroy target artifact or enchantment. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rottenheart Ghoul | handled | When this creature dies, target player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rush of Adrenaline | handled | Target creature gets +2/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -277,7 +275,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
@@ -285,6 +283,7 @@
 - Behold the Beyond
 - Briarbridge Patrol
 - Clip Wings
+- Cryptolith Rite
 - Diregraf Colossus
 - Dual Shot
 - Duskwatch Recruiter // Krallenhorde Howler
@@ -292,6 +291,7 @@
 - Nahiri, the Harbinger
 - Port Town
 - Prized Amalgam
+- Rabid Bite
 - Slayer's Plate
 
 </details>
@@ -315,8 +315,6 @@
 | attacking creatures you control have first strike. | 1 | Stensia Masquerade | soi |
 | choose target creature you don"..."s a wolf or a werewolf deals damage equal to its power to that creature. | 1 | Moonlight Hunt | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
-| create a tapped N/N black zombie creature token for each instant and sorcery card in your graveyard. | 1 | Rise from the Tides | soi |
-| creatures you control have "..." | 1 | Cryptolith Rite | soi |
 | creatures you control have skulk. | 1 | Behind the Scenes | soi |
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
 | enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
@@ -343,7 +341,6 @@
 | reveal the top five cards of your library. put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | 1 | Pieces of the Puzzle | soi |
 | search your library for up to two basic land cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Fork in the Road | soi |
 | target creature deals damage to itself equal to its power. | 1 | Inner Struggle | soi |
-| target opponent mills thirteen cards. {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
 | target player sacrifices a creature or planeswalker of their choice. delirium — if there are four or more card types among cards in your graveyard, instead that | 1 | To the Slaughter | soi |
 | westvale cult leader's power and toughness are each equal to the number of creatures you control. | 1 | Hanweir Militia Captain // Westvale Cult Leader | soi |
@@ -372,11 +369,11 @@
 | {M}: choose a color of a card in your graveyard. add one mana of that color. | 1 | Corrupted Grafstone | soi |
 | {M}{M}, sacrifice ~: reveal the top four cards of your library. you may put an artifact, creature, enchantment, land, or planeswalker card from among them into  | 1 | Vessel of Nascency | soi |
 | {M}{M}, sacrifice ~: target opponent exiles two cards from their hand. activate only as a sorcery. | 1 | Vessel of Malignity | soi |
+| {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |
 | ~ can block an additional seven creatures each combat. | 1 | Watcher in the Web | soi |
 | ~ can"..."ve cast a noncreature spell ~. | 1 | Silburlind Snapper | soi |
 | ~ can't attack unless you control a creature with power N or greater. | 1 | Lambholt Pacifist // Lambholt Butcher | soi |
 | ~ deals N damage to any target. if a creature is dealt damage ~, it loses indestructible until end of turn. if that creature would die ~, exile it instead. | 1 | Burn from Within | soi |
-| ~ deals N damage to any target. {M}{M}, exile ~ from your graveyard: copy target instant or sorcery spell you control. you may choose new targets for the copy. | 1 | Geistblast | soi |
 | ~ gets -N/-N for each card in your hand. | 1 | Geralf's Masterpiece | soi |
 | ~'s power and toughness are each equal to the number of cards in your hand. | 1 | Sage of Ancient Lore // Werewolf of Ancient Hunger | soi |
 

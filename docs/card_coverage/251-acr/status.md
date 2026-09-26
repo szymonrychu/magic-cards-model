@@ -32,7 +32,6 @@
 | Assassin Gauntlet | silent | When this Equipment enters, attach it to up to one target creature you control. Tap all creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Assassin Initiate | silent | {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aveline de Grandpré | silent | Whenever a creature you control with deathtouch deals combat damage to a player, put that many +1/+1 counters on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Basim Ibn Ishaq | silent | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bayek of Siwa | silent | During your turn, other historic creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Become Anonymous | silent | Exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. They enter tapped.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brotherhood Ambushers | silent | Freerunning | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -49,7 +48,7 @@
 | Eivor, Wolf-Kissed | silent | Whenever Eivor deals combat damage to a player, you mill that many cards. You may put a Saga card and/or a land card from among them onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Escape Detection | silent | Freerunning | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ezio, Brash Novice | silent | As long as Ezio has two or more counters on it, it has first strike and is an Assassin in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Fall of the First Civilization | silent | I — You and target opponent each draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Fall of the First Civilization | silent | III — Each player chooses three nonland permanents they control. Destroy all other nonland permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haytham Kenway | silent | Other Knights you control get +2/+2 and have protection from Assassins. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hemlock Vial | silent | {B}, {T}, Sacrifice this artifact: Each equipped creature and Equipment you control gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hookblade | silent | During your turn, equipped creature has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,6 +77,7 @@
 | Altaïr Ibn-La'Ahad | notice | Whenever Altaïr attacks, exile up to one target Assassin creature card from your graveyard with a memory counter on it. Then for each creature card you own in e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Apple of Eden, Isu Relic | notice | {T}, Pay 4 life, Sacrifice Apple of Eden: Look at target opponent's hand and exile those cards face down. You may play those cards this turn, and mana of any ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Auditore Ambush | notice | Choose one or both — • Return target creature to its owner's hand. • Target player searches their library and/or graveyard for a card named Ezio, Blade of Venge | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Basim Ibn Ishaq | notice | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Misthios's Fury | notice | Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -161,6 +161,7 @@
 | detain | 1 | Tax Collector | acr |
 | during your turn, equipped creature has flying. | 1 | Hookblade | acr |
 | during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
+| each player chooses three nonland permanents they control. destroy all other nonland permanents. | 1 | Fall of the First Civilization | acr |
 | enchanted creature can't attack or block. | 1 | Detained by Legionnaires | acr |
 | equip abilities you activate cost {M} less to activate. | 1 | Bureau Headmaster | acr |
 | equipped creature has ward {M}, is an assassin in addition to its other types, and can't be blocked. | 1 | Brotherhood Regalia | acr |
@@ -195,7 +196,6 @@
 | whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
 | whenever ~ attacks, if an assassin crewed it ~, draw a card. ~ becomes an assassin in addition to its other types until end of turn. | 1 | Adrestia | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
-| you and target opponent each draw two cards. | 1 | Fall of the First Civilization | acr |
 | you may play historic lands and cast historic spells from the top of your library. | 1 | Crystal Skull, Isu Spyglass | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |

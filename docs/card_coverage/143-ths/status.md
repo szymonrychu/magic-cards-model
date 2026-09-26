@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 8.1% |
-| Works (untested) | 123 | 58.3% |
+| Works (untested) | 124 | 58.8% |
 | Partial (unaudited) | 9 | 4.3% |
-| Not working | 62 | 29.4% |
+| Not working | 61 | 28.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Abhorrent Overlord | silent | When this creature enters, create a number of 1/1 black Harpy creature tokens with flying equal to your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Agent of Horizons | silent | {2}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akroan Hoplite | silent | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of attacking creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akroan Horse | silent | When this creature enters, an opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anthousa, Setessan Hero | silent | Heroic — Whenever you cast a spell that targets Anthousa, up to three target lands you control each become 2/2 Warrior creatures until end of turn. They're stil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,6 +96,7 @@
 | Spellheart Chimera | unaudited | Spellheart Chimera's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Titan of Eternal Fire | unaudited | Each Human creature you control has "{R}, {T}: This creature deals 1 damage to any target." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vaporkin | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Agent of Horizons | handled | {2}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Agent of the Fates | handled | Heroic — Whenever you cast a spell that targets this creature, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Crusader | handled | Heroic — Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anvilwrought Raptor | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -306,7 +306,6 @@
 | {M}{M}: target creature must be blocked ~ if able. | 1 | Satyr Piper | ths |
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Returned Phalanx | ths |
 | {M}{M}: ~ can block an additional creature ~. | 1 | Coastline Chimera | ths |
-| {M}{M}: ~ can't be blocked ~. | 1 | Agent of Horizons | ths |
 | {M}{M}: ~ must be blocked ~ if able. | 1 | Loathsome Catoblepas | ths |
 | {M}{M}{M}, {M}: return target creature card from your graveyard to the battlefield. it gains haste. exile it at the beginning of the next end step. if it would  | 1 | Whip of Erebos | ths |
 | {M}{M}{M}: create a N/N white cleric enchantment creature token. | 1 | Heliod, God of the Sun | ths |

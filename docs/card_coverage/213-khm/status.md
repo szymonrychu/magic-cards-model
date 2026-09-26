@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 4.9% |
-| Works (untested) | 135 | 47.0% |
+| Works (untested) | 138 | 48.1% |
 | Partial (unaudited) | 16 | 5.6% |
-| Not working | 122 | 42.5% |
+| Not working | 119 | 41.5% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Firja's Retribution | silent | II — Until end of turn, Angels you control gain "{T}: Destroy target creature with power less than this creature's power." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frenzied Raider | silent | Whenever you activate a boast ability, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Frost Augur | silent | {S}, {T}: Look at the top card of your library. If it's a snow card, you may reveal it and put it into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Frostpeak Yeti | silent | {1}{S}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frostpyre Arcanist | silent | When this creature enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Giant's Amulet | silent | When this Equipment enters, you may pay {3}{U}. If you do, create a 4/4 blue Giant Wizard creature token, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glimpse the Cosmos | silent | Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. As long as you control a Gi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,8 +78,6 @@
 | Koll, the Forgemaster | silent | Creature tokens you control that are enchanted or equipped get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kolvori, God of Kinship // The Ringhart Crest | silent | As long as you control three or more legendary creatures, Kolvori gets +4/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Littjara Mirrorlake | silent | {2}{G}{G}{U}, {T}, Sacrifice this land: Create a token that's a copy of target creature you control, except it enters with an additional +1/+1 counter on it. Ac | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Masked Vandal | silent | When this creature enters, you may exile a creature card from your graveyard. If you do, exile target artifact or enchantment an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Master Skald | silent | When this creature enters, you may exile a creature card from your graveyard. If you do, return target artifact or enchantment card from your graveyard to your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Reflection | silent | Choose target nonlegendary creature. The next time one or more creatures or planeswalkers enter this turn, they enter as copies of the chosen creature. Foretell | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Narfi, Betrayer King | silent | Other snow and Zombie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Niko Aris | silent | When Niko Aris enters, create X Shard tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -210,6 +207,7 @@
 | Feed the Serpent | handled | Exile target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firja, Judge of Valor | handled | Whenever you cast your second spell each turn, look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frost Bite | handled | Frost Bite deals 2 damage to target creature or planeswalker. If you control three or more snow permanents, it deals 3 damage instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Frostpeak Yeti | handled | {1}{S}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Funeral Longboat | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Fynn, the Fangbearer | handled | Whenever a creature you control with deathtouch deals combat damage to a player, that player gets two poison counters. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gates of Istfell | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -252,6 +250,8 @@
 | Littjara Glade-Warden | handled | {2}{G}, {T}, Exile a creature card from your graveyard: Put two +1/+1 counters on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maja, Bretagard Protector | handled | Other creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mammoth Growth | handled | Target creature gets +4/+4 until end of turn. Foretell {G} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on a later t | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Masked Vandal | handled | When this creature enters, you may exile a creature card from your graveyard. If you do, exile target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Master Skald | handled | When this creature enters, you may exile a creature card from your graveyard. If you do, return target artifact or enchantment card from your graveyard to your  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mists of Littjara | handled | Enchanted creature gets -3/-0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mistwalker | handled | {1}{U}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Path to the World Tree | handled | When this enchantment enters, search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -413,8 +413,6 @@
 | when ~ enters, search your library for an instant or sorcery card with the same name as a card in your graveyard, reveal it, put it into your hand, then shuffle | 1 | Frostpyre Arcanist | khm |
 | when ~ enters, tap enchanted creature. it deals damage to you equal to its power. | 1 | Bind the Monster | khm |
 | when ~ enters, tap target artifact or creature an opponent controls. if {M} was spent to cast ~, that permanent doesn"..."s next untap step. | 1 | Berg Strider | khm |
-| when ~ enters, you may exile a creature card from your graveyard. if you do, exile target artifact or enchantment an opponent controls. | 1 | Masked Vandal | khm |
-| when ~ enters, you may exile a creature card from your graveyard. if you do, return target artifact or enchantment card from your graveyard to your hand. | 1 | Master Skald | khm |
 | when ~ enters, you may exile any number of non-angel creatures you control until ~ leaves the battlefield. | 1 | Glorious Protector | khm |
 | when ~ enters, you may pay {M}. if you do, create a N/N green elf warrior creature token, then attach ~ to it. | 1 | Elven Bow | khm |
 | when ~ enters, you may pay {M}. if you do, create a N/N red dwarf berserker creature token, then attach ~ to it. | 1 | Dwarven Hammer | khm |
@@ -452,7 +450,6 @@
 | {M}, {M}: look at the top card of your library. if it's a snow card, you may reveal it and put it into your hand. | 1 | Frost Augur | khm |
 | {M}: target snow land you control becomes a N/N elemental creature with hexproof and haste until end of turn. it's still a land. | 1 | Avalanche Caller | khm |
 | {M}{M}: ~ becomes a spirit warrior with base power and toughness N/N. | 1 | Ascendant Spirit | khm |
-| {M}{M}: ~ can't be blocked ~. | 1 | Frostpeak Yeti | khm |
 | {M}{M}{M}: ~ becomes a N/N creature with vigilance and all creature types until end of turn. it's still a land. | 1 | Faceless Haven | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: create a token that's a copy of target creature you control, except it enters with an additional +N/+N counter on it. activate o | 1 | Littjara Mirrorlake | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: search your library for an aura card and/or an equipment card, reveal them, put them into your hand, then shuffle. | 1 | Axgard Armory | khm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 9.7% |
-| Works (untested) | 104 | 56.2% |
+| Tested | 19 | 10.3% |
+| Works (untested) | 105 | 56.8% |
 | Partial (unaudited) | 11 | 5.9% |
-| Not working | 52 | 28.1% |
+| Not working | 50 | 27.0% |
 
 ## Cards needing work
 
@@ -63,13 +63,11 @@
 | Rishkar's Expertise | silent | Draw cards equal to the greatest power among creatures you control. You may cast a spell with mana value 5 or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Salvage Scuttler | silent | Whenever this creature attacks, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scrounging Bandar | silent | At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sram's Expertise | silent | Create three 1/1 colorless Servo artifact creature tokens. You may cast a spell with mana value 3 or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tezzeret's Touch | silent | When enchanted artifact is put into a graveyard, return that card to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Tezzeret, Master of Metal | silent | −3: Target opponent loses life equal to the number of artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trophy Mage | silent | When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Battle at the Bridge | notice | Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) Target creature gets -X/-X  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call for Unity | notice | Creatures you control get +1/+1 for each unity counter on this enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chandra's Revolution | notice | Chandra's Revolution deals 4 damage to target creature. Tap target land. That land doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Destructive Tampering | notice | Choose one — • Destroy target artifact. • Creatures without flying can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -103,6 +101,7 @@
 | Augmenting Automaton | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Barricade Breaker | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bastion Inventor | handled | Improvise | machines/objects_as_costs.py (improvise) | Y/Y/- | not_tested |
+| Battle at the Bridge | handled | Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) Target creature gets -X/-X  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cogwork Assembler | handled | {7}: Create a token that's a copy of target artifact. That token gains haste. Exile it at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Consulate Turret | handled | {T}: You get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Countless Gears Renegade | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -197,7 +196,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Aether Chaser
 - Aetherstream Leopard
@@ -213,6 +212,7 @@
 - Merchant's Dockhand
 - Metallic Rebuke
 - Renegade Rallier
+- Scrounging Bandar
 - Skyship Plunderer
 - Walking Ballista
 - Whir of Invention
@@ -233,7 +233,6 @@
 | at end of combat, if ~ attacked or blocked ~, put a velocity counter on it. then if it has two or more velocity counters on it, sacrifice it and draw two cards. | 1 | Daredevil Dragster | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
-| at the beginning of your upkeep, you may move any number of +N/+N counters from ~ onto another target creature. | 1 | Scrounging Bandar | aer |
 | counter target spell, activated ability, or triggered ability. (mana abilities can't be targeted.) | 1 | Disallow | aer |
 | create three N/N colorless servo artifact creature tokens. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Sram's Expertise | aer |
 | creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
@@ -248,7 +247,6 @@
 | exile target nonland card from your graveyard. search your library for any number of cards with the same name as that card, reveal them, put them into your hand | 1 | Secret Salvage | aer |
 | gain control of target creature or vehicle until end of turn. untap it. it gains haste until end of turn. you may cast a spell with mana value N or less from yo | 1 | Kari Zev's Expertise | aer |
 | if you would lose the game, instead exile ~ and your life total becomes equal to your starting life total. | 1 | Exquisite Archangel | aer |
-| improvise (your artifacts can help cast ~. each artifact you tap after you're done activating mana abilities pays for {M}.) target creature gets -N/-N until end | 1 | Battle at the Bridge | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
 | pay {M}{M}, sacrifice ~: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Gonti's Machinations | aer |
 | put N +N/+N counters on target artifact you control. if it isn't a creature or vehicle, it becomes a N/N construct artifact creature. | 1 | Lifecraft Awakening | aer |

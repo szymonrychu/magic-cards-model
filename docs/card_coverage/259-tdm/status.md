@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.9% |
-| Works (untested) | 125 | 49.6% |
-| Partial (unaudited) | 11 | 4.4% |
-| Not working | 86 | 34.1% |
+| Tested | 31 | 12.3% |
+| Works (untested) | 127 | 50.4% |
+| Partial (unaudited) | 12 | 4.8% |
+| Not working | 82 | 32.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aegis Sculptor | silent | At the beginning of your upkeep, you may exile two cards from your graveyard. If you do, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | All-Out Assault | silent | When this enchantment enters, if it's your main phase, there is an additional combat phase after this phase followed by an additional main phase. When you next  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anafenza, Unyielding Lineage | silent | Endure | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Arashin Sunshield | silent | When this creature enters, exile up to two target cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -81,7 +80,6 @@
 | Severance Priest | silent | When this creature enters, target opponent reveals their hand. You may choose a nonland card from it. If you do, exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sinkhole Surveyor | silent | Whenever this creature attacks, you lose 1 life and this creature endures 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Smile at Death | silent | At the beginning of your upkeep, return up to two target creature cards with power 2 or less from your graveyard to the battlefield. Put a +1/+1 counter on each | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Snowmelt Stag | silent | {5}{U}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Songcrafter Mage | silent | When this creature enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. Its harmonize cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sonic Shrieker | silent | When this creature enters, it deals 2 damage to any target and you gain 2 life. If a player is dealt damage this way, they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stadium Headliner | silent | {1}{R}, Sacrifice this creature: It deals damage equal to the number of creatures you control to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -105,8 +103,6 @@
 | Lie in Wait | notice | Return target creature card from your graveyard to your hand. Lie in Wait deals damage equal to that card's power to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Magmatic Hellkite | notice | When this creature enters, destroy target nonbasic land an opponent controls. Its controller searches their library for a basic land card, puts it onto the batt | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Naga Fleshcrafter | notice | Renew — {2}{U}, Exile this card from your graveyard: Put a +1/+1 counter on target nonlegendary creature you control. Each other creature you control becomes a  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Rally the Monastery | notice | This spell costs {2} less to cast if you've cast another spell this turn. Choose one — • Create two 1/1 white Monk creature tokens with prowess. • Up to two tar | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Sage of the Fang | notice | Renew — {3}{G}, Exile this card from your graveyard: Put a +1/+1 counter on target creature, then double the number of +1/+1 counters on that creature. Activate | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shiko, Paragon of the Way | notice | When Shiko enters, exile target nonland card with mana value 3 or less from your graveyard. Copy it, then you may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sunpearl Kirin | notice | When this creature enters, return up to one other target nonland permanent you control to its owner's hand. If it was a token, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Synchronized Charge | notice | Distribute two +1/+1 counters among one or two target creatures you control. Creatures you control with counters on them gain vigilance and trample until end of | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -120,6 +116,7 @@
 | Glacierwood Siege | unaudited | As this enchantment enters, choose Temur or Sultai. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Highspire Bell-Ringer | unaudited | The second spell you cast each turn costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Neriv, Heart of the Storm | unaudited | If a creature you control that entered this turn would deal damage, it deals twice that much damage instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Snowmelt Stag | unaudited | During your turn, this creature has base power and toughness 5/2. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Static Snare | unaudited | This spell costs {1} less to cast for each attacking creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Whirlwing Stormbrood // Dynamic Soar | unaudited | You may cast sorcery spells and Dragon spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Zurgo, Thunder's Decree | unaudited | During your end step, Warrior tokens you control have "This token can't be sacrificed." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -194,6 +191,7 @@
 | Poised Practitioner | handled | Flurry — Whenever you cast your second spell each turn, put a +1/+1 counter on this creature. Scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rainveil Rejuvenator | handled | When this creature enters, you may mill three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rakshasa's Bargain | handled | Look at the top four cards of your library. Put two of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Rally the Monastery | handled | This spell costs {2} less to cast if you've cast another spell this turn. Choose one — • Create two 1/1 white Monk creature tokens with prowess. • Up to two tar | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rebellious Strike | handled | Target creature gets +3/+0 until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rediscover the Way | handled | I, II — Look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Reigning Victor | handled | When this creature enters, target creature gets +1/+0 and gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -205,6 +203,7 @@
 | Riverwalk Technique | handled | Choose one — • The owner of target nonland permanent puts it on their choice of the top or bottom of their library. • Counter target noncreature spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Roiling Dragonstorm | handled | When this enchantment enters, draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Runescale Stormbrood // Chilling Screech | handled | Counter target spell with mana value 2 or less. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sage of the Fang | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sagu Wildling // Roost Seek | handled | Search your library for a basic land card, reveal it, put it into your hand, then shuffle. (Also shuffle this card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Salt Road Packbeast | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Salt Road Skirmish | handled | Destroy target creature. Create two 1/1 red Warrior creature tokens. They gain haste until end of turn. Sacrifice them at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -252,8 +251,9 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
+- Aegis Sculptor
 - Ainok Wayfarer
 - Avenger of the Fallen
 - Clarion Conqueror
@@ -291,7 +291,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Renew | 5 | Champion of Dusan, Naga Fleshcrafter, Qarsi Revenant, Sage of the Fang, Sagu Pummeler | tdm |
+| Renew | 4 | Champion of Dusan, Naga Fleshcrafter, Qarsi Revenant, Sagu Pummeler | tdm |
 | when ~ enters, exile up to two target cards from a single graveyard. | 2 | Arashin Sunshield, Feral Deathgorger // Dusk Sight | tdm |
 | Choose one | 1 | Frontline Rush | tdm |
 | Flurry | 1 | Taigam, Master Opportunist | tdm |
@@ -308,7 +308,6 @@
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
 | at the beginning of your upkeep, mill three cards. then if your library has no cards in it, exile ~ and put five cards from your graveyard on top of your librar | 1 | Stillness in Motion | tdm |
 | at the beginning of your upkeep, return up to two target creature cards with power N or less from your graveyard to the battlefield. put a +N/+N counter on each | 1 | Smile at Death | tdm |
-| at the beginning of your upkeep, you may exile two cards from your graveyard. if you do, put a +N/+N counter on ~. | 1 | Aegis Sculptor | tdm |
 | decayed | 1 | Rot-Curse Rakshasa | tdm |
 | destroy all creatures and enchantments. draw a card for each permanent destroyed ~. | 1 | Death Begets Life | tdm |
 | distribute two +N/+N counters among one or two target creatures you control. creatures you control with counters on them gain vigilance and trample until end of | 1 | Synchronized Charge | tdm |
@@ -316,6 +315,7 @@
 | double the power and toughness of target creature you control until end of turn. then it fights up to one target creature an opponent controls. (each deals dama | 1 | Dragonclaw Strike | tdm |
 | during your end step, warrior tokens you control have "..." | 1 | Zurgo, Thunder's Decree | tdm |
 | during your turn, spells you cast cost {M} less to cast for each creature you control with power N or greater. | 1 | Temur Battlecrier | tdm |
+| during your turn, ~ has base power and toughness N/N. | 1 | Snowmelt Stag | tdm |
 | each dragon you control enters with an additional +N/+N counter on it. | 1 | Dragonstorm Globe | tdm |
 | each non-dragon creature gets -N/-N until end of turn. (then shuffle ~ into its owner's library.) | 1 | Scavenger Regent // Exude Toxin | tdm |
 | enchanted creature gets -N/-N and loses all abilities. | 1 | Fresh Start | tdm |
@@ -372,10 +372,8 @@
 | {M}{M}, sacrifice ~: it deals damage equal to the number of creatures you control to target creature. | 1 | Stadium Headliner | tdm |
 | {M}{M}: return ~ to its owner's hand. | 1 | Wingspan Stride | tdm |
 | {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Krotiq Nestguard | tdm |
-| {M}{M}{M}: ~ can't be blocked ~. | 1 | Snowmelt Stag | tdm |
 | {M}{M}{M}{M}{M}{M}, sacrifice ~: create a N/N dragon creature token named reliquary dragon that's all colors. it has flying, lifelink, and "..." activate only a | 1 | Dragonbroods' Relic | tdm |
 | ~ costs {M} less to cast for each attacking creature. | 1 | Static Snare | tdm |
-| ~ costs {M} less to cast if you've cast another spell ~. choose one — • create two N/N white monk creature tokens with prowess. • up to two target creatures you | 1 | Rally the Monastery | tdm |
 | ~ costs {M} more to cast if it targets a dragon. destroy target creature. | 1 | Dragon's Prey | tdm |
 | ~ deals N damage to target creature. add {M}{M}{M}. if that creature would die ~, exile it instead. | 1 | Narset's Rebuke | tdm |
 | ~ enters with two +N/+N counters on it if you've cast two or more spells ~. | 1 | Effortless Master | tdm |

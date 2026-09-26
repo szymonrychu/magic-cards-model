@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 7.7% |
-| Works (untested) | 90 | 49.5% |
+| Tested | 15 | 8.2% |
+| Works (untested) | 93 | 51.1% |
 | Partial (unaudited) | 11 | 6.0% |
-| Not working | 67 | 36.8% |
+| Not working | 63 | 34.6% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Garruk's Harbinger | silent | Whenever this creature deals combat damage to a player or planeswalker, look at that many cards from the top of your library. You may reveal a creature card or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk's Warsteed | silent | When this creature enters, you may search your library and/or graveyard for a card named Garruk, Savage Herald, reveal it, and put it into your hand. If you sea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk, Savage Herald | silent | −2: Target creature you control deals damage equal to its power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ghostly Pilferer | silent | Discard a card: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gloom Sower | silent | Whenever this creature becomes blocked by a creature, that creature's controller loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gnarled Sage | silent | As long as you've drawn two or more cards this turn, this creature gets +0/+2 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goremand | silent | When this creature enters, each opponent sacrifices a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +61,6 @@
 | Necromentia | silent | Choose a card name other than a basic land card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exile the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nine Lives | silent | When this enchantment leaves the battlefield, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pack Leader | silent | Whenever this creature attacks, prevent all combat damage that would be dealt this turn to Dogs you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Peer into the Abyss | silent | Target player draws cards equal to half the number of cards in their library and loses half their life. Round up each time. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pursued Whale | silent | When this creature enters, each opponent creates a 1/1 red Pirate creature token with "This token can't block" and "Creatures you control attack each combat if  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctum of Calm Waters | silent | At the beginning of your first main phase, you may draw X cards, where X is the number of Shrines you control. If you do, discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasoned Hallowblade | silent | Discard a card: Tap this creature. It gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,12 +80,10 @@
 | Carrion Grub | notice | This creature gets +X/+0, where X is the greatest power among creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crypt Lurker | notice | When this creature enters, you may sacrifice a creature or discard a creature card. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Fleet Warmonger | notice | At the beginning of combat on your turn, you may sacrifice another creature. If you do, this creature gets +2/+2 and gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Invigorating Surge | notice | Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Liliana's Scorn | notice | Destroy target creature. You may search your library and/or graveyard for a card named Liliana, Death Mage, reveal it, and put it into your hand. If you search  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Niambi, Esteemed Speaker | notice | When Niambi enters, you may return another target creature you control to its owner's hand. If you do, you gain life equal to that creature's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pestilent Haze | notice | Choose one — • All creatures get -2/-2 until end of turn. • Remove two loyalty counters from each planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Predatory Wurm | notice | This creature gets +2/+2 as long as you control a Garruk planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Primal Might | notice | Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control. (Each deals damage equal to its power to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rookie Mistake | notice | Until end of turn, target creature gets +0/+2 and another target creature gets -2/-0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sigiled Contender | notice | This creature has lifelink as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Soul Sear | notice | Soul Sear deals 5 damage to target creature or planeswalker. That permanent loses indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -130,6 +126,7 @@
 | Garruk's Gorehorn | handled |  |  | Y/Y/- | not_tested |
 | Garruk's Uprising | handled | When this enchantment enters, if you control a creature with power 4 or greater, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Garruk, Unleashed | handled | +1: Up to one target creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ghostly Pilferer | handled | Whenever this creature becomes untapped, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Wizardry | handled | Create two 1/1 red Goblin Wizard creature tokens with prowess. (Whenever you cast a noncreature spell, they get +1/+1 until end of turn.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Havoc Jester | handled | Whenever you sacrifice a permanent, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hellkite Punisher | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -138,6 +135,7 @@
 | Hunter's Edge | handled | Put a +1/+1 counter on target creature you control. Then that creature deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Igneous Cur | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Indulging Patrician | handled | At the beginning of your end step, if you gained 3 or more life this turn, each opponent loses 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Invigorating Surge | handled | Put a +1/+1 counter on target creature you control, then double the number of +1/+1 counters on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keen Glidemaster | handled | {2}{U}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keral Keep Disciples | handled | Whenever you activate a loyalty ability of a Chandra planeswalker, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leafkin Avenger | handled | {7}{R}: This creature deals damage equal to its power to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -155,6 +153,7 @@
 | Obsessive Stitcher | handled | {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ornery Dilophosaur | handled | Whenever this creature attacks, if you control a creature with power 4 or greater, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pridemalkin | handled | When this creature enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Primal Might | handled | Target creature you control gets +X/+X until end of turn. Then it fights up to one target creature you don't control. (Each deals damage equal to its power to t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rambunctious Mutt | handled | When this creature enters, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Read the Tides | handled | Choose one — • Draw three cards. • Return up to two target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rise Again | handled | Return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -198,7 +197,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -210,6 +209,7 @@
 - Griffin Aerie
 - Liliana, Waker of the Dead
 - Mazemind Tome
+- Peer into the Abyss
 - Sanctum of Fruitful Harvest
 - Speaker of the Heavens
 - Teferi, Master of Time
@@ -235,7 +235,6 @@
 | creature spells with flying you cast cost {M} less to cast. | 1 | Watcher of the Spheres | m21 |
 | destroy target creature. you may search your library and/or graveyard for a card named liliana, death mage, reveal it, and put it into your hand. if you search  | 1 | Liliana's Scorn | m21 |
 | discard a card: tap ~. it gains indestructible until end of turn. | 1 | Seasoned Hallowblade | m21 |
-| discard a card: ~ can't be blocked ~. | 1 | Ghostly Pilferer | m21 |
 | double the power of target creature until end of turn. | 1 | Unleash Fury | m21 |
 | draw a card, then draw cards equal to the number of cards named ~ in your graveyard. | 1 | Frantic Inventory | m21 |
 | during your turn, ~ costs {M}{M}{M} less to cast. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discard | 1 | Discontinuity | m21 |
@@ -248,11 +247,8 @@
 | other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
 | play with the top card of your library revealed. | 1 | Conspicuous Snoop | m21 |
 | put a +N/+N counter on each of up to two target creatures. you may search your library and/or graveyard for a card named basri, devoted paladin, reveal it, and  | 1 | Basri's Aegis | m21 |
-| put a +N/+N counter on target creature you control, then double the number of +N/+N counters on that creature. | 1 | Invigorating Surge | m21 |
 | scry N, then reveal the top card of your library. if it's a creature or land card, draw a card. (to scry N, look at the top three cards of your library, then pu | 1 | Track Down | m21 |
 | target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
-| target creature you control gets +N/+N until end of turn. then it fights up to one target creature you don't control. (each deals damage equal to its power to t | 1 | Primal Might | m21 |
-| target player draws cards equal to half the number of cards in their library and loses half their life. round up each time. | 1 | Peer into the Abyss | m21 |
 | triple | 1 | Fiery Emancipation | m21 |
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
 | when niambi enters, you may return another target creature you control to its owner"..."s mana value. | 1 | Niambi, Esteemed Speaker | m21 |

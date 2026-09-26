@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 11.7% |
-| Works (untested) | 72 | 44.4% |
+| Works (untested) | 74 | 45.7% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 60 | 37.0% |
+| Not working | 58 | 35.8% |
 
 ## Cards needing work
 
@@ -62,13 +62,11 @@
 | Sensor Splicer | silent | Golem creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrine of Limitless Power | silent | {4}, {T}, Sacrifice this artifact: Target player discards a card for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrine of Loyal Legions | silent | {3}, {T}, Sacrifice this artifact: Create a 1/1 colorless Phyrexian Myr artifact creature token for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shrine of Piercing Vision | silent | {T}, Sacrifice this artifact: Look at the top X cards of your library, where X is the number of charge counters on this artifact. Put one of those cards into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sickleslicer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Slag Fiend | silent | Slag Fiend's power and toughness are each equal to the number of artifact cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Conduit | silent | {6}, {T}: Two target players exchange life totals. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Suture Priest | silent | Whenever a creature an opponent controls enters, you may have that player lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of War and Peace | silent | Whenever equipped creature deals combat damage to a player, this Equipment deals damage to that player equal to the number of cards in their hand and you gain 1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Trespassing Souleater | silent | {U/P}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vapor Snag | silent | Return target creature to its owner's hand. Its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridian Harvest | silent | When enchanted artifact is put into a graveyard, you gain 6 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | War Report | silent | You gain life equal to the number of creatures on the battlefield plus the number of artifacts on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -153,6 +151,7 @@
 | Shriek Raptor | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Shrine of Boundless Growth | handled | At the beginning of your upkeep and whenever you cast a green spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrine of Burning Rage | handled | At the beginning of your upkeep and whenever you cast a red spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shrine of Piercing Vision | handled | At the beginning of your upkeep and whenever you cast a blue spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slash Panther | handled | Haste | machines/combat.py | Y/-/- | not_tested |
 | Spined Thopter | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Spire Monitor | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -161,6 +160,7 @@
 | Thundering Tanadon | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Tormentor Exarch | handled | When this creature enters, choose one — • Target creature gets +2/+0 until end of turn. • Target creature gets -0/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Toxic Nim | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Trespassing Souleater | handled | {U/P}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Triumph of the Hordes | handled | Until end of turn, creatures you control get +1/+1 and gain trample and infect. (Creatures with infect deal damage to creatures in the form of -1/-1 counters an | the engine reads this text and performs it | Y/-/- | not_tested |
 | Urabrask the Hidden | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vault Skirge | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -256,13 +256,11 @@
 | you may have ~ enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types. | 1 | Phyrexian Metamorph | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of the first upkeep, each opponent loses N life, then you gain life equal to the life lost  | 1 | Chancellor of the Dross | nph |
 | you may reveal ~ from your opening hand. if you do, at the beginning of your first main phase of the game, add {M}. | 1 | Chancellor of the Tangle | nph |
-| {M}, sacrifice ~: look at the top N cards of your library, where N is the number of charge counters on ~. put one of those cards into your hand and the rest on  | 1 | Shrine of Piercing Vision | nph |
 | {M}, {M}, sacrifice ~: create a N/N colorless phyrexian myr artifact creature token for each charge counter on ~. | 1 | Shrine of Loyal Legions | nph |
 | {M}, {M}, sacrifice ~: remove up to four charge counters from target noncreature artifact. | 1 | Gremlin Mine | nph |
 | {M}, {M}, sacrifice ~: target player discards a card for each charge counter on ~. | 1 | Shrine of Limitless Power | nph |
 | {M}, {M}: two target players exchange life totals. | 1 | Soul Conduit | nph |
 | {M}: return ~ to its owner's hand. | 1 | Batterskull | nph |
-| {M}: ~ can't be blocked ~. | 1 | Trespassing Souleater | nph |
 | {M}{M}: remove up to N counters from target permanent. for each counter removed ~, ~ gets +N/+N until end of turn. | 1 | Hex Parasite | nph |
 | {M}{M}: return ~ to its owner's hand. | 1 | Forced Worship | nph |
 | ~ can't attack unless defending player is poisoned. | 1 | Chained Throatseeker | nph |

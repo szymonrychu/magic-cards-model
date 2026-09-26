@@ -41,7 +41,7 @@
 | Carom | silent | The next 1 damage that would be dealt to target creature this turn is dealt to another target creature instead. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Hussar | silent | When this creature enters, sacrifice it unless {W} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crime // Punishment | silent | Put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Crime // Punishment | silent | Destroy each artifact, creature, and enchantment with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoplast Manipulator | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,7 +117,7 @@
 | War's Toll | silent | Whenever an opponent taps a land for mana, tap all lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Weight of Spires | silent | Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Windreaver | silent | {U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Writ of Passage | silent | Whenever enchanted creature attacks, if its power is 2 or less, it can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Writ of Passage | silent | Forecast | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Demonfire | notice | Demonfire deals X damage to any target. If a creature dealt damage this way would die this turn, exile it instead. Hellbent — If you have no cards in hand, this | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dread Slag | notice | This creature gets -4/-4 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Experiment Kraj | notice | Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -210,8 +210,8 @@
 |---|---|---|---|
 | graft | 10 | Aquastrand Spider, Cytoplast Manipulator, Cytospawn Shambler, Helium Squirter, Novijen Sages | dis |
 | Hellbent | 5 | Demon's Jester, Gobhobbler Rats, Rakdos Pit Dragon, Slithering Shade, Taste for Mayhem | dis |
+| forecast | 4 | Pride of the Clouds, Sky Hussar, Steeling Stance, Writ of Passage | dis |
 | when ~ enters, sacrifice it unless {M} was spent to cast it. | 4 | Azorius Herald, Court Hussar, Patagia Viper, Plaxmanta | dis |
-| forecast | 3 | Pride of the Clouds, Sky Hussar, Steeling Stance | dis |
 | as an additional cost to cast ~, pay N life. each other player loses N life. | 1 | Bond of Agony | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
 | at the beginning of your first main phase, add mana equal to enchanted permanent's mana cost. | 1 | Elemental Resonance | dis |
@@ -224,6 +224,7 @@
 | counter all other spells. draw a card for each spell countered ~. | 1 | Swift Silence | dis |
 | counter target spell, activated ability, or triggered ability. (mana abilities can't be targeted.) | 1 | Voidslime | dis |
 | destroy all auras and equipment. | 1 | Pure // Simple | dis |
+| destroy each artifact, creature, and enchantment with mana value N. | 1 | Crime // Punishment | dis |
 | discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |
 | draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
 | each player draws N cards. forecast — {M}{M}, reveal ~ from your hand: each player draws a card. (activate only during your upkeep and only once each turn.) | 1 | Skyscribing | dis |
@@ -241,7 +242,6 @@
 | prevent all damage that would be dealt to target multicolored creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Brace for Impact | dis |
 | put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
 | put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
-| put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | 1 | Crime // Punishment | dis |
 | remove a palliation counter from ~: prevent the next N damage that would be dealt to you ~. | 1 | Palliation Accord | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
 | return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
@@ -271,7 +271,6 @@
 | whenever an opponent is dealt N or more damage by a single source, that player discards a card. | 1 | Pain Magnification | dis |
 | whenever an opponent taps a land for mana, tap all lands that player controls. | 1 | War's Toll | dis |
 | whenever enchanted creature attacks or blocks, its controller loses N life. | 1 | Nettling Curse | dis |
-| whenever enchanted creature attacks, if its power is N or less, it can't be blocked ~. | 1 | Writ of Passage | dis |
 | whenever isperia deals combat damage to a player, choose a card name. that player reveals their hand. if a card with the chosen name is revealed ~, search your  | 1 | Isperia the Inscrutable | dis |
 | whenever rakdos attacks, sacrifice half the non-demon permanents you control, rounded up. | 1 | Rakdos the Defiler | dis |
 | whenever you cast a blue creature spell, reveal the top card of your library. if it's a creature card, put that card into your hand. | 1 | Momir Vig, Simic Visionary | dis |

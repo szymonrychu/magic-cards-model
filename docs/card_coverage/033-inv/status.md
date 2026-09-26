@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 9.1% |
-| Works (untested) | 30 | 68.2% |
+| Works (untested) | 31 | 70.5% |
 | Partial (unaudited) | 2 | 4.5% |
-| Not working | 8 | 18.2% |
+| Not working | 7 | 15.9% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Prohibit | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Counter target spell if its mana value is 2 or less. If this spell was kicked, counter that s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Verdeloth the Ancient | silent | Saproling creatures and other Treefolk creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Void | silent | Choose a number. Destroy all artifacts and creatures with mana value equal to that number. Then target player reveals their hand and discards all nonland cards  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Worldly Counsel | silent | Domain — Look at the top X cards of your library, where X is the number of basic land types among lands you control. Put one of those cards into your hand and t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sterling Grove | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Teferi's Moat | unaudited | Creatures of the chosen color without flying can't attack you. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Absorb | handled | Counter target spell. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -66,6 +65,7 @@
 | Urborg Volcano | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Urza's Rage | handled | Kicker {8}{R} (You may pay an additional {8}{R} as you cast this spell.) This spell can't be countered. Urza's Rage deals 3 damage to any target. If this spell  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Utopia Tree | handled |  |  | Y/-/- | not_tested |
+| Worldly Counsel | handled | Domain — Look at the top X cards of your library, where X is the number of basic land types among lands you control. Put one of those cards into your hand and t | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
@@ -83,7 +83,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Domain | 1 | Worldly Counsel | inv |
 | choose a number. destroy all artifacts and creatures with mana value equal to that number. then target player reveals their hand and discards all nonland cards  | 1 | Void | inv |
 | creatures of the chosen color without flying can't attack you. | 1 | Teferi's Moat | inv |
 | kicker {M} (you may pay an additional {M} as you cast ~.) counter target spell if its mana value is N or less. if ~ was kicked, counter that spell if its mana v | 1 | Prohibit | inv |

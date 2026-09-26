@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 9.7% |
+| Tested | 26 | 10.1% |
 | Works (untested) | 118 | 45.7% |
 | Partial (unaudited) | 10 | 3.9% |
-| Not working | 105 | 40.7% |
+| Not working | 104 | 40.3% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Nocturnal Hunger | silent | Gift a Food (You may promise an opponent a gift as you cast this spell. If you do, they create a Food token before its other effects. It's an artifact with "{2} | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Oakhollow Village | silent | {G}, {T}: Put a +1/+1 counter on each Frog, Rabbit, Raccoon, or Squirrel you control that entered the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Osteomancer Adept | silent | {T}: Until end of turn, you may cast creature spells from your graveyard by foraging in addition to paying their other costs. If you cast a spell this way, that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Otterball Antics | silent | Create a 1/1 blue and red Otter creature token with prowess. If this spell was cast from anywhere other than your hand, put a +1/+1 counter on that creature. (W | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Persistent Marshstalker | silent | Threshold — Whenever you attack with one or more Rats, if there are seven or more cards in your graveyard, you may pay {2}{B}. If you do, return this card from  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ral, Crackling Wit | silent | −10: Draw three cards. You get an emblem with "Instant and sorcery spells you cast have storm." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Reptilian Recruiter | silent | When this creature enters, choose target creature. If that creature's power is 2 or less or if you control another Lizard, gain control of that creature until e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -263,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -282,6 +281,7 @@
 - Lunar Convocation
 - Mind Drill Assailant
 - Mockingbird
+- Otterball Antics
 - Portent of Calamity
 - Scavenger's Talent
 - Seasoned Warrenguard
@@ -319,7 +319,6 @@
 | choose up to five {M} worth of modes. you may choose the same mode more than once. {M} — each player sacrifices a creature of their choice. {M}{M} — draw a card | 1 | Season of Loss | blb |
 | choose up to five {M} worth of modes. you may choose the same mode more than once. {M} — put a +N/+N counter on a creature you control. it gains vigilance and t | 1 | Season of Gathering | blb |
 | create N tokens that are copies of target token you control. then tokens you control gain indestructible until your next turn. you gain N life for each token yo | 1 | For the Common Good | blb |
-| create a N/N blue and red otter creature token with prowess. if ~ was cast from anywhere other than your hand, put a +N/+N counter on that creature. (whenever y | 1 | Otterball Antics | blb |
 | creatures your opponents control have base toughness N. | 1 | Maha, Its Feathers Night | blb |
 | during your turn, equipped creatures you control have double strike and haste. | 1 | Blacksmith's Talent | blb |
 | during your turn, you may cast instant and sorcery spells from your graveyard by paying N life in addition to their other costs. | 1 | Festival of Embers | blb |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 2.5% |
-| Works (untested) | 45 | 57.0% |
+| Works (untested) | 46 | 58.2% |
 | Partial (unaudited) | 5 | 6.3% |
-| Not working | 27 | 34.2% |
+| Not working | 26 | 32.9% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Vedalken Dismisser | silent | When this creature enters, put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whitemane Lion | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Balduvian Rage | notice | Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Helldozer | notice | {B}{B}{B}, {T}: Destroy target land. If that land was nonbasic, untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Skyrider Trainee | notice | This creature has flying as long as it's enchanted. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Strength in Numbers | notice | Until end of turn, target creature gains trample and gets +X/+X, where X is the number of attacking creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -58,6 +57,7 @@
 | Goblin Fire Fiend | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Grifter's Blade | unaudited | As this Equipment enters, choose a creature you control it could be attached to. If you do, it enters attached to that creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nacatl War-Pride | unaudited | This creature must be blocked by exactly one creature if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Balduvian Rage | handled | Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Carrion Howler | handled | Pay 1 life: This creature gets +2/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Guildmage | handled | {3}{U}: Target player draws a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dimir Infiltrator | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -133,7 +133,6 @@
 | forecast | 1 | Plumes of Peace | psal |
 | other green creatures you control get +N/+N. | 1 | Tolsimir Wolfblood | psal |
 | return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |
-| target attacking creature gets +N/+N until end of turn. draw a card at the beginning of the next turn's upkeep. | 1 | Balduvian Rage | psal |
 | until end of turn, target creature gains trample and gets +N/+N, where N is the number of attacking creatures. | 1 | Strength in Numbers | psal |
 | when ~ enters, put target creature on top of its owner's library. | 1 | Vedalken Dismisser | psal |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Whitemane Lion | psal |

@@ -26,7 +26,6 @@
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aetherling | silent | {U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Armed // Dangerous | silent | All creatures able to block target creature this turn do so. Fuse (You may cast one or both halves of this card from your hand.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awe for the Guilds | silent | Monocolored creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battering Krasis | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -80,6 +79,7 @@
 | Vorel of the Hull Clade | silent | {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Aetherling | notice | {U}: Exile this creature. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warped Physique | notice | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -237,7 +237,7 @@
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
 | whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
 | you gain N life for each creature your opponents control. prevent all damage that would be dealt to you ~. | 1 | Riot Control | dgm |
-| {M}: ~ can't be blocked ~. | 1 | Aetherling | dgm |
+| {M}: exile ~. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Aetherling | dgm |
 | {M}{M}, {M}: double the number of each kind of counter on target artifact, creature, or land. | 1 | Vorel of the Hull Clade | dgm |
 | {M}{M}, {M}: target opponent loses N life, then reveals a card at random from their hand. | 1 | Hired Torturer | dgm |
 | {M}{M}{M}, return ~ to its owner's hand: put two +N/+N counters on enchanted creature. | 1 | Krasis Incubation | dgm |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.0% |
-| Works (untested) | 131 | 49.2% |
-| Partial (unaudited) | 12 | 4.5% |
-| Not working | 107 | 40.2% |
+| Works (untested) | 134 | 50.4% |
+| Partial (unaudited) | 11 | 4.1% |
+| Not working | 105 | 39.5% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Armory Mice | silent | Celebration — This creature gets +0/+2 as long as two or more nonland permanents entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ashiok, Wicked Manipulator | silent | +1: Look at the top two cards of your library. Exile one of them and put the other into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Asinine Antics | silent | You may cast this spell as though it had flash if you pay {2} more to cast it. For each creature your opponents control, create a Cursed Role token attached to  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Become Brutes | silent | One or two target creatures each gain haste until end of turn. For each of those creatures, create a Monster Role token attached to it. (If you control another  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bellowing Bruiser // Beat a Path | silent | Up to two target creatures can't block this turn. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beluna Grandsquall // Seek Thrills | silent | Mill seven cards. Then put all cards that have an Adventure from among the milled cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Beseech the Mirror | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Search your library for a card, exile it face down, then shuffle. If this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -117,10 +116,10 @@
 | Yenna, Redtooth Regent | silent | {2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Archon's Glory | notice | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets +2/+2 until end of turn. If this spell was bargained | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Back for Seconds | notice | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Return up to two target creature cards from your graveyard to your hand.  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Become Brutes | notice | One or two target creatures each gain haste until end of turn. For each of those creatures, create a Monster Role token attached to it. (If you control another  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Cheeky House-Mouse // Squeak By | notice | Target creature you control gets +1/+1 until end of turn. It can't be blocked by creatures with power 3 or greater this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Curse of the Werefox | notice | Create a Monster Role token attached to target creature you control. When you do, that creature fights up to one target creature you don't control. (If you cont | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Extraordinary Journey | notice | When this enchantment enters, exile up to X target creatures. For each of those cards, its owner may play it for as long as it remains exiled. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Faerie Fencing | notice | Target creature gets -X/-X until end of turn. That creature gets an additional -3/-3 until end of turn if you controlled a Faerie as you cast this spell. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Howling Galefang | notice | This creature has haste as long as you own a card in exile that has an Adventure. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kellan, the Fae-Blooded // Birthright Boon | notice | Other creatures you control get +1/+0 for each Aura and Equipment attached to Kellan. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lord Skitter's Butcher | notice | When this creature enters, choose one — • Create a 1/1 black Rat creature token with "This token can't block." • You may sacrifice another creature. If you do,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -129,7 +128,6 @@
 | Rotisserie Elemental | notice | Whenever this creature deals combat damage to a player, put a skewer counter on this creature. Then you may sacrifice it. If you do, exile the top X cards of yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sentinel of Lost Lore | notice | When this creature enters, choose one or more — • Return target card you own in exile that has an Adventure to your hand. • Put target card you don't own in exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Specter of Mortality | notice | When this creature enters, you may exile one or more creature cards from your graveyard. When you do, each other creature gets -X/-X until end of turn, where X  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Stonesplitter Bolt | notice | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Stonesplitter Bolt deals X damage to target creature or planeswalker. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Huntsman's Redemption | notice | II — You may sacrifice a creature. If you do, search your library for a creature or basic land card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Twisted Fealty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Wicked Role token attached to up to one targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Water Wings | notice | Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof. (It can't be the target of spells or abilities yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -137,7 +135,6 @@
 | Blossoming Tortoise | unaudited | Activated abilities of lands you control cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Elusive Otter // Grove's Bounty | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Eriette of the Charmed Apple | unaudited | Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Food Fight | unaudited | Artifacts you control have "{2}, Sacrifice this artifact: It deals damage to any target equal to 1 plus the number of permanents named Food Fight you control." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hamlet Glutton | unaudited | This spell costs {2} less to cast if it's bargained. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hearth Elemental // Stoke Genius | unaudited | This spell costs {X} less to cast, where X is the number of cards in your graveyard that are instant cards, sorcery cards, and/or have an Adventure. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Horned Loch-Whale // Lagoon Breach | unaudited | This creature enters tapped unless it's your turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -170,10 +167,12 @@
 | Eriette's Tempting Apple | handled | When Eriette's Tempting Apple enters, gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Experimental Confectioner | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Faerie Dreamthief | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Faerie Fencing | handled | Target creature gets -X/-X until end of turn. That creature gets an additional -3/-3 until end of turn if you controlled a Faerie as you cast this spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Feed the Cauldron | handled | Destroy target creature with mana value 3 or less. If it's your turn, create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 li | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ferocious Werefox // Guard Change | handled | Create a Monster Role token attached to target creature you control. (Enchanted creature gets +1/+1 and has trample.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flick a Coin | handled | Flick a Coin deals 1 damage to any target. You create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") Draw a c | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Food Coma | handled | When this enchantment enters, exile target creature an opponent controls until this enchantment leaves the battlefield. Create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Food Fight | handled | Artifacts you control have "{2}, Sacrifice this artifact: It deals damage to any target equal to 1 plus the number of permanents named Food Fight you control." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Freeze in Place | handled | Tap target creature an opponent controls and put three stun counters on it. Scry 2. (If a permanent with a stun counter would become untapped, remove one from i | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frolicking Familiar // Blow Off Steam | handled | Blow Off Steam deals 1 damage to any target. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frostbridge Guard | handled | {2}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -241,6 +240,7 @@
 | Spellscorn Coven // Take It Back | handled | Return target spell to its owner's hand. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spider Food | handled | Destroy up to one target artifact, enchantment, or creature with flying. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stingblade Assassin | handled | When this creature enters, destroy target creature an opponent controls that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Stonesplitter Bolt | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Stonesplitter Bolt deals X damage to target creature or planeswalker. If  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stormkeld Prowler | handled | Whenever you cast a spell with mana value 5 or greater, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stormkeld Vanguard // Bear Down | handled | Destroy target artifact or enchantment. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Storyteller Pixie | handled | Whenever you cast an Adventure spell, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -311,7 +311,6 @@
 | activated abilities of creatures you control cost {M} less to activate, where N is agatha"..."t reduce the mana in that cost to less than one mana. | 1 | Agatha of the Vile Cauldron | woe |
 | activated abilities of lands you control cost {M} less to activate. | 1 | Blossoming Tortoise | woe |
 | any number of target enchanted creatures you control and up to one other target creature you control each deal damage equal to their power to target creature yo | 1 | Graceful Takedown | woe |
-| artifacts you control have "..." | 1 | Food Fight | woe |
 | at the beginning of combat on your turn, if you control a creature with power N or greater, ~ gets +N/+N until end of turn and can attack ~ as though it didn't  | 1 | Territorial Witchstalker | woe |
 | at the beginning of your end step, put a +N/+N counter on each creature you control. untap those creatures. | 1 | Virtue of Loyalty // Ardenvale Fealty | woe |
 | at the beginning of your upkeep, if ~ has one or more +N/+N counters on it, you may remove a +N/+N counter from it. if you do, draw a card. | 1 | Ingenious Prodigy | woe |
@@ -323,7 +322,6 @@
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) return up to two target creature cards from your graveyard to your hand. if ~ was  | 1 | Back for Seconds | woe |
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) search your library for a card, exile it face down, then shuffle. if ~ was bargain | 1 | Beseech the Mirror | woe |
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) target creature gets +N/+N until end of turn. if ~ was bargained, that creature al | 1 | Archon's Glory | woe |
-| bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) ~ deals N damage to target creature or planeswalker. if ~ was bargained, it deals  | 1 | Stonesplitter Bolt | woe |
 | choose a number between N and N. destroy all creatures with power greater than or equal to the chosen number. | 1 | Expel the Interlopers | woe |
 | choose target nontoken creature you control that doesn"..."s a copy of it, except it isn't legendary, is a reflection in addition to its other types, and has ha | 1 | The Apprentice's Folly | woe |
 | copy target activated or triggered ability you control. you may choose new targets for the copy. | 1 | Virtue of Knowledge // Vantress Visions | woe |
@@ -353,7 +351,6 @@
 | return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
 | return the exiled card to the battlefield under its owner's control. | 1 | The Princess Takes Flight | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
-| target creature gets -N/-N until end of turn. that creature gets an additional -N/-N until end of turn if you controlled a faerie as you cast ~. | 1 | Faerie Fencing | woe |
 | target creature you control deals damage equal to its power to any other target. then sacrifice it. | 1 | Callous Sell-Sword // Burn Together | woe |
 | target creature you control gets +N/+N until end of turn. it can't be blocked by creatures with power N or greater ~. | 1 | Cheeky House-Mouse // Squeak By | woe |
 | target opponent discards two cards. create a wicked role token attached to up to one target creature you control. (if you control another role on it, put that o | 1 | Eriette's Whisper | woe |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 29 | 10.8% |
-| Works (untested) | 128 | 47.6% |
+| Works (untested) | 130 | 48.3% |
 | Partial (unaudited) | 26 | 9.7% |
-| Not working | 86 | 32.0% |
+| Not working | 84 | 31.2% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Joust | silent | Choose target creature you control and target creature you don't control. The creature you control gets +2/+1 until end of turn if it's a Knight. Then those cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knights' Charge | silent | {6}{W}{B}, Sacrifice this enchantment: Return all Knight creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Korvold, Fae-Cursed King | silent | Whenever Korvold enters or attacks, sacrifice another permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lochmere Serpent | silent | {U}, Sacrifice an Island: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mace of the Valiant | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Memory Theft | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,7 +74,6 @@
 | Rankle, Master of Pranks | silent | Whenever Rankle deals combat damage to a player, choose any number — • Each player discards a card. • Each player loses 1 life and draws a card. • Each player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Realm-Cloaked Giant // Cast Off | silent | Destroy all non-Giant creatures. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Redcap Melee | silent | Redcap Melee deals 4 damage to target creature or planeswalker. If a nonred permanent is dealt damage this way, you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Redcap Raiders | silent | Whenever this creature attacks, you may tap an untapped non-Human creature you control. If you do, this creature gets +1/+1 and gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Revenge of Ravens | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life and you gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Robber of the Rich | silent | Whenever this creature attacks, if defending player has more cards in hand than you, exile the top card of their library. During any turn you attacked with a Ro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rosethorn Acolyte // Seasonal Ritual | silent | Add one mana of any color. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -197,6 +195,7 @@
 | Lash of Thorns | handled | Target creature gets +2/+1 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Linden, the Steadfast Queen | handled | Whenever a white creature you control attacks, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Loch Dragon | handled | Whenever this creature enters or attacks, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lochmere Serpent | handled | {U}, Sacrifice an Island: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Locthwain Gargoyle | handled | {4}: This creature gets +2/+0 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lonesome Unicorn // Rider in Need | handled | Create a 2/2 white Knight creature token with vigilance. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lost Legion | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -219,6 +218,7 @@
 | Prized Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Prophet of the Peak | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raging Redcap | handled | Double strike | machines/combat.py | Y/Y/Y | not_tested |
+| Redcap Raiders | handled | Whenever this creature attacks, you may tap an untapped non-Human creature you control. If you do, this creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resolute Rider | handled | {W/B}{W/B}: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rosethorn Halberd | handled | When this Equipment enters, attach it to target non-Human creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sage of the Falls | handled | Whenever this creature or another non-Human creature you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -381,7 +381,6 @@
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |
 | whenever ~ attacks, you may pay {M}{M}. if you do, creatures you control get +N/+N until end of turn, where N is the number of opponents you have. | 1 | Embereth Skyblazer | eld |
-| whenever ~ attacks, you may tap an untapped non-human creature you control. if you do, ~ gets +N/+N and gains trample until end of turn. | 1 | Redcap Raiders | eld |
 | whenever ~ deals combat damage to a creature, tap that creature. it doesn"..."s next untap step. | 1 | Queen of Ice // Rage of Winter | eld |
 | whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |
 | whenever ~ deals damage to an opponent, that player discards a card at random. if the player does, they draw a card. | 1 | Skullknocker Ogre | eld |
@@ -390,7 +389,6 @@
 | you may have ~ enter as a copy of any artifact or enchantment on the battlefield. | 1 | Mirrormade | eld |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
 | you may sacrifice two foods. if you do, create a N/N green giant creature token. otherwise, create three food tokens. (they're artifacts with "...") | 1 | Giant Opportunity | eld |
-| {M}, sacrifice an island: ~ can't be blocked ~. | 1 | Lochmere Serpent | eld |
 | {M}, sacrifice ~: search your library for a basic land card, put it onto the battlefield tapped, then shuffle. then if you control four or more lands, untap tha | 1 | Fabled Passage | eld |
 | {M}, {M}, remove a wish counter from ~: search your library for a card, put it into your hand, then shuffle. an opponent gains control of ~. activate only durin | 1 | Wishclaw Talisman | eld |
 | {M}: for each color among permanents you control, add one mana of that color. | 1 | Faeburrow Elder | eld |

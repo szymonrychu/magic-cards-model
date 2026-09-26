@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 13.8% |
+| Tested | 5 | 17.2% |
 | Works (untested) | 16 | 55.2% |
 | Partial (unaudited) | 2 | 6.9% |
-| Not working | 7 | 24.1% |
+| Not working | 6 | 20.7% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Avoid Fate | silent | Counter target instant or Aura spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Craw Giant | silent | Rampage | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Divine Offering | silent | Destroy target artifact. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kobold Taskmaster | silent | Other Kobold creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas | silent | At the beginning of your upkeep, sacrifice Nicol Bolas unless you pay {U}{B}{R}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pendelhaven | silent | {T}: Target 1/1 creature gets +1/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -55,8 +54,9 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
+- Divine Offering
 - Hell's Caretaker
 - Pyrotechnics
 - Vampire Bats
@@ -70,7 +70,6 @@
 |---|---|---|---|
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}{M}. | 1 | Nicol Bolas | leg |
 | counter target instant or aura spell that targets a permanent you control. | 1 | Avoid Fate | leg |
-| destroy target artifact. you gain life equal to its mana value. | 1 | Divine Offering | leg |
 | non-eye creatures you control can't attack. | 1 | Evil Eye of Orms-by-Gore | leg |
 | other kobold creatures you control get +N/+N. | 1 | Kobold Taskmaster | leg |
 | rampage | 1 | Craw Giant | leg |

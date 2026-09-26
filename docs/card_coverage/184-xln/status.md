@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.5% |
-| Works (untested) | 150 | 61.2% |
+| Works (untested) | 152 | 62.0% |
 | Partial (unaudited) | 15 | 6.1% |
-| Not working | 64 | 26.1% |
+| Not working | 62 | 25.3% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Atzocan Archer | silent | When this creature enters, you may have it fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Axis of Mortality | silent | At the beginning of your upkeep, you may have two target players exchange life totals. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boneyard Parley | silent | Exile up to five target creature cards from graveyards. An opponent separates those cards into two piles. Put all cards from the pile of your choice onto the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Daring Saboteur | silent | {2}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadeye Tracker | silent | Explore | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Deathgorge Scavenger | silent | Whenever this creature enters or attacks, you may exile target card from a graveyard. If a creature card is exiled this way, you gain 2 life. If a noncreature c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dinosaur Stampede | silent | Attacking creatures get +2/+0 until end of turn. Dinosaurs you control gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -58,7 +57,6 @@
 | Perilous Voyage | silent | Return target nonland permanent you don't control to its owner's hand. If its mana value was 2 or less, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Priest of the Wakening Sun | silent | At the beginning of your upkeep, you may reveal a Dinosaur card from your hand. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Raging Swordtooth | silent | When this creature enters, it deals 1 damage to each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Repeating Barrage | silent | Repeating Barrage deals 3 damage to any target. Raid — {3}{R}{R}: Return this card from your graveyard to your hand. Activate only if you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Revel in Riches | silent | At the beginning of your upkeep, if you control ten or more Treasures, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River Heralds' Boon | silent | Put a +1/+1 counter on target creature and a +1/+1 counter on up to one target Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River's Rebuke | silent | Return all nonland permanents target player controls to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -126,6 +124,7 @@
 | Costly Plunder | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crash the Ramparts | handled | Target creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crushing Canopy | handled | Choose one — • Destroy target creature with flying. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Daring Saboteur | handled | {2}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Nourishment | handled | Dark Nourishment deals 3 damage to any target. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Plunderers | handled | This creature gets +1/+1 for each artifact you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Quartermaster | handled | When this creature enters, you may search your library for an Equipment or Vehicle card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -203,6 +202,7 @@
 | Raptor Hatchling | handled | Enrage — Whenever this creature is dealt damage, create a 3/3 green Dinosaur creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Daggertooth | handled | Enrage — Whenever this creature is dealt damage, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regisaur Alpha | handled | Other Dinosaurs you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Repeating Barrage | handled | Repeating Barrage deals 3 damage to any target. Raid — {3}{R}{R}: Return this card from your graveyard to your hand. Activate only if you attacked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rile | handled | Rile deals 1 damage to target creature you control. That creature gains trample until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ripjaw Raptor | handled | Enrage — Whenever this creature is dealt damage, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual of Rejuvenation | handled | You gain 4 life. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -349,11 +349,9 @@
 | {M}, sacrifice ~: counter target spell or ability that targets you or a creature you control. | 1 | Siren Stormtamer | xln |
 | {M}, {M}: target attacking vampire gets +N/+N until end of turn. | 1 | Duskborne Skymarcher | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
-| {M}{M}: ~ can't be blocked ~. | 1 | Daring Saboteur | xln |
 | ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |
 | ~ can block only creatures with flying. | 1 | Dreamcaller Siren | xln |
 | ~ can't attack or block alone. | 1 | Bonded Horncrest | xln |
-| ~ deals N damage to any target. raid — {M}{M}{M}: return ~ from your graveyard to your hand. activate only if you attacked ~. | 1 | Repeating Barrage | xln |
 | ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Bloodcrazed Paladin | xln |
 | ~ gets +N/+N as long as you control a dinosaur. | 1 | Drover of the Mighty | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |

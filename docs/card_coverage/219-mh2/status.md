@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 33 | 12.8% |
 | Works (untested) | 120 | 46.5% |
-| Partial (unaudited) | 11 | 4.3% |
-| Not working | 94 | 36.4% |
+| Partial (unaudited) | 12 | 4.7% |
+| Not working | 93 | 36.0% |
 
 ## Cards needing work
 
@@ -97,7 +97,6 @@
 | Shattered Ego | silent | {3}{U}{U}: Put enchanted creature into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skophos Reaver | silent | During your turn, this creature gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sojourner's Companion | silent | Affinity for artifacts Artifact landcycling {2} ({2}, Discard this card: Search your library for an artifact land card, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Steel Dromedary | silent | At the beginning of combat on your turn, you may move a +1/+1 counter from this creature onto target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sweep the Skies | silent | Converge — Create a 1/1 colorless Thopter artifact creature token with flying for each color of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sword of Hearth and Home | silent | Whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. Put both ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sylvan Anthem | silent | Green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -129,6 +128,7 @@
 | Goblin Anarchomancer | unaudited | Each spell you cast that's red or green costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Necrogoyf | unaudited | Necrogoyf's power is equal to the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Serra's Emissary | unaudited | As this creature enters, choose a card type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Steel Dromedary | unaudited | This creature enters tapped with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Thrasta, Tempest's Roar | unaudited | This spell costs {3} less to cast for each other spell cast this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tizerus Charger | unaudited | This creature escapes with your choice of a +1/+1 counter or a flying counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Archfiend of Sorrows | handled | When this creature enters, creatures your opponents control get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -310,7 +310,6 @@
 | aftermath | 1 | Road // Ruin | mh2 |
 | as ~ enters, choose a card type. | 1 | Serra's Emissary | mh2 |
 | at the beginning of combat on your turn, you may discard a card. when you do, ~ deals N damage to any target, where N is the number of card types the discarded  | 1 | Mount Velus Manticore | mh2 |
-| at the beginning of combat on your turn, you may move a +N/+N counter from ~ onto target creature. | 1 | Steel Dromedary | mh2 |
 | at the beginning of your upkeep, if ~ is in your graveyard, you may pay N life. if you do, return it to your hand. | 1 | Master of Death | mh2 |
 | at the beginning of your upkeep, sacrifice piru unless you pay {M}{M}{M}. | 1 | Piru, the Volatile | mh2 |
 | bushido | 1 | Jade Avenger | mh2 |
@@ -383,6 +382,7 @@
 | {M}: choose a card name that hasn't been chosen from among disenchant, braingeyser, terror, shivan dragon, regrowth, and black lotus. create a copy of the card  | 1 | Garth One-Eye | mh2 |
 | {M}{M}{M}: put enchanted creature into its owner's library third from the top. | 1 | Shattered Ego | mh2 |
 | ~ costs {M} less to cast for each other spell cast ~. | 1 | Thrasta, Tempest's Roar | mh2 |
+| ~ enters tapped with two +N/+N counters on it. | 1 | Steel Dromedary | mh2 |
 | ~ escapes with your choice of a +N/+N counter or a flying counter on it. | 1 | Tizerus Charger | mh2 |
 | ~'s power is equal to the number of creature cards in all graveyards. | 1 | Necrogoyf | mh2 |
 | −N: gain control of each permanent with a corruption counter on it. | 1 | Geyadrone Dihada | mh2 |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.9% |
-| Works (untested) | 88 | 61.1% |
+| Works (untested) | 89 | 61.8% |
 | Partial (unaudited) | 4 | 2.8% |
-| Not working | 45 | 31.2% |
+| Not working | 44 | 30.6% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Hare Apparent | silent | When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Vessel | silent | When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Inspiring Paladin | silent | During your turn, creatures you control with +1/+1 counters on them have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Kaito, Cunning Infiltrator | silent | +1: Up to one target creature you control can't be blocked this turn. Draw a card, then discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kellan, Planar Trailblazer | silent | {1}{R}: If Kellan is a Scout, it becomes a Human Faerie Detective and gains "Whenever Kellan deals combat damage to a player, exile the top card of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Loot, Exuberant Explorer | silent | {4}{G}{G}, {T}: Look at the top six cards of your library. You may reveal a creature card with mana value less than or equal to the number of lands you control  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lunar Insight | silent | Draw a card for each different mana value among nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -126,6 +125,7 @@
 | Incinerating Blast | handled | Incinerating Blast deals 6 damage to target creature. You may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Infestation Sage | handled | When this creature dies, create a 1/1 black and green Insect creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Joust Through | handled | Joust Through deals 3 damage to target attacking or blocking creature. You gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Kaito, Cunning Infiltrator | handled | Whenever a creature you control deals combat damage to a player, put a loyalty counter on Kaito. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kiora, the Rising Tide | handled | When Kiora enters, draw two cards, then discard two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Koma, World-Eater | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kykar, Zephyr Awakener | handled | Whenever you cast a noncreature spell, choose one — • Exile another target creature you control. Return that card to the battlefield under its owner's control a | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -187,7 +187,6 @@
 | Morbid | 1 | Tragic Banshee | fdn |
 | Threshold | 1 | Cephalid Inkmage | fdn |
 | +N: create a token that's a copy of target creature you control, except it has haste and "..." | 1 | Chandra, Flameshaper | fdn |
-| +N: up to one target creature you control can't be blocked ~. draw a card, then discard a card. | 1 | Kaito, Cunning Infiltrator | fdn |
 | as long as your life total is greater than your starting life total, elenda gets +N/+N and has menace. elenda gets an additional +N/+N as long as your life tota | 1 | Elenda, Saint of Dusk | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
 | attacking vampires you control have deathtouch and lifelink. | 1 | Crossway Troublemakers | fdn |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 30 | 11.2% |
-| Works (untested) | 103 | 38.4% |
+| Works (untested) | 104 | 38.8% |
 | Partial (unaudited) | 11 | 4.1% |
-| Not working | 124 | 46.3% |
+| Not working | 123 | 45.9% |
 
 ## Cards needing work
 
@@ -148,7 +148,6 @@
 | Repeat Offender | notice | {2}{B}: If this creature is suspected, put a +1/+1 counter on it. Otherwise, suspect it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sample Collector | notice | Whenever this creature attacks, you may collect evidence 3. When you do, put a +1/+1 counter on target creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sanctuary Wall | notice | {2}{W}, {T}: Tap target creature. You may put a stun counter on it. If you do, put a stun counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Slice from the Shadows | notice | This spell can't be countered. (This includes by the ward ability.) Target creature gets -X/-X until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Unyielding Gatekeeper | notice | When this creature is turned face up, exile another target nonland permanent. If you controlled it, return it to the battlefield tapped. Otherwise, its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Assemble the Players | unaudited | Once each turn, you may cast a creature spell with power 2 or less from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Bubble Smuggler | unaudited | As this creature is turned face up, put four +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -244,6 +243,7 @@
 | Scene of the Crime | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seasoned Consultant | handled | Whenever you attack with three or more creatures, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shady Informant | handled | When this creature dies, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Slice from the Shadows | handled | This spell can't be countered. (This includes by the ward ability.) Target creature gets -X/-X until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Snarling Gorehound | handled | Whenever another creature you control with power 2 or less enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sumala Sentry | handled | Whenever a face-down permanent you control is turned face up, put a +1/+1 counter on it and a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Suspicious Detonation | handled | This spell costs {3} less to cast if you've sacrificed an artifact this turn. This spell can't be countered. (This includes by the ward ability.) Suspicious Det | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -427,7 +427,6 @@
 | ~ can"..."t have a name. | 1 | Pompous Gadabout | mkm |
 | ~ can"..."ve sacrificed an artifact ~. | 1 | Furtive Courier | mkm |
 | ~ can't be blocked by creatures with power N or greater. | 1 | Exit Specialist | mkm |
-| ~ can't be countered. (~ by the ward ability.) target creature gets -N/-N until end of turn. | 1 | Slice from the Shadows | mkm |
 | ~ costs {M}{M} more to cast for each target beyond the first. choose any number of target players. investigate N times, where N is the total number of creatures | 1 | Officious Interrogation | mkm |
 | ~ deals N damage to any target. put up to N land cards from your hand and/or graveyard onto the battlefield tapped. | 1 | Worldsoul's Rage | mkm |
 | ~ deals twice N damage to target creature. if excess damage was dealt to that creature ~, investigate. (create a clue token. it's an artifact with "...") | 1 | Torch the Witness | mkm |

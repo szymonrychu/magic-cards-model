@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 60 | 22.9% |
-| Works (untested) | 85 | 32.4% |
+| Works (untested) | 88 | 33.6% |
 | Partial (unaudited) | 18 | 6.9% |
-| Not working | 99 | 37.8% |
+| Not working | 96 | 36.6% |
 
 ## Cards needing work
 
@@ -86,7 +86,6 @@
 | Nyxborn Hydra | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on this Aura and has reach and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nyxborn Unicorn | silent | Enchanted creature gets +2/+2 and has mentor. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Powerbalance | silent | Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, you may cast that card without paying its mana cost if the two spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Quest for the Necropolis | silent | {5}{B}, Sacrifice this enchantment: Put target creature card from a graveyard onto the battlefield under your control. This ability costs {1} less to activate f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ral and the Implicit Maze | silent | III — Create a Spellgorger Weird token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reckless Pyrosurfer | silent | Landfall — Whenever a land you control enters, this creature gains battle cry until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ripples of Undeath | silent | At the beginning of your first main phase, mill three cards. Then you may pay {1} and 3 life. If you do, put a card from among those cards into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -120,11 +119,9 @@
 | Etched Slith | notice | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. When you do, you may remove a counter from another target permanent or oppone | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fanged Flames | notice | Devoid (This card has no color.) Fanged Flames deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Glimpse the Impossible | notice | Exile the top three cards of your library. You may play those cards this turn. At the beginning of the next end step, if any of those cards remain exiled, put t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Nadu, Winged Wisdom | notice | Creatures you control have "Whenever this creature becomes the target of a spell or ability, reveal the top card of your library. If it's a land card, put it on | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Obstinate Gargoyle | notice | This creature has flying as long as it's modified. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Propagator Drone | notice | Creature tokens you control have evolve. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wither and Bloom | notice | Target creature gets -3/-3 until end of turn. {1}{B}, Exile this card from your graveyard: Put a +1/+1 counter on target creature you control. Activate only as  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Revolt | unaudited | Revolt — As long as a permanent left the battlefield under your control this turn, if a source you control would deal noncombat damage to an opponent or a perma | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ashling, Flame Dancer | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Corrupted Shapeshifter | unaudited | As this creature enters, it becomes your choice of a 3/3 creature with flying, a 2/5 creature with vigilance, or a 0/12 creature with defender. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -184,6 +181,7 @@
 | Mogg Mob | handled | Sacrifice this creature: It deals 3 damage divided as you choose among one, two, or three targets. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Gatekeeper | handled | Whenever another creature you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nadier's Nightblade | handled | Whenever a token you control leaves the battlefield, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nadu, Winged Wisdom | handled | Creatures you control have "Whenever this creature becomes the target of a spell or ability, reveal the top card of your library. If it's a land card, put it on | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightshade Dryad | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
 | Nulldrifter | handled | When you cast this spell, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ondu Knotmaster // Throw a Line | handled | Distribute two +1/+1 counters among one or two target creatures. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -192,6 +190,7 @@
 | Phyrexian Ironworks | handled | Whenever you attack, you get {E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pinnacle Monk // Mystic Peak | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Proud Pack-Rhino | handled | When this creature enters, choose one — • Put a shield counter on target permanent. • Proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quest for the Necropolis | handled | Landfall — Whenever a land you control enters, put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razorgrass Ambush // Razorgrass Field | handled | Razorgrass Ambush deals 3 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reiterating Bolt | handled | Replicate—Pay {E}{E}{E}. (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Reiterating B | the engine reads this text and performs it | Y/-/- | not_tested |
 | Retrofitted Transmogrant | handled | {3}{B}: Return this card from your graveyard to the battlefield tapped with two +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -226,6 +225,7 @@
 | Wastescape Battlemage | handled | When you cast this spell, if it was kicked with its {G} kicker, exile target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wight of the Reliquary | handled | This creature gets +1/+1 for each creature card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wing It | handled | Target creature gets +2/+2 until end of turn. Put a flying counter on it. Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wither and Bloom | handled | Target creature gets -3/-3 until end of turn. {1}{B}, Exile this card from your graveyard: Put a +1/+1 counter on target creature you control. Activate only as  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Writhing Chrysalis | handled | When you cast this spell, create two 0/1 colorless Eldrazi Spawn creature tokens with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wurmcoil Larva | handled | When this creature dies, create a 1/2 black Phyrexian Wurm artifact creature token with deathtouch and a 2/1 black Phyrexian Wurm artifact creature token with l | the engine reads this text and performs it | Y/-/- | not_tested |
 
@@ -319,7 +319,6 @@
 | create a N/N white cat warrior creature token, then put a vigilance counter on a creature you control. | 1 | Ajani Fells the Godsire | mh3 |
 | create a spellgorger weird token. | 1 | Ral and the Implicit Maze | mh3 |
 | creature tokens you control have evolve. | 1 | Propagator Drone | mh3 |
-| creatures you control have "..." | 1 | Nadu, Winged Wisdom | mh3 |
 | destroy target creature or planeswalker. you gain N life for each of its colors. | 1 | Breathe Your Last | mh3 |
 | destroy target land. its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. creatures without flying c | 1 | Sundering Eruption // Volcanic Fissure | mh3 |
 | devoid (~ has no color.) draw three cards and create a N/N colorless eldrazi spawn creature token with "..." | 1 | Unfathomable Truths | mh3 |
@@ -360,7 +359,6 @@
 | sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
 | search your library for a card, exile it face down, then shuffle. | 1 | The Creation of Avacyn | mh3 |
 | skip your draw step. | 1 | Necrodominance | mh3 |
-| target creature gets -N/-N until end of turn. {M}{M}, exile ~ from your graveyard: put a +N/+N counter on target creature you control. activate only as a sorcer | 1 | Wither and Bloom | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
 | vanishing | 1 | Dreamtide Whale | mh3 |
 | when imskir enters, you draw N cards and you lose N life, where N is half the number of artifacts you control, rounded down. | 1 | Imskir Iron-Eater | mh3 |
@@ -405,7 +403,6 @@
 | {M}, {M}: target creature you control connives N, where N is the number of creatures that died ~. | 1 | Spymaster's Vault | mh3 |
 | {M}, {M}: the next spell you cast ~ has improvise. | 1 | Archway of Innovation | mh3 |
 | {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |
-| {M}{M}, sacrifice ~: put target creature card from a graveyard onto the battlefield under your control. ~ costs {M} less to activate for each quest counter on ~ | 1 | Quest for the Necropolis | mh3 |
 | {M}{M}: each opponent loses N life and you gain N life. ~ costs {M}{M} less to activate if you've drawn three or more cards ~. activate only once each turn. | 1 | Kami of Jealous Thirst | mh3 |
 | {M}{M}: exile enchanted creature. | 1 | Utter Insignificance | mh3 |
 | ~ can block only creatures with flying. | 1 | Etherium Pteramander | mh3 |

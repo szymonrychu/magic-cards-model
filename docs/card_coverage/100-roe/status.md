@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.3% |
+| Tested | 17 | 7.7% |
 | Works (untested) | 103 | 46.8% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 91 | 41.4% |
+| Not working | 90 | 40.9% |
 
 ## Cards needing work
 
@@ -83,7 +83,6 @@
 | Perish the Thought | silent | Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raid Bombardment | silent | Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Recurring Insight | silent | Draw cards equal to the number of cards in target opponent's hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reinforced Bulwark | silent | {T}: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Renegade Doppelganger | silent | Whenever another creature you control enters, you may have this creature become a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Repay in Kind | silent | Each player's life total becomes the lowest life total among all players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -234,7 +233,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -248,6 +247,7 @@
 - Momentous Fall
 - Nirkana Revenant
 - Prophetic Prism
+- Recurring Insight
 - Spawning Breath
 - Ulamog's Crusher
 - Vengevine
@@ -281,7 +281,6 @@
 | counter target spell. look at its controller's hand. | 1 | Lay Bare | roe |
 | creatures with flying get +N/+N. | 1 | Gravitational Shift | roe |
 | creatures with power less than ~ power can't block it. | 1 | Aura Gnarlid | roe |
-| draw cards equal to the number of cards in target opponent's hand. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your next | 1 | Recurring Insight | roe |
 | draw two cards, then shuffle a card from your hand into your library. | 1 | See Beyond | roe |
 | each creature you control with a level counter on it gets +N/+N. | 1 | Time of Heroes | roe |
 | each player's life total becomes the lowest life total among all players. | 1 | Repay in Kind | roe |

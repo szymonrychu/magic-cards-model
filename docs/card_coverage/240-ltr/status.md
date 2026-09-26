@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 9.3% |
-| Works (untested) | 128 | 45.6% |
+| Works (untested) | 129 | 45.9% |
 | Partial (unaudited) | 21 | 7.5% |
-| Not working | 106 | 37.7% |
+| Not working | 105 | 37.4% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Frodo, Determined Hero | silent | Whenever Frodo enters or attacks, you may attach target Equipment you control with mana value 2 or 3 to Frodo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frodo, Sauron's Bane | silent | {W/B}{W/B}: If Frodo is a Citizen, it becomes a Halfling Scout with base power and toughness 2/3 and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galadriel of Lothlórien | silent | Whenever you scry, you may reveal the top card of your library. If a land card is revealed this way, put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gandalf's Sanction | silent | Gandalf's Sanction deals X damage to target creature, where X is the number of instant and sorcery cards in your graveyard. Excess damage is dealt to that creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gimli's Axe | silent | As long as equipped creature is legendary, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gimli, Mournful Avenger | silent | Whenever another creature you control dies, put a +1/+1 counter on Gimli. When this ability resolves for the third time this turn, Gimli fights up to one target | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glamdring | silent | Equipped creature has first strike and gets +1/+0 for each instant and sorcery card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -114,9 +113,9 @@
 | Eastfarthing Farmer | notice | When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fires of Mount Doom | notice | When Fires of Mount Doom enters, it deals 2 damage to target creature an opponent controls. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flowering of the White Tree | notice | Legendary creatures you control get +2/+1 and have ward {1}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Gandalf's Sanction | notice | Gandalf's Sanction deals X damage to target creature, where X is the number of instant and sorcery cards in your graveyard. Excess damage is dealt to that creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gimli's Fury | notice | Target creature gets +3/+2 until end of turn. If it's legendary, it also gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Glorious Gale | notice | Counter target creature spell. If it was a legendary spell, the Ring tempts you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gollum's Bite | notice | Target creature gets -2/-2 until end of turn. {3}{B}, Exile this card from your graveyard: The Ring tempts you. Activate only as a sorcery. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorbag of Minas Morgul | notice | Whenever a Goblin or Orc you control deals combat damage to a player, you may sacrifice it. When you do, choose one — • Draw a card. • Create a Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grishnákh, Brash Instigator | notice | When Grishnákh enters, amass Orcs 2. When you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Isildur's Fateful Strike | notice | (You may cast a legendary instant only if you control a legendary creature or planeswalker.) Destroy target creature. If its controller has more than four cards | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -195,6 +194,7 @@
 | Gandalf the Grey | handled | Whenever you cast an instant or sorcery spell, choose one that hasn't been chosen — • You may tap or untap target permanent. • Gandalf deals 3 damage to each op | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gandalf, White Rider | handled | Whenever you cast a spell, creatures you control get +1/+0 until end of turn. Scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gift of Strands | handled | When this Aura enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gollum's Bite | handled | Target creature gets -2/-2 until end of turn. {3}{B}, Exile this card from your graveyard: The Ring tempts you. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gothmog, Morgul Lieutenant | handled | When Gothmog enters, amass Orcs 1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Great Hall of the Citadel | handled |  |  | Y/-/- | not_tested |
 | Grey Havens Navigator | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -366,7 +366,6 @@
 | target creature an opponent controls deals damage equal to its power to another target creature that player controls. the ring tempts you. | 1 | Breaking of the Fellowship | ltr |
 | target creature gets +N/+N and gains first strike until end of turn. if it's a goblin or orc, it also gains haste until end of turn. | 1 | Rush the Room | ltr |
 | target creature gets +N/+N until end of turn. if it's legendary, it also gains trample until end of turn. | 1 | Gimli's Fury | ltr |
-| target creature gets -N/-N until end of turn. {M}{M}, exile ~ from your graveyard: the ring tempts you. activate only as a sorcery. | 1 | Gollum's Bite | ltr |
 | target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | 1 | Friendly Rivalry | ltr |
 | the ring tempts you, then each player mills cards equal to your ring-bearer's power. | 1 | One Ring to Rule Them All | ltr |
 | the ring tempts you. search your library for a card that shares a color with a legendary creature you control, reveal it, put it into your hand, then shuffle. | 1 | Ringsight | ltr |

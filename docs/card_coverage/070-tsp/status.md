@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 94 | 35.1% |
+| Works (untested) | 95 | 35.4% |
 | Partial (unaudited) | 29 | 10.8% |
-| Not working | 122 | 45.5% |
+| Not working | 121 | 45.1% |
 
 ## Cards needing work
 
@@ -142,7 +142,6 @@
 | Gorgon Recluse | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Locket of Yesterdays | notice | Spells you cast cost {1} less to cast for each card with the same name as that spell in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Jar | notice | {T}, Sacrifice this creature: Each player exiles all cards from their hand face down and draws seven cards. At the beginning of the next end step, each player d | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Molder | notice | Destroy target artifact or enchantment with mana value X. It can't be regenerated. You gain X life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Norin the Wary | notice | When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Phthisis | notice | Destroy target creature. Its controller loses life equal to its power plus its toughness. Suspend 5—{1}{B} (Rather than cast this card from your hand, you may p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Traitor's Clutch | notice | Target creature gets +1/+0, becomes black, and gains shadow until end of turn. (It can block or be blocked by only creatures with shadow.) Flashback {1}{B} (You | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -230,6 +229,7 @@
 | Mana Skimmer | handled | Whenever this creature deals damage to a player, tap target land that player controls. That land doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Might of Old Krosa | handled | Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindstab | handled | Target player discards three cards. Suspend 4—{B} (Rather than cast this card from your hand, you may pay {B} and exile it with four time counters on it. At the | the engine reads this text and performs it | Y/-/- | not_tested |
+| Molder | handled | Destroy target artifact or enchantment with mana value X. It can't be regenerated. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Slagheap | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Momentary Blink | handled | Exile target creature you control, then return it to the battlefield under its owner's control. Flashback {3}{U} (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mwonvuli Acid-Moss | handled | Destroy target land. Search your library for a Forest card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -336,7 +336,6 @@
 | creatures of the chosen color get +N/+N. | 1 | Gauntlet of Power | tsp |
 | creatures you control are slivers in addition to their other creature types. | 1 | Hivestone | tsp |
 | damage that would reduce your life total to less than N reduces it to N instead. | 1 | Fortune Thief | tsp |
-| destroy target artifact or enchantment with mana value N. it can't be regenerated. you gain N life. | 1 | Molder | tsp |
 | destroy target creature. its controller loses life equal to its power plus its toughness. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M | 1 | Phthisis | tsp |
 | discard a card: ~ gains shadow until end of turn. | 1 | Trespasser il-Vec | tsp |
 | each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |

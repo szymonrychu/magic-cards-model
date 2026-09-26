@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 9.6% |
-| Works (untested) | 59 | 33.1% |
+| Works (untested) | 60 | 33.7% |
 | Partial (unaudited) | 19 | 10.7% |
-| Not working | 83 | 46.6% |
+| Not working | 82 | 46.1% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Quiet Disrepair | notice | At the beginning of your upkeep, choose one — • Destroy enchanted permanent. • You gain 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Shivan Sand-Mage | notice | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sporoloth Ancient | notice | Creatures you control have "Remove two spore counters from this creature: Create a 1/1 green Saproling creature token." | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aven Mindcensor | unaudited | If an opponent would search a library, that player searches the top four cards of that library instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Bound in Silence | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -175,6 +174,7 @@
 | Sarcomite Myr | handled | {2}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slaughter Pact | handled | Destroy target nonblack creature. At the beginning of your next upkeep, pay {2}{B}. If you don't, you lose the game. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sliversmith | handled | {1}, {T}, Discard a card: Create a 1/1 colorless Sliver artifact creature token named Metallic Sliver. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sporoloth Ancient | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Take Possession | handled | You control enchanted permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tarox Bladewing | handled | Grandeur — Discard another card named Tarox Bladewing: Tarox Bladewing gets +X/+X until end of turn, where X is its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thornweald Archer | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
@@ -243,7 +243,6 @@
 | counter target spell if no mana was spent to cast it. | 1 | Nix | fut |
 | creatures with no abilities get +N/+N. | 1 | Muraganda Petroglyphs | fut |
 | creatures without flying can't attack. | 1 | Magus of the Moat | fut |
-| creatures you control have "..." | 1 | Sporoloth Ancient | fut |
 | each player may play an additional land on each of their turns. | 1 | Rites of Flourishing | fut |
 | each sliver card in each player's hand has slivercycling {M}. | 1 | Homing Sliver | fut |
 | enchanted creature can't attack or block. | 1 | Bound in Silence | fut |

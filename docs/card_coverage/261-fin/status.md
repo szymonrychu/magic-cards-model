@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 8.2% |
-| Works (untested) | 125 | 41.1% |
+| Tested | 26 | 8.6% |
+| Works (untested) | 126 | 41.4% |
 | Partial (unaudited) | 19 | 6.2% |
-| Not working | 135 | 44.4% |
+| Not working | 133 | 43.8% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Seifer Almasy | silent | Fire Cross — Whenever Seifer Almasy deals combat damage to a player, you may cast target instant or sorcery card with mana value 3 or less from your graveyard w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Self-Destruct | silent | Target creature you control deals X damage to any other target and X damage to itself, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seymour Flux | silent | At the beginning of your upkeep, you may pay 1 life. If you do, draw a card and put a +1/+1 counter on Seymour Flux. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Shantotto, Tactician Magician | silent | Whenever you cast a noncreature spell, Shantotto gets +X/+0 until end of turn, where X is the amount of mana spent to cast that spell. If X is 4 or more, draw a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sidequest: Catch a Fish // Cooking Campsite | silent | At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card, you may reveal it and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sin, Spira's Punishment | silent | Whenever Sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. If the exiled card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sorceress's Schemes | silent | Return target instant or sorcery card from your graveyard or exiled card with flashback you own to your hand. Add {R}. Flashback {4}{R} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -149,7 +148,6 @@
 | Judgment Bolt | notice | Judgment Bolt deals 5 damage to target creature and X damage to that creature's controller, where X is the number of Equipment you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Light of Judgment | notice | Light of Judgment deals 6 damage to target creature. Destroy up to one Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Moogles' Valor | notice | For each creature you control, create a 1/2 white Moogle creature token with lifelink. Then creatures you control gain indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Opera Love Song | notice | Choose one — • Exile the top two cards of your library. You may play those cards until your next end step. • One or two target creatures each get +2/+0 until en | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Prishe's Wanderings | notice | Search your library for a basic land card or Town card, put it onto the battlefield tapped, then shuffle. When you search your library this way, put a +1/+1 cou | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Qutrub Forayer | notice | When this creature enters, choose one — • Destroy target creature that was dealt damage this turn. • Exile up to two target cards from a single graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Random Encounter | notice | Shuffle your library, then mill four cards. Put each creature card milled this way onto the battlefield. They gain haste. At the beginning of the next end step, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -249,6 +247,7 @@
 | Minwu, White Mage | handled | Whenever you gain life, put a +1/+1 counter on each Cleric you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mysidian Elder | handled | When this creature enters, create a 0/1 black Wizard creature token with "Whenever you cast a noncreature spell, this token deals 1 damage to each opponent." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Namazu Trader | handled | When this creature enters, you lose 1 life and create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Opera Love Song | handled | Choose one — • Exile the top two cards of your library. You may play those cards until your next end step. • One or two target creatures each get +2/+0 until en | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overkill | handled | Target creature gets -0/-9999 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Phoenix Down | handled | {1}{W}, {T}, Exile this artifact: Choose one — • Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped. • Exile ta | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Poison the Waters | handled | Choose one — • All creatures get -1/-1 until end of turn. • Target player reveals their hand. You choose an artifact or creature card from it. That player disca | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -309,7 +308,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Blitzball
 - Cactuar
@@ -328,6 +327,7 @@
 - Rufus Shinra
 - Sazh's Chocobo
 - Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel
+- Shantotto, Tactician Magician
 - Sidequest: Hunt the Mark // Yiazmat, Ultimate Mark
 - Sidequest: Play Blitzball // World Champion, Celestial Weapon
 - Snow Villiers
@@ -344,7 +344,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | job select | 6 | Bard's Bow, Dark Knight's Greatsword, Monk's Fist, Paladin's Arms, Samurai's Katana | fin |
-| Choose one | 2 | Aerith Rescue Mission, Opera Love Song | fin |
 | as long as you control seven or more lands, ~ gets +N/+N. | 2 | Gigantoad, Scorpion Sentinel | fin |
 | equipped creature gets +N/+N, has "..." and is a cleric in addition to its other types. | 2 | Sage's Nouliths, White Mage's Staff | fin |
 | Angelo Cannon | 1 | Rinoa Heartilly | fin |
@@ -352,6 +351,7 @@
 | Blessing of Light | 1 | Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal | fin |
 | Blow Up | 1 | Blazing Bomb | fin |
 | Blue Magic | 1 | Quistis Trepe | fin |
+| Choose one | 1 | Aerith Rescue Mission | fin |
 | Choose one or more | 1 | Clash of the Eikons | fin |
 | Darkness | 1 | Cecil, Dark Knight // Cecil, Redeemed Paladin | fin |
 | Dragonfire Dive | 1 | Dion, Bahamut's Dominant // Bahamut, Warden of Light | fin |
@@ -461,7 +461,6 @@
 | whenever sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. if the exiled card  | 1 | Sin, Spira's Punishment | fin |
 | whenever you cast a noncreature spell, create a N/N colorless hero creature token. if four or more mana was spent to cast that spell, draw two cards. if eight o | 1 | Tellah, Great Sage | fin |
 | whenever you cast a noncreature spell, if at least four mana was spent to cast it, ~ becomes an artifact creature until end of turn. | 1 | The Prima Vista | fin |
-| whenever you cast a noncreature spell, shantotto gets +N/+N until end of turn, where N is the amount of mana spent to cast that spell. if N is N or more, draw a | 1 | Shantotto, Tactician Magician | fin |
 | whenever you cast your first human creature spell each turn, that creature enters with an additional +N/+N counter on it for each dog and/or wolf you control. | 1 | Torgal, A Fine Hound | fin |
 | whenever you tap a land for {M}, add an additional {M}. | 1 | Ultima, Origin of Oblivion | fin |
 | whenever ~ attacks, it deals damage equal to the number of equipped creatures you control to defending player. | 1 | Barret Wallace | fin |

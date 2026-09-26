@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.1% |
-| Works (untested) | 116 | 47.0% |
+| Tested | 16 | 6.5% |
+| Works (untested) | 115 | 46.6% |
 | Partial (unaudited) | 16 | 6.5% |
 | Not working | 100 | 40.5% |
 
@@ -207,7 +207,6 @@
 | Hunted Phantasm | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunted Troll | handled | When this creature enters, target opponent creates four 1/1 blue Faerie creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infectious Host | handled | When this creature dies, target player loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Instill Furor | handled | Enchanted creature has "At the beginning of your end step, sacrifice this creature unless it attacked this turn." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ivy Dancer | handled | {T}: Target creature gains forestwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Junktroller | handled | {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Last Gasp | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -262,7 +261,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
@@ -271,6 +270,7 @@
 - Doubling Season
 - Firemane Angel
 - Hunted Horror
+- Instill Furor
 - Lightning Helix
 - Muddle the Mixture
 - Overgrown Tomb

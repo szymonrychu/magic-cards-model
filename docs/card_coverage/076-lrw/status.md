@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 8.6% |
-| Works (untested) | 125 | 44.6% |
+| Works (untested) | 126 | 45.0% |
 | Partial (unaudited) | 15 | 5.4% |
-| Not working | 116 | 41.4% |
+| Not working | 115 | 41.1% |
 
 ## Cards needing work
 
@@ -108,7 +108,6 @@
 | Springjack Knight | silent | Whenever this creature attacks, clash with an opponent. If you win, target creature gains double strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squeaking Pie Sneak | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Streambed Aquitects | silent | {T}: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Summon the School | silent | Create two 1/1 blue Merfolk Wizard creature tokens. Tap four untapped Merfolk you control: Return this card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunrise Sovereign | silent | Other Giant creatures you control get +2/+2 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sylvan Echoes | silent | Whenever you clash and win, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Thieving Sprite | silent | When this creature enters, target player reveals X cards from their hand, where X is the number of Faeries you control. You choose one of those cards. That play | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -267,6 +266,7 @@
 | Sower of Temptation | handled | When this creature enters, gain control of target creature for as long as this creature remains on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stinkdrinker Daredevil | handled | Giant spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonybrook Angler | handled | {1}{U}, {T}: You may tap or untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Summon the School | handled | Create two 1/1 blue Merfolk Wizard creature tokens. Tap four untapped Merfolk you control: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surge of Thoughtweft | handled | Creatures you control get +1/+1 until end of turn. If you control a Kithkin, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surgespanner | handled | Whenever this creature becomes tapped, you may pay {1}{U}. If you do, return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sygg, River Guide | handled | {1}{W}: Target Merfolk you control gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -344,7 +344,6 @@
 | counter target spell unless its controller pays {M}. clash with an opponent. if you win, that spell's controller mills four cards. (each clashing player reveals | 1 | Broken Ambitions | lrw |
 | counter target spell. clash with an opponent. if you win, at the beginning of your next main phase, you may add an amount of {M} equal to that spell's mana valu | 1 | Scattering Stroke | lrw |
 | create a token that's a copy of target creature, except it has haste and "..." | 1 | Heat Shimmer | lrw |
-| create two N/N blue merfolk wizard creature tokens. tap four untapped merfolk you control: return ~ from your graveyard to your hand. | 1 | Summon the School | lrw |
 | create two N/N green elf warrior creature tokens. clash with an opponent. if you win, those creatures gain deathtouch until end of turn. (each clashing player r | 1 | Gilt-Leaf Ambush | lrw |
 | destroy target creature. clash with an opponent. if you win, you gain life equal to that creature's toughness. (each clashing player reveals the top card of the | 1 | Weed Strangle | lrw |
 | destroy target enchantment. clash with an opponent. if you win, destroy all enchantments your opponents control. (each clashing player reveals the top card of t | 1 | Spring Cleaning | lrw |

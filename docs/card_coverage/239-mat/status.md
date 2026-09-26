@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 14.3% |
+| Tested | 8 | 16.3% |
 | Works (untested) | 10 | 20.4% |
 | Partial (unaudited) | 5 | 10.2% |
-| Not working | 27 | 55.1% |
+| Not working | 26 | 53.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Arni Metalbrow | silent | Whenever a creature you control attacks or enters attacking, you may pay {1}{R}. If you do, you may put a creature card with mana value less than that creature' | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blot Out | silent | Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Calix, Guided by Fate | silent | Whenever Calix or an enchanted creature you control deals combat damage to a player, you may create a token that's a copy of a nonlegendary enchantment you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coppercoat Vanguard | silent | Each other Human you control gets +1/+0 and has ward {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cosmic Rebirth | silent | Choose target permanent card in your graveyard. If it has mana value 3 or less, you may put it onto the battlefield. If you don't put it onto the battlefield, p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,9 +71,10 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Ayara's Oathsworn
+- Blot Out
 - Jolrael, Voice of Zhalfir
 - Narset, Enlightened Exile
 - Nashi, Moon's Legacy
@@ -106,7 +106,6 @@
 | karn's power and toughness are each equal to the greatest mana value among artifacts you control. | 1 | Karn, Legacy Reforged | mat |
 | other permanents you control have hexproof. | 1 | Sigarda, Font of Blessings | mat |
 | return all noncreature, nonland permanents to their owners' hands. | 1 | Filter Out | mat |
-| target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control. | 1 | Blot Out | mat |
 | when ~ enters, destroy all other creatures that were dealt damage ~. | 1 | Death-Rattle Oni | mat |
 | when ~ enters, exile up to two target legendary creature cards from your graveyard. you draw N cards and you lose N life, where N is the greatest mana value amo | 1 | The Kenriths' Royal Funeral | mat |
 | when ~ enters, you may pay {M} up to three times. when you pay ~ one or more times, choose up to that many — • destroy target artifact or enchantment. • exile t | 1 | Tranquil Frillback | mat |

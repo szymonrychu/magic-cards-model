@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 4.4% |
+| Tested | 9 | 5.0% |
 | Works (untested) | 121 | 67.2% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 44 | 24.4% |
+| Not working | 43 | 23.9% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Dwindle | silent | When enchanted creature blocks, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elvish Clancaller | silent | {4}{G}{G}, {T}: Search your library for a card named Elvish Clancaller, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fraying Omnipotence | silent | Each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. Round up each ti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Frilled Sea Serpent | silent | {5}{U}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goreclaw, Terror of Qal Sisma | silent | Whenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hungering Hydra | silent | Whenever this creature is dealt damage, put that many +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infernal Reckoning | silent | Exile target colorless creature. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -113,6 +112,7 @@
 | Fell Specter | handled | When this creature enters, target opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fiery Finish | handled | Fiery Finish deals 7 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fountain of Renewal | handled | At the beginning of your upkeep, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Frilled Sea Serpent | handled | {5}{U}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gallant Cavalry | handled | When this creature enters, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gearsmith Guardian | handled | This creature gets +2/+0 as long as you control a blue creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gearsmith Prodigy | handled | This creature gets +1/+0 as long as you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -176,7 +176,6 @@
 | Star-Crowned Stag | handled | Whenever this creature attacks, tap target creature defending player controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stitcher's Supplier | handled | When this creature enters or dies, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strangling Spores | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Supreme Phantom | handled | Other Spirits you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Suspicious Bookcase | handled | {3}, {T}: Target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Take Vengeance | handled | Destroy target tapped creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Talons of Wildwood | handled | Enchanted creature gets +1/+1 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,7 +201,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
@@ -212,6 +211,7 @@
 - Nicol Bolas, the Ravager // Nicol Bolas, the Arisen
 - One with the Machine
 - Sarkhan, Fireblood
+- Supreme Phantom
 
 </details>
 
@@ -260,7 +260,6 @@
 | {M}{M}: another target creature you control can't be blocked ~ except by spirits. | 1 | Departed Deckhand | m19 |
 | {M}{M}: ~ gets +N/+N and becomes a bear berserker until end of turn. activate only once each turn. | 1 | Ursine Champion | m19 |
 | {M}{M}{M}, {M}: search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Elvish Clancaller | m19 |
-| {M}{M}{M}: ~ can't be blocked ~. | 1 | Frilled Sea Serpent | m19 |
 | ~ can block an additional creature each combat. | 1 | Ghastbark Twins | m19 |
 | ~ can't be blocked by black creatures. | 1 | Vine Mare | m19 |
 | ~ can't be blocked by blue creatures. | 1 | Lightning Mare | m19 |

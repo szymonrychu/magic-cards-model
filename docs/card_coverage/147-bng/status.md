@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 7.5% |
-| Works (untested) | 79 | 49.4% |
+| Works (untested) | 80 | 50.0% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 59 | 36.9% |
+| Not working | 58 | 36.2% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Fall of the Hammer | silent | Target creature you control deals damage equal to its power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Intervention | silent | Create two 3/3 green Centaur enchantment creature tokens. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fated Retribution | silent | Destroy all creatures and planeswalkers. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fated Return | silent | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flame-Wreathed Phoenix | silent | When this creature enters, if tribute wasn't paid, it gains haste and "When this creature dies, return it to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flitterstep Eidolon | silent | Enchanted creature gets +1/+1 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forgestoker Dragon | silent | {1}{R}: This creature deals 1 damage to target creature. That creature can't block this combat. Activate only if this creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,8 +78,8 @@
 | Crypsis | notice | Target creature you control gains protection from creatures your opponents control until end of turn. Untap it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Everflame Eidolon | notice | {R}: This creature gets +1/+0 until end of turn. If it's an Aura, enchanted creature gets +1/+0 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Eye Gouge | notice | Target creature gets -1/-1 until end of turn. If it's a Cyclops, destroy it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Fated Return | notice | Put target creature card from a graveyard onto the battlefield under your control. It gains indestructible. If it's your turn, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Felhide Spiritbinder | notice | Inspired — Whenever this creature becomes untapped, you may pay {1}{R}. If you do, create a token that's a copy of another target creature, except it's an encha | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Phenax, God of Deception | notice | Creatures you control have "{T}: Target player mills X cards, where X is this creature's toughness." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ragemonger | notice | Minotaur spells you cast cost {B}{R} less to cast. This effect reduces only the amount of colored mana you pay. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Retraction Helix | notice | Until end of turn, target creature gains "{T}: Return target nonland permanent to its owner's hand." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Satyr Firedancer | notice | Whenever an instant or sorcery spell you control deals damage to an opponent, this creature deals that much damage to target creature that player controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -150,6 +149,7 @@
 | Oracle's Insight | handled | Enchanted creature has "{T}: Scry 1, then draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oreskos Sun Guide | handled | Inspired — Whenever this creature becomes untapped, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharagax Giant | handled | When this creature enters, if tribute wasn't paid, this creature deals 5 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Phenax, God of Deception | handled | As long as your devotion to blue and black is less than seven, Phenax isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pheres-Band Tromper | handled | Inspired — Whenever this creature becomes untapped, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pinnacle of Rage | handled | Pinnacle of Rage deals 3 damage to each of two targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plea for Guidance | handled | Search your library for up to two enchantment cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -209,7 +209,6 @@
 | counter target spell unless its controller pays {M}, where N is your devotion to blue. (each {M} in the mana costs of permanents you control counts toward your  | 1 | Thassa's Rebuff | bng |
 | create two N/N green centaur enchantment creature tokens. if it's your turn, scry N. | 1 | Fated Intervention | bng |
 | creatures with power less than the number of islands you control can't block ~. | 1 | Kraken of the Straits | bng |
-| creatures you control have "..." | 1 | Phenax, God of Deception | bng |
 | creatures your opponents control lose deathtouch and can't have or gain deathtouch. | 1 | Archetype of Finality | bng |
 | creatures your opponents control lose first strike and can't have or gain first strike. | 1 | Archetype of Courage | bng |
 | creatures your opponents control lose flying and can't have or gain flying. | 1 | Archetype of Imagination | bng |

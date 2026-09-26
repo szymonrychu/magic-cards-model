@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 8.5% |
-| Works (untested) | 143 | 58.1% |
+| Works (untested) | 145 | 58.9% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 75 | 30.5% |
+| Not working | 73 | 29.7% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Fateful Showdown | silent | Fateful Showdown deals damage to any target equal to the number of cards in your hand. Discard all the cards in your hand, then draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fleetwheel Cruiser | silent | When this Vehicle enters, it becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fumigate | silent | Destroy all creatures. You gain 1 life for each creature destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gearseeker Serpent | silent | {5}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gearshift Ace | silent | Whenever this creature crews a Vehicle, that Vehicle gains first strike until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ghirapur Guide | silent | {2}{G}: Target creature you control can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glint-Sleeve Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -69,7 +68,6 @@
 | Hightide Hermit | silent | Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inventor's Goggles | silent | Whenever an Artificer you control enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Iron League Steed | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Key to the City | silent | {T}, Discard a card: Up to one target creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lost Legacy | silent | Choose a nonartifact, nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. That player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Madcap Experiment | silent | Reveal cards from the top of your library until you reveal an artifact card. Put that card onto the battlefield and the rest on the bottom of your library in a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Marionette Master | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -160,6 +158,7 @@
 | Fragmentize | handled | Destroy target artifact or enchantment with mana value 4 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fretwork Colony | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Furious Reprisal | handled | Furious Reprisal deals 2 damage to each of two targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gearseeker Serpent | handled | {5}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Giant Spectacle | handled | Enchanted creature gets +2/+1 and has menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glassblower's Puzzleknot | handled | When this artifact enters, scry 2, then you get {E}{E}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glimmer of Genius | handled | Scry 2, then draw two cards. You get {E}{E} (two energy counters). | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -173,6 +172,7 @@
 | Inventors' Fair | handled | At the beginning of your upkeep, if you control three or more artifacts, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Janjeet Sentry | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kambal, Consul of Allocation | handled | Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Key to the City | handled | {T}, Discard a card: Up to one target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kujar Seedsculptor | handled | When this creature enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Larger Than Life | handled | Target creature gets +4/+4 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lathnu Hellion | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -340,12 +340,10 @@
 | whenever ~ crews a vehicle, that vehicle gains haste until end of turn. | 1 | Speedway Fanatic | kld |
 | whenever ~ crews a vehicle, that vehicle gets +N/+N until end of turn. | 1 | Veteran Motorist | kld |
 | whenever ~ deals combat damage to a player, you get that many {M} . | 1 | Empyreal Voyager | kld |
-| {M}, discard a card: up to one target creature can't be blocked ~. | 1 | Key to the City | kld |
 | {M}, pay {M}: tap target creature or planeswalker. its activated abilities can't be activated ~. | 1 | Deadlock Trap | kld |
 | {M}, {M}, sacrifice ~: mill five cards. then you may put an artifact card from your graveyard on top of your library. | 1 | Sequestered Stash | kld |
 | {M}, {M}: choose a counter on target permanent or player. give that permanent or player another counter of that kind. | 1 | Animation Module | kld |
 | {M}{M}: target creature you control can't be blocked by creatures with power N or less ~. | 1 | Ghirapur Guide | kld |
-| {M}{M}: ~ can't be blocked ~. | 1 | Gearseeker Serpent | kld |
 | ~ can block only creatures with flying. | 1 | Long-Finned Skywhale | kld |
 | ~ can't attack alone. | 1 | Trusty Companion | kld |
 | ~ can't be blocked by creatures with power N or less. | 1 | Demolition Stomper | kld |

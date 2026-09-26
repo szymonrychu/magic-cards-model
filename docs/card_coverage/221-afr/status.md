@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.2% |
-| Works (untested) | 109 | 42.4% |
+| Works (untested) | 111 | 43.2% |
 | Partial (unaudited) | 18 | 7.0% |
-| Not working | 114 | 44.4% |
+| Not working | 112 | 43.6% |
 
 ## Cards needing work
 
@@ -58,7 +58,6 @@
 | Fifty Feet of Rope | silent | Tie Up — {3}, {T}: Target creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fighter Class | silent | Whenever a creature you control attacks, up to one target creature blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameskull | silent | Rejuvenation — When this creature dies, exile it. If you do, exile the top card of your library. Until the end of your next turn, you may play one of those card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flumph | silent | Whenever this creature is dealt damage, you and target opponent each draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fly | silent | Enchanted creature has flying and "Whenever this creature deals combat damage to a player, venture into the dungeon." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Froghemoth | silent | Whenever this creature deals combat damage to a player, exile up to that many target cards from their graveyard. Put a +1/+1 counter on this creature for each c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gelatinous Cube | silent | Dissolve — {X}{B}: Put target creature card with mana value X exiled with this creature into its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +67,6 @@
 | Grazilaxx, Illithid Scholar | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Green Dragon | silent | Poison Breath — When this creature enters, until end of turn, whenever a creature an opponent controls is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guardian of Faith | silent | When this creature enters, any number of other target creatures you control phase out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Guild Thief | silent | Cunning Action — {3}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hand of Vecna | silent | At the beginning of combat on your turn, equipped creature or a creature you control named Vecna gets +X/+X until end of turn, where X is the number of cards in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herald of Hadar | silent | Circle of Death — {5}{B}: Roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hive of the Eye Tyrant | silent | {3}{B}: Until end of turn, this land becomes a 3/3 black Beholder creature with menace and "Whenever this creature attacks, exile target card from defending pla | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -187,10 +185,12 @@
 | Eye of Vecna | handled | When Eye of Vecna enters, you draw a card and you lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eyes of the Beholder | handled | Target creature gets -11/-11 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fates' Reversal | handled | Return up to one target creature card from your graveyard to your hand. Venture into the dungeon. (Enter the first room or advance to the next room.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Flumph | handled | Whenever this creature is dealt damage, you and target opponent each draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Javelineer | handled | Whenever this creature becomes blocked, it deals 1 damage to target creature blocking it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greataxe | handled | Equipped creature gets +4/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gretchen Titchwillow | handled | {2}{G}{U}: Draw a card. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grim Bounty | handled | Destroy target creature or planeswalker. Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Guild Thief | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Half-Elf Monk | handled | Stunning Strike — {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hill Giant Herdgorger | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hoard Robber | handled | Whenever this creature deals combat damage to a player, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -305,7 +305,6 @@
 | Bewitching Whispers | 1 | Shessra, Death's Whisper | afr |
 | Circle of Death | 1 | Herald of Hadar | afr |
 | Cone of Cold | 1 | Scion of Stygia | afr |
-| Cunning Action | 1 | Guild Thief | afr |
 | Dark One's Own Luck | 1 | Farideh, Devil's Chosen | afr |
 | Dissolve | 1 | Gelatinous Cube | afr |
 | Drag Below | 1 | Dragon Turtle | afr |
@@ -393,7 +392,6 @@
 | whenever you roll one or more dice, ~ deals N damage to each opponent. | 1 | Brazen Dwarf | afr |
 | whenever ~ deals combat damage to a player, exile up to that many target cards from their graveyard. put a +N/+N counter on ~ for each creature card exiled ~. y | 1 | Froghemoth | afr |
 | whenever ~ deals combat damage to a player, put that many +N/+N counters on it. | 1 | Westgate Regent | afr |
-| whenever ~ is dealt damage, you and target opponent each draw a card. | 1 | Flumph | afr |
 | you may cast creature spells from the top of your library. | 1 | Ranger Class | afr |
 | you may cast ~ from your graveyard if a creature not named ~ died ~. | 1 | Ebondeath, Dracolich | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |

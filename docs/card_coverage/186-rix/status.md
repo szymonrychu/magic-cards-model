@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 10.1% |
-| Works (untested) | 87 | 48.9% |
+| Works (untested) | 88 | 49.4% |
 | Partial (unaudited) | 12 | 6.7% |
-| Not working | 61 | 34.3% |
+| Not working | 60 | 33.7% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Journey to Eternity // Atzal, Cave of Eternity | silent | When enchanted creature dies, return it to the battlefield under your control, then return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kumena, Tyrant of Orazca | silent | Tap another untapped Merfolk you control: Kumena can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Merfolk Mistbinder | silent | Other Merfolk you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mutiny | silent | Target creature an opponent controls deals damage equal to its power to another target creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Paladin of Atonement | silent | When this creature dies, you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -137,6 +136,7 @@
 | Jungle Creeper | handled | {3}{B}{G}: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jungleborn Pioneer | handled | When this creature enters, create a 1/1 blue Merfolk creature token with hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight of the Stampede | handled | Dinosaur spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kumena, Tyrant of Orazca | handled | Tap another untapped Merfolk you control: Kumena can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Legion Lieutenant | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Majestic Heliopterus | handled | Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Martyr of Dusk | handled | When this creature dies, create a 1/1 white Vampire creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +246,6 @@
 | other merfolk you control get +N/+N. | 1 | Merfolk Mistbinder | rix |
 | players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
-| tap another untapped merfolk you control: kumena can't be blocked ~. | 1 | Kumena, Tyrant of Orazca | rix |
 | target creature an opponent controls deals damage equal to its power to another target creature that player controls. | 1 | Mutiny | rix |
 | target opponent loses N life. you may search your library and/or graveyard for a card named vraska, scheming gorgon, reveal it, and put it into your hand. if yo | 1 | Vraska's Scorn | rix |
 | when azor enters, each opponent can"..."s next turn. | 1 | Azor, the Lawbringer | rix |

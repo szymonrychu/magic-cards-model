@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.2% |
-| Works (untested) | 115 | 44.4% |
+| Works (untested) | 116 | 44.8% |
 | Partial (unaudited) | 6 | 2.3% |
-| Not working | 122 | 47.1% |
+| Not working | 121 | 46.7% |
 
 ## Cards needing work
 
@@ -87,7 +87,6 @@
 | Outlaw Stitcher | silent | When this creature enters, create a 2/2 blue and black Zombie Rogue creature token, then put two +1/+1 counters on that token for each spell you've cast this tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Overzealous Muscle | silent | Whenever you commit a crime during your turn, this creature gains indestructible until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Patient Naturalist | silent | When this creature enters, mill three cards. Put a land card from among the milled cards into your hand. If you can't, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Pillage the Bog | silent | Look at the top X cards of your library, where X is twice the number of lands you control. Put one of them into your hand and the rest on the bottom of your lib | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Pitiless Carnage | silent | Sacrifice any number of permanents you control, then draw that many cards. Plot {1}{B}{B} (You may pay {1}{B}{B} and exile this card from your hand. Cast it as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Railway Brawler | silent | Whenever another creature you control enters, put X +1/+1 counters on it, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rakdos Joins Up | silent | When Rakdos Joins Up enters, return target creature card from your graveyard to the battlefield with two additional +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -106,7 +105,7 @@
 | Taii Wakeen, Perfect Shot | silent | Whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | The Key to the Vault | silent | Whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. You may exile a nonland card from among them.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thunder Salvo | silent | Thunder Salvo deals X damage to target creature, where X is 2 plus the number of other spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tinybones Joins Up | silent | When Tinybones Joins Up enters, any number of target players each discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Tinybones Joins Up | silent | Whenever a legendary creature you control enters, any number of target players each mill a card and lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tinybones, the Pickpocket | silent | Whenever Tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vadmir, New Blood | silent | Whenever you commit a crime, put a +1/+1 counter on Vadmir. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Visage Bandit | silent | You may have this creature enter as a copy of a creature you control, except it's a Shapeshifter Rogue in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -220,6 +219,7 @@
 | Outlaws' Fury | handled | Creatures you control get +2/+0 until end of turn. If you control an outlaw, exile the top card of your library. Until the end of your next turn, you may play t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Peerless Ropemaster | handled | When this creature enters, return up to one target tapped creature to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Phantom Interference | handled | Spree (Choose one or more additional costs.) + {3} — Create a 2/2 white Spirit creature token with flying. + {1} — Counter target spell unless its controller pa | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pillage the Bog | handled | Look at the top X cards of your library, where X is twice the number of lands you control. Put one of them into your hand and the rest on the bottom of your lib | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Plan the Heist | handled | Surveil 3 if you have no cards in hand. Then draw three cards. (To surveil 3, look at the top three cards of your library, then put any number of them into your | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prickly Pair | handled | When this creature enters, create a 1/1 red Mercenary creature token with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only as a sor | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prosperity Tycoon | handled | When this creature enters, create a 1/1 red Mercenary creature token with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only as a sor | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -313,7 +313,6 @@
 | exile any number of creatures you control, then return them to the battlefield under their owner's control. then repeat ~ N more times. | 1 | Another Round | otj |
 | exile target creature. if it had mana value N or less, surveil N. (look at the top two cards of your library, then put any number of them into your graveyard an | 1 | Consuming Ashes | otj |
 | if you control five or more untapped lands, ~ enters with two +N/+N counters and a lifelink counter on it. | 1 | Dust Animus | otj |
-| look at the top N cards of your library, where N is twice the number of lands you control. put one of them into your hand and the rest on the bottom of your lib | 1 | Pillage the Bog | otj |
 | look at the top three cards of your library. you may exile a nonland card from among them. if you do, it becomes plotted. put the rest into your hand. (you may  | 1 | Make Your Own Luck | otj |
 | nontoken creatures you control have "..." | 1 | Ghired, Mirror of the Wilds | otj |
 | other outlaws you control have haste. | 1 | Hellspur Posse Boss | otj |
@@ -345,7 +344,6 @@
 | when ~ becomes plotted, target creature gets +N/+N and gains trample until end of turn. | 1 | Aloe Alchemist | otj |
 | when ~ dies, create a number of tapped treasure tokens equal to its power. | 1 | Goldvein Hydra | otj |
 | when ~ enters, any number of target opponents each discard a card. for each of those opponents who didn't discard a card with mana value N or greater, draw a ca | 1 | Hollow Marauder | otj |
-| when ~ enters, any number of target players each discard a card. | 1 | Tinybones Joins Up | otj |
 | when ~ enters, create a N/N blue and black zombie rogue creature token, then put two +N/+N counters on that token for each spell you've cast ~ other than the fi | 1 | Outlaw Stitcher | otj |
 | when ~ enters, exile up to one target creature until ~ leaves the battlefield. | 1 | Assimilation Aegis | otj |
 | when ~ enters, if an opponent controls more lands than you, you may search your library for a plains card and put it onto the battlefield tapped. then if an opp | 1 | Claim Jumper | otj |
@@ -354,6 +352,7 @@
 | when ~ enters, return target creature card from your graveyard to the battlefield with two additional +N/+N counters on it. | 1 | Rakdos Joins Up | otj |
 | when ~ enters, return target permanent card with mana value N or less from your graveyard to your hand. return that card to the battlefield instead if you contr | 1 | Shepherd of the Clouds | otj |
 | when ~ enters, return up to one target non-faerie, nonland permanent you control to its owner's hand. if a permanent was returned ~, put a +N/+N counter on ~. | 1 | Nurturing Pixie | otj |
+| whenever a legendary creature you control enters, any number of target players each mill a card and lose N life. | 1 | Tinybones Joins Up | otj |
 | whenever a nontoken creature an opponent controls dies, you may pay {M}. if you do, return that card to the battlefield tapped under your control. it's a treasu | 1 | Vraska, the Silencer | otj |
 | whenever a player casts a noncreature spell, ~ deals damage to that player equal to the number of noncreature spells they've cast ~. | 1 | Magebane Lizard | otj |
 | whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | 1 | Taii Wakeen, Perfect Shot | otj |

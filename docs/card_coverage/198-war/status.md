@@ -17,22 +17,20 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 7.0% |
-| Works (untested) | 132 | 54.1% |
+| Tested | 18 | 7.4% |
+| Works (untested) | 136 | 55.7% |
 | Partial (unaudited) | 19 | 7.8% |
-| Not working | 76 | 31.1% |
+| Not working | 71 | 29.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ajani, the Greathearted | silent | −2: Put a +1/+1 counter on each creature you control and a loyalty counter on each other planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ashiok's Skulker | silent | {3}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Band Together | silent | Up to two target creatures you control each deal damage equal to their power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bond of Insight | silent | Each player mills four cards. Return up to two instant and/or sorcery cards from your graveyard to your hand. Exile Bond of Insight. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Fire Artisan | silent | Whenever one or more loyalty counters are removed from Chandra, she deals that much damage to target opponent or planeswalker. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Command the Dreadhorde | silent | Choose any number of target creature and/or planeswalker cards in graveyards. Command the Dreadhorde deals damage to you equal to the total mana value of those  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cyclops Electromancer | silent | When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deliver Unto Evil | silent | Choose up to four target cards in your graveyard. If you control a Bolas planeswalker, return those cards to your hand. Otherwise, an opponent chooses two of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Domri, Anarch of Bolas | silent | +1: Add {R} or {G}. Creature spells you cast this turn can't be countered. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin, Hand of Control | silent | −1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,7 +55,6 @@
 | Guild Globe | silent | {2}, {T}, Sacrifice this artifact: Add two mana of different colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heartwarming Redemption | silent | Discard all the cards in your hand, then draw that many cards plus one. You gain life equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Interplanar Beacon | silent | {1}, {T}: Add two mana of different colors. Spend this mana only to cast planeswalker spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invade the City | silent | Amass Zombies X, where X is the number of instant and sorcery cards in your graveyard. (Put X +1/+1 counters on an Army you control. It's also a Zombie. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace's Ruse | silent | Return up to two target creatures to their owner's hand. You may search your library and/or graveyard for a card named Jace, Arcane Strategist, reveal it, and p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Arcane Strategist | silent | −7: Creatures you control can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Krenko, Tin Street Kingpin | silent | Whenever Krenko attacks, put a +1/+1 counter on it, then create a number of 1/1 red Goblin creature tokens equal to Krenko's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -91,7 +88,6 @@
 | Vizier of the Scorpion | silent | Zombie tokens you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blindblast | notice | Blindblast deals 1 damage to target creature. That creature can't block this turn. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bond of Passion | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Bond of Passion deals 2 damage to any other target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feather, the Redeemed | notice | Whenever you cast an instant or sorcery spell that targets a creature you control, exile that card instead of putting it into your graveyard as it resolves. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gideon's Battle Cry | notice | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -99,7 +95,6 @@
 | Paradise Druid | notice | This creature has hexproof as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spark Double | notice | You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Storm the Citadel | notice | Until end of turn, creatures you control get +2/+2 and gain "Whenever this creature deals combat damage to a player or planeswalker, destroy target artifact or  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teferi's Time Twist | notice | Exile target permanent you control. Return that card to the battlefield under its owner's control at the beginning of the next end step. If it enters as a creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Topple the Statue | notice | Tap target permanent. If it's an artifact, destroy it. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Arlinn, Voice of the Pack | unaudited | Each creature you control that's a Wolf or a Werewolf enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -126,11 +121,13 @@
 | Angrath's Rampage | handled | Choose one — • Target player sacrifices an artifact of their choice. • Target player sacrifices a creature of their choice. • Target player sacrifices a planesw | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angrath, Captain of Chaos | handled | Creatures you control have menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arlinn's Wolf | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ashiok's Skulker | handled | {3}{U}: This creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Eternal | handled | When this creature enters, amass Zombies 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Banehound | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Battlefield Promotion | handled | Put a +1/+1 counter on target creature. That creature gains first strike until end of turn. You gain 2 life. (A creature with first strike deals combat damage b | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blast Zone | handled | This land enters with a charge counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bleeding Edge | handled | Up to one target creature gets -2/-2 until end of turn. Amass Zombies 2. (Put two +1/+1 counters on an Army you control. It's also a Zombie. If you don't contro | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blindblast | handled | Blindblast deals 1 damage to target creature. That creature can't block this turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloom Hulk | handled | When this creature enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bond of Discipline | handled | Tap all creatures your opponents control. Creatures you control gain lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bond of Flourishing | handled | Look at the top three cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on the bottom of your libra | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -148,6 +145,7 @@
 | Courage in Crisis | handled | Put a +1/+1 counter on target creature, then proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cruel Celebrant | handled | Whenever this creature or another creature or planeswalker you control dies, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crush Dissent | handled | Counter target spell unless its controller pays {2}. Amass Zombies 2. (Put two +1/+1 counters on an Army you control. It's also a Zombie. If you don't control a | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cyclops Electromancer | handled | When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Davriel's Shadowfugue | handled | Target player discards two cards and loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Davriel, Rogue Shadowmage | handled | At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, Davriel deals 2 damage to them. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathsprout | handled | Destroy target creature. Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -178,6 +176,7 @@
 | Honor the God-Pharaoh | handled | As an additional cost to cast this spell, discard a card. Draw two cards. Amass Zombies 1. (Put a +1/+1 counter on an Army you control. It's also a Zombie. If y | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Huatli's Raptor | handled | When this creature enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ignite the Beacon | handled | Search your library for up to two planeswalker cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Invade the City | handled | Amass Zombies X, where X is the number of instant and sorcery cards in your graveyard. (Put X +1/+1 counters on an Army you control. It's also a Zombie. If you  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invading Manticore | handled | When this creature enters, amass Zombies 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iron Bully | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ironclad Krovod | handled |  |  | Y/Y/- | not_tested |
@@ -257,7 +256,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Arboreal Grazer
 - Ashiok, Dream Render
@@ -274,6 +273,7 @@
 - Parhelion II
 - Saheeli, Sublime Artificer
 - Sorin, Vengeful Bloodlord
+- Storm the Citadel
 - Teferi, Time Raveler
 - Turret Ogre
 
@@ -288,7 +288,6 @@
 | +N: exile the top card of your library face down and look at it. create a N/N colorless spirit creature token. when that token leaves the battlefield, put the e | 1 | Ugin, the Ineffable | war |
 | +N: until your next turn, up to one target creature gains reach and vigilance. | 1 | Vivien, Champion of the Wilds | war |
 | amass zombies N, then the army you amassed deals damage equal to its power to each non-army creature. (to amass zombies N, put two +N/+N counters on an army you | 1 | Widespread Brutality | war |
-| amass zombies N, where N is the number of instant and sorcery cards in your graveyard. (put N +N/+N counters on an army you control. it"..."t control an army, c | 1 | Invade the City | war |
 | as ~ enters, you may return a nonland permanent you control to its owner's hand. if you do, ~ enters with a +N/+N counter on it. | 1 | Rescuer Sphinx | war |
 | choose a creature or planeswalker you control. all damage that would be dealt ~ to you and permanents you control is dealt to the chosen permanent instead (if i | 1 | Gideon's Sacrifice | war |
 | choose any number of target creature and/or planeswalker cards in graveyards. ~ deals damage to you equal to the total mana value of those cards. put them onto  | 1 | Command the Dreadhorde | war |
@@ -329,7 +328,6 @@
 | spells your opponents cast that target a creature or planeswalker you control cost {M} more to cast. | 1 | Kasmina, Enigmatic Mentor | war |
 | tap target permanent. if it's an artifact, destroy it. draw a card. | 1 | Topple the Statue | war |
 | target opponent sacrifices a creature of their choice that attacked or blocked ~. if you control a gideon planeswalker, that player sacrifices two of those crea | 1 | Gideon's Triumph | war |
-| until end of turn, creatures you control get +N/+N and gain "..." | 1 | Storm the Citadel | war |
 | up to two target creatures you control each deal damage equal to their power to another target creature. | 1 | Band Together | war |
 | when fblthp enters, draw a card. if it entered from your library or was cast from your library, draw two cards instead. | 1 | Fblthp, the Lost | war |
 | when niv-mizzet enters, reveal the top ten cards of your library. for each color pair, choose a card that's exactly those colors from among them. put the chosen | 1 | Niv-Mizzet Reborn | war |
@@ -337,7 +335,6 @@
 | when tolsimir enters, create voja, friend to elves, a legendary N/N green and white wolf creature token. | 1 | Tolsimir, Friend to Wolves | war |
 | when ~ enters, double the power of each other creature you control until end of turn. those creatures gain vigilance until end of turn. | 1 | God-Eternal Rhonas | war |
 | when ~ enters, each other creature gets -N/-N until end of turn. whenever a creature dies ~, each creature other than ~ gets -N/-N until end of turn. | 1 | Massacre Girl | war |
-| when ~ enters, it deals N damage to target creature an opponent controls, where N is the number of instant and sorcery cards in your graveyard. | 1 | Cyclops Electromancer | war |
 | when ~ enters, look at the top card of target opponent's library. | 1 | Saheeli's Silverwing | war |
 | when ~ enters, sacrifice any number of other permanents, then draw that many cards. | 1 | God-Eternal Bontu | war |
 | whenever a creature attacks you or a planeswalker you control, each dragon you control deals N damage to that creature. | 1 | Sarkhan the Masterless | war |
@@ -367,11 +364,9 @@
 | {M}: add two mana of different colors. | 1 | Firemind Vessel | war |
 | {M}: return a tapped land you control to its owner's hand. | 1 | Living Twister | war |
 | {M}{M}: look at the top card of your library. if it"..."t put the card into your hand, put it on the bottom of your library. | 1 | Vivien's Grizzly | war |
-| {M}{M}: ~ can't be blocked ~. | 1 | Ashiok's Skulker | war |
 | ~ can't attack alone. | 1 | Raging Kronch | war |
 | ~ can't be blocked by creatures with power N or greater. | 1 | Duskmantle Operative | war |
 | ~ deals N damage to target creature and you gain life equal to the damage dealt ~. target player mills four cards. amass zombies N. (put four +N/+N counters on  | 1 | Enter the God-Eternals | war |
-| ~ deals N damage to target creature. that creature can't block ~. draw a card. | 1 | Blindblast | war |
 | ~ enters with a +N/+N counter on it for each loyalty counter on planeswalkers you control. | 1 | Bioessence Hydra | war |
 | ~ has hexproof as long as it's untapped. | 1 | Paradise Druid | war |
 | −N: creatures you control can't be blocked ~. | 1 | Jace, Arcane Strategist | war |

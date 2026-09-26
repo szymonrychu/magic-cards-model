@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 1.9% |
-| Works (untested) | 66 | 41.5% |
+| Works (untested) | 70 | 44.0% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 80 | 50.3% |
+| Not working | 76 | 47.8% |
 
 ## Cards needing work
 
@@ -90,21 +90,17 @@
 | Sway of the Stars | silent | Each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. Each player's life total becomes 7. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Takeno's Cavalry | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Tallowisp | silent | Whenever you cast a Spirit or Arcane spell, you may search your library for an Aura card with enchant creature, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Terashi's Grasp | silent | Destroy target artifact or enchantment. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Toshiro Umezawa | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Twist Allegiance | silent | You and target opponent each gain control of all creatures the other controls until end of turn. Untap those creatures. Those creatures gain haste until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Uproot | silent | Put target land on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Walker of Secret Ways | silent | Whenever this creature deals combat damage to a player, look at that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ward of Piety | silent | {1}{W}: The next 1 damage that would be dealt to enchanted creature this turn is dealt to any target instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yukora, the Prisoner | silent | When Yukora leaves the battlefield, sacrifice all non-Ogre creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blazing Shoal | notice | You may exile a red card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Call for Blood | notice | As an additional cost to cast this spell, sacrifice a creature. Target creature gets -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Empty-Shrine Kannushi | notice | This creature has protection from each color among permanents you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | First Volley | notice | First Volley deals 1 damage to target creature and 1 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Kira, Great Glass-Spinner | notice | Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability." | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kodama of the Center Tree | notice | Kodama of the Center Tree has soulshift X, where X is the number of Spirits you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Lifespinner | notice | {T}, Sacrifice three Spirits: Search your library for a legendary Spirit permanent card, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sickening Shoal | notice | You may exile a black card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets -X/-X until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unchecked Growth | notice | Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Clash of Realities | unaudited | All Spirits have "When this permanent enters, you may have it deal 3 damage to target non-Spirit creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fumiko the Lowblood | unaudited | Creatures your opponents control attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -120,6 +116,7 @@
 | Akki Raider | handled | Whenever a land is put into a graveyard from the battlefield, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashen Monstrosity | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Baku Altar | handled | Whenever you cast a Spirit or Arcane spell, you may put a ki counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blazing Shoal | handled | You may exile a red card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets +X/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blinding Powder | handled | Equipped creature has "Unattach Blinding Powder: Prevent all combat damage that would be dealt to this creature this turn." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Child of Thorns | handled | Sacrifice this creature: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crack the Earth | handled | Each player sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -141,6 +138,7 @@
 | Kaijin of the Vanishing Touch | handled | Whenever this creature blocks a creature, return that creature to its owner's hand at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of False Hope | handled | Sacrifice this creature: Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of Tattered Shoji | handled | Whenever you cast a Spirit or Arcane spell, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kira, Great Glass-Spinner | handled | Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lifegift | handled | Whenever a land enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loam Dweller | handled | Whenever you cast a Spirit or Arcane spell, you may put a land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of Sakiko | handled | Enchanted creature has "Whenever this creature deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phas | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -163,6 +161,7 @@
 | Scourge of Numai | handled | At the beginning of your upkeep, you lose 2 life if you don't control an Ogre. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shuko | handled | Equipped creature gets +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shuriken | handled | Equipped creature has "{T}, Unattach Shuriken: Shuriken deals 2 damage to target creature. That creature's controller gains control of Shuriken unless it was un | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sickening Shoal | handled | You may exile a black card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets -X/-X until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skullmane Baku | handled | Whenever you cast a Spirit or Arcane spell, you may put a ki counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soratami Mindsweeper | handled | {2}, Return a land you control to its owner's hand: Target player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sosuke's Summons | handled | Create two 1/1 green Snake creature tokens. Whenever a nontoken Snake you control enters, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -171,6 +170,7 @@
 | Takenuma Bleeder | handled | Whenever this creature attacks or blocks, you lose 1 life if you don't control a Demon. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Teardrop Kami | handled | Sacrifice this creature: You may tap or untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tendo Ice Bridge | handled | This land enters with a charge counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Terashi's Grasp | handled | Destroy target artifact or enchantment. You gain life equal to its mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Terashi's Verdict | handled | Destroy target attacking creature with power 3 or less. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Threads of Disloyalty | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Three Tragedies | handled | Target player discards three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -210,9 +210,7 @@
 | at the beginning of your upkeep, add {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Sakura-Tribe Springcaller | bok |
 | at the beginning of your upkeep, sacrifice chisei unless you remove a counter from a permanent you control. | 1 | Chisei, Heart of Oceans | bok |
 | counter target spell. that spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | 1 | Minamo's Meddling | bok |
-| creatures you control have "..." | 1 | Kira, Great Glass-Spinner | bok |
 | creatures your opponents control attack each combat if able. | 1 | Fumiko the Lowblood | bok |
-| destroy target artifact or enchantment. you gain life equal to its mana value. | 1 | Terashi's Grasp | bok |
 | each enchantment deals N damage to its controller, then each aura attached to a creature deals N damage to the creature it's attached to. | 1 | Aura Barbs | bok |
 | each permanent with a divinity counter on it has indestructible. | 1 | That Which Was Taken | bok |
 | each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. each player's life total becomes N. | 1 | Sway of the Stars | bok |
@@ -247,8 +245,6 @@
 | whenever ~ is dealt damage, it deals that much damage to you. | 1 | Shinka Gatekeeper | bok |
 | whenever ~ is dealt damage, you gain that much life. | 1 | Kami of the Honored Dead | bok |
 | you and target opponent each gain control of all creatures the other controls until end of turn. untap those creatures. those creatures gain haste until end of  | 1 | Twist Allegiance | bok |
-| you may exile a black card with mana value N from your hand rather than pay ~ mana cost. target creature gets -N/-N until end of turn. | 1 | Sickening Shoal | bok |
-| you may exile a red card with mana value N from your hand rather than pay ~ mana cost. target creature gets +N/+N until end of turn. | 1 | Blazing Shoal | bok |
 | you may exile a white card with mana value N from your hand rather than pay ~ mana cost. the next N damage that a source of your choice would deal to you and/or | 1 | Shining Shoal | bok |
 | {M}, discard a spirit or arcane card: ~ becomes an N/N cat artifact creature until end of turn, where N is the discarded card's mana value. | 1 | Slumbering Tora | bok |
 | {M}, remove N ki counters from ~: for each counter removed, ~ gets +N/+N until end of turn. | 1 | Blademane Baku | bok |

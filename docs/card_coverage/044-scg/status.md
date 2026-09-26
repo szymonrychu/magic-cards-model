@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 20.8% |
+| Tested | 6 | 25.0% |
 | Works (untested) | 8 | 33.3% |
 | Partial (unaudited) | 1 | 4.2% |
-| Not working | 10 | 41.7% |
+| Not working | 9 | 37.5% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Undead Warchief | silent | Zombie creatures you control get +2/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealous Inquisitor | silent | {1}{W}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragonstorm | notice | Search your library for a Dragon permanent card, put it onto the battlefield, then shuffle. Storm (When you cast this spell, copy it for each spell cast before  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Enrage | notice | Target creature gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Upwelling | unaudited | Players don't lose unspent mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dragon Mage | handled | Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gilded Light | handled | You gain shroud until end of turn. (You can't be the target of spells or abilities.) Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -49,10 +48,11 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>6 cards</summary>
 
 - Call to the Grave
 - Carrion Feeder
+- Enrage
 - Goblin Brigand
 - Goblin Warchief
 - Twisted Abomination
@@ -66,7 +66,6 @@
 | at the beginning of each end step, your life total becomes N. | 1 | Form of the Dragon | scg |
 | players don't lose unspent mana as steps and phases end. | 1 | Upwelling | scg |
 | search your library for a dragon permanent card, put it onto the battlefield, then shuffle. storm (when you cast ~, copy it for each spell cast before it ~.) | 1 | Dragonstorm | scg |
-| target creature gets +N/+N until end of turn. | 1 | Enrage | scg |
 | target player loses life equal to the damage already dealt to that player ~. | 1 | Final Punishment | scg |
 | when enchanted creature is dealt damage, destroy it. | 1 | Frozen Solid | scg |
 | when you cycle ~, you may pay {M}. if you do, create N N/N white soldier creature tokens. | 1 | Decree of Justice | scg |

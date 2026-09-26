@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 2.2% |
-| Works (untested) | 86 | 48.0% |
+| Works (untested) | 87 | 48.6% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 84 | 46.9% |
+| Not working | 83 | 46.4% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Desecrator Hag | silent | When this creature enters, return to your hand the creature card in your graveyard with the greatest power. If two or more cards are tied for greatest power, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dominus of Fealty | silent | At the beginning of your upkeep, you may gain control of target permanent until end of turn. If you do, untap it and it gains haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doomgape | silent | At the beginning of your upkeep, sacrifice a creature. You gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dream Thief | silent | When this creature enters, draw a card if you've cast another blue spell this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duergar Mine-Captain | silent | {1}{R/W}, {Q}: Attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Edge of the Divinity | silent | As long as enchanted creature is white, it gets +1/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Endless Horizons | silent | When this enchantment enters, search your library for any number of Plains cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -130,6 +129,7 @@
 | Double Cleave | handled | Target creature gains double strike until end of turn. (It deals both first-strike and regular combat damage.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drain the Well | handled | Destroy target land. You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dream Fracture | handled | Counter target spell. Its controller draws a card. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dream Thief | handled | When this creature enters, draw a card if you've cast another blue spell this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Assailant | handled | Sacrifice this creature: It deals 1 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Cave-Guard | handled | {R/W}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Hedge-Mage | handled | When this creature enters, if you control two or more Mountains, you may destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -258,7 +258,6 @@
 | untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. retrace (you may cast ~ from your  | 1 | Waves of Aggression | eve |
 | until end of turn, target creature gains "..." | 1 | Banishing Knack | eve |
 | when ~ enters, draw a card for each green creature you control. | 1 | Regal Force | eve |
-| when ~ enters, draw a card if you've cast another blue spell ~. | 1 | Dream Thief | eve |
 | when ~ enters, if you control two or more swamps, you may have target player discard a card. | 1 | Hag Hedge-Mage | eve |
 | when ~ enters, put a -N/-N counter on each creature. | 1 | Soul Snuffers | eve |
 | when ~ enters, return to your hand the creature card in your graveyard with the greatest power. if two or more cards are tied for greatest power, you choose one | 1 | Desecrator Hag | eve |

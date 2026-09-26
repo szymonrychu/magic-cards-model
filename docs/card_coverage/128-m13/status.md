@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 2.8% |
+| Tested | 5 | 4.7% |
 | Works (untested) | 56 | 52.3% |
-| Partial (unaudited) | 3 | 2.8% |
-| Not working | 45 | 42.1% |
+| Partial (unaudited) | 2 | 1.9% |
+| Not working | 44 | 41.1% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Duty-Bound Dead | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Elderscale Wurm | silent | When this creature enters, if your life total is less than 7, your life total becomes 7. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gem of Becoming | silent | {3}, {T}, Sacrifice this artifact: Search your library for an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Harbor Bandit | silent | {1}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of Glory | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Knight of Infamy | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Liliana of the Dark Realms | silent | −3: Target creature gets +X/+X or -X/-X until end of turn, where X is the number of Swamps you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,19 +64,17 @@
 | Worldfire | silent | Exile all permanents. Exile all cards from all hands and graveyards. Each player's life total becomes 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arctic Aven | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Crimson Muckwader | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Diabolic Revelation | notice | Search your library for up to X cards, put those cards into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flinthoof Boar | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Harbor Bandit | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Jace's Phantasm | notice | This creature gets +4/+4 as long as an opponent has ten or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Prized Elephant | notice | This creature gets +1/+1 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Encrust | unaudited | Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Omniscience | unaudited | You may cast spells from your hand without paying their mana costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Yeva, Nature's Herald | unaudited | You may cast green creature spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Archaeomancer | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Attended Knight | handled | When this creature enters, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Augur of Bolas | handled | When this creature enters, look at the top three cards of your library. You may reveal an instant or sorcery card from among them and put it into your hand. Put | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battleflight Eagle | handled | When this creature enters, target creature gets +2/+2 and gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodhunter Bat | handled | When this creature enters, target player loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bond Beetle | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -88,6 +85,7 @@
 | Cower in Fear | handled | Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Craterize | handled | Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crusader of Odric | handled | Crusader of Odric's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Diabolic Revelation | handled | Search your library for up to X cards, put those cards into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Downpour | handled | Tap up to three target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon Hatchling | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Faerie Invaders | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -134,10 +132,12 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>5 cards</summary>
 
+- Augur of Bolas
 - Faith's Reward
 - Mind Sculpt
+- Omniscience
 - Switcheroo
 
 </details>
@@ -160,7 +160,6 @@
 | exile all permanents. exile all cards from all hands and graveyards. each player's life total becomes N. | 1 | Worldfire | m13 |
 | exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. copy those cards. cast the copies if a | 1 | Spelltwine | m13 |
 | other merfolk creatures you control get +N/+N and have islandwalk. | 1 | Master of the Pearl Trident | m13 |
-| search your library for up to N cards, put those cards into your hand, then shuffle. | 1 | Diabolic Revelation | m13 |
 | when ~ enters, if your life total is less than N, your life total becomes N. | 1 | Elderscale Wurm | m13 |
 | when ~ enters, it deals N damage to each creature with flying your opponents control. tap those creatures. | 1 | Thundermaw Hellkite | m13 |
 | when ~ enters, sacrifice another creature. you gain N life and draw N cards, where N is that creature's power. | 1 | Disciple of Bolas | m13 |
@@ -171,13 +170,11 @@
 | whenever nefarox attacks alone, defending player sacrifices a creature of their choice. | 1 | Nefarox, Overlord of Grixis | m13 |
 | whenever odric and at least three other creatures attack, you choose which creatures block ~ and how those creatures block. | 1 | Odric, Master Tactician | m13 |
 | you may cast green creature spells as though they had flash. | 1 | Yeva, Nature's Herald | m13 |
-| you may cast spells from your hand without paying their mana costs. | 1 | Omniscience | m13 |
 | {M}, {M}, sacrifice ~: search your library for an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Gem of Becoming | m13 |
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
 | {M}: target creature blocks ~ if able. | 1 | Courtly Provocateur | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
-| {M}{M}: ~ can't be blocked ~. | 1 | Harbor Bandit | m13 |
 | ~ deals N damage to each creature without flying and each planeswalker. | 1 | Magmaquake | m13 |
 | ~ deals N damage to target player or planeswalker and N damage to each creature that player or that planeswalker's controller controls. | 1 | Chandra's Fury | m13 |
 | ~ gets +N/+N as long as an opponent has ten or more cards in their graveyard. | 1 | Jace's Phantasm | m13 |
@@ -185,6 +182,7 @@
 | ~ gets +N/+N as long as you control a mountain. | 1 | Flinthoof Boar | m13 |
 | ~ gets +N/+N as long as you control a plains. | 1 | Arctic Aven | m13 |
 | ~ gets +N/+N as long as you control a swamp. | 1 | Crimson Muckwader | m13 |
+| ~ gets +N/+N as long as you control an island. | 1 | Harbor Bandit | m13 |
 | ~ gets +N/+N for each other creature you control named ~. | 1 | Timberpack Wolf | m13 |
 | −N: create N N/N white cat creature tokens, where N is your life total. | 1 | Ajani, Caller of the Pride | m13 |
 | −N: target creature gets +N/+N or -N/-N until end of turn, where N is the number of swamps you control. | 1 | Liliana of the Dark Realms | m13 |

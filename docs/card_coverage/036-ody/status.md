@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 11.8% |
+| Tested | 7 | 13.7% |
 | Works (untested) | 28 | 54.9% |
 | Partial (unaudited) | 4 | 7.8% |
-| Not working | 13 | 25.5% |
+| Not working | 12 | 23.5% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Deluge | silent | Tap all creatures without flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haunting Echoes | silent | Exile all cards from target player's graveyard other than basic land cards. For each card exiled this way, search that player's library for all cards with the s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnivore | silent | Magnivore's power and toughness are each equal to the number of sorcery cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mirari | silent | Whenever you cast an instant or sorcery spell, you may pay {3}. If you do, copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortivore | silent | Mortivore's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadowmage Infiltrator | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Time Stretch | silent | Target player takes two extra turns after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -75,11 +74,12 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Barbarian Ring
 - Diabolic Tutor
 - Millikin
+- Mirari
 - Peek
 - Syncopate
 - Traumatize
@@ -99,7 +99,6 @@
 | tap all creatures without flying. | 1 | Deluge | ody |
 | target creature you control gains protection from the color of your choice until end of turn. draw a card. | 1 | Shelter | ody |
 | target player takes two extra turns after ~. | 1 | Time Stretch | ody |
-| whenever you cast an instant or sorcery spell, you may pay {M}. if you do, copy that spell. you may choose new targets for the copy. | 1 | Mirari | ody |
 | whenever you win a coin flip, put a luck counter on ~. | 1 | Chance Encounter | ody |
 | {M}{M}: target player reveals the top card of their library. | 1 | Aven Windreader | ody |
 | ~ can't attack or block alone. | 1 | Ember Beast | ody |

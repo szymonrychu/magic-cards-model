@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.2% |
-| Works (untested) | 125 | 51.9% |
+| Works (untested) | 127 | 52.7% |
 | Partial (unaudited) | 22 | 9.1% |
-| Not working | 79 | 32.8% |
+| Not working | 77 | 32.0% |
 
 ## Cards needing work
 
@@ -96,12 +96,10 @@
 | Trueheart Twins | silent | Whenever you exert a creature, creatures you control get +1/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Unwavering Initiate | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vizier of Many Faces | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Warfire Javelineer | silent | When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Watchers of the Dead | silent | Exile this creature: Each opponent chooses two cards in their graveyard and exiles the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Djeru's Resolve | notice | Untap target creature. Prevent all damage that would be dealt to it this turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grim Strider | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hazoret's Favor | notice | At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Merciless Javelineer | notice | {2}, Discard a card: Put a -1/-1 counter on target creature. That creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Shed Weakness | notice | Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thresher Lizard | notice | This creature gets +1/+2 as long as you have one or fewer cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vizier of Deferment | notice | When this creature enters, you may exile target creature if it attacked or blocked this turn. Return that card to the battlefield under its owner's control at t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -196,6 +194,7 @@
 | Limits of Solidarity | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Manglehorn | handled | When this creature enters, you may destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Manticore of the Gauntlet | handled | When this creature enters, put a -1/-1 counter on target creature you control. This creature deals 3 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Merciless Javelineer | handled | {2}, Discard a card: Put a -1/-1 counter on target creature. That creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Miasmic Mummy | handled | When this creature enters, each player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minotaur Sureshot | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naga Oracle | handled | When this creature enters, surveil 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,6 +245,7 @@
 | Trial of Zeal | handled | When this enchantment enters, it deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Violent Impact | handled | Destroy target artifact or land. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wander in Death | handled | Return up to two target creature cards from your graveyard to your hand. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Warfire Javelineer | handled | When this creature enters, it deals X damage to target creature an opponent controls, where X is the number of instant and sorcery cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wasteland Scorpion | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Wayward Servant | handled | Whenever another Zombie you control enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weaver of Currents | handled |  |  | Y/Y/- | not_tested |
@@ -326,7 +326,6 @@
 | untap up to two target creatures. they each get +N/+N until end of turn. | 1 | Synchronized Strike | akh |
 | when ~ dies, you may put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Soulstinger | akh |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Quarry Hauler | akh |
-| when ~ enters, it deals N damage to target creature an opponent controls, where N is the number of instant and sorcery cards in your graveyard. | 1 | Warfire Javelineer | akh |
 | when ~ enters, you may exile target creature if it attacked or blocked ~. return that card to the battlefield under its owner's control at the beginning of the  | 1 | Vizier of Deferment | akh |
 | when ~ enters, you may have enchanted creature fight target creature an opponent controls. | 1 | Cartouche of Strength | akh |
 | when ~ enters, you may search your library and/or graveyard for a card named gideon, martial paragon, reveal it, and put it into your hand. if you search your l | 1 | Gideon's Resolve | akh |
@@ -352,7 +351,6 @@
 | you may exert ~ as it attacks. when you do, untap all other creatures you control. | 1 | Ahn-Crop Champion | akh |
 | you may exert ~ as it attacks. when you do, you may put a creature card from your hand onto the battlefield. | 1 | Champion of Rhonas | akh |
 | your opponents can't cast spells with the chosen name. | 1 | Gideon's Intervention | akh |
-| {M}, discard a card: put a -N/-N counter on target creature. that creature can't block ~. | 1 | Merciless Javelineer | akh |
 | {M}, {M}, sacrifice ~: search your graveyard, hand, and/or library for a card named god-pharaoh's gift and put it onto the battlefield. if you search your libra | 1 | Gate to the Afterlife | akh |
 | {M}, {M}: until your next turn, target creature can"..."t be activated. activate only if there are three or more brick counters on ~. | 1 | Edifice of Authority | akh |
 | {M}{M}, {M}: all zombies gain menace until end of turn. | 1 | Lord of the Accursed | akh |

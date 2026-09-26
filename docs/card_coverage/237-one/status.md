@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 9.1% |
-| Works (untested) | 100 | 39.7% |
+| Tested | 24 | 9.5% |
+| Works (untested) | 104 | 41.3% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 119 | 47.2% |
+| Not working | 114 | 45.2% |
 
 ## Cards needing work
 
@@ -92,7 +92,6 @@
 | Phyrexian Atlas | silent | Corrupted — Whenever this artifact becomes tapped, each opponent who has three or more poison counters loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plague Nurse | silent | {2}{G}: Each other creature you control with toxic gains toxic 1 until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prologue to Phyresis | silent | Each opponent gets a poison counter. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ravenous Necrotitan | silent | Corrupted — When this creature enters, sacrifice a creature unless an opponent has three or more poison counters. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reject Imperfection | silent | Counter target spell. If that spell's mana value was 3 or less, proliferate. (Choose any number of permanents and/or players, then give each another counter of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rhuk, Hexgold Nabber | silent | Whenever an equipped creature you control other than Rhuk attacks or dies, you may attach all Equipment attached to that creature to Rhuk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ria Ivor, Bane of Bladehold | silent | At the beginning of combat on your turn, the next time target creature would deal combat damage to one or more players this combat, prevent that damage. If dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -106,9 +105,7 @@
 | Unctus, Grand Metatect | silent | {U/P}: Until end of turn, target creature you control becomes a blue artifact in addition to its other colors and types. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Urabrask's Anointer | silent | When this creature enters, it deals X damage to any target, where X is the number of permanents you control with oil counters on them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vanish into Eternity | silent | This spell costs {3} more to cast if it targets a creature. Exile target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vat Emergence | silent | Put target creature card from a graveyard onto the battlefield under your control. Proliferate. (Choose any number of permanents and/or players, then give each  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Venser, Corpse Puppet | silent | Whenever you proliferate, choose one — • If you don't control a creature named The Hollow Sentinel, create The Hollow Sentinel, a legendary 3/3 colorless Phyrex | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Vindictive Flamestoker | silent | {6}{R}, Sacrifice this creature: Discard your hand, then draw four cards. This ability costs {1} less to activate for each oil counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Viral Spawning | silent | Create a 3/3 green Phyrexian Beast creature token with toxic 1. (Players dealt combat damage by it also get a poison counter.) Corrupted — As long as an opponen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voidwing Hybrid | silent | When you proliferate, return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Vraska, Betrayal's Sting | silent | −2: Target creature becomes a Treasure artifact with "{T}, Sacrifice this artifact: Add one mana of any color" and loses all other card types and abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -123,7 +120,6 @@
 | Aspirant's Ascent | notice | Until end of turn, target creature gets +1/+3 and gains flying and toxic 1. (Players dealt combat damage by that creature also get a poison counter.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Atraxa's Skitterfang | notice | At the beginning of combat on your turn, you may remove an oil counter from this creature. When you do, target creature you control gains your choice of flying, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Black Sun's Twilight | notice | Up to one target creature gets -X/-X until end of turn. If X is 5 or more, return a creature card with mana value X or less from your graveyard to the battlefie | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Cacophony Scamp | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, proliferate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Carnivorous Canopy | notice | Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate. (Choose any number of permanents and/o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Charge of the Mites | notice | Choose one — • Charge of the Mites deals damage equal to the number of creatures you control to target creature or planeswalker. • Create two 1/1 colorless Phyr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -143,7 +139,6 @@
 | Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Serum Snare | notice | Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Trawler Drake | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tyvar's Stand | notice | Target creature you control gets +X/+X and gains hexproof and indestructible until end of turn. (It can't be the target of spells or abilities your opponents co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urabrask's Forge | notice | At the beginning of combat on your turn, put an oil counter on this artifact, then create an X/1 red Phyrexian Horror creature token with trample and haste, whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bladegraft Aspirant | unaudited | Activated abilities of Equipment you control that target this creature cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Cinderslash Ravager | unaudited | This spell costs {1} less to cast for each permanent you control with oil counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -162,6 +157,7 @@
 | Atmosphere Surgeon | handled | Whenever you cast a noncreature spell, put an oil counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Axiom Engraver | handled | This creature enters with two oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basilica Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Black Sun's Twilight | handled | Up to one target creature gets -X/-X until end of turn. If X is 5 or more, return a creature card with mana value X or less from your graveyard to the battlefie | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bladed Ambassador | handled | This creature enters with an oil counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blightbelly Rat | handled | When this creature dies, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloated Contaminator | handled | Whenever this creature deals combat damage to a player, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -217,6 +213,7 @@
 | Plated Onslaught | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Predation Steward | handled | This creature enters with two oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quicksilver Fisher | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ravenous Necrotitan | handled | Corrupted — When this creature enters, sacrifice a creature unless an opponent has three or more poison counters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resistance Skywarden | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Ribskiff | handled | When this Vehicle enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rustvine Cultivator | handled | {T}: Put an oil counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,7 +243,9 @@
 | Transplant Theorist | handled | Whenever this creature or another artifact you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tyrranax Atrocity | handled | Toxic | machines/combat.py | Y/Y/- | not_tested |
 | Tyrranax Rex | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tyvar's Stand | handled | Target creature you control gets +X/+X and gains hexproof and indestructible until end of turn. (It can't be the target of spells or abilities your opponents co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unnatural Restoration | handled | Return target permanent card from your graveyard to your hand. Proliferate. (Choose any number of permanents and/or players, then give each another counter of e | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vat Emergence | handled | Put target creature card from a graveyard onto the battlefield under your control. Proliferate. (Choose any number of permanents and/or players, then give each  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vat of Rebirth | handled | Whenever another artifact or creature you control is put into a graveyard from the battlefield, put an oil counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Veil of Assimilation | handled | Whenever this artifact or another artifact you control enters, target creature you control gets +1/+1 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Venomous Brutalizer | handled | When this creature enters, you may pay {1}{G}. If you do, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Atraxa, Grand Unifier
 - Bilious Skulldweller
@@ -283,6 +282,7 @@
 - The Mycosynth Gardens
 - Tyvar, Jubilant Brawler
 - Venerated Rotpriest
+- Vindictive Flamestoker
 - Vivisection Evangelist
 
 </details>
@@ -292,7 +292,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | for mirrodin! | 7 | Barbed Batterfist, Bladehold War-Whip, Dragonwing Glider, Goldwarden's Helm, Mirran Bardiche | one |
-| Corrupted | 6 | Apostle of Invasion, Bonepicker Skirge, Phyrexian Atlas, Ravenous Necrotitan, The Seedcore | one |
+| Corrupted | 5 | Apostle of Invasion, Bonepicker Skirge, Phyrexian Atlas, The Seedcore, Zealot's Conviction | one |
 | ~ gets +N/+N for each oil counter on it. | 4 | Evolving Adaptive, Exuberant Fuseling, Necrosquito, Trawler Drake | one |
 | when ~ dies, create a N/N colorless phyrexian mite artifact creature token with toxic N and "..." | 2 | Crawling Chorus, Stinging Hivemaster | one |
 | Choose one | 1 | Charge of the Mites | one |
@@ -338,17 +338,14 @@
 | no more than one creature can attack ~ each combat. | 1 | The Eternal Wanderer | one |
 | nonland permanents you control are artifacts in addition to their other types. the same is true for permanent spells you control and nonland permanent cards you | 1 | Encroaching Mycosynth | one |
 | other rats you control have toxic N. | 1 | Karumonix, the Rat King | one |
-| put target creature card from a graveyard onto the battlefield under your control. proliferate. (choose any number of permanents and/or players, then give each  | 1 | Vat Emergence | one |
 | remove an oil counter from ~: it becomes an artifact creature until end of turn. | 1 | Meldweb Strider | one |
 | return target nonland permanent to its owner's hand. if that permanent had mana value N or less, proliferate. (choose any number of permanents and/or players, t | 1 | Serum Snare | one |
 | reveal the top N plus one cards of your library. choose a creature card and/or a land card from among them. put those cards into your hand and the rest on the b | 1 | Green Sun's Twilight | one |
 | target creature gets +N/+N until end of turn. equipped creatures you control gain indestructible until end of turn. (damage and effects that say "..." don't des | 1 | Resistance Reunited | one |
 | target creature you control deals damage equal to its power to target creature you don't control. each opponent gets a poison counter. | 1 | Infectious Bite | one |
-| target creature you control gets +N/+N and gains hexproof and indestructible until end of turn. (it can"..."t destroy it.) | 1 | Tyvar's Stand | one |
 | target creature you control gets +N/+N until end of turn. if that creature has toxic, draw a card. | 1 | Compleat Devotion | one |
 | thrun can't be the target of nongreen spells your opponents control or abilities from nongreen sources your opponents control. | 1 | Thrun, Breaker of Silence | one |
 | until end of turn, target creature gets +N/+N and gains flying and toxic N. (players dealt combat damage by that creature also get a poison counter.) | 1 | Aspirant's Ascent | one |
-| up to one target creature gets -N/-N until end of turn. if N is N or more, return a creature card with mana value N or less from your graveyard to the battlefie | 1 | Black Sun's Twilight | one |
 | when ezuri enters, you may pay {M}. if you do, proliferate twice. | 1 | Ezuri, Stalker of Spheres | one |
 | when you proliferate, return ~ from your graveyard to your hand. | 1 | Voidwing Hybrid | one |
 | when ~ enters, another target creature you control with toxic gets +N/+N and gains flying until end of turn. | 1 | Flensing Raptor | one |
@@ -393,7 +390,6 @@
 | {M}: choose target nonland permanent card in your graveyard. if you haven"..."t cast additional spells ~. activate only as a sorcery. | 1 | Conduit of Worlds | one |
 | {M}: until end of turn, target creature you control becomes a blue artifact in addition to its other colors and types. activate only as a sorcery. | 1 | Unctus, Grand Metatect | one |
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
-| {M}{M}, sacrifice ~: discard your hand, then draw four cards. ~ costs {M} less to activate for each oil counter on ~. | 1 | Vindictive Flamestoker | one |
 | {M}{M}: each other creature you control with toxic gains toxic N until end of turn. activate only once each turn. | 1 | Plague Nurse | one |
 | {M}{M}{M}, {M}: return target creature card from your graveyard to the battlefield. it gains "..." activate only as a sorcery. | 1 | Geth, Thane of Contracts | one |
 | ~ can't be blocked by creatures with flying. | 1 | Skyscythe Engulfer | one |

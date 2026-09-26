@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.7% |
+| Tested | 16 | 7.1% |
 | Works (untested) | 97 | 43.3% |
-| Partial (unaudited) | 11 | 4.9% |
+| Partial (unaudited) | 10 | 4.5% |
 | Not working | 101 | 45.1% |
 
 ## Cards needing work
@@ -127,7 +127,6 @@
 | Golgari Charm | notice | Choose one — • All creatures get -1/-1 until end of turn. • Destroy target enchantment. • Regenerate each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Chromatic Lantern | unaudited | Lands you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Dryad Militant | unaudited | If an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hypersonic Dragon | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Loxodon Smiter | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -239,11 +238,12 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Abrupt Decay
 - Azorius Guildgate
 - Batterhorn
+- Chromatic Lantern
 - Dark Revenant
 - Fencing Ace
 - Gatecreeper Vine
@@ -296,7 +296,6 @@
 | exile the top N cards of your library. you may cast instant and sorcery spells with mana value N or less from among them without paying their mana costs. then p | 1 | Epic Experiment | rtr |
 | if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Loxodon Smiter | rtr |
 | if an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | 1 | Dryad Militant | rtr |
-| lands you control have "..." | 1 | Chromatic Lantern | rtr |
 | populate | 1 | Rootborn Defenses | rtr |
 | prevent all combat damage that would be dealt to you ~. populate. (create a token that's a copy of a creature token you control.) | 1 | Druid's Deliverance | rtr |
 | sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Judge's Familiar | rtr |
