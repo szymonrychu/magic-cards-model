@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "The Death of Gwen Stacy@alice#1",
-    "targets": [],
+    "targets": ["player:alice"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,39 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
+    "fields_changed": ["exile_residents_seen", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
     "notices": {},
     "objects": {
+      "Bonesplitter@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@alice#6": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Grizzly Bears@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Lightning Bolt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
       "The Death of Gwen Stacy@alice#1": {
         "counters": [
           {
@@ -59,6 +89,7 @@
   "recipe": {
     "attempt": "staged",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

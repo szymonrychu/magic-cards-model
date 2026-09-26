@@ -5662,15 +5662,15 @@ through `magic_cards_model.numbers`.
 Newly visible, not closed here (effect or static gaps on proof printings, all
 effects.py/layers.py work): Agent of Treachery's "gain control of target
 permanent", Beamsplitter Mage's copy, Betor's layered draw/untap/half-life,
-Liliana's Contract / Happily Ever After's "you win the game", Jadar's
-"token with decayed", Chainer's and Phage's effects, Wild Pair's search,
-Wumpus Aberration's "may put a creature card", Boreal Outrider's "enters with
-an additional counter", Historian's Wisdom's "as long as" static, Puca's
-Eye's "becomes the chosen color", Quicksilver Fountain, Haphazard
-Bombardment, Sothera, Siege Dragon's "each creature without flying that
-player controls", Haunted Plate Mail's animation, Anti-Venom's prevention
-replacement, Ana Battlemage's {1}{B} effect, Inga and Esika's granted mana
-ability.
+Liliana's Contract / Happily Ever After's "you win the game", Chainer's and
+Phage's effects, Wild Pair's search, Wumpus Aberration's "may put a creature
+card", Boreal Outrider's "enters with an additional counter", Historian's
+Wisdom's "as long as" static, Puca's Eye's "becomes the chosen color",
+Quicksilver Fountain, Haphazard Bombardment, Sothera, Siege Dragon's "each
+creature without flying that player controls", Haunted Plate Mail's
+animation, Anti-Venom's prevention replacement, Ana Battlemage's {1}{B}
+effect, Inga and Esika's granted mana ability. Jadar's own "token with
+decayed" is closed by the regaudit-decayed round below (`_TOKEN_KEYWORDS`).
 ### EC4: turn-history conditions (clusters H1-H5)
 
 Every turn-history clause below is read by `machines/conditions/history.py`
@@ -5832,7 +5832,7 @@ verified with `mise run rules:find` this session: 207.2c, 601.2h, 202.3e,
 | "... look at the top X cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random order." - X is the *triggering* spell's own announced X (CR 107.3a), read off its `CastRecord.x_value`, never the ability's own (a triggered ability announces none) | `effects._parse_cast_trigger_look_top_x_take_one_clause` | Geometer's Arthropod | - (paired one-for-one with the restriction above; no other printing shares this exact consequence) | `test_x_spell_cast_triggers_sos.py` |
 | "This creature can't be blocked this turn." / "Target creature can't be blocked this turn." - CR 509.1a's restriction as a temporary (`Duration.UNTIL_END_OF_TURN`) grant of the plain, undated sentence `machines/combat.py`'s evasion reader already recognises; previously unread as a *whole-ability* shape (only the anaphoric rider form, "it can't be blocked this turn," was) | `layers._SELF_OR_TARGET_CANT_BE_BLOCKED_EOT_RE`/`_cant_be_blocked_until_eot_builder`, wired into `parsed_layer_effects` | Matterbending Mage, Snooping Page | Dreadlight Monstrosity and Writ of Passage (both pre-existing pool cards, found silent before this fix and handled after it - not asserted on directly, credited by the sweep diff) | `test_x_spell_cast_triggers_sos.py` |
 | Repartee - "Whenever you cast an instant or sorcery spell that targets a creature, this creature can't be blocked this turn." - the trigger condition itself (Repartee's targets-a-creature restriction) was already generic (Rehearsed Debater, Lecturing Scornmage, Stirring Hopesinger); only the "can't be blocked" consequence needed the layer reader above | (condition: pre-existing; effect: the `_cant_be_blocked_until_eot_builder` row above) | Snooping Page | Rehearsed Debater (already fully supported before this task, unaffected regression check) | `test_x_spell_cast_triggers_sos.py` |
-| "Counter target spell. If you control a Wizard, add an amount of `<color>` equal to the amount of mana spent to cast that spell at the beginning of your next main phase." - "you control a Wizard" is the pre-existing `_CONDITION_CONTROLS_A` board condition, checked once as Mana Sculpt resolves (not itself a delayed condition); the mana amount is captured off the *countered* spell's own `CastRecord` before `Game.counter` moves it off the stack, carried as a plain integer on a new delayed triggered ability that waits for either of the controller's own main phases | `effects._parse_counter_then_wizard_mana_from_countered_pair`, `delayed.AddManaAmountForController`, `DelayedTrigger.any_main_phase` (schema 85 -> 86) | Mana Sculpt | - (no other real printing pairs a Wizard-gated delayed mana grant with a counterspell) | `test_mana_spent_spells_sos.py` |
+| "Counter target spell. If you control a Wizard, add an amount of `<color>` equal to the amount of mana spent to cast that spell at the beginning of your next main phase." - "you control a Wizard" is the pre-existing `_CONDITION_CONTROLS_A` board condition, checked once as Mana Sculpt resolves (not itself a delayed condition); the mana amount is captured off the *countered* spell's own `CastRecord` before `Game.counter` moves it off the stack, carried as a plain integer on a new delayed triggered ability that waits for either of the controller's own main phases | `effects._parse_counter_then_wizard_mana_from_countered_pair`, `delayed.AddManaAmountForController`, `DelayedTrigger.any_main_phase` (schema 87; 86 at the task, renumbered at the sos integration merge) | Mana Sculpt | - (no other real printing pairs a Wizard-gated delayed mana grant with a counterspell) | `test_mana_spent_spells_sos.py` |
 | "`<this>` deals damage to target creature equal to the amount of mana spent to cast this spell." - CR 700.7's self-reference, a new `amount_expression` term reused everywhere that reads an `<expr>` (not hardcoded to this one spell); a flashback recast correctly reads the flashback cost's own total (CR 702.34a pays it as the total cost) | `effects._amount_term`'s new "the amount of mana spent to cast this spell" case | Molten Note | - (Molten Note is itself the pool's only "mana spent to cast this spell" *self*-referential shape; the amount-of-mana-spent-on-*that*-spell family is proven separately by Aberrant Manawurm/Shantotto above) | `test_mana_spent_spells_sos.py` |
 | "Target creature you control gets +N/+N until end of turn if `<condition>`. Then it deals damage equal to its power to up to one target creature an opponent controls." - the rider's own victim is a target of its own, the same reason `_parse_pump_then_fight_clause_pair`/`_parse_bite_damage_clause_pair` are not the general object-anaphor reader; the bite always runs (reusing `_resolve_bite_damage` outright), whether or not the pump did | `effects._parse_conditional_pump_then_bite_clause_pair` | Burrog Barrage | Rabid Bite (the identical "deals damage equal to its power to" bite shape, already fully handled, exercised standalone as the proof printing) | `test_mana_spent_spells_sos.py` |
 | "you've cast another `<quality>` spell this turn" - widened to admit "another" (excluding the clause's own source by id) alongside the pre-existing "a"/"one or more" quantifiers, reused by `Game.condition_holds` for a spell's own resolution-time "if" (not only a triggered ability's intervening one) | `conditions/history._cast_a_spell` (widened) | Burrog Barrage | - (the widening is additive; every pre-existing "a"/"one or more" caller is unaffected, confirmed by the full suite) | `test_mana_spent_spells_sos.py` |
@@ -5846,7 +5846,7 @@ does not obscure the exact number dealt - Runeclaw Bear, tried first, has
 toughness 2 and died to every hit, resetting `.damage` to 0 before the
 assertion could read it).
 
-`Game.schema_version` bumped 85 -> 86 for `machines/delayed.DelayedTrigger.
+`Game.schema_version` bumped to 87 (86 at the task, renumbered at the sos integration merge) for `machines/delayed.DelayedTrigger.
 any_main_phase` and the new `add_mana_amount_for_controller` effect kind.
 
 ## SoS round 2 (sos-t2): Converge in every position, X-count Fractal tokens, 2^X, cast-not-from-hand
@@ -5982,7 +5982,7 @@ time by `_consume_skip` inside `begin_next_turn` - for both the ordinary
 rotation and a queued extra turn, since CR 614.10 does not carve out an
 exception for a turn being an extra one. `Game.skip_next_turns(username,
 count)` is the public entry point, mirroring `Game.grant_extra_turn` exactly.
-`Game.schema_version` bumped to 87 for the new persisted field (86 at the task, renumbered at the sos integration merge after T1 took 86).
+`Game.schema_version` bumped to 88 for the new persisted field (86 at the task, renumbered at the sos integration merge).
 
 **Skip-turns proof gap, documented rather than hidden.** `card_search
 o:"skips their next" o:turns` (2026-09-26) found no other Modern/Pioneer/
@@ -6005,7 +6005,7 @@ engine API instead, since no second card exists to exercise them through.
 | Cascade granted to spells (CR 702.85a, 702.85c), "from your hand" (`CastRecord.origin_zone`), a subtype quality, "the first spell you cast each turn" (`Game.spells_cast_this_turn`) | same | Quandrix, the Proof | The First Sliver, Maelstrom Nexus | `test_spell_keyword_grants.py` |
 | Affinity granted to spells (CR 702.41a), one reduction per granted instance at CR 601.2f | `spell_grants.granted_affinity_reductions` in `Casting.total_cost` | Witherbloom, the Balancer | Sami, Wildcat Captain | `test_spell_keyword_grants.py` |
 | Miracle granted to cards in hand (CR 702.94a) - in force as the card is drawn; each instance (printed, granted) offered separately and linked to its own trigger and cost (CR 607.2h) | `Game._offer_miracle_reveal`, `keywords._miracle_effect` | Lorehold, the Historian | - (only printing of the hand-card grant; the reader is keyword-general) | `test_spell_keyword_grants.py` |
-| **Casualty** (CR 702.153a/b) built: an optional sacrifice of a creature with power N or greater, announced at CR 601.2b and paid at 601.2h; one copy trigger per casualty cost paid (`CastRecord.casualty_paid`, schema 88, 86 at the task, renumbered at the sos integration merge); offered to `legal_actions` (printed and granted) and to casts made during resolution | `Casting.pay_casualty`, `keywords.casualty_triggered_abilities`/`_casualty_effect`, `Game._announce_casualty`, `casting.granted_optional_additional_costs` | Silverquill, the Disputant (granted) | Join the Maestros (printed) | `test_casualty.py`, `test_spell_keyword_grants.py` |
+| **Casualty** (CR 702.153a/b) built: an optional sacrifice of a creature with power N or greater, announced at CR 601.2b and paid at 601.2h; one copy trigger per casualty cost paid (`CastRecord.casualty_paid`, schema 89, 86 at the task, renumbered at the sos integration merge); offered to `legal_actions` (printed and granted) and to casts made during resolution | `Casting.pay_casualty`, `keywords.casualty_triggered_abilities`/`_casualty_effect`, `Game._announce_casualty`, `casting.granted_optional_additional_costs` | Silverquill, the Disputant (granted) | Join the Maestros (printed) | `test_casualty.py`, `test_spell_keyword_grants.py` |
 | "Once during each of your turns, you may cast `<quality>` spell from your hand[ or the top of your library] without paying its mana cost" (CR 118.9) - one use per granting permanent per turn, only on its controller's turn | `cost.static_free_cast_grant`, `casting.static_free_cast_refusal` (shared by `Casting.alternative_costs` and `Game.alternative_costs_for`) | Zaffai and the Tempests | One with the Multiverse (hand half; casting from the top of a library is not modelled for any card) | `test_free_cast_once_per_turn.py` |
 | "This spell costs `<mana>` less to cast if it targets a(n) `<quality>` spell" (CR 601.2f, CR 118.7) - coloured symbols included, subsuming Mystical Dispute's colour-only shape | `Game._target_spell_reduction` (`_COSTS_LESS_IF_TARGETS_SPELL_RE`) | Brush Off | Out of Air | `test_spell_cost_changes_sos.py` |
 | "you may tap N [other] untapped `<quality>` you control. If you do, `<consequence>`" (CR 118.12, CR 701.26a) | `effects._parse_may_tap_untapped_if_you_do_clause` | Aziza, Mage Tower Captain | Raff, Weatherlight Stalwart | `test_copy_spell_cast_triggers.py` |
@@ -6075,3 +6075,26 @@ triggered_ability` already made for a graveyard-return trigger.
 | "Return all instant and sorcery cards from your graveyard to your hand. You have no maximum hand size for the rest of the game. Exile `<this>`." - a two-type mass return, CR 613.11's rule-modifying hand size (pre-existing reader), and the spell exiling itself (pre-existing reader), each read independently once the type-list phrase stopped being cut apart | `effects._parse_mass_return_from_graveyard_to_hand_clause` (widened `_parse_card_group_qualifier`), `_strip_self_exile_sentence` (unchanged) | Wisdom of Ages | Brilliant Restoration (the widened qualifier on the "to the battlefield" family instead) | `test_graveyard_mass_returns.py` |
 | "As an additional cost to cast this spell, pay X life. Return each artifact and creature card with mana value X from your graveyard to the battlefield." - CR 107.3f's additional-cost X (the pre-existing "pay X life" machinery, proved by Toxic Deluge/Vicious Rivalry) feeding a two-type mass return filtered by an *exact* mana value, X=0 included (CR 119.4b) | `effects._parse_x_life_return_types_mv_x_clause` | Fix What's Broken | Brilliant Restoration (the widened `_parse_card_group_qualifier` on the "all ... to the battlefield" family) | `test_graveyard_mass_returns.py` |
 | "Exile target nonland permanent and the top card of your library. For each of those cards, its owner may play it until the end of their next turn." - two objects exiled in one instruction, each granted a `PlayPermission` scoped to its own **owner** (CR 108.3), not the caster - the one shape the pool's other "exile ..., you may play it" printings never need, since every one of them grants to the caster who did the exiling | `effects._parse_exile_target_and_top_owner_may_play_clause` (`Game.grant_play_permission`'s `expires_end_of_next_turn`, keyed off `PlayPermission.player`) | Suspend Aggression | - (only printing of an owner-scoped, two-object exile-and-play grant) | `test_owner_exile_play.py` |
+
+### regaudit-decayed: Decayed (CR 702.147a)
+
+Decayed was previously parsed (Scryfall keyword vocabulary, `KEYWORD_ABILITY_NAMES`)
+but executed nowhere - `test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list`
+listed it against Rot-Curse Rakshasa. Built as two abilities, per the rule's
+own text: the static "This creature can't block" is
+`machines/combat.py::block_refusal`'s own `has_keyword(blocker, Keyword.
+DECAYED, game)` check (`Keyword.DECAYED` new member), so a printed keyword,
+a CR 122.1b keyword counter, or a grant all refuse the block the same way -
+`machines/keyword_counters.py::KEYWORD_COUNTER_KEYWORDS` now lists decayed,
+since layers.py's own generic per-`Keyword`-member counter-to-line grant now
+has a reading vocabulary for it. The triggered "sacrifice it at end of
+combat" is `machines/keywords.py::_decayed_ability` (`_TRIGGER_EXPANSIONS`),
+whose effect text is read by a new `_parse_delayed_single_clause` branch in
+`machines/effects.py` (self-referential "it" off the ATTACKS event's own
+subject) as a CR 603.7 delayed trigger reusing the same `sacrificed_by_its_
+controller` effect The Ring's third ability already uses. Jadar, Ghoulcaller
+of Nephalia's own "create a 2/2 black Zombie creature token with decayed"
+needed `_TOKEN_KEYWORDS` widened in `machines/effects.py` (its "if you
+control no creatures with decayed" condition was already read generally by
+`conditions/board.py::quality`'s "with `<keyword>`" suffix - `KEYWORD_
+ABILITY_NAMES` already had decayed). `tests/scenarios/test_decayed.py`.

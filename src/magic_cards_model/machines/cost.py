@@ -3648,8 +3648,16 @@ def announce_reveal(
     well has to agree. Nothing named leaves `required` at the announced
     `x_value` (0 when none was), which is a cost `legal_actions` can price and
     `Game.choose_cards_to_reveal` can ask about.
+
+    `revealing=None` keeps whatever `component.cards` already held rather
+    than wiping it to empty - CR 702.57a's own "Reveal this card from your
+    hand" (`_PHRASE_REVEAL`'s `self_noun` branch) is filled in before this
+    ever runs, by `Game.activation_cost`'s generic self-reference fill
+    (`_cost_refers_to_self`), the same way "Exile this card" fills its own
+    `ComponentKind.EXILE` component; nobody ever calls this with `revealing`
+    for that shape; there is nothing to choose.
     """
-    cards = list(revealing or [])
+    cards = list(revealing) if revealing is not None else list(component.cards)
     required = component.required
     if component.variable_count:
         if revealing is not None:
@@ -4887,8 +4895,17 @@ _PHRASE_EXILE_PERMANENT = re.compile(
 #: the quality is read by `_requirement` like every other object cost's. A
 #: rider after "hand" - Illuminated Folio's "that share a color" - is not this
 #: shape, so that phrase stays unread rather than paying for the wrong cards.
+#:
+#: `self_noun` is the `_PHRASE_EXILE` shape one cost verb over: "Reveal this
+#: card from your hand" (CR 702.57a's Forecast template, Writ of Passage),
+#: "Reveal this creature from your hand" (Pride of the Clouds) - CR 201.5's
+#: self-reference, so there is no count or quality to read at all, only the
+#: caller's own object (`Game.activation_cost`'s `_cost_refers_to_self` fills
+#: it in, same as an exiled or discarded "this card").
 _PHRASE_REVEAL = re.compile(
-    r"^reveal (?P<count>x|\w+) (?P<quality>[\w ,]*?)cards? from your hand$",
+    r"^reveal (?:this (?P<self_noun>card|artifact|creature|enchantment|land|planeswalker|permanent)"
+    r" from (?:your|their) hand"
+    r"|(?P<count>x|\w+) (?P<quality>[\w ,]*?)cards? from your hand)$",
     re.IGNORECASE,
 )
 #: CR 701.4a's keyword action as a cost: "behold a Jace" (Countersculpt,
@@ -5292,6 +5309,12 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
 
     reveal = _PHRASE_REVEAL.match(text)
     if reveal is not None:
+        if reveal.group("self_noun") is not None:
+            # "Reveal this card/creature from your hand": CR 201.5's self-
+            # reference, so there is nothing to choose - only the caller
+            # knows which card this is (`_PHRASE_EXILE`'s own "Exile this
+            # card" branch is the identical shape one cost verb over).
+            return reveal_cost(payer=payer, required=1, description=text)
         reveal_requirement = _requirement(reveal.group("quality"))
         if reveal_requirement is None:
             return None

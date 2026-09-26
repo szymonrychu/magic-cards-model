@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Galion, Elvenking's Butler@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,14 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "power": [1, 4],
+        "toughness": [1, 4]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +54,7 @@
   "recipe": {
     "attempt": "combat",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

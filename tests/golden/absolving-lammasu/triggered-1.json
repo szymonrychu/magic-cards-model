@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Absolving Lammasu@alice#1",
-    "targets": [],
+    "targets": ["Fleecemane Lion@bob#1"],
     "x": 0
   },
   "board": {
@@ -53,6 +53,7 @@
   "recipe": {
     "attempt": "itself",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "removal": "destroy"
     },

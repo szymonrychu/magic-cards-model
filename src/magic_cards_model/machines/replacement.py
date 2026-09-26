@@ -1609,6 +1609,14 @@ class ReplaceableEvent:
     tapped: bool = False
     #: Whether the permanent arrives with the prepared designation (CR 722.3a).
     prepared: bool = False
+    #: CR 702.136a's riot, declined: "If you don't [have this permanent enter
+    #: with an additional +1/+1 counter], it gains haste." No duration is
+    #: printed, so `Game.enter_the_battlefield` grants it indefinitely
+    #: (CR 611.2a's default) once the permanent is on the battlefield, scoped
+    #: to this exact incarnation the way dash and unearth's own haste grants
+    #: already are (CR 400.7) - a later re-entry is a new object and is asked
+    #: again rather than inheriting this flag.
+    grants_haste: bool = False
     #: The copiable values an "enter as a copy" replacement already gave the
     #: entering permanent (CR 614.1c, CR 707.2), as (name, ability lines) -
     #: `None` until one applies. CR 614.12: which enters-replacements apply is
@@ -6111,7 +6119,75 @@ def _self_enters_modifiers(
     if tribute is not None:
         performable.append(tribute)
 
+    performable.extend(_riot_modifiers(game, card_state))
+
     return performable
+
+
+def _riot_modifiers(game: "Game", card_state: CardState) -> list[tuple[str, Apply, str, bool]]:
+    """Riot, read off the keyword rather than off a sentence - its expansion is
+    reminder text (CR 207.2): CR 702.136a: "Riot is a static ability. 'Riot'
+    means 'You may have this permanent enter with an additional +1/+1 counter
+    on it. If you don't, it gains haste.''"
+
+    A CR 614.1c "enters with .../enters ..." replacement on the entering
+    permanent itself (CR 614.12), cast or not, with the choice made before it
+    is on the battlefield (CR 614.12a) and asked of its controller (CR
+    608.2d). Taking the counter places it the same way every other "enters
+    with" amount here does, through `event.counters`. Declining instead sets
+    `event.grants_haste`, which `Game.enter_the_battlefield` turns into an
+    indefinite (CR 611.2a's default, since riot's own reminder text states no
+    duration), `only_this_incarnation`-scoped (CR 400.7) haste grant once the
+    permanent is actually on the battlefield - the same shape dash's
+    `Game._grant_dash_haste` (CR 702.109a) and unearth's `_unearth_effect`
+    (CR 702.84a) already grant their own haste with, so a blinked or
+    otherwise re-entering permanent is a new object and is asked again rather
+    than inheriting a haste grant made for the incarnation before it.
+
+    CR 702.136b: "If a permanent has multiple instances of riot, each works
+    separately" - one performable entry per instance, each asked on its own,
+    the same way `_bloodthirst_entering_counters` keeps its own per-instance
+    amounts apart.
+    """
+    from ..models.card_state import Counter
+    from .abilities import keyword_abilities
+
+    instance_count = sum(
+        1 for ability in keyword_abilities(card_state.card) if ability.canonical.lower() == "riot"
+    )
+    if not instance_count:
+        return []
+
+    found: list[tuple[str, Apply, str, bool]] = []
+    for index in range(instance_count):
+
+        def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+            if source is None:
+                return
+            controller = source.controller or source.owner
+            if controller is None:
+                return
+            took_counter = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=controller,
+                    prompt=(
+                        f"have {source.name} enter with an additional +1/+1 counter "
+                        "instead of gaining haste (riot, CR 702.136a)"
+                    ),
+                    source=source.name,
+                    source_id=source_id_of(source),
+                )
+            )
+            if took_counter:
+                event.counters[str(Counter.PLUS_ONE)] = (
+                    event.counters.get(str(Counter.PLUS_ONE), 0) + 1
+                )
+            else:
+                event.grants_haste = True
+
+        found.append((f"self:riot:{index}", apply, "Riot (CR 702.136a)", False))
+    return found
 
 
 def _tribute_modifier(game: "Game", card_state: CardState) -> tuple[str, Apply, str, bool] | None:
@@ -6658,6 +6734,49 @@ def _bloodthirst_entering_counters(game: "Game", event: ReplaceableEvent) -> lis
                 key=f"{entering.id}:bloodthirst:{index}",
                 source=entering,
                 label=f"bloodthirst: enters with {amount} +1/+1 counters (CR 702.54a)",
+                apply=apply,
+            )
+        )
+    return found
+
+
+def _vanishing_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """CR 702.63a's first ability: "'Vanishing N' means 'This permanent enters
+    with N time counters on it,' ...' " - a CR 614.1c "enters with" replacement
+    on the entering permanent itself, cast or not (unlike impending's own
+    version of the same shape, which is gated on an alternative cost paid;
+    vanishing's own wording carries no such condition, so a Deadly Grub
+    reanimated or put onto the battlefield by any effect still enters with its
+    time counters). CR 702.63b: vanishing printed with no number is only the
+    other two abilities, so a printing whose `KeywordAbility.count` is `None`
+    gets nothing here. CR 702.63c: each instance applies separately, the same
+    per-instance loop `_bloodthirst_entering_counters` above already uses."""
+    from ..models.card_state import Counter
+    from .abilities import keyword_abilities
+
+    entering = event.card
+    if entering is None:
+        return []
+    amounts = [
+        ability.count
+        for ability in keyword_abilities(entering.card)
+        if ability.canonical.lower() == "vanishing" and ability.count is not None
+    ]
+    if not amounts:
+        return []
+    found = []
+    for index, amount in enumerate(amounts):
+
+        def apply(
+            game: "Game", source: CardState, event: ReplaceableEvent, n: int = amount
+        ) -> None:
+            event.counters[Counter.TIME] = event.counters.get(Counter.TIME, 0) + n
+
+        found.append(
+            ApplicableEffect(
+                key=f"{entering.id}:vanishing:{index}",
+                source=entering,
+                label=f"vanishing: enters with {amount} time counters (CR 702.63a)",
                 apply=apply,
             )
         )
@@ -7357,6 +7476,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
             )
         found.extend(_impending_entering_counters(game, event))
         found.extend(_bloodthirst_entering_counters(game, event))
+        found.extend(_vanishing_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
 

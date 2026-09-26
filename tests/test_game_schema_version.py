@@ -1344,17 +1344,41 @@ def test_a_snapshot_written_before_the_object_state_is_refused() -> None:
         Game.model_validate(dumped)
 
 
+#: The last version before Forecast's own once-each-turn tracking:
+#: `Game.forecast_activations` (CR 702.57b).
+_SCHEMA_VERSION_BEFORE_FORECAST = 85
+
+
+def test_the_forecast_bump_moved_the_version_past_eighty_five() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_FORECAST
+
+
+def test_a_snapshot_written_before_forecast_is_refused() -> None:
+    """A version-85 dump has no `forecast_activations`: decoded as current, a
+    forecast ability activated earlier that turn (CR 702.57b) would read as
+    never having been, and a second activation the same upkeep would be
+    wrongly allowed."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_FORECAST
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_FORECAST}",
+    ):
+        Game.model_validate(dumped)
+
+
 #: The last version before Mana Sculpt's own delayed mana trigger:
 #: `machines/delayed.DelayedTrigger.any_main_phase`.
-_SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA = 85
+_SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA = 86
 
 
-def test_the_any_main_phase_delayed_mana_bump_moved_the_version_past_eighty_five() -> None:
+def test_the_any_main_phase_delayed_mana_bump_moved_the_version_past_eighty_six() -> None:
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ANY_MAIN_PHASE_DELAYED_MANA
 
 
 def test_a_snapshot_written_before_any_main_phase_delayed_mana_is_refused() -> None:
-    """A version-85 pending `DelayedTrigger` has no `any_main_phase`: decoded
+    """A version-86 pending `DelayedTrigger` has no `any_main_phase`: decoded
     as current, Mana Sculpt's own "at the beginning of your next main phase"
     trigger would read as `False` (the pre-existing single-`step` gate),
     matching neither of the controller's own main phases at all - a mana
@@ -1387,15 +1411,15 @@ def test_a_snapshot_written_before_any_main_phase_delayed_mana_is_refused() -> N
 
 #: The last version before CR 614.10's skip-turn counter:
 #: `machines.turn.TurnMachine.skipped_turns`.
-_SCHEMA_VERSION_BEFORE_SKIPPED_TURNS = 86
+_SCHEMA_VERSION_BEFORE_SKIPPED_TURNS = 87
 
 
-def test_the_skipped_turns_bump_moved_the_version_past_eighty_six() -> None:
+def test_the_skipped_turns_bump_moved_the_version_past_eighty_seven() -> None:
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SKIPPED_TURNS
 
 
 def test_a_snapshot_written_before_skipped_turns_is_refused() -> None:
-    """A version-86 dump has no `turn.skipped_turns`: decoded as current, a
+    """A version-87 dump has no `turn.skipped_turns`: decoded as current, a
     player Ral Zarek's own "-7" made skip their next turns would read as
     having none pending, and CR 614.10's skip would silently not happen on
     their next turn."""

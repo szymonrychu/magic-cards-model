@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "The Super Hero Civil War@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects"],
     "notices": {},
     "objects": {},
     "players": {},
@@ -49,6 +49,7 @@
   "recipe": {
     "attempt": "entered",
     "index": 1,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

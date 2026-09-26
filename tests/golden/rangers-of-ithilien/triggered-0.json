@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Rangers of Ithilien@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -64,6 +64,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

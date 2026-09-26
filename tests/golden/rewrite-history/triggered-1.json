@@ -69,6 +69,7 @@
   "recipe": {
     "attempt": "happen",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

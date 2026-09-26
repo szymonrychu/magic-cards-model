@@ -1857,6 +1857,45 @@ def _power_or_toughness_qualifier_holds(
     return any(compare(value, threshold) for value in values)
 
 
+#: Flanking's own qualifier (CR 702.25a): "becomes blocked by a creature
+#: without `<keyword>`". Not fixed to "flanking" - a differently worded card
+#: could as easily name any other keyword here, the same reasoning
+#: `_POWER_OR_TOUGHNESS_QUALIFIER` above already gives for staying generic
+#: rather than hardcoding the one word the pool happens to print.
+_BECOMES_BLOCKED_BY_WITHOUT_KEYWORD = re.compile(
+    r"\bbecomes blocked by a creature without (?P<keyword>[a-z][a-z '-]*?)\s*$"
+)
+
+
+def _becomes_blocked_by_qualifier_holds(
+    game: "Game", condition: str, blocker_id: "UUID | None"
+) -> bool | None:
+    """Whether a "becomes blocked by a creature without `<keyword>`" qualifier
+    (Flanking, CR 702.25a) is true of the blocker `blocker_id` names, or
+    `None` when the condition carries no such qualifier at all - the same
+    "nothing to check" reading `_power_or_toughness_qualifier_holds` gives
+    `condition_matches`'s BLOCKS branch for its own qualifier.
+
+    CR 509.3f: a "becomes blocked by a creature with certain characteristics"
+    condition is checked "at the point it becomes a blocking creature" - this
+    is read the moment the `BLOCKS` event itself is matched, off the live
+    board (CR 613.5), so there is no later moment for the check to have
+    drifted from.
+    """
+    match = _BECOMES_BLOCKED_BY_WITHOUT_KEYWORD.search(condition.lower())
+    if match is None:
+        return None
+    if blocker_id is None:
+        return False
+    blocker = game.find_by_id(blocker_id)
+    if not isinstance(blocker, CardState):
+        return False
+
+    from .combat import has_keyword
+
+    return not has_keyword(blocker, match.group("keyword").strip(), game)
+
+
 #: "a Dragon spell", "the first Otter spell" - a subtype named on a "cast a
 #: ... spell" condition (CR 205.3a). Templating always capitalizes a subtype
 #: the way Scryfall's Oracle text does, which is what tells this apart from
@@ -2710,6 +2749,14 @@ def condition_matches(
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
             blocked = "becomes blocked" in lowered and event.related_id == source.id
+            if blocked:
+                # Flanking's own "... by a creature without `<keyword>`"
+                # (CR 702.25a) - checked against the blocker, `event.
+                # subject_id`, which is always the blocker of the pair
+                # `Game.declare_blockers` emits (never the source itself,
+                # even when the source is what "becomes blocked").
+                qualifier = _becomes_blocked_by_qualifier_holds(game, condition, event.subject_id)
+                blocked = qualifier is None or qualifier
             return blocks or blocked
         # Tetsuko Umezawa, Pursuer's own non-self-referential form: "a
         # creature an opponent controls with power or toughness 1 or less
@@ -3488,7 +3535,14 @@ _NTH_COUNTER_PUT_CONDITION = re.compile(
 #: writes it out: "the last time counter is removed from this card". Never
 #: printed as a line of condition text on any card - suspend prints it as one
 #: word, and the only text on Lotus Bloom that resembles it is reminder text.
-_LAST_TIME_COUNTER_CONDITION = re.compile(r"^the last time counter is removed from this card$")
+#: CR 702.63a's own third ability writes the identical condition over "this
+#: permanent" instead of "this card" (`machines/keywords._vanishing_abilities`)
+#: - the same fact asked about a battlefield permanent rather than an exiled
+#: card - so this accepts both nouns rather than becoming two near-duplicate
+#: patterns.
+_LAST_TIME_COUNTER_CONDITION = re.compile(
+    r"^the last time counter is removed from this (?:card|permanent)$"
+)
 
 #: CR 702.94a's second ability, as `machines/keywords._miracle_ability` writes
 #: it out: "you reveal this card this way". Miracle prints it as one word, so
@@ -4116,11 +4170,13 @@ def _unread_condition_matches(
         )
 
     if _LAST_TIME_COUNTER_CONDITION.match(condition):
-        # CR 702.62a's third ability. "This card" is the source itself and
-        # nothing else - `machines/casting.remove_suspend_time_counter` raises
-        # the event only for the card it just took the last counter off, so
-        # two suspended cards reaching zero in the same upkeep each match only
-        # their own.
+        # CR 702.62a's third ability ("this card") and CR 702.63a's own third
+        # ability ("this permanent") - both name the source itself and
+        # nothing else. `machines/casting.remove_suspend_time_counter` and
+        # `machines/keywords._remove_vanishing_time_counter` each raise the
+        # event only for the object they just took the last counter off, so
+        # two cards or permanents reaching zero in the same upkeep each match
+        # only their own.
         return (
             event.event is ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED
             and event.subject_id == source.id
@@ -4307,7 +4363,9 @@ def resolution_key(ability: "AbilityOnStack") -> str:
     return f"{ability.source_id}:{ability.source_stamp}:{ability.ability.text}"
 
 
-def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> frozenset[Zone]:
+def zones_ability_functions_in(
+    ability: TriggeredAbility, source: CardState, game: "Game | None" = None
+) -> frozenset[Zone]:
     """Which zone(s) this printed ability functions from (CR 113.6).
 
     CR 113.6: "Abilities of an instant or sorcery spell usually function only
@@ -4425,7 +4483,20 @@ def zones_ability_functions_in(ability: TriggeredAbility, source: CardState) -> 
     # either way the object just left is exactly what `Game.emit` widens
     # `sources` for.
     if ability.event in _LOOK_BACK_EVENTS:
-        return frozenset({Zone.BATTLEFIELD, source.zone})
+        # CR 603.10a looks back at the event the source was part of - it and
+        # whatever left in the same batch (its own example: a "whenever a
+        # creature dies" artifact destroyed together with two creatures
+        # triggers twice). A source that left in an earlier batch, or was
+        # never on the battlefield, is only a card in that zone and hears
+        # nothing (CR 113.6). A countered spell never left the battlefield.
+        if (
+            game is None
+            or source.zone is Zone.BATTLEFIELD
+            or ability.event is TriggerEvent.SPELL_IS_COUNTERED
+            or source.left_battlefield_in(game._departure_epoch)
+        ):
+            return frozenset({Zone.BATTLEFIELD, source.zone})
+        return frozenset({Zone.BATTLEFIELD})
     if ability.event is None and _returned_subject(lowered) is not None:
         # CR 603.10a's look-back for a returned-to-hand condition the parser
         # left unread: the source returned by the same event is in a hand
@@ -5208,6 +5279,27 @@ def intervening_if_answer(
         # by `machines/keywords._cumulative_upkeep_ability`: a zone question
         # (CR 400.1), fully readable, so False is a real answer.
         return source.zone is Zone.BATTLEFIELD
+
+    if clause == "this permanent has a time counter on it":
+        # CR 702.63a's second ability, written out by `machines/keywords.
+        # _vanishing_abilities`. Fully readable off the object itself, so a
+        # permanent whose last time counter already came off some other way
+        # (or that has since left the battlefield) answers False here rather
+        # than through `_fail_closed` - both on the event (CR 603.4) and again
+        # on resolution (CR 608.2a), which is what stops the tick once the
+        # counters are gone.
+        return source.zone is Zone.BATTLEFIELD and source.counter_count(Counter.TIME) > 0
+
+    if clause == "it had no time counters on it":
+        # Deadly Grub's own dies trigger ("if it had no time counters on it"),
+        # the identical look-back shape persist's "it had no -1/-1 counters on
+        # it" already reads just above, generalised to time counters: CR
+        # 603.10a's look-back plus CR 122.2's counters ceasing to exist on the
+        # move is what makes `last_known_counters` the answer, for any
+        # permanent's own dies trigger that asks this about its counters as it
+        # last existed on the battlefield - not only a permanent with
+        # vanishing, since nothing about the clause names the keyword.
+        return not source.last_known_counters[Counter.TIME]
 
     if match := _POWER_GREATER_THAN_SELF_RE.fullmatch(clause):
         if match.group("name") not in (source.name or "").lower():
@@ -6802,7 +6894,7 @@ def abilities_triggered_by(
             for ability in triggered_abilities_on(game, source):
                 if not condition_matches(game, ability, source, controller, event):
                     continue
-                if source.zone not in zones_ability_functions_in(ability, source):
+                if source.zone not in zones_ability_functions_in(ability, source, game):
                     continue  # CR 113.6: doesn't function from the zone it's in.
                 if not event_qualifier_holds(game, ability, source, controller, event):
                     continue  # CR 603.2: the event did not happen that way.

@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Kraul Harpooner@alice#1",
-    "targets": [],
+    "targets": ["Abhorrent Oculus@bob#1"],
     "x": 0
   },
   "board": {
@@ -35,12 +35,25 @@
   "card": "Kraul Harpooner",
   "delta": {
     "created": {},
-    "decisions": [],
-    "fields_changed": ["continuous_effects"],
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "have Kraul Harpooner fight Abhorrent Oculus",
+        "source": "Kraul Harpooner"
+      }
+    ],
+    "fields_changed": ["continuous_effects", "creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
+      "Abhorrent Oculus@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
       "Kraul Harpooner@alice#1": {
-        "power": [3, 7]
+        "zone": ["battlefield", "graveyard"]
       }
     },
     "players": {},
@@ -53,6 +66,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

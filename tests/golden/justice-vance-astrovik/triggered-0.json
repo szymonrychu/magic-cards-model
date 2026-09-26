@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Justice, Vance Astrovik@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,11 +36,15 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["known_carries", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "hand"]
+      }
+    },
     "players": {},
-    "stack": []
+    "stack": ["ability of Justice, Vance Astrovik@alice#1: Whenever another nonland permanent you control is returned to its owner's hand, put a +1/+1 counter on Justice."]
   },
   "family": "triggered",
   "format": 1,
@@ -49,6 +53,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

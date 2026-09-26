@@ -63,6 +63,7 @@
   "recipe": {
     "attempt": "cast",
     "index": 1,
+    "optional_targets": "some",
     "params": {
       "kicked": false,
       "paying_with": null

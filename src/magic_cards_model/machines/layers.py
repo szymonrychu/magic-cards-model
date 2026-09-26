@@ -97,6 +97,7 @@ from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
 from .abilities import (
     ActivatedAbility,
+    keywords_in_lines,
     layer_readable_sentences,
     parse_abilities,
     parse_granted_ability_lines,
@@ -108,6 +109,7 @@ from .combat import (
     ATTACK_WITHOUT_DEFENDER_TEXT,
     KEYWORDS_OUTSIDE_COMBAT,
     Keyword,
+    block_exception_keyword,
 )
 from .designations import ENDURING_STORY, split_as_long_as, split_unless
 
@@ -452,6 +454,46 @@ class CountOtherCreaturesNamed(CountBase):
         )
 
 
+class CountOtherCreaturesWithKeyword(CountBase):
+    """How many creatures on the board have a given CR 702 keyword ability
+    right now - Pride of the Clouds' own "This creature gets +1/+1 for each
+    other creature on the battlefield with flying."
+
+    `excludes_self` is that "other" (leaving the asking object out of its own
+    count, the same shape `CountPermanentsControlledBy.excludes_self`
+    reads); `controlled_by_source` is `CountOtherCreaturesNamed`'s own "you
+    control" qualifier - Pride of the Clouds prints "on the battlefield"
+    (every match anywhere, both players' creatures), so it stays `False`.
+
+    Read off `other.abilities`, the computed ability-text lines CR 613.5
+    already leaves on every `Characteristics` this module works with -
+    `machines/abilities.keywords_in_lines` is the identical reader
+    `machines/combat.has_keyword`'s own `_computed_keywords` points at a live
+    game's board, applied here to the board a `Count` is already handed. A
+    keyword this creature only has from a continuous effect (a granted
+    "Flying" line) counts exactly the same as one it was printed with, and
+    one layer 6 took away does not - the count is asked fresh every time the
+    board is computed (CR 613.5), so it moves as creatures with the keyword
+    enter, leave, or gain and lose it.
+    """
+
+    kind: Literal["other_creatures_with_keyword"] = "other_creatures_with_keyword"
+    keyword: str
+    excludes_self: bool = False
+    controlled_by_source: bool = False
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        vocabulary = [self.keyword]
+        return sum(
+            1
+            for other in board.values()
+            if other.is_creature
+            and not (self.excludes_self and other.card_id == chars.card_id)
+            and (not self.controlled_by_source or other.controller == chars.controller)
+            and self.keyword.lower() in keywords_in_lines(list(other.abilities), vocabulary)
+        )
+
+
 class CountLandsControlledBy(CountBase):
     kind: Literal["lands_controlled_by"] = "lands_controlled_by"
     username: str | None = None
@@ -696,6 +738,7 @@ Count = Annotated[
     | CountCountersOnIt
     | CountOtherCreaturesLikeThatOne
     | CountOtherCreaturesNamed
+    | CountOtherCreaturesWithKeyword
     | CountLandsControlledBy
     | CountPermanentsControlledBy
     | CountCreaturesWithSubtypesControlledBy
@@ -3352,6 +3395,19 @@ def count_other_creatures_named(name: str, *, controlled_by_source: bool = False
     return CountOtherCreaturesNamed(name=name, controlled_by_source=controlled_by_source)
 
 
+def count_other_creatures_with_keyword(
+    keyword: str, *, excludes_self: bool = False, controlled_by_source: bool = False
+) -> Count:
+    """How many creatures on the board have a given CR 702 keyword ability
+    right now - Pride of the Clouds' own "for each other creature on the
+    battlefield with flying". `controlled_by_source=True` for a future "you
+    control" printing of the identical shape; "on the battlefield" leaves the
+    default, unscoped."""
+    return CountOtherCreaturesWithKeyword(
+        keyword=keyword, excludes_self=excludes_self, controlled_by_source=controlled_by_source
+    )
+
+
 def count_lands_controlled_by(username: str | None) -> Count:
     return CountLandsControlledBy(username=username)
 
@@ -4070,6 +4126,63 @@ def _self_pump_per_other_creature_named_builder(
                 modification=modify_power_toughness_per(
                     count_other_creatures_named(
                         resolved_name, controlled_by_source=controlled_by_source
+                    ),
+                    power,
+                    toughness,
+                ),
+            )
+        ]
+
+    return builder
+
+
+#: "This creature gets +1/+1 for each other creature on the battlefield with
+#: flying." (Pride of the Clouds) - the same self-counting shape
+#: `_SELF_PUMP_PER_OTHER_CREATURE_NAMED_RE` reads by name, counting by a CR
+#: 702 keyword instead. `keyword` is validated against `combat.Keyword`'s own
+#: closed vocabulary (`block_exception_keyword`) rather than accepted as any
+#: word, so a phrase this engine has no keyword for fails closed instead of
+#: silently counting nothing. Only "on the battlefield"/"you control" scopes
+#: are read, matching CR's own two templates for this shape (Oracle never
+#: leaves the scope out): a bare "for each creature with `<keyword>`" is not
+#: this sentence and is left unmatched.
+_SELF_PUMP_PER_OTHER_CREATURE_WITH_KEYWORD_RE = re.compile(
+    r"^this creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) for each other creature "
+    r"(?P<scope>on the battlefield|you control) with (?P<keyword>[a-z][a-z ]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_other_creature_with_keyword_builder(
+    power: int, toughness: int, keyword: Keyword, controlled_by_source: bool, line: str
+) -> EffectBuilder:
+    """`_SELF_PUMP_PER_OTHER_CREATURE_WITH_KEYWORD_RE`'s shape - Pride of the
+    Clouds' own flying-counting pump, built the same way `_self_pump_per_
+    other_creature_named_builder` is: sublayer 7c (CR 613.4c), switched off
+    the moment `source` loses the printed sentence (CR 613.6, `source_ability`).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power:+d}/{toughness:+d} for each other creature with "
+                    f"{keyword.value}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modify_power_toughness_per(
+                    count_other_creatures_with_keyword(
+                        keyword.value, excludes_self=True, controlled_by_source=controlled_by_source
                     ),
                     power,
                     toughness,
@@ -11103,6 +11216,17 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             match.group("name").strip(),
             match.group("you_control") is not None,
+            sentence,
+        )
+    if match := _SELF_PUMP_PER_OTHER_CREATURE_WITH_KEYWORD_RE.fullmatch(sentence):
+        keyword = block_exception_keyword(match.group("keyword"))
+        if keyword is None:
+            return None
+        return _self_pump_per_other_creature_with_keyword_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keyword,
+            match.group("scope").lower() == "you control",
             sentence,
         )
     if match := _BECOME_A_COPY_RE.fullmatch(sentence):

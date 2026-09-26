@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Celebrate the Mountain-king@alice#1",
-    "targets": [],
+    "targets": ["Kaito, Bane of Nightmares@bob#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,19 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["delayed_triggers", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Kaito, Bane of Nightmares@bob#1": {
+        "counters": [
+          {
+            "loyalty": 4
+          },
+          {}
+        ],
+        "zone": ["battlefield", "exile"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +59,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },
