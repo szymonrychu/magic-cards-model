@@ -1844,6 +1844,45 @@ def _power_or_toughness_qualifier_holds(
     return any(compare(value, threshold) for value in values)
 
 
+#: Flanking's own qualifier (CR 702.25a): "becomes blocked by a creature
+#: without `<keyword>`". Not fixed to "flanking" - a differently worded card
+#: could as easily name any other keyword here, the same reasoning
+#: `_POWER_OR_TOUGHNESS_QUALIFIER` above already gives for staying generic
+#: rather than hardcoding the one word the pool happens to print.
+_BECOMES_BLOCKED_BY_WITHOUT_KEYWORD = re.compile(
+    r"\bbecomes blocked by a creature without (?P<keyword>[a-z][a-z '-]*?)\s*$"
+)
+
+
+def _becomes_blocked_by_qualifier_holds(
+    game: "Game", condition: str, blocker_id: "UUID | None"
+) -> bool | None:
+    """Whether a "becomes blocked by a creature without `<keyword>`" qualifier
+    (Flanking, CR 702.25a) is true of the blocker `blocker_id` names, or
+    `None` when the condition carries no such qualifier at all - the same
+    "nothing to check" reading `_power_or_toughness_qualifier_holds` gives
+    `condition_matches`'s BLOCKS branch for its own qualifier.
+
+    CR 509.3f: a "becomes blocked by a creature with certain characteristics"
+    condition is checked "at the point it becomes a blocking creature" - this
+    is read the moment the `BLOCKS` event itself is matched, off the live
+    board (CR 613.5), so there is no later moment for the check to have
+    drifted from.
+    """
+    match = _BECOMES_BLOCKED_BY_WITHOUT_KEYWORD.search(condition.lower())
+    if match is None:
+        return None
+    if blocker_id is None:
+        return False
+    blocker = game.find_by_id(blocker_id)
+    if not isinstance(blocker, CardState):
+        return False
+
+    from .combat import has_keyword
+
+    return not has_keyword(blocker, match.group("keyword").strip(), game)
+
+
 #: "a Dragon spell", "the first Otter spell" - a subtype named on a "cast a
 #: ... spell" condition (CR 205.3a). Templating always capitalizes a subtype
 #: the way Scryfall's Oracle text does, which is what tells this apart from
@@ -2697,6 +2736,14 @@ def condition_matches(
         if mine:
             blocks = "blocks" in lowered and event.subject_id == source.id
             blocked = "becomes blocked" in lowered and event.related_id == source.id
+            if blocked:
+                # Flanking's own "... by a creature without `<keyword>`"
+                # (CR 702.25a) - checked against the blocker, `event.
+                # subject_id`, which is always the blocker of the pair
+                # `Game.declare_blockers` emits (never the source itself,
+                # even when the source is what "becomes blocked").
+                qualifier = _becomes_blocked_by_qualifier_holds(game, condition, event.subject_id)
+                blocked = qualifier is None or qualifier
             return blocks or blocked
         # Tetsuko Umezawa, Pursuer's own non-self-referential form: "a
         # creature an opponent controls with power or toughness 1 or less

@@ -20022,8 +20022,15 @@ def _parse_layer_counter_instead_upgrade(
 #: `AbilityOnStack.event.subject_id` (the same field `event_subject_power`
 #: already reads for a dying creature's power) instead of from `Game.
 #: resolve_card_targets`.
+#:
+#: "The blocking creature" (Flanking, CR 702.25a) is the identical anaphor,
+#: one noun phrase over: CR 509.1a's blocking creature is exactly what a
+#: `TriggerEvent.BLOCKS` event's own `subject_id` already names, whichever
+#: side of the block declared the trigger's own "this creature" - so it needs
+#: no noun captured at all, only the `creature` default below.
 _EVENT_SUBJECT_PUMP_RE = re.compile(
-    r"^(?:that (?P<noun>creature|permanent)|it)\b(?P<rest>.*)$", re.IGNORECASE | re.DOTALL
+    r"^(?:that (?P<noun>creature|permanent)|the blocking creature|it)\b(?P<rest>.*)$",
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -20041,7 +20048,15 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
     if match is None:
         return None
     noun = match.group("noun") or "creature"
-    rewritten = f"target {noun}{match.group('rest')}"
+    rewritten = f"target {noun}{match.group('rest')}".rstrip()
+    if not rewritten.endswith("."):
+        # A keyword's own `_TRIGGER_EXPANSIONS` effect text (Flanking's "the
+        # blocking creature gets -1/-1 until end of turn") carries no
+        # trailing period - `_expansion` never adds one - unlike a printed
+        # oracle sentence, which always keeps its own. `parsed_layer_effects`
+        # reads by sentence (`_effect_sentences`) and needs one to see this
+        # as a complete sentence rather than nothing at all.
+        rewritten += "."
     if not is_genuine_resolution_layer_sentence(rewritten):
         return None
     builder = parsed_layer_effects(rewritten)
