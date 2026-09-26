@@ -11051,9 +11051,18 @@ def _merge_tap_target_then_no_untap_clauses(
 #: CR 122.5's "move" keyword action, self-referential source (`_COUNTER_
 #: SELF_SUBJECT`'s "this `<noun>`" shape, reused from `cost.py`'s own counter
 #: phrasing) and a target destination.
+#:
+#: "onto **another** target creature" (Scrounging Bandar's "you may move any
+#: number of +1/+1 counters from this creature onto another target
+#: creature.", Tester of the Tangential's reflexive "move X +1/+1 counters
+#: from this creature onto another target creature.") is CR 115.1's ordinary
+#: "another" exclusion on the same destination phrase - `phrase` already
+#: reaches `_targets_understood`, which reads "another" the same way every
+#: other target phrase in this file does, so this only has to stop refusing
+#: the word before that check is ever reached.
 _MOVE_COUNTER_RE = re.compile(
     rf"^move (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from this \w+ onto "
-    r"(?P<phrase>target .+)\.?$",
+    r"(?P<phrase>(?:another )?target .+)\.?$",
     re.IGNORECASE,
 )
 
@@ -11822,12 +11831,22 @@ def put_counters_on_ability_targets(
 # (CR 613.5) could have changed as of resolution the way a granted color or
 # type can. Effie, Fast Learner (off-pool, not legal in any target format)
 # proves the word is read generally rather than fitted to Aang's own card.
+#
+# `group` also reads a comma/"and"/"or"-joined **list** of subtypes - SOS's
+# Blech, Loafing Pest: "put a +1/+1 counter on each Pest, Bat, Insect, Snake,
+# and Spider you control." (CR 205.3's own subtype list, an inclusive "or":
+# one creature carrying two of the named types still gets one counter, not
+# two, since `place`'s `any(...)` below never adds twice for one permanent).
+# Agent Phil Coulson's single-subtype "each other Hero you control" already
+# read through the bare-word branch before this list widened it; that word
+# is just the list's own one-element case now.
 _COUNTER_EACH_GROUP_RE = re.compile(
     rf"^put (?P<n>{COUNT}|x) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each "
     rf"(?P<other>other )?"
     r"(?:(?P<tap_state>tapped|untapped) )?"
     r"(?:(?P<color>white|blue|black|red|green|colorless|monocolored|multicolored) )?"
-    rf"(?P<group>[a-z]+) (?P<whose>you control|your opponents control|an opponent controls)"
+    r"(?P<group>[a-z]+(?:,\s*[a-z]+)*(?:,?\s+(?:and|or)\s+[a-z]+)?) "
+    rf"(?P<whose>you control|your opponents control|an opponent controls)"
     rf"{where_x_pattern('expr')}\.?$",
     re.IGNORECASE,
 )
@@ -11982,6 +12001,11 @@ def _parse_put_counters_on_group_clause(
         return None
     kind = match.group("kind").lower()
     group = match.group("group")
+    # CR 205.3's subtype list, comma/"and"/"or" joined - a single bare word
+    # ("creature", "Hero") is just this list's one-element case.
+    group_words = [
+        word.strip() for word in re.split(r",\s*|\s+and\s+|\s+or\s+", group) if word.strip()
+    ]
     excludes_source = match.group("other") is not None
     tap_state = (match.group("tap_state") or "").lower()
     color_word = (match.group("color") or "").lower()
@@ -12026,10 +12050,10 @@ def _parse_put_counters_on_group_clause(
             # read off the computed board like the type below.
             if not color_matches(chars.colors):
                 continue
-            if group.lower() == "creature":
+            if len(group_words) == 1 and group_words[0].lower() == "creature":
                 if not chars.is_creature:
                     continue
-            elif group not in chars.subtypes:
+            elif not any(word in chars.subtypes for word in group_words):
                 continue
             game.add_counters(permanent, kind, amount)
 
@@ -13926,8 +13950,15 @@ def _parse_remove_up_to_n_counters_from_target_clause(text: str) -> AbilityEffec
 #: named kind, matching the printed "its counters" (CR 122.1 leaves the kind
 #: open); CR 122.5's "counter is removed from the first ... and put onto the
 #: second" is what "put ... on" invokes, not two independent instructions.
+#:
+#: "those" (SOS's Scolding Administrator: "When this creature dies, if it had
+#: counters on it, put those counters on up to one target creature.") is the
+#: identical CR 400.7 anaphora back to the same dying source, spelled with a
+#: demonstrative instead of the possessive - the intervening *if* ahead of it
+#: is `machines/triggers.py`'s own condition to answer, already split off
+#: `TriggeredAbility.effect` before this text is ever seen here.
 _PUT_ITS_COUNTERS_ON_TARGET_RE = re.compile(
-    r"^put its counters on (?P<phrase>(?:up to \S+ )?target .+)\.?$", re.IGNORECASE
+    r"^put (?:its|those) counters on (?P<phrase>(?:up to \S+ )?target .+)\.?$", re.IGNORECASE
 )
 
 
@@ -17310,6 +17341,18 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         # `create_continuous_effect_of_ability` instead, keyed by ability
         # index rather than a clause shape.
         return create_continuous_effect  # type: ignore[return-value]
+
+    if not for_spell:
+        move_counter = _parse_move_counter_clause(clause)
+        if move_counter is not None:
+            # SOS's Tester of the Tangential: reached here (not only through
+            # `_ability_effect_or_notice`'s own whole-text dispatch) so that
+            # `reflexive_consequence_effect`'s `parse_mixed_effect` call - the
+            # only reader a CR 603.12 reflexive ability's own text goes
+            # through at resolution - can read a "move ... counters"
+            # consequence too, not only a directly-printed one (Diamond
+            # City's non-reflexive "Move a shield counter ...").
+            return move_counter
 
     if match := _TARGET_CANT_BE_BLOCKED_RE.fullmatch(clause):
         # CR 509.1a's evasion restriction, granted directly rather than as
@@ -29141,6 +29184,26 @@ _RIDER_CANT_BE_BLOCKED_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} can'?t be blocked this turn$", re.IGNORECASE
 )
 
+#: "It can't block this turn." - CR 509.1b's mirror restriction, printed as an
+#: anaphoric rider after an earlier clause (SOS's Duel Tactics: "Duel Tactics
+#: deals 1 damage to target creature. It can't block this turn.") rather than
+#: `_TARGET_CANT_BLOCK_RE`'s own direct "target creature can't block this
+#: turn" grant. Granted the identical way `_RIDER_CANT_BE_BLOCKED_RE` grants
+#: its own mirror keyword: the self line "This creature can't block."
+#: `machines/combat.py`'s blocker restriction already reads, for the rest of
+#: the turn (CR 611.2a).
+_RIDER_CANT_BLOCK_RE = re.compile(rf"^{_OBJECT_ANAPHOR} can'?t block this turn$", re.IGNORECASE)
+
+#: "Put twice X `<kind>` counters on it." - SOS's Procrastinate: "Tap target
+#: creature. Put twice X stun counters on it." CR 107.3a's announced X,
+#: doubled (CR 107.3b's own "twice X" reading a plain arithmetic multiplier,
+#: not CR 701.10e's "double the number of counters *already there*" - there
+#: are none yet on a freshly-tapped creature). `_RIDER_PUT_COUNTERS_RE`'s own
+#: literal-count sibling, for the one shape a fixed `COUNT` cannot spell.
+_RIDER_PUT_TWICE_X_COUNTERS_RE = re.compile(
+    rf"^put twice x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on {_OBJECT_ANAPHOR}$", re.IGNORECASE
+)
+
 #: "Goad it." / "Goad them." / "Goad that creature." - Oceanus Dragon's own
 #: rider after its tap (CR 701.15a): the goader is the resolving object's
 #: controller, the objects are whatever the antecedent sentence acted on.
@@ -29266,13 +29329,43 @@ _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
 #: time a clause reaches here. "also" only says the rider adds to what the
 #: antecedent did; it changes nothing, so it is dropped before the rider
 #: itself is read.
+#: The rider half is not required to *start* with the anaphor - SOS's Rapier
+#: Wit: "Tap target creature. If it's your turn, put a stun counter on it."
+#: puts "it" at the end, as the counter clause's own object, not as the
+#: rider's subject. `_parse_conditional_referent_clause` below still checks
+#: the body through `_parse_referent_object_clause`, the same reader every
+#: unconditional rider goes through, so nothing here is read more loosely
+#: than an unconditional rider already is - and the caller
+#: (`_parse_object_anaphor_clause_pair`) has already confirmed the *whole*
+#: second sentence contains the anaphor somewhere before this is even tried.
 _CONDITIONAL_REFERENT_LEADING_RE = re.compile(
-    rf"^if (?P<condition>[^,]+), (?P<rider>{_OBJECT_ANAPHOR}\b.+)$", re.IGNORECASE
+    r"^if (?P<condition>[^,]+), (?P<rider>.+)$", re.IGNORECASE
 )
 _CONDITIONAL_REFERENT_TRAILING_RE = re.compile(
     rf"^(?P<rider>{_OBJECT_ANAPHOR}\b.+?) if (?P<condition>.+)$", re.IGNORECASE
 )
 _RIDER_ALSO_RE = re.compile(rf"^(?P<anaphor>{_OBJECT_ANAPHOR}) also\b", re.IGNORECASE)
+
+#: "it's a[n] `<type>`" - SOS's Searing Barb: "Searing Barb deals 2 damage to
+#: any target. If it's a creature, it can't block this turn." A bare CR
+#: 205.2a card type or CR 205.3 subtype naming what the antecedent's own
+#: referent *is* right now, not a board-state condition - so it is judged
+#: per referent (`_referent_matches_quality`) rather than through `Game.
+#: condition_holds`, which has no referent to ask about at all.
+_REFERENT_IS_TYPE_CONDITION_RE = re.compile(r"^it'?s an? (?P<type>[a-z]+)$", re.IGNORECASE)
+
+
+def _referent_matches_quality(game: "Game", referent: CardState, word: str) -> bool:
+    """Whether `referent`'s *computed* characteristics (CR 613.5) carry
+    `word` as a card type or a subtype - `_matches_subtype_on_battlefield`'s
+    own subtype half, plus the card-type half `_REFERENT_IS_TYPE_CONDITION_RE`
+    also has to answer ("it's a creature" is CR 205.2a, not CR 205.3)."""
+    from .layers import _card_type_word
+
+    card_type = _card_type_word(word)
+    if card_type is not None:
+        return card_type in game.characteristics_of(referent).types
+    return _matches_subtype_on_battlefield(game, referent, word)
 
 
 def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | None:
@@ -29293,11 +29386,35 @@ def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | Non
     if match is None:
         return None
     condition_text = match.group("condition").strip()
-    if not _effect_condition_is_readable(condition_text):
-        return None
     body = _RIDER_ALSO_RE.sub(lambda found: found.group("anaphor"), match.group("rider").strip())
     inner = _parse_referent_object_clause(body)
     if inner is None:
+        return None
+
+    type_match = _REFERENT_IS_TYPE_CONDITION_RE.fullmatch(condition_text)
+    if type_match is not None:
+        # "If it's a `<type>`, `<rider>`" (Searing Barb: "... any target. If
+        # it's a creature, it can't block this turn.") - a characteristic
+        # check on the referent itself (CR 205.2a/205.3), not a board
+        # condition `Game.condition_holds` answers, so it is filtered per
+        # referent rather than asked once for the whole rider.
+        word = type_match.group("type")
+
+        def type_filtered_rider(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            matching = [
+                referent
+                for referent in referents
+                if referent.zone is Zone.BATTLEFIELD
+                and _referent_matches_quality(game, referent, word)
+            ]
+            if matching:
+                inner(game, matching, stack_object)
+
+        return type_filtered_rider
+
+    if not _effect_condition_is_readable(condition_text):
         return None
 
     def conditional_rider(
@@ -29559,6 +29676,51 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                 )
 
         return cant_be_blocked
+
+    if _RIDER_CANT_BLOCK_RE.fullmatch(rider):
+
+        def cant_block(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            effects = game.continuous_effects
+            for referent in referents:
+                if referent.zone is not Zone.BATTLEFIELD:
+                    continue
+                effects.add(
+                    ContinuousEffect(
+                        description=f"{referent.name} can't block this turn",
+                        layer=Layer.ABILITY,
+                        timestamp=effects.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=only_this_incarnation(referent, referent.zone_change_stamp),
+                        modification=grant_ability("This creature can't block."),
+                    )
+                )
+
+        return cant_block
+
+    if match := _RIDER_PUT_TWICE_X_COUNTERS_RE.fullmatch(rider):
+        kind = _counter_kind(match.group("kind"))
+
+        def put_twice_x_counters(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            # CR 107.3a's announced X: a spell's own cast record, an
+            # ability's own `x_value` (the same two-shape read `counter_
+            # effects._announced_x` already gives this identical question).
+            x_value = (
+                game.cast_record(stack_object).x_value
+                if isinstance(stack_object, CardState)
+                else getattr(stack_object, "x_value", None) or 0
+            )
+            amount = 2 * x_value
+            if amount <= 0:
+                return
+            for referent in referents:
+                if referent.zone is Zone.BATTLEFIELD:
+                    game.add_counters(referent, kind, amount)
+
+        return put_twice_x_counters
 
     if _RIDER_GOAD_RE.fullmatch(rider):
 

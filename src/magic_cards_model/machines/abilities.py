@@ -1657,6 +1657,15 @@ class ActivationCostReduction(EngineModel):
     #: `machines/keywords.target_cost_reduction_amount`, the same "read the
     #: phrase, don't guess a table" approach `quality` above already takes.
     target_quality: str | None = None
+    #: SOS's Diary of Dreams: "This ability costs {1} less to activate for
+    #: each page counter on this artifact." - counted on the ability's own
+    #: *source* rather than among permanents its controller controls
+    #: (`quality`) or on the ability's target (`target_quality`); exactly one
+    #: of the three is ever set. Kept as the printed counter kind ("page")
+    #: and read generically by `Game.activation_cost_reduction_for` off
+    #: `CardState.counter_count`, the same open CR 122.1 vocabulary every
+    #: other counter-kind read in this codebase already takes.
+    self_counter_kind: str | None = None
 
 
 #: "This ability costs {N} less to activate for each <quality> you control."
@@ -1683,6 +1692,17 @@ _TRAILING_TARGET_COST_REDUCTION_RE = re.compile(
 #: `target_cost_reduction_amount`'s own reading of a "<kind> counter[s]"
 #: phrase - the counter half of `ActivationCostReduction.target_quality`.
 _TARGET_COUNTER_PHRASE_RE = re.compile(r"^(?P<kind>[\w+/−-]+) counters?$", re.IGNORECASE)
+
+#: The self-counter sibling: "... for each <kind> counter on this <type>."
+#: (Diary of Dreams) - a count on the ability's own source, not its target
+#: (`_TRAILING_TARGET_COST_REDUCTION_RE`'s "the ... it targets") and not a
+#: quality among permanents its controller controls
+#: (`_TRAILING_ACTIVATION_COST_REDUCTION_RE`'s "... you control").
+_TRAILING_SELF_COUNTER_COST_REDUCTION_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
+    r"(?P<kind>[\w+/−-]+) counters? on this \w+\.?$",
+    re.IGNORECASE,
+)
 
 
 def target_cost_reduction_amount(
@@ -1740,6 +1760,13 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
         reduction = ActivationCostReduction(
             amount=int(target_match.group("amount")),
             target_quality=target_match.group("what").strip(),
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    self_counter_match = _TRAILING_SELF_COUNTER_COST_REDUCTION_RE.match(last)
+    if self_counter_match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(self_counter_match.group("amount")),
+            self_counter_kind=self_counter_match.group("kind").strip().lower(),
         )
         return " ".join(sentences[:-1]).strip(), reduction
     return effect, None

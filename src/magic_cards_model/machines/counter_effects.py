@@ -350,12 +350,74 @@ def put_this_turn(context: object, putter: str | None, permanent: CardState, kin
     )
 
 
+#: "As long as there are `<N>` or more `<kind>` counters on this `<type>`,
+#: `<group>` you control get `<power>/<toughness>`." (SOS's Comforting
+#: Counsel; Obscura Ascendancy, the off-pool generality proof, whose
+#: "Spirits you control" is a subtype list rather than the bare word
+#: "creatures") - CR 611.3a's own "isn't 'locked in'" threshold static,
+#: gated on the *source's own* counter count rather than a board-wide count
+#: (`machines/layers.py`'s own `_BOARD_COUNT_GATE_RE` reads "as long as you
+#: control N or more `<type>`" instead - a different subject entirely). CR
+#: 604.2/611.3a mean the gate is re-asked on every CR 613.5 computation, not
+#: fixed once when the permanent entered.
+_COUNTER_THRESHOLD_ANTHEM_RE = re.compile(
+    r"^as long as there (?:is|are) (?P<q>[a-z]+|\d+) or more "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on this [a-z]+, "
+    r"(?P<other>[Oo]ther )?(?P<group>[a-zA-Z]+) you control get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _counter_threshold_anthem_builder(
+    kind: str, threshold: int, power: int, toughness: int, *, other: bool, group: str, line: str
+):  # noqa: ANN202
+    from . import layers
+
+    is_creatures = group.lower() == "creatures"
+    subtypes = None if is_creatures else layers._subtype_list_words(group)
+
+    def builder(source: CardState, timestamp: int, targets, context) -> list:  # noqa: ANN001
+        if source.counter_count(kind) < threshold:
+            return []
+        if is_creatures:
+            inner = layers._anthem_builder(
+                power, toughness, other=other, whose="you control", line=line
+            )
+        else:
+            inner = layers._filtered_anthem_builder(
+                subtypes, power, toughness, [], other=other, line=line
+            )
+        return inner(source, timestamp, targets, context)
+
+    return builder
+
+
 def parse_static_layer_sentence(sentence: str):  # noqa: ANN201 - EffectBuilder
     """A static counter sentence as a `machines/layers` `EffectBuilder`, or
     `None`. Asked first by `machines/layers._parse_static_layer_sentence`."""
+    from ..numbers import parse_count
     from . import layers
 
     text = " ".join(sentence.split())
+    match = _COUNTER_THRESHOLD_ANTHEM_RE.fullmatch(text)
+    if match is not None:
+        threshold = parse_count(match.group("q"), article=False)
+        if threshold is None:
+            return None
+        group = match.group("group")
+        if group.lower() != "creatures" and layers._subtype_list_words(group) is None:
+            return None
+        kind = match.group("kind").lower()
+        return _counter_threshold_anthem_builder(
+            kind,
+            threshold,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            other=match.group("other") is not None,
+            group=group,
+            line=sentence,
+        )
     match = _PUT_ON_SELF_THIS_TURN_GRANT_RE.fullmatch(text)
     if match is not None:
         keywords = layers._split_and_validate_keywords(match.group("keywords"))
@@ -1119,6 +1181,339 @@ def _create_then_counters_per_source_counter(text: str, *, for_spell: bool):  # 
     return effect
 
 
+#: "When this creature dies, if it had one or more counters on it, create a
+#: `<token>`, then put this creature's counters on that token." (SOS's
+#: Ambitious Augmenter) - CR 603.4's intervening *if* is already split off
+#: `TriggeredAbility.effect` by `machines/abilities.py` before this text is
+#: ever seen here, and answered by `machines/conditions/objects.py`'s "it
+#: had ... counters on it" reader (`_has_counters`, in its own `READERS`
+#: tuple), so only the create-then-move half is this module's to read: CR
+#: 400.7/603.10a's last-known information for the already-dead source (the
+#: same ternary `_parse_put_its_counters_on_target_clause` and
+#: `hangarback_dies` already read in `machines/effects.py`), CR 122.6's
+#: counters landing on the object the token clause just created.
+_CREATE_TOKEN_THEN_PUT_THIS_CREATURES_COUNTERS_ON_IT_RE = re.compile(
+    r"^(?P<create>create .+? tokens?(?:\s+with\s+.+?)?), then put this "
+    r"(?:creature|permanent|card)'s counters on (?:that|this) token\.?$",
+    re.IGNORECASE,
+)
+
+
+def _create_token_then_put_this_creatures_counters_on_it(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.token import is_token
+    from ..models.zone import Zone
+    from . import effects
+
+    if for_spell:
+        return None
+    match = _CREATE_TOKEN_THEN_PUT_THIS_CREATURES_COUNTERS_ON_IT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    create = effects._parse_token_clause(match.group("create"), for_spell=False)
+    if create is None:
+        return None
+
+    def effect(game: Game, ability) -> None:  # noqa: ANN001
+        source = ability.source(game)
+        if source is None:
+            return
+        counters = (
+            source.counters if source.zone is Zone.BATTLEFIELD else source.last_known_counters
+        )
+        before = {permanent.id for permanent in game.battlefield}
+        create(game, ability)
+        created = [
+            permanent
+            for permanent in game.battlefield
+            if permanent.id not in before and is_token(permanent)
+        ]
+        if not created:
+            return
+        token = created[0]
+        for kind, amount in counters.items():
+            if amount:
+                game.add_counters(token, kind, amount)
+
+    return effect
+
+
+#: "you may pay {X}. When you do, move X `<kind>` counters from this
+#: `<type>` onto `<phrase>`." (SOS's Tester of the Tangential) - CR 118.9's
+#: variable-amount cost paid one generic mana at a time, the same "ask again
+#: until declined or unaffordable" shape `effects._parse_reflexive_pay_up_
+#: to_n_times_choose_modes_clause` already uses for a *fixed* repeat count,
+#: unbounded here since {X} prints no ceiling of its own - the loop simply
+#: stops the moment `Game.may_pay_mana_cost` is no longer payable (CR 118.3)
+#: or the controller declines. CR 603.12's reflexive trigger is then created
+#: with the actual paid amount substituted in as a literal count -
+#: `effects._MOVE_COUNTER_RE` already reads "move `<n>` ... onto `<phrase>`"
+#: for any literal `<n>`, so nothing new is needed to run the consequence
+#: itself once X is known.
+_REFLEXIVE_MAY_PAY_X_MOVE_COUNTERS_RE = re.compile(
+    r"^you may pay \{x\}\.\s*when you do, move x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? "
+    r"from this (?P<noun>[a-z]+) onto (?P<phrase>(?:another )?target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _reflexive_may_pay_x_move_counters(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.mana import ManaCost
+    from . import effects
+    from .decisions import source_id_of
+    from .delayed import ReflexiveConsequence
+
+    if for_spell:
+        return None
+    match = _REFLEXIVE_MAY_PAY_X_MOVE_COUNTERS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = match.group("kind").lower()
+    noun = match.group("noun")
+    phrase = match.group("phrase").strip()
+    if not effects._targets_understood(phrase, count_agnostic=False):
+        return None
+    one_generic = ManaCost.parse("{1}")
+
+    def effect(game: Game, ability) -> None:  # noqa: ANN001
+        player = game.controller_of(ability)
+        source_id, source_name = effects._permanent_id_and_name(ability, for_spell=False)
+        paid = 0
+        while game.may_pay_mana_cost(
+            player, one_generic, source=source_name, source_id=source_id_of(ability)
+        ):
+            paid += 1
+        if paid <= 0:
+            return
+        consequence_text = f"move {paid} {kind} counters from this {noun} onto {phrase}."
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
+#: "you may move any number of `<kind>` counters from this `<type>` onto
+#: `<phrase>`." (Scrounging Bandar, the off-pool generality proof for
+#: `effects._MOVE_COUNTER_RE`'s "onto another target" widening) - CR 608.2d's
+#: open amount with no `DecisionKind` built for it yet, the same documented
+#: scoped simplification `effects._parse_remove_up_to_n_counters_from_
+#: target_clause` already takes for its own "remove up to N counters": the
+#: maximum available rather than a separate "how many" question (recorded
+#: here, not hidden, for the identical reason). The move itself is optional
+#: (a plain `MAY` question, CR 608.2d), and CR 122.5 checks both halves -
+#: source has the counters, destination is still legal - before either one
+#: happens.
+_MAY_MOVE_ANY_NUMBER_COUNTERS_RE = re.compile(
+    r"^you may move any number of (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? from this "
+    r"(?P<noun>[a-z]+) onto (?P<phrase>(?:another )?target .+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _may_move_any_number_counters(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from . import effects
+    from .decisions import Decision, DecisionKind, source_id_of
+
+    if for_spell:
+        return None
+    match = _MAY_MOVE_ANY_NUMBER_COUNTERS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = match.group("kind").lower()
+    phrase = match.group("phrase").strip()
+    if not effects._targets_understood(phrase, count_agnostic=False):
+        return None
+
+    def effect(game: Game, ability) -> None:  # noqa: ANN001
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        available = source.counter_count(kind)
+        if available <= 0:
+            return
+        player = game.controller_of(ability)
+        if not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=f"move {kind} counters from {ability.source_name}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                affirmative_is_legal=True,
+            )
+        ):
+            return
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        source.remove_counters(kind, available)
+        game.add_counters(targets[0], kind, available)
+
+    return effect
+
+
+#: "Put a[n] `<kind>` counter on target creature you control, then double
+#: the number of `<kind>` counters on that creature." (SOS's Growth Curve) -
+#: CR 122.1's counter placement followed immediately by CR 701.10e's
+#: doubling of whatever the *same* target now carries (the counter this
+#: instruction itself just added included, since CR 608.2c runs the two
+#: clauses of one printed instruction in order).
+_PUT_COUNTER_THEN_DOUBLE_ON_THAT_RE = re.compile(
+    r"^put (?P<n>an?|[\w-]+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?P<phrase>target .+?), then double the number of (?P<kind2>\+1/\+1|-1/-1|[a-z]+) "
+    r"counters? on (?:that creature|it|this [a-z]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _put_counter_then_double_on_that(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from ..numbers import parse_count
+    from . import effects
+
+    match = _PUT_COUNTER_THEN_DOUBLE_ON_THAT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if match.group("kind").lower() != match.group("kind2").lower():
+        return None
+    kind = match.group("kind").lower()
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    phrase = match.group("phrase").strip()
+    if not effects._targets_understood(phrase, count_agnostic=False):
+        return None
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        target = targets[0]
+        game.add_counters(target, kind, amount)
+        current = target.counter_count(kind)
+        if current:
+            game.add_counters(target, kind, current)
+
+    return effect
+
+
+#: "Choose any number of target creatures. Double the number of `<kind>`
+#: counters on each of them." (Solidarity of Heroes, the off-pool generality
+#: proof of the doubling primitive over a multi-target choice rather than
+#: `_put_counter_then_double_on_that`'s single "that creature") - CR 701.10e
+#: applied once per chosen, still-legal target (CR 608.2b).
+_CHOOSE_ANY_NUMBER_THEN_DOUBLE_EACH_RE = re.compile(
+    r"^choose any number of (?P<phrase>target .+?)\. double the number of "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each of them\.?$",
+    re.IGNORECASE,
+)
+
+
+def _choose_any_number_then_double_each(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from . import effects
+
+    match = _CHOOSE_ANY_NUMBER_THEN_DOUBLE_EACH_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase").strip()
+    if not effects._targets_understood(phrase, count_agnostic=True):
+        return None
+    kind = match.group("kind").lower()
+
+    def effect(game: Game, stack_object) -> None:  # noqa: ANN001
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            current = target.counter_count(kind)
+            if current:
+                game.add_counters(target, kind, current)
+
+    return effect
+
+
+#: "`<Name>` deals `<N>` damage to target creature. You may exile a card
+#: from your graveyard. If you do, `<name>` also deals `<M>` damage to that
+#: creature's controller." (SOS's Heated Argument) - CR 118.12's optional
+#: cost read during resolution (a graveyard card chosen and exiled, CR
+#: 608.2d, the same `_exile_cards_from_graveyard` helper an ordinary forced
+#: exile already uses), gating a second instance of damage to the first
+#: sentence's own target's controller (CR 400.7 anaphora: "that creature",
+#: read before the first damage might destroy it). No second Modern/
+#: Pioneer/Standard-legal printing of this exact optional-graveyard-exile
+#: rider turned up a `card_search`; see MEMORY.md for the dated note. The
+#: leading name is matched, not assumed, so a same-shaped future printing
+#: with a different name reads identically - a `(?P=name)` backreference is
+#: what makes the second "also deals" sentence name *this* spell rather than
+#: a different one.
+_DEALS_DAMAGE_THEN_MAY_EXILE_GRAVEYARD_EXTRA_DAMAGE_RE = re.compile(
+    r"^(?P<name>[A-Z][A-Za-z',.\- ]*?) deals (?P<n1>\d+) damage to target creature\. "
+    r"You may exile a card from your graveyard\. If you do, (?P=name) also deals "
+    r"(?P<n2>\d+) damage to that creature'?s controller\.?$"
+)
+
+
+def _deals_damage_then_may_exile_graveyard_extra_damage(text: str, *, for_spell: bool):  # noqa: ANN202
+    from ..models.card_state import CardState
+    from ..models.zone import Zone
+    from . import effects
+    from .decisions import source_id_of
+
+    if not for_spell:
+        return None
+    match = _DEALS_DAMAGE_THEN_MAY_EXILE_GRAVEYARD_EXTRA_DAMAGE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n1"))
+    extra = int(match.group("n2"))
+
+    def effect(game: Game, spell) -> None:  # noqa: ANN001
+        targets = [
+            target
+            for target in game.resolve_targets(spell)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        target = targets[0]
+        controller_username = target.controller
+        game.deal_damage(target, amount, source=spell)
+        player = game.controller_of(spell)
+        if not player.graveyard:
+            return
+        if not game.may(
+            player,
+            "exile a card from your graveyard",
+            source=spell.name,
+            source_id=source_id_of(spell),
+        ):
+            return
+        exiled = effects._exile_cards_from_graveyard(
+            game, player, 1, spell.name, source_id=source_id_of(spell)
+        )
+        if not exiled or not controller_username:
+            return
+        game.deal_damage(game.player(controller_username), extra, source=spell)
+
+    return effect
+
+
 _WHOLE_TEXT_READERS = (
     lambda text, *, for_spell: _each_kind_another_counter(text),
     _create_that_many_tokens,
@@ -1130,6 +1525,12 @@ _WHOLE_TEXT_READERS = (
     _search_library_and_or_graveyard,
     _choose_targets_put_counter_on_each,
     _create_then_counters_per_source_counter,
+    _create_token_then_put_this_creatures_counters_on_it,
+    _reflexive_may_pay_x_move_counters,
+    _may_move_any_number_counters,
+    _put_counter_then_double_on_that,
+    _choose_any_number_then_double_each,
+    _deals_damage_then_may_exile_graveyard_extra_damage,
 )
 
 
