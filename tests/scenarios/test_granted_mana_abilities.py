@@ -27,7 +27,9 @@ that wrote this file:
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
+from magic_cards_model.models.action import ActionKind, Affordability
 from magic_cards_model.models.card import Color
 from magic_cards_model.support import HANDLED, classify_clauses
 from tests.cards import card
@@ -239,3 +241,39 @@ def test_cryptolith_rite_does_not_reach_lands_or_opponents_creatures() -> None:
     assert RITE not in scenario.game.characteristics_of(_mine(scenario, "Forest")).abilities
     elves = _mine(scenario, "Llanowar Elves", "bob")
     assert RITE not in scenario.game.characteristics_of(elves).abilities
+
+
+def test_affordability_with_the_grant_on_many_lands_is_answered() -> None:
+    """Every land made a two-mana any-one-colour source is an "exotic" source
+    for the auto-tap solver; with eight of them the plain product of their
+    alternatives is 7**8 readings. The solver prunes interchangeable lands and
+    readings that commit more sources than the cost has mana, so the
+    enumeration answers - and answers right: Lightning Bolt is payable, and
+    so is Goblin Guide from a Mountain's own unrestricted {R}, but not from
+    the restricted mana alone (no Mountain here for Grizzly Bears' {G})."""
+    lands = ["Island"] * 4 + ["Mountain"] * 4
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt", "Goblin Guide", "Grizzly Bears", "Lava Spike"],
+            battlefield=["Resonating Lute", *lands],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casts = {
+        scenario.game.find_by_id(action.card_id).name: action.affordable
+        for action in legal_actions(scenario.game, "alice")
+        if action.kind is ActionKind.CAST
+    }
+
+    assert casts["Lightning Bolt"] is Affordability.YES
+    assert casts["Lava Spike"] is Affordability.YES
+    assert casts["Goblin Guide"] is Affordability.YES
+    assert casts["Grizzly Bears"] is Affordability.NO
+
+    scenario.cast_and_resolve("Lightning Bolt", auto=True, targets=["bob"])
+    assert scenario.game.player("bob").life == 17
