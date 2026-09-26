@@ -5938,3 +5938,59 @@ All ten shapes below are whole-text readers in `machines/counter_effects.py`'s `
 | "`<Name>` deals N damage to target creature. You may exile a card from your graveyard. If you do, `<name>` also deals M damage to that creature's controller." (CR 118.12's optional resolution-time cost - a graveyard card chosen and exiled, reusing `effects._exile_cards_from_graveyard` - gating a second instance of damage to the first target's controller, read before the first damage might remove that creature) | `counter_effects._deals_damage_then_may_exile_graveyard_extra_damage` | Heated Argument | - (no second Modern/Pioneer/Standard printing of this exact optional-graveyard-exile damage rider found despite a `card_search`; dated MEMORY.md line) | `test_damage_riders_sos.py` |
 
 Additive, non-owning changes to shared machinery this task made (see MEMORY.md for the dated notes): `effects._parse_targeted_clause` also tries `effects._parse_move_counter_clause` per clause (not only through the whole-text dispatch), so a CR 603.12 reflexive consequence's own text - which only ever reaches `parse_mixed_effect`, never the whole-text dispatch - can read a "move ... counters" instruction too.
+
+## sos T4: Infusion effect shapes, symmetric/edict/halving templates, skip turns
+
+`machines/infusion.py` is new: Infusion itself (CR 207.2c's ability word) needs
+no code - `_ABILITY_WORDS` already strips the label - so this module is the
+*effect shapes* that follow "if/unless/as long as you gained life this turn",
+plus the round's other new templates that share no better home. The boolean
+fact is never re-derived: every reader here asks `Game.condition_holds`
+(which falls to `machines/conditions/history.py`'s H4 `_life_this_turn`
+reader, already generic over "gained"/"lost", a count threshold, and
+"this"/"last turn") the identical way `_parse_condition_clause` and
+`_parse_condition_instead_clause` (`machines/effects.py`) already do for the
+shapes they cover.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "copy it if `<condition>`[. You may choose new targets for the copy.]" - a cast trigger's own conditional self-copy (CR 707.10) | `infusion._parse_copy_it_if_condition_clause` | Lumaret's Favor | - (only printing) | `test_infusion_effect_shapes.py` |
+| "target `<description>` gets `<P/T>` [and gains/have `<keywords>`] until end of turn if `<condition>`" - a targeted one-shot pump gated on a resolution-time condition (CR 608.2c), built with `source_id=None` (CR 611.2c: fixed independently of the source once it begins, the same shape `layers._mass_pump_until_eot_builder` already uses for every other "until end of turn" pump - `_still_exists`'s CR 613.6 ability-text match would otherwise never find the "if" clause's own line) | `infusion._parse_conditional_targeted_layer_clause` | Poisoner's Apprentice | - (only printing) | `test_infusion_effect_shapes.py` |
+| "sacrifice a/an `<description>`\|this `<type>`\|it unless `<condition>`" (CR 118.12) - the sacrifice twin of `effects._parse_discard_unless_condition_clause`'s identical "discard ... unless" shape | `infusion._parse_sacrifice_unless_condition_clause` | Tragedy Feaster | Instill Furor ("it attacked this turn" - a differently-worded condition and a self-reference subject, not Tragedy Feaster's "a permanent"/"you gained life this turn") | `test_infusion_statics.py` |
+| "Any number of target players each discard `<count>` card(s)." (CR 107.1c's unbounded target count, `machines.targeting` reads "any number of target players" whole already) | `infusion._parse_quantified_target_players_each_discard_clause` | Ral Zarek, Guest Lecturer ("−1") | - (only printing) | `test_symmetric_player_effects_sos.py` |
+| "Flip `<n>` coins. Target opponent skips their next X turns, where X is the number of coins that came up heads." (CR 705.1/705.2's counted-not-won flip; CR 614.10's skip) | `infusion._parse_flip_coins_then_skip_turns_clause` | Ral Zarek, Guest Lecturer ("−7") | - (the only "skips their next `<N>` turns" printing found via `card_search`; see MEMORY.md) | `test_skip_turns_coin_flip.py` |
+| "Destroy/exile target creature. If `<condition>`, that creature's controller `<referent clause>`." - a resolution-time conditional (CR 608.2c) riding `effects._parse_anaphoric_clause_pair`'s CR 400.7 "its controller" anaphora, the destroy itself unconditional | `infusion._parse_conditional_anaphoric_clause_pair` (hooked into `effects._parse_mixed_clauses` beside `_parse_anaphoric_clause_pair`) | Foolish Fate | - (only printing) | `test_infusion_effect_shapes.py` |
+| "Look at the top N cards of your library. You may reveal a/an `<quality>` card ... If you gained life this turn, you may instead reveal M `<quality>` cards ... Put the rest on the bottom ... in a random order." - `Game.look_at_top_and_split`'s own CR 608.2d split question, with the moved ceiling computed from the condition at resolution instead of fixed at parse time | `infusion._parse_look_top_reveal_creature_or_land_infusion_clause` | Follow the Lumarets | - (only printing) | `test_infusion_effect_shapes.py` |
+| "Each player loses half `<their life>`, then discards half `<the cards in their hand>`, then sacrifices half `<the permanents they control>` of their choice. Round `<direction>` each time." (CR 107.1a) - APNAP order (`effects._players_in_apnap_order`), every choice of one step asked for every player before any of that step's sacrifices/discards actually happen | `infusion._parse_each_player_halves_life_hand_permanents_clause` | Pox Plague | Peer into the Abyss ("Target player draws cards equal to half the number of cards in their library and loses half their life. Round up each time." - a *targeted* player and a different pair of halved counts, proving the trailing rounding declaration is read generally) | `test_symmetric_player_effects_sos.py` |
+| "Target opponent sacrifices/exiles a/an `<kinds>` [they control] with the greatest mana value among `<pool>` they control." - `effects._TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE` widened to accept "exiles" (CR 701.10a) alongside "sacrifices" (CR 701.21a); the docstring already anticipated this as Blot Out's own "identical shape" | `effects._parse_target_opponent_sacrifice_greatest_mv_clause` | End of the Hunt | Blot Out (byte-identical printed text) | `test_symmetric_player_effects_sos.py` |
+| "When you cast this spell `<qualifier>`, `<effect>`." - `copy_effects._LEADING_CAST_TRIGGER_RE` widened to admit an intervening-if clause ("while `<X>`"/"if `<X>`") between "this spell" and the comma, so the trailing paragraph still strips off correctly | `copy_effects._parse_spell_after_cast_trigger` | Social Snub | - (no separate proof needed: the base spell body it unblocks, "Each player sacrifices a creature of their choice. Each opponent loses 1 life and you gain 1 life.", already parses generically) | `test_symmetric_player_effects_sos.py` |
+| "You may sacrifice `<restriction>`. If you do, `<consequence>`." (CR 118.12) as one *mode* of a modal spell - `effects.parse_mode_effect` gained a try at `_parse_conditional_sacrifice_clause` (already used by the non-modal `_spell_effect_or_notice`, but never by the mode-scoped reader) | `effects.parse_mode_effect` | Witherbloom Charm | - (Disciple of Freyalise and Sanctum of Ugin already prove the underlying reader outside a modal context) | `test_symmetric_player_effects_sos.py` |
+| "as long as you gained life this turn" (Infusion's own turn-history fact, `LayerContext.gained_life_this_turn`/`Game.life_gained_this_turn`) gating a self pump/grant, or a *group* pump/keyword grant ("Creatures you control get ... as long as ...") - `layers._context_gated_self_pump_builder`'s existing shape plus a new `_context_gated_group_pump_and_keyword_builder` for the group case | `layers._parse_static_layer_sentence` (new `_GAINED_LIFE_GATED_SELF_STATIC_*`/`_GAINED_LIFE_GATED_GROUP_STATIC_RE` branches) | Tenured Concocter, Thornfist Striker | Ulna Alley Shopkeep (identical self-pump line, a different creature) | `test_infusion_statics.py` |
+
+CR 705.2, looked up in full: "Some effects that instruct a player to flip a
+coin care only about whether the coin comes up heads or tails. No player wins
+or loses a coin flip for this kind of effect." - Ral Zarek's "−7" is this
+shape, not the win/lose one `Game.flip_coin`'s own docstring frames its
+return value around; the boolean is read as heads/tails only, never as a
+win.
+
+`machines/turn.py`'s `TurnMachine` gained a fourth thing that breaks plain
+round-the-table order (CR 500.7's extra turns and CR 723's player control
+were already there): `skipped_turns: dict[str, int]`, a *counter* per CR
+614.10a ("that player must skip the next two"), spent one occurrence at a
+time by `_consume_skip` inside `begin_next_turn` - for both the ordinary
+rotation and a queued extra turn, since CR 614.10 does not carve out an
+exception for a turn being an extra one. `Game.skip_next_turns(username,
+count)` is the public entry point, mirroring `Game.grant_extra_turn` exactly.
+`Game.schema_version` bumped to 87 for the new persisted field (86 at the task, renumbered at the sos integration merge after T1 took 86).
+
+**Skip-turns proof gap, documented rather than hidden.** `card_search
+o:"skips their next" o:turns` (2026-09-26) found no other Modern/Pioneer/
+Standard-legal printing of a true *turn* skip - every other "skips their
+next `<X>`" card skips a step or a phase (untap step, combat phase, draw
+step), a materially narrower effect this task does not touch. Ral Zarek,
+Guest Lecturer is the sole real printing tested against; `test_skip_turns_
+coin_flip.py` proves the shared `TurnMachine.skip_next_turns`/`_consume_skip`
+mechanism's own corner cases (CR 614.10a's stacking, a skip spent on a
+queued extra turn, a departed player's skip dropped) directly against the
+engine API instead, since no second card exists to exercise them through.

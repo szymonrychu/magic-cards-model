@@ -3962,7 +3962,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 86
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 87
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4034,6 +4034,8 @@ class Game(EngineModel):
     #: `machines/delayed` gained the `add_mana_amount_for_controller` effect
     #: kind (Mana Sculpt's own "at the beginning of your next main phase",
     #: 273-sos T1).
+    #: 87: `machines/turn.TurnMachine` gained `skipped_turns` (CR 614.10's
+    #: "skip your next turn" counter, Ral Zarek, Guest Lecturer's own "−7").
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -17561,6 +17563,17 @@ class Game(EngineModel):
             },
             active_player=self.turn.active_player if self.turn is not None else None,
             turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
+            # Infusion's own turn-history fact (CR 207.2c's ability word),
+            # for a static "as long as you gained life this turn" gate
+            # (`LayerContext.gained_life_this_turn`) - `Game.life_gained_
+            # this_turn` is the same set `machines/conditions/history.py`'s
+            # H4 reader and `machines/triggers.py`'s own intervening-if
+            # branch already read for every other "gained life this turn"
+            # question; a static ability asks a `LayerContext` rather than a
+            # live `Game` (CR 611.3a: recomputed on every board query), so
+            # the fact travels here the identical way `turn_facts` already
+            # does for its own family of per-turn questions.
+            life_gained_this_turn=frozenset(self.life_gained_this_turn),
             combat_damage_dealt_this_turn=frozenset(self.combat_damage_dealt_this_turn_by),
             # CR 122.6's per-turn placement history (Beast, Erudite
             # Aerialist; Kid Loki), who put what kind on which permanent.
@@ -23764,6 +23777,13 @@ class Game(EngineModel):
         assert self.turn is not None
         self.player(username)  # raises if unknown
         self.turn.grant_extra_turn(username)
+
+    def skip_next_turns(self, username: str, count: int = 1) -> None:
+        """`username` skips their next `count` turns (CR 614.10, CR 614.10a) -
+        Ral Zarek, Guest Lecturer's own coin-flip "−7"."""
+        assert self.turn is not None
+        self.player(username)  # raises if unknown
+        self.turn.skip_next_turns(username, count)
 
     def controller_of(self, state: StackObject) -> Player:
         """Who controls this object. Unlabelled cards belong to the active player.

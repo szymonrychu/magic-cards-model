@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "424eb4c7-647e-4168-9471-f299e8e77f5f",
+  "oracle_id": "9609cd5c-b537-4cb2-9dde-4b12795531f7",
+  "multiverse_ids": [
+    615405
+  ],
+  "mtgo_id": 109146,
+  "arena_id": 85068,
+  "tcgplayer_id": 495628,
+  "cardmarket_id": 710171,
+  "name": "Blot Out",
+  "lang": "en",
+  "released_at": "2023-05-12",
+  "uri": "https://api.scryfall.com/cards/424eb4c7-647e-4168-9471-f299e8e77f5f",
+  "scryfall_uri": "https://scryfall.com/card/mat/12/blot-out?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:22:05Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.jpg?1783916525",
+    "normal": "https://cards.scryfall.io/normal/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.jpg?1783916525",
+    "large": "https://cards.scryfall.io/large/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.jpg?1783916525",
+    "png": "https://cards.scryfall.io/png/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.png?1783916525",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.jpg?1783916525",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.jpg?1783916525",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.webp?1783916525",
+    "grid": "https://cards.scryfall.io/grid/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.webp?1783916525",
+    "display": "https://cards.scryfall.io/display/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.webp?1783916525",
+    "art": "https://cards.scryfall.io/art/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.webp?1783916525",
+    "crop": "https://cards.scryfall.io/crop/front/4/2/424eb4c7-647e-4168-9471-f299e8e77f5f.webp?1783916525"
+  },
+  "mana_cost": "{2}{B}",
+  "cmc": 3.0,
+  "type_line": "Instant",
+  "oracle_text": "Target opponent exiles a creature or planeswalker they control with the greatest mana value among creatures and planeswalkers they control.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "6727e43d-31b6-45b0-ae05-7a811ba72f70",
+  "set": "mat",
+  "set_name": "March of the Machine: The Aftermath",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/6727e43d-31b6-45b0-ae05-7a811ba72f70",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amat&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mat?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/424eb4c7-647e-4168-9471-f299e8e77f5f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9609cd5c-b537-4cb2-9dde-4b12795531f7&unique=prints",
+  "collector_number": "12",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "After the invasion, many wanted to leave a life of violence. But once you're a Reckoner, you die a Reckoner.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Cold",
+  "artist_ids": [
+    "2622d22b-3fd8-4831-9b2b-adc5fac01b85"
+  ],
+  "illustration_id": "d642b23a-078d-443f-98f3-701441af7503",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13952,
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.20",
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": "0.10",
+    "tix": "0.28"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=615405&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBlot%2BOut",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBlot%2BOut",
+    "edhrec": "https://edhrec.com/route/?cc=Blot+Out"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F495628%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=710171&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/109146?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -19162,6 +19162,17 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     c02_t6 = _c02_t6_spell_effect(text)
     if c02_t6 is not None:
         return c02_t6
+    # Witherbloom Charm's own first mode: "You may sacrifice a permanent. If
+    # you do, draw two cards." (CR 118.12) is read whole by `_spell_effect_
+    # or_notice` for a non-modal card, but a mode's own text never reaches
+    # that function - `parse_mode_effect` is the mode-scoped path, and it had
+    # no equivalent try for this exact shape, so the mode fell through to
+    # `parse_mixed_effect_for_spell` below and failed closed on the whole
+    # card (CR 700.2a: one mode is still one card's worth of CR 608.2c
+    # instructions once it stands on its own).
+    conditional_sacrifice = _parse_conditional_sacrifice_clause(text, for_spell=True)
+    if conditional_sacrifice is not None:
+        return conditional_sacrifice
     # A genuine layer sentence goes to the mode-scoped composer ahead of the
     # per-clause dispatcher: `parse_mixed_effect_for_spell` reads "Target
     # creature gets -3/-1 until end of turn." (Witherbloom Command's third
@@ -24459,6 +24470,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     c02_t6 = _c02_t6_ability_effect(effect_text)
     if c02_t6 is not None:
         return c02_t6
+    from .infusion import infusion_ability_effect
+
+    infused = infusion_ability_effect(effect_text)
+    if infused is not None:
+        return infused
     base_pt_become = _parse_base_pt_become_clause(effect_text)
     if base_pt_become is not None:
         return base_pt_become
@@ -28204,6 +28220,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     c02_t6 = _c02_t6_spell_effect(whole)
     if c02_t6 is not None:
         return c02_t6
+    from .infusion import infusion_spell_effect
+
+    infused = infusion_spell_effect(whole)
+    if infused is not None:
+        return infused
     exile_all_creatures_then_hand_refill = _parse_exile_all_creatures_then_hand_refill_clause(whole)
     if exile_all_creatures_then_hand_refill is not None:
         return exile_all_creatures_then_hand_refill
@@ -51439,6 +51460,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            from .infusion import _parse_conditional_anaphoric_clause_pair
+
+            paired = _parse_conditional_anaphoric_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
             paired = _parse_all_of_target_player_then_referent_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
@@ -54550,16 +54580,18 @@ def _parse_each_player_chooses_creature_then_sacrifices_rest_whole_text(
     return effect
 
 
-#: "Target opponent sacrifices a creature or planeswalker with the greatest
-#: mana value among creatures and planeswalkers they control." (CR 701.21a) -
+#: "Target opponent sacrifices/exiles a creature or planeswalker with the
+#: greatest mana value among creatures and planeswalkers they control." -
 #: a *targeted* edict (the opponent, not the permanent, CR 115.10a still
 #: applies: nothing about which permanent is chosen is targeted), narrowed to
 #: whichever of the named types has the highest mana value on their board.
-#: The real, off-set printing is Riveteers Charm's own mode one; Blot Out's
-#: identical shape reads "exile" for "sacrifices" and is out of this
-#: mechanic's scope.
+#: The real, off-set printings are Riveteers Charm's own mode one
+#: ("sacrifices", CR 701.21a) and Blot Out/End of the Hunt's identical shape
+#: with "exiles" (CR 701.10a) in its place - the same selection, a different
+#: verb for what happens to the one chosen.
 _TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE = re.compile(
-    r"^target opponent sacrifices an? (?P<kinds>[a-z]+(?:\s+or\s+[a-z]+)*)"
+    r"^target opponent (?P<verb>sacrifices|exiles) an? "
+    r"(?P<kinds>[a-z]+(?:\s+or\s+[a-z]+)*)"
     r"(?: they control)? with the greatest mana value among "
     r"(?P<pool>[a-z]+(?:\s+(?:and|or)\s+[a-z]+)*) they control\.?$",
     re.IGNORECASE,
@@ -54570,13 +54602,14 @@ def _parse_target_opponent_sacrifice_greatest_mv_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """`_TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE`'s shape; see the banner
-    above. CR 701.21a: "That player chooses which... they sacrifice" - the
+    above. CR 701.21a/701.10a: "That player chooses which ... " - the
     resolving player is the *target*, not this ability's controller, so any
     real choice among a tie for the greatest mana value is theirs.
     """
     match = _TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE.fullmatch(clause.strip())
     if match is None:
         return None
+    verb = match.group("verb").lower()
     if not _targets_understood("target opponent", allow_player_targets=True):
         return None
     pool_words = re.split(r"\s+(?:and|or)\s+", match.group("pool"))
@@ -54613,7 +54646,7 @@ def _parse_target_opponent_sacrifice_greatest_mv_clause(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=opponent.username,
-                    prompt="sacrifice a permanent with the greatest mana value",
+                    prompt=f"{verb[:-1]} a permanent with the greatest mana value",
                     source=source_name,
                     amount=1,
                     exact=True,
@@ -54624,7 +54657,10 @@ def _parse_target_opponent_sacrifice_greatest_mv_clause(
             by_id = {permanent.id: permanent for permanent in tied}
             chosen = by_id.get(chosen_ids[0]) if chosen_ids else None
         if chosen is not None and chosen.zone is Zone.BATTLEFIELD:
-            game.sacrifice(chosen)
+            if verb == "exiles":
+                game.exile_permanent(chosen)
+            else:
+                game.sacrifice(chosen)
 
     return effect
 

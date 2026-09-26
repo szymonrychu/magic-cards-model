@@ -351,6 +351,21 @@ class TurnMachine(EngineModel):
     ordinary case and the starting one.
     """
 
+    skipped_turns: dict[str, int] = Field(default_factory=dict)
+    """Turns still owed to be skipped for each player (CR 614.10, CR 614.10a).
+
+    A counter, not a flag: CR 614.10a, in full, on two stacked skips - "If two
+    effects each cause a player to skip their next occurrence, that player
+    must skip the next two; one effect will be satisfied in skipping the
+    first occurrence, while the other will remain until another occurrence
+    can be skipped" - so a second "skip your next turn" while one is already
+    owed adds to the count rather than being redundant with it.
+    `_consume_skip` is the read-and-decrement half, called from
+    `begin_next_turn` for both the ordinary round-the-table rotation and an
+    inserted extra turn (CR 500.7) - CR 614.10 makes no exception for an
+    extra turn being "a turn", so a skip owed to a player is spent on
+    whichever of their turns comes next, extra or not."""
+
     pending_player_control: dict[str, str] = Field(default_factory=dict)
     """Player-controlling effects waiting for their turn, controlled -> controller.
 
@@ -406,6 +421,7 @@ class TurnMachine(EngineModel):
         if username in self.players and username not in self.departed:
             self.departed.append(username)
         self.extra_turns = [player for player in self.extra_turns if player != username]
+        self.skipped_turns.pop(username, None)
         self.pending_player_control = {
             controlled: controller
             for controlled, controller in self.pending_player_control.items()
@@ -633,6 +649,21 @@ class TurnMachine(EngineModel):
             self.resume_index = TURN_ORDER.index(self.step) + 1
         self.extra_phase_queue = [Step.COMBAT_DAMAGE] + self.extra_phase_queue
 
+    def _consume_skip(self, username: str) -> bool:
+        """Spend one owed skip for `username`, if any are owed (CR 614.10a).
+
+        Returns whether a skip was spent - the caller's own signal that this
+        occurrence of their turn is the one CR 614.10 turns into "do nothing"
+        rather than the one that actually begins."""
+        remaining = self.skipped_turns.get(username, 0)
+        if remaining <= 0:
+            return False
+        if remaining == 1:
+            del self.skipped_turns[username]
+        else:
+            self.skipped_turns[username] = remaining - 1
+        return True
+
     def begin_next_turn(self) -> None:
         """Pass the turn to the next player still in the game (CR 500.1, 800.4).
 
@@ -644,14 +675,26 @@ class TurnMachine(EngineModel):
         it is inserted directly after the turn that just ended, so nothing about
         whose seat comes next changes, and `turn_number` does not move because
         no round of the table was completed.
+
+        CR 614.10: "Once a step, phase, or turn has started, it can no longer
+        be skipped - any skip effects will wait until the next occurrence."
+        So a player with a skip owed is stepped over here, before their turn
+        ever starts, the same way a departed player already is - an extra
+        turn queued for them is skipped in its own right (CR 500.7's "turn"
+        is still CR 614.10's "turn"), and so is an ordinary round-the-table
+        turn, each consuming one skip off their own counter.
         """
         self.step = Step.UNTAP
         self.turns_taken += 1
 
         rotation = self.active_index if self.order_index is None else self.order_index
 
-        extra = self._next_extra_turn()
-        if extra is not None:
+        while True:
+            extra = self._next_extra_turn()
+            if extra is None:
+                break
+            if self._consume_skip(extra):
+                continue
             self.order_index = rotation
             self.active_index = self.players.index(extra)
             self.taking_extra_turn = True
@@ -661,15 +704,34 @@ class TurnMachine(EngineModel):
 
         self.taking_extra_turn = False
         self.active_index = rotation
-        for _ in range(len(self.players)):
+        while True:
             self.active_index = (self.active_index + 1) % len(self.players)
             if self.active_index == 0:
                 self.turn_number += 1
-            if self.active_player not in self.departed:
-                break
+            if self.active_player in self.departed:
+                continue
+            if self._consume_skip(self.active_player):
+                continue
+            break
         self.order_index = None
         self._begin_own_turn()
         self._begin_player_control()
+
+    # -- skipped turns (CR 614.10) ------------------------------------------
+
+    def skip_next_turns(self, username: str, count: int = 1) -> None:
+        """`username` skips their next `count` turns (CR 614.10, CR 614.10a).
+
+        Adds to any already owed rather than replacing it - two "skip your
+        next turn" effects owe two skipped turns, spent one occurrence at a
+        time (`_consume_skip`), never collapsed into one. Raises for a
+        player not at the table; a departed player's owed skips are dropped
+        by `leave` the same way their queued extra turns already are.
+        """
+        if username not in self.players:
+            raise KeyError(f"no player named {username}")
+        if count > 0:
+            self.skipped_turns[username] = self.skipped_turns.get(username, 0) + count
 
     # -- extra turns (CR 500.7) --------------------------------------------
 
