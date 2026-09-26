@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 5.8% |
-| Works (untested) | 153 | 68.0% |
+| Works (untested) | 154 | 68.4% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 50 | 22.2% |
+| Not working | 49 | 21.8% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jeskai Charm | notice | Choose one — • Put target creature on top of its owner's library. • Jeskai Charm deals 4 damage to target opponent or planeswalker. • Creatures you control get  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kheru Dreadmaw | notice | {1}{G}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mardu Blazebringer | notice | When this creature attacks or blocks, sacrifice it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mardu Charm | notice | Choose one — • Mardu Charm deals 4 damage to target creature. • Create two 1/1 white Warrior creature tokens. They gain first strike until end of turn. • Target | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ride Down | notice | Destroy target blocking creature. Creatures that were blocked by that creature this combat gain trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -154,6 +153,7 @@
 | Mantis Rider | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Mardu Ascendancy | handled | Whenever a nontoken creature you control attacks, create a 1/1 red Goblin creature token that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Banner | handled | {R}{W}{B}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mardu Blazebringer | handled | When this creature attacks or blocks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Hateblade | handled | {B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Hordechief | handled | Raid — When this creature enters, if you attacked this turn, create a 1/1 white Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Roughrider | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -294,7 +294,6 @@
 | the next time a source of your choice would deal damage to you ~, prevent that damage. if damage is prevented ~, ~ deals that much damage to that source's contr | 1 | Deflecting Palm | ktk |
 | untap each creature you control with a +N/+N counter on it during each other player's untap step. | 1 | Ivorytusk Fortress | ktk |
 | when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
-| when ~ attacks or blocks, sacrifice it at end of combat. | 1 | Mardu Blazebringer | ktk |
 | when ~ dies, create a N/N green snake creature token for each +N/+N counter on it. | 1 | Hooded Hydra | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
 | when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 2.5% |
-| Works (untested) | 46 | 58.2% |
+| Works (untested) | 47 | 59.5% |
 | Partial (unaudited) | 5 | 6.3% |
-| Not working | 26 | 32.9% |
+| Not working | 25 | 31.6% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Leyline of the Meek | silent | Creature tokens get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lovisa Coldeyes | silent | Each creature that's a Barbarian, a Warrior, or a Berserker gets +2/+2 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Martyr of Frost | silent | {2}, Reveal X blue cards from your hand, Sacrifice this creature: Counter target spell unless its controller pays {X}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Plumes of Peace | silent | Forecast | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sanguine Praetor | silent | {B}, Sacrifice a creature: Destroy each creature with the same mana value as the sacrificed creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seed Spark | silent | Destroy target artifact or enchantment. If {G} was spent to cast this spell, create two 1/1 green Saproling creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seht's Tiger | silent | When this creature enters, you gain protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -77,6 +76,7 @@
 | Nullmage Shepherd | handled | Tap four untapped creatures you control: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Overwhelm | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Creatures y | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plagued Rusalka | handled | {B}, Sacrifice a creature: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Plumes of Peace | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Primal Forcemage | handled | Whenever another creature you control enters, that creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Saltblast | handled | Destroy target nonwhite permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sandsower | handled | Tap three untapped creatures you control: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -130,7 +130,6 @@
 | each creature that's a barbarian, a warrior, or a berserker gets +N/+N and has haste. | 1 | Lovisa Coldeyes | psal |
 | enchanted creature gets +N/+N and can't block. | 1 | Undying Rage | psal |
 | enchanted creature"..."t be activated. | 1 | Detainment Spell | psal |
-| forecast | 1 | Plumes of Peace | psal |
 | other green creatures you control get +N/+N. | 1 | Tolsimir Wolfblood | psal |
 | return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |
 | until end of turn, target creature gains trample and gets +N/+N, where N is the number of attacking creatures. | 1 | Strength in Numbers | psal |

@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 24 | 12.8% |
 | Works (untested) | 92 | 49.2% |
-| Partial (unaudited) | 14 | 7.5% |
-| Not working | 57 | 30.5% |
+| Partial (unaudited) | 15 | 8.0% |
+| Not working | 56 | 29.9% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Spider-Man India | silent | Pavitr's Sevā — Whenever you cast a creature spell, put a +1/+1 counter on target creature you control. It gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Man No More | silent | Enchanted creature is a Citizen with base power and toughness 1/1. It has defender and loses all other abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Man Noir | silent | Whenever a creature you control attacks alone, put a +1/+1 counter on it. Then surveil X, where X is the number of counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spider-Punk | silent | Riot | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Spider-Sense | silent | Web-slinging {U} (You may cast this spell for {U} if you also return a tapped creature you control to its owner's hand.) Counter target instant spell, sorcery s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Slayer, Hatred Honed | silent | Whenever Spider-Slayer deals damage to a Spider, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Verse | silent | Whenever you cast a spell from anywhere other than your hand, you may copy it. If you do, you may choose new targets for the copy. If the copy is a permanent sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -96,6 +95,7 @@
 | Peter Parker // Amazing Spider-Man | unaudited | Each legendary spell you cast that's one or more colors has web-slinging {G}{W}{U}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Scarlet Spider, Ben Reilly | unaudited | Sensational Save — If Scarlet Spider was cast using web-slinging, he enters with X +1/+1 counters on him, where X is the mana value of the returned creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Spider-Man 2099 | unaudited | From the Future — You can't cast Spider-Man 2099 during your first, second, or third turns of the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Spider-Punk | unaudited | Other Spiders you control have riot. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Spider-Woman, Stunning Savior | unaudited | Venom Blast — Artifacts and creatures your opponents control enter tapped. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Agent Venom | handled | Whenever another nontoken creature you control dies, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Amazing Acrobatics | handled | Choose one or both — • Counter target spell. • Tap one or two target creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -251,10 +251,10 @@
 | if damage would be dealt to anti-venom, prevent that damage and put that many +N/+N counters on him. | 1 | Anti-Venom, Horrifying Healer | spm |
 | mill five cards. when you do, ~ deals damage equal to the greatest power among creature cards in your graveyard to target creature. | 1 | Kraven's Last Hunt | spm |
 | morlun enters with N +N/+N counters on him. | 1 | Morlun, Devourer of Spiders | spm |
+| other spiders you control have riot. | 1 | Spider-Punk | spm |
 | pavitr's sevā — whenever you cast a creature spell, put a +N/+N counter on target creature you control. it gains flying until end of turn. | 1 | Spider-Man India | spm |
 | put a +N/+N counter on target creature you control. it becomes a legendary spider hero in addition to its other types. | 1 | Origin of Spider-Man | spm |
 | put target creature on the bottom of its owner's library. you lose N life unless you control a villain. | 1 | The Spot's Portal | spm |
-| riot | 1 | Spider-Punk | spm |
 | spiders you control get +N/+N and can't be blocked by creatures with defender. | 1 | Wall Crawl | spm |
 | target creature deals damage equal to its power to itself. if that creature is attacking, ~ deals N damage to that creature's controller. | 1 | Wisecrack | spm |
 | target creature gets +N/+N and gains flying until end of turn. if it's a spider, you gain N life. | 1 | Thwip! | spm |

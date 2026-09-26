@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.6% |
-| Works (untested) | 55 | 34.0% |
+| Tested | 11 | 6.8% |
+| Works (untested) | 61 | 37.7% |
 | Partial (unaudited) | 13 | 8.0% |
-| Not working | 85 | 52.5% |
+| Not working | 77 | 47.5% |
 
 ## Cards needing work
 
@@ -28,18 +28,13 @@
 |---|---|---|---|---|---|
 | Aeon Chronicler | silent | Aeon Chronicler's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auramancer's Guise | silent | Enchanted creature gets +2/+2 for each Aura attached to it and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Aven Riftwatcher | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Battering Sliver | silent | All Sliver creatures have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Benalish Commander | silent | Whenever a time counter is removed from this card while it's exiled, create a 1/1 white Soldier creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bog Serpent | silent | When you control no Swamps, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Braids, Conjurer Adept | silent | At the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Gorgers | silent | When you cast this spell, any player may sacrifice a creature of their choice. If a player does, counter Brain Gorgers. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Calciderm | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Chronozoa | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crovax, Ascendant Hero | silent | Other white creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dash Hopes | silent | When you cast this spell, any player may pay 5 life. If a player does, counter Dash Hopes. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Deadly Grub | silent | When this creature dies, if it had no time counters on it, create a 6/1 green Insect creature token with shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Deadwood Treefolk | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Detritivore | silent | Detritivore's power and toughness are each equal to the number of nonbasic land cards in your opponents' graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dichotomancy | silent | For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,9 +52,7 @@
 | Imp's Mischief | silent | Change the target of target spell with a single target. You lose life equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intet, the Dreamer | silent | Whenever Intet deals combat damage to a player, you may pay {2}{U}. If you do, exile the top card of your library face down. You may look at that card for as lo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jodah's Avenger | silent | {0}: Until end of turn, this creature gets -1/-1 and gains your choice of double strike, protection from red, vigilance, or shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Keldon Marauders | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kor Dirge | silent | All damage that would be dealt this turn to target creature you control by a source of your choice is dealt to another target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lavacore Elemental | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Life and Limb | silent | All Forests and all Saprolings are 1/1 green Saproling creatures and Forest lands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mantle of Leadership | silent | Whenever a creature enters, enchanted creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Melancholy | silent | At the beginning of your upkeep, sacrifice this Aura unless you pay {B}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -98,7 +91,6 @@
 | Veiling Oddity | silent | When the last time counter is removed from this card while it's exiled, creatures can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Venarian Glimmer | silent | Target player reveals their hand. You choose a nonland card with mana value X or less from it. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volcano Hellion | silent | When this creature enters, it deals an amount of damage of your choice to you and target creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Waning Wurm | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ana Battlemage | notice | When this creature enters, if it was kicked with its {1}{B} kicker, tap target untapped creature and that creature deals damage equal to its power to its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Blightspeaker | notice | {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -130,10 +122,13 @@
 | Body Double | handled | You may have this creature enter as a copy of any creature card in a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boom // Bust | handled | Destroy target land you control and target land you don't control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brute Force | handled | Target creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Calciderm | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
+| Chronozoa | handled | When this creature dies, if it had no time counters on it, create two tokens that are copies of it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Circle of Affliction | handled | As this enchantment enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Citanul Woodreaders | handled | When this creature enters, if it was kicked, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Damnation | handled | Destroy all creatures. They can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dead // Gone | handled | Dead deals 2 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Deadwood Treefolk | handled | When this creature enters or leaves the battlefield, return another target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamscape Artist | handled | {2}{U}, {T}, Discard a card, Sacrifice a land: Search your library for up to two basic land cards, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Warden | handled | Whenever another creature enters, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evolution Charm | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Return target creature card from your graveyard to y | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -146,6 +141,8 @@
 | Heroes Remembered | handled | You gain 20 life. Suspend 10—{W} (Rather than cast this card from your hand, you may pay {W} and exile it with ten time counters on it. At the beginning of your | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kavu Predator | handled | Whenever an opponent gains life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Keen Sense | handled | Whenever enchanted creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Keldon Marauders | handled | When this creature enters or leaves the battlefield, it deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lavacore Elemental | handled | Whenever a creature you control deals combat damage to a player, put a time counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Bazaar | handled | {T}: Draw two cards, then discard three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Coffers | handled |  |  | Y/-/- | not_tested |
 | Malach of the Dawn | handled | {W}{W}{W}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -178,15 +175,18 @@
 | Torchling | handled | {R}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vitaspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vorosh, the Hunter | handled | Whenever Vorosh deals combat damage to a player, you may pay {2}{G}. If you do, put six +1/+1 counters on Vorosh. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Waning Wurm | handled | Vanishing | machines/keywords.py | Y/-/- | not_tested |
 | Wistful Thinking | handled | Target player draws two cards, then discards four cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Aether Membrane
+- Aven Riftwatcher
 - Cradle to Grave
+- Deadly Grub
 - Dunerider Outlaw
 - Harmonize
 - Magus of the Library
@@ -201,7 +201,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| vanishing | 7 | Aven Riftwatcher, Calciderm, Chronozoa, Deadwood Treefolk, Keldon Marauders | plc |
 | all slivers have "..." | 5 | Cautery Sliver, Darkheart Sliver, Frenetic Sliver, Necrotic Sliver, Poultice Sliver | plc |
 | Choose one | 3 | Dawn Charm, Fury Charm, Timecrafting | plc |
 | echo | 3 | Hammerheim Deadeye, Stingscourger, Uktabi Drake | plc |
@@ -251,7 +250,6 @@
 | when you cast ~, any player may pay half their life, rounded up. if a player does, counter ~. | 1 | Temporal Extortion | plc |
 | when you cast ~, any player may sacrifice a creature of their choice. if a player does, counter ~. | 1 | Brain Gorgers | plc |
 | when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
-| when ~ dies, if it had no time counters on it, create a N/N green insect creature token with shroud. | 1 | Deadly Grub | plc |
 | when ~ enters, any player may sacrifice a land of their choice. if a player does, put ~ on top of its owner's library. | 1 | Shivan Wumpus | plc |
 | when ~ enters, if it was kicked with its {M}{M} kicker, tap target untapped creature and that creature deals damage equal to its power to its controller. | 1 | Ana Battlemage | plc |
 | when ~ enters, it deals an amount of damage of your choice to you and target creature. the damage can't be prevented. | 1 | Volcano Hellion | plc |

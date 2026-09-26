@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 6.6% |
-| Works (untested) | 109 | 40.1% |
+| Works (untested) | 110 | 40.4% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 135 | 49.6% |
+| Not working | 134 | 49.3% |
 
 ## Cards needing work
 
@@ -97,7 +97,6 @@
 | Nahiri's Warcrafting | silent | Nahiri's Warcrafting deals 5 damage to target creature, planeswalker, or battle. Look at the top X cards of your library, where X is the excess damage dealt thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Norn's Inquisitor | silent | When this creature enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Omnath, Locus of All | silent | At the beginning of your first main phase, look at the top card of your library. You may reveal that card if it has three or more colored mana symbols in its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Order of the Mirror // Order of the Alabaster Host | silent | Whenever this creature becomes blocked by a creature, the blocking creature gets -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overgrown Pest | silent | When this creature enters, look at the top five cards of your library. You may reveal a land or double-faced card from among them and put that card into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phyrexian Awakening | silent | When this enchantment enters, incubate 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portent Tracker | silent | {T}: Choose target battle. If an opponent protects it, remove a defense counter from it. Otherwise, put a defense counter on it. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -238,6 +237,7 @@
 | Nezumi Informant | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Omen Hawker | handled |  |  | Y/Y/- | not_tested |
 | Onakke Javelineer | handled | {T}: This creature deals 2 damage to target player or battle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Order of the Mirror // Order of the Alabaster Host | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orthion, Hero of Lavabrink | handled | {1}{R}, {T}: Create a token that's a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate o | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ozolith, the Shattered Spire | handled | If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Archivist | handled | {2}, {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -398,7 +398,6 @@
 | whenever ~ attacks, sacrifice a creature or land, then draw a card. | 1 | Thalia and The Gitrog Monster | mom |
 | whenever ~ attacks, up to one other target creature has base power and toughness N/N until end of turn. | 1 | Gnottvold Hermit // Chrome Host Hulk | mom |
 | whenever ~ attacks, you may pay {M}{M}. when you do, return target creature card from your graveyard to the battlefield. it's a phyrexian in addition to its oth | 1 | Terror of Towashi | mom |
-| whenever ~ becomes blocked by a creature, the blocking creature gets -N/-N until end of turn. | 1 | Order of the Mirror // Order of the Alabaster Host | mom |
 | whenever ~ deals combat damage to a player or battle, choose any number — • each player creates a treasure token. • each player sacrifices a creature of their c | 1 | Rankle and Torbran | mom |
 | whenever ~ deals combat damage to a player or battle, look at that many cards from the top of your library. you may reveal a creature or land card from among th | 1 | Doomskar Warrior | mom |
 | whenever ~ deals combat damage to a player or battle, transform up to one target incubator token you control. | 1 | Attentive Skywarden | mom |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 1 | 3.2% |
-| Works (untested) | 19 | 61.3% |
+| Works (untested) | 20 | 64.5% |
 | Partial (unaudited) | 1 | 3.2% |
-| Not working | 10 | 32.3% |
+| Not working | 9 | 29.0% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Sacred Mesa | silent | At the beginning of your upkeep, sacrifice this enchantment unless you sacrifice a Pegasus. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow Guildmage | silent | {U}, {T}: Put target creature you control on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stupor | silent | Target opponent discards a card at random, then discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Zhalfirin Commander | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Grinning Totem | notice | {2}, {T}, Sacrifice this artifact: Search target opponent's library for a card and exile it. Then that player shuffles. Until the beginning of your next upkeep, | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Polymorph | notice | Destroy target creature. It can't be regenerated. Its controller reveals cards from the top of their library until they reveal a creature card. The player puts  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pacifism | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -56,6 +55,7 @@
 | Volcanic Geyser | handled | Volcanic Geyser deals X damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wall of Roots | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Wildfire Emissary | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Zhalfirin Commander | handled | {1}{W}{W}: Target Knight creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
@@ -74,7 +74,6 @@
 | change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (for example, you may change  | 1 | Mind Bend | mir |
 | destroy target creature. it can't be regenerated. its controller reveals cards from the top of their library until they reveal a creature card. the player puts  | 1 | Polymorph | mir |
 | enchanted creature can't attack or block. | 1 | Pacifism | mir |
-| flanking | 1 | Zhalfirin Commander | mir |
 | lands you control are plains. | 1 | Celestial Dawn | mir |
 | target opponent discards a card at random, then discards a card. | 1 | Stupor | mir |
 | target player untaps all basic lands they control. | 1 | Early Harvest | mir |

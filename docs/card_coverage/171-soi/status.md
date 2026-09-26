@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.1% |
-| Works (untested) | 158 | 60.5% |
+| Works (untested) | 159 | 60.9% |
 | Partial (unaudited) | 11 | 4.2% |
-| Not working | 76 | 29.1% |
+| Not working | 75 | 28.7% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Runaway Carriage | notice | When this creature attacks or blocks, sacrifice it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Structural Distortion | notice | Exile target artifact or land. Structural Distortion deals 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -218,6 +217,7 @@
 | Rise from the Tides | handled | Create a tapped 2/2 black Zombie creature token for each instant and sorcery card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Root Out | handled | Destroy target artifact or enchantment. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rottenheart Ghoul | handled | When this creature dies, target player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Runaway Carriage | handled | When this creature attacks or blocks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rush of Adrenaline | handled | Target creature gets +2/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanguinary Mage | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Sanitarium Skeleton | handled | {2}{B}: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -346,7 +346,6 @@
 | westvale cult leader's power and toughness are each equal to the number of creatures you control. | 1 | Hanweir Militia Captain // Westvale Cult Leader | soi |
 | when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
-| when ~ attacks or blocks, sacrifice it at end of combat. | 1 | Runaway Carriage | soi |
 | when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |
 | when ~ enters, another target human you control gets +N/+N until end of turn. | 1 | Intrepid Provisioner | soi |
 | when ~ enters, each opponent mills three cards. | 1 | Manic Scribe | soi |

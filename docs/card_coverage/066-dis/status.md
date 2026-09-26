@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 8.3% |
-| Works (untested) | 48 | 28.4% |
+| Tested | 16 | 9.5% |
+| Works (untested) | 53 | 31.4% |
 | Partial (unaudited) | 6 | 3.6% |
-| Not working | 101 | 59.8% |
+| Not working | 94 | 55.6% |
 
 ## Cards needing work
 
@@ -79,8 +79,6 @@
 | Plaxcaster Frogling | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Plaxmanta | silent | When this creature enters, sacrifice it unless {G} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Prahv, Spires of Order | silent | {4}{W}{U}, {T}: Prevent all damage a source of your choice would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pride of the Clouds | silent | Forecast | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Proclamation of Rebirth | silent | Return up to three target creature cards with mana value 1 or less from your graveyard to the battlefield. Forecast — {5}{W}, Reveal this card from your hand: R | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Proper Burial | silent | Whenever a creature you control dies, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Protean Hulk | silent | When this creature dies, search your library for any number of creature cards with total mana value 6 or less, put them onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pure // Simple | silent | Destroy all Auras and Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -95,12 +93,9 @@
 | Simic Basilisk | silent | {1}{G}: Until end of turn, target creature with a +1/+1 counter on it gains "Whenever this creature deals combat damage to a creature, destroy that creature at  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Guildmage | silent | {1}{G}: Move a +1/+1 counter from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Initiate | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Sky Hussar | silent | Forecast | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Skyscribing | silent | Each player draws X cards. Forecast — {2}{U}, Reveal this card from your hand: Each player draws a card. (Activate only during your upkeep and only once each tu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slithering Shade | silent | Hellbent — This creature can attack as though it didn't have defender as long as you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sporeback Troll | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Squealing Devil | silent | When this creature enters, you may pay {X}. If you do, target creature gets +X/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Steeling Stance | silent | Forecast | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Stormscale Anarch | silent | {2}{R}, Discard a card at random: This creature deals 2 damage to any target. If the discarded card was multicolored, this creature deals 4 damage instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Street Savvy | silent | Enchanted creature gets +0/+2 and can block creatures with landwalk abilities as though they didn't have those abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swift Silence | silent | Counter all other spells. Draw a card for each spell countered this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,7 +112,6 @@
 | War's Toll | silent | Whenever an opponent taps a land for mana, tap all lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Weight of Spires | silent | Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Windreaver | silent | {U}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Writ of Passage | silent | Forecast | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Demonfire | notice | Demonfire deals X damage to any target. If a creature dealt damage this way would die this turn, exile it instead. Hellbent — If you have no cards in hand, this | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dread Slag | notice | This creature gets -4/-4 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Experiment Kraj | notice | Experiment Kraj has all activated abilities of each other creature with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -126,7 +120,6 @@
 | Ignorant Bliss | notice | Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Infernal Tutor | notice | Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Nephilim | notice | Target creature gets +2/+2 until end of turn for each of its colors. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Stoic Ephemera | notice | When this creature blocks, sacrifice it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gnat Alley Creeper | unaudited | This creature can't be blocked by creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leafdrake Roost | unaudited | Enchanted land has "{G}{U}, {T}: Create a 2/2 green and blue Drake creature token with flying." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Psychic Possession | unaudited | Skip your draw step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -158,6 +151,7 @@
 | Omnibian | handled | {T}: Target creature becomes a Frog with base power and toughness 3/3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Overrule | handled | Counter target spell unless its controller pays {X}. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillar of the Paruns | handled |  |  | Y/-/- | not_tested |
+| Proclamation of Rebirth | handled | Return up to three target creature cards with mana value 1 or less from your graveyard to the battlefield. Forecast — {5}{W}, Reveal this card from your hand: R | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Signet | handled |  |  | Y/-/- | not_tested |
@@ -169,8 +163,12 @@
 | Simic Signet | handled |  |  | Y/-/- | not_tested |
 | Simic Sky Swallower | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Skullmead Cauldron | handled | {T}: You gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sky Hussar | handled | When this creature enters, untap all creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Skyscribing | handled | Each player draws X cards. Forecast — {2}{U}, Reveal this card from your hand: Each player draws a card. (Activate only during your upkeep and only once each tu | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slaughterhouse Bouncer | handled | Hellbent — When this creature dies, if you have no cards in hand, target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sprouting Phytohydra | handled | Whenever this creature is dealt damage, you may create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Steeling Stance | handled | Creatures you control get +1/+1 until end of turn. Forecast — {W}, Reveal this card from your hand: Target creature gets +1/+1 until end of turn. (Activate only | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stoic Ephemera | handled | When this creature blocks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stomp and Howl | handled | Destroy target artifact and target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidespout Tyrant | handled | Whenever you cast a spell, return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trygon Predator | handled | Whenever this creature deals combat damage to a player, you may destroy target artifact or enchantment that player controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -185,7 +183,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
@@ -196,11 +194,13 @@
 - Ghost Quarter
 - Grand Arbiter Augustin IV
 - Hallowed Fountain
+- Pride of the Clouds
 - Psychotic Fury
 - Ragamuffyn
 - Simic Growth Chamber
 - Spell Snare
 - Utopia Sprawl
+- Writ of Passage
 
 </details>
 
@@ -210,7 +210,6 @@
 |---|---|---|---|
 | graft | 10 | Aquastrand Spider, Cytoplast Manipulator, Cytospawn Shambler, Helium Squirter, Novijen Sages | dis |
 | Hellbent | 5 | Demon's Jester, Gobhobbler Rats, Rakdos Pit Dragon, Slithering Shade, Taste for Mayhem | dis |
-| forecast | 4 | Pride of the Clouds, Sky Hussar, Steeling Stance, Writ of Passage | dis |
 | when ~ enters, sacrifice it unless {M} was spent to cast it. | 4 | Azorius Herald, Court Hussar, Patagia Viper, Plaxmanta | dis |
 | as an additional cost to cast ~, pay N life. each other player loses N life. | 1 | Bond of Agony | dis |
 | as long as ~ is enchanted, it gets +N/+N, has trample, and has "..." | 1 | Flaring Flame-Kin | dis |
@@ -227,7 +226,6 @@
 | destroy each artifact, creature, and enchantment with mana value N. | 1 | Crime // Punishment | dis |
 | discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |
 | draw a card for each creature target player controls, then draw a card for each creature another target player controls. | 1 | Biomantic Mastery | dis |
-| each player draws N cards. forecast — {M}{M}, reveal ~ from your hand: each player draws a card. (activate only during your upkeep and only once each turn.) | 1 | Skyscribing | dis |
 | enchanted creature can't be the target of spells or abilities your opponents control. | 1 | Shielding Plax | dis |
 | enchanted creature gets +N/+N and can block creatures with landwalk abilities as though they didn't have those abilities. | 1 | Street Savvy | dis |
 | enchanted creature gets +N/+N for each of its colors. | 1 | Blessing of the Nephilim | dis |
@@ -245,7 +243,6 @@
 | remove a palliation counter from ~: prevent the next N damage that would be dealt to you ~. | 1 | Palliation Accord | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
 | return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
-| return up to three target creature cards with mana value N or less from your graveyard to the battlefield. forecast — {M}{M}, reveal ~ from your hand: return ta | 1 | Proclamation of Rebirth | dis |
 | reveal a card from your hand. search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. hellbent — if you  | 1 | Infernal Tutor | dis |
 | reveal the top four cards of your library. you may put a creature card from among them onto the battlefield. it gains "..." then put the rest of the cards revea | 1 | Aethermage's Touch | dis |
 | shuffle up to four cards you own from outside the game into your library. | 1 | Research // Development | dis |
@@ -256,7 +253,6 @@
 | until end of turn, all creatures become black and all lands become swamps. | 1 | Nightcreep | dis |
 | when a player other than ~ owner controls it, that player sacrifices it. if the player does, ~ deals N damage to the player. | 1 | Bronze Bombshell | dis |
 | when another creature enters, sacrifice ~. if you do, ~ deals N damage to that creature. | 1 | Flame-Kin War Scout | dis |
-| when ~ blocks, sacrifice it at end of combat. | 1 | Stoic Ephemera | dis |
 | when ~ dies, search your library for any number of creature cards with total mana value N or less, put them onto the battlefield, then shuffle. | 1 | Protean Hulk | dis |
 | when ~ enters, each player puts a creature card with mana value N or less from their graveyard onto the battlefield. | 1 | Crypt Champion | dis |
 | when ~ enters, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Cytoplast Root-Kin | dis |

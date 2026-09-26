@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 33 | 12.8% |
-| Works (untested) | 120 | 46.5% |
+| Works (untested) | 121 | 46.9% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 93 | 36.0% |
+| Not working | 92 | 35.7% |
 
 ## Cards needing work
 
@@ -83,7 +83,6 @@
 | Nettlecyst | silent | Equipped creature gets +1/+1 for each artifact and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nykthos Paragon | silent | Whenever you gain life, you may put that many +1/+1 counters on each creature you control. Do this only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Out of Time | silent | When this enchantment enters, untap all creatures, then those creatures phase out until this enchantment leaves the battlefield. Put a time counter on this ench | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Piercing Rays | silent | Exile target tapped creature. Forecast — {2}{W}, Reveal this card from your hand: Tap target untapped creature. (Activate this ability only during your upkeep a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Piru, the Volatile | silent | At the beginning of your upkeep, sacrifice Piru unless you pay {R}{W}{B}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Power Depot | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Radiant Epicure | silent | Converge — When this creature enters, each opponent loses X life and you gain X life, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -202,6 +201,7 @@
 | Ornithopter of Paradise | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Parcel Myr | handled | {2}, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantasmal Dreadmaw | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Piercing Rays | handled | Exile target tapped creature. Forecast — {2}{W}, Reveal this card from your hand: Tap target untapped creature. (Activate this ability only during your upkeep a | the engine reads this text and performs it | Y/-/- | not_tested |
 | Priest of Fell Rites | handled | {T}, Pay 3 life, Sacrifice this creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Profane Tutor | handled | Suspend 2—{1}{B} (Rather than cast this card from your hand, pay {1}{B} and exile it with two time counters on it. At the beginning of your upkeep, remove a tim | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ravenous Squirrel | handled | Whenever you sacrifice an artifact or creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -330,7 +330,6 @@
 | exalted | 1 | Ignoble Hierarch | mh2 |
 | exile target creature card from your graveyard. create N N/N white bird creature tokens with flying, where N is the exiled card's toughness. | 1 | Scour the Desert | mh2 |
 | exile target creature or planeswalker. you gain life equal to the number of counters on it. | 1 | Flay Essence | mh2 |
-| exile target tapped creature. forecast — {M}{M}, reveal ~ from your hand: tap target untapped creature. (activate ~ only during your upkeep and only once each t | 1 | Piercing Rays | mh2 |
 | exile the top card of your library. during your next turn, you may play that card. storm (when you cast ~, copy it for each spell cast before it ~.) | 1 | Galvanic Relay | mh2 |
 | gain control of target spell that targets only a single permanent or player. copy it, then reselect the targets at random for the spell and the copy. the new ta | 1 | Chef's Kiss | mh2 |
 | green creatures you control get +N/+N. | 1 | Sylvan Anthem | mh2 |

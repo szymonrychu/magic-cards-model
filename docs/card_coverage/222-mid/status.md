@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 10.0% |
-| Works (untested) | 111 | 44.6% |
-| Partial (unaudited) | 13 | 5.2% |
-| Not working | 100 | 40.2% |
+| Tested | 26 | 10.4% |
+| Works (untested) | 119 | 47.8% |
+| Partial (unaudited) | 14 | 5.6% |
+| Not working | 90 | 36.1% |
 
 ## Cards needing work
 
@@ -49,21 +49,16 @@
 | Duel for Dominance | silent | Coven — Choose target creature you control and target creature you don't control. If you control three or more creatures with different powers, put a +1/+1 coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Enduring Angel // Angelic Enforcer | silent | Angelic Enforcer's power and toughness are each equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Falcon Abomination | silent | When this creature enters, create a 2/2 black Zombie creature token with decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Falkenrath Perforator | silent | Whenever this creature attacks, it deals 1 damage to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flip the Switch | silent | Counter target spell unless its controller pays {4}. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Florian, Voldaren Scion | silent | At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Galedrifter // Waildrifter | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ghoulcaller's Harvest | silent | Create X 2/2 black Zombie creature tokens with decayed, where X is half the number of creature cards in your graveyard, rounded up. (A creature with decayed can | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ghoulish Procession | silent | Whenever one or more nontoken creatures die, create a 2/2 black Zombie creature token with decayed. This ability triggers only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gisa, Glorious Resurrector | silent | At the beginning of your upkeep, put all creature cards exiled with Gisa onto the battlefield under your control. They gain decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graveyard Trespasser // Graveyard Glutton | silent | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card was exiled this way, each opponent loses 1 life and y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvesttide Sentry | silent | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature can't be blocked by creatures with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hobbling Zombie | silent | When this creature dies, create a 2/2 black Zombie creature token with decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Hostel // Creeping Inn | silent | Whenever this creature attacks, you may exile a creature card from your graveyard. If you do, each opponent loses X life and you gain X life, where X is the num | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Howl of the Hunt | silent | When this Aura enters, if enchanted creature is a Wolf or Werewolf, untap that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Intrepid Adversary | silent | When this creature enters, you may pay {1}{W} any number of times. When you pay this cost one or more times, put that many valor counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jadar, Ghoulcaller of Nephalia | silent | At the beginning of your end step, if you control no creatures with decayed, create a 2/2 black Zombie creature token with decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Naturalist // Lord of the Ulvenwald | silent | Whenever this creature attacks, add {R} or {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loyal Gryff | silent | When this creature enters, you may return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | silent | {X}{U}{U}{B}{B}, Exile X creature cards from your graveyard: Transform Ludevic. X can't be 0. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -73,16 +68,12 @@
 | Moonveil Regent | silent | Whenever you cast a spell, you may discard your hand. If you do, draw a card for each of that spell's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mourning Patrol // Morning Apparition | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Neonate's Rush | silent | This spell costs {1} less to cast if you control a Vampire. Neonate's Rush deals 1 damage to target creature and 1 damage to its controller. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| No Way Out | silent | Target opponent discards two cards. You create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of combat.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Old Stickfingers | silent | When you cast this spell, reveal cards from the top of your library until you reveal X creature cards. Put all creature cards revealed this way into your gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overwhelmed Archivist // Archive Haunt | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Play with Fire | silent | Play with Fire deals 2 damage to any target. If a player is dealt damage this way, scry 1. (Look at the top card of your library. You may put that card on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Poppet Stitcher // Poppet Factory | silent | Whenever you cast an instant or sorcery spell, create a 2/2 black Zombie creature token with decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Revenge of the Drowned | silent | Target creature's owner puts it on their choice of the top or bottom of their library. You create a 2/2 black Zombie creature token with decayed. (It can't bloc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rootcoil Creeper | silent | {G}{U}, {T}, Exile this creature: Return target card with flashback you own from exile to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rotten Reunion | silent | Exile up to one target card from a graveyard. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Saryth, the Viper's Fang | silent | Other tapped creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shipwreck Sifters | silent | Whenever you discard a Spirit card or a card with disturb, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -120,7 +111,6 @@
 | Olivia's Midnight Ambush | notice | Target creature gets -2/-2 until end of turn. If it's night, that creature gets -13/-13 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pack's Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. (Look at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Purifying Dragon | notice | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. If that creature is a Zombie, this creature deals 2 damage to it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Startle | notice | Target creature gets -2/-0 until end of turn. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Stolen Vitality | notice | Target creature gets +3/+1 until end of turn. If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unnatural Moonrise | notice | It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and "Whenever this creature deals combat damage to a player, draw a card." Fla | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Voldaren Stinger | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -134,6 +124,7 @@
 | Katilda, Dawnhart Prime | unaudited | Human creatures you control have "{T}: Add one mana of any of this creature's colors." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lier, Disciple of the Drowned | unaudited | Spells can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mounted Dreadknight | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Poppet Stitcher // Poppet Factory | unaudited | Creature tokens you control lose all abilities and have base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rem Karolus, Stalwart Slayer | unaudited | If a spell would deal damage to you or another permanent you control, prevent that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Search Party Captain | unaudited | This spell costs {1} less to cast for each creature you attacked with this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sludge Monster | unaudited | Non-Horror creatures with slime counters on them lose all abilities and have base power and toughness 2/2. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -177,19 +168,23 @@
 | Eccentric Farmer | handled | When this creature enters, mill three cards, then you may return a land card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ecstatic Awakener // Awoken Demon | handled | {2}{B}, Sacrifice another creature: Draw a card, then transform this creature. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Electric Revelation | handled | As an additional cost to cast this spell, discard a card. Draw two cards. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost an | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Falcon Abomination | handled | When this creature enters, create a 2/2 black Zombie creature token with decayed. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Famished Foragers | handled | When this creature enters, if an opponent lost life this turn, add {R}{R}{R}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fangblade Brigand // Fangblade Eviscerator | handled | {1}{R}: This creature gets +1/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Festival Crasher | handled | Whenever you cast an instant or sorcery spell, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Firmament Sage | handled | If it's neither day nor night, it becomes day as this creature enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flame Channeler // Embodiment of Flame | handled | When a spell you control deals damage, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleshtaker | handled | Whenever you sacrifice another creature, you gain 1 life and scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Flip the Switch | handled | Counter target spell unless its controller pays {4}. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at en | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foul Play | handled | Destroy target creature with power 2 or less. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Galvanic Iteration | handled | When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. Flashback {1}{U}{R} (You may cast this card  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gavony Silversmith | handled | When this creature enters, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gavony Trapper | handled | {2}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Geistwave | handled | Return target nonland permanent to its owner's hand. If you controlled that permanent, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ghoulish Procession | handled | Whenever one or more nontoken creatures die, create a 2/2 black Zombie creature token with decayed. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grafted Identity | handled | As an additional cost to cast this spell, sacrifice a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harvesttide Infiltrator // Harvesttide Assailant | handled | Transform | no code needed | Y/Y/- | not_tested |
+| Hobbling Zombie | handled | When this creature dies, create a 2/2 black Zombie creature token with decayed. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Homestead Courage | handled | Put a +1/+1 counter on target creature you control. It gains vigilance until end of turn. Flashback {W} (You may cast this card from your graveyard for its flas | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hound Tamer // Untamed Pup | handled | {3}{G}: Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Infernal Grasp | handled | Destroy target creature. You lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -211,6 +206,7 @@
 | Mystic Skull // Mystic Monstrosity | handled | {5}, {T}: Transform this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nebelgast Intruder | handled | When this creature enters, up to one target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Necrosynthesis | handled | Enchanted creature has "Whenever another creature dies, put a +1/+1 counter on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| No Way Out | handled | Target opponent discards two cards. You create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of combat.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Novice Occultist | handled | When this creature dies, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Obsessive Astronomer | handled | If it's neither day nor night, it becomes day as this creature enters. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Odric's Outrider | handled | Whenever this creature or another creature you control dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -221,10 +217,12 @@
 | Pestilent Wolf | handled | {2}{G}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phantom Carriage | handled | When this creature enters, you may search your library for a card with flashback or disturb, put it into your graveyard, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raze the Effigy | handled | Choose one — • Destroy target artifact. • Target attacking creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Revenge of the Drowned | handled | Target creature's owner puts it on their choice of the top or bottom of their library. You create a 2/2 black Zombie creature token with decayed. (It can't bloc | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rise of the Ants | handled | Create two 3/3 green Insect creature tokens. You gain 2 life. Flashback {6}{G}{G} (You may cast this card from your graveyard for its flashback cost. Then exile | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rite of Oblivion | handled | As an additional cost to cast this spell, sacrifice a nonland permanent. Exile target nonland permanent. Flashback {2}{W}{B} (You may cast this card from your g | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual Guardian | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual of Hope | handled | Creatures you control get +1/+1 until end of turn. Coven — If you control three or more creatures with different powers, creatures you control get +2/+1 until e | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rotten Reunion | handled | Exile up to one target card from a graveyard. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sacred Fire | handled | Sacred Fire deals 2 damage to any target and you gain 2 life. Flashback {4}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shadowbeast Sighting | handled | Create a 4/4 green Beast creature token. Flashback {6}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shady Traveler // Stalking Predator | handled | Transform | no code needed | Y/Y/- | not_tested |
@@ -236,6 +234,7 @@
 | Snarling Wolf | handled | {1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul-Guide Gryff | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spellrune Painter // Spellrune Howler | handled | Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Startle | handled | Target creature gets -2/-0 until end of turn. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm Skreelix | handled | Instant and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm the Festival | handled | Look at the top five cards of your library. You may put up to two permanent cards with mana value 5 or less from among them onto the battlefield. Put the rest o | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stromkirk Bloodthief | handled | At the beginning of your end step, if an opponent lost life this turn, put a +1/+1 counter on target Vampire you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -254,7 +253,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
@@ -269,6 +268,7 @@
 - Gavony Dawnguard
 - Geistflame Reservoir
 - Haunted Ridge
+- Jadar, Ghoulcaller of Nephalia
 - Moonsilver Key
 - Otherworldly Gaze
 - Overgrown Farmland
@@ -301,7 +301,6 @@
 | at the beginning of each combat, double the power and toughness of each creature you control until end of turn. | 1 | Unnatural Growth | mid |
 | at the beginning of each of your postcombat main phases, look at the top N cards of your library, where N is the total amount of life your opponents lost ~. exi | 1 | Florian, Voldaren Scion | mid |
 | at the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of curses attached to tha | 1 | Curse of Surveillance | mid |
-| at the beginning of your end step, if you control no creatures with decayed, create a N/N black zombie creature token with decayed. | 1 | Jadar, Ghoulcaller of Nephalia | mid |
 | at the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for ~. then note your life total. | 1 | Sigarda's Splendor | mid |
 | at the beginning of your upkeep, if you control three or more wolves and/or werewolves, it becomes night. then transform any number of human werewolves you cont | 1 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | mid |
 | at the beginning of your upkeep, if you have exactly thirteen cards in your hand, you win the game. | 1 | Triskaidekaphile | mid |
@@ -309,16 +308,15 @@
 | at the beginning of your upkeep, you may exile a card from a graveyard. if a creature card was exiled ~, put a +N/+N counter on ~. | 1 | Deathbonnet Sprout // Deathbonnet Hulk | mid |
 | choose up to three target cards in graveyards. the owners of those cards shuffle them into their libraries. you gain N life. flashback {M}{M} (you may cast ~ fr | 1 | Turn the Earth | mid |
 | choose up to two target creature cards in your graveyard. an opponent chooses one of them. return that card to your hand. return the other to the battlefield un | 1 | Wake to Slaughter | mid |
-| counter target spell unless its controller pays {M}. create a N/N black zombie creature token with decayed. (it can't block. when it attacks, sacrifice it at en | 1 | Flip the Switch | mid |
 | create N N/N black zombie creature tokens with decayed, where N is half the number of creature cards in your graveyard, rounded up. (a creature with decayed can | 1 | Ghoulcaller's Harvest | mid |
 | create a N/N black and red vampire creature token with trample, lifelink, and haste. sacrifice it at the beginning of the next end step. flashback {M}{M}{M} (yo | 1 | Hungry for More | mid |
 | create a red elemental creature token with trample and "..." flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Seize the Storm | mid |
+| creature tokens you control lose all abilities and have base power and toughness N/N. | 1 | Poppet Stitcher // Poppet Factory | mid |
 | destroy target artifact, enchantment, or land. if a land was destroyed ~, its controller may search their library for up to two basic land cards, put them onto  | 1 | Dire-Strain Rampage | mid |
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
 | enchanted creature has vigilance and "..." | 1 | Cathar's Call | mid |
 | equipped creature can't be blocked by creatures with power N or greater. | 1 | Hedgewitch's Mask | mid |
 | exile target nonlegendary creature, then return it to the battlefield under its owner's control. if it entered under your control, put a +N/+N counter on it. ot | 1 | Hallowed Respite | mid |
-| exile up to one target card from a graveyard. create a N/N black zombie creature token with decayed. (it can't block. when it attacks, sacrifice it at end of co | 1 | Rotten Reunion | mid |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if you control a wolf or werewolf, scry N. (look at th | 1 | Pack's Betrayal | mid |
 | human creatures you control have "..." | 1 | Katilda, Dawnhart Prime | mid |
 | if a spell would deal damage to you or another permanent you control, prevent that damage. | 1 | Rem Karolus, Stalwart Slayer | mid |
@@ -336,17 +334,12 @@
 | spells with the chosen name enchanted player casts cost {M} more to cast. | 1 | Curse of Silence | mid |
 | target creature gets +N/+N until end of turn. if it"..."s attacking. a creature with first strike deals combat damage before creatures without first strike.) | 1 | Stolen Vitality | mid |
 | target creature gets +N/+N until end of turn. if it's a human, instead it gets +N/+N and gains indestructible until end of turn. | 1 | Flare of Faith | mid |
-| target creature gets -N/-N until end of turn. create a N/N black zombie creature token with decayed. (it can't block. when it attacks, sacrifice it at end of co | 1 | Startle | mid |
 | target creature gets -N/-N until end of turn. if it's night, that creature gets -N/-N until end of turn instead. | 1 | Olivia's Midnight Ambush | mid |
 | target creature you control gets +N/+N and gains lifelink until end of turn. when that creature dies ~, create a N/N white spirit creature token with flying. | 1 | Blessed Defiance | mid |
-| target creature"..."t block. when it attacks, sacrifice it at end of combat.) | 1 | Revenge of the Drowned | mid |
-| target opponent discards two cards. you create a N/N black zombie creature token with decayed. (it can't block. when it attacks, sacrifice it at end of combat.) | 1 | No Way Out | mid |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Abandon the Post | mid |
 | when you cast ~, reveal cards from the top of your library until you reveal N creature cards. put all creature cards revealed ~ into your graveyard, then put th | 1 | Old Stickfingers | mid |
-| when ~ dies, create a N/N black zombie creature token with decayed. | 1 | Hobbling Zombie | mid |
 | when ~ dies, return it to the battlefield transformed under your control attached to target creature or planeswalker an opponent controls. | 1 | Vengeful Strangler // Strangling Grasp | mid |
 | when ~ dies, you gain life equal to its power. | 1 | Willow Geist | mid |
-| when ~ enters, create a N/N black zombie creature token with decayed. | 1 | Falcon Abomination | mid |
 | when ~ enters, create two N/N black zombie creature tokens with decayed. when you do, exile up to two target cards from graveyards. | 1 | Diregraf Horde | mid |
 | when ~ enters, each creature gets -N/-N until end of turn. | 1 | The Meathook Massacre | mid |
 | when ~ enters, each opponent creates a N/N white human creature token. | 1 | Slaughter Specialist | mid |
@@ -361,10 +354,8 @@
 | whenever day becomes night or night becomes day, look at the top two cards of your library. put one of them into your graveyard. | 1 | Celestus Sanctifier | mid |
 | whenever equipped creature dies, you may pay N life, where N is its power. if you do, draw N cards. | 1 | Mask of Griselbrand | mid |
 | whenever one or more creature cards are put into graveyards from anywhere, investigate. ~ triggers only once each turn. | 1 | Dennick, Pious Apprentice // Dennick, Pious Apparition | mid |
-| whenever one or more nontoken creatures die, create a N/N black zombie creature token with decayed. ~ triggers only once each turn. | 1 | Ghoulish Procession | mid |
 | whenever you attack, for each opponent, create a N/N white human creature token that's tapped and attacking that player or a planeswalker they control. | 1 | Adeline, Resplendent Cathar | mid |
 | whenever you cast a spell, you may discard your hand. if you do, draw a card for each of that spell's colors. | 1 | Moonveil Regent | mid |
-| whenever you cast an instant or sorcery spell, create a N/N black zombie creature token with decayed. | 1 | Poppet Stitcher // Poppet Factory | mid |
 | whenever you discard a spirit card or a card with disturb, put a +N/+N counter on ~. | 1 | Shipwreck Sifters | mid |
 | whenever ~ attacks, add {M} or {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Kessig Naturalist // Lord of the Ulvenwald | mid |
 | whenever ~ attacks, it deals N damage to defending player. | 1 | Falkenrath Perforator | mid |

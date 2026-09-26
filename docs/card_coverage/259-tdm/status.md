@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 31 | 12.3% |
+| Tested | 32 | 12.7% |
 | Works (untested) | 127 | 50.4% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 82 | 32.5% |
+| Not working | 81 | 32.1% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Rite of Renewal | silent | Return up to two target permanent cards from your graveyard to your hand. Target player shuffles up to four target cards from their graveyard into their library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Riverwheel Sweep | silent | Tap target creature. Put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instead.) Exile the top two ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roar of Endless Song | silent | III — Double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Rot-Curse Rakshasa | silent | Decayed | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Sagu Pummeler | silent | Renew — {4}{G}, Exile this card from your graveyard: Put two +1/+1 counters and a reach counter on target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sarkhan, Dragon Ascendant | silent | When Sarkhan enters, you may behold a Dragon. If you do, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scavenger Regent // Exude Toxin | silent | Each non-Dragon creature gets -X/-X until end of turn. (Then shuffle this card into its owner's library.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -251,7 +250,7 @@
 ## Fully supported
 
 <details>
-<summary>31 cards</summary>
+<summary>32 cards</summary>
 
 - Aegis Sculptor
 - Ainok Wayfarer
@@ -275,6 +274,7 @@
 - Mistrise Village
 - Nature's Rhythm
 - Roamer's Routine
+- Rot-Curse Rakshasa
 - Sage of the Skies
 - Stalwart Successor
 - Starry-Eyed Skyrider
@@ -308,7 +308,6 @@
 | at the beginning of your upkeep, for each color, put a +N/+N counter on a dragon you control of that color. if you put +N/+N counters on five dragons ~, you win | 1 | Call the Spirit Dragons | tdm |
 | at the beginning of your upkeep, mill three cards. then if your library has no cards in it, exile ~ and put five cards from your graveyard on top of your librar | 1 | Stillness in Motion | tdm |
 | at the beginning of your upkeep, return up to two target creature cards with power N or less from your graveyard to the battlefield. put a +N/+N counter on each | 1 | Smile at Death | tdm |
-| decayed | 1 | Rot-Curse Rakshasa | tdm |
 | destroy all creatures and enchantments. draw a card for each permanent destroyed ~. | 1 | Death Begets Life | tdm |
 | distribute two +N/+N counters among one or two target creatures you control. creatures you control with counters on them gain vigilance and trample until end of | 1 | Synchronized Charge | tdm |
 | double the power and toughness of each creature you control until end of turn. | 1 | Roar of Endless Song | tdm |

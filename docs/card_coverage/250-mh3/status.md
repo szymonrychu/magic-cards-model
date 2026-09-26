@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 60 | 22.9% |
-| Works (untested) | 88 | 33.6% |
+| Works (untested) | 89 | 34.0% |
 | Partial (unaudited) | 18 | 6.9% |
-| Not working | 96 | 36.6% |
+| Not working | 95 | 36.3% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Copycrook | silent | Connive | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crabomination | silent | When this creature enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cranial Ram | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Dreamtide Whale | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Drossclaw | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eladamri, Korvecdal | silent | {G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Electrozoa | silent | At the beginning of your first main phase, tap this creature unless you pay {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -153,6 +152,7 @@
 | Depth Defiler | handled | When you cast this spell, choose one. If it was kicked, choose both instead. • Return target creature to its owner's hand. • Target player draws two cards, then | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreadmobile | handled | {1}, Sacrifice another artifact or creature: Put a +1/+1 counter on this Vehicle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamdrinker Vampire | handled | {1}{B}: Adapt 1. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dreamtide Whale | handled | Whenever a player casts their second spell each turn, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drownyard Lurker | handled | When you cast or cycle Drownyard Lurker, create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eldrazi Linebreaker | handled | At the beginning of combat on your turn, target creature you control gains haste and gets +X/+0 until end of turn, where X is the number of Eldrazi you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Eldrazi Ravager | handled | Sacrifice two Eldrazi: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -360,7 +360,6 @@
 | search your library for a card, exile it face down, then shuffle. | 1 | The Creation of Avacyn | mh3 |
 | skip your draw step. | 1 | Necrodominance | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
-| vanishing | 1 | Dreamtide Whale | mh3 |
 | when imskir enters, you draw N cards and you lose N life, where N is half the number of artifacts you control, rounded down. | 1 | Imskir Iron-Eater | mh3 |
 | when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
 | when you cast ~, counter target spell an opponent controls unless they pay {M}. | 1 | Hope-Ender Coatl | mh3 |

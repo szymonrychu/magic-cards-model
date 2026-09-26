@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 5.6% |
-| Works (untested) | 129 | 55.4% |
+| Tested | 14 | 6.0% |
+| Works (untested) | 128 | 54.9% |
 | Partial (unaudited) | 5 | 2.1% |
 | Not working | 86 | 36.9% |
 
@@ -171,7 +171,6 @@
 | Guildmages' Forum | handled |  |  | Y/Y/- | not_tested |
 | Haazda Marshal | handled | Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Healer's Hawk | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
-| Hellkite Whelp | handled | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hunted Witness | handled | When this creature dies, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hypothesizzle | handled | Draw two cards. Then you may discard a nonland card. When you do, Hypothesizzle deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inescapable Blaze | handled | This spell can't be countered. Inescapable Blaze deals 6 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Arclight Phoenix
 - Assassin's Trophy
@@ -258,6 +257,7 @@
 - Conclave Tribunal
 - Deafening Clarion
 - Divine Visitation
+- Hellkite Whelp
 - Hired Poisoner
 - Kraul Harpooner
 - Lazav, the Multifarious

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
+| Tested | 1 | 4.2% |
 | Works (untested) | 14 | 58.3% |
 | Partial (unaudited) | 1 | 4.2% |
-| Not working | 9 | 37.5% |
+| Not working | 8 | 33.3% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Shrieking Drake | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stampeding Wildebeests | silent | At the beginning of your upkeep, return a green creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Summer Bloom | silent | You may play up to three additional lands this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Suq'Ata Lancer | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Teferi's Puzzle Box | silent | At the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloud Elemental | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Archangel | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -54,8 +53,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Suq'Ata Lancer
 
 </details>
 
@@ -65,7 +65,6 @@
 |---|---|---|---|
 | at the beginning of each player's draw step, that player puts the cards in their hand on the bottom of their library in any order, then draws that many cards. | 1 | Teferi's Puzzle Box | vis |
 | at the beginning of your upkeep, return a green creature you control to its owner's hand. | 1 | Stampeding Wildebeests | vis |
-| flanking | 1 | Suq'Ata Lancer | vis |
 | the next time a source of your choice would deal damage to any target ~, prevent that damage. if damage from a red source is prevented ~, ~ deals that much dama | 1 | Honorable Passage | vis |
 | untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. | 1 | Relentless Assault | vis |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Shrieking Drake | vis |

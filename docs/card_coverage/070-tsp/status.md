@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 95 | 35.4% |
-| Partial (unaudited) | 29 | 10.8% |
-| Not working | 121 | 45.1% |
+| Works (untested) | 98 | 36.6% |
+| Partial (unaudited) | 30 | 11.2% |
+| Not working | 117 | 43.7% |
 
 ## Cards needing work
 
@@ -31,12 +31,10 @@
 | Angel's Grace | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) You can't lose the game this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Barbed Shocker | silent | Whenever this creature deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Basalt Gargoyle | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Benalish Cavalry | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Blazing Blade Askari | silent | {2}: This creature becomes colorless until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonesplitter Sliver | silent | All Sliver creatures get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Candles of Leng | silent | {4}, {T}: Reveal the top card of your library. If it has the same name as a card in your graveyard, put it into your graveyard. Otherwise, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Castle Raptors | silent | As long as this creature is untapped, it gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cavalry Master | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Celestial Crusader | silent | Other white creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chameleon Blur | silent | Prevent all damage that creatures would deal to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chronosavant | silent | {1}{W}: Return this card from your graveyard to the battlefield tapped. You skip your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -66,7 +64,6 @@
 | Ghitu Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghostflame Sliver | silent | All Slivers are colorless. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glass Asp | silent | Whenever this creature deals combat damage to a player, that player loses 2 life at the beginning of their next draw step unless they pay {2} before that step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gustcloak Cavalier | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Haunting Hymn | silent | Target player discards two cards. If you cast this spell during your main phase, that player discards four cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hivestone | silent | Creatures you control are Slivers in addition to their other creature types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hypergenesis | silent | Suspend 3—{1}{G}{G} Starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. Repeat this pr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -94,7 +91,6 @@
 | Paradox Haze | silent | At the beginning of enchanted player's first upkeep each turn, that player gets an additional upkeep step after this step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pardic Dragon | silent | Whenever an opponent casts a spell, if this card is suspended, that player may put a time counter on this card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pendelhaven Elder | silent | {T}: Each 1/1 creature you control gets +1/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pentarch Paladin | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Phyrexian Totem | silent | Whenever this permanent is dealt damage, if it's a creature, sacrifice that many permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Psychotic Episode | silent | Target player reveals their hand and the top card of their library. You choose a card revealed this way. That player puts the chosen card on the bottom of their | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pull from Eternity | silent | Put target face-up exiled card into its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,7 +102,6 @@
 | Sarpadian Empires, Vol. VII | silent | {3}, {T}: Create a 1/1 creature token of the chosen color and type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scion of the Ur-Dragon | silent | {2}: Search your library for a Dragon permanent card and put it into your graveyard. If you do, Scion of the Ur-Dragon becomes a copy of that card until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sedge Sliver | silent | All Sliver creatures have "This creature gets +1/+1 as long as you control a Swamp." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skulking Knight | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Slipstream Serpent | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Smallpox | silent | Each player loses 1 life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Force | silent | Whenever this creature attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -140,6 +135,7 @@
 | Chronatog Totem | notice | {0}: This creature gets +3/+3 until end of turn. You skip your next turn. Activate only once each turn and only if this permanent is a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Goblin Skycutter | notice | Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorgon Recluse | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Gustcloak Cavalier | notice | Whenever this creature becomes blocked, you may untap this creature and remove it from combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Locket of Yesterdays | notice | Spells you cast cost {1} less to cast for each card with the same name as that spell in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Jar | notice | {T}, Sacrifice this creature: Each player exiles all cards from their hand face down and draws seven cards. At the beginning of the next end step, each player d | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Norin the Wary | notice | When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -150,6 +146,7 @@
 | Aetherflame Wall | unaudited | This creature can block creatures with shadow as though they didn't have shadow. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Amrou Seekers | unaudited | This creature can't be blocked except by artifact creatures and/or white creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Basal Sliver | unaudited | All Slivers have "Sacrifice this permanent: Add {B}{B}." | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Cavalry Master | unaudited | Other creatures you control with flanking have flanking. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dementia Sliver | unaudited | All Slivers have "{T}: Choose a card name. Target opponent reveals a card at random from their hand. If that card has the chosen name, that player discards it.  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dralnu, Lich Lord | unaudited | If damage would be dealt to Dralnu, sacrifice that many permanents instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Foriysian Interceptor | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -180,6 +177,7 @@
 | Ashcoat Bear | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 | Aspect of Mongoose | handled | Enchanted creature has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Assassinate | handled | Destroy target tapped creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Benalish Cavalry | handled | Flanking | machines/keywords.py | Y/-/- | not_tested |
 | Bewilder | handled | Target creature gets -3/-0 until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bogardan Hellkite | handled | When this creature enters, it deals 5 damage divided as you choose among any number of targets. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bogardan Rager | handled | When this creature enters, target creature gets +4/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -236,6 +234,7 @@
 | Nantuko Shaman | handled | When this creature enters, if you control no tapped lands, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ophidian Eye | handled | Whenever enchanted creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Paradise Plume | handled | As this artifact enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Pentarch Paladin | handled | As this creature enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Penumbra Spider | handled | When this creature dies, create a 2/4 black Spider creature token with reach. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plunder | handled | Destroy target artifact or land. Suspend 4—{1}{R} (Rather than cast this card from your hand, you may pay {1}{R} and exile it with four time counters on it. At  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Premature Burial | handled | Destroy target nonblack creature that entered since your last turn ended. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -249,6 +248,7 @@
 | Search for Tomorrow | handled | Search your library for a basic land card, put it onto the battlefield, then shuffle. Suspend 2—{G} (Rather than cast this card from your hand, you may pay {G}  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sengir Nosferatu | handled | {1}{B}, Exile this creature: Create a 1/2 black Bat creature token with flying. It has "{1}{B}, Sacrifice this token: Return an exiled card named Sengir Nosfera | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skittering Monstrosity | handled | When you cast a creature spell, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Skulking Knight | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonebrow, Krosan Hero | handled | Whenever a creature you control with trample attacks, it gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonewood Invocation | handled | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Target creature gets +5/+5 and | the engine reads this text and performs it | Y/-/- | not_tested |
 | Strangling Soot | handled | Destroy target creature with toughness 3 or less. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -309,7 +309,6 @@
 |---|---|---|---|
 | all slivers have "..." | 10 | Basal Sliver, Dementia Sliver, Gemhide Sliver, Harmonic Sliver, Mindlash Sliver | tsp |
 | echo | 6 | Basalt Gargoyle, Firemaw Kavu, Flamecore Elemental, Mogg War Marshal, Subterranean Shambler | tsp |
-| flanking | 5 | Benalish Cavalry, Cavalry Master, Gustcloak Cavalier, Pentarch Paladin, Skulking Knight | tsp |
 | all sliver creatures have "..." | 4 | Fungus Sliver, Psionic Sliver, Sedge Sliver, Vampiric Sliver | tsp |
 | buyback | 4 | Demonic Collusion, Reiterate, Spell Burst, Wurmcalling | tsp |
 | all sliver creatures get +N/+N. | 3 | Bonesplitter Sliver, Might Sliver, Watcher Sliver | tsp |
@@ -348,6 +347,7 @@
 | if a spell would deal damage to a permanent or player, prevent N damage that spell would deal to that permanent or player. | 1 | Plated Pegasus | tsp |
 | if damage would be dealt to dralnu, sacrifice that many permanents instead. | 1 | Dralnu, Lich Lord | tsp |
 | if damage would be dealt to ~, prevent that damage. remove a +N/+N counter from ~. | 1 | Phantom Wurm | tsp |
+| other creatures you control with flanking have flanking. | 1 | Cavalry Master | tsp |
 | other creatures you control with flying get +N/+N. | 1 | Sprite Noble | tsp |
 | other white creatures get +N/+N. | 1 | Celestial Crusader | tsp |
 | prevent all damage that creatures would deal to players ~. | 1 | Chameleon Blur | tsp |
@@ -392,6 +392,7 @@
 | whenever ~ attacks or blocks, remove a +N/+N counter from it. if you do, it deals N damage to any target. | 1 | Clockwork Hydra | tsp |
 | whenever ~ attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | 1 | Spectral Force | tsp |
 | whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Evil Eye of Urborg | tsp |
+| whenever ~ becomes blocked, you may untap ~ and remove it from combat. | 1 | Gustcloak Cavalier | tsp |
 | whenever ~ blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | 1 | Gorgon Recluse | tsp |
 | whenever ~ deals combat damage to a player, that player loses N life at the beginning of their next draw step unless they pay {M} before that step. | 1 | Glass Asp | tsp |
 | whenever ~ deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | 1 | Barbed Shocker | tsp |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 11.9% |
-| Works (untested) | 92 | 43.8% |
+| Works (untested) | 93 | 44.3% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 78 | 37.1% |
+| Not working | 77 | 36.7% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Conifer Wurm | silent | {3}{G}: This creature gets +X/+X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cunning Evasion | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Deep Forest Hermit | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Feaster of Fools | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Force of Despair | silent | If it's not your turn, you may exile a black card from your hand rather than pay this spell's mana cost. Destroy all creatures that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -130,6 +129,7 @@
 | Chillerpillar | handled | {4}{S}{S}: Monstrosity 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cordial Vampire | handled | Whenever this creature or another creature dies, put a +1/+1 counter on each Vampire you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crashing Footfalls | handled | Suspend 4—{G} (Rather than cast this card from your hand, pay {G} and exile it with four time counters on it. At the beginning of your upkeep, remove a time cou | the engine reads this text and performs it | Y/-/- | not_tested |
+| Deep Forest Hermit | handled | When this creature enters, create four 1/1 green Squirrel creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Echo of Eons | handled | Each player shuffles their hand and graveyard into their library, then draws seven cards. Flashback {2}{U} (You may cast this card from your graveyard for its f | the engine reads this text and performs it | Y/-/- | not_tested |
 | Endling | handled | {B}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etchings of the Chosen | handled | As this enchantment enters, choose a creature type. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -300,7 +300,6 @@
 | unblocked attacking ninjas you control have lifelink. | 1 | Throatseeker | mh1 |
 | until end of turn, creatures you control get +N/+N and gain all creature types. | 1 | Volatile Claws | mh1 |
 | until end of turn, up to two target creatures each have base power and toughness N/N, gain flying, and become blue illusions in addition to their other colors a | 1 | Phantasmal Form | mh1 |
-| vanishing | 1 | Deep Forest Hermit | mh1 |
 | when a ninja you control enters, you may return ~ from your graveyard to the battlefield attached to that creature. | 1 | Smoke Shroud | mh1 |
 | when ~ enters, each opponent gains N life. | 1 | Aria of Flame | mh1 |
 | when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | On Thin Ice | mh1 |

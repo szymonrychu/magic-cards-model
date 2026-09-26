@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.6% |
-| Works (untested) | 93 | 40.8% |
+| Works (untested) | 94 | 41.2% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 98 | 43.0% |
+| Not working | 97 | 42.5% |
 
 ## Cards needing work
 
@@ -120,7 +120,6 @@
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ram Through | notice | Target creature you control deals damage equal to its power to target creature you don't control. If the creature you control has trample, excess damage is deal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rooting Moloch | notice | When this creature enters, exile target card with a cycling ability from your graveyard. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Skycat Sovereign | notice | This creature gets +1/+1 for each other creature you control with flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spelleater Wolverine | notice | This creature has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Will of the All-Hunter | notice | Target creature gets +2/+2 until end of turn. If it's blocking, instead put two +1/+1 counters on it. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Yorion, Sky Nomad | notice | When Yorion enters, exile any number of other nonland permanents you own and control. Return those cards to the battlefield at the beginning of the next end ste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -217,6 +216,7 @@
 | Serrated Scorpion | handled | When this creature dies, it deals 2 damage to each opponent and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shredded Sails | handled | Choose one — • Destroy target artifact. • Shredded Sails deals 4 damage to target creature with flying. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skull Prophet | handled | {T}: Mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skycat Sovereign | handled | This creature gets +1/+1 for each other creature you control with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slitherwisp | handled | Whenever you cast another spell that has flash, you draw a card and each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Snare Tactician | handled | Whenever you cycle a card, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Song of Creation | handled | You may play an additional land on each of your turns. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -377,7 +377,6 @@
 | ~ enters with your choice of a reach counter or a vigilance counter on it. | 1 | Flycatcher Giraffid | iko |
 | ~ enters with your choice of a trample counter or a menace counter on it. | 1 | Ferocious Tigorilla | iko |
 | ~ enters with your choice of two different counters on it from among menace, deathtouch, and lifelink. | 1 | Grimdancer | iko |
-| ~ gets +N/+N for each other creature you control with flying. | 1 | Skycat Sovereign | iko |
 | ~ has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | 1 | Spelleater Wolverine | iko |
 | ~ has flash as long as you control a permanent with flash. as an additional cost to cast ~, sacrifice a creature. destroy target creature. | 1 | Mutual Destruction | iko |
 | ~ has protection from each mana value of the chosen quality. | 1 | Lavabrink Venturer | iko |

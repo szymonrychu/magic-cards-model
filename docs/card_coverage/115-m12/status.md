@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 8.2% |
-| Works (untested) | 56 | 57.1% |
+| Works (untested) | 57 | 58.2% |
 | Partial (unaudited) | 4 | 4.1% |
-| Not working | 30 | 30.6% |
+| Not working | 29 | 29.6% |
 
 ## Cards needing work
 
@@ -54,7 +54,6 @@
 | Vengeful Pharaoh | silent | Whenever combat damage is dealt to you or a planeswalker you control, if this card is in your graveyard, destroy target attacking creature, then put this card o | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Visions of Beyond | silent | Draw a card. If a graveyard has twenty or more cards in it, draw three cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crown of Empires | notice | {3}, {T}: Tap target creature. Gain control of that creature instead if you control artifacts named Scepter of Empires and Throne of Empires. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Crumbling Colossus | notice | When this creature attacks, sacrifice it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Primordial Hydra | notice | This creature has trample as long as it has ten or more +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Garruk's Horde | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grand Abolisher | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -75,6 +74,7 @@
 | Chandra, the Firebrand | handled | +1: Chandra deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chasm Drake | handled | Whenever this creature attacks, target creature you control gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crimson Mage | handled | {R}: Target creature you control gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Crumbling Colossus | handled | When this creature attacks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Favor | handled | When this Aura enters, you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devouring Swarm | handled | Sacrifice a creature: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Divine Favor | handled | When this Aura enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -152,7 +152,6 @@
 | tap an untapped spider you control: search your graveyard and/or library for a card named arachnus web and put it onto the battlefield attached to target creatu | 1 | Arachnus Spinner | m12 |
 | target player chooses a card in their hand and discards the rest. | 1 | Monomania | m12 |
 | when enchanted creature dies, return ~ to its owner's hand. | 1 | Angelic Destiny | m12 |
-| when ~ attacks, sacrifice it at end of combat. | 1 | Crumbling Colossus | m12 |
 | when ~ enters, reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your  | 1 | Sphinx of Uthuun | m12 |
 | when ~ enters, target opponent skips their next combat phase. | 1 | Stonehorn Dignitary | m12 |
 | whenever a creature without flying attacks you or a planeswalker you control, ~ deals N damage to that creature. | 1 | Circle of Flame | m12 |
