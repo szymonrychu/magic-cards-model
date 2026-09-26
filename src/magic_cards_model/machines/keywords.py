@@ -183,6 +183,10 @@ def executes(keyword: str) -> bool:
         # CR 702.54a: an "enters with" replacement (CR 614.1c),
         # `machines/replacement._bloodthirst_entering_counters`.
         "bloodthirst",
+        # CR 702.136a: an "enters with"/"enters ..." replacement (CR 614.1c)
+        # asking its controller, `machines/replacement._riot_modifiers` (the
+        # haste half is `Game.enter_the_battlefield`'s `event.grants_haste`).
+        "riot",
         "cascade",
         "storm",
         "persist",

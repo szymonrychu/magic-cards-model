@@ -11147,6 +11147,25 @@ class Game(EngineModel):
                 # CR 702.104a's tribute: the opponent is the one who puts them.
                 self.add_counters(card_state, kind, amount, putter=putter)
 
+            if event.grants_haste:
+                # CR 702.136a's riot, declined: "it gains haste." No duration
+                # is stated, so CR 611.2a's default is indefinite -
+                # `only_this_incarnation`-scoped (CR 400.7) the same way dash's
+                # `_grant_dash_haste` (CR 702.109a) and unearth's `_unearth_
+                # effect` (CR 702.84a) already grant their own haste, so a
+                # later re-entry is a new object and is asked again rather
+                # than inheriting this incarnation's grant.
+                store = self.continuous_effects
+                store.add(
+                    ContinuousEffect(
+                        description=f"{card_state.name}: riot grants haste (CR 702.136a)",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        selector=only_this_incarnation(card_state, card_state.zone_change_stamp),
+                        modification=grant_ability("Haste"),
+                    )
+                )
+
             if event.loyalty_reduction:
                 # CR 702.150a (compleated): "minus two for each" of the
                 # Phyrexian symbols paid with life, off whatever CR 306.5b's
