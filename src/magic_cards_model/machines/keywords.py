@@ -134,6 +134,7 @@ class KeywordRule(StrEnum):
     MIRACLE = "CR 702.94a"
     MORPH = "CR 702.37a"
     DISGUISE = "CR 702.168a"
+    MANIFEST = "CR 701.40a"
     INDESTRUCTIBLE = "CR 702.12b"
     EXERT = "CR 701.43a"
     REBOUND = "CR 702.88a"
@@ -4742,8 +4743,68 @@ def face_down_characteristics(card: Card) -> FaceDownCharacteristics | None:
 FACE_DOWN_CAST_COST = "{3}"
 
 
-def why_cannot_turn_face_up(permanent: CardState) -> str | None:
-    """Why the CR 702.37e special action is unavailable right now, or None.
+def why_cannot_turn_up_manifested(permanent: CardState) -> str | None:
+    """Why CR 701.40b's own turn-up procedure is unavailable for this
+    manifested permanent right now, or None.
+
+    "Any time you have priority, you may turn a manifested permanent you
+    control face up. ... To do this, show all players that the card
+    representing that permanent is a creature card and what that card's mana
+    cost is, pay that cost, then turn the permanent face up. **(If the card
+    representing that permanent isn't a creature card or it doesn't have a
+    mana cost, it can't be turned face up this way.)**" CR 701.58b prints the
+    identical parenthetical for a cloaked permanent - the reason this reads
+    `permanent.manifested` rather than a name check, so a future cloak
+    implementation only has to set the same flag to reach here too.
+
+    Never called on an object that is not manifested at all - that is
+    `why_cannot_turn_face_up`'s own job, which only reaches this once the
+    morph/disguise path has already come up empty.
+    """
+    if Type.CREATURE not in permanent.card.types:
+        return (
+            f"{permanent.card.name} is not a creature card, so the manifested permanent "
+            f"cannot be turned face up this way (CR 701.40b)"
+        )
+    if not _manifest_front_mana_cost(permanent.card):
+        return (
+            f"{permanent.card.name} has no mana cost, so the manifested permanent cannot "
+            f"be turned face up this way (CR 701.40b)"
+        )
+    return None
+
+
+def _manifest_front_mana_cost(card: Card) -> str | None:
+    """The mana cost CR 701.40b's/701.58b's own turn-up procedure pays -
+    "the card representing that permanent[[']s] ... mana cost", read off the
+    front face (CR 712.8a) for a transform or modal DFC, whose top-level
+    `mana_cost` Scryfall leaves blank in favour of `card_faces`. A split or
+    Adventure card keeps its combined `mana_cost` at the top level and never
+    reaches the fallback.
+    """
+    if card.mana_cost:
+        return card.mana_cost
+    if card.card_faces:
+        return card.card_faces[0].mana_cost or None
+    return None
+
+
+def manifest_turn_up_cost(permanent: CardState) -> TotalCost | None:
+    """The mana cost CR 701.40b's turn-up procedure pays for a manifested
+    permanent, or None when it cannot be turned up this way at all."""
+    if why_cannot_turn_up_manifested(permanent) is not None:
+        return None
+    mana = ManaCost.try_parse(_manifest_front_mana_cost(permanent.card) or "")
+    return None if mana is None else TotalCost.of(mana)
+
+
+def why_cannot_turn_face_up(permanent: CardState, *, procedure: str | None = None) -> str | None:
+    """Why every special action this engine turns a face-down permanent face
+    up with is unavailable right now, or None: CR 702.37e's morph/megamorph
+    procedure, CR 702.168d's disguise procedure (both read off the card's own
+    `morph_ability`, which covers all three - see that function's docstring),
+    and CR 701.40b's manifest procedure (CR 701.58b's cloak procedure once
+    that keyword action exists - `docs/engine-coverage.md`).
 
     "Any time you have priority, you may turn a face-down permanent you control
     with a morph ability face up. This is a special action; it doesn't use the
@@ -4755,6 +4816,15 @@ def why_cannot_turn_face_up(permanent: CardState) -> str | None:
     That last clause is why the check is against the card and not against the
     face-down object: the object has no text at all (CR 708.2), so the morph
     cost has to be read off the printing it is hiding.
+
+    CR 701.40c-d: a card that is both manifested *and* has morph or disguise
+    has both procedures available, at potentially different costs, and its
+    controller picks which one to use. `procedure` is that pick - `"morph"`
+    for CR 702.37e's/CR 702.168d's cost, `"manifest"` for CR 701.40b's own
+    mana cost - checked instead of the default preference order below.
+    `None`, every caller from before this choice existed, keeps that order:
+    the morph/disguise cost when the card has one, manifest's only when it
+    does not - `turn_face_up_cost`'s own docstring says the same.
     """
     if permanent.zone is not Zone.BATTLEFIELD:
         return (
@@ -4764,12 +4834,28 @@ def why_cannot_turn_face_up(permanent: CardState) -> str | None:
     if permanent.face_up:
         return f"{permanent.card.name} is already face up"
     ability = morph_ability(permanent.card)
-    if ability is None or not ability.cost:
+    if procedure == "manifest":
+        if not permanent.manifested:
+            return (
+                f"{permanent.card.name} is not manifested, so it has no manifest turn-up "
+                f"procedure (CR 701.40b)"
+            )
+        return why_cannot_turn_up_manifested(permanent)
+    if procedure == "morph":
+        if ability is not None and ability.cost:
+            return None
         return (
             f"{permanent.card.name} would have no morph cost if it were face up, so it "
             f"cannot be turned face up this way (CR 702.37e)"
         )
-    return None
+    if ability is not None and ability.cost:
+        return None
+    if permanent.manifested:
+        return why_cannot_turn_up_manifested(permanent)
+    return (
+        f"{permanent.card.name} would have no morph cost if it were face up, so it "
+        f"cannot be turned face up this way (CR 702.37e)"
+    )
 
 
 #: "As long as enchanted creature is face down, it can't be turned face up."
@@ -4841,12 +4927,30 @@ def turn_face_up_ban(game: Any, permanent: CardState) -> str | None:
     return None
 
 
-def turn_face_up_cost(permanent: CardState, player: str) -> TotalCost | None:
-    """The morph cost this permanent pays to be turned face up (CR 702.37e)."""
+def turn_face_up_cost(
+    permanent: CardState, player: str, *, procedure: str | None = None
+) -> TotalCost | None:
+    """The cost this permanent pays to be turned face up right now, or None.
+
+    The morph/megamorph/disguise cost (CR 702.37e, CR 702.168d) when the card
+    has one - `morph_ability` reads all three alike. Otherwise, for a
+    manifested permanent (CR 701.40b) or, once printed in this pool, a cloaked
+    one (CR 701.58b), the card's own mana cost.
+
+    CR 701.40c-d: a card that is manifested *and* has morph or disguise may
+    use either procedure, at whatever each one's cost comes to. `procedure`
+    (`"morph"` or `"manifest"`) picks one explicitly; `None`, every caller
+    from before this choice existed, keeps the old preference - the morph/
+    disguise cost when the card has one, manifest's own mana cost otherwise.
+    """
     ability = morph_ability(permanent.card)
-    if ability is None:
-        return None
-    return _keyword_cost(ability, player)
+    morph_cost = _keyword_cost(ability, player) if ability is not None else None
+    manifest_cost = manifest_turn_up_cost(permanent) if permanent.manifested else None
+    if procedure == "manifest":
+        return manifest_cost
+    if procedure == "morph":
+        return morph_cost
+    return morph_cost if morph_cost is not None else manifest_cost
 
 
 # --------------------------------------------------------------------------
