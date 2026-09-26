@@ -1342,3 +1342,27 @@ def test_a_snapshot_written_before_the_object_state_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_OBJECT_STATE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before Forecast's own once-each-turn tracking:
+#: `Game.forecast_activations` (CR 702.57b).
+_SCHEMA_VERSION_BEFORE_FORECAST = 85
+
+
+def test_the_forecast_bump_moved_the_version_past_eighty_five() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_FORECAST
+
+
+def test_a_snapshot_written_before_forecast_is_refused() -> None:
+    """A version-85 dump has no `forecast_activations`: decoded as current, a
+    forecast ability activated earlier that turn (CR 702.57b) would read as
+    never having been, and a second activation the same upkeep would be
+    wrongly allowed."""
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_FORECAST
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_FORECAST}",
+    ):
+        Game.model_validate(dumped)

@@ -1572,6 +1572,12 @@ class KeywordActivation(EngineModel):
     ability: ActivatedAbility
     sorcery_only: bool = False
     """CR 602.1b timing, as printed in the rule the keyword expands to."""
+    forecast: bool = False
+    """CR 702.57b's own timing, mirrored from `ability.forecast` rather than
+    read off printed instruction text the way `sorcery_only` is - Forecast's
+    "only during the upkeep step of the card's owner and only once each
+    turn" is the keyword's own meaning, never printed on the card. Checked in
+    `why_not` and recorded in `_activate_impl` via `Game.forecast_activations`."""
     targets: list[TargetRef] = Field(default_factory=list)
     game: Any = Field(default=None, exclude=True, repr=False)
     """The live `Game` this activation acts on. Reset to `None` by a round
@@ -1716,6 +1722,35 @@ class KeywordActivation(EngineModel):
                 f"sorcery: {self.player}'s main phase, with the stack empty "
                 f"({self.rule}, CR 307.5)"
             )
+        if self.forecast and self.game is not None:
+            # CR 702.57b: "A forecast ability may be activated only during
+            # the upkeep step of the card's owner and only once each turn."
+            # Not read off `ability.instructions` the way `sorcery_only`'s
+            # printed "Activate only as a sorcery" is below - Forecast never
+            # prints this restriction, it *is* the restriction, so it is
+            # checked directly against the turn machine instead. By this
+            # point `self.player` is already proven to own `self.card` (the
+            # zone checks above), which is exactly CR 702.57b's own "the
+            # card's owner".
+            from .turn import Step
+
+            turn = self.game.turn
+            if (
+                turn is None
+                or turn.in_pregame
+                or turn.step is not Step.UPKEEP
+                or turn.active_player != self.player
+            ):
+                return (
+                    f"{self.card.name}'s forecast ability may be activated only during "
+                    f"{self.player}'s upkeep step (CR 702.57b)"
+                )
+            forecast_key = f"{self.card.id}:{self.card.zone_change_stamp}"
+            if forecast_key in self.game.forecast_activations:
+                return (
+                    f"{self.card.name}'s forecast ability has already been activated "
+                    "this turn (CR 702.57b)"
+                )
         if self.game is not None:
             # CR 602.1b's activation instructions apply here exactly as they
             # do to a battlefield activation - `Game.activation_instruction_
@@ -1796,6 +1831,12 @@ class KeywordActivation(EngineModel):
             # "the first equip ability you activate each turn" counts this one
             # whichever cost it paid (`free_first_equip_source`).
             self.game.record_turn_fact(ACTIVATED_EQUIP_FACT, self.player)
+        if self.forecast:
+            # CR 702.57b's own once-each-turn restriction, checked back in
+            # `why_not` against this same key - the card is still in `zone`
+            # (revealing never moves it, CR 701.20b), so `zone_change_stamp`
+            # is unchanged between the two calls.
+            self.game.forecast_activations.add(f"{self.card.id}:{self.card.zone_change_stamp}")
         self._emit_activation_events()
         self.game.put_triggers_on_stack()  # CR 117.3c hands priority straight back
         return self.on_stack
@@ -3905,6 +3946,7 @@ def off_battlefield_activation(
         targets=[TargetRef.coerce(target) for target in targets or []],
         generic_effect=True,
         game=game,
+        forecast=ability.forecast,
     )
 
 

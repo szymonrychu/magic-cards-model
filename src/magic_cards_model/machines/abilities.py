@@ -1817,6 +1817,21 @@ class ActivatedAbility(BaseAbility):
     #: once", word for word), and `Game.activation_cost` reads this flag to
     #: apply the entered-this-turn discount (CR 702.193b, CR 118.7).
     power_up: bool = False
+    #: CR 702.57a: "A forecast ability is an activated ability that can be
+    #: activated only from a player's hand. It's written 'Forecast —
+    #: [Activated ability].'" Read off the printed em-dash prefix exactly the
+    #: way `exhaust`/`power_up` above are - Forecast is a real CR 702 keyword
+    #: printed in the same "Word — cost: effect." shape, so the same parser
+    #: branch already captures it as `ability_word`. `zone`/`zone_rule` above
+    #: separately read `costs` for "Reveal this card from your hand"
+    #: (`_REVEALS_ITSELF_FROM_HAND`, CR 113.6j) and pin the ability to the
+    #: hand that way, the same as any other self-referential off-battlefield
+    #: cost; this flag is what `machines/keywords.off_battlefield_activation`
+    #: reads to add CR 702.57b's own timing restriction - only during the
+    #: card's owner's upkeep, and only once each turn - which is the
+    #: keyword's own meaning rather than printed instruction text, so
+    #: `ActivatedAbility.instructions` never carries it.
+    forecast: bool = False
 
 
 class TriggeredAbility(BaseAbility):
@@ -3788,6 +3803,22 @@ _EXILE_ZONE_WORDS: dict[str, Zone] = {
     "library": Zone.LIBRARY,
 }
 
+#: CR 113.6j again, one cost verb over: "Reveal this card from your hand" -
+#: CR 702.57a's own Forecast template ("Forecast — {1}{U}, Reveal this card
+#: from your hand: ...", Writ of Passage; "Forecast — {2}{W}{U}, Reveal this
+#: creature from your hand: ...", Pride of the Clouds) is the pool's example,
+#: but the words are read generally - revealing, unlike discarding or
+#: exiling, never moves the card (CR 701.20b), so nothing about paying this
+#: cost is itself impossible on the battlefield the way `_DISCARDS_ITSELF`'s
+#: shape is. What pins the ability to the hand is CR 701.20a's own "from your
+#: hand": a permanent on the battlefield has no hand card to reveal, so a
+#: cost phrased this way can only ever be paid there.
+_REVEALS_ITSELF_FROM_HAND = re.compile(
+    r"^reveal this (?:card|artifact|creature|enchantment|land|planeswalker|permanent) "
+    r"from (?:your|their) hand$",
+    re.IGNORECASE,
+)
+
 #: CR 113.6m: "An ability whose cost or effect specifies that it moves the
 #: object it's on out of a particular zone functions only in that zone, unless
 #: its trigger condition or a previous part of its cost or effect already
@@ -3837,6 +3868,8 @@ def _activated_ability_zone(
         match = _EXILES_ITSELF_FROM_ZONE.match(piece.text)
         if match is not None:
             return _EXILE_ZONE_WORDS[match.group("zone").lower()], "CR 113.6j"
+        if _REVEALS_ITSELF_FROM_HAND.match(piece.text):
+            return Zone.HAND, "CR 113.6j"
     if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
         return Zone.GRAVEYARD, "CR 113.6m"
     if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
@@ -3913,6 +3946,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
     ability_word = (common.get("ability_word") or "").lower()
     exhaust = ability_word == "exhaust"
     power_up = ability_word == "power-up"
+    forecast = ability_word == "forecast"
 
     return ActivatedAbility(
         **common,
@@ -3927,6 +3961,7 @@ def _parse_activated(text: str, common: dict) -> ActivatedAbility | None:
         cost_reduction=cost_reduction,
         exhaust=exhaust,
         power_up=power_up,
+        forecast=forecast,
     )
 
 

@@ -3700,6 +3700,19 @@ class Game(EngineModel):
     planeswalker's loyalty abilities having been activated refuses the next
     one. Cleared when a new turn begins."""
 
+    forecast_activations: SortedSet[str] = Field(default_factory=set)
+    """Which forecast abilities (CR 702.57a) have been activated this turn,
+    keyed `"<card id>:<zone_change_stamp>"` - `Game._activation_key`'s own
+    id-plus-incarnation scoping, without an ability index, since a hand card
+    only ever prints one forecast line. CR 702.57b: "A forecast ability may
+    be activated only ... once each turn" - read and written by
+    `machines/keywords.KeywordActivation.why_not`/`_activate_impl`, which
+    (unlike `Game.activate_ability`'s battlefield path, the one that fills
+    `activations` below) is the only entry point a hand-zone activation ever
+    reaches. Cleared when a new turn begins, alongside `activations`/
+    `loyalty_activations` - a `SortedSet` for the same canonical-dump reason
+    `exhausted` is one."""
+
     once_per_turn_triggers: dict[str, int] = Field(default_factory=dict)
     """How often a "this ability triggers only once each turn" ability has
     already triggered this turn, keyed `"<source id>:<printed condition>"` -
@@ -3962,7 +3975,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 85
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 86
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4030,6 +4043,11 @@ class Game(EngineModel):
     #: `renowned`, `venture_room`, `dungeon_completions` and
     #: `last_known_attachments` (EC6's object-state readers - bumped at the
     #: EC round 2 merge).
+    #: 86: `Game` gained `forecast_activations` (CR 702.57b's own once-each-
+    #: turn restriction on a forecast ability, tracked per card incarnation
+    #: - `KeywordActivation.why_not`/`_activate_impl` in `machines/
+    #: keywords.py` are the reader and writer, reachable from a decoded
+    #: `Game` the moment a Forecast card sits in a hand).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -24016,6 +24034,7 @@ class Game(EngineModel):
             self.extra_land_plays = {}  # Way of the Paradox's own "this turn" grant
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
+            self.forecast_activations = set()  # CR 702.57b's once-per-turn is per turn too
             self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too
             self.once_per_turn_cast_permissions_used = {}  # "Once during each of your turns"
             # Snapshotted, not dropped: "last turn" is a question the
