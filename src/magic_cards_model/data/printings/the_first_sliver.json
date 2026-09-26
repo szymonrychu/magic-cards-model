@@ -1,0 +1,151 @@
+{
+  "object": "card",
+  "id": "06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87",
+  "oracle_id": "55e4d4b2-1bd8-4c29-a21a-c014a974b715",
+  "multiverse_ids": [
+    464149
+  ],
+  "mtgo_id": 72772,
+  "tcgplayer_id": 190877,
+  "cardmarket_id": 374607,
+  "name": "The First Sliver",
+  "lang": "en",
+  "released_at": "2019-06-14",
+  "uri": "https://api.scryfall.com/cards/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87",
+  "scryfall_uri": "https://scryfall.com/card/mh1/200/the-first-sliver?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:58:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.jpg?1783933086",
+    "normal": "https://cards.scryfall.io/normal/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.jpg?1783933086",
+    "large": "https://cards.scryfall.io/large/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.jpg?1783933086",
+    "png": "https://cards.scryfall.io/png/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.png?1783933086",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.jpg?1783933086",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.jpg?1783933086",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.webp?1783933086",
+    "grid": "https://cards.scryfall.io/grid/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.webp?1783933086",
+    "display": "https://cards.scryfall.io/display/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.webp?1783933086",
+    "art": "https://cards.scryfall.io/art/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.webp?1783933086",
+    "crop": "https://cards.scryfall.io/crop/front/0/6/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87.webp?1783933086"
+  },
+  "mana_cost": "{W}{U}{B}{R}{G}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Sliver",
+  "oracle_text": "Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nSliver spells you cast have cascade.",
+  "power": "7",
+  "toughness": "7",
+  "colors": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "G",
+    "R",
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Cascade"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "d7efccd6-55bc-4fb8-9138-e72577510a99",
+  "set": "mh1",
+  "set_name": "Modern Horizons",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/d7efccd6-55bc-4fb8-9138-e72577510a99",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amh1&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mh1?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/06d4fbe1-8a2f-4958-bb85-1a1e5f1e8d87/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A55e4d4b2-1bd8-4c29-a21a-c014a974b715&unique=prints",
+  "collector_number": "200",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Svetlin Velinov",
+  "artist_ids": [
+    "ffd063ae-c097-4f26-b2e6-b1e2137708bc"
+  ],
+  "illustration_id": "7ddd8f5b-8757-49b5-b7a0-706181654c27",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4235,
+  "penny_rank": 7940,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/sliver-direction-2019-05-22",
+    "previewed_at": "2019-05-22"
+  },
+  "prices": {
+    "usd": "39.10",
+    "usd_foil": "63.44",
+    "usd_etched": null,
+    "eur": "31.09",
+    "eur_foil": "49.52",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=464149&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DThe%2BFirst%2BSliver",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DThe%2BFirst%2BSliver",
+    "edhrec": "https://edhrec.com/route/?cc=The+First+Sliver"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F190877%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=374607&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/72772?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "015afe31-af3c-4c9b-9997-d7c33b915a33",
+  "oracle_id": "2cbccc46-bdef-4dfb-90a4-0278c5c8488a",
+  "multiverse_ids": [],
+  "resource_id": "C859831BF0756C7A0E9E7A909D079EFAAC6811F9EA3B361E18FF4EAB7518CC96",
+  "mtgo_id": 149935,
+  "arena_id": 102677,
+  "tcgplayer_id": 686603,
+  "cardmarket_id": 880531,
+  "name": "Quandrix, the Proof",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/015afe31-af3c-4c9b-9997-d7c33b915a33",
+  "scryfall_uri": "https://scryfall.com/card/sos/218/quandrix-the-proof?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:47:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.jpg?1783903635",
+    "normal": "https://cards.scryfall.io/normal/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.jpg?1783903635",
+    "large": "https://cards.scryfall.io/large/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.jpg?1783903635",
+    "png": "https://cards.scryfall.io/png/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.png?1783903635",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.jpg?1783903635",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.jpg?1783903635",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.webp?1783903635",
+    "grid": "https://cards.scryfall.io/grid/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.webp?1783903635",
+    "display": "https://cards.scryfall.io/display/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.webp?1783903635",
+    "art": "https://cards.scryfall.io/art/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.webp?1783903635",
+    "crop": "https://cards.scryfall.io/crop/front/0/1/015afe31-af3c-4c9b-9997-d7c33b915a33.webp?1783903635"
+  },
+  "mana_cost": "{4}{G}{U}",
+  "cmc": 6.0,
+  "type_line": "Legendary Creature \u2014 Elder Dragon",
+  "oracle_text": "Flying, trample\nCascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)\nInstant and sorcery spells you cast from your hand have cascade.",
+  "power": "6",
+  "toughness": "6",
+  "colors": [
+    "G",
+    "U"
+  ],
+  "color_identity": [
+    "G",
+    "U"
+  ],
+  "keywords": [
+    "Cascade",
+    "Flying",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set": "sos",
+  "set_name": "Secrets of Strixhaven",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/015afe31-af3c-4c9b-9997-d7c33b915a33/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2cbccc46-bdef-4dfb-90a4-0278c5c8488a&unique=prints",
+  "collector_number": "218",
+  "digital": false,
+  "rarity": "mythic",
+  "watermark": "quandrix",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Lucas Graciano",
+  "artist_ids": [
+    "ce98f39c-7cdd-47e6-a520-6c50443bb4c2"
+  ],
+  "illustration_id": "6dd5a9a5-d258-46b7-975e-66e7300e1e98",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 7295,
+  "prices": {
+    "usd": "1.41",
+    "usd_foil": "1.93",
+    "usd_etched": null,
+    "eur": "1.65",
+    "eur_foil": "1.98",
+    "tix": "0.22"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DQuandrix%252C%2Bthe%2BProof",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DQuandrix%252C%2Bthe%2BProof",
+    "edhrec": "https://edhrec.com/route/?cc=Quandrix%2C+the+Proof"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F686603%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=880531&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149935?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -117,6 +117,7 @@ from .abilities import (
     keyword_abilities,
     legendary_self_pronoun_normalized,
     parse_abilities,
+    parse_granted_ability_lines,
     parse_triggered_mana,
     self_normalized_effect_text,
 )
@@ -127,7 +128,7 @@ from .casting import (
     remove_suspend_time_counter,
 )
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
-from .combat import has_keyword
+from .combat import Keyword, has_keyword
 from .connive import parse_connive_clause
 from .converge import colors_of_mana_spent
 from .cost import (
@@ -10257,7 +10258,7 @@ _FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
 #: what it does on resolution. This self-referential reduction (as opposed to
 #: `machines/cost.cost_modifier_effect`'s board-static "Spells cost {N} more
 #: to cast", read off a *different* permanent) is now computed by
-#: `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`, opted
+#: `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_SPELL_RE`, opted
 #: into by calling `Game.determine_total_cost(casting)` instead of
 #: `casting.determine_cost()` directly - the same opt-in shape Emrakul, the
 #: Promised End's own graveyard-count reduction already uses. Stripping the
@@ -10266,7 +10267,7 @@ _FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
 #: spell unless its controller pays ..." down with it, since this dispatcher
 #: only ever reads what a spell *does*, not what it costs.
 _SELF_COST_REDUCTION_LINE_RE = re.compile(
-    r"^(?:[A-Za-z' ]+ \u2014 )?This spell costs \{\d+\} less to cast (?:if|as long as) "
+    r"^(?:[A-Za-z' ]+ \u2014 )?This spell costs (?:\{[^{}]+\})+ less to cast (?:if|as long as) "
     r"[^.]+\.\s*",
     re.IGNORECASE | re.MULTILINE,
 )
@@ -24693,6 +24694,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if conditional_remove_counter_from_self is not None:
         return conditional_remove_counter_from_self
+    may_tap_untapped_if_you_do = _parse_may_tap_untapped_if_you_do_clause(effect_text)
+    if may_tap_untapped_if_you_do is not None:
+        return may_tap_untapped_if_you_do
     reflexive_sacrifice_or_discard = _parse_reflexive_sacrifice_or_discard_clause(effect_text)
     if reflexive_sacrifice_or_discard is not None:
         return reflexive_sacrifice_or_discard
@@ -33595,7 +33599,10 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
         # Any other instruction ("untap this creature", "return a creature
         # card from your graveyard to the battlefield ...") is read by the
         # ordinary clause parser and run against the same resolving object.
-        clause = (
+        # "copy that spell and you may choose new targets for the copy"
+        # (Mica, Reader of Ruins) is one CR 707.10c instruction the
+        # clause splitter's bare "and" cut would slice in two.
+        clause = _parse_copy_that_spell_clause(consequence_text, for_spell=for_spell) or (
             parse_mixed_effect_for_spell(consequence_text)  # type: ignore[assignment]
             if for_spell
             else parse_mixed_effect(consequence_text)
@@ -33644,6 +33651,89 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
             consequence(game, player, power, source_name, source_id_of(stack_object))
         elif clause is not None:
             clause(game, stack_object)  # type: ignore[arg-type]
+
+    return effect
+
+
+#: Aziza, Mage Tower Captain: "you may tap three untapped creatures you
+#: control. If you do, copy that spell. You may choose new targets for the
+#: copy." Raff, Weatherlight Stalwart: "you may tap two untapped creatures you
+#: control. If you do, draw a card." Tidal Terror: "you may tap two other
+#: untapped creatures you control. If you do, ..." - CR 118.12's shape with
+#: tapping (CR 701.26a) as the optional cost: a count, an optional "other"
+#: (not the ability's source), and a description of the untapped permanents.
+_MAY_TAP_UNTAPPED_IF_YOU_DO_RE = re.compile(
+    r"^you may tap (?P<count>[\w-]+) (?P<other>other )?untapped (?P<description>[^.]+?) "
+    r"you control\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_tap_untapped_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_TAP_UNTAPPED_IF_YOU_DO_RE`'s shape. The permanents are read the
+    way `_sacrifice_restriction` reads a counted description ("three other
+    creatures"), then narrowed to the untapped ones as the ability resolves.
+    The "you may" is a `MAY` legal only while enough of them are untapped
+    (CR 118.3); a yes chooses exactly that many (`CHOOSE_CARDS`), taps them,
+    and runs the consequence - `pay_consequence_effect`'s, "copy that
+    spell" included - on the same ability (CR 118.12)."""
+    match = _MAY_TAP_UNTAPPED_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    other = "other " if match.group("other") else ""
+    restriction = _sacrifice_restriction(
+        f"{match.group('count')} {other}{match.group('description').strip()}"
+    )
+    if restriction is None or restriction.is_self:
+        return None
+    quantity = restriction.quantity
+    if not quantity.exact or quantity.amount is None:
+        return None
+    count = quantity.amount
+    consequence = pay_consequence_effect(match.group("consequence").strip())
+    if consequence is None:
+        return None
+    prompt = (
+        f"tap {match.group('count')} {other}untapped {match.group('description').strip()} "
+        "you control"
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        candidates = [
+            permanent
+            for permanent in restriction.candidates(game, player, source_id)
+            if not permanent.tapped
+        ]
+        if not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=prompt,
+                source=source_name,
+                affirmative_is_legal=len(candidates) >= count,
+                source_id=source_id_of(ability),
+            )
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {count} to tap",
+                source=source_name,
+                amount=count,
+                cards=tuple(candidate.id for candidate in candidates),
+                source_id=source_id_of(ability),
+            )
+        )
+        chosen = [candidate for candidate in candidates if candidate.id in set(chosen_ids)]
+        if len(chosen) < count:
+            return
+        for permanent in chosen:
+            game.tap_permanent(permanent)
+        consequence(game, ability)
 
     return effect
 
@@ -34334,6 +34424,9 @@ def pay_consequence_effect(text: str) -> AbilityEffect | None:
     118.12), run on the same ability that paid: an ordinary clause sequence
     (`parse_mixed_effect`), or one of `_layer_consequence`'s one-shot
     continuous effects. `None` when none of them reads it."""
+    copy_that_spell = _parse_copy_that_spell_clause(text, for_spell=False)
+    if copy_that_spell is not None:
+        return copy_that_spell
     return parse_mixed_effect(text) or _layer_consequence(text)
 
 
@@ -41424,9 +41517,12 @@ def _parse_counter_that_spell_clause(clause: str, *, for_spell: bool) -> Targete
 #: offer_new_targets_for_copy`) - the same two primitives `_parse_target_
 #: opponent_draw_then_copy_that_spell_clause` already uses for Alania,
 #: Divergent Storm's richer two-clause chain, here with nothing in front of
-#: the copy at all.
+#: the copy at all. Mica, Reader of Ruins joins the two with "and" instead of
+#: a period ("copy that spell and you may choose new targets for the copy") -
+#: the same permission (CR 707.10c).
 _COPY_THAT_SPELL_RE = re.compile(
-    r"^copy that spell\.?(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
+    r"^copy that spell(?:\.|,)?"
+    r"(?P<new_targets>\s*(?:and )?you may choose new targets for the copy\.?)?$",
     re.IGNORECASE,
 )
 
@@ -41450,9 +41546,11 @@ def _parse_copy_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedCl
         if event is None or event.subject_id is None:
             return
         spell = game.find_by_id(event.subject_id)
-        if spell is None or spell not in game.stack:
+        if spell is None:
             return
-        copy = game.copy_spell(spell, controller=ability.controller)
+        # CR 608.2h: "that spell" is not a target, so one countered in
+        # response is still copied, as it last existed on the stack.
+        copy = game.copy_spell_as_last_known(spell, controller=ability.controller)
         if offer_new_targets:
             game.offer_new_targets_for_copy(
                 copy,
@@ -41486,9 +41584,18 @@ _COPY_TARGET_SPELL_RE = re.compile(
     rf"^copy target(?: {_SPELL_QUALIFIER})? spell(?: you control)?\.?"
     r"(?P<doubles>\s*if this spell was cast from a graveyard,\s*"
     r"copy that spell twice instead\.)?"
-    r"(?P<new_targets>\s*you may choose new targets for the cop(?:y|ies)\.?)?\s*$",
+    r"(?P<new_targets>\s*you may choose new targets for the cop(?:y|ies)\.?)?"
+    r"(?P<gains>\s*the copy gains (?P<keywords>[a-z ,]+?)"
+    r"(?:,? and \"(?P<quoted>[^\"]+)\")?\.?)?\s*$",
     re.IGNORECASE,
 )
+
+#: "The copy gains `<keywords>`[ and "`<ability>`"]." (Choreographed Sparks'
+#: second mode) - what the copy of a spell gains as it is put onto the stack,
+#: carried onto the token it becomes (CR 707.10f, CR 400.7b's permanent-spell
+#: exception, `CardState.move_to`). Each keyword has to be one combat reads
+#: (`machines/combat.Keyword`), or the rider is not read at all.
+_COPY_GAINS_KEYWORD_SPLIT_RE = re.compile(r"\s*(?:,\s*and|,|\band)\s*", re.IGNORECASE)
 
 
 def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
@@ -41531,6 +41638,9 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
         # "If this spell was cast ..." only means anything on a spell.
         return None
     offer_new_targets = match.group("new_targets") is not None
+    gained = _copy_gains_lines(match.group("keywords"), match.group("quoted"))
+    if match.group("gains") is not None and gained is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -41552,6 +41662,11 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
                 continue
             for _ in range(copies):
                 copy = game.copy_spell(target, controller=controller)
+                if copy is not None and gained:
+                    copy.granted_ability_texts = (
+                        *copy.granted_ability_texts,
+                        *(line for line in gained if line not in copy.granted_ability_texts),
+                    )
                 if offer_new_targets:
                     game.offer_new_targets_for_copy(
                         copy,
@@ -41561,6 +41676,29 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
                     )
 
     return effect
+
+
+def _copy_gains_lines(keywords: str | None, quoted: str | None) -> tuple[str, ...] | None:
+    """`_COPY_TARGET_SPELL_RE`'s "The copy gains ..." rider as the ability
+    lines the copy is granted, `()` when there is no rider, or None when a
+    keyword is not one combat executes or the quoted ability does not parse
+    - an unread rider fails the whole clause closed."""
+    if keywords is None:
+        return ()
+    lines: list[str] = []
+    for word in _COPY_GAINS_KEYWORD_SPLIT_RE.split(keywords.strip()):
+        if not word:
+            continue
+        try:
+            Keyword(word.lower())
+        except ValueError:
+            return None
+        lines.append(word.capitalize())
+    if quoted is not None:
+        if not parse_granted_ability_lines([quoted]):
+            return None
+        lines.append(quoted)
+    return tuple(lines)
 
 
 #: "This creature deals N damage to that spell's controller." - Bonecrusher
@@ -44630,12 +44768,14 @@ def _put_spell_in_library(
     if spell not in game.stack:
         return
     game.stack.remove(spell)
-    game.forget_cast_record(spell)
     if spell.owner is None:
+        game.forget_cast_record(spell)
         return
     # One CR 401.1 instruction, so the move raises the library event and is
     # known to every player, who saw the spell on the stack (CR 400.2).
     game.put_cards_into_library([spell], to_bottom=not top)
+    # Forgotten after the move, so `last_known_spell` keeps it (CR 608.2h).
+    game.forget_cast_record(spell)
     if top and depth:
         _reposition_in_owners_library(game, spell, depth=depth)
 
@@ -48445,10 +48585,14 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
         return None
     noun = match.group("noun")
     # A subtype names the source as well as a card type does - See Red's
-    # "sacrifice this Aura" (CR 205.3).
+    # "sacrifice this Aura" (CR 205.3) - and so does "this token" (CR 111.1),
+    # the noun a quoted ability granted to a token or a copy that becomes one
+    # prints for itself (Choreographed Sparks' "At the beginning of the end
+    # step, sacrifice this token.").
     if (
         noun is not None
         and noun.lower() not in _SACRIFICE_SELF_NOUNS
+        and noun.lower() != "token"
         and canonical_subtype(noun) is None
     ):
         return None

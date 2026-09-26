@@ -87,6 +87,7 @@ from magic_cards_model.machines.cost import (
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
+    static_free_cast_grant,
     waterbend_mana_cost,
 )
 from magic_cards_model.machines.counter_effects import (
@@ -146,6 +147,7 @@ from magic_cards_model.machines.replacement import (
     self_enters_effects_read,
     strip_reminder_text,
 )
+from magic_cards_model.machines.spell_grants import reads_spell_keyword_grant_line
 from magic_cards_model.machines.triggers import (
     _ENTERS_TAPPED_RE as _CONDITION_ENTERS_TAPPED_RE,
 )
@@ -1988,6 +1990,19 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if static_free_cast_grant(text) is not None:
+        # CR 118.9: "you may cast ... without paying its mana cost" off a
+        # permanent (Omniscience; Zaffai and the Tempests' once each turn) -
+        # `casting.static_free_cast_grants` offers it as an alternative cost
+        # and `casting.static_free_cast_refusal` enforces its limits.
+        return HANDLED
+    if reads_spell_keyword_grant_line(text):
+        # CR 604.2: "<quality> spells you cast have storm/cascade/affinity/
+        # casualty" and "<quality> cards in your hand have miracle" -
+        # `machines/spell_grants.py` hands the keyword to the machine that
+        # executes the printed one (triggers, `Casting.total_cost`,
+        # `Casting.pay_casualty`, `Game._offer_miracle_reveal`).
         return HANDLED
     return STATIC_UNAUDITED
 

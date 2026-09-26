@@ -76,11 +76,13 @@ from .keywords import (
     FACE_DOWN_CAST_COST,
     enchant_restrictions,
     face_down_characteristics,
+    printed_casualty_numbers,
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
 from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .objects_as_costs import power_of
+from .spell_grants import casualty_numbers, granted_affinity_reductions
 from .targeting import (
     TargetingProfile,
     kicked_instead_target_text,
@@ -2083,7 +2085,17 @@ _COST_INCREASE_PER_TARGET_RE = re.compile(
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
-    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift", "teamwork", "bargain"}
+    {
+        "kicker",
+        "multikicker",
+        "replicate",
+        "offspring",
+        "blight",
+        "gift",
+        "teamwork",
+        "bargain",
+        "casualty",
+    }
 )
 
 #: CR 702.166a: "'Bargain' means 'As an additional cost to cast this spell,
@@ -2172,8 +2184,8 @@ class OptionalAdditionalCost(EngineModel):
     """False when the cost is printed and optional but nothing here can
     charge it, so a seat is told the option exists and told this engine
     cannot take it, rather than being quietly shown nothing (CR 118.8b).
-    Buyback, bargain and casualty are not read as additional costs at all and
-    so never reach this; what does are the "you may ..." sentences
+    Buyback and bargain are not read as additional costs at all and so never
+    reach this; what does are the "you may ..." sentences
     `additional_cost_phrases` returns that `Casting` has no `pay_*` for."""
 
 
@@ -2182,6 +2194,20 @@ class OptionalAdditionalCost(EngineModel):
 #: none - but the handle `OptionalAdditionalCost.keyword` carries, so the
 #: option is never a keyword-less entry a seat has no way to name back.
 PAY_LIFE_KEYWORD = "pay life"
+
+
+def casualty_cost_phrase(number: int) -> str:
+    """CR 702.153a's cost, spelled out: "sacrifice a creature with power N or
+    greater"."""
+    return f"Sacrifice a creature with power {number} or greater"
+
+
+def casualty_cost_option(number: int) -> OptionalAdditionalCost:
+    """One casualty instance as an optional additional cost (CR 702.153a,
+    CR 118.8b) - `Casting.pay_casualty` pays it."""
+    return OptionalAdditionalCost(
+        keyword="casualty", cost=casualty_cost_phrase(number), rule="CR 702.153a"
+    )
 
 
 def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
@@ -2220,6 +2246,7 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
         found.append(
             OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
         )
+    found.extend(casualty_cost_option(number) for number in printed_casualty_numbers(card))
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
             continue
@@ -2249,6 +2276,23 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             OptionalAdditionalCost(keyword=PAY_LIFE_KEYWORD, cost=printed[index], rule="CR 601.2b")
         )
     return found
+
+
+def granted_optional_additional_costs(
+    game: Any, card: CardState, caster: str
+) -> list[OptionalAdditionalCost]:
+    """The optional additional costs another permanent's grant gives `card`
+    if `caster` cast it from where it is now - casualty from "Each instant
+    and sorcery spell you cast has casualty 1." (`machines/spell_grants.py`).
+    `optional_additional_costs`' game-aware twin: the printed half cannot
+    know what the board grants."""
+    if game is None:
+        return []
+    printed = len(printed_casualty_numbers(card.card))
+    return [
+        casualty_cost_option(number)
+        for number in casualty_numbers(game, card, caster, card.zone)[printed:]
+    ]
 
 
 def has_flash(card: Card) -> bool:
@@ -2871,6 +2915,9 @@ class AlternativeCostOption(EngineModel):
     """How many objects `use_alternative_cost(choosing=...)` must supply."""
     unavailable: str | None = None
     """Why it cannot be announced right now, or None if it can."""
+    once_per_turn_key: str | None = None
+    """For a once-each-turn `STATIC` grant, the granting permanent's key -
+    recorded as used when the spell becomes cast (CR 601.2i)."""
 
     @property
     def available(self) -> bool:
@@ -3251,6 +3298,9 @@ class Casting(EngineModel):
     plain-kicker-style single-payment restriction the way CR 702.33a/c
     distinguishes kicker from multikicker.
     """
+    casualty_paid: int = 0
+    """How many of this spell's casualty instances were paid (CR 702.153a,
+    CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), set by
     `pay_offspring`. A flag rather than `kicked`'s count: offspring has no
@@ -4694,30 +4744,6 @@ class Casting(EngineModel):
             )
 
         for source_name, grant in self._static_free_cast_grants():
-            unavailable = None
-            if self.origin_zone is not grant.zone:
-                unavailable = (
-                    f"{source_name} only applies to spells cast from your "
-                    f"{grant.zone.value} (CR 118.9)"
-                )
-            elif grant.type_word and not self._spell_is_type(grant.type_word):
-                unavailable = (
-                    f"{source_name} only applies to {grant.type_word} spells, and "
-                    f"{self.spell.name} is not one"
-                )
-            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
-                cap = mana_value_cap_for(grant, self.game, self.caster)
-                if cap is None:
-                    unavailable = (
-                        f"{source_name}'s mana value cap "
-                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
-                        "(CR 118.9)"
-                    )
-                elif self.spell.mana_value > cap:
-                    unavailable = (
-                        f"{source_name} only applies to spells with mana value {cap} or "
-                        f"less, and {self.spell.name} is {self.spell.mana_value}"
-                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -4726,7 +4752,15 @@ class Casting(EngineModel):
                     source_name=source_name,
                     description="nothing",
                     cost=None,
-                    unavailable=unavailable,
+                    unavailable=static_free_cast_refusal(
+                        self.game,
+                        self.caster,
+                        self._as_announced,
+                        self.origin_zone,
+                        source_name,
+                        grant,
+                    ),
+                    once_per_turn_key=grant.once_per_turn_key,
                 )
             )
 
@@ -4826,6 +4860,11 @@ class Casting(EngineModel):
         self._enter_modes()
         if option.source is AlternativeCostSource.STATIC:
             self.free_cast_source = option.source_name
+            if option.once_per_turn_key is not None:
+                # "Once during each of your turns": recorded as used when the
+                # spell becomes cast (`cast`), not before - a cast that is
+                # reversed (CR 601.6) used nothing.
+                self.keyword_once_per_turn_key = option.once_per_turn_key
         remaining = list(choosing or [])
         for component in cost.components:
             if component.required and not component.cards:
@@ -5037,6 +5076,73 @@ class Casting(EngineModel):
         component = sacrifice_cost(permanent, payer=self.caster, description=BARGAIN_COST)
         self.add_additional_cost(TotalCost(components=[component]))
         self.bargained = True
+        return self.step
+
+    def casualty_numbers(self) -> list[int]:
+        """The N of every casualty instance this spell has as it is cast
+        (CR 702.153a): printed, then granted ("Each instant and sorcery spell
+        you cast has casualty 1.", `machines/spell_grants.py`)."""
+        return casualty_numbers(self.game, self.spell, self.caster, self.origin_zone)
+
+    def pay_casualty(self, creature: CardState) -> CastingStep:
+        """CR 702.153a: "As an additional cost to cast this spell, you may
+        sacrifice a creature with power N or greater."
+
+        Each instance is paid separately (CR 702.153b), one creature each -
+        the ruling: "You may sacrifice only one creature to pay a spell's
+        casualty cost". The creature is chosen now (CR 601.2b) and sacrificed
+        with the rest of the total cost at CR 601.2h, and it is checked now:
+        a creature on the battlefield the caster controls (CR 701.21a) whose
+        power (CR 613.5's computed board) meets the next unpaid instance's N.
+        The instances are taken in order - the lowest N the creature meets
+        first would change nothing, since every paid instance triggers the
+        same one copy.
+        """
+        from .cost import sacrifice_cost
+
+        numbers = self.casualty_numbers()
+        if not numbers:
+            raise ValueError(f"{self.spell.name} has no casualty ability (CR 702.153a)")
+        if self.casualty_paid >= len(numbers):
+            raise ValueError(
+                f"every casualty cost {self.spell.name} has was already paid - each instance "
+                "is paid with one creature (CR 702.153b)"
+            )
+        if creature.zone is not Zone.BATTLEFIELD:
+            raise ValueError(
+                f"{creature.name} is not a permanent, so it cannot be sacrificed (CR 701.21a)"
+            )
+        controller = (
+            self.game.controller_of(creature).username
+            if self.game is not None
+            else creature.controller
+        )
+        if controller != self.caster:
+            raise ValueError(
+                f"{self.caster} does not control {creature.name}, so cannot sacrifice it "
+                "(CR 701.21a)"
+            )
+        chars = self.game.characteristics_of(creature) if self.game is not None else creature
+        if not chars.is_creature:
+            raise ValueError(f"{creature.name} is not a creature (CR 702.153a)")
+        if any(
+            component.cards and creature in component.cards
+            for extra in self.additional_costs
+            for component in extra.components
+        ):
+            raise ValueError(f"{creature.name} is already paying another cost of this spell")
+        needed = numbers[self.casualty_paid]
+        power = power_of(creature, self.game)
+        if power < needed:
+            raise ValueError(
+                f"{creature.name} has power {power}, and {self.spell.name}'s casualty "
+                f"{needed} needs a creature with power {needed} or greater (CR 702.153a)"
+            )
+        component = sacrifice_cost(
+            creature, payer=self.caster, description=casualty_cost_phrase(needed)
+        )
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.casualty_paid += 1
         return self.step
 
     def _optional_sentence(self, pattern: re.Pattern[str], what: str, rule: str) -> str:
@@ -5633,6 +5739,13 @@ class Casting(EngineModel):
             )
             increases = increases + board_increases
             reductions = reductions + board_reductions
+            # CR 702.41a via CR 604.2: affinity another permanent grants this
+            # spell ("Instant and sorcery spells you cast have affinity for
+            # creatures.", `machines/spell_grants.py`), one reduction per
+            # granted instance - applied at CR 601.2f like a printed one.
+            reductions = reductions + granted_affinity_reductions(
+                self.game, self.spell, self.caster, self.origin_zone
+            )
         own = self.self_reduction if self.self_reduction is not None else self._own_cost_reduction()
         if own.symbols:
             if own in reductions:
@@ -6397,6 +6510,7 @@ class Casting(EngineModel):
                 ),
                 kicked=self.kicked,
                 replicated=self.replicated,
+                casualty_paid=self.casualty_paid,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
                 cast_using_teamwork=self.teamwork_paid,
@@ -6650,14 +6764,70 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
         for line in static_lines:
             grant = static_free_cast_grant(line)
             if grant is not None:
+                if grant.once_each_of_your_turns:
+                    grant = grant.model_copy(
+                        update={"once_per_turn_key": once_per_turn_key(permanent)}
+                    )
                 found.append((permanent.card.name, grant))
     return found
 
 
+def static_free_cast_refusal(
+    game: Any,
+    caster: str,
+    card: CardState,
+    origin_zone: Zone,
+    source_name: str,
+    grant: StaticFreeCastGrant,
+) -> str | None:
+    """Why `grant` (an Omniscience- or Zaffai-shaped static free cast, CR
+    118.9) does not apply to `card` cast by `caster` from `origin_zone`
+    right now, or None when it does.
+
+    The one answer both `Casting.alternative_costs` and `Game.
+    alternative_costs_for` give, so the listing a seat reads and the cast it
+    makes agree: the zone the grant names (the top card of the library too,
+    for "or the top of your library"), the card type it names (CR 205.2b's
+    any-of-them), a mana value cap, and for "Once during each of your turns"
+    whose turn it is and whether that permanent's one use this turn is gone.
+    """
+    in_zone = origin_zone is grant.zone
+    if not in_zone and grant.also_top_of_library and origin_zone is Zone.LIBRARY:
+        library = game.player(caster).library if game is not None else []
+        in_zone = bool(library) and library[0] is card
+    if not in_zone:
+        return f"{source_name} only applies to spells cast from your {grant.zone.value} (CR 118.9)"
+    if grant.type_word and not spell_has_type_word(card.card, grant.type_word):
+        return f"{source_name} only applies to {grant.type_word} spells, and {card.name} is not one"
+    if grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+        cap = mana_value_cap_for(grant, game, caster)
+        if cap is None:
+            return (
+                f"{source_name}'s mana value cap ({grant.max_mana_value_quality!r}) is not read "
+                "by this engine (CR 118.9)"
+            )
+        if card.mana_value > cap:
+            return (
+                f"{source_name} only applies to spells with mana value {cap} or less, and "
+                f"{card.name} is {card.mana_value}"
+            )
+    if grant.once_each_of_your_turns:
+        turn = getattr(game, "turn", None)
+        if turn is None or turn.active_player != caster:
+            return f"{source_name} applies only during your turns (CR 118.9)"
+        used = getattr(game, "once_per_turn_cast_permissions_used", {})
+        if grant.once_per_turn_key in used:
+            return f"{source_name} was already used once this turn"
+    return None
+
+
 def spell_has_type_word(card: Card, type_word: str) -> bool:
     """Whether `card` has the card type a static grant names (CR 205.2b: a
-    card with more than one type has all of them)."""
-    return type_word.lower() in (card.type_line or "").lower()
+    card with more than one type has all of them). "instant or sorcery" is
+    CR 205.1's type list read as the disjunction it is - either will do."""
+    type_line = (card.type_line or "").lower()
+    words = [word for word in re.split(r"\s+(?:or|and)\s+", type_word.lower()) if word]
+    return any(word in type_line for word in words)
 
 
 # --------------------------------------------------------------------------

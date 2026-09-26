@@ -1143,6 +1143,32 @@ def combat_lockdown_restriction_source(game: Any) -> str | None:
     return None
 
 
+#: CR 113.6g's other half: "This spell can't be copied." (Choreographed
+#: Sparks, See Double).
+_CANT_BE_COPIED_RE = re.compile(r"^this spell can'?t be copied\.?$", re.IGNORECASE)
+
+
+def cannot_be_copied(spell: Any) -> bool:
+    """Whether this spell - or printing - says it can't be copied (CR
+    113.6g: "An object's ability that states it can't be countered or can't
+    be copied functions on the stack").
+
+    What this makes impossible is CR 707.10's "to copy a spell ... means to
+    put a copy of it onto the stack": `Game.copy_spell` puts nothing there
+    for such a spell, whatever asked - storm, a "copy that spell" trigger,
+    another copy spell targeting it. A cost paid to make the copy (Mica,
+    Reader of Ruins' sacrifice) stays paid. An ability on the stack has no
+    card behind it and answers False.
+    """
+    card = spell if isinstance(spell, Card) else getattr(spell, "card", None)
+    if card is None:
+        return False
+    return any(
+        line.kind is AbilityKind.STATIC and _CANT_BE_COPIED_RE.match((line.text or "").strip())
+        for line in parse_abilities(card)
+    )
+
+
 def cannot_be_countered(spell: Any) -> bool:
     """Whether this object on the stack says it can't be countered
     (CR 113.6g).

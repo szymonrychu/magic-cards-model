@@ -54,14 +54,13 @@ from ..machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     life_or_mana_additional_costs,
-    mana_value_cap_for,
     marker_cast_options,
     optional_additional_costs,
     play_permissions_on,
     player_keyword_grant_of_line,
-    spell_has_type_word,
     split_second_restriction_source,
     static_free_cast_grants,
+    static_free_cast_refusal,
     types_being_cast,
     usable_play_permission,
     why_cannot_cast_restriction,
@@ -69,6 +68,7 @@ from ..machines.casting import (
 from ..machines.casting_restrictions import (
     CastingRuleEffect,
     CastingRuleKind,
+    cannot_be_copied,
     cannot_be_countered,
     combat_lockdown_restriction_source,
     conditionally_cannot_be_countered,
@@ -194,7 +194,7 @@ from ..machines.keywords import (
     equipment_state_based_actions,
     grant_enduring_stories,
     grant_the_citys_blessing,
-    has_miracle,
+    granted_keyword_triggered_abilities,
     has_paradigm,
     has_rebound_now,
     is_indestructible,
@@ -256,6 +256,7 @@ from ..machines.replacement import (
     apply_replacements,
     replace_mana_production,
 )
+from ..machines.spell_grants import granted_hand_keyword_lines
 from ..machines.targeting import (
     RetargetScope,
     TargetingProfile,
@@ -315,7 +316,7 @@ from .card_state import (
     annihilate_counters_on,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
+from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
 from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -475,19 +476,20 @@ _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE = re.compile(
 )
 
 #: CR 601.2f's *other* self-referential reduction shape: "This spell costs
-#: `<N>` less to cast if it targets a `<color>` spell." (Mystical Dispute).
-#: Unlike Emrakul's row above, the condition is not a fact about the board -
-#: it is about *this spell's own announced target* (CR 601.2c), which is
-#: chosen before the cost is determined (CR 601.2f is a later step), so this
-#: is read against `Casting.targets` rather than the battlefield. Narrow on
-#: purpose, the same way as the row above: the amount and the one condition
-#: shape actually printed are read back out and nothing else is guessed at -
-#: a hypothetical "... if it targets a creature you control" is a different
-#: shape this regex does not match, and would leave the reduction at {0}
-#: rather than a wrong guess.
-_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
-    r"costs \{(\d+)\} less to cast if it targets a "
-    r"(?P<color>white|blue|black|red|green) spell",
+#: `<mana>` less to cast if it targets a(n) `<quality>` spell." - Mystical
+#: Dispute's "{2} ... a blue spell", Out of Air's "{2} ... a creature spell",
+#: Brush Off's "{1}{U} ... an instant or sorcery spell". Unlike Emrakul's row
+#: above, the condition is not a fact about the board - it is about *this
+#: spell's own announced target* (CR 601.2c), which is chosen before the cost
+#: is determined (CR 601.2f is a later step), so this is read against
+#: `Casting.targets` rather than the battlefield. The amount is a run of mana
+#: symbols, coloured ones included, and lands on the cost by CR 118.7; the
+#: quality is `machines/next_spell.spell_has_quality`'s (colour words, card
+#: types, CR 205.1's "instant and sorcery" read as either). Only a *spell*
+#: target qualifies - "if it targets a tapped creature" is a different shape.
+_COSTS_LESS_IF_TARGETS_SPELL_RE = re.compile(
+    r"costs (?P<amount>(?:\{[^{}]+\})+) less to cast if it targets an? "
+    r"(?P<quality>[a-z ,]+?) spell\b",
     re.IGNORECASE,
 )
 
@@ -581,6 +583,12 @@ _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Every keyword `machines/combat.Keyword` executes, lower case - what
+#: `Game._keep_keywords_gained_as_a_spell` carries from a spell onto the
+#: permanent it becomes (CR 400.7a).
+_COMBAT_KEYWORDS: frozenset[str] = frozenset(keyword.value for keyword in Keyword)
+
+
 #: CR 702.41a's affinity, read off the keyword line rather than off its
 #: reminder text (which is CR 207.2 italics with no game function): "Affinity
 #: is a static ability that functions while the spell with affinity is on the
@@ -602,7 +610,7 @@ _SELF_COST_REDUCTION_SHAPES = (
     _COSTS_LESS_PER_CARD_DISCARDED_RE,
     _COSTS_LESS_PER_BASIC_LAND_TYPE_RE,
     _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE,
-    _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE,
+    _COSTS_LESS_IF_TARGETS_SPELL_RE,
     _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE,
     _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE,
 )
@@ -2154,6 +2162,12 @@ class CastRecord(EngineModel):
     `Casting.replicated` - what `machines/keywords._replicate_effect` copies
     the spell for and `machines/triggers.intervening_if_holds`'s "a
     replicate cost was paid for it" clause reads."""
+    casualty_paid: int = 0
+    """How many of the spell's casualty costs were paid (CR 702.153a/b),
+    copied from `Casting.casualty_paid` - one casualty trigger per payment
+    (`machines/spell_grants.granted_triggered_abilities_for`), each gated by
+    `machines/triggers.intervening_if_holds`'s "a casualty cost was paid for
+    it" clause."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), copied
     from `Casting.offspring_paid`. Bool rather than a count: CR 702.175b's
@@ -3962,7 +3976,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 87
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 88
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4036,6 +4050,9 @@ class Game(EngineModel):
     #: 273-sos T1).
     #: 87: `machines/turn.TurnMachine` gained `skipped_turns` (CR 614.10's
     #: "skip your next turn" counter, Ral Zarek, Guest Lecturer's own "−7").
+    #: 88: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5), and
+    #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5), carrying
+    #: its `CastRecord` as JSON.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6476,6 +6493,7 @@ class Game(EngineModel):
         treasure_mana_spent: int = 0,
         kicked: int = 0,
         replicated: int = 0,
+        casualty_paid: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
         cast_using_teamwork: bool = False,
@@ -6546,6 +6564,7 @@ class Game(EngineModel):
             treasure_mana_spent=0 if is_copy else treasure_mana_spent,
             kicked=kicked,
             replicated=replicated,
+            casualty_paid=casualty_paid,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
             cast_using_teamwork=cast_using_teamwork,
@@ -6609,9 +6628,21 @@ class Game(EngineModel):
         return found if found is not None else CastRecord()
 
     def forget_cast_record(self, state: StackObject) -> None:
-        """Drop every record of `state`'s card, whichever object it described."""
+        """Drop every record of `state`'s card, whichever object it described.
+
+        The record of the stack object the card last was is kept on its
+        `last_known_spell` first (CR 608.2h): a "copy that spell" trigger
+        resolving after the spell left still copies its modes, X and cost
+        decisions (CR 707.10, `copy_spell_as_last_known`)."""
         if not isinstance(state, CardState):
             return
+        last_known = state.last_known_spell
+        if last_known is not None and last_known.cast_record is None:
+            record = self.cast_records.get(last_known.stamp)
+            if record is not None:
+                state.last_known_spell = last_known.model_copy(
+                    update={"cast_record": record.model_dump(mode="json")}
+                )
         for stamp in [
             key for key, record in self.cast_records.items() if record.card_id == state.id
         ]:
@@ -6778,6 +6809,37 @@ class Game(EngineModel):
         finally:
             self.resolving = None
             self._forget_counts()
+
+    def _keep_keywords_gained_as_a_spell(self, permanent: CardState) -> None:
+        """CR 400.7a: "Effects from spells, activated abilities, and triggered
+        abilities that change the characteristics or controller of a
+        permanent spell on the stack continue to apply to the permanent that
+        spell becomes." A keyword such an effect gave the spell - Choreographed
+        Sparks' "The copy gains haste" - is carried on `granted_ability_texts`
+        (kept across this one move, `CardState.move_to`); the layer system
+        reads a permanent's abilities off the computed board (CR 613.1f), so
+        each combat keyword there is granted in layer 6 to this incarnation of
+        the permanent, indefinitely (CR 611.2a's default when no duration is
+        printed). Triggered lines need nothing here: `triggered_abilities_on`
+        already reads `granted_ability_texts`."""
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return
+        keywords = [
+            line for line in permanent.granted_ability_texts if line.lower() in _COMBAT_KEYWORDS
+        ]
+        if not keywords:
+            return
+        store = self.continuous_effects
+        for line in keywords:
+            store.add(
+                ContinuousEffect(
+                    description=f"{permanent.name}: gained {line} as a spell (CR 400.7a)",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                    modification=grant_ability(line),
+                )
+            )
 
     def create_emblem(
         self, owner: str, text: str, source_name: str, *, name: str | None = None
@@ -7233,6 +7295,7 @@ class Game(EngineModel):
                 _put_onto_the_battlefield_attacking(self, spell, sneak_defender)
             self._apply_mana_spend_effects(spell)
             self._create_resolution_delayed_triggers(spell)
+            self._keep_keywords_gained_as_a_spell(spell)
             # Deliberately *not* popped here, unlike the graveyard-bound branch
             # below. CR 608.2a rechecks a triggered ability's intervening *if*
             # again as it resolves, and an "enters, if [mana] was spent to cast
@@ -8208,6 +8271,7 @@ class Game(EngineModel):
                 casting, card, caster, "offspring", extra, taken
             ):
                 casting.pay_offspring()
+        self._announce_casualty(casting, card, caster, taken)
         if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
@@ -8270,6 +8334,51 @@ class Game(EngineModel):
                     )
                 )
                 casting.pay_blight(next(state for state in creatures if state.id == answer[0]))
+
+    def _announce_casualty(
+        self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
+    ) -> None:
+        """CR 702.153a's optional sacrifice, one `MAY` per casualty instance
+        the spell has - printed or granted (CR 702.153b: "each is paid
+        separately") - each legal only while a creature with enough power is
+        left to sacrifice, then which creature (`CHOOSE_CARDS`)."""
+        for number in casting.casualty_numbers():
+            board = self.computed_board()
+            fodder = [
+                state
+                for state in self.permanents_controlled_by(caster)
+                if board.of(state).is_creature
+                and state.id not in taken
+                and (self.power_of(state) or 0) >= number
+            ]
+            if not self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=(
+                        f"pay casualty {number} (sacrifice a creature with power {number} or "
+                        f"greater) as you cast {card.name} (CR 702.153a)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=bool(fodder),
+                )
+            ):
+                return
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=f"choose a creature to sacrifice for {card.name}'s casualty {number}",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    amount=1,
+                    cards=tuple(state.id for state in fodder),
+                )
+            )
+            chosen = next(state for state in fodder if state.id == answer[0])
+            taken.add(chosen.id)
+            casting.pay_casualty(chosen)
 
     def _announce_bargain_evidence_and_reveal(
         self, casting: Casting, card: CardState, caster: str, printed: dict
@@ -8506,8 +8615,11 @@ class Game(EngineModel):
             chosen.append(next((mode for mode in remaining if mode.text == answer), remaining[0]))
         return chosen
 
-    def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState:
-        """CR 707.10: put a copy of `spell` onto the stack.
+    def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState | None:
+        """CR 707.10: put a copy of `spell` onto the stack - or nothing, for a
+        spell that says "This spell can't be copied." (CR 113.6g,
+        `casting_restrictions.cannot_be_copied`), which is why every caller
+        is handed `None` to pass over rather than a copy.
 
         "To copy a spell ... means to put a copy of it onto the stack; a copy
         of a spell isn't cast." Unlike `cast_during_resolution`, this does not
@@ -8575,9 +8687,54 @@ class Game(EngineModel):
         A copy of a non-permanent spell (an instant or sorcery) never becomes
         a token at all, so it stays a plain `CardState`.
         """
+        return self._put_spell_copy(
+            spell,
+            controller,
+            original_record=self.cast_record(spell),
+            targets=list(spell.targets),
+            division=spell.division,
+        )
+
+    def copy_spell_as_last_known(
+        self, spell: CardState, controller: str | None = None
+    ) -> CardState | None:
+        """`copy_spell` for "copy that spell" (CR 707.10) naming a spell that
+        may have left the stack since the ability triggered: still on the
+        stack, it is copied as it is; gone, it is copied as it last existed
+        there (CR 608.2h, `CardState.last_known_spell`) - its targets,
+        division and the record of how it was cast. `None` for a spell that
+        never left the stack as a cast card (a copy ceases to exist, CR
+        707.10a) or that can't be copied (CR 113.6g)."""
+        if spell in self.stack:
+            return self.copy_spell(spell, controller)
+        last_known = spell.last_known_spell
+        if last_known is None:
+            return None
+        if last_known.cast_record is not None:
+            record = CastRecord.model_validate(last_known.cast_record)
+        else:
+            record = self.cast_record_as_last_known(last_known.stamp) or CastRecord()
+        return self._put_spell_copy(
+            spell,
+            controller,
+            original_record=record,
+            targets=list(last_known.targets),
+            division=list(last_known.division) if last_known.division is not None else None,
+        )
+
+    def _put_spell_copy(
+        self,
+        spell: CardState,
+        controller: str | None,
+        *,
+        original_record: CastRecord,
+        targets: list[TargetRef],
+        division: list[int] | None,
+    ) -> CardState | None:
+        if cannot_be_copied(spell):
+            return None
         with self._id_allocator_scope():
             controller = controller or spell.controller or self.controller_of(spell).username
-            original_record = self.cast_record(spell)
             state_type = TokenState if spell.is_permanent else CardState
             copy = state_type(
                 card=spell.card,
@@ -8586,10 +8743,10 @@ class Game(EngineModel):
                 owner=controller,
                 is_copy=True,
                 token=False,
-                targets=list(spell.targets),
+                targets=targets,
                 face_played=spell.face_played,
                 land_face_played=spell.land_face_played,
-                division=spell.division,
+                division=division,
                 # CR 722.3d: "If a prepare spell is copied, the copy is also
                 # a prepare spell" - carried onto any further copy of a
                 # CR 722.3c exile copy, so it keeps reading its inset face's
@@ -8609,6 +8766,7 @@ class Game(EngineModel):
                 x_value=original_record.x_value,
                 kicked=original_record.kicked,
                 replicated=original_record.replicated,
+                casualty_paid=original_record.casualty_paid,
                 offspring_paid=original_record.offspring_paid,
                 blight_paid=original_record.blight_paid,
                 gift_promised=original_record.gift_promised,
@@ -8657,7 +8815,12 @@ class Game(EngineModel):
             return copy
 
     def offer_new_targets_for_copy(
-        self, copy: CardState, controller: str, *, source_name: str = "", source_id: str | None
+        self,
+        copy: CardState | None,
+        controller: str,
+        *,
+        source_name: str = "",
+        source_id: str | None,
     ) -> None:
         """CR 707.10c-shaped permission: "you may choose new targets for the
         copy" (Alania, Divergent Storm being the only printing in the pool).
@@ -8684,6 +8847,9 @@ class Game(EngineModel):
         only the flat `copy.targets` moves - CR 700.2g still holds regardless
         (the modes themselves are never touched here, only their targets).
         """
+        if copy is None:
+            # `copy_spell` made no copy (CR 113.6g): nothing to retarget.
+            return
         record = self.cast_record(copy)
         owners: list[int] | None = None
         if record.modes:
@@ -8785,6 +8951,8 @@ class Game(EngineModel):
             if requirement.rejects(target, controller, self, spell.id) is not None:
                 return None
         copy = self.copy_spell(spell, controller=controller)
+        if copy is None:
+            return None
         ref = TargetRef.coerce(target)
         copy.targets = [ref for _ in profile.requirements]
         record = self.cast_record(copy)
@@ -13933,36 +14101,63 @@ class Game(EngineModel):
         waits in `pending_triggers` for the next time a player would receive
         priority (CR 603.3) - a draw in the middle of a resolving spell puts it
         on the stack only once that spell has finished.
+
+        Each miracle *instance* the card has as it is drawn is its own static
+        ability linked to its own trigger (CR 607.2h): the printed one, and
+        any a permanent grants the card in hand ("Each instant and sorcery
+        card in your hand has miracle {2}.", `machines/spell_grants.py`),
+        which has to be in force as the card is drawn - this moment. They are
+        offered in that order; revealing through one triggers only its own
+        linked ability, so the cast is at that instance's cost.
         """
-        if card.zone is not Zone.HAND or not has_miracle(card.card):
+        if card.zone is not Zone.HAND:
             return
-        revealed = self.ask(
-            Decision(
-                kind=DecisionKind.MAY,
-                player=player.username,
-                prompt=(
-                    f"reveal {card.name} as you draw it, the first card you've drawn this "
-                    f"turn, for its miracle ability (CR 702.94a)"
-                ),
-                source=card.name,
-                source_id=source_id_of(card),
-                card=card.id,
-                cards=(card.id,),
-                default_may=False,
+        instances = [
+            ability
+            for ability in keyword_triggered_abilities(card.card)
+            if (ability.keyword or "").lower() == "miracle"
+        ] + [
+            ability
+            for ability in granted_keyword_triggered_abilities(
+                granted_hand_keyword_lines(self, card)
             )
-        )
-        if not revealed:
+            if (ability.keyword or "").lower() == "miracle"
+        ]
+        for instance in instances:
+            revealed = self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt=(
+                        f"reveal {card.name} as you draw it, the first card you've drawn this "
+                        f"turn, for its {instance.raw.split('(')[0].strip()} ability "
+                        "(CR 702.94a)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    card=card.id,
+                    cards=(card.id,),
+                    default_may=False,
+                )
+            )
+            if not revealed:
+                continue
+            self.reveal(card, source=card.name)
+            event = GameEvent(
+                event=ExtraTriggerEvent.REVEALED_FOR_MIRACLE,
+                subject_id=card.id,
+                subject_name=card.name,
+                subject_controller=player.username,
+                subject_card=card.card,
+                player=player.username,
+            )
+            self.pending_triggers.extend(
+                triggered
+                for triggered in triggers_for(self, event, [card])
+                if triggered.ability.raw == instance.raw
+                and triggered.ability.effect == instance.effect
+            )
             return
-        self.reveal(card, source=card.name)
-        event = GameEvent(
-            event=ExtraTriggerEvent.REVEALED_FOR_MIRACLE,
-            subject_id=card.id,
-            subject_name=card.name,
-            subject_controller=player.username,
-            subject_card=card.card,
-            player=player.username,
-        )
-        self.pending_triggers.extend(triggers_for(self, event, [card]))
 
     def revealed_for_miracle(self, card_state: CardState) -> bool:
         """Whether `card_state` is being played revealed under CR 702.94b:
@@ -19448,30 +19643,6 @@ class Game(EngineModel):
             )
 
         for source_name, grant in static_free_cast_grants(self, caster):
-            unavailable = None
-            if origin_zone is not grant.zone:
-                unavailable = (
-                    f"{source_name} only applies to spells cast from your "
-                    f"{grant.zone.value} (CR 118.9)"
-                )
-            elif grant.type_word and not spell_has_type_word(card.card, grant.type_word):
-                unavailable = (
-                    f"{source_name} only applies to {grant.type_word} spells, and "
-                    f"{card.name} is not one"
-                )
-            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
-                cap = mana_value_cap_for(grant, self, caster)
-                if cap is None:
-                    unavailable = (
-                        f"{source_name}'s mana value cap "
-                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
-                        "(CR 118.9)"
-                    )
-                elif card.mana_value > cap:
-                    unavailable = (
-                        f"{source_name} only applies to spells with mana value {cap} or "
-                        f"less, and {card.name} is {card.mana_value}"
-                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -19480,7 +19651,10 @@ class Game(EngineModel):
                     source_name=source_name,
                     description="nothing",
                     cost=None,
-                    unavailable=unavailable,
+                    unavailable=static_free_cast_refusal(
+                        self, caster, card, origin_zone, source_name, grant
+                    ),
+                    once_per_turn_key=grant.once_per_turn_key,
                 )
             )
         return options
@@ -19624,6 +19798,7 @@ class Game(EngineModel):
         bargain: CardState | None = None,
         collect_evidence: bool = False,
         reveal_for_cost: CardState | None = None,
+        casualty: Sequence[CardState] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -19695,6 +19870,8 @@ class Game(EngineModel):
         702.166a's bargain; `collect_evidence` pays a printed "you may collect
         evidence N" (CR 701.59a); `reveal_for_cost` is the card revealed for a
         printed "you may reveal a <quality> card from your hand".
+        `casualty` is the creature sacrificed for each casualty instance paid
+        (CR 702.153a/b), in order - printed instances first, then granted.
         They join `offspring`, `blight` and `gift` as this method's whole
         CR 601.2b announcement; `machines/casting.optional_additional_costs`
         is what tells a caller which of them a given card actually prints,
@@ -19736,6 +19913,10 @@ class Game(EngineModel):
                 casting.use_permission()
             if modes:
                 casting.choose_modes(modes, x_value=x_value)
+            # CR 601.2b: casualty's sacrifice is announced with the modes,
+            # before CR 601.2c's targets.
+            for creature in casualty or ():
+                casting.pay_casualty(creature)
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
@@ -20094,25 +20275,24 @@ class Game(EngineModel):
         if affinity is not None:
             amount += self._affinity_count(affinity.group("what").lower(), owner)
 
-        target_match = _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE.search(text)
+        colored_reduction = ManaCost()
+        target_match = _COSTS_LESS_IF_TARGETS_SPELL_RE.search(text)
         if target_match is not None and targets:
-            color = _COLOR_WORDS[target_match.group("color").lower()]
-            for ref in targets:
-                if ref.is_player:
-                    continue
-                target = self.find_by_id(ref.card_id)
-                # CR 109.2b: "spell" means an object on the stack - a target
-                # that has already left the stack (countered, or already
-                # resolved by the time this is asked) is not a spell any
-                # more and cannot satisfy "if it targets a ... spell".
-                if target is None or target.zone is not Zone.STACK:
-                    continue
-                if color in target.colors:
-                    amount += int(target_match.group(1))
-                    break
+            reduction = self._target_spell_reduction(target_match, targets)
+            if reduction is not None:
+                amount += reduction.generic
+                colored_reduction = ManaCost(
+                    symbols=tuple(
+                        symbol
+                        for symbol in reduction.symbols
+                        if symbol.kind is not SymbolKind.GENERIC
+                    )
+                )
 
         condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
-        if condition_match is not None:
+        # Out of Air's "if it targets a creature spell" is the target shape
+        # above, not an open board condition - read once, never twice.
+        if condition_match is not None and target_match is None:
             held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
             if held:
                 amount += int(condition_match.group("amount"))
@@ -20137,7 +20317,32 @@ class Game(EngineModel):
                 and (keyword is None or has_keyword(state, keyword, self))
             )
 
-        return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+        generic = ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+        return generic.plus(colored_reduction) if colored_reduction.symbols else generic
+
+    def _target_spell_reduction(
+        self, match: re.Match[str], targets: Sequence[TargetRef]
+    ) -> ManaCost | None:
+        """`_COSTS_LESS_IF_TARGETS_SPELL_RE`'s reduction when one of
+        `targets` is a spell of its quality, or None. CR 109.2b: "spell"
+        means an object on the stack - a target that has already left the
+        stack (countered, or resolved by the time this is asked) is not a
+        spell any more and cannot satisfy "if it targets a ... spell"."""
+        from ..machines.next_spell import spell_has_quality, spell_quality_is_readable
+
+        reduction = ManaCost.try_parse(match.group("amount"))
+        quality = re.sub(r"\s+and\s+", " or ", match.group("quality").strip().lower())
+        if reduction is None or not spell_quality_is_readable(quality):
+            return None
+        for ref in targets:
+            if ref.is_player:
+                continue
+            target = self.find_by_id(ref.card_id)
+            if target is None or target.zone is not Zone.STACK:
+                continue
+            if spell_has_quality(target, quality):
+                return reduction
+        return None
 
     def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
         """The basic land types (CR 305.6) among lands this player controls -

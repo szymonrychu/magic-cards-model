@@ -4648,6 +4648,33 @@ class StaticFreeCastGrant(EngineModel):
     is a live board read at CR 601.2f, not a fact fixed when the permanent
     entered, so nothing here may cache a number. `mana_value_cap_for` counts
     it against the board when the grant is actually checked."""
+    once_each_of_your_turns: bool = False
+    """"Once during each of your turns, you may cast ..." (Zaffai and the
+    Tempests, One with the Multiverse): one use per turn of the granting
+    permanent, only while its controller is the active player."""
+    also_top_of_library: bool = False
+    """"from your hand or the top of your library" (One with the
+    Multiverse) - the top card of the library is a second zone the grant
+    reaches."""
+    once_per_turn_key: str | None = None
+    """The granting permanent as that object (`machines/casting.
+    once_per_turn_key`, CR 400.7), filled in by `machines/casting.
+    static_free_cast_grants` for a once-each-turn grant - what records the
+    one use in `Game.once_per_turn_cast_permissions_used`."""
+
+
+#: Zaffai and the Tempests: "Once during each of your turns, you may cast an
+#: instant or sorcery spell from your hand without paying its mana cost." One
+#: with the Multiverse: "Once during each of your turns, you may cast a spell
+#: from your hand or the top of your library without paying its mana cost."
+#: CR 118.9's alternative cost again, applied from another effect, limited to
+#: one use per turn of the permanent printing it.
+_ONCE_EACH_TURN_FREE_CAST = re.compile(
+    r"^Once during each of your turns, you may cast an? (?P<what>[\w' -]*?spell)"
+    r" from your (?P<zone>hand)(?P<library> or the top of your library)?"
+    r" without paying its mana cost\.?$",
+    re.IGNORECASE,
+)
 
 
 def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
@@ -4656,6 +4683,15 @@ def static_free_cast_grant(text: str) -> StaticFreeCastGrant | None:
     Fails closed: a line this cannot read returns None rather than a guess, so
     a spell is never quietly made free by text nobody parsed.
     """
+    once = _ONCE_EACH_TURN_FREE_CAST.match(text.strip())
+    if once is not None:
+        qualifier = re.sub(r"spells?$", "", once.group("what").strip().lower()).strip()
+        return StaticFreeCastGrant(
+            zone=_ZONE_WORDS[once.group("zone").lower()],
+            type_word=qualifier or None,
+            once_each_of_your_turns=True,
+            also_top_of_library=once.group("library") is not None,
+        )
     match = _STATIC_FREE_CAST.match(text.strip())
     if match is None:
         return None

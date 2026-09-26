@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "ff2665f7-6cf8-4f9b-810e-17e264753225",
+  "oracle_id": "849a7ae8-2b4e-4fa5-9607-2bfc961fee40",
+  "multiverse_ids": [
+    555286
+  ],
+  "mtgo_id": 98389,
+  "arena_id": 80236,
+  "tcgplayer_id": 268503,
+  "cardmarket_id": 651634,
+  "name": "Join the Maestros",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/ff2665f7-6cf8-4f9b-810e-17e264753225",
+  "scryfall_uri": "https://scryfall.com/card/snc/85/join-the-maestros?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:12:09Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.jpg?1783923129",
+    "normal": "https://cards.scryfall.io/normal/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.jpg?1783923129",
+    "large": "https://cards.scryfall.io/large/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.jpg?1783923129",
+    "png": "https://cards.scryfall.io/png/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.png?1783923129",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.jpg?1783923129",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.jpg?1783923129",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.webp?1783923129",
+    "grid": "https://cards.scryfall.io/grid/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.webp?1783923129",
+    "display": "https://cards.scryfall.io/display/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.webp?1783923129",
+    "art": "https://cards.scryfall.io/art/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.webp?1783923129",
+    "crop": "https://cards.scryfall.io/crop/front/f/f/ff2665f7-6cf8-4f9b-810e-17e264753225.webp?1783923129"
+  },
+  "mana_cost": "{4}{B}",
+  "cmc": 5.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Casualty 2 (As you cast this spell, you may sacrifice a creature with power 2 or greater. When you do, copy this spell.)\nCreate a 4/3 black Ogre Warrior creature token.",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Casualty"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "3ca43425-d007-4181-9182-18dc01ad7e90",
+      "component": "token",
+      "name": "Ogre Warrior",
+      "type_line": "Token Creature \u2014 Ogre Warrior",
+      "uri": "https://api.scryfall.com/cards/3ca43425-d007-4181-9182-18dc01ad7e90"
+    },
+    {
+      "object": "related_card",
+      "id": "ff2665f7-6cf8-4f9b-810e-17e264753225",
+      "component": "combo_piece",
+      "name": "Join the Maestros",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/ff2665f7-6cf8-4f9b-810e-17e264753225"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "df837242-8c15-42e4-b049-c933a02dc501",
+  "set": "snc",
+  "set_name": "Streets of New Capenna",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/df837242-8c15-42e4-b049-c933a02dc501",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asnc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/snc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ff2665f7-6cf8-4f9b-810e-17e264753225/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A849a7ae8-2b4e-4fa5-9607-2bfc961fee40&unique=prints",
+  "collector_number": "85",
+  "digital": false,
+  "rarity": "common",
+  "watermark": "maestros",
+  "flavor_text": "\"We're family now, big guy.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Josh Hass",
+  "artist_ids": [
+    "8fa1fdf0-96d6-46f4-a7ff-b1c0257c3735"
+  ],
+  "illustration_id": "576bf442-c057-4cec-9e9a-03ff769e4eb4",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 26144,
+  "preview": {
+    "source": "MTGNerdGirl",
+    "source_uri": "https://twitter.com/MTGNerdGirl/status/1512581056142233602",
+    "previewed_at": "2022-04-08"
+  },
+  "prices": {
+    "usd": "0.04",
+    "usd_foil": "0.22",
+    "usd_etched": null,
+    "eur": "0.02",
+    "eur_foil": "0.08",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555286&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DJoin%2Bthe%2BMaestros",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DJoin%2Bthe%2BMaestros",
+    "edhrec": "https://edhrec.com/route/?cc=Join+the+Maestros"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F268503%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=651634&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/98389?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
