@@ -9776,6 +9776,14 @@ _PLAYER_GROUP_SUBJECT_AND_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "You and target opponent each ..." (Secret Rendezvous, Farsight Adept) -
+#: `_PLAYER_GROUP_SUBJECT_AND_RE`'s compound subject with a targeted player as
+#: the second half, read whole by `_parse_you_and_target_player_each_clause`.
+_YOU_AND_TARGET_PLAYER_SUBJECT_AND_RE = re.compile(
+    r"(?:\A|(?<=\.\s)|(?<=\n)|(?<=,\s))you and (?=target (?:player|opponent) each\b)",
+    re.IGNORECASE,
+)
+
 #: CR 702.11f: "'Hexproof from [quality A] and from [quality B]' is
 #: shorthand for 'hexproof from [quality A]' and 'hexproof from [quality
 #: B]'; it behaves as two separate hexproof abilities" - one clause, not two
@@ -9857,6 +9865,11 @@ def split_effect_clauses(text: str) -> list[str]:
     # Same replace-in-place idiom as `_EXCLUSION_LIST_AND_RE` above, so the
     # restore below (a plain "and" -> " and " swap) round-trips it exactly.
     masked = _PLAYER_GROUP_SUBJECT_AND_RE.sub(
+        lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
+    # "You and target opponent each draw three cards." - the same compound
+    # subject, with a targeted player in place of the group.
+    masked = _YOU_AND_TARGET_PLAYER_SUBJECT_AND_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
     # "hexproof from blue and from black" (CR 702.11f/702.16g) - one clause,
@@ -16592,7 +16605,7 @@ _GAIN_LIFE_EQUAL_TO_DAMAGE_PREVENTED_RE = re.compile(
 _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
     r"^(?:target (?:[a-z]+ )?creature"
     r"(?: and all other creatures with the same name as that creature)?"
-    rf"|(?:(?:up to )?{AMOUNT}|any number of) target (?:[a-z]+ )?creatures(?: each)?)"
+    rf"|(?:(?:up to |one or )?{AMOUNT}|any number of) target (?:[a-z]+ )?creatures(?: each)?)"
     r" (?:gets? [+-]\d+/[+-]\d+|gains? [a-z ]+) until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -16607,7 +16620,7 @@ _CONTINUOUS_PUMP_OR_KEYWORD_RE = re.compile(
 #: identical way, with the plural verb "get" (not "gets") and the "each"
 #: landing inside this first clause rather than after it.
 _BARE_CONTINUOUS_PUMP_RE = re.compile(
-    r"^(?:target creature gets|(?:(?:up to )?"
+    r"^(?:target creature gets|(?:(?:up to |one or )?"
     + AMOUNT
     + r"|any number of) target creatures(?: you control)? each gets?) [+-]\d+/[+-]\d+$",
     re.IGNORECASE,
@@ -17485,6 +17498,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return become_prepared_ability_targets  # type: ignore[return-value]
 
+    becomes_unprepared = _parse_becomes_unprepared_target_clause(clause)
+    if becomes_unprepared is not None:
+        return becomes_unprepared
+
     if match := _EXILE_TARGET_PLAYERS_GRAVEYARD_RE.fullmatch(clause):
         # Ahead of `_EXILE_TARGET_RE`: that pattern's phrase is a superset of
         # this one's and would otherwise commit first, read the player target
@@ -17541,6 +17558,10 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         ):
             return None
         return return_ability_targets_to_hand
+
+    put_onto_battlefield = _parse_put_from_graveyard_onto_battlefield_clause(clause)
+    if put_onto_battlefield is not None:
+        return put_onto_battlefield
 
     if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_BATTLEFIELD_WITH_COUNTER_RE.fullmatch(clause):
         if not _targets_understood(
@@ -48090,6 +48111,291 @@ def _parse_turn_rules_ban_clause(clause: str, *, for_spell: bool) -> TargetedCla
     return effect
 
 
+# --------------------------------------------------------------------------
+# Secrets of Strixhaven prepare faces and their triggers (CR 722)
+# --------------------------------------------------------------------------
+#
+# Each reader here targets a template, never a card: the prepare faces that
+# exposed them (Reanimate, Secret Rendezvous, Echocasting Symposium's own
+# paradigm body, Emeritus of Truce's and Emeritus of Ideation's triggers)
+# are only the first printings of each shape - see
+# `tests/scenarios/test_prepare_spell_faces.py`,
+# `test_becomes_prepared_triggers.py` and `test_paradigm_token_copy.py` for
+# the second printing each one is proven on.
+
+#: "Put target `<card>` from a graveyard onto the battlefield under your
+#: control." (Reanimate, Beacon of Unrest, Vat Emergence) - and its "return
+#: ... to the battlefield under your control" twin. CR 110.2a: "If an effect
+#: instructs a player to put an object onto the battlefield, that object
+#: enters the battlefield under that player's control unless the effect
+#: states otherwise" - "under your control" states exactly that default, so
+#: this is `return_ability_targets_to_battlefield`'s own executor, read off a
+#: phrase that may name *any* graveyard (`machines/targeting.py` already
+#: reads "from a graveyard" as a graveyard-zone target with no owner filter).
+_PUT_FROM_GRAVEYARD_ONTO_BATTLEFIELD_RE = re.compile(
+    r"^(?:put (?P<phrase>(?:up to \w+ )?target .+? from (?:a|your|an opponent'?s) graveyard) "
+    r"onto the battlefield(?: under your control)?"
+    r"|return (?P<return_phrase>(?:up to \w+ )?target .+? from (?:a|an opponent'?s) graveyard) "
+    r"to the battlefield under your control)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_from_graveyard_onto_battlefield_clause(clause: str) -> TargetedClause | None:
+    """`_PUT_FROM_GRAVEYARD_ONTO_BATTLEFIELD_RE`'s shape, or `None`."""
+    match = _PUT_FROM_GRAVEYARD_ONTO_BATTLEFIELD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase") or match.group("return_phrase")
+    if not _targets_understood(phrase, count_agnostic=True, battlefield_only=False):
+        return None
+    return return_ability_targets_to_battlefield
+
+
+#: "You lose/gain life equal to that card's/its mana value." read right after
+#: a clause that targets a card - Reanimate's own second sentence, Divine
+#: Offering's and Terashi's Grasp's "You gain life equal to its mana value."
+#: The anaphor is CR 608.2c's read-back to the object the previous
+#: instruction targeted; CR 608.2b's own "If part of the effect requires
+#: information about an illegal target, it fails to determine any such
+#: information" is why only a target still legal as the spell resolves is
+#: counted. The value is read before the first clause moves the card, the
+#: same mana value it has wherever it lands (CR 202.3).
+_LIFE_EQUAL_TO_TARGET_MANA_VALUE_RE = re.compile(
+    r"^you (?P<verb>lose|gain) life equal to "
+    r"(?:its|that (?:card|creature|artifact|enchantment|permanent)['’]s) mana value\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_target_then_life_equal_to_its_mana_value_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """A targeted clause, then `_LIFE_EQUAL_TO_TARGET_MANA_VALUE_RE` - read
+    as one CR 608.2c pair so the second sentence knows which card "that card"
+    is. `None` unless the first clause names a target and reads on its own.
+    """
+    if index + 1 >= len(clauses):
+        return None
+    first = clauses[index].strip()
+    if "target" not in first.lower():
+        return None
+    rider = _LIFE_EQUAL_TO_TARGET_MANA_VALUE_RE.fullmatch(clauses[index + 1].strip())
+    if rider is None:
+        return None
+    head = _parse_mixed_clause(first, for_spell=for_spell)
+    if head is None:
+        return None
+    loses = rider.group("verb").lower() == "lose"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        amount = sum(int(card.mana_value) for card in game.resolve_card_targets(stack_object))
+        head(game, stack_object)
+        game.announce_batched_events()
+        controller = game.controller_of(stack_object)
+        if loses:
+            game.lose_life(controller, amount)
+        else:
+            game.gain_life(controller, amount)
+
+    return 2, effect
+
+
+#: CR 722.3b's targeted twin of `_BECOMES_PREPARED_TARGET_RE`: "Target
+#: creature becomes unprepared." (Biblioplex Tomekeeper's second mode).
+#: `Game.become_unprepared` is already a no-op on a permanent that was never
+#: prepared, so no filter is needed here.
+_BECOMES_UNPREPARED_TARGET_RE = re.compile(
+    r"^(?P<phrase>target .+?) becomes unprepared\.?$", re.IGNORECASE
+)
+
+
+def _parse_becomes_unprepared_target_clause(clause: str) -> TargetedClause | None:
+    """`_BECOMES_UNPREPARED_TARGET_RE`'s shape, or `None`."""
+    match = _BECOMES_UNPREPARED_TARGET_RE.fullmatch(clause.strip())
+    if match is None or not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_card_targets(stack_object):
+            if target.zone is Zone.BATTLEFIELD:
+                game.become_unprepared(target)
+
+    return effect
+
+
+#: "You and target opponent each draw three cards." (Secret Rendezvous) and
+#: "you and target opponent each draw a card." (Farsight Adept, Sky Crier,
+#: Loran of the Third Path) - a compound subject (CR 608.2c), one instruction
+#: carried out by each named player. The predicate is read by the ordinary
+#: player-clause reader, once per player; CR 101.4 orders only *choices*, and
+#: a draw has none, so the controller simply goes first.
+_YOU_AND_TARGET_PLAYER_EACH_RE = re.compile(
+    r"^you and (?P<phrase>target (?:player|opponent)) each (?P<predicate>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_you_and_target_player_each_clause(clause: str) -> TargetedClause | None:
+    """`_YOU_AND_TARGET_PLAYER_EACH_RE`'s shape, or `None`."""
+    match = _YOU_AND_TARGET_PLAYER_EACH_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        return None
+    predicate = parse_clause_effect(match.group("predicate").strip())
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        players = [game.controller_of(stack_object)]
+        players.extend(
+            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
+        )
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        for player in players:
+            predicate(game, player, source, source_id_of(stack_object))
+
+    return effect
+
+
+#: "Target player creates a token that's a copy of target creature you
+#: control." (Echocasting Symposium) - CR 111.2: the player the instruction
+#: names creates the token, so that player owns and controls it; CR 707.2:
+#: it copies the targeted creature's copiable values, through the same
+#: `token_copy_of` (and CR 707.9 "except" reader) "create a token that's a
+#: copy of ..." already uses.
+_TARGET_PLAYER_CREATES_TOKEN_COPY_RE = re.compile(
+    rf"^(?P<player>target (?:player|opponent)) creates? {count_pattern('count')} tokens? "
+    r"that(?: are copies|['’]s a copy| is a copy) of "
+    r"(?P<phrase>(?:another )?target .+?)"
+    r"(?:, except (?P<except>.+))?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_target_player_creates_token_copy_clause(clause: str) -> TargetedClause | None:
+    """`_TARGET_PLAYER_CREATES_TOKEN_COPY_RE`'s shape, or `None`."""
+    match = _TARGET_PLAYER_CREATES_TOKEN_COPY_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("player"), allow_player_targets=True):
+        return None
+    if not _targets_understood(match.group("phrase")):
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+    exception = _read_token_copy_except(match.group("except"))
+    if exception is None:
+        return None
+    added, power, toughness, added_type = exception
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = game.resolve_targets(stack_object)
+        creators = [target for target in targets if isinstance(target, Player)]
+        originals = [target for target in targets if isinstance(target, CardState)]
+        for creator in creators:
+            for original in originals:
+                token_copy_of(
+                    game,
+                    original,
+                    creator.username,
+                    count=count,
+                    added_abilities=added,
+                    power=power,
+                    toughness=toughness,
+                    added_creature_type=added_type,
+                )
+
+    return effect
+
+
+def _parse_target_player_creates_clause(clause: str) -> TargetedClause | None:
+    """ "Target player/opponent creates `<token>`" as one clause of a longer
+    effect - Emeritus of Truce's "target player creates a 1/1 white and black
+    Inkling creature token with flying. Then if an opponent controls more
+    creatures than you, this creature becomes prepared." The token phrase is
+    `_parse_target_player_creates_token`'s own (CR 111.2), and a copy is
+    `_parse_target_player_creates_token_copy_clause`'s; this only lets
+    either sit beside other clauses instead of being the whole text."""
+    copy = _parse_target_player_creates_token_copy_clause(clause)
+    if copy is not None:
+        return copy
+    return _parse_target_player_creates_token(clause)  # type: ignore[return-value]
+
+
+#: "You may exile `<n>` [`<quality>`] cards from your graveyard. If you do,
+#: `<consequence>`." (Emeritus of Ideation's attack trigger, Aegis
+#: Sculptor's upkeep trigger). CR 118.12: the exile is a cost paid as the
+#: ability resolves, and "if you do" checks whether it was paid; CR 118.3:
+#: "A player can't pay a cost without having the necessary resources to pay
+#: it fully" - so with fewer than `<n>` such cards the question is never
+#: asked and nothing is exiled. The consequence may name the ability's own
+#: source ("this creature becomes prepared", "put a +1/+1 counter on this
+#: creature"), so it is read by `_parse_mixed_clause` when the player-clause
+#: reader cannot read it.
+_MAY_EXILE_FROM_GRAVEYARD_COST_RE = re.compile(
+    rf"^you may exile (?P<n>{COUNT}) (?:(?P<quality>[a-z]+) )?cards? from your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_may_exile_from_graveyard_if_you_do_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_MAY_EXILE_FROM_GRAVEYARD_COST_RE`, then "If you do, `<clause>`"."""
+    if index + 1 >= len(clauses):
+        return None
+    cost = _MAY_EXILE_FROM_GRAVEYARD_COST_RE.fullmatch(clauses[index].strip())
+    if cost is None:
+        return None
+    if_match = _IF_YOU_DO_RE.fullmatch(clauses[index + 1].strip())
+    if if_match is None:
+        return None
+    count = parse_count(cost.group("n"))
+    if count is None or count < 1:
+        return None
+    quality = cost.group("quality")
+    predicate: Callable[[CardState], bool] | None = None
+    if quality is not None:
+        predicate = _nonland_or_typed_card_matcher(quality) or _quality_matcher(quality)
+        if predicate is None:
+            return None
+    consequence_text = if_match.group("consequence").strip().rstrip(".")
+    player_consequence = parse_clause_effect(consequence_text)
+    object_consequence = (
+        _parse_mixed_clause(consequence_text, for_spell=for_spell)
+        if player_consequence is None
+        else None
+    )
+    if player_consequence is None and object_consequence is None:
+        return None
+    prompt = cost.group(0).strip().rstrip(".")[len("you may ") :]
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        source_id = source_id_of(stack_object)
+        pool = [card for card in player.graveyard if predicate is None or predicate(card)]
+        if len(pool) < count:
+            return  # CR 118.3: the cost can't be paid, so it wasn't.
+        if not game.may(player, prompt, source=source, source_id=source_id):
+            return
+        _exile_cards_from_graveyard(
+            game, player, count, source, source_id=source_id, predicate=predicate
+        )
+        game.announce_batched_events()
+        if player_consequence is not None:
+            player_consequence(game, player, source, source_id)
+        elif object_consequence is not None:
+            object_consequence(game, stack_object)
+
+    return 2, effect
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -48184,6 +48490,12 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     you_and_group_gain = _parse_you_and_group_gain_clause(clause, for_spell=for_spell)
     if you_and_group_gain is not None:
         return you_and_group_gain
+    you_and_target_player_each = _parse_you_and_target_player_each_clause(clause)
+    if you_and_target_player_each is not None:
+        return you_and_target_player_each
+    target_player_creates = _parse_target_player_creates_clause(clause)
+    if target_player_creates is not None:
+        return target_player_creates
     named_token = _parse_named_token_clause(clause, for_spell=for_spell)
     if named_token is not None:
         return named_token
@@ -49657,6 +49969,22 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_return_self_then_if_you_do_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_may_exile_from_graveyard_if_you_do_clauses(
+            clauses, index, for_spell=for_spell
+        )
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_target_then_life_equal_to_its_mana_value_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)

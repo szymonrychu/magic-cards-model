@@ -2968,7 +2968,18 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             effects = [
                 effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
             ]
-            categories = [_dispatch_category(effect, printing) for effect in effects]
+            # A prepare spell (CR 722.3c: the copy that is cast "has only the
+            # characteristics of that permanent's prepare spell") is judged by
+            # its own face text - `_layer_category`'s fallback reads the
+            # printing's *front* face, which for a prepare card is the
+            # creature, never the inset spell `create_continuous_effect`
+            # actually reads at resolution (Venomous Words' own pump).
+            face_text = (
+                face.text
+                if prepare_spell_face_name is not None and face.name == prepare_spell_face_name
+                else None
+            )
+            categories = [_dispatch_category(effect, printing, face_text) for effect in effects]
             category = _best(categories)
             # The quoted-text closure only asks about the one dispatch `_best`
             # could have picked from unambiguously - a face carrying both CR

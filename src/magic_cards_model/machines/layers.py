@@ -3530,7 +3530,7 @@ _SUBJECT = (
 #: ("get", "each get", "gain"). CR 601.2c/603.3d already fixed how many and
 #: which were targeted; the builders below apply to every resolved target.
 _PLURAL_TARGET_SUBJECT = (
-    rf"(?:(?:up to )?(?:\d+|{COUNT})|any number of) target{_QUALIFIER} creatures"
+    rf"(?:(?:up to |one or )?(?:\d+|{COUNT})|any number of) target{_QUALIFIER} creatures"
 )
 _PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
 
