@@ -22560,9 +22560,31 @@ class Game(EngineModel):
         rather than quietly reducing by nothing - the same "unreadable is not
         the same as no effect" rule `static_cost_modifiers_for` already keeps
         for a permanent's *other* static cost text (DDR#978).
+
+        `reduction.self_counter_kind` (SOS's Diary of Dreams: "... for each
+        page counter on this artifact.") is a different sentence shape
+        entirely - a count on the ability's own source rather than a quality
+        among permanents its controller controls - answered directly off
+        `permanent.counter_count` (CR 122.1 leaves the counter kind open, the
+        same read every other counter-kind check in this codebase already
+        takes) before this reaches the "quality" reading below at all.
+        `reduction.target_quality` (Dragonfire Blade's, Warrior's Blades' own
+        equip-cost shape) is `machines/keywords.py`'s own equip-activation
+        path to read, never this one - equip costs are priced through
+        `unannounced_equip_activation`, not `Game.activation_cost`, so this
+        function is never actually asked about a `target_quality` reduction
+        in practice; it answers no reduction rather than crashing on the
+        `quality`-only reading below if that invariant is ever broken.
         """
         reduction = ability.cost_reduction
         if reduction is None:
+            return ManaCost()
+
+        if reduction.self_counter_kind is not None:
+            amount = reduction.amount * permanent.counter_count(reduction.self_counter_kind)
+            return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+
+        if reduction.quality is None:
             return ManaCost()
 
         words = reduction.quality.strip().lower().split()
