@@ -1,0 +1,146 @@
+{
+  "object": "card",
+  "id": "71a6701f-40f1-43ef-bff5-a5907fd67cd6",
+  "oracle_id": "61a41cf1-60cc-45ba-aa98-493c14e87d9d",
+  "multiverse_ids": [],
+  "resource_id": "8EF621B7D58B0E2B128C966B38F68D71A56316FEC80DF02CA69CC465721630B8",
+  "mtgo_id": 149901,
+  "arena_id": 102660,
+  "tcgplayer_id": 675584,
+  "cardmarket_id": 880343,
+  "name": "Lorehold, the Historian",
+  "lang": "en",
+  "released_at": "2026-04-24",
+  "uri": "https://api.scryfall.com/cards/71a6701f-40f1-43ef-bff5-a5907fd67cd6",
+  "scryfall_uri": "https://scryfall.com/card/sos/201/lorehold-the-historian?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:47:20Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.jpg?1783903640",
+    "normal": "https://cards.scryfall.io/normal/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.jpg?1783903640",
+    "large": "https://cards.scryfall.io/large/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.jpg?1783903640",
+    "png": "https://cards.scryfall.io/png/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.png?1783903640",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.jpg?1783903640",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.jpg?1783903640",
+    "thumb": "https://cards.scryfall.io/thumb/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.webp?1783903640",
+    "grid": "https://cards.scryfall.io/grid/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.webp?1783903640",
+    "display": "https://cards.scryfall.io/display/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.webp?1783903640",
+    "art": "https://cards.scryfall.io/art/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.webp?1783903640",
+    "crop": "https://cards.scryfall.io/crop/front/7/1/71a6701f-40f1-43ef-bff5-a5907fd67cd6.webp?1783903640"
+  },
+  "mana_cost": "{3}{R}{W}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Elder Dragon",
+  "oracle_text": "Flying, haste\nEach instant and sorcery card in your hand has miracle {2}. (You may cast a card for its miracle cost when you draw it if it's the first card you drew this turn.)\nAt the beginning of each opponent's upkeep, you may discard a card. If you do, draw a card.",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "R",
+    "W"
+  ],
+  "color_identity": [
+    "R",
+    "W"
+  ],
+  "keywords": [
+    "Flying",
+    "Haste"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set": "sos",
+  "set_name": "Secrets of Strixhaven",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e487c9ce-5e76-4756-bcd0-e4b7db5c38a3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asos&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/sos?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/71a6701f-40f1-43ef-bff5-a5907fd67cd6/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A61a41cf1-60cc-45ba-aa98-493c14e87d9d&unique=prints",
+  "collector_number": "201",
+  "digital": false,
+  "rarity": "mythic",
+  "watermark": "lorehold",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Joshua Raphael",
+  "artist_ids": [
+    "553b2a73-780f-414b-b2d7-3b7888821082"
+  ],
+  "illustration_id": "3e1e3c23-465a-402e-b83c-b5ba58a20b3a",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 7609,
+  "preview": {
+    "source": "GameSpot",
+    "source_uri": "https://www.gamespot.com/gallery/magic-the-gathering-is-bringing-back-the-mystical-archives-and-going-hard-on-marvel-super-heroes/2900-7428/#4",
+    "previewed_at": "2026-01-27"
+  },
+  "prices": {
+    "usd": "1.31",
+    "usd_foil": "1.90",
+    "usd_etched": null,
+    "eur": "1.72",
+    "eur_foil": "2.25",
+    "tix": "0.13"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DLorehold%252C%2Bthe%2BHistorian",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DLorehold%252C%2Bthe%2BHistorian",
+    "edhrec": "https://edhrec.com/route/?cc=Lorehold%2C+the+Historian"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F675584%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=880343&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/149901?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

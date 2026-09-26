@@ -76,11 +76,13 @@ from .keywords import (
     FACE_DOWN_CAST_COST,
     enchant_restrictions,
     face_down_characteristics,
+    printed_casualty_numbers,
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
 from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .objects_as_costs import power_of
+from .spell_grants import casualty_numbers, granted_affinity_reductions
 from .targeting import (
     TargetingProfile,
     kicked_instead_target_text,
@@ -2083,7 +2085,17 @@ _COST_INCREASE_PER_TARGET_RE = re.compile(
 #: Keywords that are an optional additional cost on a spell being cast
 #: (CR 118.8a). `Casting.pay_kicker` charges these.
 ADDITIONAL_COST_KEYWORDS = frozenset(
-    {"kicker", "multikicker", "replicate", "offspring", "blight", "gift", "teamwork", "bargain"}
+    {
+        "kicker",
+        "multikicker",
+        "replicate",
+        "offspring",
+        "blight",
+        "gift",
+        "teamwork",
+        "bargain",
+        "casualty",
+    }
 )
 
 #: CR 702.166a: "'Bargain' means 'As an additional cost to cast this spell,
@@ -2184,6 +2196,20 @@ class OptionalAdditionalCost(EngineModel):
 PAY_LIFE_KEYWORD = "pay life"
 
 
+def casualty_cost_phrase(number: int) -> str:
+    """CR 702.153a's cost, spelled out: "sacrifice a creature with power N or
+    greater"."""
+    return f"Sacrifice a creature with power {number} or greater"
+
+
+def casualty_cost_option(number: int) -> OptionalAdditionalCost:
+    """One casualty instance as an optional additional cost (CR 702.153a,
+    CR 118.8b) - `Casting.pay_casualty` pays it."""
+    return OptionalAdditionalCost(
+        keyword="casualty", cost=casualty_cost_phrase(number), rule="CR 702.153a"
+    )
+
+
 def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     """Every optional additional cost `card` prints for CR 601.2b's
     announcement, keyword lines and "you may ..." sentences alike.
@@ -2220,6 +2246,7 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
         found.append(
             OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
         )
+    found.extend(casualty_cost_option(number) for number in printed_casualty_numbers(card))
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
             continue
@@ -2249,6 +2276,23 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             OptionalAdditionalCost(keyword=PAY_LIFE_KEYWORD, cost=printed[index], rule="CR 601.2b")
         )
     return found
+
+
+def granted_optional_additional_costs(
+    game: Any, card: CardState, caster: str
+) -> list[OptionalAdditionalCost]:
+    """The optional additional costs another permanent's grant gives `card`
+    if `caster` cast it from where it is now - casualty from "Each instant
+    and sorcery spell you cast has casualty 1." (`machines/spell_grants.py`).
+    `optional_additional_costs`' game-aware twin: the printed half cannot
+    know what the board grants."""
+    if game is None:
+        return []
+    printed = len(printed_casualty_numbers(card.card))
+    return [
+        casualty_cost_option(number)
+        for number in casualty_numbers(game, card, caster, card.zone)[printed:]
+    ]
 
 
 def has_flash(card: Card) -> bool:
@@ -3251,6 +3295,9 @@ class Casting(EngineModel):
     plain-kicker-style single-payment restriction the way CR 702.33a/c
     distinguishes kicker from multikicker.
     """
+    casualty_paid: int = 0
+    """How many of this spell's casualty instances were paid (CR 702.153a,
+    CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), set by
     `pay_offspring`. A flag rather than `kicked`'s count: offspring has no
@@ -5039,6 +5086,73 @@ class Casting(EngineModel):
         self.bargained = True
         return self.step
 
+    def casualty_numbers(self) -> list[int]:
+        """The N of every casualty instance this spell has as it is cast
+        (CR 702.153a): printed, then granted ("Each instant and sorcery spell
+        you cast has casualty 1.", `machines/spell_grants.py`)."""
+        return casualty_numbers(self.game, self.spell, self.caster, self.origin_zone)
+
+    def pay_casualty(self, creature: CardState) -> CastingStep:
+        """CR 702.153a: "As an additional cost to cast this spell, you may
+        sacrifice a creature with power N or greater."
+
+        Each instance is paid separately (CR 702.153b), one creature each -
+        the ruling: "You may sacrifice only one creature to pay a spell's
+        casualty cost". The creature is chosen now (CR 601.2b) and sacrificed
+        with the rest of the total cost at CR 601.2h, and it is checked now:
+        a creature on the battlefield the caster controls (CR 701.21a) whose
+        power (CR 613.5's computed board) meets the next unpaid instance's N.
+        The instances are taken in order - the lowest N the creature meets
+        first would change nothing, since every paid instance triggers the
+        same one copy.
+        """
+        from .cost import sacrifice_cost
+
+        numbers = self.casualty_numbers()
+        if not numbers:
+            raise ValueError(f"{self.spell.name} has no casualty ability (CR 702.153a)")
+        if self.casualty_paid >= len(numbers):
+            raise ValueError(
+                f"every casualty cost {self.spell.name} has was already paid - each instance "
+                "is paid with one creature (CR 702.153b)"
+            )
+        if creature.zone is not Zone.BATTLEFIELD:
+            raise ValueError(
+                f"{creature.name} is not a permanent, so it cannot be sacrificed (CR 701.21a)"
+            )
+        controller = (
+            self.game.controller_of(creature).username
+            if self.game is not None
+            else creature.controller
+        )
+        if controller != self.caster:
+            raise ValueError(
+                f"{self.caster} does not control {creature.name}, so cannot sacrifice it "
+                "(CR 701.21a)"
+            )
+        chars = self.game.characteristics_of(creature) if self.game is not None else creature
+        if not chars.is_creature:
+            raise ValueError(f"{creature.name} is not a creature (CR 702.153a)")
+        if any(
+            component.cards and creature in component.cards
+            for extra in self.additional_costs
+            for component in extra.components
+        ):
+            raise ValueError(f"{creature.name} is already paying another cost of this spell")
+        needed = numbers[self.casualty_paid]
+        power = power_of(creature, self.game)
+        if power < needed:
+            raise ValueError(
+                f"{creature.name} has power {power}, and {self.spell.name}'s casualty "
+                f"{needed} needs a creature with power {needed} or greater (CR 702.153a)"
+            )
+        component = sacrifice_cost(
+            creature, payer=self.caster, description=casualty_cost_phrase(needed)
+        )
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.casualty_paid += 1
+        return self.step
+
     def _optional_sentence(self, pattern: re.Pattern[str], what: str, rule: str) -> str:
         """The cost of the card's own "As an additional cost to cast this
         spell, you may <cost>" sentence matching `pattern` (CR 118.8b)."""
@@ -5633,6 +5747,13 @@ class Casting(EngineModel):
             )
             increases = increases + board_increases
             reductions = reductions + board_reductions
+            # CR 702.41a via CR 604.2: affinity another permanent grants this
+            # spell ("Instant and sorcery spells you cast have affinity for
+            # creatures.", `machines/spell_grants.py`), one reduction per
+            # granted instance - applied at CR 601.2f like a printed one.
+            reductions = reductions + granted_affinity_reductions(
+                self.game, self.spell, self.caster, self.origin_zone
+            )
         own = self.self_reduction if self.self_reduction is not None else self._own_cost_reduction()
         if own.symbols:
             if own in reductions:
@@ -6397,6 +6518,7 @@ class Casting(EngineModel):
                 ),
                 kicked=self.kicked,
                 replicated=self.replicated,
+                casualty_paid=self.casualty_paid,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
                 cast_using_teamwork=self.teamwork_paid,

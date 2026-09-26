@@ -194,7 +194,7 @@ from ..machines.keywords import (
     equipment_state_based_actions,
     grant_enduring_stories,
     grant_the_citys_blessing,
-    has_miracle,
+    granted_keyword_triggered_abilities,
     has_paradigm,
     has_rebound_now,
     is_indestructible,
@@ -256,6 +256,7 @@ from ..machines.replacement import (
     apply_replacements,
     replace_mana_production,
 )
+from ..machines.spell_grants import granted_hand_keyword_lines
 from ..machines.targeting import (
     RetargetScope,
     TargetingProfile,
@@ -2154,6 +2155,12 @@ class CastRecord(EngineModel):
     `Casting.replicated` - what `machines/keywords._replicate_effect` copies
     the spell for and `machines/triggers.intervening_if_holds`'s "a
     replicate cost was paid for it" clause reads."""
+    casualty_paid: int = 0
+    """How many of the spell's casualty costs were paid (CR 702.153a/b),
+    copied from `Casting.casualty_paid` - one casualty trigger per payment
+    (`machines/spell_grants.granted_triggered_abilities_for`), each gated by
+    `machines/triggers.intervening_if_holds`'s "a casualty cost was paid for
+    it" clause."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), copied
     from `Casting.offspring_paid`. Bool rather than a count: CR 702.175b's
@@ -3962,7 +3969,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 85
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 86
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4030,6 +4037,7 @@ class Game(EngineModel):
     #: `renowned`, `venture_room`, `dungeon_completions` and
     #: `last_known_attachments` (EC6's object-state readers - bumped at the
     #: EC round 2 merge).
+    #: 86: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6470,6 +6478,7 @@ class Game(EngineModel):
         treasure_mana_spent: int = 0,
         kicked: int = 0,
         replicated: int = 0,
+        casualty_paid: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
         cast_using_teamwork: bool = False,
@@ -6540,6 +6549,7 @@ class Game(EngineModel):
             treasure_mana_spent=0 if is_copy else treasure_mana_spent,
             kicked=kicked,
             replicated=replicated,
+            casualty_paid=casualty_paid,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
             cast_using_teamwork=cast_using_teamwork,
@@ -8202,6 +8212,7 @@ class Game(EngineModel):
                 casting, card, caster, "offspring", extra, taken
             ):
                 casting.pay_offspring()
+        self._announce_casualty(casting, card, caster, taken)
         if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
@@ -8264,6 +8275,51 @@ class Game(EngineModel):
                     )
                 )
                 casting.pay_blight(next(state for state in creatures if state.id == answer[0]))
+
+    def _announce_casualty(
+        self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
+    ) -> None:
+        """CR 702.153a's optional sacrifice, one `MAY` per casualty instance
+        the spell has - printed or granted (CR 702.153b: "each is paid
+        separately") - each legal only while a creature with enough power is
+        left to sacrifice, then which creature (`CHOOSE_CARDS`)."""
+        for number in casting.casualty_numbers():
+            board = self.computed_board()
+            fodder = [
+                state
+                for state in self.permanents_controlled_by(caster)
+                if board.of(state).is_creature
+                and state.id not in taken
+                and (self.power_of(state) or 0) >= number
+            ]
+            if not self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=(
+                        f"pay casualty {number} (sacrifice a creature with power {number} or "
+                        f"greater) as you cast {card.name} (CR 702.153a)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=bool(fodder),
+                )
+            ):
+                return
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=f"choose a creature to sacrifice for {card.name}'s casualty {number}",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    amount=1,
+                    cards=tuple(state.id for state in fodder),
+                )
+            )
+            chosen = next(state for state in fodder if state.id == answer[0])
+            taken.add(chosen.id)
+            casting.pay_casualty(chosen)
 
     def _announce_bargain_evidence_and_reveal(
         self, casting: Casting, card: CardState, caster: str, printed: dict
@@ -8603,6 +8659,7 @@ class Game(EngineModel):
                 x_value=original_record.x_value,
                 kicked=original_record.kicked,
                 replicated=original_record.replicated,
+                casualty_paid=original_record.casualty_paid,
                 offspring_paid=original_record.offspring_paid,
                 blight_paid=original_record.blight_paid,
                 gift_promised=original_record.gift_promised,
@@ -13927,36 +13984,63 @@ class Game(EngineModel):
         waits in `pending_triggers` for the next time a player would receive
         priority (CR 603.3) - a draw in the middle of a resolving spell puts it
         on the stack only once that spell has finished.
+
+        Each miracle *instance* the card has as it is drawn is its own static
+        ability linked to its own trigger (CR 607.2h): the printed one, and
+        any a permanent grants the card in hand ("Each instant and sorcery
+        card in your hand has miracle {2}.", `machines/spell_grants.py`),
+        which has to be in force as the card is drawn - this moment. They are
+        offered in that order; revealing through one triggers only its own
+        linked ability, so the cast is at that instance's cost.
         """
-        if card.zone is not Zone.HAND or not has_miracle(card.card):
+        if card.zone is not Zone.HAND:
             return
-        revealed = self.ask(
-            Decision(
-                kind=DecisionKind.MAY,
-                player=player.username,
-                prompt=(
-                    f"reveal {card.name} as you draw it, the first card you've drawn this "
-                    f"turn, for its miracle ability (CR 702.94a)"
-                ),
-                source=card.name,
-                source_id=source_id_of(card),
-                card=card.id,
-                cards=(card.id,),
-                default_may=False,
+        instances = [
+            ability
+            for ability in keyword_triggered_abilities(card.card)
+            if (ability.keyword or "").lower() == "miracle"
+        ] + [
+            ability
+            for ability in granted_keyword_triggered_abilities(
+                granted_hand_keyword_lines(self, card)
             )
-        )
-        if not revealed:
+            if (ability.keyword or "").lower() == "miracle"
+        ]
+        for instance in instances:
+            revealed = self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=player.username,
+                    prompt=(
+                        f"reveal {card.name} as you draw it, the first card you've drawn this "
+                        f"turn, for its {instance.raw.split('(')[0].strip()} ability "
+                        "(CR 702.94a)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    card=card.id,
+                    cards=(card.id,),
+                    default_may=False,
+                )
+            )
+            if not revealed:
+                continue
+            self.reveal(card, source=card.name)
+            event = GameEvent(
+                event=ExtraTriggerEvent.REVEALED_FOR_MIRACLE,
+                subject_id=card.id,
+                subject_name=card.name,
+                subject_controller=player.username,
+                subject_card=card.card,
+                player=player.username,
+            )
+            self.pending_triggers.extend(
+                triggered
+                for triggered in triggers_for(self, event, [card])
+                if triggered.ability.raw == instance.raw
+                and triggered.ability.effect == instance.effect
+            )
             return
-        self.reveal(card, source=card.name)
-        event = GameEvent(
-            event=ExtraTriggerEvent.REVEALED_FOR_MIRACLE,
-            subject_id=card.id,
-            subject_name=card.name,
-            subject_controller=player.username,
-            subject_card=card.card,
-            player=player.username,
-        )
-        self.pending_triggers.extend(triggers_for(self, event, [card]))
 
     def revealed_for_miracle(self, card_state: CardState) -> bool:
         """Whether `card_state` is being played revealed under CR 702.94b:
@@ -19607,6 +19691,7 @@ class Game(EngineModel):
         bargain: CardState | None = None,
         collect_evidence: bool = False,
         reveal_for_cost: CardState | None = None,
+        casualty: Sequence[CardState] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -19678,6 +19763,8 @@ class Game(EngineModel):
         702.166a's bargain; `collect_evidence` pays a printed "you may collect
         evidence N" (CR 701.59a); `reveal_for_cost` is the card revealed for a
         printed "you may reveal a <quality> card from your hand".
+        `casualty` is the creature sacrificed for each casualty instance paid
+        (CR 702.153a/b), in order - printed instances first, then granted.
         They join `offspring`, `blight` and `gift` as this method's whole
         CR 601.2b announcement; `machines/casting.optional_additional_costs`
         is what tells a caller which of them a given card actually prints,
@@ -19719,6 +19806,10 @@ class Game(EngineModel):
                 casting.use_permission()
             if modes:
                 casting.choose_modes(modes, x_value=x_value)
+            # CR 601.2b: casualty's sacrifice is announced with the modes,
+            # before CR 601.2c's targets.
+            for creature in casualty or ():
+                casting.pay_casualty(creature)
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():

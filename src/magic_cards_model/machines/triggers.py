@@ -4519,6 +4519,10 @@ _FIRST_TIME_TAPPED_THIS_TURN_CLAUSE = re.compile(
 #: `machines/keywords._replicate_ability` - "a replicate cost was paid for it".
 _REPLICATE_CLAUSE = re.compile(r"^a replicate cost was paid for it$")
 
+#: CR 702.153a's own intervening *if*, written out by
+#: `machines/keywords._casualty_ability` - "a casualty cost was paid for it".
+_CASUALTY_CLAUSE = re.compile(r"^a casualty cost was paid for it$")
+
 #: CR 601.2h's "no mana was spent to cast it" (Vexing Bauble) and "[mana
 #: symbols] was spent to cast it" (Wistfulness's "{G}{G}", Drowner of Truth's
 #: "{C}") - both always phrased as "... to cast it" in the pool, never "...
@@ -5125,6 +5129,12 @@ def intervening_if_answer(
         if record is None:
             return _fail_closed(game, ability, source)
         return record.replicated > 0
+
+    if _CASUALTY_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.casualty_paid > 0
 
     if _NO_MANA_SPENT_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)
@@ -6640,6 +6650,20 @@ def controller_of_source(game: "Game", source: CardState) -> str:
     return source.owner or source.controller or game.active_player.username
 
 
+def spell_grant_triggered_abilities(game: "Game", source: CardState) -> list[TriggeredAbility]:
+    """The triggered abilities another permanent's static grant gives a spell
+    on the stack or a card in hand (`machines/spell_grants.py`), and a cast
+    spell's own casualty triggers (CR 702.153a) - nothing for an object in
+    any other zone, which is every object most events ask about."""
+    if source.zone not in (Zone.STACK, Zone.HAND):
+        return []
+    # Imported here for the same cycle `granted_triggered_abilities_of`
+    # documents: `machines/keywords.py` imports this module.
+    from .spell_grants import granted_triggered_abilities_for
+
+    return granted_triggered_abilities_for(game, source)
+
+
 def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbility]:
     """Every triggered ability `source` has right now, printed and granted,
     before any condition is read - the abilities `triggers_for` asks."""
@@ -6672,6 +6696,11 @@ def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbi
         # here so a granted "Whenever ..." is actually found rather than
         # granted invisibly.
         granted = granted + granted_triggered_abilities_of(added_ability_lines(game, source))
+    # CR 604.2 / CR 611.3a: a permanent's "spells you cast have storm" or
+    # "cards in your hand have miracle" grant, read now off the board -
+    # `machines/spell_grants.py` - plus CR 702.153a's casualty trigger, one
+    # per casualty cost paid (CR 702.153b).
+    granted = granted + spell_grant_triggered_abilities(game, source)
     granted_ids = {id(ability) for ability in granted}
     printed_abilities = [] if rewritten is not None else triggered_abilities_of(source.card)
     had: list[TriggeredAbility] = []

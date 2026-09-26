@@ -127,6 +127,7 @@ class KeywordRule(StrEnum):
     PROWESS = "CR 702.108a"
     CASCADE = "CR 702.85a"
     STORM = "CR 702.40a"
+    CASUALTY = "CR 702.153a"
     PERSIST = "CR 702.79a"
     DREDGE = "CR 702.52a"
     MOBILIZE = "CR 702.181a"
@@ -185,6 +186,10 @@ def executes(keyword: str) -> bool:
         "bloodthirst",
         "cascade",
         "storm",
+        # CR 702.153a: the additional cost is `machines/casting.Casting.
+        # pay_casualty`, the trigger `casualty_triggered_abilities`/
+        # `_casualty_effect` here, one per casualty cost paid (CR 702.153b).
+        "casualty",
         "persist",
         "dredge",
         "mobilize",
@@ -588,6 +593,50 @@ def _replicate_ability(ability: KeywordAbility) -> TriggeredAbility:
         ),
         event=TriggerEvent.CAST_SPELL,
     )
+
+
+def _casualty_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.153a's second ability: "When you cast this spell, if a casualty
+    cost was paid for it, copy it. If the spell has any targets, you may
+    choose new targets for the copy."
+
+    Not in `_TRIGGER_EXPANSIONS`: CR 702.153b says each instance "triggers
+    based on the payments made for it, not any other instance of casualty",
+    so the triggers a spell has are one per casualty cost actually paid
+    (`casualty_triggered_abilities`), read off its `CastRecord`, never one
+    per printed or granted instance - an unpaid instance's intervening *if*
+    would only ever have stopped it anyway.
+    """
+    return _expansion(
+        ability,
+        keyword="casualty",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        intervening_if="a casualty cost was paid for it",
+        effect="copy it. If the spell has any targets, you may choose new targets for the copy",
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
+def casualty_triggered_abilities(paid: int) -> list[TriggeredAbility]:
+    """CR 702.153a/b: one casualty trigger for each casualty cost paid."""
+    line = KeywordAbility(
+        raw="Casualty", text="Casualty", face="", keyword="Casualty", canonical="Casualty"
+    )
+    return [_casualty_ability(line) for _ in range(max(paid, 0))]
+
+
+def printed_casualty_numbers(card: Card) -> list[int]:
+    """The N of every "Casualty N" `card` prints, in printed order (CR
+    702.153a). A casualty whose N is not a number ("Casualty X") is left
+    out - no reader here announces that X."""
+    numbers: list[int] = []
+    for ability in keyword_abilities(card):
+        if ability.canonical.lower() != "casualty":
+            continue
+        if ability.count is not None:
+            numbers.append(ability.count)
+    return numbers
 
 
 def _persist_ability(ability: KeywordAbility) -> TriggeredAbility:
@@ -5334,6 +5383,26 @@ def _replicate_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     return copies
 
 
+def _casualty_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
+    """CR 702.153a's copy: "copy it. If the spell has any targets, you may
+    choose new targets for the copy."
+
+    The trigger sits directly above the spell that caused it (CR 603.3b),
+    so `ability.source` is still that spell on the stack - `_replicate_
+    effect`'s own shape, with exactly one copy per trigger.
+    """
+    source = ability.source(game)
+    if source is None or source not in game.stack:
+        return None
+    copy = game.copy_spell(source, controller=ability.controller)
+    if copy is None:
+        return None
+    game.offer_new_targets_for_copy(
+        copy, ability.controller, source_name=source.name, source_id=source_id_of(source)
+    )
+    return copy
+
+
 def _ward_effect(game: Any, ability: AbilityOnStack) -> bool:
     """CR 702.21a's effect: "counter that spell or ability unless that player pays".
 
@@ -5436,7 +5505,15 @@ def _miracle_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     ):
         return None
     caster = ability.controller
-    cost = miracle_cost(source.card, caster)
+    # CR 607.2h: the cost is the one of the miracle instance this trigger is
+    # linked to - a granted "Miracle {2}" (`machines/spell_grants.py`) is
+    # written out as a bare keyword line and read back here; a printed one
+    # is the card's own.
+    linked = granted_keyword_ability(ability.ability.raw) if ability.ability.raw else None
+    if linked is not None and linked.canonical.lower() == "miracle" and linked.cost:
+        cost = _keyword_cost(linked, caster)
+    else:
+        cost = miracle_cost(source.card, caster)
     if cost is None:
         game._note_unread_trigger(ability)  # noqa: SLF001
         return None
@@ -5694,6 +5771,7 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "cascade": _cascade_effect,
     "storm": _storm_effect,
     "replicate": _replicate_effect,
+    "casualty": _casualty_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
     "miracle": _miracle_effect,

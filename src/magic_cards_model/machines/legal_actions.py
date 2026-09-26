@@ -105,6 +105,7 @@ from .casting import (
     PlayAction,
     adventure_face,
     granted_cast_options,
+    granted_optional_additional_costs,
     keyword_cast_options,
     mandatory_additional_costs,
     marker_cast_options,
@@ -653,6 +654,7 @@ def _cast_action(
                 understood=option.understood,
             )
             for option in optional_additional_costs(card.card)
+            + granted_optional_additional_costs(game, card, player)
         ),
     )
 
