@@ -315,7 +315,7 @@ from .card_state import (
     annihilate_counters_on,
     planeswalkers_with_zero_loyalty,
 )
-from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect
+from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
 from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
@@ -475,19 +475,20 @@ _COSTS_LESS_PER_QUALITY_CARD_IN_GRAVEYARD_RE = re.compile(
 )
 
 #: CR 601.2f's *other* self-referential reduction shape: "This spell costs
-#: `<N>` less to cast if it targets a `<color>` spell." (Mystical Dispute).
-#: Unlike Emrakul's row above, the condition is not a fact about the board -
-#: it is about *this spell's own announced target* (CR 601.2c), which is
-#: chosen before the cost is determined (CR 601.2f is a later step), so this
-#: is read against `Casting.targets` rather than the battlefield. Narrow on
-#: purpose, the same way as the row above: the amount and the one condition
-#: shape actually printed are read back out and nothing else is guessed at -
-#: a hypothetical "... if it targets a creature you control" is a different
-#: shape this regex does not match, and would leave the reduction at {0}
-#: rather than a wrong guess.
-_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE = re.compile(
-    r"costs \{(\d+)\} less to cast if it targets a "
-    r"(?P<color>white|blue|black|red|green) spell",
+#: `<mana>` less to cast if it targets a(n) `<quality>` spell." - Mystical
+#: Dispute's "{2} ... a blue spell", Out of Air's "{2} ... a creature spell",
+#: Brush Off's "{1}{U} ... an instant or sorcery spell". Unlike Emrakul's row
+#: above, the condition is not a fact about the board - it is about *this
+#: spell's own announced target* (CR 601.2c), which is chosen before the cost
+#: is determined (CR 601.2f is a later step), so this is read against
+#: `Casting.targets` rather than the battlefield. The amount is a run of mana
+#: symbols, coloured ones included, and lands on the cost by CR 118.7; the
+#: quality is `machines/next_spell.spell_has_quality`'s (colour words, card
+#: types, CR 205.1's "instant and sorcery" read as either). Only a *spell*
+#: target qualifies - "if it targets a tapped creature" is a different shape.
+_COSTS_LESS_IF_TARGETS_SPELL_RE = re.compile(
+    r"costs (?P<amount>(?:\{[^{}]+\})+) less to cast if it targets an? "
+    r"(?P<quality>[a-z ,]+?) spell\b",
     re.IGNORECASE,
 )
 
@@ -602,7 +603,7 @@ _SELF_COST_REDUCTION_SHAPES = (
     _COSTS_LESS_PER_CARD_DISCARDED_RE,
     _COSTS_LESS_PER_BASIC_LAND_TYPE_RE,
     _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE,
-    _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE,
+    _COSTS_LESS_IF_TARGETS_SPELL_RE,
     _COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE,
     _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE,
 )
@@ -20146,25 +20147,24 @@ class Game(EngineModel):
         if affinity is not None:
             amount += self._affinity_count(affinity.group("what").lower(), owner)
 
-        target_match = _COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE.search(text)
+        colored_reduction = ManaCost()
+        target_match = _COSTS_LESS_IF_TARGETS_SPELL_RE.search(text)
         if target_match is not None and targets:
-            color = _COLOR_WORDS[target_match.group("color").lower()]
-            for ref in targets:
-                if ref.is_player:
-                    continue
-                target = self.find_by_id(ref.card_id)
-                # CR 109.2b: "spell" means an object on the stack - a target
-                # that has already left the stack (countered, or already
-                # resolved by the time this is asked) is not a spell any
-                # more and cannot satisfy "if it targets a ... spell".
-                if target is None or target.zone is not Zone.STACK:
-                    continue
-                if color in target.colors:
-                    amount += int(target_match.group(1))
-                    break
+            reduction = self._target_spell_reduction(target_match, targets)
+            if reduction is not None:
+                amount += reduction.generic
+                colored_reduction = ManaCost(
+                    symbols=tuple(
+                        symbol
+                        for symbol in reduction.symbols
+                        if symbol.kind is not SymbolKind.GENERIC
+                    )
+                )
 
         condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
-        if condition_match is not None:
+        # Out of Air's "if it targets a creature spell" is the target shape
+        # above, not an open board condition - read once, never twice.
+        if condition_match is not None and target_match is None:
             held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
             if held:
                 amount += int(condition_match.group("amount"))
@@ -20189,7 +20189,32 @@ class Game(EngineModel):
                 and (keyword is None or has_keyword(state, keyword, self))
             )
 
-        return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+        generic = ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
+        return generic.plus(colored_reduction) if colored_reduction.symbols else generic
+
+    def _target_spell_reduction(
+        self, match: re.Match[str], targets: Sequence[TargetRef]
+    ) -> ManaCost | None:
+        """`_COSTS_LESS_IF_TARGETS_SPELL_RE`'s reduction when one of
+        `targets` is a spell of its quality, or None. CR 109.2b: "spell"
+        means an object on the stack - a target that has already left the
+        stack (countered, or resolved by the time this is asked) is not a
+        spell any more and cannot satisfy "if it targets a ... spell"."""
+        from ..machines.next_spell import spell_has_quality, spell_quality_is_readable
+
+        reduction = ManaCost.try_parse(match.group("amount"))
+        quality = re.sub(r"\s+and\s+", " or ", match.group("quality").strip().lower())
+        if reduction is None or not spell_quality_is_readable(quality):
+            return None
+        for ref in targets:
+            if ref.is_player:
+                continue
+            target = self.find_by_id(ref.card_id)
+            if target is None or target.zone is not Zone.STACK:
+                continue
+            if spell_has_quality(target, quality):
+                return reduction
+        return None
 
     def basic_land_types_controlled(self, controller: str) -> frozenset[str]:
         """The basic land types (CR 305.6) among lands this player controls -

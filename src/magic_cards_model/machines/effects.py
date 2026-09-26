@@ -10019,7 +10019,7 @@ _FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
 #: what it does on resolution. This self-referential reduction (as opposed to
 #: `machines/cost.cost_modifier_effect`'s board-static "Spells cost {N} more
 #: to cast", read off a *different* permanent) is now computed by
-#: `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`, opted
+#: `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_SPELL_RE`, opted
 #: into by calling `Game.determine_total_cost(casting)` instead of
 #: `casting.determine_cost()` directly - the same opt-in shape Emrakul, the
 #: Promised End's own graveyard-count reduction already uses. Stripping the
@@ -10028,7 +10028,7 @@ _FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
 #: spell unless its controller pays ..." down with it, since this dispatcher
 #: only ever reads what a spell *does*, not what it costs.
 _SELF_COST_REDUCTION_LINE_RE = re.compile(
-    r"^(?:[A-Za-z' ]+ \u2014 )?This spell costs \{\d+\} less to cast (?:if|as long as) "
+    r"^(?:[A-Za-z' ]+ \u2014 )?This spell costs (?:\{[^{}]+\})+ less to cast (?:if|as long as) "
     r"[^.]+\.\s*",
     re.IGNORECASE | re.MULTILINE,
 )
