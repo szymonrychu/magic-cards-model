@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Petrifying Meddler@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,19 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["became_tapped_count_this_turn", "counters_put_this_turn"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "counters": [
+          {},
+          {
+            "stun": 1
+          }
+        ],
+        "tapped": [false, true]
+      }
+    },
     "players": {},
     "stack": ["Petrifying Meddler@alice#1"]
   },
@@ -49,6 +59,7 @@
   "recipe": {
     "attempt": "cast",
     "index": 1,
+    "optional_targets": "some",
     "params": {
       "kicked": false,
       "paying_with": null

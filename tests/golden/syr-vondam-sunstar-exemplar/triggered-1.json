@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Syr Vondam, Sunstar Exemplar@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,11 +36,15 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
     "players": {},
-    "stack": []
+    "stack": ["ability of Syr Vondam, Sunstar Exemplar@alice#1: Whenever another creature you control dies or is put into exile, put a +1/+1 counter on Syr Vondam and you gain 1 life."]
   },
   "family": "triggered",
   "format": 1,
@@ -49,6 +53,7 @@
   "recipe": {
     "attempt": "itself",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "removal": "destroy"
     },

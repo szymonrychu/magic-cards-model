@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Ureni, the Song Unending@alice#1",
-    "targets": [],
+    "targets": ["Kaito, Bane of Nightmares@bob#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,19 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Kaito, Bane of Nightmares@bob#1": {
+        "counters": [
+          {
+            "loyalty": 4
+          },
+          {}
+        ],
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +59,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

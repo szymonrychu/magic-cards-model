@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Jacob Frye@alice#1",
-    "targets": [],
+    "targets": ["Bullseye, Death Dealer@alice#1"],
     "x": 0
   },
   "board": {
@@ -34,13 +34,50 @@
   },
   "card": "Jacob Frye",
   "delta": {
-    "created": {},
-    "decisions": [],
-    "fields_changed": [],
+    "created": {
+      "Bullseye, Death Dealer@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      }
+    },
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": ["Bullseye, Death Dealer@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Bullseye, Death Dealer",
+        "source": "Jacob Frye"
+      },
+      {
+        "amount": 3,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {2}{B/R} to cast Bullseye, Death Dealer",
+        "source": "Bullseye, Death Dealer"
+      }
+    ],
+    "fields_changed": ["became_tapped_count_this_turn", "cast_records", "exile_residents_seen", "spells_cast_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Bullseye, Death Dealer@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@alice#1": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#2": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#3": {
+        "tapped": [false, true]
+      }
+    },
     "players": {},
-    "stack": []
+    "stack": ["Bullseye, Death Dealer@alice+1"]
   },
   "family": "triggered",
   "format": 1,
@@ -49,6 +86,7 @@
   "recipe": {
     "attempt": "combat",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

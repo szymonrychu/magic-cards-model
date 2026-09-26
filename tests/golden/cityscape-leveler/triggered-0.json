@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Cityscape Leveler@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -34,11 +34,31 @@
   },
   "card": "Cityscape Leveler",
   "delta": {
-    "created": {},
+    "created": {
+      "Powerstone Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {},
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": null,
+        "tapped": true,
+        "toughness": null,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
     "players": {},
     "stack": ["Cityscape Leveler@alice#1"]
   },
@@ -49,6 +69,7 @@
   "recipe": {
     "attempt": "cast",
     "index": 1,
+    "optional_targets": "some",
     "params": {
       "kicked": false,
       "paying_with": null

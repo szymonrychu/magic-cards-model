@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Tamiyo Meets the Story Circle@alice#1",
-    "targets": [],
+    "targets": ["Grizzly Bears@alice#2"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,12 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "shuffles_performed", "turn_counts", "turn_history"],
+    "fields_changed": ["graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "reveals", "shuffles_performed", "turn_counts", "turn_history"],
     "notices": {},
     "objects": {
+      "Grizzly Bears@alice#2": {
+        "zone": ["graveyard", "library"]
+      },
       "Tamiyo Meets the Story Circle@alice#1": {
         "counters": [
           {
@@ -59,6 +62,7 @@
   "recipe": {
     "attempt": "staged",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

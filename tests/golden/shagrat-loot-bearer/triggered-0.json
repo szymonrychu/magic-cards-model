@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Shagrat, Loot Bearer@alice#1",
-    "targets": [],
+    "targets": ["Bonesplitter@alice#1"],
     "x": 0
   },
   "board": {
@@ -34,11 +34,36 @@
   },
   "card": "Shagrat, Loot Bearer",
   "delta": {
-    "created": {},
+    "created": {
+      "Orc Army Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {
+          "+1/+1": 1
+        },
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 1,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Bonesplitter@alice#1": {
+        "attached_to": [null, "Shagrat, Loot Bearer@alice#1"]
+      },
+      "Shagrat, Loot Bearer@alice#1": {
+        "power": [4, 6]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +74,7 @@
   "recipe": {
     "attempt": "combat",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

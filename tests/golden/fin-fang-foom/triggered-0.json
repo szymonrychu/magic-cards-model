@@ -84,6 +84,7 @@
   "recipe": {
     "attempt": "cast_probe",
     "index": 1,
+    "optional_targets": "some",
     "params": {
       "caster": "alice",
       "probe": "Lightning Bolt"

@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Azog, Moria's Ruin@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -34,11 +34,36 @@
   },
   "card": "Azog, Moria's Ruin",
   "delta": {
-    "created": {},
+    "created": {
+      "Goblin Army Token@alice+1": {
+        "attached_to": null,
+        "class_level": 1,
+        "controller": "alice",
+        "counters": {
+          "+1/+1": 1
+        },
+        "damage": 0,
+        "face_up": true,
+        "granted": [],
+        "monstrous": false,
+        "power": 1,
+        "tapped": false,
+        "toughness": 1,
+        "transformed": false,
+        "zone": "battlefield"
+      }
+    },
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["cards_drawn_this_turn", "continuous_effects", "counters_put_this_turn", "creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Forest@alice#6": {
+        "zone": ["library", "hand"]
+      },
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +74,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

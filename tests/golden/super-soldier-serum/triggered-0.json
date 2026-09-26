@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Super-Soldier Serum@alice#1",
-    "targets": [],
+    "targets": ["Bonesplitter@alice#1"],
     "x": 0
   },
   "board": {
@@ -38,7 +38,14 @@
     "decisions": [],
     "fields_changed": [],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Bonesplitter@alice#1": {
+        "attached_to": [null, "Memnite@alice#1"]
+      },
+      "Memnite@alice#1": {
+        "power": [3, 5]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +56,7 @@
   "recipe": {
     "attempt": "combat",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

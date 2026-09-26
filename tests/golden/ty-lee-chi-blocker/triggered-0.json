@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Ty Lee, Chi Blocker@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -38,7 +38,15 @@
     "decisions": [],
     "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "granted": [
+          [],
+          ["Doesn't untap during its controller's untap step."]
+        ],
+        "tapped": [false, true]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +57,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

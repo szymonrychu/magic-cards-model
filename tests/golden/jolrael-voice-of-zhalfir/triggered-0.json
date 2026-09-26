@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Jolrael, Voice of Zhalfir@alice#1",
-    "targets": [],
+    "targets": ["Plains@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,18 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Plains@alice#1": {
+        "granted": [
+          [],
+          ["Flying", "Haste"]
+        ],
+        "power": [null, 4],
+        "toughness": [null, 4]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +58,7 @@
   "recipe": {
     "attempt": "staged",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

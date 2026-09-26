@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Aetherstorm Roc@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -59,6 +59,7 @@
   "recipe": {
     "attempt": "combat",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }
