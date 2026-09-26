@@ -372,6 +372,18 @@ class DecisionKind(StrEnum):
     #: refused; the default is the offered order unchanged, which is what this
     #: engine did before anybody was asked.
     ORDER_TRIGGERS = "order_triggers"
+    #: CR 702.52a: "if you would draw a card, you may instead mill N cards
+    #: [...] return this card from your graveyard to your hand." Asked once
+    #: for each individual draw (CR 121.2) a player is about to make, naming
+    #: every graveyard card whose dredge is satisfiable right now
+    #: (`Decision.cards`, filtered by `machines/keywords.why_cannot_dredge`'s
+    #: own CR 702.52b library-size floor already) - not asked at all when
+    #: none is. CR 616.1e: several optional replacement effects competing for
+    #: the same event, any one of which "may be chosen" - the answer is an
+    #: empty tuple to decline (draw normally, the unscripted default) or a
+    #: single chosen card's id, never more than one, since a single draw
+    #: can only be replaced once.
+    DREDGE = "dredge"
 
 
 @dataclass(frozen=True)
@@ -694,6 +706,13 @@ def default_answer(decision: Decision) -> object:
         # this engine before the question existed. A permutation is always
         # legal, so there is no `affirmative_is_legal` branch here.
         return decision.cards
+    if decision.kind is DecisionKind.DREDGE:
+        # CR 702.52a's "you may instead" with nobody choosing: draw normally.
+        # An unscripted player does not silently reshape their graveyard and
+        # hand in place of the draw the caller actually asked for - the same
+        # "leave the more ordinary outcome alone" posture `SCRY`/`SURVEIL`'s
+        # own "keep everything on top" default already takes.
+        return ()
     if decision.kind is DecisionKind.ASSIGN_COMBAT_DAMAGE:
         # CR 510.1c's division with nobody choosing: the asker's own
         # documented split, which is what combat did before it asked.
@@ -836,6 +855,12 @@ def rule_for_kind(kind: DecisionKind) -> str:
         )
     if kind is DecisionKind.ASSIGN_COMBAT_DAMAGE:
         return "CR 703.4k, CR 510.1c, CR 702.19b (assigning combat damage, a turn-based action)"
+    if kind is DecisionKind.DREDGE:
+        # Not CR 608.2d either: dredge is a static/replacement ability
+        # (CR 702.52a) offered as the draw itself is about to happen, and
+        # CR 616.1e is what governs choosing among the applicable optional
+        # replacement effects it competes with.
+        return "CR 702.52a, CR 616.1 (replacing a draw with dredge, an optional replacement effect)"
     return "CR 608.2d (a choice made while the effect applies)"
 
 
@@ -856,6 +881,7 @@ _ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
     DecisionKind.CHOOSE_CARDS: "card_ids",
     DecisionKind.CHOOSE_PLAYERS: "usernames",
     DecisionKind.ORDER_TRIGGERS: "card_ids",
+    DecisionKind.DREDGE: "card_ids",
     DecisionKind.SCRY: "split",
     DecisionKind.SURVEIL: "split",
     DecisionKind.CHOOSE_TARGETS: "targets",

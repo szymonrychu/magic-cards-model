@@ -38763,8 +38763,18 @@ def manifest(game: "Game", controller: str, card_state: CardState) -> CardState:
     does not touch `face_down_characteristics`, so setting it first is what
     keeps a caller from ever observing the card face up on the battlefield,
     even for one line.
+
+    `card_state.manifested` is stamped `True` here - "that permanent is a
+    manifested permanent for as long as it remains face down" - which is what
+    lets `machines/keywords.why_cannot_turn_up_manifested`/`.manifest_turn_up_
+    cost` tell this face-down object apart from a face-down morph or disguise
+    spell that happens to share the identical empty characteristics, and offer
+    CR 701.40b's own turn-up procedure (pay the card's mana cost) instead of
+    (or, for a card that also has morph or disguise, alongside) CR 702.37e's/
+    CR 702.168d's.
     """
     card_state.turn_face_down(FaceDownCharacteristics())
+    card_state.manifested = True
     return game.put_onto_battlefield(card_state, controller)
 
 

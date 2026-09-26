@@ -18,6 +18,7 @@ card data, since the point of these tests is that they run against real cards.
 
 from collections.abc import Sequence
 from typing import Any
+from uuid import UUID
 
 from magic_cards_model.machines import Casting, CostPayment, PriorityOutcome, Step, TurnMachine
 from magic_cards_model.machines.abilities import granted_mana_abilities, parse_mana_abilities
@@ -720,6 +721,32 @@ class PlayedScenario:
         is what a scenario about a repeated optional trigger wants.
         """
         self._queue(DecisionKind.MAY, taken, username, source, times)
+
+    def will_dredge(
+        self,
+        card: CardState | str | None,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next dredge offer (CR 702.52a): replace the draw by
+        dredging `card`, or decline with `None` to draw normally.
+
+        `card` is a graveyard `CardState`, or its name - resolved off the
+        dredger's own graveyard, the way `will_choose_mode` resolves a mode by
+        its printed text rather than an id nobody outside the engine has yet.
+        """
+        value: tuple[UUID, ...]
+        if card is None:
+            value = ()
+        elif isinstance(card, str):
+            owner = self.player(username)
+            (state,) = [c for c in owner.cards_in(Zone.GRAVEYARD) if c.name == card]
+            value = (state.id,)
+        else:
+            value = (card.id,)
+        self._queue(DecisionKind.DREDGE, value, username, source, times)
 
     def will_pay_the_life(
         self,

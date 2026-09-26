@@ -1,0 +1,149 @@
+{
+  "object": "card",
+  "id": "451507de-9c42-43ee-b9ba-1f69e9aa29d2",
+  "oracle_id": "6985c8a9-9299-461b-8bef-bd2b2c739c11",
+  "multiverse_ids": [
+    479748
+  ],
+  "mtgo_id": 80465,
+  "arena_id": 71295,
+  "tcgplayer_id": 212637,
+  "cardmarket_id": 453533,
+  "name": "Obosh, the Preypiercer",
+  "lang": "en",
+  "released_at": "2020-04-24",
+  "uri": "https://api.scryfall.com/cards/451507de-9c42-43ee-b9ba-1f69e9aa29d2",
+  "scryfall_uri": "https://scryfall.com/card/iko/228/obosh-the-preypiercer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:23:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.jpg?1783931009",
+    "normal": "https://cards.scryfall.io/normal/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.jpg?1783931009",
+    "large": "https://cards.scryfall.io/large/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.jpg?1783931009",
+    "png": "https://cards.scryfall.io/png/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.png?1783931009",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.jpg?1783931009",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.jpg?1783931009",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.webp?1783931009",
+    "grid": "https://cards.scryfall.io/grid/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.webp?1783931009",
+    "display": "https://cards.scryfall.io/display/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.webp?1783931009",
+    "art": "https://cards.scryfall.io/art/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.webp?1783931009",
+    "crop": "https://cards.scryfall.io/crop/front/4/5/451507de-9c42-43ee-b9ba-1f69e9aa29d2.webp?1783931009"
+  },
+  "mana_cost": "{3}{B/R}{B/R}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Hellion Horror",
+  "oracle_text": "Companion \u2014 Your starting deck contains only cards with odd mana values and land cards. (If this card is your chosen companion, you may put it into your hand from outside the game for {3} as a sorcery.)\nIf a source you control with an odd mana value would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+  "power": "3",
+  "toughness": "5",
+  "colors": [
+    "B",
+    "R"
+  ],
+  "color_identity": [
+    "B",
+    "R"
+  ],
+  "keywords": [
+    "Companion",
+    "Double"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set": "iko",
+  "set_name": "Ikoria: Lair of Behemoths",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/19feda43-15ab-427e-a0e4-148a4bf2b03a",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aiko&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/iko?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/451507de-9c42-43ee-b9ba-1f69e9aa29d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6985c8a9-9299-461b-8bef-bd2b2c739c11&unique=prints",
+  "collector_number": "228",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "c8c91aec-3f6e-4808-a939-1793c7aadcf0",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "companion",
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10023,
+  "penny_rank": 7704,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://www.youtube.com/watch?v=Uh61r8ccgFU",
+    "previewed_at": "2020-04-03"
+  },
+  "prices": {
+    "usd": "0.28",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.18",
+    "eur_foil": "0.41",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=479748&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DObosh%252C%2Bthe%2BPreypiercer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DObosh%252C%2Bthe%2BPreypiercer",
+    "edhrec": "https://edhrec.com/route/?cc=Obosh%2C+the+Preypiercer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212637%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=453533&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/80465?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

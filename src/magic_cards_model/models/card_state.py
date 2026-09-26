@@ -1153,6 +1153,23 @@ class CardState(EngineModel):
     the owner reveal it as it leaves the battlefield.
     """
 
+    manifested: bool = False
+    """Whether this object is a manifested permanent (CR 701.40a), for as
+    long as it remains face down.
+
+    Set by `machines/effects.manifest` and cleared by `turn_face_up` (CR
+    701.40a: "That permanent is a manifested permanent for as long as it
+    remains face down"). Distinct from `face_down_characteristics`, which a
+    face-down morph or disguise spell sets to the identical empty
+    `FaceDownCharacteristics()` shape - the two mechanisms make an object
+    face down the same way, but only a manifested (or, once printed in this
+    pool, cloaked - CR 701.58a) permanent may be turned face up by paying its
+    own mana cost (CR 701.40b, CR 701.58b), rather than a morph ability's own
+    cost (CR 702.37e). Without this flag nothing could tell the two apart:
+    `machines/keywords.why_cannot_turn_up_manifested`/`.manifest_turn_up_cost`
+    read it, through `machines/special_actions.py`'s seat-facing checks.
+    """
+
     last_known_power: int | None = None
     """The power this object had the last time it left the battlefield (CR 608.2h).
 
@@ -2523,9 +2540,14 @@ class CardState(EngineModel):
 
         Turning something face up that already is does nothing - the rules have
         no such action, and there is nothing to undo.
+
+        CR 701.40a: a manifested permanent is one "for as long as it remains
+        face down" - `manifested` ends here too, the same way `701.58a` will
+        for a cloaked one once that keyword action exists.
         """
         self.face_up = True
         self.face_down_characteristics = None
+        self.manifested = False
 
     def turn_face_down(self, characteristics: "FaceDownCharacteristics | None" = None) -> None:
         """Turn this object face down (CR 708.2, CR 708.2a).
