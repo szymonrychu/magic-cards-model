@@ -29346,27 +29346,6 @@ _CONDITIONAL_REFERENT_TRAILING_RE = re.compile(
 )
 _RIDER_ALSO_RE = re.compile(rf"^(?P<anaphor>{_OBJECT_ANAPHOR}) also\b", re.IGNORECASE)
 
-#: "it's a[n] `<type>`" - SOS's Searing Barb: "Searing Barb deals 2 damage to
-#: any target. If it's a creature, it can't block this turn." A bare CR
-#: 205.2a card type or CR 205.3 subtype naming what the antecedent's own
-#: referent *is* right now, not a board-state condition - so it is judged
-#: per referent (`_referent_matches_quality`) rather than through `Game.
-#: condition_holds`, which has no referent to ask about at all.
-_REFERENT_IS_TYPE_CONDITION_RE = re.compile(r"^it'?s an? (?P<type>[a-z]+)$", re.IGNORECASE)
-
-
-def _referent_matches_quality(game: "Game", referent: CardState, word: str) -> bool:
-    """Whether `referent`'s *computed* characteristics (CR 613.5) carry
-    `word` as a card type or a subtype - `_matches_subtype_on_battlefield`'s
-    own subtype half, plus the card-type half `_REFERENT_IS_TYPE_CONDITION_RE`
-    also has to answer ("it's a creature" is CR 205.2a, not CR 205.3)."""
-    from .layers import _card_type_word
-
-    card_type = _card_type_word(word)
-    if card_type is not None:
-        return card_type in game.characteristics_of(referent).types
-    return _matches_subtype_on_battlefield(game, referent, word)
-
 
 def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | None:
     """`_CONDITIONAL_REFERENT_*_RE`'s shape: a referent rider that runs only if
@@ -29390,29 +29369,6 @@ def _parse_conditional_referent_clause(rider: str) -> ReferentObjectClause | Non
     inner = _parse_referent_object_clause(body)
     if inner is None:
         return None
-
-    type_match = _REFERENT_IS_TYPE_CONDITION_RE.fullmatch(condition_text)
-    if type_match is not None:
-        # "If it's a `<type>`, `<rider>`" (Searing Barb: "... any target. If
-        # it's a creature, it can't block this turn.") - a characteristic
-        # check on the referent itself (CR 205.2a/205.3), not a board
-        # condition `Game.condition_holds` answers, so it is filtered per
-        # referent rather than asked once for the whole rider.
-        word = type_match.group("type")
-
-        def type_filtered_rider(
-            game: "Game", referents: list[CardState], stack_object: "StackObject"
-        ) -> None:
-            matching = [
-                referent
-                for referent in referents
-                if referent.zone is Zone.BATTLEFIELD
-                and _referent_matches_quality(game, referent, word)
-            ]
-            if matching:
-                inner(game, matching, stack_object)
-
-        return type_filtered_rider
 
     if not _effect_condition_is_readable(condition_text):
         return None

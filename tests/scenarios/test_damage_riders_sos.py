@@ -7,16 +7,20 @@ resolution-time cost that adds more.
   be blocked" rider (`machines/effects._RIDER_CANT_BE_BLOCKED_RE`), granted
   the identical way: the self line "This creature can't block."
   (`machines/combat.py`'s own blocker restriction) for the rest of the turn.
-- **Searing Barb** (off-pool, the generality proof - a real second printing,
-  a *conditional* rider rather than Duel Tactics' unconditional one, and a
-  "damage to any target" antecedent rather than "target creature") - "Searing
-  Barb deals 2 damage to any target. If it's a creature, it can't block this
-  turn." `machines/effects._REFERENT_IS_TYPE_CONDITION_RE` reads "if it's a
-  `<type>`," as a characteristic check on the antecedent's own found object
-  (CR 205.2a), filtering which referents the rider actually reaches - a
-  player or planeswalker target simply never triggers the "can't block"
-  half. (Its own "Incubate 1." clause is a different, unrelated mechanic
-  this file does not touch or claim to cover.)
+  No second Modern/Pioneer/Standard-legal printing of this exact "damage to
+  target creature. It can't block this turn." template plays end to end:
+  `card_search`/Scryfall turn up only Searing Barb (an "any target"
+  antecedent gated by "If it's a creature," - and a real printing that is
+  *itself* silent, CR 608.2c failing the whole spell closed because of its
+  unrelated, unimplemented Incubate keyword action - not a card this reader
+  can honestly claim as proof), Puppet Master, String Puller (not legal in
+  any of the three formats) and Ydwen Efreet (a self-referential "it" inside
+  one sentence, a different composition entirely). See MEMORY.md's dated
+  line. Generality is instead proven within this file by exercising the
+  reader across Duel Tactics' own two ways onto the stack - cast normally
+  and cast again from the graveyard via flashback (CR 702.34a) - and by
+  checking the grant does not survive past the turn it was made on (CR
+  514.2).
 - **Heated Argument** - "Heated Argument deals 6 damage to target creature.
   You may exile a card from your graveyard. If you do, Heated Argument also
   deals 2 damage to that creature's controller." CR 118.12's optional
@@ -32,7 +36,9 @@ effective 2026-09-25) in the session that wrote this file:
   illegal.
 - **CR 400.7** - the pronoun/demonstrative anaphora naming the antecedent's
   own found object.
-- **CR 205.2a** - the fifteen card types, including creature.
+- **CR 702.34a** - Flashback: casting the card from the graveyard by paying
+  its flashback cost, then exiling it instead of letting it go anywhere
+  else when it leaves the stack.
 - **CR 118.12** - "[a player] may [do something]. If [that player] does,
   [effect]" - the shape backing the graveyard-exile rider.
 - **CR 608.2d** - the player announces choices (which card to exile) while
@@ -45,7 +51,6 @@ from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 DUEL_TACTICS = "Duel Tactics"
-SEARING_BARB = "Searing Barb"
 HEATED_ARGUMENT = "Heated Argument"
 
 
@@ -87,73 +92,41 @@ def test_duel_tactics_grant_is_only_until_end_of_turn():
     assert "This creature can't block." not in board_after_cleanup.of(bears).abilities
 
 
-def _searing_barb_damage_and_cant_block_clause():
-    """Searing Barb's own first two sentences, read the production way
-    (`effects._spell_effect_or_notice`) - not its whole printed text.
-
-    Searing Barb's third sentence, "Incubate 1.", is CR 701.51's Incubate
-    keyword action - a real mechanic, but a wholly different one this task
-    does not own or touch, and the engine does not implement it yet. Since
-    `_parse_mixed_clauses` fails a card closed *as a whole* when even one of
-    its clauses is unreadable (CR 608.2c has no notion of running half an
-    effect), casting the real printed card end to end would resolve nothing
-    at all and prove nothing about the conditional "can't block" rider this
-    file is actually about. Reading just the two sentences that rider lives
-    in, through the same dispatcher every whole card goes through, is what
-    isolates the mechanic under test from the unrelated, unimplemented one
-    sharing the card - not a hand-written substitute for either.
-    """
-    from magic_cards_model.machines import effects
-
-    text = (
-        "Searing Barb deals 2 damage to any target. If it's a creature, it can't block this turn."
-    )
-    effect = effects._spell_effect_or_notice(text)
-    assert effect is not None and not effects._is_notice_only(effect)
-    return effect
+def _flashback(scenario, name: str, targets=None):
+    casting = scenario.cast(name, from_zone=Zone.GRAVEYARD)
+    casting.use_keyword("Flashback")
+    if targets is not None:
+        casting.choose_targets(targets)
+    scenario.auto_pay(casting.begin_paying())
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
 
 
-def test_searing_barb_a_creature_target_cant_block():
+def test_duel_tactics_cast_from_the_graveyard_via_flashback_still_grants_cant_block():
+    """The off-pool generality proof this reader actually has: no second
+    real printing of the template plays end to end (see the module
+    docstring and MEMORY.md's dated line), so generality is instead proven
+    by driving the *same* reader through Duel Tactics' own second, distinct
+    way onto the stack - CR 702.34a's flashback, an alternative cost and a
+    different origin zone from a fresh cast, exercising the exact same
+    `_parse_referent_object_clause` composition the front-face cast above
+    already used."""
     scenario = (
         Scenario()
-        .player("alice", hand=[SEARING_BARB], battlefield=["Mountain", "Mountain", "Mountain"])
+        .player("alice", graveyard=[DUEL_TACTICS], battlefield=["Mountain", "Mountain"])
         .player("bob", battlefield=["Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
-    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
-    scenario.cast_onto_stack(SEARING_BARB, *sources, targets=[bears])
-    spell = scenario.game.stack[-1]
 
-    with scenario.game._id_allocator_scope():  # noqa: SLF001 - deterministic ids, as every mutation in this engine mints them
-        _searing_barb_damage_and_cant_block_clause()(scenario.game, spell)
+    _flashback(scenario, DUEL_TACTICS, targets=[bears])
 
-    assert bears.damage == 2
+    assert bears.damage == 1
     board = scenario.game.computed_board()
     assert "This creature can't block." in board.of(bears).abilities
-
-
-def test_searing_barb_at_a_player_grants_no_cant_block():
-    """CR 205.2a: a player is never a creature, so the conditional rider's
-    own referent-type filter drops the referent, and nothing is granted -
-    the damage to the player's life total still happens."""
-    scenario = (
-        Scenario()
-        .player("alice", hand=[SEARING_BARB], battlefield=["Mountain", "Mountain", "Mountain"])
-        .player("bob")
-        .build()
-    )
-    scenario.start_at(Step.PRECOMBAT_MAIN)
-    bob = scenario.player("bob")
-    life_before = bob.life
-    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain")
-    scenario.cast_onto_stack(SEARING_BARB, *sources, targets=["bob"])
-    spell = scenario.game.stack[-1]
-
-    _searing_barb_damage_and_cant_block_clause()(scenario.game, spell)
-
-    assert bob.life == life_before - 2
+    duel_tactics = scenario.find(DUEL_TACTICS, Zone.EXILE, "alice")
+    assert duel_tactics.zone is Zone.EXILE  # CR 702.34a's own flashback exile, not the graveyard
 
 
 BIG_CREATURE = "Atraxa, Grand Unifier"  # 7/7: survives the 6 damage, so `.damage`

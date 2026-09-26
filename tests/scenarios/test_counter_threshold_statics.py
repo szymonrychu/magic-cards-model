@@ -233,3 +233,76 @@ def test_diary_of_dreams_reduced_cost_is_still_not_free_below_it():
     (island,) = scenario.untapped_sources("Island")
     with pytest.raises(ValueError):
         scenario.activate(diary, island)
+
+
+# --------------------------------------------------------------------------
+# The off-pool generality proof for `ActivationCostReduction.self_counter_kind`
+# itself: Vindictive Flamestoker, "{6}{R}, Sacrifice this creature: Discard
+# your hand, then draw four cards. This ability costs {1} less to activate
+# for each oil counter on this creature." A different counter kind ("oil"
+# rather than "page"), a different ability shape (a sacrifice additional
+# cost, CR 601.2b, ahead of the mana cost the reduction actually applies to;
+# a discard-then-draw effect rather than a plain draw), proving the reader
+# is not fitted to Diary of Dreams' own printed sentence.
+# --------------------------------------------------------------------------
+
+FLAMESTOKER = "Vindictive Flamestoker"
+
+
+def test_vindictive_flamestoker_costs_one_less_per_oil_counter():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mountain", "Mountain"],
+            battlefield=[FLAMESTOKER, "Mountain", "Mountain", "Mountain", "Mountain"],
+            library=["Forest", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    flamestoker = scenario.find(FLAMESTOKER, Zone.BATTLEFIELD, "alice")
+    flamestoker.add_counters("oil", 3)
+    alice = scenario.player("alice")
+    # Printed {6}{R} minus three oil counters is {3}{R} - four Mountains pay it.
+    assert scenario.game.activation_cost(flamestoker, 0).mana == ManaCost.parse("{3}{R}")
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain")
+
+    scenario.activate(flamestoker, *sources, sacrificing=[flamestoker])
+    scenario.resolve_top()
+
+    assert flamestoker.zone is Zone.GRAVEYARD
+    assert len(alice.hand) == 4
+
+
+def test_vindictive_flamestoker_with_no_oil_counters_still_costs_the_full_six_red():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Mountain"],
+            battlefield=[
+                FLAMESTOKER,
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+                "Mountain",
+            ],
+            library=["Forest", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    flamestoker = scenario.find(FLAMESTOKER, Zone.BATTLEFIELD, "alice")
+    assert scenario.game.activation_cost(flamestoker, 0).mana == ManaCost.parse("{6}{R}")
+    sources = scenario.untapped_sources(*(["Mountain"] * 7))
+
+    scenario.activate(flamestoker, *sources, sacrificing=[flamestoker])
+    scenario.resolve_top()
+
+    assert flamestoker.zone is Zone.GRAVEYARD
