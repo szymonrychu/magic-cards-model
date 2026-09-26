@@ -216,6 +216,9 @@ _PROBE_SPELLS = [
 ]
 #: Creatures to put onto the battlefield, kill or attack with when a
 #: condition names "a creature" without a type the probe finder can use.
+#: The {X} spell cast for "a spell with {X} in its mana cost", and its X.
+_X_PROBE = "Endless One"
+_X_PROBE_VALUE = 2
 _PROBE_CREATURES = ["Memnite", "Grizzly Bears", "Llanowar Elves", "Serra Angel"]
 #: Noncreature permanents, for a condition that names "noncreature
 #: permanents": an Equipment and an enchantment.
@@ -1664,6 +1667,11 @@ def _player_state_threshold(scenario: PlayedScenario, condition: str | None) -> 
         missing = player.starting_life + int(above.group(1)) - player.life
         if missing > 0:
             game.gain_life(ALICE, missing)
+    if re.search(r"\byou own (?:a|one or more) cards? in exile\b", lowered):
+        # CR 406.1: a card of the player's own library put into exile.
+        library = game.player(ALICE).library
+        if library and not any(card.owner == ALICE for card in game.exile):
+            game.exile_cards([library[-1]])
     if re.search(r"you have (?:more life than an opponent|the most life)", lowered):
         game.lose_life(BOB, 1)
     if re.search(rf"(?:{_SUBJECT}) (?:is|are) poisoned", lowered):
@@ -1692,7 +1700,7 @@ _SELF_DESIGNATION = re.compile(
 #: source itself (CR 122.1), put there as the board is staged.
 _SELF_COUNTERS = re.compile(
     r"(?:\b(?:it|this \w+) (?:has|had) (?:(?P<count>a|an|one|two|three|four|five|\d+)"
-    r"(?: or more)? )?(?P<kind>\S+) counters? on it"
+    r"(?: or more)? )?(?:(?P<kind>\S+) )?counters? on it"
     r"|there (?:is|are) (?P<count2>\w+) or more (?P<kind2>\S+) counters? on this \w+)",
     re.IGNORECASE,
 )
@@ -1722,7 +1730,8 @@ def _object_state_threshold(
         and "no " not in lowered
         and "n't" not in lowered
     ):
-        kind = counters.group("kind") or counters.group("kind2")
+        # A bare "it had counters on it" names no kind: +1/+1, like "counters".
+        kind = counters.group("kind") or counters.group("kind2") or "counters"
         raw = counters.group("count") or counters.group("count2") or "1"
         count = int(raw) if raw.isdigit() else parse_count(raw) or 1
         game.add_counters(source, "+1/+1" if kind == "counters" else kind, count)
@@ -2810,6 +2819,11 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         and not pool()[card.name].is_land
         and not pool()[card.name].card_faces
     ]
+    # "a spell with {X} in its mana cost" (CR 107.3): no stock spell prints
+    # {X}, so a real {X} spell is cast too, with X announced (CR 107.3a).
+    x_spell = "{x} in its mana cost" in lowered
+    if x_spell:
+        fitted.append(_X_PROBE)
     for caster in casters:
         for probe in dict.fromkeys([*_PROBE_SPELLS, *fitted]):
 
@@ -2825,7 +2839,8 @@ def _casting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
                         _treasure_mana_for(scenario, probe, caster)
                     prefer = source_id if targets_self else None
                     if caster == scenario.game.active_player.username:
-                        _cast(scenario, probe, caster, prefer=prefer)
+                        x_value = _X_PROBE_VALUE if x_spell and probe == _X_PROBE else None
+                        _cast(scenario, probe, caster, prefer=prefer, x_value=x_value)
                     else:
                         _opponent_casts(scenario, probe, prefer=prefer)
                     if _drive(scenario, case, source_id) is not None:
