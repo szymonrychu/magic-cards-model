@@ -117,6 +117,7 @@ from .abilities import (
     keyword_abilities,
     legendary_self_pronoun_normalized,
     parse_abilities,
+    parse_granted_ability_lines,
     parse_triggered_mana,
     self_normalized_effect_text,
 )
@@ -127,7 +128,7 @@ from .casting import (
     remove_suspend_time_counter,
 )
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
-from .combat import has_keyword
+from .combat import Keyword, has_keyword
 from .connive import parse_connive_clause
 from .cost import (
     cost_announces_x,
@@ -40259,9 +40260,18 @@ _COPY_TARGET_SPELL_RE = re.compile(
     rf"^copy target(?: {_SPELL_QUALIFIER})? spell(?: you control)?\.?"
     r"(?P<doubles>\s*if this spell was cast from a graveyard,\s*"
     r"copy that spell twice instead\.)?"
-    r"(?P<new_targets>\s*you may choose new targets for the cop(?:y|ies)\.?)?\s*$",
+    r"(?P<new_targets>\s*you may choose new targets for the cop(?:y|ies)\.?)?"
+    r"(?P<gains>\s*the copy gains (?P<keywords>[a-z ,]+?)"
+    r"(?:,? and \"(?P<quoted>[^\"]+)\")?\.?)?\s*$",
     re.IGNORECASE,
 )
+
+#: "The copy gains `<keywords>`[ and "`<ability>`"]." (Choreographed Sparks'
+#: second mode) - what the copy of a spell gains as it is put onto the stack,
+#: carried onto the token it becomes (CR 707.10f, CR 400.7b's permanent-spell
+#: exception, `CardState.move_to`). Each keyword has to be one combat reads
+#: (`machines/combat.Keyword`), or the rider is not read at all.
+_COPY_GAINS_KEYWORD_SPLIT_RE = re.compile(r"\s*(?:,\s*and|,|\band)\s*", re.IGNORECASE)
 
 
 def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedClause | None:
@@ -40304,6 +40314,9 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
         # "If this spell was cast ..." only means anything on a spell.
         return None
     offer_new_targets = match.group("new_targets") is not None
+    gained = _copy_gains_lines(match.group("keywords"), match.group("quoted"))
+    if match.group("gains") is not None and gained is None:
+        return None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -40325,6 +40338,11 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
                 continue
             for _ in range(copies):
                 copy = game.copy_spell(target, controller=controller)
+                if copy is not None and gained:
+                    copy.granted_ability_texts = (
+                        *copy.granted_ability_texts,
+                        *(line for line in gained if line not in copy.granted_ability_texts),
+                    )
                 if offer_new_targets:
                     game.offer_new_targets_for_copy(
                         copy,
@@ -40334,6 +40352,29 @@ def _parse_copy_target_spell_clause(text: str, *, for_spell: bool) -> TargetedCl
                     )
 
     return effect
+
+
+def _copy_gains_lines(keywords: str | None, quoted: str | None) -> tuple[str, ...] | None:
+    """`_COPY_TARGET_SPELL_RE`'s "The copy gains ..." rider as the ability
+    lines the copy is granted, `()` when there is no rider, or None when a
+    keyword is not one combat executes or the quoted ability does not parse
+    - an unread rider fails the whole clause closed."""
+    if keywords is None:
+        return ()
+    lines: list[str] = []
+    for word in _COPY_GAINS_KEYWORD_SPLIT_RE.split(keywords.strip()):
+        if not word:
+            continue
+        try:
+            Keyword(word.lower())
+        except ValueError:
+            return None
+        lines.append(word.capitalize())
+    if quoted is not None:
+        if not parse_granted_ability_lines([quoted]):
+            return None
+        lines.append(quoted)
+    return tuple(lines)
 
 
 #: "This creature deals N damage to that spell's controller." - Bonecrusher
@@ -46989,10 +47030,14 @@ def _parse_sacrifice_self_clause(clause: str, *, for_spell: bool) -> TargetedCla
         return None
     noun = match.group("noun")
     # A subtype names the source as well as a card type does - See Red's
-    # "sacrifice this Aura" (CR 205.3).
+    # "sacrifice this Aura" (CR 205.3) - and so does "this token" (CR 111.1),
+    # the noun a quoted ability granted to a token or a copy that becomes one
+    # prints for itself (Choreographed Sparks' "At the beginning of the end
+    # step, sacrifice this token.").
     if (
         noun is not None
         and noun.lower() not in _SACRIFICE_SELF_NOUNS
+        and noun.lower() != "token"
         and canonical_subtype(noun) is None
     ):
         return None

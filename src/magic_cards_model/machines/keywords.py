@@ -5346,6 +5346,8 @@ def _storm_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     copies: list[CardState] = []
     for _ in range(max(count, 0)):
         copy = game.copy_spell(source, controller=controller)
+        if copy is None:
+            break  # CR 113.6g: this spell can't be copied.
         game.offer_new_targets_for_copy(
             copy, controller, source_name=source.name, source_id=source_id_of(source)
         )
@@ -5376,6 +5378,8 @@ def _replicate_effect(game: Any, ability: AbilityOnStack) -> list[CardState]:
     copies: list[CardState] = []
     for _ in range(max(count, 0)):
         copy = game.copy_spell(source, controller=controller)
+        if copy is None:
+            break  # CR 113.6g: this spell can't be copied.
         game.offer_new_targets_for_copy(
             copy, controller, source_name=source.name, source_id=source_id_of(source)
         )

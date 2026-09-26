@@ -68,6 +68,7 @@ from ..machines.casting import (
 from ..machines.casting_restrictions import (
     CastingRuleEffect,
     CastingRuleKind,
+    cannot_be_copied,
     cannot_be_countered,
     combat_lockdown_restriction_source,
     conditionally_cannot_be_countered,
@@ -581,6 +582,12 @@ _COSTS_LESS_PER_OPPONENT_COLORLESS_LAND_RE = re.compile(
     r"that could produce \{C\}",
     re.IGNORECASE,
 )
+
+#: Every keyword `machines/combat.Keyword` executes, lower case - what
+#: `Game._keep_keywords_gained_as_a_spell` carries from a spell onto the
+#: permanent it becomes (CR 400.7a).
+_COMBAT_KEYWORDS: frozenset[str] = frozenset(keyword.value for keyword in Keyword)
+
 
 #: CR 702.41a's affinity, read off the keyword line rather than off its
 #: reminder text (which is CR 207.2 italics with no game function): "Affinity
@@ -6783,6 +6790,37 @@ class Game(EngineModel):
             self.resolving = None
             self._forget_counts()
 
+    def _keep_keywords_gained_as_a_spell(self, permanent: CardState) -> None:
+        """CR 400.7a: "Effects from spells, activated abilities, and triggered
+        abilities that change the characteristics or controller of a
+        permanent spell on the stack continue to apply to the permanent that
+        spell becomes." A keyword such an effect gave the spell - Choreographed
+        Sparks' "The copy gains haste" - is carried on `granted_ability_texts`
+        (kept across this one move, `CardState.move_to`); the layer system
+        reads a permanent's abilities off the computed board (CR 613.1f), so
+        each combat keyword there is granted in layer 6 to this incarnation of
+        the permanent, indefinitely (CR 611.2a's default when no duration is
+        printed). Triggered lines need nothing here: `triggered_abilities_on`
+        already reads `granted_ability_texts`."""
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return
+        keywords = [
+            line for line in permanent.granted_ability_texts if line.lower() in _COMBAT_KEYWORDS
+        ]
+        if not keywords:
+            return
+        store = self.continuous_effects
+        for line in keywords:
+            store.add(
+                ContinuousEffect(
+                    description=f"{permanent.name}: gained {line} as a spell (CR 400.7a)",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    selector=only_this_incarnation(permanent, permanent.zone_change_stamp),
+                    modification=grant_ability(line),
+                )
+            )
+
     def create_emblem(
         self, owner: str, text: str, source_name: str, *, name: str | None = None
     ) -> CardState:
@@ -7237,6 +7275,7 @@ class Game(EngineModel):
                 _put_onto_the_battlefield_attacking(self, spell, sneak_defender)
             self._apply_mana_spend_effects(spell)
             self._create_resolution_delayed_triggers(spell)
+            self._keep_keywords_gained_as_a_spell(spell)
             # Deliberately *not* popped here, unlike the graveyard-bound branch
             # below. CR 608.2a rechecks a triggered ability's intervening *if*
             # again as it resolves, and an "enters, if [mana] was spent to cast
@@ -8556,8 +8595,11 @@ class Game(EngineModel):
             chosen.append(next((mode for mode in remaining if mode.text == answer), remaining[0]))
         return chosen
 
-    def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState:
-        """CR 707.10: put a copy of `spell` onto the stack.
+    def copy_spell(self, spell: CardState, controller: str | None = None) -> CardState | None:
+        """CR 707.10: put a copy of `spell` onto the stack - or nothing, for a
+        spell that says "This spell can't be copied." (CR 113.6g,
+        `casting_restrictions.cannot_be_copied`), which is why every caller
+        is handed `None` to pass over rather than a copy.
 
         "To copy a spell ... means to put a copy of it onto the stack; a copy
         of a spell isn't cast." Unlike `cast_during_resolution`, this does not
@@ -8625,6 +8667,8 @@ class Game(EngineModel):
         A copy of a non-permanent spell (an instant or sorcery) never becomes
         a token at all, so it stays a plain `CardState`.
         """
+        if cannot_be_copied(spell):
+            return None
         with self._id_allocator_scope():
             controller = controller or spell.controller or self.controller_of(spell).username
             original_record = self.cast_record(spell)
@@ -8708,7 +8752,12 @@ class Game(EngineModel):
             return copy
 
     def offer_new_targets_for_copy(
-        self, copy: CardState, controller: str, *, source_name: str = "", source_id: str | None
+        self,
+        copy: CardState | None,
+        controller: str,
+        *,
+        source_name: str = "",
+        source_id: str | None,
     ) -> None:
         """CR 707.10c-shaped permission: "you may choose new targets for the
         copy" (Alania, Divergent Storm being the only printing in the pool).
@@ -8735,6 +8784,9 @@ class Game(EngineModel):
         only the flat `copy.targets` moves - CR 700.2g still holds regardless
         (the modes themselves are never touched here, only their targets).
         """
+        if copy is None:
+            # `copy_spell` made no copy (CR 113.6g): nothing to retarget.
+            return
         record = self.cast_record(copy)
         owners: list[int] | None = None
         if record.modes:
@@ -8836,6 +8888,8 @@ class Game(EngineModel):
             if requirement.rejects(target, controller, self, spell.id) is not None:
                 return None
         copy = self.copy_spell(spell, controller=controller)
+        if copy is None:
+            return None
         ref = TargetRef.coerce(target)
         copy.targets = [ref for _ in profile.requirements]
         record = self.cast_record(copy)
