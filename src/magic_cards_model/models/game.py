@@ -12190,6 +12190,11 @@ class Game(EngineModel):
                 raise ValueError(f"{decision.prompt}: needs a top-or-bottom bool answer")
             return value
 
+        if decision.kind is DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD:
+            if not isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs a hand-or-graveyard bool answer")
+            return value
+
         if decision.kind is DecisionKind.CHOOSE_PILE:
             if not isinstance(value, bool):
                 raise ValueError(f"{decision.prompt}: needs a which-pile bool answer")

@@ -778,6 +778,22 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.PUT_ON_TOP_OR_BOTTOM, top, username, source, times)
 
+    def will_choose_hand_or_graveyard(
+        self,
+        hand: bool = True,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "put it into your hand or graveyard" (CR 608.2d) -
+        Dina's Guidance's own choice. `hand` names the answer: `True` for the
+        hand (the documented default, `DecisionKind.PUT_INTO_HAND_OR_
+        GRAVEYARD`'s own least-destructive choice), `False` for the
+        graveyard.
+        """
+        self._queue(DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD, hand, username, source, times)
+
     def will_choose_pile(
         self,
         pile_one: bool = True,

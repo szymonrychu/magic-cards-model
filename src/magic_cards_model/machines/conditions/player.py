@@ -222,6 +222,27 @@ def _cards_in_your_zone(context: "ConditionContext", match: re.Match[str]) -> bo
     return test(sum(1 for state in cards if quality(state)))
 
 
+def _two_card_qualities_in_your_zone(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "there is/are a[n] <quality1> card and a[n] <quality2> card in your
+    <zone>" - Flow State's own "If there is an instant card and a sorcery
+    card in your graveyard, instead put two of them into your hand".
+
+    Not `_cards_in_your_zone`'s single-quality count: a card is not usually
+    both of two distinct card types at once, so "an instant card and a
+    sorcery card" is never one predicate to count matches of, but the
+    logical AND of two independent existence checks (CR 608.2c's plain
+    conjunction), each read the same `_card_quality` any other single
+    quality word already is."""
+    from ...models.game import _card_quality
+
+    quality1 = _card_quality(match.group("quality1"))
+    quality2 = _card_quality(match.group("quality2"))
+    if quality1 is None or quality2 is None:
+        return False
+    cards = _zone_cards(context, context.controller, match.group("zone"))
+    return any(quality1(state) for state in cards) and any(quality2(state) for state in cards)
+
+
 def _mana_values_among(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "there are <count> mana values among [<quality>] cards in your
     graveyard" (Sanguine Spy) - the number of distinct CR 202.3 mana values."""
@@ -682,6 +703,13 @@ READERS: tuple[ConditionReader, ...] = (
             rf"(?:(?P<quality>{_CARD_QUALITY}) )?cards in your graveyard"
         ),
         _mana_values_among,
+    ),
+    ConditionReader(
+        re.compile(
+            rf"there (?:is|are) an? (?P<quality1>{_CARD_QUALITY}) card and an? "
+            rf"(?P<quality2>{_CARD_QUALITY}) card in your (?P<zone>graveyard|hand|library)"
+        ),
+        _two_card_qualities_in_your_zone,
     ),
     ConditionReader(
         re.compile(

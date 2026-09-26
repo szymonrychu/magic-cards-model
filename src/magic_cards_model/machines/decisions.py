@@ -330,6 +330,14 @@ class DecisionKind(StrEnum):
     #: same "least destructive, most reversible" posture `SCRY`/`SURVEIL`'s own
     #: "keep everything on top" default already takes.
     PUT_ON_TOP_OR_BOTTOM = "put_on_top_or_bottom"
+    #: "Put it into your hand or graveyard" (Dina's Guidance) - CR 608.2d's
+    #: own choice between two named zones, made by whichever player the
+    #: effect names (the searcher, CR 701.23's own subject), the identical
+    #: two-way boolean shape `PUT_ON_TOP_OR_BOTTOM` already is: `True` is the
+    #: hand, `False` the graveyard. The default keeps the card visible and
+    #: usable rather than buried, the same "least destructive" posture
+    #: `PUT_ON_TOP_OR_BOTTOM`'s own default already takes.
+    PUT_INTO_HAND_OR_GRAVEYARD = "put_into_hand_or_graveyard"
     #: CR 700.3's own two-way pile split (Liliana of the Veil's own `-6`,
     #: "Separate all permanents target player controls into two piles. That
     #: player sacrifices all permanents in the pile of their choice."; Do or
@@ -681,6 +689,8 @@ def default_answer(decision: Decision) -> object:
         return 0
     if decision.kind is DecisionKind.PUT_ON_TOP_OR_BOTTOM:
         return True
+    if decision.kind is DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD:
+        return True
     if decision.kind is DecisionKind.CHOOSE_PILE:
         # Neither pile is more "destructive" than the other here - both name
         # the same consequence (sacrifice, destroy) - so this is an arbitrary
@@ -850,6 +860,7 @@ _ANSWER_FIELD_FOR_KIND: dict[DecisionKind, str] = {
     DecisionKind.MULLIGAN: "accept",
     DecisionKind.OPENING_HAND_ACTION: "accept",
     DecisionKind.PUT_ON_TOP_OR_BOTTOM: "accept",
+    DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD: "accept",
     DecisionKind.CHOOSE_PILE: "accept",
     DecisionKind.PAY_ENERGY_AMOUNT: "amount",
     DecisionKind.PAY_LIFE_AMOUNT: "amount",

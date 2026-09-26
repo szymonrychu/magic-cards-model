@@ -1,0 +1,139 @@
+{
+  "object": "card",
+  "id": "64f7a506-0aa1-4c2d-b322-e0e9179d05fb",
+  "oracle_id": "9584a8ae-2aba-42b8-8983-0467d6bd5698",
+  "multiverse_ids": [
+    548298
+  ],
+  "mtgo_id": 96920,
+  "arena_id": 79425,
+  "tcgplayer_id": 262298,
+  "cardmarket_id": 607393,
+  "name": "Brilliant Restoration",
+  "lang": "en",
+  "released_at": "2022-02-18",
+  "uri": "https://api.scryfall.com/cards/64f7a506-0aa1-4c2d-b322-e0e9179d05fb",
+  "scryfall_uri": "https://scryfall.com/card/neo/7/brilliant-restoration?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:25:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.jpg?1783923925",
+    "normal": "https://cards.scryfall.io/normal/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.jpg?1783923925",
+    "large": "https://cards.scryfall.io/large/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.jpg?1783923925",
+    "png": "https://cards.scryfall.io/png/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.png?1783923925",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.jpg?1783923925",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.jpg?1783923925",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.webp?1783923925",
+    "grid": "https://cards.scryfall.io/grid/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.webp?1783923925",
+    "display": "https://cards.scryfall.io/display/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.webp?1783923925",
+    "art": "https://cards.scryfall.io/art/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.webp?1783923925",
+    "crop": "https://cards.scryfall.io/crop/front/6/4/64f7a506-0aa1-4c2d-b322-e0e9179d05fb.webp?1783923925"
+  },
+  "mana_cost": "{3}{W}{W}{W}{W}",
+  "cmc": 7.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Return all artifact and enchantment cards from your graveyard to the battlefield.",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "59a2059f-5482-433f-8761-eb2e17859b71",
+  "set": "neo",
+  "set_name": "Kamigawa: Neon Dynasty",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/59a2059f-5482-433f-8761-eb2e17859b71",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aneo&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/neo?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/64f7a506-0aa1-4c2d-b322-e0e9179d05fb/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9584a8ae-2aba-42b8-8983-0467d6bd5698&unique=prints",
+  "collector_number": "7",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"We have done our best to heal this land together, but now I must entrust the future to my sister. She will carry our dreams onward into the sunrise.\"\n\u2014Michiko Konda's journal",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Wylie Beckert",
+  "artist_ids": [
+    "074daf3d-0849-4c4a-b5a5-c276384e81e5"
+  ],
+  "illustration_id": "bb2370a0-49ed-4d7b-b92a-c02051705683",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": true,
+  "edhrec_rank": 2331,
+  "penny_rank": 11136,
+  "preview": {
+    "source": "CBR.com",
+    "source_uri": "https://www.cbr.com/magic-the-gathering-kamigawa-neon-dynasty-card-reveal/",
+    "previewed_at": "2022-01-31"
+  },
+  "prices": {
+    "usd": "1.26",
+    "usd_foil": "1.75",
+    "usd_etched": null,
+    "eur": "0.89",
+    "eur_foil": "1.32",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=548298&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBrilliant%2BRestoration",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBrilliant%2BRestoration",
+    "edhrec": "https://edhrec.com/route/?cc=Brilliant+Restoration"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F262298%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=607393&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/96920?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
