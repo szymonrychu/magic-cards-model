@@ -14095,6 +14095,9 @@ class Game(EngineModel):
                     f"one of {names} instead? (CR 702.52a)"
                 ),
                 cards=tuple(card.id for card in candidates),
+                # Several graveyard cards can offer dredge for the one draw, so
+                # no single object asks; `cards` names each candidate.
+                source_id=None,
             )
         )
         assert isinstance(answer, tuple)
