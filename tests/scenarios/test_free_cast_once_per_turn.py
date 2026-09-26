@@ -185,9 +185,7 @@ def test_legal_actions_list_the_free_cast_until_it_is_used():
 def test_one_with_the_multiverse_casts_any_spell_from_hand_once():
     """A different quality ("a spell") and a second zone named: Grizzly
     Bears, a creature spell, is cast from hand for nothing."""
-    scenario = board(
-        "Grizzly Bears", "Opt", battlefield=("One with the Multiverse",)
-    )
+    scenario = board("Grizzly Bears", "Opt", battlefield=("One with the Multiverse",))
     bears = cast_free(scenario, "Grizzly Bears", source="One with the Multiverse")
     assert bears.zone is Zone.STACK
     assert untapped_lands(scenario) == 5
