@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 7.3% |
-| Works (untested) | 97 | 44.1% |
+| Works (untested) | 103 | 46.8% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 97 | 44.1% |
+| Not working | 91 | 41.4% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Crab Umbra | silent | {2}{U}: Untap enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonic Appetite | silent | At the beginning of your upkeep, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Disaster Radius | silent | As an additional cost to cast this spell, reveal a creature card from your hand. Disaster Radius deals X damage to each creature your opponents control, where X | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Domestication | silent | At the beginning of your end step, if enchanted creature's power is 4 or greater, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dormant Gomazoa | silent | Whenever you become the target of a spell, you may untap this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Echo Mage | silent | {U}{U}, {T}: Copy target instant or sorcery spell twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eldrazi Conscription | silent | Enchanted creature gets +10/+10 and has trample and annihilator 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,7 +72,6 @@
 | Lighthouse Chronologist | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lightmine Field | silent | Whenever one or more creatures attack, this enchantment deals damage to each of those creatures equal to the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of Shatterskull Pass | silent | Whenever this creature attacks, it deals 6 damage to each creature defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lust for War | silent | Whenever enchanted creature becomes tapped, this Aura deals 3 damage to that creature's controller. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Mul Daya Channelers | silent | As long as the top card of your library is a creature card, this creature gets +3/+3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Narcolepsy | silent | At the beginning of each upkeep, if enchanted creature is untapped, tap it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Near-Death Experience | silent | At the beginning of your upkeep, if you have exactly 1 life, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -83,9 +81,7 @@
 | Oust | silent | Put target creature into its owner's library second from the top. Its controller gains 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pennon Blade | silent | Equipped creature gets +1/+1 for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Perish the Thought | silent | Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pestilence Demon | silent | {B}: This creature deals 1 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raid Bombardment | silent | Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rapacious One | silent | Whenever this creature deals combat damage to a player, create that many 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recurring Insight | silent | Draw cards equal to the number of cards in target opponent's hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reinforced Bulwark | silent | {T}: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -100,7 +96,6 @@
 | Suffer the Past | silent | Exile X target cards from target player's graveyard. For each card exiled this way, that player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Surrakar Spellblade | silent | Whenever this creature deals combat damage to a player, you may draw X cards, where X is the number of charge counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Surreal Memoir | silent | Return an instant card at random from your graveyard to your hand. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Survival Cache | silent | You gain 2 life. Then if you have more life than an opponent, draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the begin | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Gorger | silent | When this creature enters, put a +1/+1 counter on it for each card in your hand. If you do, discard your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time of Heroes | silent | Each creature you control with a level counter on it gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Transcendent Master | silent | Level up {1} ({1}: Put a level counter on this. Level up only as a sorcery.) LEVEL 6-11 6/6 Lifelink LEVEL 12+ 9/9 Lifelink, indestructible | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -120,15 +115,14 @@
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Emerge Unscathed | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Kor Spiritdancer | notice | This creature gets +2/+2 for each Aura attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Masses | notice | Target creature gets +1/+1 until end of turn for each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aura Gnarlid | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cast Through Time | unaudited | Instant and sorcery spells you control have rebound. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Guard Gomazoa | unaudited | Prevent all combat damage that would be dealt to this creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hand of Emrakul | unaudited | You may sacrifice four Eldrazi Spawn rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hedron Matrix | unaudited | Equipped creature gets +X/+X, where X is its mana value. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Khalni Hydra | unaudited | This spell costs {G} less to cast for each green creature you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Lust for War | unaudited | Enchanted creature attacks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Pathrazer of Ulamog | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tajuru Preserver | unaudited | Spells and abilities your opponents control can't cause you to sacrifice permanents. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Training Grounds | unaudited | Activated abilities of creatures you control cost {2} less to activate. This effect can't reduce the mana in that cost to less than one mana. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -152,6 +146,7 @@
 | Deathless Angel | handled | {W}{W}: Target creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deprive | handled | As an additional cost to cast this spell, return a land you control to its owner's hand. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devastating Summons | handled | As an additional cost to cast this spell, sacrifice X lands. Create two X/X red Elemental creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Domestication | handled | You control enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drake Umbra | handled | Enchanted creature gets +3/+3 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dread Drone | handled | When this creature enters, create two 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamstone Hedron | handled | {3}, {T}, Sacrifice this artifact: Draw three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -175,9 +170,11 @@
 | Grotag Siege-Runner | handled | {R}, Sacrifice this creature: Destroy target creature with defender. This creature deals 2 damage to that creature's controller. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Growth Spasm | handled | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrif | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guard Duty | handled | Enchanted creature has defender. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Guard Gomazoa | handled | Prevent all combat damage that would be dealt to this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jwari Scuttler | handled |  |  | Y/-/- | not_tested |
 | Kiln Fiend | handled | Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kor Line-Slinger | handled | {T}: Tap target creature with power 3 or less. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kor Spiritdancer | handled | This creature gets +2/+2 for each Aura attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kozilek's Predator | handled | When this creature enters, create two 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lagac Lizard | handled |  |  | Y/-/- | not_tested |
 | Last Kiss | handled | Last Kiss deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -202,10 +199,12 @@
 | Overgrown Battlement | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Pawn of Ulamog | handled | Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrifice this token: | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pelakka Wurm | handled | When this creature enters, you gain 7 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pestilence Demon | handled | {B}: This creature deals 1 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantasmal Abomination | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prey's Vengeance | handled | Target creature gets +2/+2 until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you | the engine reads this text and performs it | Y/-/- | not_tested |
 | Puncturing Light | handled | Destroy target attacking or blocking creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rage Nimbus | handled | {1}{R}: Target creature attacks this turn if able. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rapacious One | handled | Whenever this creature deals combat damage to a player, create that many 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reality Spasm | handled | Choose one — • Tap X target permanents. • Untap X target permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Repel the Darkness | handled | Tap up to two target creatures. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Runed Servitor | handled | When this creature dies, each player draws a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -225,6 +224,7 @@
 | Sporecap Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Staggershock | handled | Staggershock deals 2 damage to any target. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you ma | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stomper Cub | handled | Trample | machines/combat.py | Y/-/- | not_tested |
+| Survival Cache | handled | You gain 2 life. Then if you have more life than an opponent, draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the begin | the engine reads this text and performs it | Y/-/- | not_tested |
 | Totem-Guide Hartebeest | handled | When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tuktuk the Explorer | handled | When Tuktuk the Explorer dies, create Tuktuk the Returned, a legendary 5/5 colorless Goblin Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Virulent Swipe | handled | Target creature gets +2/+0 and gains deathtouch until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -270,7 +270,6 @@
 | as long as the top card of your library is a creature card, ~ gets +N/+N. | 1 | Mul Daya Channelers | roe |
 | at the beginning of combat on your turn, you may have target creature get +N/+N until end of turn. | 1 | Battle-Rattle Shaman | roe |
 | at the beginning of each upkeep, if enchanted creature is untapped, tap it. | 1 | Narcolepsy | roe |
-| at the beginning of your end step, if enchanted creature's power is N or greater, sacrifice ~. | 1 | Domestication | roe |
 | at the beginning of your end step, you may reveal the top card of your library. if you do, each opponent loses life equal to that card's mana value. | 1 | Baneful Omen | roe |
 | at the beginning of your upkeep, if you have exactly N life, you win the game. | 1 | Near-Death Experience | roe |
 | at the beginning of your upkeep, sacrifice a creature. | 1 | Demonic Appetite | roe |
@@ -287,6 +286,7 @@
 | each creature you control with a level counter on it gets +N/+N. | 1 | Time of Heroes | roe |
 | each player's life total becomes the lowest life total among all players. | 1 | Repay in Kind | roe |
 | eldrazi spawn creatures you control get +N/+N. | 1 | Broodwarden | roe |
+| enchanted creature attacks each combat if able. | 1 | Lust for War | roe |
 | enchanted creature gets +N/+N and has trample and annihilator N. | 1 | Eldrazi Conscription | roe |
 | enchanted land is a swamp. | 1 | Contaminated Ground | roe |
 | equipped creature gets +N/+N for each creature you control. | 1 | Pennon Blade | roe |
@@ -306,7 +306,6 @@
 | level up {M}{M} ({M}{M}: put a level counter on this. level up only as a sorcery.) level N-N N/N level N+ N/N trample | 1 | Beastbreaker of Bala Ged | roe |
 | other creatures you control with defender get +N/+N. | 1 | Stalwart Shield-Bearers | roe |
 | other merfolk creatures you control get +N/+N. | 1 | Coralhelm Commander | roe |
-| prevent all combat damage that would be dealt to ~. | 1 | Guard Gomazoa | roe |
 | prevent all combat damage that would be dealt ~ by attacking creatures. | 1 | Harmless Assault | roe |
 | put target creature into its owner's library second from the top. its controller gains N life. | 1 | Oust | roe |
 | return an instant card at random from your graveyard to your hand. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of your next | 1 | Surreal Memoir | roe |
@@ -330,22 +329,18 @@
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Raid Bombardment | roe |
 | whenever an opponent sacrifices a nontoken permanent, put that card onto the battlefield under your control. | 1 | It That Betrays | roe |
 | whenever another creature you control enters, you may have ~ become a copy of that creature until end of turn. | 1 | Renegade Doppelganger | roe |
-| whenever enchanted creature becomes tapped, ~ deals N damage to that creature's controller. | 1 | Lust for War | roe |
 | whenever one or more creatures attack, ~ deals damage to each of those creatures equal to the number of attacking creatures. | 1 | Lightmine Field | roe |
 | whenever you become the target of a spell, you may untap ~. | 1 | Dormant Gomazoa | roe |
 | whenever you're dealt damage, you may put that many charge counters on ~. | 1 | Angelheart Vial | roe |
 | whenever ~ attacks, it deals N damage to each creature defending player controls. | 1 | Lord of Shatterskull Pass | roe |
 | whenever ~ attacks, switch its power and toughness until end of turn. | 1 | Valakut Fireboar | roe |
 | whenever ~ blocks or becomes blocked by a creature with power N or less, destroy ~ at end of combat. | 1 | Arrogant Bloodlord | roe |
-| whenever ~ deals combat damage to a player, create that many N/N colorless eldrazi spawn creature tokens. they have "..." | 1 | Rapacious One | roe |
 | whenever ~ deals combat damage to a player, sacrifice all other permanents you control and discard your hand. exile the top six cards of your library. you may c | 1 | Hellcarver Demon | roe |
 | whenever ~ deals combat damage to a player, you may draw N cards, where N is the number of charge counters on it. | 1 | Surrakar Spellblade | roe |
-| you gain N life. then if you have more life than an opponent, draw a card. rebound (if you cast ~ from your hand, exile it as it resolves. at the beginning of y | 1 | Survival Cache | roe |
 | you may sacrifice four eldrazi spawn rather than pay ~ mana cost. | 1 | Hand of Emrakul | roe |
 | {M}, {M}: target player mills N cards, where N is the number of cards in that player's graveyard. | 1 | Keening Stone | roe |
 | {M}: cast any number of eldrazi spells from among cards you own outside the game without paying their mana costs. | 1 | Spawnsire of Ulamog | roe |
 | {M}: prevent the next N damage that would be dealt to you ~. | 1 | Reinforced Bulwark | roe |
-| {M}: ~ deals N damage to each creature and each player. | 1 | Pestilence Demon | roe |
 | {M}{M}, {M}: copy target instant or sorcery spell twice. you may choose new targets for the copies. | 1 | Echo Mage | roe |
 | {M}{M}, {M}: ~ deals damage to target player or planeswalker equal to the number of creatures you control with defender. | 1 | Vent Sentinel | roe |
 | {M}{M}: untap enchanted creature. | 1 | Crab Umbra | roe |
@@ -354,7 +349,6 @@
 | ~ costs {M} less to cast for each green creature you control. | 1 | Khalni Hydra | roe |
 | ~ deals N damage to each of up to three target creatures. those creatures can't block ~. | 1 | Wrap in Flames | roe |
 | ~ gets +N/+N as long as you control a creature with three or more level counters on it. | 1 | Champion's Drake | roe |
-| ~ gets +N/+N for each aura attached to it. | 1 | Kor Spiritdancer | roe |
 
 ## Notes
 

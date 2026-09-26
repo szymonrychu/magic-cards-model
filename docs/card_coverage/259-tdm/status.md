@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.3% |
-| Works (untested) | 124 | 49.2% |
+| Tested | 30 | 11.9% |
+| Works (untested) | 125 | 49.6% |
 | Partial (unaudited) | 11 | 4.4% |
-| Not working | 91 | 36.1% |
+| Not working | 86 | 34.1% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Attuned Hunter | silent | Whenever one or more cards leave your graveyard during your turn, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Betor, Kin to All | silent | At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloomvine Regent // Claim Territory | silent | Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Bone-Cairn Butcher | silent | Attacking tokens you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Breaching Dragonstorm | silent | When this enchantment enters, exile cards from the top of your library until you exile a nonland card. You may cast it without paying its mana cost if that spel | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call the Spirit Dragons | silent | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Champion of Dusan | silent | Renew — {1}{G}, Exile this card from your graveyard: Put a +1/+1 counter and a trample counter on target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -46,7 +45,6 @@
 | Dragonstorm Forecaster | silent | {2}, {T}: Search your library for a card named Dragonstorm Globe or Boulderborn Dragon, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Embermouth Sentinel | silent | When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. If you control a Dragon, put tha | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Feral Deathgorger // Dusk Sight | silent | When this creature enters, exile up to two target cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fire-Rim Form | silent | When this Aura enters, enchanted creature gains first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Formation Breaker | silent | As long as you control a creature with a counter on it, this creature gets +1/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fresh Start | silent | Enchanted creature gets -5/-0 and loses all abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Frostcliff Siege | silent | • Temur — Creatures you control get +1/+0 and have trample and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -87,11 +85,8 @@
 | Songcrafter Mage | silent | When this creature enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. Its harmonize cost is equal to its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sonic Shrieker | silent | When this creature enters, it deals 2 damage to any target and you gain 2 life. If a player is dealt damage this way, they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stadium Headliner | silent | {1}{R}, Sacrifice this creature: It deals damage equal to the number of creatures you control to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Stalwart Successor | silent | Whenever one or more counters are put on a creature you control, if it's the first time counters have been put on that creature this turn, put a +1/+1 counter o | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Starry-Eyed Skyrider | silent | Attacking tokens you control have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stillness in Motion | silent | At the beginning of your upkeep, mill three cards. Then if your library has no cards in it, exile this enchantment and put five cards from your graveyard on top | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Strategic Betrayal | silent | Target opponent exiles a creature they control and their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Summit Intimidator | silent | When this creature enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Taigam, Master Opportunist | silent | Flurry — Whenever you cast your second spell each turn, copy it, then exile the spell you cast with four time counters on it. If it doesn't have suspend, it gai | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tempest Hawk | silent | Whenever this creature deals combat damage to a player, you may search your library for a card named Tempest Hawk, reveal it, put it into your hand, then shuffl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Teval, Arbiter of Virtue | silent | Whenever you cast a spell, you lose life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -141,6 +136,7 @@
 | Awaken the Honored Dead | handled | I — Destroy target nonland permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bearer of Glory | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bewildering Blizzard | handled | Draw three cards. Creatures your opponents control get -3/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Bone-Cairn Butcher | handled | Attacking tokens you control have deathtouch. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boulderborn Dragon | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Caustic Exhale | handled | As an additional cost to cast this spell, behold a Dragon or pay {1}. (To behold a Dragon, choose a Dragon you control or reveal a Dragon card from your hand.)  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Channeled Dragonfire | handled | Channeled Dragonfire deals 2 damage to any target. Harmonize {5}{R}{R} (You may cast this card from your graveyard for its harmonize cost. You may tap a creatur | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -151,7 +147,6 @@
 | Cruel Truths | handled | Surveil 2, then draw two cards. You lose 2 life. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dalkovan Packbeasts | handled | Vigilance | machines/combat.py | Y/Y/Y | not_tested |
 | Defibrillating Current | handled | Defibrillating Current deals 4 damage to target creature or planeswalker and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Delta Bloodflies | handled | Whenever this creature attacks, if you control a creature with a counter on it, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Devoted Duelist | handled | Flurry — Whenever you cast your second spell each turn, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dirgur Island Dragon // Skimming Strike | handled | Tap up to one target creature. Draw a card. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Disruptive Stormbrood // Petty Revenge | handled | Destroy target creature with power 3 or less. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -163,9 +158,9 @@
 | Encroaching Dragonstorm | handled | When this enchantment enters, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Equilibrium Adept | handled | When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eshki Dragonclaw | handled | At the beginning of combat on your turn, if you've cast both a creature spell and a noncreature spell this turn, draw a card and put two +1/+1 counters on Eshki | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Essence Anchor | handled | At the beginning of your upkeep, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fangkeeper's Familiar | handled | When this creature enters, choose one — • You gain 3 life and surveil 3. • Destroy target enchantment. • Counter target creature spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Felothar, Dawn of the Abzan | handled | Whenever Felothar enters or attacks, you may sacrifice a nonland permanent. When you do, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Fire-Rim Form | handled | When this Aura enters, enchanted creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fleeting Effigy | handled | At the beginning of your end step, return this creature to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Focus the Mind | handled | This spell costs {2} less to cast if you've cast another spell this turn. Draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Furious Forebear | handled | Whenever a creature you control dies while this card is in your graveyard, you may pay {1}{W}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -227,6 +222,7 @@
 | Stormshriek Feral // Flush Out | handled | Discard a card. If you do, draw two cards. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sultai Devotee | handled | Deathtouch | machines/combat.py | Y/Y/Y | not_tested |
 | Sultai Monument | handled | When this artifact enters, search your library for a basic Swamp, Forest, or Island card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Summit Intimidator | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sunset Strikemaster | handled | {2}{R}, {T}, Sacrifice this creature: It deals 6 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Surrak, Elusive Hunter | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Teeming Dragonstorm | handled | When this enchantment enters, create two 2/2 white Soldier creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,7 +252,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>30 cards</summary>
 
 - Ainok Wayfarer
 - Avenger of the Fallen
@@ -264,8 +260,10 @@
 - Cori Mountain Monastery
 - Cori-Steel Cutter
 - Dalkovan Encampment
+- Delta Bloodflies
 - Dragonback Lancer
 - Dragonfire Blade
+- Essence Anchor
 - Flamehold Grappler
 - Fortress Kin-Guard
 - Heritage Reclamation
@@ -278,6 +276,8 @@
 - Nature's Rhythm
 - Roamer's Routine
 - Sage of the Skies
+- Stalwart Successor
+- Starry-Eyed Skyrider
 - Stormscale Scion
 - Ugin, Eye of the Storms
 - Ureni, the Song Unending
@@ -309,8 +309,6 @@
 | at the beginning of your upkeep, mill three cards. then if your library has no cards in it, exile ~ and put five cards from your graveyard on top of your librar | 1 | Stillness in Motion | tdm |
 | at the beginning of your upkeep, return up to two target creature cards with power N or less from your graveyard to the battlefield. put a +N/+N counter on each | 1 | Smile at Death | tdm |
 | at the beginning of your upkeep, you may exile two cards from your graveyard. if you do, put a +N/+N counter on ~. | 1 | Aegis Sculptor | tdm |
-| attacking tokens you control have deathtouch. | 1 | Bone-Cairn Butcher | tdm |
-| attacking tokens you control have flying. | 1 | Starry-Eyed Skyrider | tdm |
 | decayed | 1 | Rot-Curse Rakshasa | tdm |
 | destroy all creatures and enchantments. draw a card for each permanent destroyed ~. | 1 | Death Begets Life | tdm |
 | distribute two +N/+N counters among one or two target creatures you control. creatures you control with counters on them gain vigilance and trample until end of | 1 | Synchronized Charge | tdm |
@@ -338,7 +336,6 @@
 | when shiko enters, exile target nonland card with mana value N or less from your graveyard. copy it, then you may cast the copy without paying its mana cost. | 1 | Shiko, Paragon of the Way | tdm |
 | when ~ enters, destroy target nonbasic land an opponent controls. its controller searches their library for a basic land card, puts it onto the battlefield tapp | 1 | Magmatic Hellkite | tdm |
 | when ~ enters, draw a card if you control a creature with a counter on it. if you don't draw a card ~, put a +N/+N counter on ~. | 1 | Trade Route Envoy | tdm |
-| when ~ enters, enchanted creature gains first strike until end of turn. | 1 | Fire-Rim Form | tdm |
 | when ~ enters, exile cards from the top of your library until you exile a nonland card. you may cast it without paying its mana cost if that spell"..."t, put th | 1 | Breaching Dragonstorm | tdm |
 | when ~ enters, if it's your main phase, there is an additional combat phase after ~ followed by an additional main phase. when you next attack ~, untap each cre | 1 | All-Out Assault | tdm |
 | when ~ enters, it deals N damage to any target and you gain N life. if a player is dealt damage ~, they discard a card. | 1 | Sonic Shrieker | tdm |
@@ -347,7 +344,6 @@
 | when ~ enters, return up to one other target nonland permanent you control to its owner's hand. if it was a token, draw a card. | 1 | Sunpearl Kirin | tdm |
 | when ~ enters, search your library for a black card, a green card, and a blue card. put those cards into your graveyard, then shuffle. | 1 | Lotuslight Dancers | tdm |
 | when ~ enters, target creature an opponent controls gets -N/-N until end of turn and target creature you control gets +N/+N until end of turn. | 1 | Gurmag Rakshasa | tdm |
-| when ~ enters, target creature can't block ~. | 1 | Summit Intimidator | tdm |
 | when ~ enters, target instant or sorcery card in your graveyard gains harmonize until end of turn. its harmonize cost is equal to its mana cost. | 1 | Songcrafter Mage | tdm |
 | when ~ enters, target opponent reveals their hand. you may choose a nonland card from it. if you do, exile that card. | 1 | Severance Priest | tdm |
 | when ~ enters, you may exile a creature card from your graveyard. when you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Kishla Trawlers | tdm |
@@ -359,7 +355,6 @@
 | whenever kotis deals combat damage to a player, exile the top N cards of their library, where N is the amount of damage dealt. you may cast any number of spells | 1 | Kotis, the Fangkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, create a treasure token. | 1 | Kheru Goldkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, put a +N/+N counter on ~. | 1 | Attuned Hunter | tdm |
-| whenever one or more counters are put on a creature you control, if it's the first time counters have been put on that creature ~, put a +N/+N counter on that c | 1 | Stalwart Successor | tdm |
 | whenever you attack, target creature gets +N/+N until end of turn, where N is the number of attacking creatures. | 1 | Marshal of the Lost | tdm |
 | whenever you cast a spell, you lose life equal to its mana value. | 1 | Teval, Arbiter of Virtue | tdm |
 | whenever ~ attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. at the beginning of your next end step, s | 1 | Mardu Siegebreaker | tdm |

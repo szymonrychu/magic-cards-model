@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.6% |
-| Works (untested) | 119 | 46.1% |
+| Tested | 25 | 9.7% |
+| Works (untested) | 118 | 45.7% |
 | Partial (unaudited) | 10 | 3.9% |
-| Not working | 112 | 43.4% |
+| Not working | 105 | 40.7% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Bandit's Talent | silent | When this Class enters, each opponent discards two cards unless they discard a nonland card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bark-Knuckle Boxer | silent | Whenever you expend 4, this creature gains indestructible until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Blacksmith's Talent | silent | During your turn, equipped creatures you control have double strike and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Brambleguard Captain | silent | At the beginning of combat on your turn, target creature you control gets +X/+0 until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brambleguard Veteran | silent | Whenever you expend 4, Raccoons you control get +1/+1 and gain vigilance until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Brazen Collector | silent | Whenever this creature attacks, add {R}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Builder's Talent | silent | Whenever one or more noncreature, nonland permanents you control enter, put a +1/+1 counter on target creature you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -47,7 +46,6 @@
 | Cruelclaw's Heist | silent | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Target opponent reveals their han | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Curious Forager | silent | Forage | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Daring Waverider | silent | When this creature enters, you may cast target instant or sorcery card with mana value 4 or less from your graveyard without paying its mana cost. If that spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dazzling Denial | silent | Counter target spell unless its controller pays {2}. If you control a Bird, counter that spell unless its controller pays {4} instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dour Port-Mage | silent | Whenever one or more other creatures you control leave the battlefield without dying, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Dreamdew Entrancer | silent | When this creature enters, tap up to one target creature and put three stun counters on it. If you control that creature, draw two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Driftgloom Coyote | silent | When this creature enters, exile target creature an opponent controls until this creature leaves the battlefield. If that creature had power 2 or less, put a +1 | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -57,9 +55,7 @@
 | Festival of Embers | silent | During your turn, you may cast instant and sorcery spells from your graveyard by paying 1 life in addition to their other costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Finneas, Ace Archer | silent | Whenever Finneas attacks, put a +1/+1 counter on each other creature you control that's a token or a Rabbit. Then if creatures you control have total power 10 o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | For the Common Good | silent | Create X tokens that are copies of target token you control. Then tokens you control gain indestructible until your next turn. You gain 1 life for each token yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Heartfire Hero | silent | When this creature dies, it deals damage equal to its power to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Heirloom Epic | silent | {4}, {T}: Draw a card. For each mana in this ability's activation cost, you may tap an untapped creature you control rather than pay that mana. Activate only as | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Helga, Skittish Seer | silent | {T}: Add X mana of any one color, where X is Helga's power. Spend this mana only to cast creature spells with mana value 4 or greater or creature spells with {X | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hoarder's Overflow | silent | When this enchantment enters and whenever you expend 4, put a stash counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Honored Dreyleader | silent | When this creature enters, put a +1/+1 counter on it for each other Squirrel and/or Food you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Jolly Gerbils | silent | Whenever you give a gift, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -67,7 +63,6 @@
 | Longstalk Brawl | silent | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mabel, Heir to Cragflame | silent | When Mabel enters, create Cragflame, a legendary colorless Equipment artifact token with "Equipped creature gets +1/+1 and has vigilance, trample, and haste" an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Manifold Mouse | silent | At the beginning of combat on your turn, target Mouse you control gains your choice of double strike or trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mind Drill Assailant | silent | Threshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mindwhisker | silent | Threshold — As long as there are seven or more cards in your graveyard, creatures your opponents control get -1/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mistbreath Elder | silent | At the beginning of your upkeep, return another creature you control to its owner's hand. If you do, put a +1/+1 counter on this creature. Otherwise, you may re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Moonstone Harbinger | silent | Whenever you gain or lose life during your turn, Bats you control get +1/+0 and gain deathtouch until end of turn. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -96,7 +91,6 @@
 | Starforged Sword | silent | Equipped creature gets +3/+3 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stargaze | silent | Look at twice X cards from the top of your library. Put X cards from among them into your hand and the rest into your graveyard. You lose X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Starseer Mentor | silent | At the beginning of your end step, if you gained or lost life this turn, target opponent loses 3 life unless they sacrifice a nonland permanent of their choice  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Stocking the Pantry | silent | Whenever you put one or more +1/+1 counters on a creature you control, put a supply counter on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Sunspine Lynx | silent | When this creature enters, it deals damage to each player equal to the number of nonbasic lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Take Out the Trash | silent | Take Out the Trash deals 3 damage to target creature or planeswalker. If you control a Raccoon, you may discard a card. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tangle Tumbler | silent | Tap two untapped tokens you control: This Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -114,7 +108,6 @@
 | Veteran Guardmouse | silent | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, it gets +1/+0 and gains first strike until e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vren, the Relentless | silent | At the beginning of each end step, create X 1/1 black Rat creature tokens with "This token gets +1/+1 for each other Rat you control," where X is the number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wandertale Mentor | silent | Whenever you expend 4, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| War Squeak | silent | When this Aura enters, target creature an opponent controls can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wax-Wane Witness | silent | Whenever you gain or lose life during your turn, this creature gets +1/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Whiskervale Forerunner | silent | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, look at the top five cards of your library.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wick, the Whorled Mind | silent | Whenever Wick or another Rat you control enters, create a 1/1 black Snail creature token if you don't control a Snail. Otherwise, put a +1/+1 counter on a Snail | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -143,7 +136,7 @@
 | Eddymurk Crab | unaudited | This creature enters tapped if it's not your turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Frilled Sparkshooter | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Gev, Scaled Scorch | unaudited | Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Glarb, Calamity's Augur | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Glarb, Calamity's Augur | unaudited | You may play lands and cast spells with mana value 4 or greater from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Huskburster Swarm | unaudited | This spell costs {1} less to cast for each creature card you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Innkeeper's Talent | unaudited | If you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sugar Coat | unaudited | Enchanted permanent is a colorless Food artifact with "{2}, {T}, Sacrifice this artifact: You gain 3 life" and loses all other card types and abilities. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -166,6 +159,7 @@
 | Conduct Electricity | handled | Conduct Electricity deals 6 damage to target creature and 2 damage to up to one target creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Coruscation Mage | handled | Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Daggerfang Duo | handled | When this creature enters, you may mill two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dazzling Denial | handled | Counter target spell unless its controller pays {2}. If you control a Bird, counter that spell unless its controller pays {4} instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dewdrop Cure | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Return up to two target creature  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dire Downdraft | handled | This spell costs {1} less to cast if it targets an attacking or tapped creature. Target creature's owner puts it on their choice of the top or bottom of their l | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diresight | handled | Surveil 2, then draw two cards. You lose 2 life. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and t | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -184,6 +178,7 @@
 | Hazel's Nocturne | handled | Return up to two target creature cards from your graveyard to your hand. Each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Head of the Homestead | handled | When this creature enters, create two 1/1 white Rabbit creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Heaped Harvest | handled | When this artifact enters and when you sacrifice it, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Heartfire Hero | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hearthborn Battler | handled | Whenever a player casts their second spell each turn, this creature deals 2 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hidden Grotto | handled | When this land enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | High Stride | handled | Target creature gets +1/+3 and gains reach until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -196,7 +191,6 @@
 | Iridescent Vinelasher | handled | Landfall — Whenever a land you control enters, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Jackdaw Savior | handled | Whenever this creature or another creature you control with flying dies, return another target creature card with lesser mana value from your graveyard to the b | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kindlespark Duo | handled | {T}: This creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Kitsa, Otterball Elite | handled | {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Knightfisher | handled | Whenever another nontoken Bird you control enters, create a 1/1 blue Fish creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lifecreed Duo | handled | Whenever another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lightshell Duo | handled | When this creature enters, surveil 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -204,7 +198,6 @@
 | Lilysplash Mentor | handled | {1}{G}{U}: Exile another target creature you control, then return it to the battlefield under its owner's control with a +1/+1 counter on it. Activate only as a | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Long River's Pull | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Counter target creature spell. If | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lumra, Bellow of the Woods | handled | Lumra's power and toughness are each equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Lunar Convocation | handled | At the beginning of your end step, if you gained life this turn, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lupinflower Village | handled | {1}{W}, {T}, Sacrifice this land: Look at the top six cards of your library. You may reveal a Bat, Bird, Mouse, or Rabbit card from among them and put it into y | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Might of the Meek | handled | Target creature gains trample until end of turn. It also gets +1/+0 until end of turn if you control a Mouse. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mind Spiral | handled | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -235,7 +228,6 @@
 | Savor | handled | Target creature gets -2/-2 until end of turn. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scales of Shale | handled | Affinity for Lizards (This spell costs {1} less to cast for each Lizard you control.) Target creature gets +2/+0 and gains lifelink and indestructible until end | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scrapshooter | handled | When this creature enters, if the gift was promised, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Seasoned Warrenguard | handled | Whenever this creature attacks while you control a token, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seedglaive Mentor | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shoreline Looter | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Short Bow | handled | Equipped creature gets +1/+1 and has reach and vigilance. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -245,7 +237,6 @@
 | Sonar Strike | handled | Sonar Strike deals 4 damage to target attacking, blocking, or tapped creature. You gain 3 life if you control a Bat. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spellgyre | handled | Choose one — • Counter target spell. • Surveil 2, then draw two cards. (To surveil 2, look at the top two cards of your library, then put any number of them int | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Splash Lasher | handled | When this creature enters, tap up to one target creature and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Starlit Soothsayer | handled | At the beginning of your end step, if you gained or lost life this turn, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starscape Cleric | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Steampath Charger | handled | When this creature dies, it deals 1 damage to target player. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stickytongue Sentinel | handled | When this creature enters, return up to one other target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -263,6 +254,7 @@
 | Treeguard Duo | handled | When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Valley Rally | handled | Gift a Food (You may promise an opponent a gift as you cast this spell. If you do, they create a Food token before its other effects. It's an artifact with "{2} | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vinereap Mentor | handled | When this creature enters or dies, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| War Squeak | handled | When this Aura enters, target creature an opponent controls can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Warren Elder | handled | {3}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Waterspout Warden | handled | Whenever this creature attacks, if another creature entered the battlefield under your control this turn, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wear Down | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Destroy target artifact or enchan | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -271,22 +263,30 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>25 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
 - Beza, the Bounding Spring
+- Brambleguard Captain
 - Caretaker's Talent
 - Crumb and Get It
 - Darkstar Augur
 - Dawn's Truce
 - Eluge, the Shoreless Sea
 - Fecund Greenshell
+- Helga, Skittish Seer
 - Into the Flood Maw
 - Keen-Eyed Curator
+- Kitsa, Otterball Elite
+- Lunar Convocation
+- Mind Drill Assailant
 - Mockingbird
 - Portent of Calamity
 - Scavenger's Talent
+- Seasoned Warrenguard
+- Starlit Soothsayer
+- Stocking the Pantry
 - Stormchaser's Talent
 - Thundertrap Trainer
 - Ygra, Eater of All
@@ -297,15 +297,14 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Threshold | 4 | Mind Drill Assailant, Mindwhisker, Nightwhorl Hermit, Persistent Marshstalker | blb |
 | forage | 4 | Camellia, the Seedmiser, Curious Forager, Feed the Cycle, Thornvault Forager | blb |
+| Threshold | 3 | Mindwhisker, Nightwhorl Hermit, Persistent Marshstalker | blb |
 | Valiant | 2 | Veteran Guardmouse, Whiskervale Forerunner | blb |
 | whenever you expend N, ~ gets +N/+N until end of turn. | 2 | Bakersbane Duo, Junkblade Bruiser | blb |
 | ~ enters with a +N/+N counter on it if an opponent lost life ~. | 2 | Cindering Cutthroat, Frilled Sparkshooter | blb |
 | Choose one | 1 | Early Winter | blb |
 | as long as you control a token, ~ gets +N/+N and has trample. | 1 | Druid of the Spade | blb |
 | as long as you've lost life ~, ~ has flying and vigilance. | 1 | Essence Channeler | blb |
-| at the beginning of combat on your turn, target creature you control gets +N/+N until end of turn, where N is ~ power. | 1 | Brambleguard Captain | blb |
 | at the beginning of combat on your turn, target mouse you control gains your choice of double strike or trample until end of turn. | 1 | Manifold Mouse | blb |
 | at the beginning of combat on your turn, you may forage. | 1 | Corpseberry Cultivator | blb |
 | at the beginning of each end step, create N N/N black rat creature tokens with "..." where N is the number of creatures that were exiled under your opponents' c | 1 | Vren, the Relentless | blb |
@@ -319,7 +318,6 @@
 | choose up to five {M} worth of modes. you may choose the same mode more than once. {M} — draw a card. {M}{M} — choose an artifact or creature you control. creat | 1 | Season of Weaving | blb |
 | choose up to five {M} worth of modes. you may choose the same mode more than once. {M} — each player sacrifices a creature of their choice. {M}{M} — draw a card | 1 | Season of Loss | blb |
 | choose up to five {M} worth of modes. you may choose the same mode more than once. {M} — put a +N/+N counter on a creature you control. it gains vigilance and t | 1 | Season of Gathering | blb |
-| counter target spell unless its controller pays {M}. if you control a bird, counter that spell unless its controller pays {M} instead. | 1 | Dazzling Denial | blb |
 | create N tokens that are copies of target token you control. then tokens you control gain indestructible until your next turn. you gain N life for each token yo | 1 | For the Common Good | blb |
 | create a N/N blue and red otter creature token with prowess. if ~ was cast from anywhere other than your hand, put a +N/+N counter on that creature. (whenever y | 1 | Otterball Antics | blb |
 | creatures your opponents control have base toughness N. | 1 | Maha, Its Feathers Night | blb |
@@ -348,7 +346,6 @@
 | target creature gets +N/+N until end of turn. up to one other target creature gets +N/+N until end of turn. | 1 | Mabel's Mettle | blb |
 | target opponent exiles a card from their hand. if ~ was cast from a graveyard, draw a card. flashback {M}{M} (you may cast ~ from your graveyard for its flashba | 1 | Ruthless Negotiation | blb |
 | when mabel enters, create cragflame, a legendary colorless equipment artifact token with "..." and equip {M}. | 1 | Mabel, Heir to Cragflame | blb |
-| when ~ dies, it deals damage equal to its power to each opponent. | 1 | Heartfire Hero | blb |
 | when ~ enters and whenever you expend N, put a stash counter on it. | 1 | Hoarder's Overflow | blb |
 | when ~ enters, choose target creature. if that creature's power is N or less or if you control another lizard, gain control of that creature until end of turn,  | 1 | Reptilian Recruiter | blb |
 | when ~ enters, choose target opponent. if they lost life ~, they reveal their hand, you choose a nonland card from it, and they discard that card. otherwise, th | 1 | Thought-Stalker Warlock | blb |
@@ -359,7 +356,6 @@
 | when ~ enters, put a +N/+N counter on it for each other squirrel and/or food you control. | 1 | Honored Dreyleader | blb |
 | when ~ enters, tap enchanted creature. if the gift wasn't promised, put three stun counters on it. | 1 | Kitnap | blb |
 | when ~ enters, tap up to one target creature and put three stun counters on it. if you control that creature, draw two cards. | 1 | Dreamdew Entrancer | blb |
-| when ~ enters, target creature an opponent controls can't block ~. | 1 | War Squeak | blb |
 | when ~ enters, target creature you control can"..."s control. | 1 | Long River Lurker | blb |
 | when ~ enters, target opponent loses N life unless they sacrifice a nonland permanent of their choice or discard a card. | 1 | Thornplate Intimidator | blb |
 | when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Daring Waverider | blb |
@@ -387,7 +383,6 @@
 | whenever you gain or lose life during your turn, bats you control get +N/+N and gain deathtouch until end of turn. ~ triggers only once each turn. | 1 | Moonstone Harbinger | blb |
 | whenever you gain or lose life during your turn, ~ gets +N/+N until end of turn. | 1 | Wax-Wane Witness | blb |
 | whenever you give a gift, draw a card. | 1 | Jolly Gerbils | blb |
-| whenever you put one or more +N/+N counters on a creature you control, put a supply counter on ~. | 1 | Stocking the Pantry | blb |
 | whenever zoraline enters or attacks, you may pay {M}{M} and N life. when you do, return target nonland permanent card with mana value N or less from your gravey | 1 | Zoraline, Cosmos Caller | blb |
 | whenever ~ attacks, add {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Brazen Collector | blb |
 | whenever ~ attacks, defending player loses N life and you gain N life. | 1 | Agate-Blade Assassin | blb |
@@ -398,12 +393,11 @@
 | whenever ~ enters or attacks, put a blight counter on it. then for each blight counter on it, each opponent loses N life unless that player sacrifices a nonland | 1 | Rottenmouth Viper | blb |
 | whenever ~ or another bird you control enters, exile up to one target creature you control without flying. return it to the battlefield under its owner's contro | 1 | Salvation Swan | blb |
 | whenever ~ or another rabbit you control enters, target creature you control gets +N/+N until end of turn. then draw a card if ~ the second time ~ has resolved  | 1 | Harvestrite Host | blb |
-| you may look at the top card of your library any time. | 1 | Glarb, Calamity's Augur | blb |
+| you may play lands and cast spells with mana value N or greater from the top of your library. | 1 | Glarb, Calamity's Augur | blb |
 | {M}, {M}: choose a color. add an amount of mana of that color equal to the number of creatures you control of the chosen type. | 1 | Three Tree City | blb |
 | {M}, {M}: draw a card. for each mana in ~ activation cost, you may tap an untapped creature you control rather than pay that mana. activate only as a sorcery. | 1 | Heirloom Epic | blb |
 | {M}, {M}: put a +N/+N counter on each frog, rabbit, raccoon, or squirrel you control that entered the battlefield ~. | 1 | Oakhollow Village | blb |
 | {M}, {M}: target lizard, mouse, otter, or raccoon you control gets +N/+N and gains haste until end of turn. activate only as a sorcery. | 1 | Rockface Village | blb |
-| {M}: add N mana of any one color, where N is helga's power. spend ~ only to cast creature spells with mana value N or greater or creature spells with {M} in the | 1 | Helga, Skittish Seer | blb |
 | {M}: put a coin counter on ~. when you do, you may cast target instant or sorcery card with mana value equal to the number of coin counters on ~ from your grave | 1 | Wishing Well | blb |
 | {M}: until end of turn, you may cast creature spells from your graveyard by foraging in addition to paying their other costs. if you cast a spell ~, that creatu | 1 | Osteomancer Adept | blb |
 | ~ costs {M} less to cast for each creature card you own in exile and in your graveyard. | 1 | Huskburster Swarm | blb |

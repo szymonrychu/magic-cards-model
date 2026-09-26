@@ -3,13 +3,13 @@
 - Expansion: 250
 - Set code: `mh3`
 - Release date: 2024-06-14
-- Cards in scope (Modern/Pioneer/Standard-legal): 256
+- Cards in scope (Modern/Pioneer/Standard-legal): 262
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 256 |
+| Modern | 262 |
 | Pioneer | 0 |
 | Standard | 0 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 20.3% |
-| Works (untested) | 81 | 31.6% |
-| Partial (unaudited) | 20 | 7.8% |
-| Not working | 103 | 40.2% |
+| Tested | 60 | 22.9% |
+| Works (untested) | 85 | 32.4% |
+| Partial (unaudited) | 18 | 6.9% |
+| Not working | 99 | 37.8% |
 
 ## Cards needing work
 
@@ -38,11 +38,9 @@
 | Breaker of Creation | silent | When you cast this spell, you gain 1 life for each colorless permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breathe Your Last | silent | Destroy target creature or planeswalker. You gain 1 life for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Colossal Dreadmask | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Conduit Goblin | error |  | card_support raised: unsupported mana symbol: {E} | Y/-/- | not_working |
 | Copycrook | silent | Connive | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crabomination | silent | When this creature enters, target opponent exiles the top card of their library, a card at random from their graveyard, and a card at random from their hand. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cranial Ram | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Cyclops Superconductor | error |  | card_support raised: unsupported mana symbol: {E} | Y/-/- | not_working |
 | Dreamtide Whale | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Drossclaw | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eladamri, Korvecdal | silent | {G}, {T}, Tap two untapped creatures you control: Reveal a card from your hand or the top card of your library. If you reveal a creature card this way, put it o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -65,7 +63,6 @@
 | Grim Servant | silent | When this creature enters, search your library for a card with mana value less than or equal to your devotion to black, reveal it, put it into your hand, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grist, Voracious Larva // Grist, the Plague Swarm | silent | Whenever Grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {G}. If you do, exile G | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Herigast, Erupting Nullkite | silent | When you cast this spell, you may exile your hand. If you do, draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hexgold Slith | error |  | card_support raised: unsupported mana symbol: {E} | Y/-/- | not_working |
 | Hope-Ender Coatl | silent | When you cast this spell, counter target spell an opponent controls unless they pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horrid Shadowspinner | silent | Whenever this creature attacks, you may draw cards equal to its power. If you do, discard that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Imskir Iron-Eater | silent | When Imskir enters, you draw X cards and you lose X life, where X is half the number of artifacts you control, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -78,12 +75,14 @@
 | Kozilek's Unsealing | silent | Whenever you cast a creature spell with mana value 4, 5, or 6, create two 0/1 colorless Eldrazi Spawn creature tokens with "Sacrifice this token: Add {C}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kozilek, the Broken Reality | silent | When you cast this spell, up to two target players each manifest two cards from their hands. For each card manifested this way, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kudo, King Among Bears | silent | Other creatures have base power and toughness 2/2 and are Bears in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Laelia, the Blade Reforged | silent | Whenever one or more cards are put into exile from your library and/or your graveyard, put a +1/+1 counter on Laelia. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Legion Leadership // Legion Stronghold | silent | Until end of turn, double target creature's power and it gains first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lethal Throwdown | silent | As an additional cost to cast this spell, sacrifice a creature or sacrifice a modified creature. (Equipment, Auras you control, and counters are modifications.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mandibular Kite | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Marionette Apprentice | silent | Fabricate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Monstrous Vortex | silent | Whenever you cast a creature spell with power 5 or greater, discover X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muster the Departed | silent | Morbid — At the beginning of your end step, if a creature died this turn, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nesting Grounds | silent | {1}, {T}: Move a counter from target permanent you control onto a second target permanent. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nyxborn Hydra | silent | Enchanted creature gets +1/+1 for each +1/+1 counter on this Aura and has reach and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nyxborn Unicorn | silent | Enchanted creature gets +2/+2 and has mentor. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Powerbalance | silent | Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, you may cast that card without paying its mana cost if the two spell | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -94,12 +93,10 @@
 | Rosecot Knight | silent | When this creature enters, look at the top six cards of your library. You may reveal an artifact or enchantment card from among them and put it into your hand.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rosheen, Roaring Prophet | silent | When Rosheen enters, mill six cards. You may put a card with {X} in its mana cost from among them into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rush of Inspiration // Crackling Falls | silent | Draw two cards. Then discard a card at random unless you pay {E}{E} (two energy counters). | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Scurrilous Sentry | silent | Whenever this creature enters or attacks, it connives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scurry of Gremlins | silent | When this enchantment enters, create two 1/1 red Gremlin creature tokens. Then you get an amount of {E} equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow of the Second Sun | silent | At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shilgengar, Sire of Famine | silent | Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Signature Slam | silent | Put a +1/+1 counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Smelted Chargebug | error |  | card_support raised: unsupported mana symbol: {E} | Y/-/- | not_working |
 | Sorin of House Markov // Sorin, Ravenous Neonate | silent | −6: Gain control of target creature. It becomes a Vampire in addition to its other types. Put a lifelink counter on it if you control a white permanent other th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Springheart Nantuko | silent | Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control. If you do, create a token that's a co | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spymaster's Vault | silent | {B}, {T}: Target creature you control connives X, where X is the number of creatures that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -110,17 +107,16 @@
 | The Creation of Avacyn | silent | I — Search your library for a card, exile it face down, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | The Hunger Tide Rises | silent | IV — Sacrifice any number of creatures. Search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Triton Wavebreaker | silent | As long as this permanent is a creature, it has prowess. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Twisted Riddlekeeper | silent | Emerge | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ugin's Binding | silent | Devoid (This card has no color.) Return target nonland permanent you don't control to its owner's hand. Whenever you cast a colorless spell with mana value 7 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unfathomable Truths | silent | Devoid (This card has no color.) Draw three cards and create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine's reading came from quoted text, not this clause's own words | Y/-/- | not_working |
 | Unstable Amulet | silent | {T}, Pay {E}{E}: Exile the top card of your library. You may play it until you exile another card with this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Utter Insignificance | silent | {2}{C}: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volatile Stormdrake | silent | When this creature enters, exchange control of this creature and target creature an opponent controls. If you do, you get {E}{E}{E}{E}, then sacrifice that crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Voltstorm Angel | error |  | card_support raised: unsupported mana symbol: {E} | Y/-/- | not_working |
 | Wheel of Potential | silent | You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Each player may exile their hand and draw a number of cards equal to the amount o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wumpus Aberration | silent | When you cast this spell, if {C} wasn't spent to cast it, target opponent may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Abstruse Appropriation | notice | Devoid (This card has no color.) Exile target nonland permanent. You may cast that card for as long as it remains exiled, and you may spend colorless mana as th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Charitable Levy | notice | Whenever a player casts a noncreature spell, put a collection counter on this enchantment. Then if there are three or more collection counters on it, sacrifice  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Estrid's Invocation | notice | You may have this enchantment enter as a copy of an enchantment you control, except it has "At the beginning of your upkeep, you may exile this enchantment. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Etched Slith | notice | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. When you do, you may remove a counter from another target permanent or oppone | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fanged Flames | notice | Devoid (This card has no color.) Fanged Flames deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Glimpse the Impossible | notice | Exile the top three cards of your library. You may play those cards this turn. At the beginning of the next end step, if any of those cards remain exiled, put t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -130,7 +126,6 @@
 | Pyretic Rebirth | notice | Return target artifact or creature card from your graveyard to your hand. Pyretic Rebirth deals damage equal to that card's mana value to up to one target creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wither and Bloom | notice | Target creature gets -3/-3 until end of turn. {1}{B}, Exile this card from your graveyard: Put a +1/+1 counter on target creature you control. Activate only as  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Revolt | unaudited | Revolt — As long as a permanent left the battlefield under your control this turn, if a source you control would deal noncombat damage to an opponent or a perma | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Amphibian Downpour | unaudited | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ashling, Flame Dancer | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Corrupted Shapeshifter | unaudited | As this creature enters, it becomes your choice of a 3/3 creature with flying, a 2/5 creature with vigilance, or a 0/12 creature with defender. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cursed Wombat | unaudited | Permanents you control have "Whenever one or more +1/+1 counters are put on this permanent, put an additional +1/+1 counter on it. This ability triggers only on | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -146,10 +141,10 @@
 | Primal Prayers | unaudited | You may cast creature spells with mana value 3 or less by paying {E} rather than paying their mana costs. If you cast a spell this way, you may cast it as thoug | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Six | unaudited | During your turn, nonland permanent cards in your graveyard have retrace. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | The Necrobloom | unaudited | Land cards in your graveyard have dredge 2. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Trickster's Elk | unaudited | Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Voidpouncer | unaudited | If this creature was kicked, it enters with two +1/+1 counters and a trample counter on it and with haste. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter Moon | unaudited | Players can't untap more than one nonbasic land during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Argent Dais | handled | This artifact enters with two oil counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bountiful Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Forest, Island, or Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brainsurge | handled | Draw four cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -182,12 +177,13 @@
 | Horrific Assault | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. If you control an Eldrazi, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspired Inventor | handled | When this creature enters, choose one — • You get {E}{E}{E} . • Put a +1/+1 counter on target creature. • Create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inventor's Axe | handled | When this Equipment enters, you get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
-| Izzet Generatorium | handled | If you would get one or more {E} , you get that many plus one {E} instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lion Umbra | handled | Enchanted creature gets +3/+3 and has reach and vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Metastatic Evangel | handled | Whenever another nontoken creature you control enters, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Meteoric Mace | handled | Equipped creature gets +4/+0 and has trample. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindless Conscription | handled | When this enchantment enters and whenever you draw your third card each turn, amass Zombies 3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mogg Mob | handled | Sacrifice this creature: It deals 3 damage divided as you choose among one, two, or three targets. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Gatekeeper | handled | Whenever another creature you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nadier's Nightblade | handled | Whenever a token you control leaves the battlefield, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightshade Dryad | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
 | Nulldrifter | handled | When you cast this spell, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ondu Knotmaster // Throw a Line | handled | Distribute two +1/+1 counters among one or two target creatures. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -200,10 +196,10 @@
 | Reiterating Bolt | handled | Replicate—Pay {E}{E}{E}. (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Reiterating B | the engine reads this text and performs it | Y/-/- | not_tested |
 | Retrofitted Transmogrant | handled | {3}{B}: Return this card from your graveyard to the battlefield tapped with two +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Revitalizing Repast // Old-Growth Grove | handled | Put a +1/+1 counter on target creature. It gains indestructible until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Riddle Gate Gargoyle | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Roil Cartographer | handled | Landfall — Whenever a land you control enters, you get {E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sage of the Unknowable | handled |  |  | Y/-/- | not_tested |
 | Sarpadian Simulacrum | handled | {3}{R}, Sacrifice this creature: It deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Scurrilous Sentry | handled | Whenever this creature enters or attacks, it connives. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seething Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Serum Visionary | handled | When this creature enters, draw a card, then scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shattered Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Mountain, Plains, or Swamp card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -221,7 +217,9 @@
 | Tempest Harvester | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thriving Skyclaw | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tranquil Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Forest, Plains, or Island card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Trickster's Elk | handled | Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Twisted Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Swamp, Mountain, or Forest card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Twisted Riddlekeeper | handled | When you cast this spell, tap up to two target permanents. Put a stun counter on each of them. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Urza's Cave | handled | {3}, {T}, Sacrifice this land: Search your library for a land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warped Tusker | handled | When you cast or cycle Warped Tusker, create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Warren Soultrader | handled | Pay 1 life, Sacrifice another creature: Create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -234,7 +232,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>60 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Arena of Glory
@@ -242,7 +240,9 @@
 - Birthing Ritual
 - Boggart Trawler // Boggart Bog
 - Bridgeworks Battle // Tanglespan Bridgeworks
+- Conduit Goblin
 - Consign to Memory
+- Cyclops Superconductor
 - Deem Inferior
 - Detective's Phoenix
 - Devourer of Destiny
@@ -256,8 +256,11 @@
 - Glaring Fleshraker
 - Guide of Souls
 - Harbinger of the Seas
+- Hexgold Slith
 - Hydroelectric Specimen // Hydroelectric Laboratory
 - Idol of False Gods
+- Izzet Generatorium
+- Kappa Cannoneer
 - Kozilek's Command
 - Malevolent Rumble
 - Monumental Henge
@@ -269,8 +272,10 @@
 - Psychic Frog
 - Ral, Monsoon Mage // Ral, Leyline Prodigy
 - Refurbished Familiar
+- Riddle Gate Gargoyle
 - Shifting Woodland
 - Sink into Stupor // Soporific Springs
+- Smelted Chargebug
 - Sowing Mycospawn
 - Static Prison
 - Strix Serenade
@@ -284,6 +289,7 @@
 - Ugin's Labyrinth
 - Ulamog, the Defiler
 - Vexing Bauble
+- Voltstorm Angel
 - Waterlogged Teachings // Inundated Archive
 - White Orchid Phantom
 - Witch Enchanter // Witch-Blessed Meadow
@@ -323,14 +329,11 @@
 | draw two cards. then discard a card at random unless you pay {M}{M} (two energy counters). | 1 | Rush of Inspiration // Crackling Falls | mh3 |
 | during your turn, nonland permanent cards in your graveyard have retrace. | 1 | Six | mh3 |
 | eldrazi you control have "..." | 1 | Path of Annihilation | mh3 |
-| emerge | 1 | Twisted Riddlekeeper | mh3 |
 | enchanted creature gets +N/+N and has afterlife N. | 1 | Indebted Spirit | mh3 |
 | enchanted creature gets +N/+N and has mentor. | 1 | Nyxborn Unicorn | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~ and has reach and trample. | 1 | Nyxborn Hydra | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~. | 1 | Glyph Elemental | mh3 |
 | enchanted creature gets +N/+N for each creature and/or enchantment you control. | 1 | Strength of the Harvest // Haven of the Harvest | mh3 |
-| enchanted creature loses all abilities and is a blue frog creature with base power and toughness N/N. | 1 | Amphibian Downpour | mh3 |
-| enchanted creature loses all abilities and is a green elk creature with base power and toughness N/N. | 1 | Trickster's Elk | mh3 |
 | enchantment spells you cast have affinity for auras. | 1 | Pearl-Ear, Imperial Advisor | mh3 |
 | exile the top three cards of your library. you may play those cards ~. at the beginning of the next end step, if any of those cards remain exiled, put them into | 1 | Glimpse the Impossible | mh3 |
 | fabricate | 1 | Marionette Apprentice | mh3 |
@@ -381,22 +384,24 @@
 | whenever an opponent casts a spell, you may reveal the top card of your library. if you do, you may cast that card without paying its mana cost if the two spell | 1 | Powerbalance | mh3 |
 | whenever another nontoken permanent you control leaves the battlefield, choose one that hasn't been chosen ~. create a creature token with those characteristics | 1 | Genku, Future Shaper | mh3 |
 | whenever grist or another creature you control enters, if it entered from your graveyard or you cast it from your graveyard, you may pay {M}. if you do, exile g | 1 | Grist, Voracious Larva // Grist, the Plague Swarm | mh3 |
+| whenever one or more cards are put into exile from your library and/or your graveyard, put a +N/+N counter on laelia. | 1 | Laelia, the Blade Reforged | mh3 |
 | whenever you cast a creature spell with mana value N, N, or N, create two N/N colorless eldrazi spawn creature tokens with "..." | 1 | Kozilek's Unsealing | mh3 |
 | whenever you cast a creature spell with power N or greater, discover N, where N is that spell's mana value. | 1 | Monstrous Vortex | mh3 |
 | whenever ~ attacks, other modified creatures you control get +N/+N until end of turn, where N is ~ power. | 1 | Golden-Tail Trainer | mh3 |
 | whenever ~ attacks, put a +N/+N counter on target modified creature you control. | 1 | Expanding Ooze | mh3 |
 | whenever ~ attacks, you may draw cards equal to its power. if you do, discard that many cards. | 1 | Horrid Shadowspinner | mh3 |
 | whenever ~ deals combat damage to a player, put a +N/+N counter on it. when you do, you may remove a counter from another target permanent or opponent. | 1 | Etched Slith | mh3 |
-| whenever ~ enters or attacks, it connives. | 1 | Scurrilous Sentry | mh3 |
 | you don't lose unspent red mana as steps and phases end. | 1 | Ashling, Flame Dancer | mh3 |
 | you get {M}{M}{M} (three energy counters), then you may pay any amount of {M}. each player may exile their hand and draw a number of cards equal to the amount o | 1 | Wheel of Potential | mh3 |
 | you may cast creature spells with mana value N or less by paying {M} rather than paying their mana costs. if you cast a spell ~, you may cast it as though it ha | 1 | Primal Prayers | mh3 |
 | you may exert ~ as it attacks. when you do, target creature gets +N/+N until end of turn, where N is the number of counters on permanents you control. | 1 | Hydra Trainer | mh3 |
+| you may have ~ enter as a copy of an enchantment you control, except it has "..." | 1 | Estrid's Invocation | mh3 |
 | you may sacrifice a nontoken black creature rather than pay ~ mana cost. each opponent sacrifices a creature or planeswalker with the greatest mana value among  | 1 | Flare of Malice | mh3 |
 | you may sacrifice a nontoken green creature rather than pay ~ mana cost. search your library for up to two basic land cards, reveal those cards, put one onto th | 1 | Flare of Cultivation | mh3 |
 | you may sacrifice a nontoken white creature rather than pay ~ mana cost. until end of turn, your life total can't change, and permanents you control gain hexpro | 1 | Flare of Fortitude | mh3 |
 | {M}, pay {M}{M}: exile the top card of your library. you may play it until you exile another card with ~. | 1 | Unstable Amulet | mh3 |
 | {M}, {M}, tap two untapped creatures you control: reveal a card from your hand or the top card of your library. if you reveal a creature card ~, put it onto the | 1 | Eladamri, Korvecdal | mh3 |
+| {M}, {M}: move a counter from target permanent you control onto a second target permanent. activate only as a sorcery. | 1 | Nesting Grounds | mh3 |
 | {M}, {M}: target creature you control connives N, where N is the number of creatures that died ~. | 1 | Spymaster's Vault | mh3 |
 | {M}, {M}: the next spell you cast ~ has improvise. | 1 | Archway of Innovation | mh3 |
 | {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |

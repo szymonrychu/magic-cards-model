@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.3% |
-| Works (untested) | 147 | 54.6% |
+| Tested | 20 | 7.4% |
+| Works (untested) | 150 | 55.8% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 95 | 35.3% |
+| Not working | 89 | 33.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Auriok Bladewarden | silent | {T}: Target creature gets +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Steelshaper | silent | As long as this creature is equipped, each creature you control that's a Soldier or a Knight gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Banshee's Blade | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinkmoth Urn | silent | At the beginning of each player's first main phase, if this artifact is untapped, that player adds {C} for each artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,14 +56,12 @@
 | Leonin Den-Guard | silent | As long as this creature is equipped, it gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leveler | silent | When this creature enters, exile all cards from your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Living Hive | silent | Whenever this creature deals combat damage to a player, create that many 1/1 green Insect creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Looming Hoverguard | silent | When this creature enters, put target artifact on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loxodon Peacekeeper | silent | At the beginning of your upkeep, the player with the lowest life total gains control of this creature. If two or more players are tied for lowest life total, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mass Hysteria | silent | All creatures have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mesmeric Orb | silent | Whenever a permanent becomes untapped, that permanent's controller mills a card. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Mindslaver | silent | {4}, {T}, Sacrifice Mindslaver: You control target player during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Mesmeric Orb | silent | Whenever a permanent becomes untapped, that permanent's controller mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindstorm Crown | silent | At the beginning of your upkeep, draw a card if you had no cards in hand at the beginning of this turn. If you had a card in hand, this artifact deals 1 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Incubator | silent | {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -83,7 +80,6 @@
 | Skyhunter Cub | silent | As long as this creature is equipped, it gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Foundry | silent | {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellweaver Helix | silent | Imprint — When this artifact enters, you may exile two target sorcery cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spikeshot Goblin | silent | {R}, {T}: This creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spoils of the Vault | silent | Choose a card name. Reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. Exile all other cards r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun Droplet | silent | Whenever you're dealt damage, put that many charge counters on this artifact. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Sword of Kaldra | silent | Whenever equipped creature deals damage to a creature, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -114,10 +110,8 @@
 | Incite War | notice | Choose one — • Creatures target player controls attack this turn if able. • Creatures you control gain first strike until end of turn. Entwine {2} (Choose both  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Irradiate | notice | Target creature gets -1/-1 until end of turn for each artifact you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Journey of Discovery | notice | Choose one — • Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. • You may play up to two additional lands | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Loxodon Punisher | notice | This creature gets +2/+2 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mirror Golem | notice | This creature has protection from each of the exiled card's card types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Molten Rain | notice | Destroy target land. If that land was nonbasic, Molten Rain deals 2 damage to the land's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Myr Adapter | notice | This creature gets +1/+1 for each Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Razor Barrier | notice | Target permanent you control gains protection from artifacts or from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Soul Nova | notice | Exile target attacking creature and all Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wail of the Nim | notice | Choose one — • Regenerate each creature you control. • Wail of the Nim deals 1 damage to each creature and each player. Entwine {B} (Choose both if you pay the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -137,6 +131,7 @@
 | Ancient Den | handled |  |  | Y/-/- | not_tested |
 | Arc-Slogger | handled | {R}, Exile the top ten cards of your library: This creature deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Assert Authority | handled | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Counter target spell. If that spell is countered this way, exile it in | the engine reads this text and performs it | Y/-/- | not_tested |
+| Auriok Bladewarden | handled | {T}: Target creature gets +X/+X until end of turn, where X is this creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Transfixer | handled | {W}, {T}: Tap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barter in Blood | handled | Each player sacrifices two creatures of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battlegrowth | handled | Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -160,7 +155,6 @@
 | Fists of the Anvil | handled | Target creature gets +4/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Galvanic Key | handled | {3}, {T}: Untap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gilded Lotus | handled |  |  | Y/Y/Y | not_tested |
-| Glimmervoid | handled | At the beginning of the end step, if you control no artifacts, sacrifice this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Dirigible | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Replica | handled | {3}{R}, Sacrifice this creature: Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Striker | handled | First strike | machines/combat.py | Y/-/- | not_tested |
@@ -181,6 +175,7 @@
 | Leonin Skyhunter | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Leonin Sun Standard | handled | {1}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lifespark Spellbomb | handled | {G}, Sacrifice this artifact: Until end of turn, target land becomes a 3/3 creature that's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Living Hive | handled | Whenever this creature deals combat damage to a player, create that many 1/1 green Insect creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lodestone Myr | handled | Tap an untapped artifact you control: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Mender | handled | {W}, {T}: Regenerate target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Warhammer | handled | Equipped creature gets +3/+0 and has trample and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -193,6 +188,7 @@
 | Mind's Eye | handled | Whenever an opponent draws a card, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molder Slug | handled | At the beginning of each player's upkeep, that player sacrifices an artifact of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moriok Scavenger | handled | When this creature enters, you may return target artifact creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Myr Adapter | handled | This creature gets +1/+1 for each Equipment attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Enforcer | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/-/- | not_tested |
 | Myr Mindservant | handled | {2}, {T}: Shuffle your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Retriever | handled | When this creature dies, return another target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -240,6 +236,7 @@
 | Solar Tide | handled | Choose one — • Destroy all creatures with power 2 or less. • Destroy all creatures with power 3 or greater. Entwine—Sacrifice two lands. (Choose both if you pay | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soldier Replica | handled | {1}{W}, Sacrifice this creature: It deals 3 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Somber Hoverguard | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Spikeshot Goblin | handled | {R}, {T}: This creature deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steel Wall | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Sunbeam Spellbomb | handled | {W}, Sacrifice this artifact: You gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Talisman of Dominance | handled |  |  | Y/-/- | not_tested |
@@ -282,7 +279,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>20 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -290,10 +287,13 @@
 - Chalice of the Void
 - Damping Matrix
 - Frogmite
+- Glimmervoid
 - Goblin Charbelcher
 - Isochron Scepter
 - Lightning Coils
 - Lightning Greaves
+- Loxodon Punisher
+- Mindslaver
 - Oblivion Stone
 - Rule of Law
 - Seat of the Synod
@@ -312,7 +312,6 @@
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
 | Imprint | 2 | Spellweaver Helix, Thought Prison | mrd |
 | fear | 2 | Dross Prowler, Woebearer | mrd |
-| ~ gets +N/+N for each equipment attached to it. | 2 | Loxodon Punisher, Myr Adapter | mrd |
 | all creatures able to block target creature ~ do so. | 1 | Bloodscent | mrd |
 | all creatures have haste. | 1 | Mass Hysteria | mrd |
 | artifacts you control have hexproof. | 1 | Leonin Abunas | mrd |
@@ -375,7 +374,6 @@
 | whenever ~ becomes blocked by an artifact creature, destroy that creature. | 1 | Ogre Leadfoot | mrd |
 | whenever ~ becomes blocked, regenerate it. | 1 | Duskworker | mrd |
 | whenever ~ deals combat damage to a creature, that creature's controller loses that much life. | 1 | Flayed Nim | mrd |
-| whenever ~ deals combat damage to a player, create that many N/N green insect creature tokens. | 1 | Living Hive | mrd |
 | you can"..."t win the game. | 1 | Platinum Angel | mrd |
 | you can't cast creature spells. | 1 | Grid Monitor | mrd |
 | you control enchanted artifact creature. | 1 | Domineer | mrd |
@@ -384,16 +382,13 @@
 | {M}, sacrifice ~: return all cards exiled with ~ to the battlefield under your control. | 1 | Synod Sanctum | mrd |
 | {M}, {M} or {M}, {M}: return target creature to its owner's hand unless its controller pays {M}. | 1 | Crystal Shard | mrd |
 | {M}, {M}, sacrifice ~: search your library for any number of artifact cards, exile them, then create that many N/N colorless myr artifact creature tokens. then  | 1 | Myr Incubator | mrd |
-| {M}, {M}, sacrifice ~: you control target player during that player's next turn. | 1 | Mindslaver | mrd |
 | {M}, {M}: choose a card name. target opponent guesses whether a card with that name is in your hand. you may reveal your hand. if you do and your opponent guess | 1 | Liar's Pendulum | mrd |
 | {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Soul Foundry | mrd |
 | {M}, {M}: prevent all damage that would be dealt ~ by a source of your choice that shares a color with the exiled card. | 1 | Mourner's Shield | mrd |
 | {M}, {M}: target player draws a card, then discards a card. if that player discards an artifact card ~, untap ~. | 1 | Lumengrid Augur | mrd |
-| {M}, {M}: ~ deals damage equal to its power to any target. | 1 | Spikeshot Goblin | mrd |
 | {M}: add one mana of any of the exiled card's colors. | 1 | Chrome Mox | mrd |
 | {M}: destroy target artifact if its mana value is equal to the amount of unspent mana you have. | 1 | Glissa Sunseeker | mrd |
 | {M}: put target permanent you own on the bottom of your library. | 1 | Tel-Jilad Stylus | mrd |
-| {M}: target creature gets +N/+N until end of turn, where N is ~ power. | 1 | Auriok Bladewarden | mrd |
 | {M}: ~ gains all activated abilities of target creature until end of turn. | 1 | Quicksilver Elemental | mrd |
 | {M}{M}, sacrifice an artifact: bosh deals damage equal to the sacrificed artifact's mana value to any target. | 1 | Bosh, Iron Golem | mrd |
 | {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |

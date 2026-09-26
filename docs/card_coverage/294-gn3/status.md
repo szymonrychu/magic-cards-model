@@ -1,8 +1,8 @@
-# Commander Masters (cmm)
+# Game Night: Free-for-All (gn3)
 
-- Expansion: 283
-- Set code: `cmm`
-- Release date: 2023-08-04
+- Expansion: 294
+- Set code: `gn3`
+- Release date: 2022-10-14
 - Cards in scope (Modern/Pioneer/Standard-legal): 1
 
 ## Legality
@@ -26,7 +26,7 @@
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Zilortha, Strength Incarnate | unaudited | Lethal damage dealt to creatures you control is determined by their power rather than their toughness. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Angler Turtle | unaudited | Creatures your opponents control attack each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 
 ## Fully supported
 
@@ -40,7 +40,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| lethal damage dealt to creatures you control is determined by their power rather than their toughness. | 1 | Zilortha, Strength Incarnate | cmm |
+| creatures your opponents control attack each combat if able. | 1 | Angler Turtle | gn3 |
 
 ## Notes
 

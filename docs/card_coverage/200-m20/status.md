@@ -3,24 +3,24 @@
 - Expansion: 200
 - Set code: `m20`
 - Release date: 2019-07-12
-- Cards in scope (Modern/Pioneer/Standard-legal): 175
+- Cards in scope (Modern/Pioneer/Standard-legal): 176
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 175 |
-| Pioneer | 175 |
+| Modern | 176 |
+| Pioneer | 176 |
 | Standard | 11 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 9.1% |
-| Works (untested) | 94 | 53.7% |
-| Partial (unaudited) | 4 | 2.3% |
-| Not working | 61 | 34.9% |
+| Tested | 19 | 10.8% |
+| Works (untested) | 92 | 52.3% |
+| Partial (unaudited) | 5 | 2.8% |
+| Not working | 60 | 34.1% |
 
 ## Cards needing work
 
@@ -58,18 +58,16 @@
 | Marauding Raptor | silent | Whenever another creature you control enters, this creature deals 2 damage to it. If a Dinosaur is dealt damage this way, this creature gets +2/+0 until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mu Yanling, Celestial Wind | silent | +1: Until your next turn, up to one target creature gets -5/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mu Yanling, Sky Dancer | silent | +2: Until your next turn, up to one target creature gets -2/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mystic Forge | silent | {T}, Pay 1 life: Exile the top card of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overgrowth Elemental | silent | Whenever another creature you control dies, you gain 1 life. If that creature was an Elemental, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pack Mastiff | silent | {1}{R}: Each creature you control named Pack Mastiff gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pattern Matcher | silent | When this creature enters, you may search your library for a card with the same name as another creature you control, reveal it, put it into your hand, then shu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portal of Sanctuary | silent | {1}, {T}: Return target creature you control and each Aura attached to it to their owners' hands. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Repeated Reverberation | silent | When you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability this turn, copy that spell or ability twice. You may choose new targets | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Salvager of Ruin | silent | Sacrifice this creature: Choose target permanent card in your graveyard that was put there from the battlefield this turn. Return it to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Rienne, Angel of Rebirth | silent | Other multicolored creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scheming Symmetry | silent | Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scorch Spitter | silent | Whenever this creature attacks, it deals 1 damage to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shifting Ceratops | silent | {G}: This creature gains your choice of reach, trample, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin's Guide | silent | When this creature enters, you may search your library and/or graveyard for a card named Sorin, Vampire Lord, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sorin, Imperious Bloodlord | silent | −3: You may put a Vampire creature card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Vampire Lord | silent | −8: Until end of turn, each Vampire you control gains "{T}: Gain control of target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tale's End | silent | Counter target activated ability, triggered ability, or legendary spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thought Distortion | silent | This spell can't be countered. Target opponent reveals their hand. Exile all noncreature, nonland cards from that player's hand and graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -83,12 +81,14 @@
 | Growth Cycle | notice | Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legion's End | notice | Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Masterful Replication | notice | Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Sorin, Imperious Bloodlord | notice | +1: Target creature you control gains deathtouch and lifelink until end of turn. If it's a Vampire, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thunderkin Awakener | notice | Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unchained Berserker | notice | This creature gets +2/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vivien's Crocodile | notice | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Voracious Hydra | notice | When this creature enters, choose one — • Double the number of +1/+1 counters on this creature. • This creature fights target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blightbeetle | unaudited | Creatures your opponents control can't have +1/+1 counters put on them. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Embodiment of Agonies | unaudited | This creature enters with a +1/+1 counter on it for each different mana cost among nonland cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Mystic Forge | unaudited | You may cast artifact spells and colorless spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sephara, Sky's Blade | unaudited | You may pay {W} and tap four untapped creatures you control with flying rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Squad Captain | unaudited | This creature enters with a +1/+1 counter on it for each other creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Agonizing Syphon | handled | Agonizing Syphon deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -123,9 +123,7 @@
 | Field of the Dead | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fry | handled | This spell can't be countered. Fry deals 5 damage to target creature or planeswalker that's white or blue. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gargos, Vicious Watcher | handled | Hydra spells you cast cost {4} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Glint-Horn Buccaneer | handled | Whenever you discard a card, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gnarlback Rhino | handled | Whenever you cast a spell that targets this creature, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Goblin Bird-Grabber | handled | {R}: This creature gains flying until end of turn. Activate only if you control a creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Smuggler | handled | {T}: Another target creature with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gorging Vulture | handled | When this creature enters, mill four cards. You gain 1 life for each creature card milled this way. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gruesome Scourger | handled | When this creature enters, it deals damage to target opponent or planeswalker equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -139,7 +137,6 @@
 | Infuriate | handled | Target creature gets +3/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ironroot Warlord | handled | Ironroot Warlord's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kaalia, Zenith Seeker | handled | When Kaalia enters, look at the top six cards of your library. You may reveal an Angel card, a Demon card, and/or a Dragon card from among them and put them int | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Knight of the Ebon Legion | handled | {2}{B}: This creature gets +3/+3 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kykar, Wind's Fury | handled | Whenever you cast a noncreature spell, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lavakin Brawler | handled | Whenever this creature attacks, it gets +1/+0 until end of turn for each Elemental you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leafkin Druid | handled |  |  | Y/Y/- | not_tested |
@@ -158,6 +155,7 @@
 | Reckless Air Strike | handled | Choose one — • Reckless Air Strike deals 3 damage to target creature with flying. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retributive Wand | handled | {3}, {T}: This artifact deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rotting Regisaur | handled | At the beginning of your upkeep, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Salvager of Ruin | handled | Sacrifice this creature: Choose target permanent card in your graveyard that was put there from the battlefield this turn. Return it to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savage Gorger | handled | At the beginning of your end step, if an opponent lost life this turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savannah Sage | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scampering Scorcher | handled | When this creature enters, create two 1/1 red Elemental creature tokens. Elementals you control gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,7 +187,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>19 cards</summary>
 
 - Aether Gust
 - Angel of Vitality
@@ -199,6 +197,9 @@
 - Cryptic Caves
 - Devout Decree
 - Flame Sweep
+- Glint-Horn Buccaneer
+- Goblin Bird-Grabber
+- Knight of the Ebon Legion
 - Leyline of Abundance
 - Lotus Field
 - Nightpack Ambusher
@@ -216,6 +217,7 @@
 |---|---|---|---|
 | Choose one | 1 | Masterful Replication | m20 |
 | +N: each opponent gets an emblem with "..." | 1 | Chandra, Awakened Inferno | m20 |
+| +N: target creature you control gains deathtouch and lifelink until end of turn. if it's a vampire, put a +N/+N counter on it. | 1 | Sorin, Imperious Bloodlord | m20 |
 | +N: until your next turn, up to one target creature gets -N/-N and loses flying. | 1 | Mu Yanling, Sky Dancer | m20 |
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Mu Yanling, Celestial Wind | m20 |
 | N: if you have at least N life more than your starting life total, exile ajani and each artifact and creature your opponents control. | 1 | Ajani, Strength of the Pride | m20 |
@@ -231,9 +233,9 @@
 | exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |
 | exile two legendary cards from your graveyard: until end of turn, each legendary card in your graveyard gains "..." | 1 | Kethis, the Hidden Hand | m20 |
 | other creatures you control with flying get +N/+N. | 1 | Empyrean Eagle | m20 |
+| other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
 | return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
-| sacrifice ~: choose target permanent card in your graveyard that was put there from the battlefield ~. return it to your hand. | 1 | Salvager of Ruin | m20 |
 | sacrifice ~: counter target spell that targets you. | 1 | Cerulean Drake | m20 |
 | spells your opponents cast that target ~ cost {M} more to cast. | 1 | Boreal Elemental | m20 |
 | target creature gets +N/+N until end of turn. it gets an additional +N/+N until end of turn for each card named ~ in your graveyard. | 1 | Growth Cycle | m20 |
@@ -259,8 +261,8 @@
 | whenever you discard a card, exile that card from your graveyard. | 1 | Bag of Holding | m20 |
 | whenever ~ attacks, choose target elemental creature card in your graveyard with toughness less than ~ toughness. return that card to the battlefield tapped and | 1 | Thunderkin Awakener | m20 |
 | whenever ~ attacks, it deals N damage to the player or planeswalker it's attacking. | 1 | Scorch Spitter | m20 |
+| you may cast artifact spells and colorless spells from the top of your library. | 1 | Mystic Forge | m20 |
 | you may pay {M} and tap four untapped creatures you control with flying rather than pay ~ mana cost. | 1 | Sephara, Sky's Blade | m20 |
-| {M}, pay N life: exile the top card of your library. | 1 | Mystic Forge | m20 |
 | {M}, {M}: choose a card name, then reveal the top card of your library. if that card has the chosen name, sacrifice ~ and draw three cards. activate only as a s | 1 | Diviner's Lockbox | m20 |
 | {M}, {M}: look at the top three cards of your library. you may reveal a creature card of the chosen type from among them and put it into your hand. put the rest | 1 | Icon of Ancestry | m20 |
 | {M}, {M}: return target creature you control and each aura attached to it to their owners' hands. activate only during your turn. | 1 | Portal of Sanctuary | m20 |
@@ -278,7 +280,6 @@
 | −N: chandra deals N damage to target creature and N damage to that creature's controller. | 1 | Chandra, Flame's Fury | m20 |
 | −N: until end of turn, each vampire you control gains "..." | 1 | Sorin, Vampire Lord | m20 |
 | −N: you may cast target instant or sorcery card with mana value N or less from your graveyard. if that spell would be put into your graveyard, exile it instead. | 1 | Chandra, Acolyte of Flame | m20 |
-| −N: you may put a vampire creature card from your hand onto the battlefield. | 1 | Sorin, Imperious Bloodlord | m20 |
 
 ## Notes
 

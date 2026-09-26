@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 5.3% |
-| Works (untested) | 111 | 44.9% |
+| Tested | 15 | 6.1% |
+| Works (untested) | 116 | 47.0% |
 | Partial (unaudited) | 16 | 6.5% |
-| Not working | 107 | 43.3% |
+| Not working | 100 | 40.5% |
 
 ## Cards needing work
 
@@ -60,11 +60,6 @@
 | Halcyon Glaze | silent | Whenever you cast a creature spell, this enchantment becomes a 4/4 Illusion creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hammerfist Giant | silent | {T}: This creature deals 4 damage to each creature without flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hour of Reckoning | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Destroy all | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunted Dragon | silent | When this creature enters, target opponent creates three 2/2 white Knight creature tokens with first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunted Horror | silent | When this creature enters, target opponent creates two 3/3 green Centaur creature tokens with protection from black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunted Lammasu | silent | When this creature enters, target opponent creates a 4/4 black Horror creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunted Phantasm | silent | When this creature enters, target opponent creates five 1/1 red Goblin creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hunted Troll | silent | When this creature enters, target opponent creates four 1/1 blue Faerie creature tokens with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite Hysteria | silent | Radiance — Until end of turn, target creature and each other creature that shares a color with it gain "This creature can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Induce Paranoia | silent | Counter target spell. If {B} was spent to cast this spell, that spell's controller mills X cards, where X is the spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loxodon Hierarch | silent | {G}{W}, Sacrifice this creature: Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,7 +76,6 @@
 | Peel from Reality | silent | Return target creature you control and target creature you don't control to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perplex | silent | Counter target spell unless its controller discards their hand. Transmute {1}{U}{B} ({1}{U}{B}, Discard this card: Search your library for a card with the same  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plague Boiler | silent | {1}{B}{G}: Put a plague counter on this artifact or remove a plague counter from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pollenbright Wings | silent | Whenever enchanted creature deals combat damage to a player, create that many 1/1 green Saproling creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quickchange | silent | Target creature becomes the color or colors of your choice until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rain of Embers | silent | Rain of Embers deals 1 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Razia's Purification | silent | Each player chooses three permanents they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -106,7 +100,6 @@
 | Telling Time | silent | Look at the top three cards of your library. Put one of those cards into your hand, one on top of your library, and one on the bottom of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Terraformer | silent | {1}: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtpicker Witch | silent | {1}, Sacrifice a creature: Look at the top two cards of target opponent's library, then exile one of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thundersong Trumpeter | silent | {T}: Target creature can't attack or block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tidewater Minion | silent | {4}: This creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torpid Moloch | silent | Sacrifice three lands: This creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tunnel Vision | silent | Choose a card name. Target player reveals cards from the top of their library until a card with that name is revealed. If it is, that player puts the rest of th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -189,7 +182,6 @@
 | Ethereal Usher | handled | {U}, {T}: Target creature can't be blocked this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Farseek | handled | Search your library for a Plains, Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiery Conclusion | handled | As an additional cost to cast this spell, sacrifice a creature. Fiery Conclusion deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Firemane Angel | handled | At the beginning of your upkeep, if Firemane Angel is in your graveyard or on the battlefield, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fists of Ironwood | handled | When this Aura enters, create two 1/1 green Saproling creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flame-Kin Zealot | handled | When this creature enters, creatures you control get +1/+1 and gain haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flow of Ideas | handled | Draw a card for each Island you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -210,6 +202,10 @@
 | Greater Mossdog | handled | Dredge | machines/keywords.py | Y/-/- | not_tested |
 | Guardian of Vitu-Ghazi | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Hex | handled | Destroy six target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hunted Dragon | handled | When this creature enters, target opponent creates three 2/2 white Knight creature tokens with first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hunted Lammasu | handled | When this creature enters, target opponent creates a 4/4 black Horror creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hunted Phantasm | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hunted Troll | handled | When this creature enters, target opponent creates four 1/1 blue Faerie creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infectious Host | handled | When this creature dies, target player loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Instill Furor | handled | Enchanted creature has "At the beginning of your end step, sacrifice this creature unless it attacked this turn." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ivy Dancer | handled | {T}: Target creature gains forestwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -226,6 +222,7 @@
 | Oathsworn Giant | handled | Other creatures you control get +0/+2 and have vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Peregrine Mask | handled | Equipped creature has defender, flying, and first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Perilous Forays | handled | {1}, Sacrifice a creature: Search your library for a land card with a basic land type, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Pollenbright Wings | handled | Enchanted creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Primordial Sage | handled | Whenever you cast a creature spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Psychic Drain | handled | Target player mills X cards and you gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Putrefy | handled | Destroy target artifact or creature. It can't be regenerated. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -250,6 +247,7 @@
 | Sunhome, Fortress of the Legion | handled | {2}{R}{W}, {T}: Target creature gains double strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surveilling Sprite | handled | When this creature dies, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tattered Drake | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thundersong Trumpeter | handled | {T}: Target creature can't attack or block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trophy Hunter | handled | {1}{G}: This creature deals 1 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veteran Armorer | handled | Other creatures you control get +0/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Fangtail | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -264,13 +262,15 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>15 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
 - Cerulean Sphinx
 - Dark Confidant
 - Doubling Season
+- Firemane Angel
+- Hunted Horror
 - Lightning Helix
 - Muddle the Mixture
 - Overgrown Tomb
@@ -346,11 +346,6 @@
 | when ~ enters, each opponent loses N life for each creature they control. | 1 | Netherborn Phalanx | rav |
 | when ~ enters, sacrifice a creature. | 1 | Vindictive Mob | rav |
 | when ~ enters, sacrifice it unless you return an enchantment to its owner's hand. | 1 | Drake Familiar | rav |
-| when ~ enters, target opponent creates a N/N black horror creature token. | 1 | Hunted Lammasu | rav |
-| when ~ enters, target opponent creates five N/N red goblin creature tokens. | 1 | Hunted Phantasm | rav |
-| when ~ enters, target opponent creates four N/N blue faerie creature tokens with flying. | 1 | Hunted Troll | rav |
-| when ~ enters, target opponent creates three N/N white knight creature tokens with first strike. | 1 | Hunted Dragon | rav |
-| when ~ enters, target opponent creates two N/N green centaur creature tokens with protection from black. | 1 | Hunted Horror | rav |
 | when ~ enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an opponent co | 1 | Spawnbroker | rav |
 | when ~ enters, you may search your library for any number of cards that have mana value N, reveal them, put them into your hand, then shuffle. | 1 | Grozoth | rav |
 | when ~ is put into your hand from your graveyard, you gain N life. | 1 | Golgari Brownscale | rav |
@@ -359,7 +354,6 @@
 | whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | 1 | Bloodbond March | rav |
 | whenever a player casts an instant or sorcery card, exile it. then that player copies each instant or sorcery card exiled with ~. for each copy, the player may  | 1 | Eye of the Storm | rav |
 | whenever agrus kos attacks, attacking red creatures get +N/+N and attacking white creatures get +N/+N until end of turn. | 1 | Agrus Kos, Wojek Veteran | rav |
-| whenever enchanted creature deals combat damage to a player, create that many N/N green saproling creature tokens. | 1 | Pollenbright Wings | rav |
 | whenever you cast a blue spell, exile the top card of target player's library. | 1 | Circu, Dimir Lobotomist | rav |
 | whenever you cast a creature spell, ~ becomes a N/N illusion creature with flying in addition to its other types until end of turn. | 1 | Halcyon Glaze | rav |
 | whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | 1 | Blood Funnel | rav |
@@ -379,7 +373,6 @@
 | {M}: choose a player. that player adds one mana of any color they choose. | 1 | Spectral Searchlight | rav |
 | {M}: prevent the next N damage that would be dealt to ~ ~. | 1 | Ordruun Commando | rav |
 | {M}: regenerate enchanted creature. | 1 | Strands of Undeath | rav |
-| {M}: target creature can't attack or block ~. | 1 | Thundersong Trumpeter | rav |
 | {M}: target creature can't block ~ ~. | 1 | Screeching Griffin | rav |
 | {M}: the next N damage that would be dealt to target creature you control ~ is dealt to another target creature instead. | 1 | Razia, Boros Archangel | rav |
 | {M}: ~ deals N damage to each creature without flying and each player. | 1 | Hammerfist Giant | rav |

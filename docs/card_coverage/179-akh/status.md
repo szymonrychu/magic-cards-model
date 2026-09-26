@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 4.1% |
-| Works (untested) | 126 | 52.3% |
-| Partial (unaudited) | 23 | 9.5% |
-| Not working | 82 | 34.0% |
+| Tested | 15 | 6.2% |
+| Works (untested) | 125 | 51.9% |
+| Partial (unaudited) | 22 | 9.1% |
+| Not working | 79 | 32.8% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Bitterblade Warrior | silent | You may exert this creature as it attacks. When you do, it gets +1/+0 and gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bounty of the Luxa | silent | At the beginning of your first main phase, remove all flood counters from this enchantment. If no counters were removed this way, put a flood counter on this en | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cartouche of Strength | silent | When this Aura enters, you may have enchanted creature fight target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cartouche of Zeal | silent | When this Aura enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Commit // Memory | silent | Put target spell or nonland permanent into its owner's library second from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cruel Reality | silent | At the beginning of enchanted player's upkeep, that player sacrifices a creature or planeswalker of their choice. If the player can't, they lose 5 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cut // Ribbons | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -44,7 +43,7 @@
 | Destined // Lead | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dispossess | silent | Choose an artifact card name. Search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. Then that playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dusk // Dawn | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Return all creature cards with power 2 or less from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Edifice of Authority | silent | {1}, {T}: Target creature can't attack this turn. Put a brick counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Edifice of Authority | silent | {1}, {T}: Until your next turn, target creature can't attack or block and its activated abilities can't be activated. Activate only if there are three or more b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emberhorn Minotaur | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 and gains menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exemplar of Strength | silent | Whenever this creature attacks, remove a -1/-1 counter from it. If you do, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Failure // Comply | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Choose a card name. Until your next turn, your opponents can't cast spells with the chosen  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -56,7 +55,6 @@
 | Glory-Bound Initiate | silent | You may exert this creature as it attacks. When you do, it gets +1/+3 and gains lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glyph Keeper | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gust Walker | silent | You may exert this creature as it attacks. When you do, it gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hapatra, Vizier of Poisons | silent | Whenever you put one or more -1/-1 counters on a creature, create a 1/1 green Snake creature token with deathtouch. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Heart-Piercer Manticore | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Heaven // Earth | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Honored Crop-Captain | silent | Whenever this creature attacks, other attacking creatures get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,7 +70,6 @@
 | Mouth // Feed | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Nef-Crop Entangler | silent | You may exert this creature as it attacks. When you do, it gets +1/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Neheb, the Worthy | silent | As long as you have one or fewer cards in hand, Minotaurs you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nest of Scarabs | silent | Whenever you put one or more -1/-1 counters on a creature, create that many 1/1 black Insect creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Never // Return | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Nissa, Steward of Elements | silent | 0: Look at the top card of your library. If it's a land card or a creature card with mana value less than or equal to the number of loyalty counters on Nissa, y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oketra's Attendant | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -127,9 +124,8 @@
 | Protection of the Hekma | unaudited | If a source an opponent controls would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Prowling Serpopard | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rhonas the Indomitable | unaudited | Rhonas can't attack or block unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sandwurm Convergence | unaudited | Creatures with flying can't attack you or planeswalkers you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Soul-Scar Mage | unaudited | If a source you control would deal noncombat damage to a creature an opponent controls, put that many -1/-1 counters on that creature instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vizier of the Menagerie | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Vizier of the Menagerie | unaudited | You may cast creature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Watchful Naga | unaudited | You may exert this creature as it attacks. When you do, draw a card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Anointed Procession | handled | If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Baleful Ammit | handled | When this creature enters, put a -1/-1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -146,6 +142,7 @@
 | Cartouche of Ambition | handled | When this Aura enters, you may put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cartouche of Knowledge | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cartouche of Solidarity | handled | When this Aura enters, create a 1/1 white Warrior creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cartouche of Zeal | handled | When this Aura enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cast Out | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeler Initiate | handled | When this creature enters, put three -1/-1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Colossapede | handled |  |  | Y/Y/- | not_tested |
@@ -179,7 +176,7 @@
 | Grasping Dunes | handled | {1}, {T}, Sacrifice this land: Put a -1/-1 counter on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greater Sandwurm | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hapatra's Mark | handled | Target creature you control gains hexproof until end of turn. Remove all -1/-1 counters from it. (A creature with hexproof can't be the target of spells or abil | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Harsh Mentor | handled | Whenever an opponent activates an ability of an artifact, creature, or land on the battlefield, if it isn't a mana ability, this creature deals 2 damage to that | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hapatra, Vizier of Poisons | handled | Whenever Hapatra deals combat damage to a player, you may put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haze of Pollen | handled | Prevent all combat damage that would be dealt this turn. Cycling {3} ({3}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hazoret's Monument | handled | Red creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hekma Sentinels | handled | Whenever you cycle or discard a card, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -197,17 +194,16 @@
 | Liliana's Mastery | handled | Zombies you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana, Death Wielder | handled | +2: Put a -1/-1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Limits of Solidarity | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Luxa River Shrine | handled | {1}, {T}: You gain 1 life. Put a brick counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Manglehorn | handled | When this creature enters, you may destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Manticore of the Gauntlet | handled | When this creature enters, put a -1/-1 counter on target creature you control. This creature deals 3 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Miasmic Mummy | handled | When this creature enters, each player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minotaur Sureshot | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naga Oracle | handled | When this creature enters, surveil 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naga Vitalist | handled |  |  | Y/Y/- | not_tested |
+| Nest of Scarabs | handled | Whenever you put one or more -1/-1 counters on a creature, create that many 1/1 black Insect creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimble-Blade Khenra | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Oashra Cultivator | handled | {2}{G}, {T}, Sacrifice this creature: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oketra's Monument | handled | White creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Oracle's Vault | handled | {2}, {T}: Exile the top card of your library. Until end of turn, you may play that card. Put a brick counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ornery Kudu | handled | When this creature enters, put a -1/-1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Painful Lesson | handled | Target player draws two cards and loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Painted Bluffs | handled |  |  | Y/Y/- | not_tested |
@@ -238,7 +234,6 @@
 | Stinging Shot | handled | Put three -1/-1 counters on target creature with flying. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stir the Sands | handled | Create three 2/2 black Zombie creature tokens. Cycling {3}{B} ({3}{B}, Discard this card: Draw a card.) When you cycle this card, create a 2/2 black Zombie crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supernatural Stamina | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies, return it to the battlefield tapped under its owner's control." | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Supply Caravan | handled | When this creature enters, if you control a tapped creature, create a 1/1 white Warrior creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sweltering Suns | handled | Sweltering Suns deals 3 damage to each creature. Cycling {3} ({3}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tattered Mummy | handled | When this creature dies, each opponent loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Those Who Serve | handled |  |  | Y/Y/- | not_tested |
@@ -261,15 +256,20 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>15 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
 - Cascading Cataracts
 - Censor
 - Curator of Mysteries
+- Harsh Mentor
 - Harvest Season
+- Luxa River Shrine
+- Oracle's Vault
+- Sandwurm Convergence
 - Sunscorched Desert
+- Supply Caravan
 - Throne of the God-Pharaoh
 - Vizier of Remedies
 - Vizier of Tumbling Sands
@@ -303,7 +303,6 @@
 | bontu can't attack or block unless a creature died under your control ~. | 1 | Bontu the Glorified | akh |
 | choose an artifact card name. search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. then that playe | 1 | Dispossess | akh |
 | creature spells you control can't be countered. | 1 | Prowling Serpopard | akh |
-| creatures with flying can't attack you or planeswalkers you control. | 1 | Sandwurm Convergence | akh |
 | damage can't be prevented ~. if a source you control would deal damage ~, it deals double that damage instead. | 1 | Insult // Injury | akh |
 | enchanted creature can't attack or block. | 1 | Compulsory Rest | akh |
 | enchanted land has "..." | 1 | Gift of Paradise | akh |
@@ -328,20 +327,18 @@
 | when ~ dies, you may put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Soulstinger | akh |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Quarry Hauler | akh |
 | when ~ enters, it deals N damage to target creature an opponent controls, where N is the number of instant and sorcery cards in your graveyard. | 1 | Warfire Javelineer | akh |
-| when ~ enters, target creature can't block ~. | 1 | Cartouche of Zeal | akh |
 | when ~ enters, you may exile target creature if it attacked or blocked ~. return that card to the battlefield under its owner's control at the beginning of the  | 1 | Vizier of Deferment | akh |
 | when ~ enters, you may have enchanted creature fight target creature an opponent controls. | 1 | Cartouche of Strength | akh |
 | when ~ enters, you may search your library and/or graveyard for a card named gideon, martial paragon, reveal it, and put it into your hand. if you search your l | 1 | Gideon's Resolve | akh |
 | whenever you cast a creature spell, target creature an opponent controls doesn"..."s next untap step. | 1 | Kefnet's Monument | akh |
 | whenever you exert a creature, creatures you control get +N/+N until end of turn. | 1 | Trueheart Twins | akh |
 | whenever you exert a creature, you may discard a card. if you do, draw a card. | 1 | Battlefield Scavenger | akh |
-| whenever you put one or more -N/-N counters on a creature, create a N/N green snake creature token with deathtouch. | 1 | Hapatra, Vizier of Poisons | akh |
-| whenever you put one or more -N/-N counters on a creature, create that many N/N black insect creature tokens. | 1 | Nest of Scarabs | akh |
 | whenever you put one or more -N/-N counters on ~, remove a -N/-N counter from another target creature you control. | 1 | Defiant Greatmaw | akh |
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Honored Crop-Captain | akh |
 | whenever ~ attacks, remove a -N/-N counter from it. if you do, you gain N life. | 1 | Exemplar of Strength | akh |
 | whenever ~ attacks, remove a -N/-N counter from target creature you control and put a -N/-N counter on up to one target creature defending player controls. | 1 | Decimator Beetle | akh |
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 1 | Glyph Keeper | akh |
+| you may cast creature spells from the top of your library. | 1 | Vizier of the Menagerie | akh |
 | you may exert ~ as it attacks. when you do, creatures you control get +N/+N until end of turn. | 1 | Tah-Crop Elite | akh |
 | you may exert ~ as it attacks. when you do, draw a card. | 1 | Watchful Naga | akh |
 | you may exert ~ as it attacks. when you do, it deals N damage to target non-dragon creature an opponent controls. | 1 | Glorybringer | akh |
@@ -354,11 +351,10 @@
 | you may exert ~ as it attacks. when you do, target creature can't block ~. | 1 | Ahn-Crop Crasher | akh |
 | you may exert ~ as it attacks. when you do, untap all other creatures you control. | 1 | Ahn-Crop Champion | akh |
 | you may exert ~ as it attacks. when you do, you may put a creature card from your hand onto the battlefield. | 1 | Champion of Rhonas | akh |
-| you may look at the top card of your library any time. | 1 | Vizier of the Menagerie | akh |
 | your opponents can't cast spells with the chosen name. | 1 | Gideon's Intervention | akh |
 | {M}, discard a card: put a -N/-N counter on target creature. that creature can't block ~. | 1 | Merciless Javelineer | akh |
 | {M}, {M}, sacrifice ~: search your graveyard, hand, and/or library for a card named god-pharaoh's gift and put it onto the battlefield. if you search your libra | 1 | Gate to the Afterlife | akh |
-| {M}, {M}: target creature can't attack ~. put a brick counter on ~. | 1 | Edifice of Authority | akh |
+| {M}, {M}: until your next turn, target creature can"..."t be activated. activate only if there are three or more brick counters on ~. | 1 | Edifice of Authority | akh |
 | {M}{M}, {M}: all zombies gain menace until end of turn. | 1 | Lord of the Accursed | akh |
 | {M}{M}: draw a card, then you may return a land you control to its owner's hand. | 1 | Kefnet the Mindful | akh |
 | ~ gets +N/+N as long as you have one or fewer cards in hand. | 1 | Thresher Lizard | akh |

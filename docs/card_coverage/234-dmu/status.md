@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 4.5% |
-| Works (untested) | 110 | 45.1% |
+| Tested | 16 | 6.6% |
+| Works (untested) | 105 | 43.0% |
 | Partial (unaudited) | 19 | 7.8% |
 | Not working | 104 | 42.6% |
 
@@ -29,7 +29,7 @@
 | Academy Loremaster | silent | At the beginning of each player's draw step, that player may draw an additional card. If they do, spells they cast this turn cost {2} more to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argivian Cavalier | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Artillery Blast | silent | Domain — Artillery Blast deals X damage to target tapped creature, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Balduvian Berserker | silent | When this creature dies, it deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Balduvian Berserker | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Barkweave Crusher | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Benalish Faithbonder | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blight Pile | silent | {2}{B}, {T}: Each opponent loses X life, where X is the number of creatures with defender you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,7 +46,6 @@
 | Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ertai Resurrected | silent | When Ertai Resurrected enters, choose up to one — • Counter target spell, activated ability, or triggered ability. Its controller draws a card. • Destroy anothe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ertai's Scorn | silent | This spell costs {U} less to cast if an opponent cast two or more spells this turn. Counter target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evolved Sleeper | silent | {B}: This creature becomes a Human Cleric with base power and toughness 2/2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Extinguish the Light | silent | Destroy target creature or planeswalker. If its mana value was 3 or less, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -94,7 +93,7 @@
 | Temporary Lockdown | silent | When this enchantment enters, exile each nonland permanent with mana value 2 or less until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Territorial Maro | silent | Domain — Territorial Maro's power and toughness are each equal to twice the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Cruelty of Gix | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| The Elder Dragon War | silent | I — This Saga deals 2 damage to each creature and each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| The Elder Dragon War | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | The Phasing of Zhalfir | silent | III — Destroy all creatures. For each creature destroyed this way, its controller creates a 2/2 black Phyrexian creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Weatherseed Treaty | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | The World Spell | silent | III — Put up to two non-Saga permanent cards from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -117,6 +116,7 @@
 | Braids, Arisen Nightmare | notice | At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permane | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Ertai Resurrected | notice | When Ertai Resurrected enters, choose up to one — • Counter target spell, activated ability, or triggered ability. Its controller draws a card. • Destroy anothe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golden Argosy | notice | Whenever Golden Argosy attacks, exile each creature that crewed it this turn. Return them to the battlefield tapped under their owner's control at the beginning | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | In Thrall to the Pit | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Gain control of target creature until end of turn. Untap that creature. It gains haste  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jodah, the Unifier | notice | Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -151,11 +151,9 @@
 | Viashino Branchrider | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Academy Wall | handled | Whenever you cast an instant or sorcery spell, you may draw a card. If you do, discard a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Channeler | handled | When this creature enters, choose one — • Create a 1/1 white Bird creature token with flying. • Return another target nonland permanent to its owner's hand. • D | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Archangel of Wrath | handled | When this creature enters, if it was kicked, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argivian Phalanx | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/Y/- | not_tested |
 | Aron, Benalia's Ruin | handled | {W}{B}, {T}, Sacrifice another creature: Put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Automatic Librarian | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Baird, Argivian Recruiter | handled | At the beginning of your end step, if you control a creature with power greater than its base power, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Balduvian Atrocity | handled | When this creature enters, if it was kicked, return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains haste. Sacri | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Balmor, Battlemage Captain | handled | Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 and gain trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Battle-Rage Blessing | handled | Target creature gains deathtouch and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -169,7 +167,6 @@
 | Clockwork Drawbridge | handled | {2}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Contaminated Aquifer | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crystal Grotto | handled | When this land enters, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Cult Conscript | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathbloom Gardener | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Destroy Evil | handled | Choose one — • Destroy target creature with toughness 4 or greater. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eerie Soultender | handled | When this creature enters, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -217,7 +214,6 @@
 | Radiant Grove | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic of Legends | handled |  |  | Y/Y/- | not_tested |
 | Resolute Reinforcements | handled | When this creature enters, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Rith, Liberated Primeval | handled | Other Dragons you control have ward {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Runic Shot | handled | Kicker {U} (You may pay an additional {U} as you cast this spell.) Destroy target tapped creature. If this spell was kicked, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sacred Peaks | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Salvaged Manaworker | handled |  |  | Y/Y/- | not_tested |
@@ -242,7 +238,6 @@
 | Tattered Apparition | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tatyova, Steward of Tides | handled | Land creatures you control have flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tear Asunder | handled | Kicker {1}{B} (You may pay an additional {1}{B} as you cast this spell.) Exile target artifact or enchantment. If this spell was kicked, exile target nonland pe | the engine reads this text and performs it | Y/Y/- | not_tested |
-| The Raven Man | handled | At the beginning of each end step, if a player discarded a card this turn, create a 1/1 black Bird creature token with flying and "This token can't block." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tidepool Turtle | handled | {2}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Timeless Lotus | handled | Timeless Lotus enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tolarian Geyser | handled | Kicker {W} (You may pay an additional {W} as you cast this spell.) Return target creature to its owner's hand. Draw a card. If this spell was kicked, you gain 3 | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -263,18 +258,23 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>16 cards</summary>
 
 - Ajani, Sleeper Agent
+- Archangel of Wrath
+- Baird, Argivian Recruiter
 - Colossal Growth
+- Cult Conscript
 - Ivy, Gleeful Spellthief
 - Lagomos, Hand of Hatred
 - Leyline Binding
 - Nemata, Primeval Warden
 - Nishoba Brawler
 - Prayer of Binding
+- Rith, Liberated Primeval
 - Rivaz of the Claw
 - Sheoldred, the Apocalypse
+- The Raven Man
 - Vohar, Vodalian Desecrator
 
 </details>
@@ -284,9 +284,9 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Domain | 15 | Artillery Blast, Bortuk Bonerattle, Briar Hydra, Drag to the Bottom, Herd Migration | dmu |
-| enlist | 8 | Argivian Cavalier, Barkweave Crusher, Benalish Faithbonder, Coalition Skyknight, Coalition Warbrute | dmu |
+| enlist | 9 | Argivian Cavalier, Balduvian Berserker, Barkweave Crusher, Benalish Faithbonder, Coalition Skyknight | dmu |
+| read ahead | 3 | The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Shalai's Acolyte, Viashino Branchrider | dmu |
-| read ahead | 2 | The Cruelty of Gix, The Weatherseed Treaty | dmu |
 | Choose one | 1 | Twinferno | dmu |
 | as an additional cost to cast black permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of bl | 1 | Defiler of Flesh | dmu |
 | as an additional cost to cast blue permanent spells, you may pay N life. those spells cost {M} less to cast if you paid life ~. ~ reduces only the amount of blu | 1 | Defiler of Dreams | dmu |
@@ -335,7 +335,6 @@
 | uurg's power is equal to the number of land cards in your graveyard. | 1 | Uurg, Spawn of Turg | dmu |
 | when danitha enters, you may put an aura or equipment card from your hand or graveyard onto the battlefield attached to danitha. | 1 | Danitha, Benalia's Hope | dmu |
 | when ~ dies, distribute N +N/+N counters among any number of target creatures you control, where N is the number of +N/+N counters on ~. | 1 | Quirion Beastcaller | dmu |
-| when ~ dies, it deals damage equal to its power to any target. | 1 | Balduvian Berserker | dmu |
 | when ~ enters, choose up to one — • counter target spell, activated ability, or triggered ability. its controller draws a card. • destroy another target creatur | 1 | Ertai Resurrected | dmu |
 | when ~ enters, create a N/N white bird creature token with flying for each creature with defender you control. | 1 | Wingmantle Chaplain | dmu |
 | when ~ enters, exile each nonland permanent with mana value N or less until ~ leaves the battlefield. | 1 | Temporary Lockdown | dmu |
@@ -377,7 +376,6 @@
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
 | ~ can"..."ve cast an instant or sorcery spell ~. | 1 | Haunting Figment | dmu |
 | ~ costs {M} less to cast if an opponent cast two or more spells ~. counter target spell. | 1 | Ertai's Scorn | dmu |
-| ~ deals N damage to each creature and each opponent. | 1 | The Elder Dragon War | dmu |
 | ~ is the chosen type in addition to its other types. | 1 | Thran Portal | dmu |
 | ~'s power and toughness are each equal to the greatest mana value among cards in your graveyard. | 1 | Monstrous War-Leech | dmu |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Haughty Djinn | dmu |

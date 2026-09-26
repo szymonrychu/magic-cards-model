@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
-| Works (untested) | 9 | 69.2% |
+| Tested | 1 | 7.7% |
+| Works (untested) | 8 | 61.5% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 4 | 30.8% |
 
@@ -33,7 +33,6 @@
 | Aladdin's Ring | handled | {8}, {T}: This artifact deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | City of Brass | handled | Whenever this land becomes tapped, it deals 1 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dancing Scimitar | handled | Flying | machines/combat.py | Y/-/- | not_tested |
-| Desert | handled | {T}: This land deals 1 damage to target attacking creature. Activate only during the end of combat step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fishliver Oil | handled | Enchanted creature has islandwalk. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flying Carpet | handled | {2}, {T}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flying Men | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -43,8 +42,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Desert
 
 </details>
 

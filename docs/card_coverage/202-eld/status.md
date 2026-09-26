@@ -3,24 +3,24 @@
 - Expansion: 202
 - Set code: `eld`
 - Release date: 2019-10-04
-- Cards in scope (Modern/Pioneer/Standard-legal): 268
+- Cards in scope (Modern/Pioneer/Standard-legal): 269
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 268 |
-| Pioneer | 268 |
+| Modern | 269 |
+| Pioneer | 269 |
 | Standard | 16 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 7.8% |
-| Works (untested) | 128 | 47.8% |
-| Partial (unaudited) | 31 | 11.6% |
-| Not working | 88 | 32.8% |
+| Tested | 29 | 10.8% |
+| Works (untested) | 128 | 47.6% |
+| Partial (unaudited) | 26 | 9.7% |
+| Not working | 86 | 32.0% |
 
 ## Cards needing work
 
@@ -36,7 +36,7 @@
 | Burning-Yard Trainer | silent | When this creature enters, another target Knight you control gets +2/+2 and gains trample and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cauldron's Gift | silent | Adamant — If at least three black mana was spent to cast this spell, mill four cards. You may choose a creature card in your graveyard. If you do, return it to  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chittering Witch | silent | When this creature enters, create a number of 1/1 black Rat creature tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Clackbridge Troll | silent | When this creature enters, target opponent creates three 0/1 white Goat creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Clackbridge Troll | silent | At the beginning of combat on your turn, any opponent may sacrifice a creature of their choice. If a player does, tap this creature, you gain 3 life, and you dr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covetous Urge | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dance of the Manse | silent | Return up to X target artifact and/or non-Aura enchantment cards each with mana value X or less from your graveyard to the battlefield. If X is 6 or more, those | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Didn't Say Please | silent | Counter target spell. Its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,7 +47,6 @@
 | Faeburrow Elder | silent | {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ferocity of the Wilds | silent | Attacking non-Human creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fervent Champion | silent | Whenever this creature attacks, another target attacking Knight you control gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Flutterfox | silent | As long as you control an artifact or enchantment, this creature has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Folio of Fancies | silent | {2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Foreboding Fruit | silent | Target player draws two cards and loses 2 life. Adamant — If at least three black mana was spent to cast this spell, create a Food token. (It's an artifact with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forever Young | silent | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,7 +60,7 @@
 | Lochmere Serpent | silent | {U}, Sacrifice an Island: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mace of the Valiant | silent | Equipped creature gets +1/+1 for each charge counter on this Equipment and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Memory Theft | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrormade | silent | You may have this enchantment enter as a copy of any artifact or enchantment on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mystic Sanctuary | silent | When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oko, Thief of Crowns | silent | +1: Target artifact or creature loses all abilities and becomes a green Elk creature with base power and toughness 3/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -89,8 +88,6 @@
 | Smitten Swordmaster // Curry Favor | silent | You gain X life and each opponent loses X life, where X is the number of Knights you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Specter's Shriek | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player exiles that card. If a nonblack card is exiled this way, exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sundering Stroke | silent | Sundering Stroke deals 7 damage divided as you choose among one, two, or three targets. If at least seven red mana was spent to cast this spell, instead Sunderi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Syr Faren, the Hengehammer | silent | Whenever Syr Faren attacks, another target attacking creature gets +X/+X until end of turn, where X is Syr Faren's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tall as a Beanstalk | silent | Enchanted creature gets +3/+3, has reach, and is a Giant in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Turn into a Pumpkin | silent | Return target nonland permanent to its owner's hand. Draw a card. Adamant — If at least three blue mana was spent to cast this spell, create a Food token. (It's | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unexplained Vision | silent | Draw three cards. Adamant — If at least three blue mana was spent to cast this spell, scry 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wicked Guardian | silent | When this creature enters, you may have it deal 2 damage to another creature you control. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -112,6 +109,7 @@
 | Scorching Dragonfire | notice | Scorching Dragonfire deals 3 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Searing Barrage | notice | Searing Barrage deals 5 damage to target creature. Adamant — If at least three red mana was spent to cast this spell, Searing Barrage deals 3 damage to that cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Slaying Fire | notice | Slaying Fire deals 3 damage to any target. Adamant — If at least three red mana was spent to cast this spell, it deals 4 damage instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Syr Elenora, the Discerning | notice | Spells your opponents cast that target Syr Elenora cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wildborn Preserver | notice | Whenever another non-Human creature you control enters, you may pay {X}. When you do, put X +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Yorvo, Lord of Garenbrig | notice | Whenever another green creature you control enters, put a +1/+1 counter on Yorvo. Then if that creature's power is greater than Yorvo's power, put another +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Archon of Absolution | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -121,26 +119,21 @@
 | Embercleave | unaudited | This spell costs {1} less to cast for each attacking creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Embereth Paladin | unaudited | Adamant — If at least three red mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Fires of Invention | unaudited | You may cast spells with mana value less than or equal to the number of lands you control without paying their mana costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Frogify | unaudited | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Garenbrig Paladin | unaudited | Adamant — If at least three green mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grumgully, the Generous | unaudited | Each other non-Human creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Harmonious Archon | unaudited | Non-Archon creatures have base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Henge Walker | unaudited | Adamant — If at least three mana of the same color was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Hushbringer | unaudited | Creatures entering or dying don't cause abilities to trigger. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kenrith's Transformation | unaudited | Enchanted creature loses all abilities and is a green Elk creature with base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Locthwain Paladin | unaudited | Adamant — If at least three black mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lovestruck Beast // Heart's Desire | unaudited | This creature can't attack unless you control a 1/1 creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mysterious Pathlighter | unaudited | Each creature you control that has an Adventure enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Oakhame Adversary | unaudited | This spell costs {2} less to cast if an opponent controls a green permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oathsworn Knight | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Questing Beast | unaudited | Combat damage that would be dealt by creatures you control can't be prevented. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rampart Smasher | unaudited | This creature can't be blocked by Knights or Walls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Seven Dwarves | unaudited | A deck can have up to seven cards named Seven Dwarves. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shambling Suit | unaudited | Shambling Suit's power is equal to the number of artifacts and/or enchantments you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shimmer Dragon | unaudited | As long as you control four or more artifacts, this creature has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Syr Elenora, the Discerning | unaudited | Syr Elenora's power is equal to the number of cards in your hand. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Syr Gwyn, Hero of Ashvale | unaudited | Equipment you control have equip Knight {0}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| The Magic Mirror | unaudited | You have no maximum hand size. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Trapped in the Tower | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vantress Gargoyle | unaudited | This creature can't attack unless defending player has seven or more cards in their graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vantress Paladin | unaudited | Adamant — If at least three blue mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -162,7 +155,7 @@
 | Castle Locthwain | handled | This land enters tapped unless you control a Swamp. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Vantress | handled | This land enters tapped unless you control an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chulane, Teller of Tales | handled | Whenever you cast a creature spell, draw a card, then you may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Clockwork Servant | handled | Adamant — When this creature enters, if at least three mana of the same color was spent to cast it, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Command Tower | handled |  |  | Y/Y/- | not_tested |
 | Corridor Monitor | handled | When this creature enters, untap target artifact or creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crashing Drawbridge | handled | {T}: Creatures you control gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crystal Slipper | handled | Equipped creature gets +1/+0 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -181,6 +174,7 @@
 | Fierce Witchstalker | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fireborn Knight | handled | {R/W}{R/W}{R/W}{R/W}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortifying Provisions | handled | Creatures you control get +0/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Frogify | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gadwick, the Wizened | handled | When Gadwick enters, draw X cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Garenbrig Carver // Shield's Might | handled | Target creature gets +2/+2 until end of turn. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Garenbrig Squire | handled | Whenever you cast a creature spell that has an Adventure, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -188,7 +182,6 @@
 | Garruk, Cursed Huntsman | handled | 0: Create two 2/2 black and green Wolf creature tokens with "When this token dies, put a loyalty counter on each Garruk you control." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Giant Killer // Chop Down | handled | Destroy target creature with power 4 or greater. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Giant's Skewer | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Gilded Goose | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gingerbread Cabin | handled | This land enters tapped unless you control three or more other Forests. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glass Casket | handled | When this artifact enters, exile target creature an opponent controls with mana value 3 or less until this artifact leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Golden Egg | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -216,7 +209,7 @@
 | Merchant of the Vale // Haggle | handled | You may discard a card. If you do, draw a card. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Merfolk Secretkeeper // Venture Deeper | handled | Target player mills four cards. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mistford River Turtle | handled | Whenever this creature attacks, another target attacking non-Human creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Moonlit Scavengers | handled | When this creature enters, if you control an artifact or enchantment, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Oakhame Adversary | handled | This spell costs {2} less to cast if an opponent controls a green permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oakhame Ranger // Bring Back | handled | Create two 1/1 white Human creature tokens. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ogre Errant | handled | Whenever this creature attacks, another target attacking Knight gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oko's Accomplices | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -226,7 +219,6 @@
 | Prized Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Prophet of the Peak | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raging Redcap | handled | Double strike | machines/combat.py | Y/Y/Y | not_tested |
-| Reaper of Night // Harvest Fear | handled | Target opponent discards two cards. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resolute Rider | handled | {W/B}{W/B}: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rosethorn Halberd | handled | When this Equipment enters, attach it to target non-Human creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sage of the Falls | handled | Whenever this creature or another non-Human creature you control enters, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -247,19 +239,20 @@
 | Stormfist Crusader | handled | At the beginning of your upkeep, each player draws a card and loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syr Alin, the Lion's Claw | handled | Whenever Syr Alin attacks, other creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Syr Carah, the Bold | handled | Whenever Syr Carah or an instant or sorcery spell you control deals damage to a player, exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Syr Faren, the Hengehammer | handled | Whenever Syr Faren attacks, another target attacking creature gets +X/+X until end of turn, where X is Syr Faren's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syr Konrad, the Grim | handled | Whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, S | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Taste of Death | handled | Each player sacrifices three creatures of their choice. You create three Food tokens. (They're artifacts with "{2}, {T}, Sacrifice this token: You gain 3 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tempting Witch | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Cauldron of Eternity | handled | This spell costs {2} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Circle of Loyalty | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Great Henge | handled | This spell costs {X} less to cast, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| The Magic Mirror | handled | This spell costs {1} less to cast for each instant and sorcery card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Royal Scions | handled | +1: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thorn Mammoth | handled | Whenever this creature or another creature you control enters, this creature fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thrill of Possibility | handled | As an additional cost to cast this spell, discard a card. Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thunderous Snapper | handled | Whenever you cast a spell with mana value 5 or greater, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tome Raider | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tome of Legends | handled | This artifact enters with a page counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Torbran, Thane of Red Fell | handled | If a red source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 2 instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tournament Grounds | handled |  |  | Y/Y/- | not_tested |
 | Trail of Crumbs | handled | When this enchantment enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | True Love's Kiss | handled | Exile target artifact or enchantment. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -277,7 +270,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>29 cards</summary>
 
 - Bartered Cow
 - Bonecrusher Giant // Stomp
@@ -285,20 +278,28 @@
 - Cauldron Familiar
 - Charmed Sleep
 - Claim the Firstborn
+- Clockwork Servant
 - Deafening Silence
 - Drown in the Loch
 - Dwarven Mine
 - Emry, Lurker of the Loch
 - Fae of Wishes // Granted
 - Faerie Vandal
+- Flutterfox
 - Foulmire Knight // Profane Insight
+- Gilded Goose
 - Heraldic Banner
 - Idyllic Grange
+- Kenrith's Transformation
+- Moonlit Scavengers
 - Murderous Rider // Swift End
 - Mystical Dispute
+- Reaper of Night // Harvest Fear
 - Rimrock Knight // Boulder Rush
 - Run Away Together
 - Steelclaw Lance
+- Tall as a Beanstalk
+- Torbran, Thane of Red Fell
 - Witch's Oven
 
 </details>
@@ -315,8 +316,8 @@
 | add one mana of any color. (then exile ~. you may cast the creature later from exile.) | 1 | Rosethorn Acolyte // Seasonal Ritual | eld |
 | add seven {M}. you can cast only one more spell ~. | 1 | Irencrag Feat | eld |
 | as long as you control a rowan planeswalker, ~ gets +N/+N. | 1 | Rowan's Battleguard | eld |
-| as long as you control an artifact or enchantment, ~ has flying. | 1 | Flutterfox | eld |
 | as long as you control four or more artifacts, ~ has hexproof. | 1 | Shimmer Dragon | eld |
+| at the beginning of combat on your turn, any opponent may sacrifice a creature of their choice. if a player does, tap ~, you gain N life, and you draw a card. | 1 | Clackbridge Troll | eld |
 | at the beginning of combat on your turn, you may have target noncreature artifact you control become a N/N artifact creature. if you do, put four +N/+N counters | 1 | Workshop Elders | eld |
 | at the beginning of each player"..."t, they discard a card, they lose N life, you draw a card, you gain N life, you create a N/N white knight creature token wit | 1 | Doom Foretold | eld |
 | at the beginning of your upkeep, choose one at random. create a red and white creature token with those characteristics. | 1 | Outlaws' Merriment | eld |
@@ -335,9 +336,6 @@
 | each other non-human creature you control enters with an additional +N/+N counter on it. | 1 | Grumgully, the Generous | eld |
 | enchanted creature can"..."t be activated. | 1 | Trapped in the Tower | eld |
 | enchanted creature gets +N/+N for each artifact and/or enchantment you control. | 1 | All That Glitters | eld |
-| enchanted creature gets +N/+N, has reach, and is a giant in addition to its other types. | 1 | Tall as a Beanstalk | eld |
-| enchanted creature loses all abilities and is a blue frog creature with base power and toughness N/N. | 1 | Frogify | eld |
-| enchanted creature loses all abilities and is a green elk creature with base power and toughness N/N. | 1 | Kenrith's Transformation | eld |
 | equipment you control have equip knight {M}. | 1 | Syr Gwyn, Hero of Ashvale | eld |
 | equipped creature gets +N/+N for each charge counter on ~ and has vigilance. | 1 | Mace of the Valiant | eld |
 | exile the top five cards of your library. you may play cards exiled ~ until the end of your next turn. you may play an additional land ~. | 1 | Escape to the Wilds | eld |
@@ -351,7 +349,7 @@
 | return target card from your graveyard to your hand. put up to one other target card from your graveyard on top of your library. exile ~. adamant — if at least  | 1 | Once and Future | eld |
 | return target nonland permanent to its owner"..."s an artifact with "...") | 1 | Turn into a Pumpkin | eld |
 | return up to N target artifact and/or non-aura enchantment cards each with mana value N or less from your graveyard to the battlefield. if N is N or more, those | 1 | Dance of the Manse | eld |
-| syr elenora's power is equal to the number of cards in your hand. | 1 | Syr Elenora, the Discerning | eld |
+| spells your opponents cast that target syr elenora cost {M} more to cast. | 1 | Syr Elenora, the Discerning | eld |
 | target attacking creature gets +N/+N until end of turn. each attacking non-human creature gains trample until end of turn. | 1 | Barge In | eld |
 | target creature gets -N/-N until end of turn, where N is the number of cards in your graveyard. | 1 | Festive Funeral | eld |
 | target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on it. | 1 | Animating Faerie // Bring to Life | eld |
@@ -371,7 +369,6 @@
 | when ~ enters, create a number of food tokens equal to the number of opponents you have. | 1 | Gluttonous Troll | eld |
 | when ~ enters, each opponent mills two cards. then you scry N. | 1 | Overwhelmed Apprentice | eld |
 | when ~ enters, target knight gains deathtouch and lifelink until end of turn. | 1 | Blacklance Paragon | eld |
-| when ~ enters, target opponent creates three N/N white goat creature tokens. | 1 | Clackbridge Troll | eld |
 | when ~ enters, you may have it deal N damage to another creature you control. if you do, draw a card. | 1 | Wicked Guardian | eld |
 | when ~ enters, you may search your library and/or graveyard for a card named rowan, fearless sparkmage, reveal it, and put it into your hand. if you search your | 1 | Rowan's Stalwarts | eld |
 | whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life and you gain N life. | 1 | Revenge of Ravens | eld |
@@ -379,7 +376,6 @@
 | whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
 | whenever korvold enters or attacks, sacrifice another permanent. | 1 | Korvold, Fae-Cursed King | eld |
 | whenever rankle deals combat damage to a player, choose any number — • each player discards a card. • each player loses N life and draws a card. • each player s | 1 | Rankle, Master of Pranks | eld |
-| whenever syr faren attacks, another target attacking creature gets +N/+N until end of turn, where N is syr faren's power. | 1 | Syr Faren, the Hengehammer | eld |
 | whenever ~ attacks, another target attacking knight you control gets +N/+N until end of turn. | 1 | Fervent Champion | eld |
 | whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
@@ -390,7 +386,6 @@
 | whenever ~ deals combat damage to a player, you may sacrifice it. when you do, destroy target artifact or enchantment. | 1 | Flaxen Intruder // Welcome Home | eld |
 | whenever ~ deals damage to an opponent, that player discards a card at random. if the player does, they draw a card. | 1 | Skullknocker Ogre | eld |
 | you gain N life and each opponent loses N life, where N is the number of knights you control. | 1 | Smitten Swordmaster // Curry Favor | eld |
-| you have no maximum hand size. | 1 | The Magic Mirror | eld |
 | you may cast spells with mana value less than or equal to the number of lands you control without paying their mana costs. | 1 | Fires of Invention | eld |
 | you may have ~ enter as a copy of any artifact or enchantment on the battlefield. | 1 | Mirrormade | eld |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
@@ -411,7 +406,6 @@
 | ~ can't be blocked by creatures with power N or greater. | 1 | Beloved Princess | eld |
 | ~ can't be blocked by knights or walls. | 1 | Rampart Smasher | eld |
 | ~ costs {M} less to cast for each attacking creature you control. | 1 | Embercleave | eld |
-| ~ costs {M} less to cast if an opponent controls a green permanent. | 1 | Oakhame Adversary | eld |
 | ~ deals N damage divided as you choose among one, two, or three targets. if at least seven red mana was spent to cast ~, instead ~ deals N damage to each of tho | 1 | Sundering Stroke | eld |
 | ~ deals N damage to any target. adamant — if at least three red mana was spent to cast ~, it deals N damage instead. | 1 | Slaying Fire | eld |
 | ~ deals N damage to target creature or planeswalker. if a nonred permanent is dealt damage ~, you sacrifice a land. | 1 | Redcap Melee | eld |

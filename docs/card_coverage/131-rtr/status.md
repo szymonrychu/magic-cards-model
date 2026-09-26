@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 5.8% |
-| Works (untested) | 98 | 43.8% |
+| Tested | 15 | 6.7% |
+| Works (untested) | 97 | 43.3% |
 | Partial (unaudited) | 11 | 4.9% |
-| Not working | 102 | 45.5% |
+| Not working | 101 | 45.1% |
 
 ## Cards needing work
 
@@ -37,7 +37,7 @@
 | Carnival Hellsteed | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chaos Imps | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chemister's Trick | silent | Target creature you don't control gets -2/-0 until end of turn and attacks this turn if able. Overload {3}{U}{R} (You may cast this spell for its overload cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chronic Flooding | silent | Whenever enchanted land becomes tapped, its controller mills three cards. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
+| Chronic Flooding | silent | Whenever enchanted land becomes tapped, its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Civic Saber | silent | Equipped creature gets +1/+0 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conjured Currency | silent | At the beginning of your upkeep, you may exchange control of this enchantment and target permanent you neither own nor control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Counterflux | silent | This spell can't be countered. Counter target spell you don't control. Overload {1}{U}{U}{R} (You may cast this spell for its overload cost. If you do, change " | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -94,7 +94,7 @@
 | Rix Maadi Guildmage | silent | {B}{R}: Target player who lost life this turn loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rootborn Defenses | silent | Populate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Search Warrant | silent | Target player reveals their hand. You gain life equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Search the City | silent | When this enchantment enters, exile the top five cards of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Search the City | silent | Whenever you play a card with the same name as one of the exiled cards, you may put one of those cards with that name into its owner's hand. Then if there are n | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sewer Shambler | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Skull Rend | silent | Skull Rend deals 2 damage to each opponent. Those players each discard two cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slaughter Games | silent | This spell can't be countered. Choose a nonland card name. Search target opponent's graveyard, hand, and library for any number of cards with that name and exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -118,7 +118,6 @@
 | Volatile Rig | silent | When this creature dies, flip a coin. If you lose the flip, it deals 4 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska the Unseen | silent | +1: Until your next turn, whenever a creature deals combat damage to Vraska, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wayfaring Temple | silent | Whenever this creature deals combat damage to a player, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wild Beastmaster | silent | Whenever this creature attacks, each other creature you control gets +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Worldspine Wurm | silent | When Worldspine Wurm is put into a graveyard from anywhere, shuffle it into its owner's library. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Zanikev Locust | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Assassin's Strike | notice | Destroy target creature. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -212,7 +211,6 @@
 | Selesnya Keyrune | handled | {G}{W}: This artifact becomes a 3/3 green and white Wolf artifact creature until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selesnya Sentry | handled | {5}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seller of Songbirds | handled | When this creature enters, create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Shrieking Affliction | handled | At the beginning of each opponent's upkeep, if that player has one or fewer cards in hand, they lose 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyline Predator | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Skymark Roc | handled | Whenever this creature attacks, you may return target creature defending player controls with toughness 2 or less to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slime Molding | handled | Create an X/X green Ooze creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -241,7 +239,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>15 cards</summary>
 
 - Abrupt Decay
 - Azorius Guildgate
@@ -255,7 +253,9 @@
 - Precinct Captain
 - Rest in Peace
 - Selesnya Guildgate
+- Shrieking Affliction
 - Supreme Verdict
+- Wild Beastmaster
 
 </details>
 
@@ -310,7 +310,6 @@
 | when ~ dies, flip a coin. if you lose the flip, it deals N damage to each creature and each player. | 1 | Volatile Rig | rtr |
 | when ~ enters, detain target nonland permanent an opponent controls. | 1 | Lyev Skyknight | rtr |
 | when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |
-| when ~ enters, exile the top five cards of your library. | 1 | Search the City | rtr |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Transguild Promenade | rtr |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Faerie Impostor | rtr |
 | when ~ is put into a graveyard from anywhere, shuffle it into its owner's library. | 1 | Worldspine Wurm | rtr |
@@ -324,8 +323,8 @@
 | whenever another creature you control enters, you gain life equal to that creature's toughness. | 1 | Trostani, Selesnya's Voice | rtr |
 | whenever enchanted land becomes tapped, its controller mills three cards. | 1 | Chronic Flooding | rtr |
 | whenever you cast a spell, if it's at least one of the chosen colors, you gain N life for each of the chosen colors it is. | 1 | Tablet of the Guilds | rtr |
+| whenever you play a card with the same name as one of the exiled cards, you may put one of those cards with that name into its owner's hand. then if there are n | 1 | Search the City | rtr |
 | whenever ~ attacks, detain up to two target nonland permanents your opponents control. | 1 | Archon of the Triumvirate | rtr |
-| whenever ~ attacks, each other creature you control gets +N/+N until end of turn, where N is ~ power. | 1 | Wild Beastmaster | rtr |
 | whenever ~ deals combat damage to a player, populate. | 1 | Wayfaring Temple | rtr |
 | whenever ~ deals combat damage to a player, that player discards a card at random. | 1 | Rakdos Ringleader | rtr |
 | you can't cast rakdos unless an opponent lost life ~. | 1 | Rakdos, Lord of Riots | rtr |

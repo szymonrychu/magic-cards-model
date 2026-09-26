@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 5.3% |
-| Works (untested) | 150 | 66.7% |
+| Tested | 13 | 5.8% |
+| Works (untested) | 153 | 68.0% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 54 | 24.0% |
+| Not working | 50 | 22.2% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Avalanche Tusker | silent | Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrage of Boulders | silent | Barrage of Boulders deals 1 damage to each creature you don't control. Ferocious — If you control a creature with power 4 or greater, creatures can't block this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bellowing Saddlebrute | silent | Raid — When this creature enters, you lose 4 life unless you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Briber's Purse | silent | {1}, {T}, Remove a gem counter from this artifact: Target creature can't attack or block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Butcher of the Horde | silent | Sacrifice another creature: This creature gains your choice of vigilance, lifelink, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chief of the Edge | silent | Other Warrior creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chief of the Scale | silent | Other Warrior creatures you control get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,11 +45,9 @@
 | Force Away | silent | Return target creature to its owner's hand. Ferocious — If you control a creature with power 4 or greater, you may draw a card. If you do, discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herald of Anafenza | silent | Whenever you activate this creature's outlast ability, create a 1/1 white Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Hooded Hydra | silent | When this creature dies, create a 1/1 green Snake creature token for each +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Horde Ambusher | silent | When this creature is turned face up, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Howl of the Horde | silent | When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. Raid — If you attacked this turn, when you n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icy Blast | silent | Tap X target creatures. Ferocious — If you control a creature with power 4 or greater, those creatures don't untap during their controllers' next untap steps. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kheru Lich Lord | silent | At the beginning of your upkeep, you may pay {2}{B}. If you do, return a creature card at random from your graveyard to the battlefield. It gains flying, trampl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mardu Roughrider | silent | Whenever this creature attacks, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meandering Towershell | silent | Whenever this creature attacks, exile it. Return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mindswipe | silent | Counter target spell unless its controller pays {X}. Mindswipe deals X damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Narset, Enlightened Master | silent | Whenever Narset attacks, exile the top four cards of your library. Until end of turn, you may cast noncreature spells from among those cards without paying thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +59,6 @@
 | Secret Plans | silent | Face-down creatures you control get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | See the Unwritten | silent | Reveal the top eight cards of your library. You may put a creature card from among them onto the battlefield. Put the rest into your graveyard. Ferocious — If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Set Adrift | silent | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Put target nonland permanent on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sidisi, Brood Tyrant | silent | Whenever one or more creature cards are put into your graveyard from your library, create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tomb of the Spirit Dragon | silent | {2}, {T}: You gain 1 life for each colorless creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,6 +107,7 @@
 | Bloodfire Mentor | handled | {2}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodsoaked Champion | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blossoming Sands | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Briber's Purse | handled | This artifact enters with X gem counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canyon Lurkers | handled | Morph | machines/casting.py | Y/Y/- | not_tested |
 | Dazzling Ramparts | handled | {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dead Drop | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Target player sacrifices two creatures of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -139,9 +136,9 @@
 | Heir of the Wilds | handled | Ferocious — Whenever this creature attacks, if you control a creature with power 4 or greater, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Highland Game | handled | When this creature dies, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Highspire Mantis | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Horde Ambusher | handled | Whenever this creature blocks, it deals 1 damage to you. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hordeling Outburst | handled | Create three 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Icefeather Aven | handled | When this creature is turned face up, you may return another target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Jeering Instigator | handled | When this creature is turned face up, if it's your turn, gain control of another target creature until end of turn. Untap that creature. It gains haste until en | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Ascendancy | handled | Whenever you cast a noncreature spell, creatures you control get +1/+1 until end of turn. Untap those creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Banner | handled | {U}{R}{W}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Student | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
@@ -159,6 +156,7 @@
 | Mardu Banner | handled | {R}{W}{B}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Hateblade | handled | {B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Hordechief | handled | Raid — When this creature enters, if you attacked this turn, create a 1/1 white Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mardu Roughrider | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Skullhunter | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mardu Warshrieker | handled | Raid — When this creature enters, if you attacked this turn, add {R}{W}{B}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Master of Pearls | handled | When this creature is turned face up, creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,6 +194,7 @@
 | Seeker of the Way | handled | Whenever you cast a noncreature spell, this creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shambling Attendants | handled | Delve | machines/keywords.py | Y/Y/- | not_tested |
 | Sidisi's Pet | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
+| Sidisi, Brood Tyrant | handled | Whenever Sidisi enters or attacks, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siege Rhino | handled | When this creature enters, each opponent loses 3 life and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siegecraft | handled | Enchanted creature gets +2/+4. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Singing Bell Strike | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
@@ -251,6 +250,7 @@
 - Clever Impersonator
 - Hardened Scales
 - Hooting Mandrills
+- Jeering Instigator
 - Kheru Spellsnatcher
 - Monastery Swiftspear
 - Necropolis Fiend
@@ -298,21 +298,17 @@
 | when ~ dies, create a N/N green snake creature token for each +N/+N counter on it. | 1 | Hooded Hydra | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
 | when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |
-| when ~ is turned face up, target creature can't block ~. | 1 | Horde Ambusher | ktk |
 | whenever a warrior you control deals combat damage to a player, you may pay N life. if you do, draw a card. | 1 | Raiders' Spoils | ktk |
 | whenever another permanent you control enters, each opponent mills a card. | 1 | Altar of the Brood | ktk |
 | whenever narset attacks, exile the top four cards of your library. until end of turn, you may cast noncreature spells from among those cards without paying thei | 1 | Narset, Enlightened Master | ktk |
 | whenever one or more cards are put into exile from your graveyard, put that many +N/+N counters on ~. | 1 | Rakshasa Vizier | ktk |
-| whenever one or more creature cards are put into your graveyard from your library, create a N/N black zombie creature token. | 1 | Sidisi, Brood Tyrant | ktk |
 | whenever you activate ~ outlast ability, create a N/N white warrior creature token. | 1 | Herald of Anafenza | ktk |
 | whenever ~ attacks, exile it. return it to the battlefield under your control tapped and attacking at the beginning of the declare attackers step on your next t | 1 | Meandering Towershell | ktk |
-| whenever ~ attacks, target creature can't block ~. | 1 | Mardu Roughrider | ktk |
 | whenever ~ attacks, target creature defending player controls blocks it ~ if able. | 1 | Avalanche Tusker | ktk |
 | whenever ~ attacks, you gain N life for each attacking creature. | 1 | Wingmate Roc | ktk |
 | whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
 | you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
 | {M}, exile ~: target player shuffles their graveyard into their library. draw a card. | 1 | Cranial Archive | ktk |
-| {M}, {M}, remove a gem counter from ~: target creature can't attack or block ~. | 1 | Briber's Purse | ktk |
 | {M}, {M}: you gain N life for each colorless creature you control. | 1 | Tomb of the Spirit Dragon | ktk |
 | {M}{M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. | 1 | Kheru Dreadmaw | ktk |
 | {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |

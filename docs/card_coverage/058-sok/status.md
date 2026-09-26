@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 3.0% |
-| Works (untested) | 57 | 34.5% |
+| Tested | 8 | 4.8% |
+| Works (untested) | 56 | 33.9% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 92 | 55.8% |
+| Not working | 90 | 54.5% |
 
 ## Cards needing work
 
@@ -88,14 +88,12 @@
 | Promised Kannushi | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Pure Intentions | silent | Whenever a spell or ability an opponent controls causes you to discard cards this turn, return those cards from your graveyard to your hand. When a spell or abi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rally the Horde | silent | Exile the top card of your library. Exile the top card of your library. Exile the top card of your library. If the last card exiled isn't a land card, repeat th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Raving Oni-Slave | silent | When this creature enters or leaves the battlefield, you lose 3 life if you don't control a Demon. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rending Vines | silent | Destroy target artifact or enchantment if its mana value is less than or equal to the number of cards in your hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ronin Cavekeeper | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rune-Tail, Kitsune Ascendant // Rune-Tail's Essence | silent | When you have 30 or more life, flip Rune-Tail. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Sasaya, Orochi Ascendant // Sasaya's Essence | silent | Reveal your hand: If you have seven or more land cards in your hand, flip Sasaya. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Secretkeeper | silent | As long as you have more cards in hand than each opponent, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seed the Land | silent | Whenever a land enters, its controller creates a 1/1 green Snake creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shinen of Fear's Chill | silent | Channel — {1}{B}, Discard this card: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shinen of Life's Roar | silent | Channel — {2}{G}{G}, Discard this card: All creatures able to block target creature this turn do so. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sink into Takenuma | silent | Sweep — Return any number of Swamps you control to their owner's hand. Target player discards a card for each Swamp returned this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skull Collector | silent | At the beginning of your upkeep, return a black creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -132,7 +130,6 @@
 | Akki Drillmaster | handled | {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arashi, the Sky Asunder | handled | {X}{G}, {T}: Arashi deals X damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Briarknit Kami | handled | Whenever you cast a Spirit or Arcane spell, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Burning-Eye Zubera | handled | When this creature dies, if 4 or more damage was dealt to it this turn, this creature deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Captive Flame | handled | {R}: Target creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death Denied | handled | Return X target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death of a Thousand Stings | handled | Target player loses 1 life and you gain 1 life. At the beginning of your upkeep, if you have more cards in hand than each opponent, you may return this card fro | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,7 +153,6 @@
 | Kami of the Crescent Moon | handled | At the beginning of each player's draw step, that player draws an additional card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kemuri-Onna | handled | When this creature enters, target player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kiri-Onna | handled | When this creature enters, return target creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Kitsune Bonesetter | handled | {T}: Prevent the next 3 damage that would be dealt to target creature this turn. Activate only if you have more cards in hand than each opponent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitsune Loreweaver | handled | {1}{W}: This creature gets +0/+X until end of turn, where X is the number of cards in your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maga, Traitor to Mortals | handled | Maga enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Manriki-Gusari | handled | Equipped creature gets +1/+2 and has "{T}: Destroy target Equipment." | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -170,13 +166,14 @@
 | Oboro, Palace in the Clouds | handled | {1}: Return Oboro to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | One with Nothing | handled | Discard your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Path of Anger's Flame | handled | Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Raving Oni-Slave | handled | When this creature enters or leaves the battlefield, you lose 3 life if you don't control a Demon. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reki, the History of Kamigawa | handled | Whenever you cast a legendary spell, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Rushing-Tide Zubera | handled | When this creature dies, if 4 or more damage was dealt to it this turn, draw three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sakura-Tribe Scout | handled | {T}: You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scroll of Origins | handled | {2}, {T}: Draw a card if you have seven or more cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seek the Horizon | handled | Search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shape Stealer | handled | Whenever this creature blocks or becomes blocked by a creature, this creature's base power and toughness become equal to that creature's power and toughness unt | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shifting Borders | handled | Exchange control of two target lands. Splice onto Arcane {3}{U} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. I | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shinen of Fear's Chill | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shinen of Flight's Wings | handled | Channel — {U}, Discard this card: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shinen of Fury's Fire | handled | Channel — {R}, Discard this card: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shinen of Stars' Light | handled | Channel — {1}{W}, Discard this card: Target creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -190,13 +187,16 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>8 cards</summary>
 
+- Burning-Eye Zubera
 - Evermind
 - Feral Lightning
 - Kaho, Minamo Historian
+- Kitsune Bonesetter
 - Pithing Needle
 - Reverence
+- Rushing-Tide Zubera
 
 </details>
 
@@ -207,8 +207,8 @@
 | bushido | 8 | Araba Mothrider, Hand of Cruelty, Hand of Honor, Inner-Chamber Guard, Kitsune Dawnblade | sok |
 | soulshift | 6 | Deathknell Kami, Elder Pine of Jukai, Kami of Empty Graves, Nightsoil Kami, Promised Kannushi | sok |
 | Sweep | 4 | Barrel Down Sokenzan, Charge Across the Araba, Plow Through Reito, Sink into Takenuma | sok |
-| Channel | 2 | Shinen of Fear's Chill, Shinen of Life's Roar | sok |
 | whenever ~ deals combat damage to a creature, tap that creature and it doesn"..."s next untap step. | 2 | Kashi-Tribe Elite, Matsu-Tribe Birdstalker | sok |
+| Channel | 1 | Shinen of Life's Roar | sok |
 | Choose one | 1 | Aether Shockwave | sok |
 | adamaro's power and toughness are each equal to the number of cards in the hand of the opponent with the most cards in hand. | 1 | Adamaro, First to Desire | sok |
 | add {M} for each card in your hand. | 1 | Inner Fire | sok |
@@ -267,7 +267,6 @@
 | when homura dies, return it to the battlefield flipped. | 1 | Homura, Human Ascendant // Homura's Essence | sok |
 | when you have N or more life, flip rune-tail. | 1 | Rune-Tail, Kitsune Ascendant // Rune-Tail's Essence | sok |
 | when ~ dies, you may exile it. if you do, return target spirit permanent card from your graveyard to the battlefield. | 1 | Iname as One | sok |
-| when ~ enters or leaves the battlefield, you lose N life if you don't control a demon. | 1 | Raving Oni-Slave | sok |
 | whenever a land enters, its controller creates a N/N green snake creature token. | 1 | Seed the Land | sok |
 | whenever a spell or ability an opponent controls causes you to discard cards ~, return those cards from your graveyard to your hand. when a spell or ability an  | 1 | Pure Intentions | sok |
 | whenever another card is put into your graveyard from anywhere, target opponent gains control of ~. | 1 | Measure of Wickedness | sok |

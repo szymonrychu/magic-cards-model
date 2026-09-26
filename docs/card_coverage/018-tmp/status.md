@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 12.3% |
-| Works (untested) | 30 | 52.6% |
+| Works (untested) | 31 | 54.4% |
 | Partial (unaudited) | 5 | 8.8% |
-| Not working | 15 | 26.3% |
+| Not working | 14 | 24.6% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Rootwater Matriarch | silent | {T}: Gain control of target creature for as long as that creature is enchanted. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Wings | silent | {U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soltari Priest | silent | Shadow | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Stun | silent | Target creature can't block this turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sudden Impact | silent | Sudden Impact deals damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Warp | silent | Target player takes an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,6 +72,7 @@
 | Scragnoth | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skyshroud Ranger | handled | {T}: You may put a land card from your hand onto the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Staunch Defenders | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stun | handled | Target creature can't block this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trained Armodon | handled |  |  | Y/-/- | not_tested |
 | Twitch | handled | You may tap or untap target artifact, creature, or land. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Verdant Force | handled | At the beginning of each upkeep, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -105,7 +105,6 @@
 | islands don"..." untap steps. | 1 | Choke | tmp |
 | sacrifice a creature: target opponent gains control of ~. | 1 | Jinxed Idol | tmp |
 | sacrifice a creature: target player mills cards equal to the sacrificed creature's power. | 1 | Altar of Dementia | tmp |
-| target creature can't block ~. draw a card. | 1 | Stun | tmp |
 | target player takes an extra turn after ~. | 1 | Time Warp | tmp |
 | when ~ enters, sacrifice it unless you sacrifice two mountains. | 1 | Rathi Dragon | tmp |
 | whenever a creature is dealt damage, destroy it. it can't be regenerated. | 1 | Death Pits of Rath | tmp |

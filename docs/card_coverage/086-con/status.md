@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.7% |
+| Tested | 9 | 6.4% |
 | Works (untested) | 72 | 51.1% |
-| Partial (unaudited) | 6 | 4.3% |
+| Partial (unaudited) | 5 | 3.5% |
 | Not working | 55 | 39.0% |
 
 ## Cards needing work
@@ -31,7 +31,7 @@
 | Blood Tyrant | silent | At the beginning of your upkeep, each player loses 1 life. Put a +1/+1 counter on this creature for each 1 life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Child of Alara | silent | When Child of Alara dies, destroy all nonland permanents. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conflux | silent | Search your library for a white card, a blue card, a black card, a red card, and a green card. Reveal those cards, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corrupted Roots | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Corrupted Roots | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cylian Sunsinger | silent | {R}{G}{W}: This creature and each other creature with the same name as it get +3/+3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drag Down | silent | Domain — Target creature gets -1/-1 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragonsoul Knight | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes a Dragon, gets +5/+3, and gains flying and trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,7 +52,7 @@
 | Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Meglonoth | silent | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Might of Alara | silent | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nacatl Hunt-Pride | silent | {R}, {T}: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nacatl Hunt-Pride | silent | {G}, {T}: Target creature blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas, Planeswalker | silent | −2: Gain control of target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,7 +85,6 @@
 | Aven Trailblazer | unaudited | Domain — Aven Trailblazer's toughness is equal to the number of basic land types among lands you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nyxathid | unaudited | As this creature enters, choose an opponent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Progenitus | unaudited | If Progenitus would be put into a graveyard from anywhere, reveal Progenitus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Reliquary Tower | unaudited | You have no maximum hand size. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Worldheart Phoenix | unaudited | You may cast this card from your graveyard by paying {W}{U}{B}{R}{G} rather than paying its mana cost. If you do, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Absorb Vis | handled | Target player loses 4 life and you gain 4 life. Basic landcycling {1}{B} ({1}{B}, Discard this card: Search your library for a basic land card, reveal it, put i | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ancient Ziggurat | handled |  |  | Y/-/- | not_tested |
@@ -163,7 +162,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Aerie Mystics
 - Canyon Minotaur
@@ -171,6 +170,7 @@
 - Exotic Orchard
 - Mark of Asylum
 - Path to Exile
+- Reliquary Tower
 - Skyward Eye Prophets
 - Thornling
 
@@ -211,9 +211,8 @@
 | whenever enchanted land becomes tapped, its controller loses N life. | 1 | Corrupted Roots | con |
 | whenever ~ blocks a creature, ~ deals damage to that creature's controller equal to ~ power. | 1 | Meglonoth | con |
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
-| you have no maximum hand size. | 1 | Reliquary Tower | con |
 | you may cast ~ from your graveyard by paying {M}{M}{M}{M}{M} rather than paying its mana cost. if you do, it enters with two +N/+N counters on it. | 1 | Worldheart Phoenix | con |
-| {M}, {M}: target creature can't block ~. | 1 | Nacatl Hunt-Pride | con |
+| {M}, {M}: target creature blocks ~ if able. | 1 | Nacatl Hunt-Pride | con |
 | {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |
 | {M}{M}: ~ gains fear and vigilance until end of turn. | 1 | Scornful Aether-Lich | con |
 | {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 7.0% |
+| Tested | 18 | 9.7% |
 | Works (untested) | 104 | 56.2% |
-| Partial (unaudited) | 12 | 6.5% |
-| Not working | 56 | 30.3% |
+| Partial (unaudited) | 11 | 5.9% |
+| Not working | 52 | 28.1% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aerial Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aethersphere Harvester | silent | Pay {E}: This Vehicle gains lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aetherstream Leopard | error |  | card_support raised: unsupported mana symbol: {E} | Y/Y/- | not_working |
 | Aethertide Whale | silent | When this creature enters, you get six {E} . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aetherwind Basker | silent | Whenever this creature enters or attacks, you get {E} for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani Unyielding | silent | +2: Reveal the top three cards of your library. Put all nonland permanent cards revealed this way into your hand and the rest on the bottom of your library in a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -38,7 +37,7 @@
 | Baral, Chief of Compliance | silent | Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Caught in the Brights | silent | When a Vehicle you control attacks, exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consulate Crackdown | silent | When this enchantment enters, exile all artifacts your opponents control until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Daredevil Dragster | silent | At end of combat, if this Vehicle attacked or blocked this combat, put a velocity counter on it. Then if it has two or more velocity counters on it, sacrifice i | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Daredevil Dragster | silent | At end of combat, if this Vehicle attacked or blocked this combat, put a velocity counter on it. Then if it has two or more velocity counters on it, sacrifice i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Intimations | silent | Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decommission | silent | Destroy target artifact or enchantment. Revolt — If a permanent left the battlefield under your control this turn, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disallow | silent | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,7 +49,6 @@
 | Indomitable Creativity | silent | Destroy X target artifacts and/or creatures. For each permanent destroyed this way, its controller reveals cards from the top of their library until an artifact | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kari Zev's Expertise | silent | Gain control of target creature or Vehicle until end of turn. Untap it. It gains haste until end of turn. You may cast a spell with mana value 2 or less from yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightning Runner | silent | Whenever this creature attacks, you get {E}{E} , then you may pay eight {E}. If you pay, untap all creatures you control, and after this phase, there is an addi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Maulfist Revolutionary | silent | When this creature enters or dies, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mechanized Production | silent | At the beginning of your upkeep, create a token that's a copy of enchanted artifact. Then if you control eight or more artifacts with the same name as one anoth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Metallic Mimic | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Monstrous Onslaught | silent | Monstrous Onslaught deals X damage divided as you choose among any number of target creatures, where X is the greatest power among creatures you control as you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,14 +59,12 @@
 | Pia's Revolution | silent | Whenever a nontoken artifact is put into your graveyard from the battlefield, return that card to your hand unless target opponent has this enchantment deal 3 d | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Quicksmith Rebel | silent | When this creature enters, target artifact you control gains "{T}: This artifact deals 2 damage to any target" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quicksmith Spy | silent | When this creature enters, target artifact you control gains "{T}: Draw a card" for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Renegade Wheelsmith | silent | Whenever this creature becomes tapped, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Restoration Specialist | silent | {W}, Sacrifice this creature: Return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rishkar's Expertise | silent | Draw cards equal to the greatest power among creatures you control. You may cast a spell with mana value 5 or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Salvage Scuttler | silent | Whenever this creature attacks, return an artifact you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Trawler | silent | Whenever this creature dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrounging Bandar | silent | At the beginning of your upkeep, you may move any number of +1/+1 counters from this creature onto another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Modification | silent | As long as enchanted permanent is a Vehicle, it's a creature in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skyship Plunderer | silent | Whenever this creature deals combat damage to a player, for each kind of counter on target permanent or player, give that permanent or player another counter of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sram's Expertise | silent | Create three 1/1 colorless Servo artifact creature tokens. You may cast a spell with mana value 3 or less from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tezzeret's Touch | silent | When enchanted artifact is put into a graveyard, return that card to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Tezzeret, Master of Metal | silent | −3: Target opponent loses life equal to the number of artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +83,6 @@
 | Fen Hauler | unaudited | This creature can't be blocked by artifact creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Greenwheel Liberator | unaudited | Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Heart of Kiran | unaudited | You may remove a loyalty counter from a planeswalker you control rather than pay Heart of Kiran's crew cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Inspiring Statuary | unaudited | Nonartifact spells you cast have improvise. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lifecraft Cavalry | unaudited | Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Narnam Renegade | unaudited | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Night Market Aeronaut | unaudited | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -126,7 +121,6 @@
 | Felidar Guardian | handled | When this creature enters, you may exile another target permanent you control, then return that card to the battlefield under its owner's control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Filigree Crawler | handled | When this creature dies, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foundry Assembler | handled | Improvise | machines/objects_as_costs.py (improvise) | Y/Y/- | not_tested |
-| Foundry Hornet | handled | When this creature enters, if you control a creature with a +1/+1 counter on it, creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Freejam Regent | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frontline Rebel | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ghirapur Osprey | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -166,6 +160,7 @@
 | Reckless Racer | handled | Whenever this creature becomes tapped, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Release the Gremlins | handled | Destroy X target artifacts. Create X 2/2 red Gremlin creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Renegade Map | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Renegade Wheelsmith | handled | Whenever this creature becomes tapped, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Renegade's Getaway | handled | Target permanent gains indestructible until end of turn. Create a 1/1 colorless Servo artifact creature token. (Effects that say "destroy" don't destroy a perma | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reservoir Walker | handled | When this creature enters, you gain 3 life and get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resourceful Return | handled | Return target creature card from your graveyard to your hand. If you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,18 +197,23 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>18 cards</summary>
 
 - Aether Chaser
+- Aetherstream Leopard
 - Aid from the Cowl
 - Bastion Enforcer
 - Consulate Dreadnought
 - Fatal Push
+- Foundry Hornet
 - Hinterland Drake
 - Hungry Flames
+- Inspiring Statuary
+- Maulfist Revolutionary
 - Merchant's Dockhand
 - Metallic Rebuke
 - Renegade Rallier
+- Skyship Plunderer
 - Walking Ballista
 - Whir of Invention
 - Winding Constrictor
@@ -249,7 +249,6 @@
 | gain control of target creature or vehicle until end of turn. untap it. it gains haste until end of turn. you may cast a spell with mana value N or less from yo | 1 | Kari Zev's Expertise | aer |
 | if you would lose the game, instead exile ~ and your life total becomes equal to your starting life total. | 1 | Exquisite Archangel | aer |
 | improvise (your artifacts can help cast ~. each artifact you tap after you're done activating mana abilities pays for {M}.) target creature gets -N/-N until end | 1 | Battle at the Bridge | aer |
-| nonartifact spells you cast have improvise. | 1 | Inspiring Statuary | aer |
 | pay {M}: ~ gains lifelink until end of turn. | 1 | Aethersphere Harvester | aer |
 | pay {M}{M}, sacrifice ~: each opponent loses N life. you gain life equal to the life lost ~. | 1 | Gonti's Machinations | aer |
 | put N +N/+N counters on target artifact you control. if it isn't a creature or vehicle, it becomes a N/N construct artifact creature. | 1 | Lifecraft Awakening | aer |
@@ -259,7 +258,6 @@
 | when a vehicle you control attacks, exile enchanted creature. | 1 | Caught in the Brights | aer |
 | when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
 | when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
-| when ~ enters or dies, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind. | 1 | Maulfist Revolutionary | aer |
 | when ~ enters, exile all artifacts your opponents control until ~ leaves the battlefield. | 1 | Consulate Crackdown | aer |
 | when ~ enters, pay {M}{M} . if you can"..."s hand and you get {M}. | 1 | Greenbelt Rampager | aer |
 | when ~ enters, you get an amount of {M} equal to the greatest power among creatures you control. | 1 | Peema Aether-Seer | aer |
@@ -272,8 +270,6 @@
 | whenever kari zev attacks, create ragavan, a legendary N/N red monkey creature token. ragavan enters tapped and attacking. exile that token at end of combat. | 1 | Kari Zev, Skyship Raider | aer |
 | whenever ~ attacks, return an artifact you control to its owner's hand. | 1 | Salvage Scuttler | aer |
 | whenever ~ attacks, you get {M}{M} , then you may pay eight {M}. if you pay, untap all creatures you control, and after ~, there is an additional combat phase. | 1 | Lightning Runner | aer |
-| whenever ~ becomes tapped, target creature can't block ~. | 1 | Renegade Wheelsmith | aer |
-| whenever ~ deals combat damage to a player, for each kind of counter on target permanent or player, give that permanent or player another counter of that kind. | 1 | Skyship Plunderer | aer |
 | whenever ~ dies or another artifact you control is put into a graveyard from the battlefield, return to your hand target artifact card in your graveyard with le | 1 | Scrap Trawler | aer |
 | whenever ~ enters or attacks, you get {M} for each creature you control. | 1 | Aetherwind Basker | aer |
 | you may remove a loyalty counter from a planeswalker you control rather than pay ~'s crew cost. | 1 | Heart of Kiran | aer |

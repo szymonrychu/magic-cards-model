@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 9.0% |
-| Works (untested) | 61 | 55.0% |
+| Tested | 11 | 9.9% |
+| Works (untested) | 62 | 55.9% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 32 | 28.8% |
+| Not working | 30 | 27.0% |
 
 ## Cards needing work
 
@@ -37,11 +37,9 @@
 | Harm's Way | silent | The next 2 damage that a source of your choice would deal to you and/or permanents you control this turn is dealt to any target instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hive Mind | silent | Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Honor of the Pure | silent | White creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Howling Banshee | silent | When this creature enters, each player loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ice Cage | silent | When enchanted creature becomes the target of a spell or ability, destroy this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inferno Elemental | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 3 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magebane Armor | silent | Equipped creature gets +2/+4 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Magma Phoenix | silent | When this creature dies, it deals 3 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Master of the Wild Hunt | silent | {T}: Tap all untapped Wolf creatures you control. Each Wolf tapped this way deals damage equal to its power to target creature. That creature deals damage equal | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Merfolk Sovereign | silent | Other Merfolk creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirror of Fate | silent | {T}, Sacrifice this artifact: Choose up to seven face-up exiled cards you own. Exile all the cards from your library, then put the chosen cards on top of your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +80,6 @@
 | Deadly Recluse | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Disentomb | handled | Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disorient | handled | Target creature gets -7/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Divination | handled | Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Divine Verdict | handled | Destroy target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Doom Blade | handled | Destroy target nonblack creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonskull Summit | handled | This land enters tapped unless you control a Swamp or a Mountain. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -96,11 +93,13 @@
 | Gorgon Flail | handled | Equipped creature gets +1/+1 and has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Great Sable Stag | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Howling Banshee | handled | When this creature enters, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Illusionary Servant | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kalonian Behemoth | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Kelinore Bat | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Lightwielder Paladin | handled | Whenever this creature deals combat damage to a player, you may exile target black or red permanent that player controls. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lurking Predators | handled | Whenever an opponent casts a spell, reveal the top card of your library. If it's a creature card, put it onto the battlefield. Otherwise, you may put that card  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Magma Phoenix | handled | When this creature dies, it deals 3 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mind Control | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mist Leopard | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Mold Adder | handled | Whenever an opponent casts a blue or black spell, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -131,11 +130,12 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Acidic Slime
 - Act of Treason
 - Burning Inquiry
+- Divination
 - Elite Vanguard
 - Essence Scatter
 - Lifelink
@@ -171,8 +171,6 @@
 | tap all creatures target player controls. those creatures don"..."s next untap step. | 1 | Sleep | m10 |
 | the next N damage that a source of your choice would deal to you and/or permanents you control ~ is dealt to any target instead. | 1 | Harm's Way | m10 |
 | when enchanted creature becomes the target of a spell or ability, destroy ~. | 1 | Ice Cage | m10 |
-| when ~ dies, it deals N damage to each creature and each player. | 1 | Magma Phoenix | m10 |
-| when ~ enters, each player loses N life. | 1 | Howling Banshee | m10 |
 | when ~ enters, target forest becomes a N/N green treefolk creature for as long as ~ remains on the battlefield. it's still a land. | 1 | Awakener Druid | m10 |
 | whenever a +N/+N counter is removed from ~, put two +N/+N counters on it at the beginning of the next end step. | 1 | Protean Hydra | m10 |
 | whenever a player casts an instant or sorcery spell, each other player copies that spell. each of those players may choose new targets for their copy. | 1 | Hive Mind | m10 |

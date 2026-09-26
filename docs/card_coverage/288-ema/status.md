@@ -1,8 +1,8 @@
-# Neon Dynasty Commander (nec)
+# Eternal Masters (ema)
 
-- Expansion: 226
-- Set code: `nec`
-- Release date: 2022-02-18
+- Expansion: 288
+- Set code: `ema`
+- Release date: 2016-06-10
 - Cards in scope (Modern/Pioneer/Standard-legal): 1
 
 ## Legality
@@ -31,7 +31,7 @@ None - every card in scope is fully supported.
 <details>
 <summary>1 cards</summary>
 
-- Kappa Cannoneer
+- Toxic Deluge
 
 </details>
 

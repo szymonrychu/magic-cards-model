@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 15.2% |
-| Works (untested) | 32 | 48.5% |
+| Tested | 11 | 16.7% |
+| Works (untested) | 31 | 47.0% |
 | Partial (unaudited) | 7 | 10.6% |
 | Not working | 17 | 25.8% |
 
@@ -41,7 +41,7 @@
 | Serra Avatar | silent | Serra Avatar's power and toughness are each equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shiv's Embrace | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sleeper Agent | silent | When this creature enters, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spreading Algae | silent | When enchanted land becomes tapped, destroy it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Spreading Algae | silent | When enchanted land becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victimize | silent | Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Abundance | unaudited | If you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. Put t | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Okk | unaudited | This creature can't attack unless a creature with greater power also attacks. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -67,7 +67,6 @@
 | Heat Ray | handled | Heat Ray deals X damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hollow Dogs | handled | Whenever this creature attacks, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horseshoe Crab | handled | {U}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Imaginary Pet | handled | At the beginning of your upkeep, if you have a card in hand, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Intrepid Hero | handled | {T}: Destroy target creature with power 4 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Looming Shade | handled | {B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pegasus Charger | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -86,7 +85,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Arc Lightning
 - Claws of Gix
@@ -95,6 +94,7 @@
 - Fog Bank
 - Glorious Anthem
 - Greater Good
+- Imaginary Pet
 - Meltdown
 - Reflexes
 - Vernal Bloom

@@ -1,8 +1,8 @@
-# Commander 2020 (c20)
+# Dominaria Remastered (dmr)
 
-- Expansion: 205
-- Set code: `c20`
-- Release date: 2020-04-17
+- Expansion: 296
+- Set code: `dmr`
+- Release date: 2023-01-13
 - Cards in scope (Modern/Pioneer/Standard-legal): 1
 
 ## Legality
@@ -26,7 +26,7 @@
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Nesting Grounds | silent | {1}, {T}: Move a counter from target permanent you control onto a second target permanent. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Sevinne's Reclamation | silent | Return target permanent card with mana value 3 or less from your graveyard to the battlefield. If this spell was cast from a graveyard, you may copy this spell  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 
 ## Fully supported
 
@@ -40,7 +40,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| {M}, {M}: move a counter from target permanent you control onto a second target permanent. activate only as a sorcery. | 1 | Nesting Grounds | c20 |
+| return target permanent card with mana value N or less from your graveyard to the battlefield. if ~ was cast from a graveyard, you may copy ~ and may choose a n | 1 | Sevinne's Reclamation | dmr |
 
 ## Notes
 

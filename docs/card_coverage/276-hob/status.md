@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 116 | 62.4% |
-| Works (untested) | 69 | 37.1% |
+| Tested | 117 | 62.9% |
+| Works (untested) | 68 | 36.6% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 1 | 0.5% |
 
@@ -83,7 +83,6 @@
 | Reverent Howl | handled | Choose one — • Target player draws two cards and loses 2 life. • Target creature gets +2/+2 and gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rhovanion Rampager | handled | Whenever this creature attacks, you may sacrifice another creature. If you do, put a number of +1/+1 counters on this creature equal to the sacrificed creature' | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Smaug's Fury | handled | Target creature gets +3/+0 and gains reach and first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Snowslope Hunter | handled | Sacrifice another creature or artifact: Exile the top card of your library. You may play it until the end of your next turn. Activate only during your turn and  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stir Up Trouble | handled | As an additional cost to cast this spell, sacrifice an artifact or creature or pay {4}. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stony-Voiced Goblins | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Chief Warg | handled | Ferocious — Whenever you attack while you control a creature with power 4 or greater, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -100,7 +99,7 @@
 ## Fully supported
 
 <details>
-<summary>116 cards</summary>
+<summary>117 cards</summary>
 
 - Along the Crooked Way
 - An Unexpected Party // At the Door
@@ -186,6 +185,7 @@
 - Smaug the Magnificent
 - Smaug, Wicked Worm
 - Smaug, the Great Calamity // Spew Flame
+- Snowslope Hunter
 - Sound the Trumpets
 - Sting, Bilbo's Sword
 - Stone by Sunlight

@@ -1,8 +1,8 @@
-# Commander 2016 (c16)
+# Masters 25 (a25)
 
-- Expansion: 176
-- Set code: `c16`
-- Release date: 2016-11-11
+- Expansion: 290
+- Set code: `a25`
+- Release date: 2018-03-16
 - Cards in scope (Modern/Pioneer/Standard-legal): 1
 
 ## Legality
@@ -26,7 +26,7 @@
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Breya, Etherium Shaper | handled | When Breya enters, create two 1/1 blue Thopter artifact creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Reef Worm | handled | When this creature dies, create a 3/3 blue Fish creature token with "When this token dies, create a 6/6 blue Whale creature token with 'When this token dies, cr | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 

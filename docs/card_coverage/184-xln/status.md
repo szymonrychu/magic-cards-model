@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.1% |
-| Works (untested) | 148 | 60.4% |
+| Tested | 16 | 6.5% |
+| Works (untested) | 150 | 61.2% |
 | Partial (unaudited) | 15 | 6.1% |
-| Not working | 67 | 27.3% |
+| Not working | 64 | 26.1% |
 
 ## Cards needing work
 
@@ -39,7 +39,7 @@
 | Dinosaur Stampede | silent | Attacking creatures get +2/+0 until end of turn. Dinosaurs you control gain trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Captain | silent | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Ravager | silent | When this creature enters, each player loses a third of their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dowsing Dagger // Lost Vale | silent | When this Equipment enters, target opponent creates two 0/2 green Plant creature tokens with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Dowsing Dagger // Lost Vale | silent | Whenever equipped creature deals combat damage to a player, you may transform this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Duskborne Skymarcher | silent | {W}, {T}: Target attacking Vampire gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elaborate Firecannon | silent | At the beginning of your upkeep, you may discard a card. If you do, untap this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Entrancing Melody | silent | Gain control of target creature with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,19 +69,16 @@
 | Shadowed Caravel | silent | Whenever a creature you control explores, put a +1/+1 counter on this Vehicle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Siren Stormtamer | silent | {U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spell Swindle | silent | Counter target spell. Create X Treasure tokens, where X is that spell's mana value. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any colo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Steadfast Armasaur | silent | {1}{W}, {T}: This creature deals damage equal to its toughness to target creature blocking or blocked by it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storm Sculptor | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sun-Blessed Mount | silent | When this creature enters, you may search your library and/or graveyard for a card named Huatli, Dinosaur Knight, reveal it, then put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbird's Invocation | silent | Whenever you cast a spell from your hand, reveal the top X cards of your library, where X is that spell's mana value. You may cast a spell with mana value X or  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sword-Point Diplomacy | silent | Reveal the top three cards of your library. For each of those cards, put that card into your hand unless any opponent pays 3 life. Then exile the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thrash of Raptors | silent | As long as you control another Dinosaur, this creature gets +2/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tilonalli's Skinshifter | silent | Whenever this creature attacks, it becomes a copy of another target nonlegendary attacking creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tishana, Voice of Thunder | silent | Tishana's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vance's Blasting Cannons // Spitfire Bastion | silent | At the beginning of your upkeep, exile the top card of your library. If it's a nonland card, you may cast that card this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Verdant Sun's Avatar | silent | Whenever this creature or another creature you control enters, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska, Relic Seeker | silent | −10: Target player's life total becomes 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wakening Sun's Avatar | silent | When this creature enters, if you cast it from your hand, destroy all non-Dinosaur creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wanted Scoundrels | silent | When this creature dies, target opponent creates two Treasure tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildgrowth Walker | silent | Whenever a creature you control explores, put a +1/+1 counter on this creature and you gain 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Arguel's Blood Fast // Temple of Aclazotz | notice | {T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blinding Fog | notice | Prevent all damage that would be dealt to creatures this turn. Creatures you control gain hexproof until end of turn. (They can't be the targets of spells or ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -230,9 +227,9 @@
 | Skymarch Bloodletter | handled | When this creature enters, target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slash of Talons | handled | Slash of Talons deals 2 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sleek Schooner | handled | Crew | machines/keywords.py | Y/Y/- | not_tested |
-| Snapping Sailback | handled | Enrage — Whenever this creature is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spreading Rot | handled | Destroy target land. Its controller loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Star of Extinction | handled | Destroy target land. Star of Extinction deals 20 damage to each creature and each planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Steadfast Armasaur | handled | {1}{W}, {T}: This creature deals damage equal to its toughness to target creature blocking or blocked by it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm Fleet Arsonist | handled | Raid — When this creature enters, if you attacked this turn, target opponent sacrifices a permanent of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm Fleet Pyromancer | handled | Raid — When this creature enters, if you attacked this turn, this creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm Fleet Spy | handled | Raid — When this creature enters, if you attacked this turn, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -243,6 +240,7 @@
 | Territorial Hammerskull | handled | Whenever this creature attacks, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thundering Spineback | handled | Other Dinosaurs you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tilonalli's Knight | handled | Whenever this creature attacks, if you control a Dinosaur, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tilonalli's Skinshifter | handled | Whenever this creature attacks, it becomes a copy of another target nonlegendary attacking creature until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tishana's Wayfinder | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tocatli Honor Guard | handled | Creatures entering don't cause abilities to trigger. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unfriendly Fire | handled | Unfriendly Fire deals 4 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -253,6 +251,7 @@
 | Vona, Butcher of Magan | handled | {T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waker of the Wilds | handled | {X}{G}{G}: Put X +1/+1 counters on target land you control. That land becomes a 0/0 Elemental creature with haste. It's still a land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Walk the Plank | handled | Destroy target non-Merfolk creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Wanted Scoundrels | handled | When this creature dies, target opponent creates two Treasure tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Watertrap Weaver | handled | When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wily Goblin | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wind Strider | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -260,7 +259,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Bellowing Aegisaur
 - Captivating Crew
@@ -274,6 +273,7 @@
 - Ranging Raptors
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage
+- Snapping Sailback
 - Treasure Map // Treasure Cove
 - Unclaimed Territory
 - Vraska's Contempt
@@ -324,14 +324,12 @@
 | tishana's power and toughness are each equal to the number of cards in your hand. | 1 | Tishana, Voice of Thunder | xln |
 | until end of turn, target creature gains "..." draw a card. | 1 | Verdant Rebirth | xln |
 | until end of turn, target creature you control gets +N/+N and target creature an opponent controls gets -N/-N. | 1 | Skulduggery | xln |
-| when ~ dies, target opponent creates two treasure tokens. | 1 | Wanted Scoundrels | xln |
 | when ~ enters, draw three cards, then discard two cards at random. if two cards that share a card type are discarded ~, put two +N/+N counters on ~. | 1 | Rowdy Crew | xln |
 | when ~ enters, each opponent may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. | 1 | Old-Growth Dryads | xln |
 | when ~ enters, each player loses a third of their life, rounded up. | 1 | Dire Fleet Ravager | xln |
 | when ~ enters, if you cast it from your hand, destroy all non-dinosaur creatures. | 1 | Wakening Sun's Avatar | xln |
 | when ~ enters, it deals N damage to each other creature. | 1 | Raging Swordtooth | xln |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Storm Sculptor | xln |
-| when ~ enters, target opponent creates two N/N green plant creature tokens with defender. | 1 | Dowsing Dagger // Lost Vale | xln |
 | when ~ enters, target opponent reveals their hand. you choose a noncreature, nonland card from it. exile that card until ~ leaves the battlefield. | 1 | Kitesail Freebooter | xln |
 | when ~ enters, you may have it fight another target creature. | 1 | Atzocan Archer | xln |
 | when ~ enters, you may search your library and/or graveyard for a card named huatli, dinosaur knight, reveal it, then put it into your hand. if you search your  | 1 | Sun-Blessed Mount | xln |
@@ -339,9 +337,9 @@
 | whenever a creature you control explores, put a +N/+N counter on ~ and you gain N life. | 1 | Wildgrowth Walker | xln |
 | whenever a creature you control explores, put a +N/+N counter on ~. | 1 | Shadowed Caravel | xln |
 | whenever a creature you control explores, target creature an opponent controls gets -N/-N until end of turn. | 1 | Lurking Chupacabra | xln |
+| whenever equipped creature deals combat damage to a player, you may transform ~. | 1 | Dowsing Dagger // Lost Vale | xln |
 | whenever gishath deals combat damage to a player, reveal that many cards from the top of your library. put any number of dinosaur creature cards from among them | 1 | Gishath, Sun's Avatar | xln |
 | whenever you cast a spell from your hand, reveal the top N cards of your library, where N is that spell's mana value. you may cast a spell with mana value N or  | 1 | Sunbird's Invocation | xln |
-| whenever ~ attacks, it becomes a copy of another target nonlegendary attacking creature until end of turn. | 1 | Tilonalli's Skinshifter | xln |
 | whenever ~ attacks, it gets +N/+N until end of turn for each other attacking pirate. | 1 | Dire Fleet Captain | xln |
 | whenever ~ enters or attacks, you may exile target card from a graveyard. if a creature card is exiled ~, you gain N life. if a noncreature card is exiled ~, ~  | 1 | Deathgorge Scavenger | xln |
 | whenever ~ or another creature you control enters, you gain life equal to that creature's toughness. | 1 | Verdant Sun's Avatar | xln |
@@ -351,7 +349,6 @@
 | {M}, sacrifice ~: counter target spell or ability that targets you or a creature you control. | 1 | Siren Stormtamer | xln |
 | {M}, {M}: target attacking vampire gets +N/+N until end of turn. | 1 | Duskborne Skymarcher | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
-| {M}{M}, {M}: ~ deals damage equal to its toughness to target creature blocking or blocked by it. | 1 | Steadfast Armasaur | xln |
 | {M}{M}: ~ can't be blocked ~. | 1 | Daring Saboteur | xln |
 | ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |
 | ~ can block only creatures with flying. | 1 | Dreamcaller Siren | xln |

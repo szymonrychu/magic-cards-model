@@ -3,24 +3,24 @@
 - Expansion: 153
 - Set code: `m15`
 - Release date: 2014-07-18
-- Cards in scope (Modern/Pioneer/Standard-legal): 142
+- Cards in scope (Modern/Pioneer/Standard-legal): 143
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 142 |
-| Pioneer | 142 |
+| Modern | 143 |
+| Pioneer | 143 |
 | Standard | 1 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 3.5% |
-| Works (untested) | 69 | 48.6% |
+| Tested | 7 | 4.9% |
+| Works (untested) | 70 | 49.0% |
 | Partial (unaudited) | 6 | 4.2% |
-| Not working | 62 | 43.7% |
+| Not working | 60 | 42.0% |
 
 ## Cards needing work
 
@@ -43,8 +43,6 @@
 | Genesis Hydra | silent | When you cast this spell, reveal the top X cards of your library. You may put a nonland permanent card with mana value X or less from among them onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Rabblemaster | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Goblin. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hammerhand | silent | When this Aura enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hornet Nest | silent | Whenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hot Soup | silent | Whenever equipped creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hunter's Ambush | silent | Prevent all combat damage that would be dealt by nongreen creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | In Garruk's Wake | silent | Destroy all creatures you don't control and all planeswalkers you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -109,14 +107,15 @@
 | Cruel Sadist | handled | {B}, {T}, Pay 1 life: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Diffusion Sliver | handled | Whenever a Sliver creature you control becomes the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays { | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ephemeral Shields | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Feast on the Fallen | handled | At the beginning of each upkeep, if an opponent lost life last turn, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feral Incarnation | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Create thre | the engine reads this text and performs it | Y/Y/- | not_tested |
-| First Response | handled | At the beginning of each upkeep, if you lost life last turn, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flesh to Dust | handled | Destroy target creature. It can't be regenerated. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frost Lynx | handled | When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Geist of the Moors | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Generator Servant | handled |  |  | Y/Y/- | not_tested |
+| Hammerhand | handled | When this Aura enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heliod's Pilgrim | handled | When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hornet Nest | handled | Whenever this creature is dealt damage, create that many 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hornet Queen | handled | When this creature enters, create four 1/1 green Insect creature tokens with flying and deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inferno Fist | handled | Enchanted creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kalonian Twingrove | handled | Kalonian Twingrove's power and toughness are each equal to the number of Forests you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kapsho Kitefins | handled | Whenever this creature or another creature you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -167,9 +166,11 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>7 cards</summary>
 
 - Ensoul Artifact
+- Feast on the Fallen
+- First Response
 - Goblin Kaboomist
 - Hushwing Gryff
 - Might Makes Right
@@ -217,7 +218,6 @@
 | when ~ enters, if your life total is less than your starting life total, it becomes equal to your starting life total. | 1 | Resolute Archangel | m15 |
 | when ~ enters, return another permanent you control to its owner's hand. | 1 | Invasive Species | m15 |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Quickling | m15 |
-| when ~ enters, target creature can't block ~. | 1 | Hammerhand | m15 |
 | when ~ enters, you may search your graveyard, hand, and/or library for an aura card and put it onto the battlefield attached to ~. if you search your library ~, | 1 | Boonweaver Giant | m15 |
 | whenever a creature card is put into an opponent's graveyard from anywhere, you gain N life. | 1 | Profane Memento | m15 |
 | whenever a sliver you control attacks, defending player loses N life. | 1 | Leeching Sliver | m15 |
@@ -229,7 +229,6 @@
 | whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the c | 1 | Kurkesh, Onakke Ancient | m15 |
 | whenever ~ attacks, it gets +N/+N until end of turn for each other attacking goblin. | 1 | Goblin Rabblemaster | m15 |
 | whenever ~ deals combat damage to a player, choose a card in your hand. that player guesses whether the card's mana value is greater than N. if the player guess | 1 | Master of Predicaments | m15 |
-| whenever ~ is dealt damage, create that many N/N green insect creature tokens with flying and deathtouch. | 1 | Hornet Nest | m15 |
 | you can't play lands. | 1 | Aggressive Mining | m15 |
 | you may have ~ enter as a copy of a creature you control, except it has "..." | 1 | Mercurial Pretender | m15 |
 | {M}, {M}: for each planeswalker you control, you may activate one of its loyalty abilities once ~ as though none of its loyalty abilities have been activated ~. | 1 | The Chain Veil | m15 |

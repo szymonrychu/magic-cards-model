@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.3% |
+| Tested | 19 | 7.5% |
 | Works (untested) | 120 | 47.1% |
-| Partial (unaudited) | 22 | 8.6% |
-| Not working | 97 | 38.0% |
+| Partial (unaudited) | 23 | 9.0% |
+| Not working | 93 | 36.5% |
 
 ## Cards needing work
 
@@ -50,13 +50,12 @@
 | Glasspool Mimic // Glasspool Shore | silent | You may have this creature enter as a copy of a creature you control, except it's a Shapeshifter Rogue in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goma Fada Vanguard | silent | Whenever this creature attacks, target creature an opponent controls with power less than or equal to the number of Warriors you control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grotag Bug-Catcher | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Iridescent Hornbeetle | silent | At the beginning of your end step, create a 1/1 green Insect creature token for each +1/+1 counter you've put on creatures under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Mirror Mage | silent | When Jace enters, if Jace was kicked, create a token that's a copy of Jace, except it's not legendary and its starting loyalty is 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kabira Outrider | silent | When this creature enters, target creature gets +1/+1 until end of turn for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kaza, Roil Chaser | silent | {T}: The next instant or sorcery spell you cast this turn costs {X} less to cast, where X is the number of Wizards you control as this ability resolves. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kor Blademaster | silent | Equipped Warriors you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Linvala, Shield of Sea Gate | silent | At the beginning of combat on your turn, if you have a full party, choose target nonland permanent an opponent controls. Until your next turn, it can't attack o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lithoform Engine | silent | {2}, {T}: Copy target activated or triggered ability you control. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Lithoform Engine | silent | {4}, {T}: Copy target permanent spell you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lullmage's Domination | silent | This spell costs {3} less to cast if it targets a creature whose controller has eight or more cards in their graveyard. Gain control of target creature with man | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Maddening Cacophony | silent | Kicker {3}{U} Each opponent mills eight cards. If this spell was kicked, instead each opponent mills half their library, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Channeler | silent | As long as there are four or more instant and/or sorcery cards in your graveyard, this creature gets +3/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,13 +64,11 @@
 | Master of Winds | silent | Whenever you cast an instant, sorcery, or Wizard spell, you may have this creature's base power and toughness become 4/1 or 1/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mesa Lynx | silent | During turns other than yours, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moraug, Fury of Akoum | silent | Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, un | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Murasa Rootgrazer | silent | {T}: You may put a basic land card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Myriad Construct | silent | When this creature becomes the target of a spell, sacrifice it and create a number of 1/1 colorless Construct artifact creature tokens equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri's Lithoforming | silent | Sacrifice X lands. For each land sacrificed this way, draw a card. You may play X additional lands this turn. Lands you control enter tapped this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri, Heir of the Ancients | silent | +1: Create a 1/1 white Kor Warrior creature token. You may attach an Equipment you control to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nimana Skitter-Sneak | silent | As long as an opponent has eight or more cards in their graveyard, this creature gets +1/+0 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa of Shadowed Boughs | silent | −5: You may put a creature card with mana value less than or equal to the number of lands you control onto the battlefield from your hand or graveyard with two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nissa's Zendikon | silent | When enchanted land dies, return that card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oran-Rief Ooze | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pelakka Predation // Pelakka Caverns | silent | Target opponent reveals their hand. You choose a card from it with mana value 3 or greater. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Phylath, World Sculptor | silent | When Phylath enters, create a 0/1 green Plant creature token for each basic land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,7 +108,6 @@
 | Allied Assault | notice | Up to two target creatures each get +X/+X until end of turn, where X is the number of creatures in your party. (Your party consists of up to one each of Cleric, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blackbloom Rogue // Blackbloom Bog | notice | This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Charix, the Raging Isle | notice | Spells your opponents cast that target Charix cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Cinderclasm | notice | Kicker {R} (You may pay an additional {R} as you cast this spell.) Cinderclasm deals 1 damage to each creature. If it was kicked, it deals 2 damage to each crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crawling Barrens | notice | {4}: Put two +1/+1 counters on this land. Then you may have it become a 0/0 Elemental creature until end of turn. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Expedition Champion | notice | This creature gets +2/+0 as long as you control another Warrior. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feed the Swarm | notice | Destroy target creature or enchantment an opponent controls. You lose life equal to that permanent's mana value. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -135,6 +131,7 @@
 | Moss-Pit Skeleton | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nahiri's Binding | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nimble Trapfinder | unaudited | This creature can't be blocked if you had another Cleric, Rogue, Warrior, or Wizard enter the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Nissa's Zendikon | unaudited | Enchanted land is a 4/4 Elemental creature with reach and haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relic Golem | unaudited | This creature can't attack or block unless an opponent has eight or more cards in their graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relic Vial | unaudited | As long as you control a Cleric, this artifact has "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sea Gate Colossus | unaudited | This spell costs {1} less to cast for each creature in your party. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -163,6 +160,7 @@
 | Canopy Baloth | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canyon Jerboa | handled | Landfall — Whenever a land you control enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chilling Trap | handled | Target creature gets -4/-0 until end of turn. If you control a Wizard, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cinderclasm | handled | Kicker {R} (You may pay an additional {R} as you cast this spell.) Cinderclasm deals 1 damage to each creature. If it was kicked, it deals 2 damage to each crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clearwater Pathway // Murkwater Pathway | handled |  |  | Y/Y/- | not_tested |
 | Cleric of Chill Depths | handled | Whenever this creature blocks a creature, that creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cleric of Life's Bond | handled | Whenever another Cleric you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -212,6 +210,7 @@
 | Mind Drain | handled | Target opponent discards two cards, mills a card, and loses 1 life. You gain 1 life. (To mill a card, a player puts the top card of their library into their gra | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Molten Blast | handled | Choose one — • Molten Blast deals 2 damage to target creature or planeswalker. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murasa Brute | handled |  |  | Y/Y/- | not_tested |
+| Murasa Rootgrazer | handled | {T}: You may put a basic land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murasa Sproutling | handled | When this creature enters, if it was kicked, return target card with a kicker ability from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Needleverge Pathway // Pillarverge Pathway | handled |  |  | Y/Y/- | not_tested |
 | Nimana Skydancer | handled | When this creature enters, target opponent mills two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -222,13 +221,11 @@
 | Prowling Felidar | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Amulet | handled | Whenever you cast an instant, sorcery, or Wizard spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Axe | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Resolute Strike | handled | Target creature gets +2/+2 until end of turn. If it's a Warrior, you may attach an Equipment you control to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Risen Riptide | handled | Whenever you cast a kicked spell, this creature has base power and toughness 5/5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riverglide Pathway // Lavaglide Pathway | handled |  |  | Y/Y/- | not_tested |
 | Rockslide Sorcerer | handled | Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roil Eruption | handled | Kicker {5} (You may pay an additional {5} as you cast this spell.) Roil Eruption deals 3 damage to any target. If this spell was kicked, it deals 5 damage inste | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roost of Drakes | handled | When this enchantment enters, if it was kicked, create a 2/2 blue Drake creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Scale the Heights | handled | Put a +1/+1 counter on up to one target creature. You gain 2 life. You may play an additional land this turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scavenged Blade | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scion of the Swarm | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scorch Rider | handled | When this creature enters, if it was kicked, it gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -269,18 +266,21 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>19 cards</summary>
 
 - Ancient Greenwarden
 - Beyeen Veil // Beyeen Coast
 - Cleansing Wildfire
 - Inscription of Abundance
 - Inscription of Ruin
+- Iridescent Hornbeetle
 - Jwari Disruption // Jwari Ruins
 - Might of Murasa
 - Nighthawk Scavenger
 - Omnath, Locus of Creation
+- Resolute Strike
 - Roiling Vortex
+- Scale the Heights
 - Scute Swarm
 - Sea Gate Restoration // Sea Gate, Reborn
 - Shatterskull Smashing // Shatterskull, the Hammer Pass
@@ -307,7 +307,6 @@
 | as long as ~ has a +N/+N counter on it, it can attack as though it didn't have defender. | 1 | Skyclave Sentinel | znr |
 | as long as ~ is equipped, it has haste. | 1 | Fireblade Charger | znr |
 | at the beginning of combat on your turn, if you have a full party, choose target nonland permanent an opponent controls. until your next turn, it can"..."t be a | 1 | Linvala, Shield of Sea Gate | znr |
-| at the beginning of your end step, create a N/N green insect creature token for each +N/+N counter you've put on creatures under your control ~. | 1 | Iridescent Hornbeetle | znr |
 | at the beginning of your end step, if there are cards exiled with ~, put them into their owner's graveyard, then ~ deals that much damage to each opponent. | 1 | Valakut Exploration | znr |
 | choose target attacking or blocking creature. ~ deals damage to that creature equal to twice the number of creatures in your party. (your party consists of up t | 1 | Practiced Tactics | znr |
 | choose target creature you control. put a +N/+N counter on it for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, | 1 | Strength of Solidarity | znr |
@@ -320,6 +319,7 @@
 | destroy target creature or enchantment an opponent controls. you lose life equal to that permanent's mana value. | 1 | Feed the Swarm | znr |
 | during turns other than yours, ~ gets +N/+N. | 1 | Mesa Lynx | znr |
 | each opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control. | 1 | Soul Shatter | znr |
+| enchanted land is a N/N elemental creature with reach and haste. it's still a land. | 1 | Nissa's Zendikon | znr |
 | enchanted land loses all land types and abilities and has "..." and "..." | 1 | Lithoform Blight | znr |
 | enchanted permanent can"..."t be activated. | 1 | Nahiri's Binding | znr |
 | equipped creature gets +N/+N for each creature in your party and has menace. | 1 | Ravager's Mace | znr |
@@ -329,7 +329,6 @@
 | if ~ was kicked, it enters with four +N/+N counters on it. | 1 | Cragplate Baloth | znr |
 | if ~ was kicked, it enters with three +N/+N counters on it. | 1 | Moss-Pit Skeleton | znr |
 | kicker {M} (you may pay an additional {M} as you cast ~.) search your library for a basic land card, reveal it, put it into your hand, then shuffle. if ~ was ki | 1 | Reclaim the Wastes | znr |
-| kicker {M} (you may pay an additional {M} as you cast ~.) ~ deals N damage to each creature. if it was kicked, it deals N damage to each creature instead. | 1 | Cinderclasm | znr |
 | kicker {M}{M} each opponent mills eight cards. if ~ was kicked, instead each opponent mills half their library, rounded up. | 1 | Maddening Cacophony | znr |
 | kicker {M}{M}{M} choose one. if ~ was kicked, choose any number instead. • return up to two target creatures to their owners' hands. • scry N, then draw two car | 1 | Inscription of Insight | znr |
 | look at the top N cards of your library, where N is three plus the number of creatures in your party. put three of those cards into your hand and the rest on th | 1 | Skyclave Plunder | znr |
@@ -347,7 +346,6 @@
 | target opponent reveals their hand. you choose a card from it with mana value N or greater. that player discards that card. | 1 | Pelakka Predation // Pelakka Caverns | znr |
 | the first kicked spell you cast each turn costs {M} less to cast. | 1 | Vine Gecko | znr |
 | up to two target creatures each get +N/+N until end of turn, where N is the number of creatures in your party. (your party consists of up to one each of cleric, | 1 | Allied Assault | znr |
-| when enchanted land dies, return that card to its owner's hand. | 1 | Nissa's Zendikon | znr |
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |
 | when phylath enters, create a N/N green plant creature token for each basic land you control. | 1 | Phylath, World Sculptor | znr |
 | when yasharn enters, search your library for a basic forest card and a basic plains card, reveal those cards, put them into your hand, then shuffle. | 1 | Yasharn, Implacable Earth | znr |
@@ -385,10 +383,9 @@
 | whenever ~ deals combat damage to a player, that player creates a N/N colorless goblin construct artifact creature token with "..." and "..." | 1 | Relic Robber | znr |
 | you don't lose unspent red mana as steps and phases end. | 1 | Leyline Tyrant | znr |
 | you may have ~ enter as a copy of a creature you control, except it's a shapeshifter rogue in addition to its other types. | 1 | Glasspool Mimic // Glasspool Shore | znr |
-| {M}, {M}: copy target activated or triggered ability you control. you may choose new targets for the copy. | 1 | Lithoform Engine | znr |
+| {M}, {M}: copy target permanent spell you control. | 1 | Lithoform Engine | znr |
 | {M}: put two +N/+N counters on ~. then you may have it become a N/N elemental creature until end of turn. it's still a land. | 1 | Crawling Barrens | znr |
 | {M}: the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is the number of wizards you control as ~ resolves. | 1 | Kaza, Roil Chaser | znr |
-| {M}: you may put a basic land card from your hand onto the battlefield. | 1 | Murasa Rootgrazer | znr |
 | {M}: you may unattach an equipment from a creature you control. if you do, tap that creature and it gains indestructible until end of turn. | 1 | Akiri, Fearless Voyager | znr |
 | {M}{M}: ~ gets +N/+N until end of turn and can't be blocked ~. ~ costs {M} less to activate for each creature in your party. | 1 | Seafloor Stalker | znr |
 | {M}{M}{M}, return an unblocked attacking rogue you control to its owner's hand: put ~ from your hand onto the battlefield tapped and attacking. | 1 | Zareth San, the Trickster | znr |

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 16.7% |
-| Works (untested) | 9 | 37.5% |
+| Tested | 5 | 20.8% |
+| Works (untested) | 8 | 33.3% |
 | Partial (unaudited) | 1 | 4.2% |
 | Not working | 10 | 41.7% |
 
@@ -37,7 +37,6 @@
 | Dragonstorm | notice | Search your library for a Dragon permanent card, put it onto the battlefield, then shuffle. Storm (When you cast this spell, copy it for each spell cast before  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Enrage | notice | Target creature gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Upwelling | unaudited | Players don't lose unspent mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Call to the Grave | handled | At the beginning of each player's upkeep, that player sacrifices a non-Zombie creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon Mage | handled | Whenever this creature deals combat damage to a player, each player discards their hand, then draws seven cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gilded Light | handled | You gain shroud until end of turn. (You can't be the target of spells or abilities.) Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunting Pack | handled | Create a 4/4 green Beast creature token. Storm (When you cast this spell, copy it for each spell cast before it this turn.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -50,8 +49,9 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
+- Call to the Grave
 - Carrion Feeder
 - Goblin Brigand
 - Goblin Warchief

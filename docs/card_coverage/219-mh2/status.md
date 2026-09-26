@@ -3,13 +3,13 @@
 - Expansion: 219
 - Set code: `mh2`
 - Release date: 2021-06-18
-- Cards in scope (Modern/Pioneer/Standard-legal): 255
+- Cards in scope (Modern/Pioneer/Standard-legal): 258
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 255 |
+| Modern | 258 |
 | Pioneer | 1 |
 | Standard | 1 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.0% |
-| Works (untested) | 117 | 45.9% |
+| Tested | 33 | 12.8% |
+| Works (untested) | 120 | 46.5% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 99 | 38.8% |
+| Not working | 94 | 36.4% |
 
 ## Cards needing work
 
@@ -45,10 +45,10 @@
 | Calibrated Blast | silent | Reveal cards from the top of your library until you reveal a nonland card. Put the revealed cards on the bottom of your library in a random order. When you reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Caprichrome | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Captured by Lagacs | silent | When this Aura enters, support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Chainer, Nightmare Adept | silent | Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chef's Kiss | silent | Gain control of target spell that targets only a single permanent or player. Copy it, then reselect the targets at random for the spell and the copy. The new ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chitterspitter | silent | Squirrels you control get +1/+1 for each acorn counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chrome Courier | silent | When this creature enters, reveal the top two cards of your library. Put one of them into your hand and the other into your graveyard. If you put an artifact ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Constable of the Realm | silent | Renown | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Dakkon, Shadow Slayer | silent | −6: You may put an artifact card from your hand or graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Damn | silent | Destroy target creature. A creature destroyed this way can't be regenerated. Overload {2}{W}{W} (You may cast this spell for its overload cost. If you do, chang | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dauthi Voidwalker | silent | {T}, Sacrifice this creature: Choose an exiled card an opponent owns with a void counter on it. You may play it this turn without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +59,6 @@
 | Esper Sentinel | silent | Whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {X}, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flametongue Yearling | silent | When this creature enters, it deals damage equal to its power to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foul Watcher | silent | Delirium — This creature gets +1/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Foundry Helix | silent | As an additional cost to cast this spell, sacrifice a permanent. Foundry Helix deals 4 damage to any target. If the sacrificed permanent was an artifact, you ga | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fractured Sanity | silent | Each opponent mills fourteen cards. Cycling {1}{U} ({1}{U}, Discard this card: Draw a card.) When you cycle this card, each opponent mills four cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gaea's Will | silent | Suspend 4—{G} Until end of turn, you may play lands and cast spells from your graveyard. If a card would be put into your graveyard from anywhere this turn, exi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galvanic Relay | silent | Exile the top card of your library. During your next turn, you may play that card. Storm (When you cast this spell, copy it for each spell cast before it this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -89,7 +88,6 @@
 | Power Depot | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Radiant Epicure | silent | Converge — When this creature enters, each opponent loses X life and you gain X life, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rakdos Headliner | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Recalibrate | silent | Return target creature to its owner's hand. If you've discarded a card this turn, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise and Shine | silent | Target noncreature artifact you control becomes a 0/0 artifact creature. Put four +1/+1 counters on each artifact that became a creature this way. Overload {4}{ | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Road // Ruin | silent | Aftermath | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scour the Desert | silent | Exile target creature card from your graveyard. Create X 1/1 white Bird creature tokens with flying, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -107,7 +105,6 @@
 | Tide Shaper | silent | When this creature enters, if it was kicked, target land becomes an Island for as long as this creature remains on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timeless Dragon | silent | Eternalize | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Timeless Witness | silent | Eternalize | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Tireless Provisioner | silent | Landfall — Whenever a land you control enters, create a Food token or a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tourach's Canticle | silent | Target opponent reveals their hand. You choose a card from it. That player discards that card, then discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tourach, Dread Cantor | silent | When Tourach enters, if it was kicked, target opponent discards two cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Underworld Hermit | silent | When this creature enters, create a number of 1/1 green Squirrel creature tokens equal to your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,11 +114,9 @@
 | Yusri, Fortune's Flame | silent | Whenever Yusri attacks, choose a number between 1 and 5. Flip that many coins. For each flip you win, draw a card. For each flip you lose, Yusri deals 2 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zabaz, the Glimmerwasp | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Blacksmith's Skill | notice | Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Captain Ripley Vance | notice | Whenever you cast your third spell each turn, put a +1/+1 counter on Captain Ripley Vance, then it deals damage equal to its power to any target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flay Essence | notice | Exile target creature or planeswalker. You gain life equal to the number of counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mount Velus Manticore | notice | At the beginning of combat on your turn, you may discard a card. When you do, this creature deals X damage to any target, where X is the number of card types th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Svyelun of Sea and Sky | notice | Svyelun has indestructible as long as you control at least two other Merfolk. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Tragic Fall | notice | Target creature gets -3/-3 until end of turn. Hellbent — That creature gets -13/-13 until end of turn instead if you have no cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unmarked Grave | notice | Search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Verdant Command | notice | Choose two — • Target player creates two tapped 1/1 green Squirrel creature tokens. • Counter target loyalty ability of a planeswalker. • Exile target card from | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Young Necromancer | notice | When this creature enters, you may exile two cards from your graveyard. When you do, return target creature card from your graveyard to the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -145,9 +140,11 @@
 | Breya's Apprentice | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burdened Aerialist | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cabal Initiate | handled | Discard a card: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Captain Ripley Vance | handled | Whenever you cast your third spell each turn, put a +1/+1 counter on Captain Ripley Vance, then it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chatterstorm | handled | Create a 1/1 green Squirrel creature token. Storm (When you cast this spell, copy it for each spell cast before it this turn.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Clattering Augur | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Combine Chrysalis | handled | Creature tokens you control have flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Constable of the Realm | handled | Whenever one or more +1/+1 counters are put on this creature, exile up to one other target nonland permanent until this creature leaves the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crack Open | handled | Destroy target artifact or enchantment. Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darkmoss Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deepwood Denizen | handled | {5}{G}, {T}: Draw a card. This ability costs {1} less to activate for each +1/+1 counter on creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,14 +166,13 @@
 | Flourishing Strike | handled | Choose one — • Flourishing Strike deals 5 damage to target creature with flying. • Target creature gets +3/+3 until end of turn. Entwine {2}{G} (Choose both if  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fodder Tosser | handled | {T}, Discard a card: This artifact deals 2 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Foundation Breaker | handled | When this creature enters, you may destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Foundry Helix | handled | As an additional cost to cast this spell, sacrifice a permanent. Foundry Helix deals 4 damage to any target. If the sacrificed permanent was an artifact, you ga | the engine reads this text and performs it | Y/-/- | not_tested |
 | Funnel-Web Recluse | handled | Morbid — When this creature enters, if a creature died this turn, investigate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fury | handled | When this creature enters, it deals 4 damage divided as you choose among any number of target creatures and/or planeswalkers. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gargadon | handled | Suspend | machines/casting.py (MarkedExile.suspend, finish_suspend) | Y/-/- | not_tested |
 | General Ferrous Rokiric | handled | Whenever you cast a multicolored spell, create a 4/4 red and white Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost-Lit Drifter | handled | {2}{U}: Another target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Gilt-Blade Prowler | handled | {1}, {T}, Pay 1 life: Draw a card. Activate only if you've discarded a card this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmer Bairn | handled | Sacrifice a token: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Glorious Enforcer | handled | At the beginning of each combat, if you have more life than an opponent, this creature gains double strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldmire Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Graceful Restoration | handled | Choose one — • Return target creature card from your graveyard to the battlefield with an additional +1/+1 counter on it. • Return up to two target creature car | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian Kirin | handled | Whenever another creature you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -211,6 +207,7 @@
 | Ravenous Squirrel | handled | Whenever you sacrifice an artifact or creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Raving Visionary | handled | {U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razortide Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Recalibrate | handled | Return target creature to its owner's hand. If you've discarded a card this turn, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Resurgent Belief | handled | Suspend 2—{1}{W} (Rather than cast this card from your hand, pay {1}{W} and exile it with two time counters on it. At the beginning of your upkeep, remove a tim | the engine reads this text and performs it | Y/-/- | not_tested |
 | Revolutionist | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rift Sower | handled | Suspend | machines/casting.py (MarkedExile.suspend, finish_suspend) | Y/-/- | not_tested |
@@ -220,12 +217,12 @@
 | Sanctum Weaver | handled |  |  | Y/-/- | not_tested |
 | Silverbluff Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sinister Starfish | handled | {T}: Surveil 1. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Skyblade's Boon | handled | Enchanted creature gets +1/+1 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slag Strider | handled | {1}, Sacrifice an artifact: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slagwoods Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Smell Fear | handled | Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) Target creature you control fights up  | the engine reads this text and performs it | Y/-/- | not_tested |
 | So Shiny | handled | When this Aura enters, if you control a token, tap enchanted creature, then scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sol Talisman | handled | Suspend | machines/casting.py (MarkedExile.suspend, finish_suspend) | Y/-/- | not_tested |
+| Soul Snare | handled | {W}, Sacrifice this enchantment: Exile target creature that's attacking you or a planeswalker you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soul of Migration | handled | When this creature enters, create two 1/1 white Bird creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Specimen Collector | handled | When this creature enters, create a 1/1 green Squirrel creature token and a 0/3 blue Crab creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spreading Insurrection | handled | Gain control of target creature you don't control until end of turn. Untap that creature. It gains haste until end of turn. Storm (When you cast this spell, cop | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -244,20 +241,21 @@
 | Thornglint Bridge | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thought Monitor | handled | When this creature enters, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thraben Watcher | handled | Other nontoken creatures you control get +1/+1 and have vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Titania, Protector of Argoth | handled | When Titania enters, return target land card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tormod's Cryptkeeper | handled | {T}, Sacrifice this creature: Exile target player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Tragic Fall | handled | Target creature gets -3/-3 until end of turn. Hellbent — That creature gets -13/-13 until end of turn instead if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unbounded Potential | handled | Choose one — • Put a +1/+1 counter on each of up to two target creatures. • Proliferate. (Choose any number of permanents and/or players, then give each another | the engine reads this text and performs it | Y/-/- | not_tested |
 | Urban Daggertooth | handled | Enrage — Whenever this creature is dealt damage, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vermin Gorger | handled | {T}, Sacrifice another creature: Each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viashino Lashclaw | handled | {T}, Discard a card: Creatures you control gain haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vile Entomber | handled | When this creature enters, search your library for a card, put that card into your graveyard, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Void Mirror | handled | Whenever a player casts a spell, if no colored mana was spent to cast it, counter that spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wavesifter | handled | When this creature enters, investigate twice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | World-Weary | handled | Enchanted creature gets -4/-4. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>33 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
@@ -267,6 +265,8 @@
 - Dragon's Rage Channeler
 - Dress Down
 - Endurance
+- Gilt-Blade Prowler
+- Glorious Enforcer
 - Grief
 - Grist, the Hunger Tide
 - Harmonic Prodigy
@@ -280,12 +280,15 @@
 - Rustvale Bridge
 - Sanctifier en-Vec
 - Scion of Draco
+- Skyblade's Boon
 - Solitude
 - Subtlety
 - Suspend
 - Territorial Kavu
+- Tireless Provisioner
 - Unholy Heat
 - Urza's Saga
+- Void Mirror
 - Yavimaya, Cradle of Growth
 
 </details>
@@ -301,12 +304,10 @@
 | reinforce | 2 | Break Ties, Wren's Run Hydra | mh2 |
 | Choose two | 1 | Verdant Command | mh2 |
 | Hellbent | 1 | Necromancer's Familiar | mh2 |
-| Landfall | 1 | Tireless Provisioner | mh2 |
 | Metalcraft | 1 | Vedalken Infiltrator | mh2 |
 | aeve isn"..."s a token. | 1 | Aeve, Progenitor Ooze | mh2 |
 | affinity for artifacts artifact landcycling {M} ({M}, discard ~: search your library for an artifact land card, reveal it, put it into your hand, then shuffle.) | 1 | Sojourner's Companion | mh2 |
 | aftermath | 1 | Road // Ruin | mh2 |
-| as an additional cost to cast ~, sacrifice a permanent. ~ deals N damage to any target. if the sacrificed permanent was an artifact, you gain N life. | 1 | Foundry Helix | mh2 |
 | as ~ enters, choose a card type. | 1 | Serra's Emissary | mh2 |
 | at the beginning of combat on your turn, you may discard a card. when you do, ~ deals N damage to any target, where N is the number of card types the discarded  | 1 | Mount Velus Manticore | mh2 |
 | at the beginning of combat on your turn, you may move a +N/+N counter from ~ onto target creature. | 1 | Steel Dromedary | mh2 |
@@ -316,6 +317,7 @@
 | destroy target creature. a creature destroyed ~ can't be regenerated. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its t | 1 | Damn | mh2 |
 | devour | 1 | Caprichrome | mh2 |
 | discard a card: switch ~ power and toughness until end of turn. | 1 | Aeromoeba | mh2 |
+| discard a card: you may cast a creature spell from your graveyard ~. activate only once each turn. | 1 | Chainer, Nightmare Adept | mh2 |
 | draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Lucid Dreams | mh2 |
 | during your turn, ~ gets +N/+N. | 1 | Skophos Reaver | mh2 |
 | each opponent mills fourteen cards. cycling {M}{M} ({M}{M}, discard ~: draw a card.) when you cycle ~, each opponent mills four cards. | 1 | Fractured Sanity | mh2 |
@@ -339,9 +341,7 @@
 | look at the top four cards of your library. put one of them into your hand and the rest into your graveyard. you gain life equal to the greatest power among cre | 1 | Discerning Taste | mh2 |
 | overload | 1 | Break the Ice | mh2 |
 | planeswalkers' loyalty abilities you activate cost an additional [+N] to activate. | 1 | Carth the Lion | mh2 |
-| renown | 1 | Constable of the Realm | mh2 |
 | return target creature card and all other cards with the same name as that card from your graveyard to your hand. | 1 | Echoing Return | mh2 |
-| return target creature to its owner"..."ve discarded a card ~, draw a card. | 1 | Recalibrate | mh2 |
 | reveal cards from the top of your library until you reveal a nonland card. put the revealed cards on the bottom of your library in a random order. when you reve | 1 | Calibrated Blast | mh2 |
 | scavenge | 1 | Bannerhide Krushok | mh2 |
 | search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | 1 | Unmarked Grave | mh2 |
@@ -351,7 +351,6 @@
 | suspend N—{M}{M}{M} (rather than cast ~ from your hand, pay {M}{M}{M} and exile it with three time counters on it. at the beginning of your upkeep, remove a tim | 1 | Inevitable Betrayal | mh2 |
 | svyelun has indestructible as long as you control at least two other merfolk. | 1 | Svyelun of Sea and Sky | mh2 |
 | tap two untapped creatures you control: until end of turn, ~ becomes a copy of the exiled card, except it's a vehicle artifact in addition to its other types. | 1 | Dermotaxi | mh2 |
-| target creature gets -N/-N until end of turn. hellbent — that creature gets -N/-N until end of turn instead if you have no cards in hand. | 1 | Tragic Fall | mh2 |
 | target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on each artifact that became a creature ~. overload {M}{M}{M} ( | 1 | Rise and Shine | mh2 |
 | target opponent reveals their hand. you choose a card from it. that player discards that card, then discards a card at random. | 1 | Tourach's Canticle | mh2 |
 | target permanent gains hexproof and indestructible until end of turn. if it's an artifact creature, it gets +N/+N until end of turn. | 1 | Blacksmith's Skill | mh2 |
@@ -374,7 +373,6 @@
 | whenever a nontoken creature is put into your graveyard from the battlefield, create a N/N black zombie creature token. | 1 | Magus of the Bridge | mh2 |
 | whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {M}, where N is ~ power. | 1 | Esper Sentinel | mh2 |
 | whenever equipped creature deals combat damage to a player, exile up to one target creature you own, then search your library for a basic land card. put both ca | 1 | Sword of Hearth and Home | mh2 |
-| whenever you cast your third spell each turn, put a +N/+N counter on ~, then it deals damage equal to its power to any target. | 1 | Captain Ripley Vance | mh2 |
 | whenever you discard a card, each opponent mills two cards. | 1 | Mystic Redaction | mh2 |
 | whenever you gain life, you may put that many +N/+N counters on each creature you control. do ~ once each turn. | 1 | Nykthos Paragon | mh2 |
 | whenever you win a coin flip, create two treasure tokens. | 1 | Tavern Scoundrel | mh2 |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 3.7% |
-| Works (untested) | 98 | 52.4% |
-| Partial (unaudited) | 9 | 4.8% |
-| Not working | 73 | 39.0% |
+| Tested | 11 | 5.9% |
+| Works (untested) | 101 | 54.0% |
+| Partial (unaudited) | 8 | 4.3% |
+| Not working | 67 | 35.8% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Improvised Arsenal | silent | Equipped creature gets +1/+0 for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kitsune, Dragon's Daughter | silent | Whenever Kitsune enters or deals combat damage to a player, you may exchange control of two other target creatures controlled by different players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Krang & Shredder | silent | Whenever Krang & Shredder enter or attack, each opponent exiles cards from the top of their library until they exile a nonland card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Krang, Master Mind | silent | When Krang enters, if you have fewer than four cards in hand, draw cards equal to the difference. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lita, Little Orphan Amphibian | silent | Alliance — Whenever another creature you control enters, choose one that hasn't been chosen this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Madame Null, Power Broker | silent | Whenever another creature you control enters, you may pay life equal to its power. If you do, put that many +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Manhole Missile | silent | Manhole Missile deals 3 damage to target creature. You may put a card from your hand on the bottom of your library. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -50,8 +49,6 @@
 | Michelangelo, Mutant BFF | silent | Whenever Michelangelo enters or attacks, create a Mutagen token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Michelangelo, Weirdness to 11 | silent | When Michelangelo enters, create a Mutagen token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mikey & Leo, Chaos & Order | silent | Whenever you put a counter on a creature you control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Mind Transfer Protocol | silent | Until end of turn, target artifact or creature becomes an artifact creature with base power and toughness 4/5. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Mona Lisa, Science Geek | silent | {T}: Add X mana of any one color, where X is Mona Lisa's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mondo Gecko | silent | {1}, Discard a card: Until end of turn, Mondo Gecko becomes the color of your choice and gains hexproof from that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mutagen Man, Living Ooze | silent | When Mutagen Man enters, create X Mutagen tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mutant Chain Reaction | silent | Destroy up to one target artifact, enchantment, or creature with flying. Create a Mutagen token. (It's an artifact with "{1}, {T}, Sacrifice this token: Put a + | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -60,7 +57,7 @@
 | Party Dude | silent | Whenever one or more of your opponents are attacked, up to one target attacking creature gets +X/+X until end of turn, where X is the number of cards in your ha | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Quintessential Katana | silent | Whenever a Ninja you control enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Raph & Mikey, Troublemakers | silent | Whenever Raph & Mikey attack, reveal cards from the top of your library until you reveal a creature card. Put that card onto the battlefield tapped and attackin | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Raphael, Most Attitude | silent | Alliance — Whenever another creature you control enters, you may exile the top card of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Raphael, Most Attitude | silent | Whenever Raphael attacks, until end of turn, you may play a card exiled with Raphael. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Raphael, Ninja Destroyer | silent | Enrage — Whenever Raphael is dealt damage, add that much {R}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Raphael, the Nightwatcher | silent | Attacking creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rat King, Verminister | silent | {T}, Sacrifice three Rats: Return target creature card and all other cards with the same name as that card from your graveyard to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -85,24 +82,20 @@
 | Uneasy Alliance | silent | {5}, Sacrifice this Aura: Exile enchanted creature. You create a 1/1 black Ninja creature token. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Venus, Torn Between Worlds | silent | Whenever Venus is dealt damage, put that many +1/+1 counters on her. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wingnut, Bat on the Belfry | silent | Alliance — Whenever another creature you control enters, Wingnut gains your choice of flying, menace, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Zog, Triceraton Castaway | silent | When Zog enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zoo Escapees | silent | When this creature leaves the battlefield, create a Mutagen token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brilliance Unleashed | notice | Choose one or both — • Brilliance Unleashed deals 5 damage to target creature. • Choose target artifact card in your graveyard. Return it to the battlefield if  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Casey Jones, Vigilante | notice | When Casey Jones enters, draw three cards. At the beginning of your next upkeep, discard three cards at random. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Does Machines | notice | At the beginning of combat on your turn, put three +1/+1 counters on target artifact you control. If it isn't a creature, it becomes a 0/0 Robot creature in add | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Karai, Future of the Foot | notice | Whenever Karai deals combat damage to a player, return target creature card from your graveyard to your hand. If her sneak cost was paid this turn, instead retu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Koya, Death from Above | notice | When Koya enters, exile up to one other target creature. At the beginning of the next end step, you may pay {3}{B}. If you don't, return that card to the battle | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Leonardo, Big Brother | notice | Leonardo gets +1/+0 for each other creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Leatherhead, Swamp Stalker | notice | Whenever Leatherhead deals combat damage to a player, you may remove a counter from her. When you do, destroy target artifact or enchantment that player control | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Pain 101 | notice | Until end of turn, target creature gains deathtouch and "When this creature dies, return it to the battlefield tapped under its owner's control." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Paramecia Coloniex | notice | When this creature dies, you may exile it. When you do, put target creature card from your graveyard on top of your library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Pizza Face, Gastromancer | notice | Disappear — At the beginning of your end step, if a permanent left the battlefield under your control this turn, put three +1/+1 counters on up to one other tar | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | The Neutrinos | notice | Whenever The Neutrinos attack, exile up to one target creature you own, then return it to the battlefield under your control tapped and attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Turtle Van | notice | Whenever this Vehicle attacks, put a +1/+1 counter on target creature that crewed it this turn. Then if that creature is a Mutant, Ninja, or Turtle, double the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | West Wind Avatar | notice | Whenever this creature enters or attacks, you may sacrifice a token or a land. If you do, you gain 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | April O'Neil, Kunoichi Trainee | unaudited | April O'Neil can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Leatherhead, Swamp Stalker | unaudited | Leatherhead enters with a hexproof counter on her. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Leonardo, Sewer Samurai | unaudited | During your turn, you may cast creature spells with power or toughness 1 or less from your graveyard. If you cast a spell this way, that creature enters with a  | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Mikey & Don, Party Planners | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Mikey & Don, Party Planners | unaudited | You may play lands and cast Mutant, Ninja, or Turtle spells from the top of your library. If you cast a creature spell this way, that creature enters with an ad | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Ninja Teen | unaudited | Creature cards in your graveyard have sneak {3}{B}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Putrid Pals | unaudited | Disappear — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Retro-Mutation | unaudited | Enchanted creature is a Turtle with base power and toughness 0/1. It can't attack and loses all abilities. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -124,6 +117,7 @@
 | Cowabunga! | handled | Look at the top four cards of your library. You may reveal a Mutant, Ninja, Turtle, or land card from among them and put it into your hand. Put the rest on the  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Death in the Family | handled | Exile target creature with mana value 3 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dimension X | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Does Machines | handled | When this Class enters, mill two cards, draw two cards, then discard two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello's Technique | handled | Sneak {U} (You may cast this spell for {U} if you also return an unblocked attacker you control to hand during the declare blockers step.) Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Gadget Master | handled | Whenever Donatello deals combat damage to a player, create a token that's a copy of target artifact you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Donatello, Turtle Techie | handled | When Donatello enters, if you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -152,17 +146,19 @@
 | Jennika, Bad Apple Big Sister | handled | When Jennika enters, create a 2/2 red Mutant creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Karai's Technique | handled | Sneak {W}{B} (You may cast this spell for {W}{B} if you also return an unblocked attacker you control to hand during the declare blockers step.) Choose one or b | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kitsune's Technique | handled | Sneak {1}{U} (You may cast this spell for {1}{U} if you also return an unblocked attacker you control to hand during the declare blockers step.) Target opponent | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Krang, Master Mind | handled | When Krang enters, if you have fewer than four cards in hand, draw cards equal to the difference. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Krang, Utrom Warlord | handled | Other artifact creatures you control have flying, trample, indestructible, and haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leader's Talent | handled | Whenever you attack, put a +1/+1 counter on target attacking creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leonardo's Technique | handled | Sneak {1}{W} (You may cast this spell for {1}{W} if you also return an unblocked attacker you control to hand during the declare blockers step.) Return one or t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leonardo, Cutting Edge | handled | Whenever you gain life, put a +1/+1 counter on Leonardo. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Leonardo, Leader in Blue | handled | When Leonardo enters, if his sneak cost was paid, creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lessons from Life | handled | Draw three cards. You may put a land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lord Dregg, Insect Invader | handled | Disappear — At the beginning of your end step, if a permanent left the battlefield under your control this turn, create a 1/1 black Insect Warrior creature toke | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mechanized Ninja Cavalry | handled | When this creature enters, create a 1/1 colorless Robot artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Metalhead | handled | When Metalhead enters, return up to one other target artifact or creature to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Michelangelo, Game Master | handled | Disappear — At the beginning of your end step, if a permanent left the battlefield under your control this turn, put a +1/+1 counter on Michelangelo. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mighty Mutanimals | handled | When this creature enters, create a 2/2 red Mutant creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mind Transfer Protocol | handled | Until end of turn, target artifact or creature becomes an artifact creature with base power and toughness 4/5. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mona Lisa, Science Geek | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Mouser Attack! | handled | Choose one — • Create a 1/1 colorless Robot artifact creature token. • Target creature gets +3/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mouser Foundry | handled | When this artifact enters or leaves the battlefield, create a 1/1 colorless Robot artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mutant Town | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -174,12 +170,12 @@
 | Old Hob, Alleycat Blues | handled | At the beginning of combat on your turn, create a 2/2 red Mutant creature token. It gains haste until end of turn. Destroy it at the beginning of the next end s | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Omni-Cheese Pizza | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oroku Saki, Shredder Rising | handled | Whenever Oroku Saki deals combat damage to a player, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pizza Face, Gastromancer | handled | When Pizza Face enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Prehistoric Pet | handled | This creature can't be blocked by creatures with greater power. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Primordial Pachyderm | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Punk Frogs | handled | Ward | machines/keywords.py | Y/Y/Y | not_tested |
 | Purple Dragon Punks | handled |  |  | Y/Y/Y | not_tested |
 | Ragamuffin Raptor | handled | When this creature enters, return up to one target creature or Food card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Raph & Leo, Sibling Rivals | handled | Whenever Raph & Leo attack, if it's the first combat phase of the turn, untap one or two target attacking creatures. After this phase, there is an additional co | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Raphael's Technique | handled | Sneak {2}{R} (You may cast this spell for {2}{R} if you also return an unblocked attacker you control to hand during the declare blockers step.) Each player may | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Raphael, Tough Turtle | handled | Alliance — Whenever another creature you control enters, Raphael deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rock Soldiers | handled | When this creature enters, destroy up to one target noncreature artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -197,7 +193,6 @@
 | Super Shredder | handled | Whenever another permanent leaves the battlefield, put a +1/+1 counter on Super Shredder. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | TCRI Building | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tenderize | handled | Target creature you control deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Tokka & Rahzar, Terrible Twos | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Transdimensional Bovine | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Triceraton Commander | handled | When this creature enters, create X 2/2 white Dinosaur Soldier creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tunnel Rats | handled | {4}{B}: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -206,19 +201,24 @@
 | Turtle Power! | handled | Turtles you control get +2/+2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Utrom Scientists | handled | When this creature enters, tap up to one target creature and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Weather Maker | handled | Landfall — Whenever a land you control enters, put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Zog, Triceraton Castaway | handled | When Zog enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>11 cards</summary>
 
 - Foot Ninjas
+- Leonardo, Big Brother
+- Leonardo, Leader in Blue
 - Michelangelo's Technique
 - Mouser Mark III
 - North Wind Avatar
+- Raph & Leo, Sibling Rivals
 - Sewer-veillance Cam
 - Skateboard
 - The Last Ronin
+- Tokka & Rahzar, Terrible Twos
 
 </details>
 
@@ -226,14 +226,13 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Alliance | 3 | Lita, Little Orphan Amphibian, Raphael, Most Attitude, Wingnut, Bat on the Belfry | tmt |
-| Disappear | 2 | Pizza Face, Gastromancer, Putrid Pals | tmt |
+| Alliance | 2 | Lita, Little Orphan Amphibian, Wingnut, Bat on the Belfry | tmt |
 | when ~ enters, create a mutagen token. | 2 | Crustacean Commando, Slithering Cryptid | tmt |
 | Choose one or both | 1 | Brilliance Unleashed | tmt |
+| Disappear | 1 | Putrid Pals | tmt |
 | Enrage | 1 | Raphael, Ninja Destroyer | tmt |
 | april o"..."t be blocked by creatures with power N or greater. | 1 | April O'Neil, Kunoichi Trainee | tmt |
 | at the beginning of combat on your turn, put a +N/+N counter on savanti romero. then you draw N cards and lose N life, where N is the number of counters on sava | 1 | Savanti Romero, Time's Exile | tmt |
-| at the beginning of combat on your turn, put three +N/+N counters on target artifact you control. if it isn't a creature, it becomes a N/N robot creature in add | 1 | Does Machines | tmt |
 | at the beginning of your end step, draw a card for each card type among spells you've cast ~. | 1 | April O'Neil, Hacktivist | tmt |
 | at the beginning of your end step, exile up to one target artifact you control and up to one target creature you control. then return them to the battlefield un | 1 | Don & Leo, Problem Solvers | tmt |
 | attacking creatures you control have double strike. | 1 | Raphael, the Nightwatcher | tmt |
@@ -247,25 +246,20 @@
 | enchanted creature is a turtle with base power and toughness N/N. it can't attack and loses all abilities. | 1 | Retro-Mutation | tmt |
 | equipped creature gets +N/+N for each artifact you control. | 1 | Improvised Arsenal | tmt |
 | gain control of all artifacts your opponents control until end of turn. untap them. they gain haste until end of turn. | 1 | Broadcast Takeover | tmt |
-| leatherhead enters with a hexproof counter on her. | 1 | Leatherhead, Swamp Stalker | tmt |
-| leonardo gets +N/+N for each other creature you control. | 1 | Leonardo, Big Brother | tmt |
 | return all creatures to their owners' hands. each player may shuffle their hand and graveyard into their library, then each player who does draws seven cards. e | 1 | Turtles in Time | tmt |
 | rocksteady can't be blocked by more than one creature. | 1 | Rocksteady, Crash Courser | tmt |
 | search your library and/or outside the game for exactly four legendary creature cards you own with different names, then reveal those cards. an opponent chooses | 1 | Turtles Forever | tmt |
 | sneak {M} (you may cast ~ for {M} if you also return an unblocked attacker you control to hand during the declare blockers step.) destroy target creature or enc | 1 | Shredder's Technique | tmt |
 | sneak {M}{M} (you may cast ~ for {M}{M} if you also return an unblocked attacker you control to hand during the declare blockers step.) create three N/N white n | 1 | The Last Ronin's Technique | tmt |
 | target creature"..."s an artifact with "...") | 1 | Return to the Sewers | tmt |
-| until end of turn, target artifact or creature becomes an artifact creature with base power and toughness N/N. draw a card. | 1 | Mind Transfer Protocol | tmt |
 | until end of turn, target creature gains deathtouch and "..." | 1 | Pain 101 | tmt |
 | when casey jones enters, draw three cards. at the beginning of your next upkeep, discard three cards at random. | 1 | Casey Jones, Vigilante | tmt |
 | when koya enters, exile up to one other target creature. at the beginning of the next end step, you may pay {M}{M}. if you don"..."s control. | 1 | Koya, Death from Above | tmt |
-| when krang enters, if you have fewer than four cards in hand, draw cards equal to the difference. | 1 | Krang, Master Mind | tmt |
 | when michelangelo enters, create a mutagen token. | 1 | Michelangelo, Weirdness to 11 | tmt |
 | when mutagen man enters, create N mutagen tokens. | 1 | Mutagen Man, Living Ooze | tmt |
 | when ray fillet enters, create a mutagen token. | 1 | Ray Fillet, Man Ray | tmt |
 | when renet enters, return each other nonland permanent that entered ~ to its owner's hand. | 1 | Renet, Temporal Apprentice | tmt |
 | when sally pride enters, create N N/N red mutant creature tokens, where N is the number of nontoken creatures you control. | 1 | Sally Pride, Lioness Leader | tmt |
-| when zog enters, target creature can't block ~. | 1 | Zog, Triceraton Castaway | tmt |
 | when ~ dies, you may exile it. when you do, put target creature card from your graveyard on top of your library. | 1 | Paramecia Coloniex | tmt |
 | when ~ enters, choose target creature an opponent controls. exile that creature until ~ leaves the battlefield. if ~ sneak cost was paid, instead exile the chos | 1 | Turncoat Kunoichi | tmt |
 | when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Dimensional Exile | tmt |
@@ -280,10 +274,12 @@
 | whenever don & raph attack, the next noncreature spell you cast ~ has affinity for artifacts. | 1 | Don & Raph, Hard Science | tmt |
 | whenever karai deals combat damage to a player, return target creature card from your graveyard to your hand. if her sneak cost was paid ~, instead return that  | 1 | Karai, Future of the Foot | tmt |
 | whenever kitsune enters or deals combat damage to a player, you may exchange control of two other target creatures controlled by different players. | 1 | Kitsune, Dragon's Daughter | tmt |
+| whenever leatherhead deals combat damage to a player, you may remove a counter from her. when you do, destroy target artifact or enchantment that player control | 1 | Leatherhead, Swamp Stalker | tmt |
 | whenever michelangelo deals combat damage to a player, you may put a creature card and/or a land card from your hand onto the battlefield. | 1 | Michelangelo, Improviser | tmt |
 | whenever michelangelo enters or attacks, create a mutagen token. | 1 | Michelangelo, Mutant BFF | tmt |
 | whenever one or more of your opponents are attacked, up to one target attacking creature gets +N/+N until end of turn, where N is the number of cards in your ha | 1 | Party Dude | tmt |
 | whenever raph & mikey attack, reveal cards from the top of your library until you reveal a creature card. put that card onto the battlefield tapped and attackin | 1 | Raph & Mikey, Troublemakers | tmt |
+| whenever raphael attacks, until end of turn, you may play a card exiled with raphael. | 1 | Raphael, Most Attitude | tmt |
 | whenever shark shredder deals combat damage to a player, put up to one target creature card from that player's graveyard onto the battlefield under your control | 1 | Shark Shredder, Killer Clone | tmt |
 | whenever venus is dealt damage, put that many +N/+N counters on her. | 1 | Venus, Torn Between Worlds | tmt |
 | whenever you put a counter on a creature you control, draw a card. ~ triggers only once each turn. | 1 | Mikey & Leo, Chaos & Order | tmt |
@@ -293,14 +289,13 @@
 | whenever ~ enter or attack, each opponent exiles cards from the top of their library until they exile a nonland card. | 1 | Krang & Shredder | tmt |
 | whenever ~ enters or attacks, you may sacrifice a token or a land. if you do, you gain N life. | 1 | West Wind Avatar | tmt |
 | whenever ~ or another mutant you control enters, create a mutagen token. | 1 | Genghis Frog | tmt |
-| you may look at the top card of your library any time. | 1 | Mikey & Don, Party Planners | tmt |
+| you may play lands and cast mutant, ninja, or turtle spells from the top of your library. if you cast a creature spell ~, that creature enters with an additiona | 1 | Mikey & Don, Party Planners | tmt |
 | {M}, discard a card: until end of turn, ~ becomes the color of your choice and gains hexproof from that color. | 1 | Mondo Gecko | tmt |
 | {M}, sacrifice three rats: return target creature card and all other cards with the same name as that card from your graveyard to the battlefield tapped. | 1 | Rat King, Verminister | tmt |
 | {M}, sacrifice ~: counter target spell that targets an artifact or creature you control. | 1 | Fugitive Droid | tmt |
 | {M}, sacrifice ~: exile enchanted creature. you create a N/N black ninja creature token. activate only as a sorcery. | 1 | Uneasy Alliance | tmt |
 | {M}, {M}, sacrifice ~: return a creature card exiled with ~ to the battlefield under your control. return each other card exiled with ~ to its owner's hand. | 1 | Northampton Farm | tmt |
 | {M}, {M}: creature tokens you control gain haste until end of turn. | 1 | Ravenous Robots | tmt |
-| {M}: add N mana of any one color, where N is mona lisa's power. | 1 | Mona Lisa, Science Geek | tmt |
 | {M}{M}{M}{M}{M}{M}, {M}, sacrifice ~: target player gains N life and draws a card. each of your opponents discards a card. ~ deals N damage to any target. put t | 1 | Everything Pizza | tmt |
 | ~ can't attack or block unless its power is N or greater. | 1 | Technodrome | tmt |
 | ~ deals N damage to target creature. you may put a card from your hand on the bottom of your library. if you do, draw a card. | 1 | Manhole Missile | tmt |

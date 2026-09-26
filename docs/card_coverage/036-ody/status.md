@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 6 | 11.8% |
-| Works (untested) | 27 | 52.9% |
+| Works (untested) | 28 | 54.9% |
 | Partial (unaudited) | 4 | 7.8% |
-| Not working | 14 | 27.5% |
+| Not working | 13 | 25.5% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Magnivore | silent | Magnivore's power and toughness are each equal to the number of sorcery cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mirari | silent | Whenever you cast an instant or sorcery spell, you may pay {3}. If you do, copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortivore | silent | Mortivore's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mystic Enforcer | silent | Threshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+3 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadowmage Infiltrator | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Time Stretch | silent | Target player takes two extra turns after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shelter | notice | Target creature you control gains protection from the color of your choice until end of turn. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -63,6 +62,7 @@
 | Ivy Elemental | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kamahl, Pit Fighter | handled | {T}: Kamahl deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindslicer | handled | When this creature dies, each player discards their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mystic Enforcer | handled | Threshold — As long as there are seven or more cards in your graveyard, this creature gets +3/+3 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nantuko Disciple | handled | {G}, {T}: Target creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nimble Mongoose | handled | Threshold — This creature gets +2/+2 as long as there are seven or more cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Persuasion | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -91,7 +91,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | enchanted land has "..." | 2 | Caustic Tar, Squirrel Nest | ody |
-| Threshold | 1 | Mystic Enforcer | ody |
 | at the beginning of your upkeep, if you have N or more cards in your library, you win the game. | 1 | Battle of Wits | ody |
 | cards in graveyards can't be the targets of spells or abilities. | 1 | Ground Seal | ody |
 | exile all cards from target player"..."s library for all cards with the same name as that card and exile them. then that player shuffles. | 1 | Haunting Echoes | ody |

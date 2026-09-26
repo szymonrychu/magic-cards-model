@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 7.7% |
-| Works (untested) | 45 | 26.6% |
+| Tested | 14 | 8.3% |
+| Works (untested) | 48 | 28.4% |
 | Partial (unaudited) | 6 | 3.6% |
-| Not working | 105 | 62.1% |
+| Not working | 101 | 59.8% |
 
 ## Cards needing work
 
@@ -38,13 +38,12 @@
 | Brace for Impact | silent | Prevent all damage that would be dealt to target multicolored creature this turn. For each 1 damage prevented this way, put a +1/+1 counter on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Pry | silent | Choose a nonland card name. Target player reveals their hand. That player discards a card with that name. If they can't, you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bronze Bombshell | silent | When a player other than this creature's owner controls it, that player sacrifices it. If the player does, this creature deals 7 damage to the player. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Cackling Flames | silent | Cackling Flames deals 3 damage to any target. Hellbent — Cackling Flames deals 5 damage instead if you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carom | silent | The next 1 damage that would be dealt to target creature this turn is dealt to another target creature instead. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Condemn | silent | Put target attacking creature on the bottom of its owner's library. Its controller gains life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Hussar | silent | When this creature enters, sacrifice it unless {W} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crime // Punishment | silent | Put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crypt Champion | silent | When this creature enters, each player puts a creature card with mana value 3 or less from their graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cytoplast Manipulator | silent | {U}, {T}: Gain control of target creature with a +1/+1 counter on it for as long as this creature remains on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Cytoplast Manipulator | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cytoplast Root-Kin | silent | When this creature enters, put a +1/+1 counter on each other creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytoshape | silent | Choose a nonlegendary creature on the battlefield. Target creature becomes a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cytospawn Shambler | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -66,18 +65,16 @@
 | Kill-Suit Cultist | silent | {B}, Sacrifice this creature: The next time damage would be dealt to target creature this turn, destroy that creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kindle the Carnage | silent | Discard a card at random. If you do, Kindle the Carnage deals damage equal to that card's mana value to each creature. You may repeat this process any number of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loaming Shaman | silent | When this creature enters, target player shuffles any number of target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lyzolda, the Blood Witch | silent | {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Momir Vig, Simic Visionary | silent | Whenever you cast a blue creature spell, reveal the top card of your library. If it's a creature card, put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Muse Vessel | silent | {3}, {T}: Target player exiles a card from their hand. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nettling Curse | silent | Whenever enchanted creature attacks or blocks, its controller loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightcreep | silent | Until end of turn, all creatures become black and all lands become Swamps. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Novijen Sages | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Novijen, Heart of Progress | silent | {G}{U}, {T}: Put a +1/+1 counter on each creature that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ocular Halo | silent | {W}: Enchanted creature gains vigilance until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Odds // Ends | silent | Flip a coin. If it comes up heads, counter target instant or sorcery spell. If it comes up tails, copy that spell and you may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pain Magnification | silent | Whenever an opponent is dealt 3 or more damage by a single source, that player discards a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Paladin of Prahv | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Palliation Accord | silent | Whenever a creature an opponent controls becomes tapped, put a palliation counter on this enchantment. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Palliation Accord | silent | Remove a palliation counter from this enchantment: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Patagia Viper | silent | When this creature enters, sacrifice it unless {U} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plaxcaster Frogling | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Plaxmanta | silent | When this creature enters, sacrifice it unless {G} was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -95,7 +92,6 @@
 | Ratcatcher | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Research // Development | silent | Shuffle up to four cards you own from outside the game into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise // Fall | silent | Return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sandstorm Eidolon | silent | {R}, Sacrifice this creature: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Basilisk | silent | {1}{G}: Until end of turn, target creature with a +1/+1 counter on it gains "Whenever this creature deals combat damage to a creature, destroy that creature at  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Guildmage | silent | {1}{G}: Move a +1/+1 counter from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Simic Initiate | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -143,6 +139,7 @@
 | Azorius First-Wing | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Azorius Signet | handled |  |  | Y/-/- | not_tested |
 | Beacon Hawk | handled | Whenever this creature deals combat damage to a player, you may untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cackling Flames | handled | Cackling Flames deals 3 damage to any target. Hellbent — Cackling Flames deals 5 damage instead if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Celestial Ancient | handled | Whenever you cast an enchantment spell, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Delirium Skeins | handled | Each player discards three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enemy of the Guildpact | handled | Protection | models/game.py | Y/-/- | not_tested |
@@ -150,21 +147,23 @@
 | Entropic Eidolon | handled | {B}, Sacrifice this creature: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of the Guildpact | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Haazda Exonerator | handled | {T}, Sacrifice this creature: Destroy target Aura. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lyzolda, the Blood Witch | handled | {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Macabre Waltz | handled | Return up to two target creature cards from your graveyard to your hand, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Magewright's Stone | handled | {1}, {T}: Untap target creature that has an activated ability with {T} in its cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Minister of Impediments | handled | {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mistral Charger | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Nihilistic Glee | handled | {2}{B}, Discard a card: Target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ocular Halo | handled | Enchanted creature has "{T}: Draw a card." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ogre Gatecrasher | handled | When this creature enters, destroy target creature with defender. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Omnibian | handled | {T}: Target creature becomes a Frog with base power and toughness 3/3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Overrule | handled | Counter target spell unless its controller pays {X}. You gain X life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pillar of the Paruns | handled |  |  | Y/-/- | not_tested |
-| Ragamuffyn | handled | Hellbent — {T}, Sacrifice a creature or land: Draw a card. Activate only if you have no cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Carnarium | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Guildmage | handled | {3}{B}, Discard a card: Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakdos Signet | handled |  |  | Y/-/- | not_tested |
 | Riot Spikes | handled | Enchanted creature gets +2/-1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rix Maadi, Dungeon Palace | handled | {1}{B}{R}, {T}: Each player discards a card. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sandstorm Eidolon | handled | {R}, Sacrifice this creature: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Silkwing Scout | handled | {G}, Sacrifice this creature: Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Simic Ragworm | handled | {U}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Simic Signet | handled |  |  | Y/-/- | not_tested |
@@ -186,7 +185,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
@@ -198,6 +197,7 @@
 - Grand Arbiter Augustin IV
 - Hallowed Fountain
 - Psychotic Fury
+- Ragamuffyn
 - Simic Growth Chamber
 - Spell Snare
 - Utopia Sprawl
@@ -208,7 +208,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| graft | 9 | Aquastrand Spider, Cytospawn Shambler, Helium Squirter, Novijen Sages, Plaxcaster Frogling | dis |
+| graft | 10 | Aquastrand Spider, Cytoplast Manipulator, Cytospawn Shambler, Helium Squirter, Novijen Sages | dis |
 | Hellbent | 5 | Demon's Jester, Gobhobbler Rats, Rakdos Pit Dragon, Slithering Shade, Taste for Mayhem | dis |
 | when ~ enters, sacrifice it unless {M} was spent to cast it. | 4 | Azorius Herald, Court Hussar, Patagia Viper, Plaxmanta | dis |
 | forecast | 3 | Pride of the Clouds, Sky Hussar, Steeling Stance | dis |
@@ -242,6 +242,7 @@
 | put target artifact or enchantment on the bottom of its owner's library. | 1 | Hide // Seek | dis |
 | put target attacking creature on the bottom of its owner's library. its controller gains life equal to its toughness. | 1 | Condemn | dis |
 | put target creature or enchantment card from an opponent's graveyard onto the battlefield under your control. | 1 | Crime // Punishment | dis |
+| remove a palliation counter from ~: prevent the next N damage that would be dealt to you ~. | 1 | Palliation Accord | dis |
 | return all creatures blocking or blocked by target creature to their owner's hand. | 1 | Trial // Error | dis |
 | return target creature card from a graveyard and target creature on the battlefield to their owners' hands. | 1 | Rise // Fall | dis |
 | return up to three target creature cards with mana value N or less from your graveyard to the battlefield. forecast — {M}{M}, reveal ~ from your hand: return ta | 1 | Proclamation of Rebirth | dis |
@@ -264,7 +265,6 @@
 | when ~ enters, target player discards a card. ~ deals damage to that player equal to that card's mana value. | 1 | Hellhole Rats | dis |
 | when ~ enters, target player shuffles any number of target cards from their graveyard into their library. | 1 | Loaming Shaman | dis |
 | when ~ enters, you may pay {M}. if you do, target creature gets +N/+N until end of turn. | 1 | Squealing Devil | dis |
-| whenever a creature an opponent controls becomes tapped, put a palliation counter on ~. | 1 | Palliation Accord | dis |
 | whenever a creature you control attacks, it gets +N/+N until end of turn and ~ deals N damage to you. | 1 | Anthem of Rakdos | dis |
 | whenever a creature you control dies, you gain life equal to that creature's toughness. | 1 | Proper Burial | dis |
 | whenever a player casts a noncreature spell, counter that spell. that player creates N N/N white and blue bird creature tokens with flying, where N is the spell | 1 | Dovescape | dis |
@@ -277,14 +277,10 @@
 | whenever you cast a blue creature spell, reveal the top card of your library. if it's a creature card, put that card into your hand. | 1 | Momir Vig, Simic Visionary | dis |
 | whenever ~ deals damage, you gain that much life. | 1 | Paladin of Prahv | dis |
 | whenever ~ is dealt damage, discard that many cards. | 1 | Jagged Poppet | dis |
-| {M}, sacrifice a creature: lyzolda deals N damage to any target if the sacrificed creature was red. draw a card if the sacrificed creature was black. | 1 | Lyzolda, the Blood Witch | dis |
-| {M}, sacrifice ~: target creature can't block ~. | 1 | Sandstorm Eidolon | dis |
 | {M}, sacrifice ~: the next time damage would be dealt to target creature ~, destroy that creature instead. | 1 | Kill-Suit Cultist | dis |
 | {M}, {M}: destroy target creature with power less than ~ power. | 1 | Unliving Psychopath | dis |
-| {M}, {M}: gain control of target creature with a +N/+N counter on it for as long as ~ remains on the battlefield. | 1 | Cytoplast Manipulator | dis |
 | {M}, {M}: tap target creature and put a +N/+N counter on it. until end of turn, that creature gains "..." | 1 | Evolution Vat | dis |
 | {M}, {M}: target player exiles a card from their hand. activate only as a sorcery. | 1 | Muse Vessel | dis |
-| {M}: enchanted creature gains vigilance until end of turn. | 1 | Ocular Halo | dis |
 | {M}: reveal your hand and discard a card of target opponent's choice. then that player reveals their hand and discards a card of your choice. activate only as a | 1 | Rakdos Augermage | dis |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Windreaver | dis |
 | {M}: ~ deals N damage to target creature and that creature's controller loses N life. | 1 | Rakdos Ickspitter | dis |
@@ -295,7 +291,6 @@
 | {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
 | {M}{M}{M}, {M}: prevent all damage a source of your choice would deal ~. | 1 | Prahv, Spires of Order | dis |
 | ~ can't be blocked by creatures with flying. | 1 | Gnat Alley Creeper | dis |
-| ~ deals N damage to any target. hellbent — ~ deals N damage instead if you have no cards in hand. | 1 | Cackling Flames | dis |
 | ~ deals N damage to any target. if a creature dealt damage ~ would die ~, exile it instead. hellbent — if you have no cards in hand, ~ can"..."t be prevented. | 1 | Demonfire | dis |
 | ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
 | ~ deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | 1 | Weight of Spires | dis |

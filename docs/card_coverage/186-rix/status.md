@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.2% |
-| Works (untested) | 88 | 49.4% |
-| Partial (unaudited) | 16 | 9.0% |
-| Not working | 63 | 35.4% |
+| Tested | 18 | 10.1% |
+| Works (untested) | 87 | 48.9% |
+| Partial (unaudited) | 12 | 6.7% |
+| Not working | 61 | 34.3% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Awakened Amalgam | silent | Awakened Amalgam's power and toughness are each equal to the number of differently named lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azor's Gateway // Sanctum of the Sun | silent | {1}, {T}: Draw a card, then exile a card from your hand. If cards with five or more different mana values are exiled with Azor's Gateway, you gain 5 life, untap | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azor, the Lawbringer | silent | When Azor enters, each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Baffling End | silent | When this enchantment leaves the battlefield, target opponent creates a 3/3 green Dinosaur creature token with trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bishop of Binding | silent | Whenever this creature attacks, target Vampire gets +X/+X until end of turn, where X is the power of the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blazing Hope | silent | Exile target creature with power greater than or equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brass's Bounty | silent | For each land you control, create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -40,7 +39,6 @@
 | Champion of Dusk | silent | When this creature enters, you draw X cards and you lose X life, where X is the number of Vampires you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cherished Hatchling | silent | When this creature dies, you may cast Dinosaur spells this turn as though they had flash, and whenever you cast a Dinosaur spell this turn, it gains "When this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crashing Tide | silent | This spell has flash as long as you control a Merfolk. Return target creature to its owner's hand. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Curious Obsession | silent | At the beginning of your end step, if you didn't attack with a creature this turn, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dead Man's Chest | silent | When enchanted creature dies, exile cards equal to its power from the top of its owner's library. You may cast spells from among those cards for as long as they | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dinosaur Hunter | silent | Whenever this creature deals damage to a Dinosaur, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Neckbreaker | silent | Attacking Pirates you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,7 +59,6 @@
 | Paladin of Atonement | silent | When this creature dies, you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path of Mettle // Metzali, Tower of Triumph | silent | When Path of Mettle enters, it deals 1 damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| See Red | silent | At the beginning of your end step, if you didn't attack with a creature this turn, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silent Gravestone | silent | {4}, {T}: Exile this artifact and all cards from all graveyards. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slaughter the Strong | silent | Each player chooses any number of creatures they control with total power 4 or less, then sacrifices all other creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx's Decree | silent | Each opponent can't cast instant or sorcery spells during that player's next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -81,6 +78,7 @@
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Nezahal, Primal Tide | notice | Discard three cards: Exile Nezahal. Return it to the battlefield tapped under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Profane Procession // Tomb of the Dusk Rose | notice | {3}{W}{B}: Exile target creature. Then if there are three or more cards exiled with Profane Procession, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Release to the Wind | notice | Exile target nonland permanent. For as long as that card remains exiled, its owner may cast it without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Skymarcher Aspirant | notice | This creature has flying as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -91,36 +89,34 @@
 | Vraska's Scorn | notice | Target opponent loses 4 life. You may search your library and/or graveyard for a card named Vraska, Scheming Gorgon, reveal it, and put it into your hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Sun | unaudited | All lands lose all abilities except mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Charging Tuskodon | unaudited | If this creature would deal combat damage to a player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Daring Buccaneer | unaudited | As an additional cost to cast this spell, reveal a Pirate card from your hand or pay {2}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Everdawn Champion | unaudited | Prevent all combat damage that would be dealt to this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Luminous Bonds | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Nezahal, Primal Tide | unaudited | You have no maximum hand size. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oathsworn Vampire | unaudited | You may cast this card from your graveyard if you gained life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Protean Raider | unaudited | Raid — If you attacked this turn, you may have this creature enter as a copy of any creature on the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relentless Raptor | unaudited | This creature attacks or blocks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | River Darter | unaudited | This creature can't be blocked by Dinosaurs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sadistic Skymarcher | unaudited | As an additional cost to cast this spell, reveal a Vampire card from your hand or pay {1}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Slippery Scoundrel | unaudited | As long as you have the city's blessing, this creature has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Swaggering Corsair | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Temple Altisaur | unaudited | If a source would deal damage to another Dinosaur you control, prevent all but 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The Immortal Sun | unaudited | Players can't activate planeswalkers' loyalty abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wayward Swordtooth | unaudited | This creature can't attack or block unless you have the city's blessing. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aquatic Incursion | handled | When this enchantment enters, create two 1/1 blue Merfolk creature tokens with hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Arch of Orazca | handled | {5}, {T}: Draw a card. Activate only if you have the city's blessing. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arterial Flow | handled | Each opponent discards two cards. If you control a Vampire, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atzocan Seer | handled | Sacrifice this creature: Return target Dinosaur card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Baffling End | handled | When this enchantment enters, exile target creature an opponent controls with mana value 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bombard | handled | Bombard deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brazen Freebooter | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cacophodon | handled | Enrage — Whenever this creature is dealt damage, untap target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canal Monitor | handled |  |  | Y/Y/- | not_tested |
 | Cleansing Ray | handled | Choose one — • Destroy target Vampire. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crested Herdcaller | handled | When this creature enters, create a 3/3 green Dinosaur creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Daring Buccaneer | handled | As an additional cost to cast this spell, reveal a Pirate card from your hand or pay {2}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Inquiry | handled | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Brawler | handled | Whenever this creature deals combat damage to a player, if you have the city's blessing, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Rig-Hauler | handled | Raid — When this creature enters, if you attacked this turn, you may return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deeproot Elite | handled | Whenever another Merfolk you control enters, put a +1/+1 counter on target Merfolk you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dusk Legion Zealot | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elenda, the Dusk Rose | handled | Whenever another creature dies, put a +1/+1 counter on Elenda. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Everdawn Champion | handled | Prevent all combat damage that would be dealt to this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Exultant Skymarcher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Famished Paladin | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fanatical Firebrand | handled | {T}, Sacrifice this creature: It deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -144,13 +140,11 @@
 | Legion Lieutenant | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Majestic Heliopterus | handled | Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Martyr of Dusk | handled | When this creature dies, create a 1/1 white Vampire creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Mausoleum Harpy | handled | Whenever another creature you control dies, if you have the city's blessing, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mist-Cloaked Herald | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moment of Craving | handled | Target creature gets -2/-2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Moment of Triumph | handled | Target creature gets +2/+2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Orazca Frillback | handled |  |  | Y/Y/- | not_tested |
 | Orazca Raptor | handled |  |  | Y/Y/- | not_tested |
-| Orazca Relic | handled | {T}, Sacrifice this artifact: You gain 3 life and draw a card. Activate only if you have the city's blessing. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Overgrown Armasaur | handled | Enrage — Whenever this creature is dealt damage, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Path of Discovery | handled | Whenever a creature you control enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pirate's Pillage | handled | As an additional cost to cast this spell, discard a card. Draw two cards and create two Treasure tokens. (They're artifacts with "{T}, Sacrifice this token: Add | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -162,8 +156,8 @@
 | Reaver Ambush | handled | Exile target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reckless Rage | handled | Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rekindling Phoenix | handled | When this creature dies, create a 0/1 red Elemental creature token with "At the beginning of your upkeep, sacrifice this token and return target card named Reki | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Resplendent Griffin | handled | Whenever this creature attacks, if you have the city's blessing, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riverwise Augur | handled | When this creature enters, draw three cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sadistic Skymarcher | handled | As an additional cost to cast this spell, reveal a Vampire card from your hand or pay {1}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanguine Glorifier | handled | When this creature enters, put a +1/+1 counter on another target Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seafloor Oracle | handled | Whenever a Merfolk you control deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shake the Foundations | handled | Shake the Foundations deals 1 damage to each creature without flying. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -178,7 +172,6 @@
 | Sun Sentinel | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Sun-Collared Raptor | handled | {2}{R}: This creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sun-Crested Pterodon | handled | This creature has vigilance as long as you control another Dinosaur. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Swab Goblin | handled |  |  | Y/Y/Y | not_tested |
 | Swift Warden | handled | When this creature enters, target Merfolk you control gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sworn Guardian | handled |  |  | Y/Y/- | not_tested |
 | Thrashing Brontodon | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -197,19 +190,26 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>18 cards</summary>
 
+- Arch of Orazca
 - Crafty Cutpurse
+- Curious Obsession
 - Dire Fleet Daredevil
 - Enter the Unknown
 - Flood of Recollection
 - Ghalta, Primal Hunger
 - Jadelight Ranger
 - Mastermind's Acquisition
+- Mausoleum Harpy
 - Needletooth Raptor
+- Orazca Relic
 - Ravenous Chupacabra
+- Resplendent Griffin
 - Secrets of the Golden City
+- See Red
 - Stampeding Horncrest
+- Swab Goblin
 
 </details>
 
@@ -219,12 +219,9 @@
 |---|---|---|---|
 | Raid | 3 | Admiral's Order, Protean Raider, Swaggering Corsair | rix |
 | ~ gets +N/+N as long as you have the city's blessing. | 3 | Dusk Charger, Snubhorn Sentry, Spire Winder | rix |
-| at the beginning of your end step, if you didn't attack with a creature ~, sacrifice ~. | 2 | Curious Obsession, See Red | rix |
 | Choose one | 1 | Buccaneer's Bravado | rix |
 | +N: put a loyalty counter on huatli for each creature you control. | 1 | Huatli, Radiant Champion | rix |
 | all lands lose all abilities except mana abilities. | 1 | Blood Sun | rix |
-| as an additional cost to cast ~, reveal a pirate card from your hand or pay {M}. | 1 | Daring Buccaneer | rix |
-| as an additional cost to cast ~, reveal a vampire card from your hand or pay {M}. | 1 | Sadistic Skymarcher | rix |
 | as long as you have the city"..."t be blocked. | 1 | Slippery Scoundrel | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s blessing, instead each opponent sacrifices half the creatures they control of their choice | 1 | Vona's Hunger | rix |
 | ascend (if you control ten or more permanents, you get the city"..."s hand. if you have the city"..."s library instead. | 1 | Expel from Orazca | rix |
@@ -233,6 +230,7 @@
 | at the beginning of your upkeep, if you have the city"..."s mana value. | 1 | Twilight Prophet | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
 | destroy target creature. ~ deals N damage to target player or planeswalker. you may search your library and/or graveyard for a card named angrath, minotaur pira | 1 | Angrath's Fury | rix |
+| discard three cards: exile nezahal. return it to the battlefield tapped under its owner's control at the beginning of the next end step. | 1 | Nezahal, Primal Tide | rix |
 | during your turn, ~ gets +N/+N. | 1 | Hardy Veteran | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each opponent loses N life for each creature you control. | 1 | Gruesome Fate | rix |
@@ -247,7 +245,6 @@
 | if ~ would deal combat damage to a player, it deals double that damage to that player instead. | 1 | Charging Tuskodon | rix |
 | other merfolk you control get +N/+N. | 1 | Merfolk Mistbinder | rix |
 | players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
-| prevent all combat damage that would be dealt to ~. | 1 | Everdawn Champion | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | tap another untapped merfolk you control: kumena can't be blocked ~. | 1 | Kumena, Tyrant of Orazca | rix |
 | target creature an opponent controls deals damage equal to its power to another target creature that player controls. | 1 | Mutiny | rix |
@@ -266,13 +263,11 @@
 | when ~ enters, you draw N cards and you lose N life, where N is the number of vampires you control. | 1 | Champion of Dusk | rix |
 | when ~ enters, you lose N life unless you control another pirate. | 1 | Fathom Fleet Boarder | rix |
 | when ~ enters, your life total becomes N. | 1 | Form of the Dinosaur | rix |
-| when ~ leaves the battlefield, target opponent creates a N/N green dinosaur creature token with trample. | 1 | Baffling End | rix |
 | whenever etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | 1 | Etali, Primal Storm | rix |
 | whenever ~ attacks, target creature defending player controls loses all abilities and has base power and toughness N/N until end of turn. | 1 | Warkite Marauder | rix |
 | whenever ~ attacks, target vampire gets +N/+N until end of turn, where N is the power of the exiled card. | 1 | Bishop of Binding | rix |
 | whenever ~ attacks, you may pay {M}{M}. if you do, create N N/N red elemental creature tokens that are tapped and attacking. at the beginning of the next end st | 1 | Tilonalli's Summoner | rix |
 | whenever ~ deals damage to a dinosaur, destroy that creature. | 1 | Dinosaur Hunter | rix |
-| you have no maximum hand size. | 1 | Nezahal, Primal Tide | rix |
 | you may cast ~ from your graveyard if you gained life ~. | 1 | Oathsworn Vampire | rix |
 | {M}, {M}: draw a card, then exile a card from your hand. if cards with five or more different mana values are exiled with ~, you gain N life, untap ~, and trans | 1 | Azor's Gateway // Sanctum of the Sun | rix |
 | {M}, {M}: exile ~ and all cards from all graveyards. draw a card. | 1 | Silent Gravestone | rix |

@@ -3,24 +3,24 @@
 - Expansion: 180
 - Set code: `mp2`
 - Release date: 2017-04-28
-- Cards in scope (Modern/Pioneer/Standard-legal): 3
+- Cards in scope (Modern/Pioneer/Standard-legal): 4
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 3 |
-| Pioneer | 3 |
+| Modern | 4 |
+| Pioneer | 4 |
 | Standard | 0 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
-| Works (untested) | 2 | 66.7% |
+| Tested | 1 | 25.0% |
+| Works (untested) | 2 | 50.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 33.3% |
+| Not working | 1 | 25.0% |
 
 ## Cards needing work
 
@@ -33,8 +33,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Containment Priest
 
 </details>
 

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.9% |
-| Works (untested) | 73 | 51.0% |
-| Partial (unaudited) | 6 | 4.2% |
-| Not working | 57 | 39.9% |
+| Works (untested) | 75 | 52.4% |
+| Partial (unaudited) | 5 | 3.5% |
+| Not working | 56 | 39.2% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Morgue Burst | silent | Return target creature card from your graveyard to your hand. Morgue Burst deals damage to any target equal to the power of the card returned this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nivix Cyclops | silent | Whenever you cast an instant or sorcery spell, this creature gets +3/+0 until end of turn and can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plasm Capture | silent | Counter target spell. At the beginning of your next first main phase, add X mana in any combination of colors, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pontiff of Blight | silent | Extort | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Pyrewild Shaman | silent | Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard, you may pay {3}. If you do, return this card to yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakdos Drake | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ral Zarek | silent | −7: Flip five coins. Take an extra turn after this one for each coin that comes up heads. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -76,18 +75,17 @@
 | Species Gorger | silent | At the beginning of your upkeep, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teysa, Envoy of Ghosts | silent | Whenever a creature deals combat damage to you, destroy that creature. Create a 1/1 white and black Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thrashing Mossdog | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Tithe Drinker | silent | Extort | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Toil // Trouble | silent | Trouble deals damage to target player equal to the number of cards in that player's hand. Fuse (You may cast one or both halves of this card from your hand.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trait Doctoring | silent | Change the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. Cipher (The | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vorel of the Hull Clade | silent | {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
+| Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warped Physique | notice | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Council of the Absolute | unaudited | As this creature enters, choose a noncreature, nonland card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Emmara Tandris | unaudited | Prevent all damage that would be dealt to creature tokens you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Melek, Izzet Paragon | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ruric Thar, the Unbowed | unaudited | Ruric Thar attacks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Varolz, the Scar-Striped | unaudited | Each creature card in your graveyard has scavenge. The scavenge cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Advent of the Wurm | handled | Create a 5/5 green Wurm creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alive // Well | handled | Create a 3/3 green Centaur creature token. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -140,6 +138,7 @@
 | Rot Farm Skeleton | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rubblebelt Maaka | handled | Bloodrush — {R}, Discard this card: Target attacking creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Runner's Bane | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ruric Thar, the Unbowed | handled | Ruric Thar attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Saruli Gatekeepers | handled | When this creature enters, if you control two or more Gates, you gain 7 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savageborn Hydra | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scab-Clan Giant | handled | When this creature enters, it fights target creature an opponent controls chosen at random. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -153,6 +152,7 @@
 | Steeple Roc | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Sunspire Gatekeepers | handled | When this creature enters, if you control two or more Gates, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tajic, Blade of the Legion | handled | Battalion — Whenever Tajic and at least two other creatures attack, Tajic gets +5/+5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tithe Drinker | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Turn // Burn | handled | Until end of turn, target creature loses all abilities and becomes a red Weird with base power and toughness 0/1. Fuse (You may cast one or both halves of this  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ubul Sar Gatekeepers | handled | When this creature enters, if you control two or more Gates, target creature an opponent controls gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Uncovered Clues | handled | Look at the top four cards of your library. You may reveal up to two instant and/or sorcery cards from among them and put the revealed cards into your hand. Put | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -182,7 +182,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| extort | 2 | Pontiff of Blight, Tithe Drinker | dgm |
 | unleash | 2 | Exava, Rakdos Blood Witch, Rakdos Drake | dgm |
 | all creatures able to block target creature ~ do so. fuse (you may cast one or both halves of ~ from your hand.) | 1 | Armed // Dangerous | dgm |
 | as long as you have N or more life and an opponent has N or less life, ~ gets +N/+N and has flying. | 1 | Blood Baron of Vizkopa | dgm |
@@ -210,6 +209,7 @@
 | multicolored creatures you control have haste. | 1 | Maze Rusher | dgm |
 | multicolored creatures you control have trample. | 1 | Maze Behemoth | dgm |
 | multicolored creatures you control have vigilance. | 1 | Maze Sentinel | dgm |
+| other creatures you control have extort. | 1 | Pontiff of Blight | dgm |
 | overload | 1 | Weapon Surge | dgm |
 | play with the top card of your library revealed. | 1 | Melek, Izzet Paragon | dgm |
 | populate. (create a token that's a copy of a creature token you control.) | 1 | Wake the Reflections | dgm |
@@ -218,7 +218,6 @@
 | red creatures you control get +N/+N. | 1 | Legion's Initiative | dgm |
 | return each creature that dealt damage ~ to its owner's hand. | 1 | Restore the Peace | dgm |
 | return target creature card from your graveyard to your hand. ~ deals damage to any target equal to the power of the card returned ~. | 1 | Morgue Burst | dgm |
-| ruric thar attacks each combat if able. | 1 | Ruric Thar, the Unbowed | dgm |
 | scavenge | 1 | Thrashing Mossdog | dgm |
 | target creature gets +N/-N until end of turn, where N is the number of cards in your hand. | 1 | Warped Physique | dgm |
 | target opponent reveals their hand. you choose up to N nonland cards from it and exile them. for each card exiled ~, search that player's graveyard, hand, and l | 1 | Reap Intellect | dgm |

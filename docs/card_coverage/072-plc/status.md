@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 3.7% |
-| Works (untested) | 56 | 34.6% |
+| Tested | 9 | 5.6% |
+| Works (untested) | 54 | 33.3% |
 | Partial (unaudited) | 13 | 8.0% |
-| Not working | 87 | 53.7% |
+| Not working | 86 | 53.1% |
 
 ## Cards needing work
 
@@ -37,7 +37,7 @@
 | Calciderm | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Chronozoa | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crovax, Ascendant Hero | silent | Other white creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dash Hopes | silent | When you cast this spell, any player may pay 5 life. If a player does, counter Dash Hopes. Counter target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Dash Hopes | silent | When you cast this spell, any player may pay 5 life. If a player does, counter Dash Hopes. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deadly Grub | silent | When this creature dies, if it had no time counters on it, create a 6/1 green Insect creature token with shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deadwood Treefolk | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Detritivore | silent | Detritivore's power and toughness are each equal to the number of nonbasic land cards in your opponents' graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,7 +71,6 @@
 | Pallid Mycoderm | silent | Sacrifice a Saproling: Each creature you control that's a Fungus or a Saproling gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phantasmagorian | silent | When you cast this spell, any player may discard three cards. If a player does, counter Phantasmagorian. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Porphyry Nodes | silent | At the beginning of your upkeep, destroy the creature with the least power. It can't be regenerated. If two or more creatures are tied for least power, you choo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pyrohemia | silent | {R}: This enchantment deals 1 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reality Acid | silent | When this Aura leaves the battlefield, enchanted permanent's controller sacrifices it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rebuff the Wicked | silent | Counter target spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reflex Sliver | silent | All Sliver creatures have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,7 +90,7 @@
 | Stormfront Riders | silent | When this creature enters, return two creatures you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sulfur Elemental | silent | White creatures get +1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synchronous Sliver | silent | All Sliver creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Temporal Extortion | silent | When you cast this spell, any player may pay half their life, rounded up. If a player does, counter Temporal Extortion. Take an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Temporal Extortion | silent | When you cast this spell, any player may pay half their life, rounded up. If a player does, counter Temporal Extortion. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Teneb, the Harvester | silent | Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tidewalker | silent | Tidewalker's power and toughness are each equal to the number of time counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timbermare | silent | When this creature enters, tap all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -137,7 +136,6 @@
 | Damnation | handled | Destroy all creatures. They can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dead // Gone | handled | Dead deals 2 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamscape Artist | handled | {2}{U}, {T}, Discard a card, Sacrifice a land: Search your library for up to two basic land cards, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Dunerider Outlaw | handled | At the beginning of each end step, if this creature dealt damage to an opponent this turn, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Warden | handled | Whenever another creature enters, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evolution Charm | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Return target creature card from your graveyard to y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaea's Anthem | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -151,7 +149,6 @@
 | Keen Sense | handled | Whenever enchanted creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Bazaar | handled | {T}: Draw two cards, then discard three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Coffers | handled |  |  | Y/-/- | not_tested |
-| Magus of the Library | handled | {T}: Draw a card. Activate only if you have exactly seven cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Malach of the Dawn | handled | {W}{W}{W}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mana Tithe | handled | Counter target spell unless its controller pays {1}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mesa Enchantress | handled | Whenever you cast an enchantment spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -186,11 +183,14 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>9 cards</summary>
 
 - Aether Membrane
 - Cradle to Grave
+- Dunerider Outlaw
 - Harmonize
+- Magus of the Library
+- Pyrohemia
 - Rough // Tumble
 - Sunlance
 - Urborg, Tomb of Yawgmoth
@@ -247,8 +247,8 @@
 | when the last time counter is removed from ~ while it"..."t be blocked ~. | 1 | Veiling Oddity | plc |
 | when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
 | when you cast ~, any player may discard three cards. if a player does, counter ~. | 1 | Phantasmagorian | plc |
-| when you cast ~, any player may pay N life. if a player does, counter ~. counter target spell. | 1 | Dash Hopes | plc |
-| when you cast ~, any player may pay half their life, rounded up. if a player does, counter ~. take an extra turn after ~. | 1 | Temporal Extortion | plc |
+| when you cast ~, any player may pay N life. if a player does, counter ~. | 1 | Dash Hopes | plc |
+| when you cast ~, any player may pay half their life, rounded up. if a player does, counter ~. | 1 | Temporal Extortion | plc |
 | when you cast ~, any player may sacrifice a creature of their choice. if a player does, counter ~. | 1 | Brain Gorgers | plc |
 | when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
 | when ~ dies, if it had no time counters on it, create a N/N green insect creature token with shroud. | 1 | Deadly Grub | plc |
@@ -276,7 +276,6 @@
 | {M}: draw a card and reveal it. if it isn't a land card, discard it. | 1 | Fa'adiyah Seer | plc |
 | {M}: switch target creature's power and toughness until end of turn. | 1 | Merfolk Thaumaturgist | plc |
 | {M}: until end of turn, ~ gets -N/-N and gains your choice of double strike, protection from red, vigilance, or shadow. | 1 | Jodah's Avenger | plc |
-| {M}: ~ deals N damage to each creature and each player. | 1 | Pyrohemia | plc |
 | {M}{M}, {M}, discard a card: target creature can't be blocked ~ except by artifact creatures and/or red creatures. | 1 | Firefright Mage | plc |
 | {M}{M}: exile ~. | 1 | Molten Firebird | plc |
 | {M}{M}{M}, {M}, discard a card: you gain N life for each card in your hand. | 1 | Sophic Centaur | plc |

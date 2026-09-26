@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 3.6% |
-| Works (untested) | 132 | 59.2% |
+| Works (untested) | 133 | 59.6% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 74 | 33.2% |
+| Not working | 73 | 32.7% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Excommunicate | silent | Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godsire | silent | {T}: Create an 8/8 Beast creature token that's red, green, and white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Godtoucher | silent | {1}{W}, {T}: Prevent all damage that would be dealt to target creature with power 5 or greater this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grixis Battlemage | silent | {R}, {T}: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guardians of Akrasa | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hindering Light | silent | Counter target spell that targets you or a permanent you control. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Immortal Coil | silent | When there are no cards in your graveyard, you lose the game. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -154,6 +153,7 @@
 | Gift of the Gargantuan | handled | Look at the top four cards of your library. You may reveal a creature card and/or a land card from among them and put the revealed cards into your hand. Put the | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glaze Fiend | handled | Whenever another artifact you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Deathraiders | handled | Trample | machines/combat.py | Y/-/- | not_tested |
+| Grixis Battlemage | handled | {U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grixis Charm | handled | Choose one — • Return target permanent to its owner's hand. • Target creature gets -4/-4 until end of turn. • Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grixis Panorama | handled | {1}, {T}, Sacrifice this land: Search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hell's Thunder | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -313,7 +313,6 @@
 | you may sacrifice three artifacts rather than pay ~ mana cost. | 1 | Salvage Titan | ala |
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
 | {M}, {M}: prevent the next N damage that would be dealt to you ~. | 1 | Esper Battlemage | ala |
-| {M}, {M}: target creature can't block ~. | 1 | Grixis Battlemage | ala |
 | {M}, {M}: ~ deals damage equal to its power to target creature. that creature deals damage equal to its power to ~. | 1 | Vein Drinker | ala |
 | {M}: create an N/N beast creature token that's red, green, and white. | 1 | Godsire | ala |
 | {M}: reveal any number of creature cards with power N or greater from your hand. add {M} for each card revealed ~. | 1 | Sacellum Godspeaker | ala |

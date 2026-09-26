@@ -3,13 +3,13 @@
 - Expansion: 236
 - Set code: `j22`
 - Release date: 2022-12-02
-- Cards in scope (Modern/Pioneer/Standard-legal): 5
+- Cards in scope (Modern/Pioneer/Standard-legal): 6
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 5 |
+| Modern | 6 |
 | Pioneer | 4 |
 | Standard | 4 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
-| Works (untested) | 3 | 60.0% |
+| Tested | 1 | 16.7% |
+| Works (untested) | 3 | 50.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 2 | 40.0% |
+| Not working | 2 | 33.3% |
 
 ## Cards needing work
 
@@ -35,8 +35,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Ophiomancer
 
 </details>
 

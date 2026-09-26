@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 7.9% |
-| Works (untested) | 98 | 37.0% |
+| Tested | 24 | 9.1% |
+| Works (untested) | 95 | 35.8% |
 | Partial (unaudited) | 18 | 6.8% |
 | Not working | 128 | 48.3% |
 
@@ -69,7 +69,7 @@
 | Grievous Wound | silent | Whenever enchanted player is dealt damage, they lose half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Growing Dread | silent | Whenever you turn a permanent face up, put a +1/+1 counter on it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Hauntwoods Shrieker | silent | {1}{G}: Reveal target face-down permanent. If it's a creature card, you may turn it face up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hedge Shredder | silent | Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
+| Hedge Shredder | silent | Whenever one or more land cards are put into your graveyard from your library, put them onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Impossible Inferno | silent | Impossible Inferno deals 6 damage to target creature. Delirium — If there are four or more card types among cards in your graveyard, exile the top card of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Phantom | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, this creature gets +2/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Keys to the House | silent | {3}, {T}, Sacrifice this artifact: Lock or unlock a door of target Room you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -204,14 +204,12 @@
 | Fear of Lost Teeth | handled | When this creature dies, it deals 1 damage to any target and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Missing Out | handled | When this creature enters, discard a card, then draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Surveillance | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Fear of the Dark | handled | Whenever this creature attacks, if defending player controls no Glimmer creatures, it gains menace and deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Final Vengeance | handled | As an additional cost to cast this spell, sacrifice a creature or enchantment. Exile target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flesh Burrower | handled | Whenever this creature attacks, another target creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Floodfarm Verge | handled |  |  | Y/Y/Y | not_tested |
 | Frantic Strength | handled | Enchanted creature gets +2/+2 and has trample. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Friendly Ghost | handled | When this creature enters, target creature gets +2/+4 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Friendly Teddy | handled | When this creature dies, each player draws a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Gloomlake Verge | handled |  |  | Y/Y/Y | not_tested |
 | Grab the Prize | handled | As an additional cost to cast this spell, discard a card. Draw two cards. If the discarded card wasn't a land card, Grab the Prize deals 2 damage to each oppone | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Grasping Longneck | handled | When this creature dies, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hand That Feeds | handled | Delirium — Whenever this creature attacks while there are four or more card types among cards in your graveyard, it gets +2/+0 and gains menace until end of tur | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,7 +254,6 @@
 | Spectral Snatcher | handled | Landcycling | machines/keywords.py | Y/Y/Y | not_tested |
 | Splitskin Doll | handled | When this creature enters, draw a card. Then discard a card unless you control another creature with power 2 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Strangled Cemetery | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Thornspire Verge | handled |  |  | Y/Y/Y | not_tested |
 | Threats Around Every Corner | handled | When this enchantment enters, manifest dread. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Trapped in the Screen | handled | When this enchantment enters, exile target artifact, creature, or enchantment an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twist Reality | handled | Choose one — • Counter target spell. • Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and  | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -274,7 +271,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>24 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
@@ -284,7 +281,9 @@
 - Drag to the Roots
 - Enduring Curiosity
 - Enduring Innocence
+- Fear of the Dark
 - Give In to Violence
+- Gloomlake Verge
 - Kaito, Bane of Nightmares
 - Kona, Rescue Beastie
 - Lakeside Shack
@@ -294,6 +293,7 @@
 - Overlord of the Mistmoors
 - Screaming Nemesis
 - The Mindskinner
+- Thornspire Verge
 - Tyvar, the Pummeler
 - Unable to Scream
 - Violent Urge

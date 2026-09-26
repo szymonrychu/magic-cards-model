@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 54 | 38.0% |
-| Partial (unaudited) | 9 | 6.3% |
-| Not working | 68 | 47.9% |
+| Works (untested) | 58 | 40.8% |
+| Partial (unaudited) | 15 | 10.6% |
+| Not working | 58 | 40.8% |
 
 ## Cards needing work
 
@@ -34,18 +34,14 @@
 | Avenger of Zendikar | silent | Landfall — Whenever a land you control enters, you may put a +1/+1 counter on each Plant creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bazaar Trader | silent | {T}: Target player gains control of target artifact, creature, or land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodhusk Ritualist | silent | When this creature enters, target opponent discards a card for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Brink of Disaster | silent | When enchanted permanent becomes tapped, destroy it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Brink of Disaster | silent | When enchanted permanent becomes tapped, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Calcite Snapper | silent | Landfall — Whenever a land you control enters, you may switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Caustic Crawler | silent | Landfall — Whenever a land you control enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chain Reaction | silent | Chain Reaction deals X damage to each creature, where X is the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Claws of Valakut | silent | Enchanted creature gets +1/+0 for each Mountain you control and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Comet Storm | silent | Multikicker {1} (You may pay an additional {1} any number of times as you cast this spell.) Choose any target, then choose another target for each time this spe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Corrupted Zendikon | silent | When enchanted land dies, return that card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crusher Zendikon | silent | When enchanted land dies, return that card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dead Reckoning | silent | You may put target creature card from your graveyard on top of your library. If you do, Dead Reckoning deals damage equal to that card's power to target creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deathforge Shaman | silent | When this creature enters, it deals damage to target player or planeswalker equal to twice the number of times it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Grotag Thrasher | silent | Whenever this creature attacks, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Guardian Zendikon | silent | When enchanted land dies, return that card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halimar Excavator | silent | Whenever this creature or another Ally you control enters, target player mills X cards, where X is the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harabaz Druid | silent | {T}: Add X mana of any one color, where X is the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Joraga Warcaller | silent | Other Elf creatures you control get +1/+1 for each +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -56,29 +52,23 @@
 | Lightkeeper of Emeria | silent | When this creature enters, you gain 2 life for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mire's Toll | silent | Target player reveals a number of cards from their hand equal to the number of Swamps you control. You choose one of them. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Novablast Wurm | silent | Whenever this creature attacks, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Quest for Renewal | silent | Whenever a creature you control becomes tapped, you may put a quest counter on this enchantment. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Quest for Ula's Temple | silent | At the beginning of your upkeep, you may look at the top card of your library. If it's a creature card, you may reveal it and put a quest counter on this enchan | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for the Nihil Stone | silent | At the beginning of each opponent's upkeep, if that player has no cards in hand and this enchantment has two or more quest counters on it, you may have that pla | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raging Ravine | silent | {2}{R}{G}: Until end of turn, this land becomes a 3/3 red and green Elemental creature with "Whenever this creature attacks, put a +1/+1 counter on it." It's st | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Refraction Trap | silent | If an opponent cast a red instant or sorcery spell this turn, you may pay {W} rather than pay this spell's mana cost. Prevent the next 3 damage that a source of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rumbling Aftershocks | silent | Whenever you cast a kicked spell, you may have this enchantment deal damage to any target equal to the number of times that spell was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scrib Nibblers | silent | {T}: Exile the top card of target player's library. If it's a land card, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sejiri Merfolk | silent | As long as you control a Plains, this creature has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Selective Memory | silent | Search your library for any number of nonland cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slavering Nulls | silent | Whenever this creature deals combat damage to a player, if you control a Swamp, you may have that player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Smoldering Spires | silent | When this land enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spell Contortion | silent | Multikicker {1}{U} (You may pay an additional {1}{U} any number of times as you cast this spell.) Counter target spell unless its controller pays {2}. Draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stone Idol Trap | silent | This spell costs {1} less to cast for each attacking creature. Create a 6/12 colorless Construct artifact creature token with trample. Exile it at the beginning | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strength of the Tajuru | silent | Multikicker {1} (You may pay an additional {1} any number of times as you cast this spell.) Choose target creature, then choose another target creature for each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Summit Apes | silent | As long as you control a Mountain, this creature has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Talus Paladin | silent | Whenever this creature or another Ally you control enters, you may have Allies you control gain lifelink until end of turn, and you may put a +1/+1 counter on t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Terastodon | silent | When this creature enters, you may destroy up to three target noncreature permanents. For each permanent put into a graveyard this way, its controller creates a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treasure Hunt | silent | Reveal cards from the top of your library until you reveal a nonland card, then put all cards revealed this way into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vapor Snare | silent | At the beginning of your upkeep, sacrifice this Aura unless you return a land you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vastwood Animist | silent | {T}: Target land you control becomes an X/X Elemental creature until end of turn, where X is the number of Allies you control. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vastwood Zendikon | silent | When enchanted land dies, return that card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Voyager Drake | silent | When this creature enters, up to X target creatures gain flying until end of turn, where X is the number of times this creature was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Wind Zendikon | silent | When enchanted land dies, return that card to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolfbriar Elemental | silent | When this creature enters, create a 2/2 green Wolf creature token for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrexial, the Risen Deep | silent | Whenever Wrexial deals combat damage to a player, you may cast target instant or sorcery card from that player's graveyard without paying its mana cost. If that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death's Shadow | notice | This creature gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -97,12 +87,18 @@
 | Abyssal Persecutor | unaudited | You can't win the game and your opponents can't lose the game. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Apex Hawks | unaudited | This creature enters with a +1/+1 counter on it for each time it was kicked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Canopy Cover | unaudited | Enchanted creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Corrupted Zendikon | unaudited | Enchanted land is a 3/3 black Ooze creature. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Crusher Zendikon | unaudited | Enchanted land is a 4/2 red Beast creature with trample. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Enclave Elite | unaudited | This creature enters with a +1/+1 counter on it for each time it was kicked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Everflowing Chalice | unaudited | This artifact enters with a charge counter on it for each time it was kicked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gnarlid Pack | unaudited | This creature enters with a +1/+1 counter on it for each time it was kicked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Guardian Zendikon | unaudited | Enchanted land is a 2/6 white Wall creature with defender. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Quag Vampires | unaudited | This creature enters with a +1/+1 counter on it for each time it was kicked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Quest for Renewal | unaudited | As long as there are four or more quest counters on this enchantment, untap all creatures you control during each other player's untap step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Skitter of Lizards | unaudited | This creature enters with a +1/+1 counter on it for each time it was kicked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Terra Eternal | unaudited | All lands have indestructible. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Vastwood Zendikon | unaudited | Enchanted land is a 6/4 green Elemental creature. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Wind Zendikon | unaudited | Enchanted land is a 2/2 blue Elemental creature with flying. It's still a land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Anowon, the Ruin Sage | handled | At the beginning of your upkeep, each player sacrifices a non-Vampire creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arbor Elf | handled | {T}: Untap target Forest. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Basilisk Collar | handled | Equipped creature has deathtouch and lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -121,6 +117,7 @@
 | Goliath Sphinx | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Grappler Spider | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Graypelt Hunter | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Grotag Thrasher | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Groundswell | handled | Target creature gets +2/+2 until end of turn. Landfall — If you had a land enter the battlefield under your control this turn, that creature gets +4/+4 until en | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hada Freeblade | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Halimar Depths | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -146,12 +143,15 @@
 | Rest for the Weary | handled | Target player gains 4 life. Landfall — If you had a land enter the battlefield under your control this turn, that player gains 8 life instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ruin Ghost | handled | {W}, {T}: Exile target land you control, then return it to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seer's Sundial | handled | Landfall — Whenever a land you control enters, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sejiri Merfolk | handled | As long as you control a Plains, this creature has first strike and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sejiri Steppe | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shoreline Salvager | handled | Whenever this creature deals combat damage to a player, if you control an Island, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slingbow Trap | handled | If a black creature with flying is attacking, you may pay {G} rather than pay this spell's mana cost. Destroy target attacking creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Smoldering Spires | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Snapping Creeper | handled | Landfall — Whenever a land you control enters, this creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stirring Wildwood | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stoneforge Mystic | handled | When this creature enters, you may search your library for an Equipment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Summit Apes | handled | As long as you control a Mountain, this creature has menace. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surrakar Banisher | handled | When this creature enters, you may return target tapped creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tideforce Elemental | handled | {U}, {T}: You may tap or untap another target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tomb Hex | handled | Target creature gets -2/-2 until end of turn. Landfall — If you had a land enter the battlefield under your control this turn, that creature gets -4/-4 until en | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -181,13 +181,11 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| when enchanted land dies, return that card to its owner's hand. | 5 | Corrupted Zendikon, Crusher Zendikon, Guardian Zendikon, Vastwood Zendikon, Wind Zendikon | wwk |
 | ~ enters with a +N/+N counter on it for each time it was kicked. | 5 | Apex Hawks, Enclave Elite, Gnarlid Pack, Quag Vampires, Skitter of Lizards | wwk |
 | Landfall | 3 | Avenger of Zendikar, Calcite Snapper, Caustic Crawler | wwk |
 | +N: look at the top card of target player"..."s library. | 1 | Jace, the Mind Sculptor | wwk |
 | all lands have indestructible. | 1 | Terra Eternal | wwk |
-| as long as you control a mountain, ~ has menace. | 1 | Summit Apes | wwk |
-| as long as you control a plains, ~ has first strike and lifelink. | 1 | Sejiri Merfolk | wwk |
+| as long as there are four or more quest counters on ~, untap all creatures you control during each other player's untap step. | 1 | Quest for Renewal | wwk |
 | as long as ~ has five or more quest counters on it, creatures you control get +N/+N. | 1 | Quest for the Goblin Lord | wwk |
 | as long as ~ is equipped, it gets +N/+N and has flying. | 1 | Kitesail Apprentice | wwk |
 | at the beginning of each opponent's upkeep, if that player has no cards in hand and ~ has two or more quest counters on it, you may have that player lose N life | 1 | Quest for the Nihil Stone | wwk |
@@ -197,6 +195,11 @@
 | destroy target land, then ~ deals damage to that land"..."s graveyard. | 1 | Roiling Terrain | wwk |
 | enchanted creature can't be blocked except by creatures with flying or reach. | 1 | Canopy Cover | wwk |
 | enchanted creature gets +N/+N for each mountain you control and has first strike. | 1 | Claws of Valakut | wwk |
+| enchanted land is a N/N black ooze creature. it's still a land. | 1 | Corrupted Zendikon | wwk |
+| enchanted land is a N/N blue elemental creature with flying. it's still a land. | 1 | Wind Zendikon | wwk |
+| enchanted land is a N/N green elemental creature. it's still a land. | 1 | Vastwood Zendikon | wwk |
+| enchanted land is a N/N red beast creature with trample. it's still a land. | 1 | Crusher Zendikon | wwk |
+| enchanted land is a N/N white wall creature with defender. it's still a land. | 1 | Guardian Zendikon | wwk |
 | if a white creature is attacking, you may pay {M}{M} rather than pay ~ mana cost. exile target attacking creature. create a token that's a copy of that creature | 1 | Nemesis Trap | wwk |
 | if an opponent cast a red instant or sorcery spell ~, you may pay {M} rather than pay ~ mana cost. prevent the next N damage that a source of your choice would  | 1 | Refraction Trap | wwk |
 | multikicker {M} (you may pay an additional {M} any number of times as you cast ~.) choose any target, then choose another target for each time ~ was kicked. ~ d | 1 | Comet Storm | wwk |
@@ -212,19 +215,16 @@
 | when enchanted permanent becomes tapped, destroy it. | 1 | Brink of Disaster | wwk |
 | when ~ enters, create a N/N green wolf creature token for each time it was kicked. | 1 | Wolfbriar Elemental | wwk |
 | when ~ enters, it deals damage to target player or planeswalker equal to twice the number of times it was kicked. | 1 | Deathforge Shaman | wwk |
-| when ~ enters, target creature can't block ~. | 1 | Smoldering Spires | wwk |
 | when ~ enters, target opponent discards a card for each time it was kicked. | 1 | Bloodhusk Ritualist | wwk |
 | when ~ enters, up to N target creatures gain flying until end of turn, where N is the number of times ~ was kicked. | 1 | Voyager Drake | wwk |
 | when ~ enters, you gain N life for each time it was kicked. | 1 | Lightkeeper of Emeria | wwk |
 | when ~ enters, you may destroy up to three target noncreature permanents. for each permanent put into a graveyard ~, its controller creates a N/N green elephant | 1 | Terastodon | wwk |
 | when ~ leaves the battlefield, return all cards exiled with it to the battlefield under their owners' control. | 1 | Admonition Angel | wwk |
 | whenever a creature an opponent controls attacks, if you"..."s controller pays {M}. | 1 | Kazuul, Tyrant of the Cliffs | wwk |
-| whenever a creature you control becomes tapped, you may put a quest counter on ~. | 1 | Quest for Renewal | wwk |
 | whenever thada adel deals combat damage to a player, search that player's library for an artifact card and exile it. then that player shuffles. until end of tur | 1 | Thada Adel, Acquisitor | wwk |
 | whenever wrexial deals combat damage to a player, you may cast target instant or sorcery card from that player's graveyard without paying its mana cost. if that | 1 | Wrexial, the Risen Deep | wwk |
 | whenever you cast a kicked spell, you may have ~ deal damage to any target equal to the number of times that spell was kicked. | 1 | Rumbling Aftershocks | wwk |
 | whenever ~ attacks, destroy all other creatures. | 1 | Novablast Wurm | wwk |
-| whenever ~ attacks, target creature can't block ~. | 1 | Grotag Thrasher | wwk |
 | whenever ~ deals combat damage to a player, if you control a swamp, you may have that player discard a card. | 1 | Slavering Nulls | wwk |
 | whenever ~ deals combat damage to a player, you may have it deal that much damage to target creature that player controls. | 1 | Mordant Dragon | wwk |
 | whenever ~ or another ally you control enters, target player mills N cards, where N is the number of allies you control. | 1 | Halimar Excavator | wwk |

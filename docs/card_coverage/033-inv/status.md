@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 6.8% |
-| Works (untested) | 31 | 70.5% |
+| Tested | 4 | 9.1% |
+| Works (untested) | 30 | 68.2% |
 | Partial (unaudited) | 2 | 4.5% |
 | Not working | 8 | 18.2% |
 
@@ -60,7 +60,6 @@
 | Rogue Kavu | handled | Whenever this creature attacks alone, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Salt Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shivan Oasis | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Skizzik | handled | At the beginning of the end step, if this creature wasn't kicked, sacrifice it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sky Weaver | handled | {2}: Target white or black creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spirit Weaver | handled | {2}: Target green or blue creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tower Drake | handled | {W}: This creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -71,10 +70,11 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
 - Chromatic Sphere
 - Opt
+- Skizzik
 - Tribal Flames
 
 </details>

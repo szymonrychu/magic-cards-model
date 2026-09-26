@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 3.9% |
+| Tested | 12 | 5.2% |
 | Works (untested) | 129 | 55.4% |
 | Partial (unaudited) | 6 | 2.6% |
-| Not working | 89 | 38.2% |
+| Not working | 86 | 36.9% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Blood Operative | silent | Whenever you surveil, if this card is in your graveyard, you may pay 3 life. If you do, return this card to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Book Devourer | silent | Whenever this creature deals combat damage to a player, you may discard all the cards in your hand. If you do, draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boros Challenger | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Centaur Peacemaker | silent | When this creature enters, each player gains 4 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chance for Glory | silent | Creatures you control gain indestructible. Take an extra turn after this one. At the beginning of that turn's end step, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charnel Troll | silent | At the beginning of your upkeep, exile a creature card from your graveyard. If you do, put a +1/+1 counter on this creature. Otherwise, sacrifice it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chemister's Insight | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -88,8 +87,6 @@
 | Ral, Izzet Viceroy | silent | −3: Ral deals damage to target creature equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Risk Factor | silent | Target opponent may have Risk Factor deal 4 damage to them. If that player doesn't, you draw three cards. Jump-start (You may cast this card from your graveyard | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Selective Snare | silent | Return X target creatures of the creature type of your choice to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skyline Scout | silent | Whenever this creature attacks, you may pay {1}{W}. If you do, it gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Smelt-Ward Minotaur | silent | Whenever you cast an instant or sorcery spell, target creature an opponent controls can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sonic Assault | silent | Jump | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Street Riot | silent | During your turn, creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunhome Stalwart | silent | Mentor | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -134,6 +131,7 @@
 | Burglar Rat | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candlelight Vigil | handled | Enchanted creature gets +3/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Capture Sphere | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Centaur Peacemaker | handled | When this creature enters, each player gains 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citywatch Sphinx | handled | When this creature dies, surveil 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citywide Bust | handled | Destroy all creatures with toughness 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Collar the Culprit | handled | Destroy target creature with toughness 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,7 +173,6 @@
 | Haazda Marshal | handled | Whenever this creature and at least two other creatures attack, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Healer's Hawk | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Hellkite Whelp | handled | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Hired Poisoner | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Hunted Witness | handled | When this creature dies, create a 1/1 white Soldier creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hypothesizzle | handled | Draw two cards. Then you may discard a nonland card. When you do, Hypothesizzle deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inescapable Blaze | handled | This spell can't be countered. Inescapable Blaze deals 6 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -189,7 +186,6 @@
 | Kraul Raider | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Kraul Swarm | handled | {2}{B}, Discard a creature card: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lava Coil | handled | Lava Coil deals 4 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Lazav, the Multifarious | handled | When Lazav enters, surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ledev Guardian | handled | Convoke | machines/keywords.py | Y/Y/- | not_tested |
 | Legion Guildmage | handled | {5}{R}, {T}: This creature deals 3 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loxodon Restorer | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -223,6 +219,7 @@
 | Severed Strands | handled | As an additional cost to cast this spell, sacrifice a creature. You gain life equal to the sacrificed creature's toughness. Destroy target creature an opponent  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silent Dart | handled | {4}, {T}, Sacrifice this artifact: It deals 3 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sinister Sabotage | handled | Counter target spell. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Smelt-Ward Minotaur | handled | Whenever you cast an instant or sorcery spell, target creature an opponent controls can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spinal Centipede | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sprouting Renewal | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose one  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Status // Statue | handled | Target creature gets +1/+1 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,16 +251,19 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>12 cards</summary>
 
 - Arclight Phoenix
 - Assassin's Trophy
 - Conclave Tribunal
 - Deafening Clarion
 - Divine Visitation
+- Hired Poisoner
 - Kraul Harpooner
+- Lazav, the Multifarious
 - Lotleth Giant
 - Rhizome Lurcher
+- Skyline Scout
 - Wand of Vertebrae
 
 </details>
@@ -311,7 +311,6 @@
 | target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. | 1 | Never Happened | grn |
 | untap all creatures you control. they gain hexproof and indestructible until end of turn. (they can"..."t destroy them.) | 1 | Join Shields | grn |
-| when ~ enters, each player gains N life. | 1 | Centaur Peacemaker | grn |
 | when ~ enters, each player sacrifices a creature or planeswalker of their choice. each player who can't discards a card. | 1 | Plaguecrafter | grn |
 | when ~ enters, mill three cards. you may put a land card from your graveyard on top of your library. | 1 | Glowspore Shaman | grn |
 | when ~ enters, put a +N/+N counter on each creature that convoked it. | 1 | Venerated Loxodon | grn |
@@ -323,13 +322,11 @@
 | whenever etrata deals combat damage to a player, exile target creature that player controls and put a hit counter on that card. that player loses the game if th | 1 | Etrata, the Silencer | grn |
 | whenever you cast an instant or sorcery spell that targets only ~, if you control one or more other creatures that spell could target, choose one of those creat | 1 | Beamsplitter Mage | grn |
 | whenever you cast an instant or sorcery spell, copy it for each other instant and sorcery spell you've cast before it ~. you may choose new targets for the copi | 1 | Thousand-Year Storm | grn |
-| whenever you cast an instant or sorcery spell, target creature an opponent controls can't block ~. | 1 | Smelt-Ward Minotaur | grn |
 | whenever you cast an instant or sorcery spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Erratic Cyclops | grn |
 | whenever you surveil, if ~ is in your graveyard, you may pay N life. if you do, return ~ to your hand. | 1 | Blood Operative | grn |
 | whenever ~ attacks, creatures with defender can't block ~. | 1 | Goblin Locksmith | grn |
 | whenever ~ attacks, if you control a ral planeswalker, ~ gets +N/+N for each card in your hand until end of turn. | 1 | Ral's Staticaster | grn |
 | whenever ~ attacks, it deals N damage to each creature defending player controls. | 1 | Swathcutter Giant | grn |
-| whenever ~ attacks, you may pay {M}{M}. if you do, it gains flying until end of turn. | 1 | Skyline Scout | grn |
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Ledev Champion | grn |
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Ornery Goblin | grn |
 | whenever ~ deals combat damage to a player, look at the top three cards of that player's library, exile one of them face down, then put the rest into their grav | 1 | Thief of Sanity | grn |

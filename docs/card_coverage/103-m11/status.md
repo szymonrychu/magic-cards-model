@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 12.4% |
-| Works (untested) | 58 | 55.2% |
-| Partial (unaudited) | 8 | 7.6% |
+| Works (untested) | 59 | 56.2% |
+| Partial (unaudited) | 7 | 6.7% |
 | Not working | 26 | 24.8% |
 
 ## Cards needing work
@@ -58,7 +58,6 @@
 | Fire Servant | unaudited | If a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gaea's Revenge | unaudited | This creature can't be the target of nongreen spells or abilities from nongreen sources. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Harbor Serpent | unaudited | This creature can't attack unless there are five or more Islands on the battlefield. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Leyline of Anticipation | unaudited | You may cast spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Obstinate Baloth | unaudited | If a spell or ability an opponent controls causes you to discard this card, put it onto the battlefield instead of putting it into your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Air Servant | handled | {2}{U}: Tap target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Pridemate | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -89,6 +88,7 @@
 | Hornet Sting | handled | Hornet Sting deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inspired Charge | handled | Creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jace's Ingenuity | handled | Draw three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Leyline of Anticipation | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leyline of Vitality | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Liliana's Caress | handled | Whenever an opponent discards a card, that player loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Liliana's Specter | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,7 +166,6 @@
 | whenever ~ attacks, each player chooses a card name. then each player reveals the top card of their library. if the card a player revealed has the name they cho | 1 | Conundrum Sphinx | m11 |
 | whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
-| you may cast spells as though they had flash. | 1 | Leyline of Anticipation | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |
 | you may pay N life and sacrifice three black creatures rather than pay ~ mana cost. | 1 | Demon of Death's Gate | m11 |
 | {M}, {M}: exile target attacking creature an opponent controls. at the beginning of the next end step, return it to the battlefield tapped under its owner's con | 1 | Mystifying Maze | m11 |

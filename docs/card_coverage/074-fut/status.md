@@ -10,17 +10,17 @@
 | Format | Legal cards |
 |---|---|
 | Modern | 178 |
-| Pioneer | 7 |
-| Standard | 1 |
+| Pioneer | 8 |
+| Standard | 2 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 7.3% |
-| Works (untested) | 61 | 34.3% |
+| Tested | 17 | 9.6% |
+| Works (untested) | 59 | 33.1% |
 | Partial (unaudited) | 19 | 10.7% |
-| Not working | 85 | 47.8% |
+| Not working | 83 | 46.6% |
 
 ## Cards needing work
 
@@ -38,9 +38,8 @@
 | Chronomantic Escape | silent | Until your next turn, creatures can't attack you. Exile Chronomantic Escape with three time counters on it. Suspend 3—{2}{W} (Rather than cast this card from yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudseeder | silent | {U}, {T}, Discard a card: Create a 1/1 blue Faerie creature token named Cloud Sprite. It has flying and "This token can block only creatures with flying." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Coalition Relic | silent | At the beginning of your first main phase, remove all charge counters from this artifact. Add one mana of any color for each charge counter removed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Darksteel Garrison | silent | Whenever fortified land becomes tapped, target creature gets +1/+1 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Darksteel Garrison | silent | Fortify | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Deepcavern Imp | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Edge of Autumn | silent | If you control four or fewer lands, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Cycling—Sacrifice a land. (Sacr | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Epochrasite | silent | When this creature dies, exile it with three time counters on it and it gains suspend. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fatal Attraction | silent | When this Aura enters, it deals 2 damage to enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fleshwrither | silent | Transfigure | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -74,7 +73,7 @@
 | Nix | silent | Counter target spell if no mana was spent to cast it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oriss, Samite Guardian | silent | {T}: Prevent all damage that would be dealt to target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phosphorescent Feast | silent | Chroma — Reveal any number of cards in your hand. You gain 2 life for each green mana symbol in those cards' mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pooling Venom | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
+| Pooling Venom | silent | Whenever enchanted land becomes tapped, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Putrid Cyclops | silent | When this creature enters, scry 1, then reveal the top card of your library. This creature gets -X/-X until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quagnoth | silent | When a spell or ability an opponent controls causes you to discard this card, return it to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ravaging Riftwurm | silent | Vanishing | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -98,7 +97,6 @@
 | Sprout Swarm | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Steamflogger Boss | silent | Other Riggers you control get +1/+0 and have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stronghold Rats | silent | Shadow | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Tarox Bladewing | silent | Grandeur — Discard another card named Tarox Bladewing: Tarox Bladewing gets +X/+X until end of turn, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thunderblade Charge | silent | Thunderblade Charge deals 3 damage to any target. Whenever one or more creatures you control deal combat damage to a player, if this card is in your graveyard,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Veilstone Amulet | silent | Whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wrap in Vigor | silent | Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -130,17 +128,16 @@
 | Storm Entity | unaudited | This creature enters with a +1/+1 counter on it for each other spell cast this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Virulent Sliver | unaudited | All Sliver creatures have poisonous 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Yixlid Jailer | unaudited | Cards in graveyards lose all abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Augur of Skulls | handled | {1}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aven Augur | handled | Sacrifice this creature: Return up to two target creatures to their owners' hands. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blade of the Sixth Pride | handled |  |  | Y/-/- | not_tested |
 | Blind Phantasm | handled |  |  | Y/-/- | not_tested |
-| Bloodshot Trainee | handled | {T}: This creature deals 4 damage to target creature. Activate only if this creature's power is 4 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bonded Fetch | handled | {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Centaur Omenreader | handled | As long as this creature is tapped, creature spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Char-Rumbler | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cryptic Annelid | handled | When this creature enters, scry 1, then scry 2, then scry 3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Daybreak Coronet | handled | Enchanted creature gets +3/+3 and has first strike, vigilance, and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Death Rattle | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Destroy target nongreen creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Edge of Autumn | handled | If you control four or fewer lands, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Cycling—Sacrifice a land. (Sacr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emberwilde Augur | handled | Sacrifice this creature: It deals 3 damage to target player or planeswalker. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emblem of the Warmind | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Even the Odds | handled | Cast this spell only if you control fewer creatures than each opponent. Create three 1/1 white Soldier creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -149,13 +146,11 @@
 | Force of Savagery | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Foresee | handled | Scry 4, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gift of Granite | handled | Enchanted creature gets +0/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Grave Scrabbler | handled | When this creature enters, if its madness cost was paid, you may return target creature card from a graveyard to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Graven Cairns | handled |  |  | Y/-/- | not_tested |
 | Grinning Ignus | handled |  |  | Y/Y/- | not_tested |
 | Grove of the Burnwillows | handled |  |  | Y/-/- | not_tested |
 | Horizon Canopy | handled | {1}, {T}, Sacrifice this land: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ichor Slick | handled | Target creature gets -3/-3 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) Madness {3}{B} (If you discard this card, discard it into exile | the engine reads this text and performs it | Y/-/- | not_tested |
-| Keldon Megaliths | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Korlash, Heir to Blackblade | handled | Korlash's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Llanowar Augur | handled | Sacrifice this creature: Target creature gets +3/+3 and gains trample until end of turn. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lucent Liminid | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -181,6 +176,7 @@
 | Slaughter Pact | handled | Destroy target nonblack creature. At the beginning of your next upkeep, pay {2}{B}. If you don't, you lose the game. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sliversmith | handled | {1}, {T}, Discard a card: Create a 1/1 colorless Sliver artifact creature token named Metallic Sliver. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Take Possession | handled | You control enchanted permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Tarox Bladewing | handled | Grandeur — Discard another card named Tarox Bladewing: Tarox Bladewing gets +X/+X until end of turn, where X is its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thornweald Archer | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Tombstalker | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Unblinking Bleb | handled | Whenever this creature or another permanent is turned face up, you may scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,14 +191,18 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>17 cards</summary>
 
 - Akroma's Memorial
 - Arc Blade
+- Augur of Skulls
+- Bloodshot Trainee
 - Dakmor Salvage
 - Delay
 - Dryad Arbor
 - Glittering Wish
+- Grave Scrabbler
+- Keldon Megaliths
 - Logic Knot
 - Pact of Negation
 - Street Wraith
@@ -222,11 +222,11 @@
 | echo | 3 | Deepcavern Imp, Henchfiend of Ukor, Skizzik Surger | fut |
 | shadow | 3 | Augur il-Vec, Infiltrator il-Kor, Stronghold Rats | fut |
 | vanishing | 3 | Lost Auramancers, Ravaging Riftwurm, Soultether Golem | fut |
-| Grandeur | 2 | Linessa, Zephyr Mage, Tarox Bladewing | fut |
 | flanking | 2 | Bogardan Lancer, Knight of Sursi | fut |
 | Choose one | 1 | Dust of Moments | fut |
 | Chroma | 1 | Phosphorescent Feast | fut |
 | Forecast | 1 | Spirit en-Dal | fut |
+| Grandeur | 1 | Linessa, Zephyr Mage | fut |
 | all sliver creatures get +N/+N for each other sliver on the battlefield. | 1 | Sliver Legion | fut |
 | all sliver creatures have absorb N. | 1 | Lymph Sliver | fut |
 | all sliver creatures have frenzy N. | 1 | Frenzy Sliver | fut |
@@ -250,10 +250,10 @@
 | enchanted creature gets +N/+N and doesn"..."s untap step. | 1 | Leaden Fists | fut |
 | enchanted creature has poisonous N. | 1 | Snake Cult Initiation | fut |
 | fateseal | 1 | Mesmeric Sliver | fut |
+| fortify | 1 | Darksteel Garrison | fut |
 | graft | 1 | Llanowar Reborn | fut |
 | if an instant or sorcery source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Pyromancer's Swath | fut |
 | if an opponent would search a library, that player searches the top four cards of that library instead. | 1 | Aven Mindcensor | fut |
-| if you control four or fewer lands, search your library for a basic land card, put it onto the battlefield tapped, then shuffle. cycling—sacrifice a land. (sacr | 1 | Edge of Autumn | fut |
 | if ~ was kicked, it enters with four +N/+N counters on it. | 1 | Kavu Primarch | fut |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, it has split second. (as long as ~ is on the stack, players can"..."t mana abilities. | 1 | Molten Disaster | fut |
 | other riggers you control get +N/+N and have haste. | 1 | Steamflogger Boss | fut |
@@ -289,7 +289,6 @@
 | whenever a player casts a noncreature spell, each of that player's opponents may draw a card. | 1 | Heartwood Storyteller | fut |
 | whenever another creature enters, exile ~. return ~ to the battlefield under its owner's control at the beginning of the next end step. | 1 | Saltskitter | fut |
 | whenever enchanted land becomes tapped, its controller loses N life. | 1 | Pooling Venom | fut |
-| whenever fortified land becomes tapped, target creature gets +N/+N until end of turn. | 1 | Darksteel Garrison | fut |
 | whenever you cast a sorcery spell, copy the enchanted instant card. you may cast the copy without paying its mana cost. if you do, exile the enchanted card and  | 1 | Spellweaver Volute | fut |
 | whenever you cast a spell, creatures you control can't be the targets of spells or abilities your opponents control ~. | 1 | Veilstone Amulet | fut |
 | whenever ~ deals combat damage to a player, that player reveals their hand. you choose a nonland card from it. search that player's graveyard, hand, and library | 1 | Shimian Specter | fut |

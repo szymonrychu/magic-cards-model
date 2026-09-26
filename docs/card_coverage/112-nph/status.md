@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 11.1% |
+| Tested | 19 | 11.7% |
 | Works (untested) | 72 | 44.4% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 61 | 37.7% |
+| Not working | 60 | 37.0% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Phyrexian Swarmlord | silent | At the beginning of your upkeep, create a 1/1 green Phyrexian Insect creature token with infect for each poison counter your opponents have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Praetor's Grasp | silent | Search target opponent's library for a card and exile it face down. Then that player shuffles. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Psychic Surgery | silent | Whenever an opponent shuffles their library, you may look at the top two cards of that library. You may exile one of those cards. Then put the rest on top of th | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Rage Extractor | silent | Whenever you cast a spell with {H} in its mana cost, this artifact deals damage equal to that spell's mana value to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reaper of Sheoldred | silent | Whenever a source deals damage to this creature, that source's controller gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ruthless Invasion | silent | ({R/P} can be paid with either {R} or 2 life.) Nonartifact creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sensor Splicer | silent | Golem creatures you control have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -121,7 +120,6 @@
 | Furnace Scamp | handled | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, this creature deals 3 damage to that player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geth's Verdict | handled | Target player sacrifices a creature of their choice and loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glissa's Scorn | handled | Destroy target artifact. Its controller loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Greenhilt Trainee | handled | {T}: Target creature gets +4/+4 until end of turn. Activate only if this creature's power is 4 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gut Shot | handled | ({R/P} can be paid with either {R} or 2 life.) Gut Shot deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hovermyr | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Immolating Souleater | handled | {R/P}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -146,6 +144,7 @@
 | Priest of Urabrask | handled | When this creature enters, add {R}{R}{R}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pristine Talisman | handled |  |  | Y/-/- | not_tested |
 | Psychic Barrier | handled | Counter target creature spell. Its controller loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Rage Extractor | handled | Whenever you cast a spell with {H} in its mana cost, this artifact deals damage equal to that spell's mana value to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razor Swine | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Remember the Fallen | handled | Choose one or both — • Return target creature card from your graveyard to your hand. • Return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rotted Hystrix | handled |  |  | Y/-/- | not_tested |
@@ -174,7 +173,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Argent Mutation
 - Caged Sun
@@ -184,6 +183,7 @@
 - Elesh Norn, Grand Cenobite
 - Gitaxian Probe
 - Glistener Elf
+- Greenhilt Trainee
 - Grim Affliction
 - Mindcrank
 - Mutagenic Growth
@@ -247,7 +247,6 @@
 | whenever an opponent casts a spell, counter it unless that player pays {M}. | 1 | Chancellor of the Annex | nph |
 | whenever an opponent shuffles their library, you may look at the top two cards of that library. you may exile one of those cards. then put the rest on top of th | 1 | Psychic Surgery | nph |
 | whenever equipped creature deals combat damage to a player, ~ deals damage to that player equal to the number of cards in their hand and you gain N life for eac | 1 | Sword of War and Peace | nph |
-| whenever you cast a spell with {M} in its mana cost, ~ deals damage equal to that spell's mana value to any target. | 1 | Rage Extractor | nph |
 | whenever ~ deals combat damage to a player, you may sacrifice it. if you do, draw three cards. | 1 | Impaler Shrike | nph |
 | whenever ~ deals combat damage to a player, you may sacrifice it. if you do, that player discards a card for each poison counter they have. | 1 | Whispering Specter | nph |
 | you can't get poison counters. | 1 | Melira, Sylvok Outcast | nph |

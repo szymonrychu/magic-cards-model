@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 3.7% |
+| Tested | 7 | 4.3% |
 | Works (untested) | 88 | 54.7% |
 | Partial (unaudited) | 7 | 4.3% |
-| Not working | 60 | 37.3% |
+| Not working | 59 | 36.6% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Interpret the Signs | silent | Scry 3, then reveal the top card of your library. Draw cards equal to that card's mana value. (To scry 3, look at the top three cards of your library, then put  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | King Macar, the Gold-Cursed | silent | Inspired — Whenever King Macar becomes untapped, you may exile target creature. If you do, create a Gold token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kruphix's Insight | silent | Reveal the top six cards of your library. Put up to three enchantment cards from among them into your hand and the rest of the revealed cards into your graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Master of the Feast | silent | At the beginning of your upkeep, each opponent draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis's Warhound | silent | Enchanted creature gets +2/+2 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nature's Panoply | silent | Strive — This spell costs {2}{G} more to cast for each target beyond the first. Choose any number of target creatures. Put a +1/+1 counter on each of them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Game Warden | silent | When this creature enters, look at the top X cards of your library, where X is the number of Forests you control. You may reveal a creature card from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -91,7 +90,7 @@
 | Godhunter Octopus | unaudited | This creature can't attack unless defending player controls an enchantment or an enchanted permanent. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Iroas, God of Victory | unaudited | Prevent all damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Keranos, God of Storms | unaudited | Reveal the first card you draw on each of your turns. Whenever you reveal a land card this way, draw a card. Whenever you reveal a nonland card this way, Kerano | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kruphix, God of Horizons | unaudited | You have no maximum hand size. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Kruphix, God of Horizons | unaudited | If you would lose unspent mana, that mana becomes colorless instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oppressive Rays | unaudited | Enchanted creature can't attack or block unless its controller pays {3}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Agent of Erebos | handled | Constellation — Whenever this creature or another enchantment you control enters, exile target player's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Presence | handled | Strive — This spell costs {2}{W} more to cast for each target beyond the first. Any number of target creatures each get +1/+1 and gain indestructible until end  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,7 +184,7 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Aegis of the Gods
 - Aerial Formation
@@ -193,6 +192,7 @@
 - Heroes' Bane
 - Launch the Fleet
 - Mana Confluence
+- Master of the Feast
 
 </details>
 
@@ -205,7 +205,6 @@
 | Inspired | 3 | Daring Thief, Disciple of Deceit, King Macar, the Gold-Cursed | jou |
 | Heroic | 1 | Akroan Line Breaker | jou |
 | as an additional cost to cast ~, sacrifice a creature. target player discards a number of cards equal to the sacrificed creature's power. | 1 | Tormented Thoughts | jou |
-| at the beginning of your upkeep, each opponent draws a card. | 1 | Master of the Feast | jou |
 | at the beginning of your upkeep, return an enchantment you control to its owner's hand. | 1 | Riptide Chimera | jou |
 | counter target spell. its controller mills four cards. | 1 | Countermand | jou |
 | create two N/N blue bird enchantment creature tokens with flying. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rise of Eagles | jou |
@@ -221,6 +220,7 @@
 | enchanted creature has double strike as long as it's an enchantment. otherwise, prevent all damage that would be dealt by enchanted creature. | 1 | Armament of Nyx | jou |
 | exile target creature card from your graveyard. create a black zombie creature token. its power is equal to that card"..."s toughness. | 1 | Ritual of the Returned | jou |
 | exile target enchantment. if the exiled card is a god card, search its controller's graveyard, hand, and library for any number of cards with the same name as t | 1 | Deicide | jou |
+| if you would lose unspent mana, that mana becomes colorless instead. | 1 | Kruphix, God of Horizons | jou |
 | other centaur creatures you control get +N/+N and have vigilance and trample. | 1 | Pheres-Band Warchief | jou |
 | other minotaur creatures you control have deathtouch. | 1 | Felhide Petrifier | jou |
 | prevent all damage that would be dealt to attacking creatures you control. | 1 | Iroas, God of Victory | jou |
@@ -244,7 +244,6 @@
 | whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target enchantment. | 1 | Mortal Obstinacy | jou |
 | whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | 1 | Godsend | jou |
 | you control target player during that player's next turn. exile ~. (you see all cards that player could see and make all decisions for them.) | 1 | Worst Fears | jou |
-| you have no maximum hand size. | 1 | Kruphix, God of Horizons | jou |
 | you may choose not to untap ~ during your untap step. | 1 | Deserter's Quarters | jou |
 | {M}, {M}: each player reveals the top card of their library. you may put the revealed cards into their owners"..."t, each player draws a card. | 1 | Dakra Mystic | jou |
 | {M}{M}, sacrifice ~: create a N/N green spider enchantment creature token with reach. | 1 | Renowned Weaver | jou |

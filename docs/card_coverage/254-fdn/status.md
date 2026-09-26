@@ -3,43 +3,44 @@
 - Expansion: 254
 - Set code: `fdn`
 - Release date: 2024-11-15
-- Cards in scope (Modern/Pioneer/Standard-legal): 139
+- Cards in scope (Modern/Pioneer/Standard-legal): 144
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 139 |
-| Pioneer | 139 |
-| Standard | 139 |
+| Modern | 144 |
+| Pioneer | 144 |
+| Standard | 144 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 4.3% |
-| Works (untested) | 83 | 59.7% |
-| Partial (unaudited) | 5 | 3.6% |
-| Not working | 45 | 32.4% |
+| Tested | 7 | 4.9% |
+| Works (untested) | 88 | 61.1% |
+| Partial (unaudited) | 4 | 2.8% |
+| Not working | 45 | 31.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Alesha, Who Laughs at Fate | silent | Raid — At the beginning of your end step, if you attacked this turn, return target creature card with mana value less than or equal to Alesha's power from your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ashroot Animist | silent | Whenever this creature attacks, another target creature you control gains trample and gets +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Banner of Kinship | silent | Creatures you control of the chosen type get +1/+1 for each fellowship counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blasphemous Edict | silent | You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield. Each player sacrifices thirteen creatures of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloodthirsty Conqueror | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bulk Up | silent | Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Chandra, Flameshaper | silent | +1: Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Crossway Troublemakers | silent | Attacking Vampires you control have deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Drake Hatcher | silent | Whenever this creature deals combat damage to a player, put that many incubation counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Dread Summons | silent | Each player mills X cards. For each creature card put into a graveyard this way, you create a tapped 2/2 black Zombie creature token. (To mill a card, a player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dropkick Bomber | silent | {R}: Until end of turn, another target Goblin you control gains flying and "When this creature deals combat damage, sacrifice it." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Electroduplicate | silent | Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." Flashback {2}{R}{ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Exemplar of Light | silent | Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Faebloom Trick | silent | Create two 1/1 blue Faerie creature tokens with flying. When you do, tap target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fiendish Panda | silent | When this creature dies, return another target non-Bear creature card with mana value less than or equal to this creature's power from your graveyard to the bat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fishing Pole | silent | Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | this trigger's condition can never be satisfied - it never triggers | Y/Y/Y | not_working |
+| Fishing Pole | silent | Whenever equipped creature becomes untapped, remove a bait counter from this Equipment. If you do, create a 1/1 blue Fish creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fleeting Flight | silent | Put a +1/+1 counter on target creature. It gains flying until end of turn. Prevent all combat damage that would be dealt to it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hare Apparent | silent | When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infernal Vessel | silent | When this creature dies, if it wasn't a Demon, return it to the battlefield under its owner's control with two +1/+1 counters on it. It's a Demon in addition to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -57,7 +58,6 @@
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Soul-Shackled Zombie | silent | When this creature enters, exile up to two target cards from a single graveyard. If at least one creature card was exiled this way, each opponent loses 2 life a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Soulstone Sanctuary | silent | {4}: This land becomes a 3/3 creature with vigilance and all creature types. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sower of Chaos | silent | {2}{R}: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sphinx of Forgotten Lore | silent | Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinner of Souls | silent | Whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. Put that card into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Squad Rallier | silent | {2}{W}: Look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your hand. Put the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -74,7 +74,6 @@
 | Cephalid Inkmage | unaudited | Threshold — This creature can't be blocked as long as there are seven or more cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Goblin Boarders | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Herald of Eternal Dawn | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| High Fae Trickster | unaudited | You may cast spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Nine-Lives Familiar | unaudited | This creature enters with eight revival counters on it if you cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Ambush Wolf | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anthem of Champions | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -83,12 +82,14 @@
 | Arcane Epiphany | handled | This spell costs {1} less to cast if you control a Wizard. Draw three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archmage of Runes | handled | Instant and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Armasaur Guide | handled | Whenever you attack with three or more creatures, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ashroot Animist | handled | Whenever this creature attacks, another target creature you control gains trample and gets +X/+X until end of turn, where X is this creature's power. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Battlesong Berserker | handled | Whenever you attack, target creature you control gets +1/+0 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Beast-Kin Ranger | handled | Whenever another creature you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bigfin Bouncer | handled | When this creature enters, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Billowing Shriekmass | handled | When this creature enters, mill three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boltwave | handled | Boltwave deals 3 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cackling Prowler | handled | Morbid — At the beginning of your end step, if a creature died this turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Carnelian Orb of Dragonkind | handled |  |  | Y/Y/Y | not_tested |
 | Cat Collector | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Celestial Armor | handled | When this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Claws Out | handled | Affinity for Cats (This spell costs {1} less to cast for each Cat you control.) Creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -106,6 +107,7 @@
 | Elfsworn Giant | handled | Landfall — Whenever a land you control enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elvish Regrower | handled | When this creature enters, return target permanent card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Erudite Wizard | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Extravagant Replication | handled | At the beginning of your upkeep, create a token that's a copy of another target nonland permanent you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Felidar Savior | handled | When this creature enters, put a +1/+1 counter on each of up to two other target creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Felling Blow | handled | Put a +1/+1 counter on target creature you control. Then that creature deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fiery Annihilation | handled | Fiery Annihilation deals 5 damage to target creature. Exile up to one target Equipment attached to that creature. If that creature would die this turn, exile it | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -127,6 +129,7 @@
 | Kiora, the Rising Tide | handled | When Kiora enters, draw two cards, then discard two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Koma, World-Eater | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kykar, Zephyr Awakener | handled | Whenever you cast a noncreature spell, choose one — • Exile another target creature you control. Return that card to the battlefield under its owner's control a | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Lathril, Blade of the Elves | handled | Whenever Lathril deals combat damage to a player, create that many 1/1 green Elf Warrior creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leyline Axe | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Luminous Rebuke | handled | This spell costs {3} less to cast if it targets a tapped creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mischievous Mystic | handled | Whenever you draw your second card each turn, create a 1/1 blue Faerie creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -145,6 +148,7 @@
 | Seeker's Folly | handled | Choose one — • Target opponent discards two cards. • Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Skyship Buccaneer | handled | Raid — When this creature enters, if you attacked this turn, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Slumbering Cerberus | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sower of Chaos | handled | {2}{R}: Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stab | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starlight Snare | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Strix Lookout | handled | {1}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -163,11 +167,12 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Arbiter of Woe
 - Crystal Barricade
 - Curator of Destinies
+- High Fae Trickster
 - Inspiration from Beyond
 - Raise the Past
 - Sire of Seven Deaths
@@ -185,6 +190,7 @@
 | +N: up to one target creature you control can't be blocked ~. draw a card, then discard a card. | 1 | Kaito, Cunning Infiltrator | fdn |
 | as long as your life total is greater than your starting life total, elenda gets +N/+N and has menace. elenda gets an additional +N/+N as long as your life tota | 1 | Elenda, Saint of Dusk | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
+| attacking vampires you control have deathtouch and lifelink. | 1 | Crossway Troublemakers | fdn |
 | create a token that's a copy of target creature you control, except it has haste and "..." flashback {M}{M}{M} (you may cast ~ from your graveyard for its flash | 1 | Electroduplicate | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
 | creatures you control of the chosen type get +N/+N for each fellowship counter on ~. | 1 | Banner of Kinship | fdn |
@@ -192,6 +198,7 @@
 | draw a card for each different mana value among nonland permanents you control. | 1 | Lunar Insight | fdn |
 | during your turn, creatures you control with +N/+N counters on them have first strike. | 1 | Inspiring Paladin | fdn |
 | during your turn, equipped creature gets +N/+N and has first strike. | 1 | Quick-Draw Katana | fdn |
+| each player mills N cards. for each creature card put into a graveyard ~, you create a tapped N/N black zombie creature token. (to mill a card, a player puts th | 1 | Dread Summons | fdn |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) target creature you control gains indestructible until end of turn. if ~ was kicked, instead any | 1 | Divine Resilience | fdn |
 | put a +N/+N counter on target creature. it gains flying until end of turn. prevent all combat damage that would be dealt to it ~. | 1 | Fleeting Flight | fdn |
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
@@ -206,12 +213,10 @@
 | whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. put that card into your | 1 | Spinner of Souls | fdn |
 | whenever equipped creature becomes untapped, remove a bait counter from ~. if you do, create a N/N blue fish creature token. | 1 | Fishing Pole | fdn |
 | whenever you put one or more +N/+N counters on ~, draw a card. ~ triggers only once each turn. | 1 | Exemplar of Light | fdn |
-| whenever ~ attacks, another target creature you control gains trample and gets +N/+N until end of turn, where N is ~ power. | 1 | Ashroot Animist | fdn |
 | whenever ~ attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to that card's mana cost. | 1 | Sphinx of Forgotten Lore | fdn |
 | whenever ~ attacks, you may sacrifice another creature. if you do, draw a card and ~ can't be blocked ~. | 1 | Vampire Gourmand | fdn |
 | whenever ~ deals combat damage to a player, put that many incubation counters on it. | 1 | Drake Hatcher | fdn |
 | you can"..."t win the game. | 1 | Herald of Eternal Dawn | fdn |
-| you may cast spells as though they had flash. | 1 | High Fae Trickster | fdn |
 | you may pay {M} rather than pay ~ mana cost if there are thirteen or more creatures on the battlefield. each player sacrifices thirteen creatures of their choic | 1 | Blasphemous Edict | fdn |
 | {M}, {M}, sacrifice ~: each opponent loses life equal to the number of soul counters on ~. | 1 | Ravenous Amulet | fdn |
 | {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |
@@ -221,7 +226,6 @@
 | {M}{M}, {M}: double the number of each kind of counter on up to two target creatures and/or artifacts you control. | 1 | Zimone, Paradox Sculptor | fdn |
 | {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |
 | {M}{M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the rest  | 1 | Squad Rallier | fdn |
-| {M}{M}: target creature can't block ~. | 1 | Sower of Chaos | fdn |
 | {M}{M}{M}, {M}: look at the top six cards of your library. you may reveal a creature card with mana value less than or equal to the number of lands you control  | 1 | Loot, Exuberant Explorer | fdn |
 | ~ deals N damage to target creature. create a number of N/N red goblin creature tokens equal to the amount of excess damage dealt to that creature ~. | 1 | Goblin Negotiation | fdn |
 | ~ enters with eight revival counters on it if you cast it. | 1 | Nine-Lives Familiar | fdn |

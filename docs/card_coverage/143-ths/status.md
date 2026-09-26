@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.6% |
-| Works (untested) | 119 | 56.4% |
-| Partial (unaudited) | 10 | 4.7% |
-| Not working | 66 | 31.3% |
+| Tested | 17 | 8.1% |
+| Works (untested) | 123 | 58.3% |
+| Partial (unaudited) | 9 | 4.3% |
+| Not working | 62 | 29.4% |
 
 ## Cards needing work
 
@@ -31,11 +31,9 @@
 | Akroan Hoplite | silent | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of attacking creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akroan Horse | silent | When this creature enters, an opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anthousa, Setessan Hero | silent | Heroic — Whenever you cast a spell that targets Anthousa, up to three target lands you control each become 2/2 Warrior creatures until end of turn. They're stil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Arena Athlete | silent | Heroic — Whenever you cast a spell that targets this creature, target creature an opponent controls can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Artisan of Forms | silent | Heroic — Whenever you cast a spell that targets this creature, you may have this creature become a copy of target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Weaver | silent | +2: Exile the top three cards of target opponent's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bident of Thassa | silent | {1}{U}, {T}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blood-Toll Harpy | silent | When this creature enters, each player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bow of Nylea | silent | Attacking creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavern Lampad | silent | Enchanted creature gets +2/+2 and has intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chained to the Rocks | silent | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -44,7 +42,6 @@
 | Curse of the Swine | silent | Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decorated Griffin | silent | {1}{W}: Prevent the next 1 combat damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Defend the Hearth | silent | Prevent all combat damage that would be dealt to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Disciple of Phenax | silent | When this creature enters, target player reveals a number of cards from their hand equal to your devotion to black. You choose one of them. That player discards | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evangel of Heliod | silent | When this creature enters, create a number of 1/1 white Soldier creature tokens equal to your devotion to white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fanatic of Mogis | silent | When this creature enters, it deals damage to each opponent equal to your devotion to red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fate Foretold | silent | When enchanted creature dies, its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -71,7 +68,6 @@
 | Satyr Piper | silent | {3}{G}: Target creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scholar of Athreos | silent | {2}{B}: Each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sealock Monster | silent | When this creature becomes monstrous, target land becomes an Island in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shipbreaker Kraken | silent | When this creature becomes monstrous, tap up to four target creatures. Those creatures don't untap during their controllers' untap steps for as long as you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shipwreck Singer | silent | {1}{B}, {T}: Attacking creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Steam Augury | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneshock Giant | silent | When this creature becomes monstrous, creatures without flying your opponents control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -92,7 +88,6 @@
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Whip of Erebos | notice | {2}{B}{B}, {T}: Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step. If it would  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Aqueous Form | unaudited | Enchanted creature can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Daxos of Meletis | unaudited | Daxos can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Erebos, God of the Dead | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Medomai the Ageless | unaudited | Medomai can't attack during extra turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -105,6 +100,8 @@
 | Agent of the Fates | handled | Heroic — Whenever you cast a spell that targets this creature, each opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akroan Crusader | handled | Heroic — Whenever you cast a spell that targets this creature, create a 1/1 red Soldier creature token with haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Anvilwrought Raptor | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Aqueous Form | handled | Enchanted creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Arena Athlete | handled | Heroic — Whenever you cast a spell that targets this creature, target creature an opponent controls can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Artisan's Sorrow | handled | Destroy target artifact or enchantment. Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashen Rider | handled | When this creature enters or dies, exile target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Asphodel Wanderer | handled | {2}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -112,6 +109,7 @@
 | Battlewise Hoplite | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature, then scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battlewise Valor | handled | Target creature gets +2/+2 until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Benthic Giant | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
+| Blood-Toll Harpy | handled | When this creature enters, each player loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boon Satyr | handled | Enchanted creature gets +4/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Borderland Minotaur | handled |  |  | Y/Y/- | not_tested |
 | Boulderfall | handled | Boulderfall deals 5 damage divided as you choose among any number of targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -127,6 +125,7 @@
 | Cutthroat Maneuver | handled | Up to two target creatures each get +1/+1 and gain lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dark Betrayal | handled | Destroy target black creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathbellow Raider | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Disciple of Phenax | handled | When this creature enters, target player reveals a number of cards from their hand equal to your devotion to black. You choose one of them. That player discards | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dissolve | handled | Counter target spell. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragon Mantle | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ember Swallower | handled | {5}{R}{R}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -170,7 +169,6 @@
 | Pharika's Cure | handled | Pharika's Cure deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharika's Mender | handled | When this creature enters, you may return target creature or enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pheres-Band Centaurs | handled |  |  | Y/Y/- | not_tested |
-| Polis Crusher | handled | {4}{R}{G}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prescient Chimera | handled | Whenever you cast an instant or sorcery spell, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Priest of Iroas | handled | {3}{W}, Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prognostic Sphinx | handled | Discard a card: This creature gains hexproof until end of turn. Tap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -186,6 +184,7 @@
 | Sentry of the Underworld | handled | {W}{B}, Pay 3 life: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Setessan Battle Priest | handled | Heroic — Whenever you cast a spell that targets this creature, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Setessan Griffin | handled | {2}{G}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shipbreaker Kraken | handled | {6}{U}{U}: Monstrosity 4. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shredding Winds | handled | Shredding Winds deals 7 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silent Artisan | handled |  |  | Y/Y/- | not_tested |
 | Sip of Hemlock | handled | Destroy target creature. Its controller loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -225,7 +224,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Anger of the Gods
 - Arbor Colossus
@@ -238,6 +237,7 @@
 - Lagonna-Band Elder
 - Nessian Asp
 - Nykthos, Shrine to Nyx
+- Polis Crusher
 - Purphoros, God of the Forge
 - Pyxis of Pandemonium
 - Reverent Hunter
@@ -250,7 +250,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Heroic | 5 | Anthousa, Setessan Hero, Arena Athlete, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
+| Heroic | 4 | Anthousa, Setessan Hero, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
 | whenever enchanted creature attacks, put a +N/+N counter on it. then if it has three or more +N/+N counters on it, sacrifice ~. | 4 | Ordeal of Erebos, Ordeal of Heliod, Ordeal of Nylea, Ordeal of Thassa | ths |
 | +N: add N mana in any combination of {M} and/or {M}, where N is the number of creatures you control. | 1 | Xenagos, the Reveler | ths |
 | +N: exile the top three cards of target opponent's library. | 1 | Ashiok, Nightmare Weaver | ths |
@@ -263,7 +263,6 @@
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
 | elemental creatures you control get +N/+N. | 1 | Master of Waves | ths |
-| enchanted creature can't be blocked. | 1 | Aqueous Form | ths |
 | enchanted creature gets +N/+N and has intimidate. | 1 | Cavern Lampad | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
@@ -286,16 +285,13 @@
 | when hythonia becomes monstrous, destroy all non-gorgon creatures. | 1 | Hythonia the Cruel | ths |
 | when ~ becomes monstrous, creatures without flying your opponents control can't block ~. | 1 | Stoneshock Giant | ths |
 | when ~ becomes monstrous, it deals damage to each opponent equal to the number of cards in that player's hand. | 1 | Stormbreath Dragon | ths |
-| when ~ becomes monstrous, tap up to four target creatures. those creatures don"..." untap steps for as long as you control ~. | 1 | Shipbreaker Kraken | ths |
 | when ~ becomes monstrous, target land becomes an island in addition to its other types. | 1 | Sealock Monster | ths |
 | when ~ dies, exile it and each player returns all creature cards from their graveyard to their hand. | 1 | Underworld Cerberus | ths |
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |
 | when ~ enters, create a number of N/N black harpy creature tokens with flying equal to your devotion to black. | 1 | Abhorrent Overlord | ths |
 | when ~ enters, create a number of N/N white soldier creature tokens equal to your devotion to white. | 1 | Evangel of Heliod | ths |
-| when ~ enters, each player loses N life. | 1 | Blood-Toll Harpy | ths |
 | when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Chained to the Rocks | ths |
 | when ~ enters, it deals damage to each opponent equal to your devotion to red. | 1 | Fanatic of Mogis | ths |
-| when ~ enters, target player reveals a number of cards from their hand equal to your devotion to black. you choose one of them. that player discards that card. | 1 | Disciple of Phenax | ths |
 | when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
 | whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of attacking creatures you control. | 1 | Akroan Hoplite | ths |

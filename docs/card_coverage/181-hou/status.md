@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 3.3% |
+| Tested | 9 | 4.9% |
 | Works (untested) | 85 | 46.4% |
 | Partial (unaudited) | 6 | 3.3% |
-| Not working | 86 | 47.0% |
+| Not working | 83 | 45.4% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Farm // Market | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fraying Sanity | silent | At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frontline Devastator | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Gilded Cerodon | silent | Whenever this creature attacks, if you control a Desert or there is a Desert card in your graveyard, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | God-Pharaoh's Gift | silent | At the beginning of combat on your turn, you may exile a creature card from your graveyard. If you do, create a token that's a copy of that card, except it's a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graven Abomination | silent | Whenever this creature attacks, exile target card from defending player's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grind // Dust | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -70,7 +69,6 @@
 | Nimble Obstructionist | silent | When you cycle this card, counter target activated or triggered ability you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Encouragement | silent | Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Genesis Mage | silent | +2: Untap up to two target creatures and up to two target lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Obelisk Spider | silent | Whenever you put one or more -1/-1 counters on a creature, each opponent loses 1 life and you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Oketra's Last Mercy | silent | Your life total becomes equal to your starting life total. Lands you control don't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Proven Combatant | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Reason // Believe | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Look at the top card of your library. You may put it onto the battlefield if it's a creatur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -106,7 +104,6 @@
 | Hour of Eternity | notice | Exile X target creature cards from your graveyard. For each card exiled this way, create a token that's a copy of that card, except it's a 4/4 black Zombie. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hour of Glory | notice | Exile target creature. If that creature was a God, its controller reveals their hand and exiles all cards from it with the same name as that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jace's Defeat | notice | Counter target blue spell. If it was a Jace planeswalker spell, scry 2. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Pride Sovereign | notice | This creature gets +1/+1 for each other Cat you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ramunap Hydra | notice | This creature gets +1/+1 as long as you control a Desert. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Samut, the Tested | notice | −7: Search your library for up to two creature and/or planeswalker cards, put them onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Solitary Camel | notice | This creature has lifelink as long as you control a Desert or there is a Desert card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -153,6 +150,7 @@
 | Firebrand Archer | handled | Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frilled Sandwalla | handled | {1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gift of Strength | handled | Target creature gets +3/+3 and gains reach until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gilded Cerodon | handled | Whenever this creature attacks, if you control a Desert or there is a Desert card in your graveyard, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | God-Pharaoh's Faithful | handled | Whenever you cast a blue, black, or red spell, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Granitic Titan | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Grisly Survivor | handled | Whenever you cycle or discard a card, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -173,6 +171,7 @@
 | Moaning Wall | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
 | Mummy Paramount | handled | Whenever another Zombie you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oasis Ritualist | handled | Exert | machines/keywords.py | Y/Y/- | not_tested |
+| Obelisk Spider | handled | Whenever this creature deals combat damage to a creature, put a -1/-1 counter on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ominous Sphinx | handled | Whenever you cycle or discard a card, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Open Fire | handled | Open Fire deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Overcome | handled | Creatures you control get +2/+2 and gain trample until end of turn. (Each of those creatures can deal excess combat damage to the player or planeswalker it's at | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,7 +184,6 @@
 | Razaketh, the Foulblooded | handled | Pay 2 life, Sacrifice another creature: Search your library for a card, put that card into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Hoopoe | handled | {3}{G}{U}: You gain 2 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruin Rat | handled | When this creature dies, exile target card from an opponent's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Sand Strangler | handled | When this creature enters, if you control a Desert or there is a Desert card in your graveyard, you may have this creature deal 3 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scavenger Grounds | handled | {2}, {T}, Sacrifice a Desert: Exile all graveyards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrounger of Souls | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Seer of the Last Tomorrow | handled | {U}, {T}, Discard a card: Target player mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -198,7 +196,6 @@
 | Unconventional Tactics | handled | Target creature gets +3/+3 and gains flying until end of turn. Whenever a Zombie you control enters, you may pay {W}. If you do, return this card from your grav | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unquenchable Thirst | handled | When this Aura enters, if you control a Desert or there is a Desert card in your graveyard, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unraveling Mummy | handled | {1}{W}: Target attacking Zombie gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Wall of Forgotten Pharaohs | handled | {T}: This creature deals 1 damage to target player or planeswalker. Activate only if you control a Desert or there is a Desert card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wasp of the Bitter End | handled | Whenever you cast a Bolas planeswalker spell, you may sacrifice this creature. If you do, destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Without Weakness | handled | Target creature you control gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it. If its toughness is 0 or less, it s | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wretched Camel | handled | When this creature dies, if you control a Desert or there is a Desert card in your graveyard, target player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -207,14 +204,17 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>9 cards</summary>
 
 - Abrade
 - Desert of the True
 - Hollow One
 - Liliana's Defeat
 - Nissa's Defeat
+- Pride Sovereign
+- Sand Strangler
 - Striped Riverwinder
+- Wall of Forgotten Pharaohs
 
 </details>
 
@@ -280,10 +280,8 @@
 | whenever you cycle or discard a card, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Cunning Survivor | hou |
 | whenever you exert a creature, tap target creature an opponent controls. | 1 | Vizier of the True | hou |
 | whenever you exert a creature, ~ deals N damage to each opponent and you gain N life. | 1 | Resolute Survivors | hou |
-| whenever you put one or more -N/-N counters on a creature, each opponent loses N life and you gain N life. | 1 | Obelisk Spider | hou |
 | whenever ~ attacks and isn't blocked, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Wildfire Eternal | hou |
 | whenever ~ attacks, exile target card from defending player's graveyard. | 1 | Graven Abomination | hou |
-| whenever ~ attacks, if you control a desert or there is a desert card in your graveyard, target creature can't block ~. | 1 | Gilded Cerodon | hou |
 | whenever ~ deals combat damage to a player, remove all -N/-N counters from it. | 1 | Ammit Eternal | hou |
 | whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Dreamstealer | hou |
 | you may cast spells that have a cycling ability from your graveyard. | 1 | Abandoned Sarcophagus | hou |
@@ -296,7 +294,6 @@
 | ~ deals damage to target spell"..."s mana value. | 1 | Refuse // Cooperate | hou |
 | ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |
 | ~ gets +N/+N for each card with cycling in your graveyard. | 1 | Vile Manifestation | hou |
-| ~ gets +N/+N for each other cat you control. | 1 | Pride Sovereign | hou |
 | ~ has first strike as long as it's attacking. | 1 | Thorned Moloch | hou |
 | ~ has lifelink as long as you control a desert or there is a desert card in your graveyard. | 1 | Solitary Camel | hou |
 | ~'s power and toughness are each equal to the number of cards in your graveyard. | 1 | Apocalypse Demon | hou |

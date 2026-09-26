@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 12.2% |
-| Works (untested) | 11 | 22.4% |
+| Tested | 7 | 14.3% |
+| Works (untested) | 10 | 20.4% |
 | Partial (unaudited) | 5 | 10.2% |
 | Not working | 27 | 55.1% |
 
@@ -68,12 +68,11 @@
 | Markov Baron | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nissa, Resurgent Animist | handled | Landfall — Whenever a land you control enters, add one mana of any color. Then if this is the second time this ability has resolved this turn, reveal cards from | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pia Nalaar, Consul of Revival | handled | Thopters you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Samut, Vizier of Naktamun | handled | Whenever a creature you control deals combat damage to a player, if that creature entered this turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>7 cards</summary>
 
 - Ayara's Oathsworn
 - Jolrael, Voice of Zhalfir
@@ -81,6 +80,7 @@
 - Nashi, Moon's Legacy
 - Rebuild the City
 - Reckless Handling
+- Samut, Vizier of Naktamun
 
 </details>
 

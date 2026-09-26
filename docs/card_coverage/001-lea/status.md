@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 20.7% |
-| Works (untested) | 59 | 50.9% |
+| Tested | 25 | 21.6% |
+| Works (untested) | 58 | 50.0% |
 | Partial (unaudited) | 5 | 4.3% |
 | Not working | 28 | 24.1% |
 
@@ -64,7 +64,6 @@
 | Bog Wraith | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Crystal Rod | handled | Whenever a player casts a blue spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disenchant | handled | Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Disrupting Scepter | handled | {3}, {T}: Target player discards a card. Activate only during your turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drudge Skeletons | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dwarven Demolition Team | handled | {T}: Destroy target Wall. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Earth Elemental | handled |  |  | Y/-/- | not_tested |
@@ -122,12 +121,13 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Birds of Paradise
 - Clone
 - Counterspell
 - Craw Wurm
+- Disrupting Scepter
 - Fireball
 - Fog
 - Forest

@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 3.7% |
-| Works (untested) | 71 | 44.1% |
+| Tested | 8 | 5.0% |
+| Works (untested) | 72 | 44.7% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 73 | 45.3% |
+| Not working | 70 | 43.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Abzan Advantage | silent | Target player sacrifices an enchantment of their choice. Bolster 1. (Choose a creature with the least toughness among creatures you control and put a +1/+1 coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Abzan Beastmaster | silent | At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Abzan Runemark | silent | Enchanted creature has vigilance as long as you control a black or green permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Abzan Skycaptain | silent | When this creature dies, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alesha, Who Smiles at Death | silent | Whenever Alesha attacks, you may pay {W/B}{W/B}. If you do, return target creature card with power 2 or less from your graveyard to the battlefield tapped and a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -35,7 +34,6 @@
 | Arcbond | silent | Choose target creature. Whenever that creature is dealt damage this turn, it deals that much damage to each other creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archfiend of Depravity | silent | At the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battle Brawler | silent | As long as you control a red or white permanent, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Break Through the Line | silent | {R}: Target creature with power 2 or less gains haste until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brutal Hordechief | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cached Defenses | silent | Bolster 3. (Choose a creature with the least toughness among creatures you control and put three +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Channel Harm | silent | Prevent all damage that would be dealt to you and permanents you control this turn by sources you don't control. If damage is prevented this way, you may have C | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,7 +49,6 @@
 | Friendly Fire | silent | Target creature's controller reveals a card at random from their hand. Friendly Fire deals damage to that creature and that player equal to the revealed card's  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fruit of the First Tree | silent | When enchanted creature dies, you gain X life and draw X cards, where X is its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ghastly Conscription | silent | Exile all creature cards from target player's graveyard in a face-down pile, shuffle that pile, then manifest those cards. (To manifest a card, put it onto the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Goblin Heelcutter | silent | Whenever this creature attacks, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grave Strength | silent | Choose target creature. Mill three cards, then put a +1/+1 counter on that creature for each creature card in your graveyard. (To mill three cards, put the top  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grim Contest | silent | Choose target creature you control and target creature an opponent controls. Each of those creatures deals damage equal to its toughness to the other. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero's Blade | silent | Whenever a legendary creature you control enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,6 +107,7 @@
 | Outpost Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Palace Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wardscale Dragon | unaudited | As long as this creature is attacking, defending player can't cast spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Abzan Beastmaster | handled | At the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alesha's Vanguard | handled | Dash | machines/casting.py | Y/Y/- | not_tested |
 | Ancestral Vengeance | handled | When this Aura enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arashin Cleric | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,6 +130,7 @@
 | Flamewake Phoenix | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frost Walker | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Boom Keg | handled | At the beginning of your upkeep, sacrifice this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Goblin Heelcutter | handled | Whenever this creature attacks, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gore Swine | handled |  |  | Y/Y/- | not_tested |
 | Great-Horn Krushok | handled |  |  | Y/Y/- | not_tested |
 | Gurmag Angler | handled | Delve | machines/keywords.py | Y/Y/- | not_tested |
@@ -176,7 +175,6 @@
 | Temporal Trespass | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Take an extra turn after this one. Exile Temporal Trespass. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valorous Stance | handled | Choose one — • Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) • Destroy target creature with  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vaultbreaker | handled | Whenever this creature attacks, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Wandering Champion | handled | Whenever this creature deals combat damage to a player, if you control a blue or red permanent, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | War Flare | handled | Creatures you control get +2/+1 until end of turn. Untap those creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whisperer of the Wilds | handled | Ferocious | no code needed | Y/Y/- | not_tested |
 | Wild Slash | handled | Ferocious — If you control a creature with power 4 or greater, damage can't be prevented this turn. Wild Slash deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,14 +183,16 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>8 cards</summary>
 
 - Ainok Guide
+- Break Through the Line
 - Dark Deal
 - Ethereal Ambush
 - Mastery of the Unseen
 - Shifting Loyalties
 - Temur Battle Rage
+- Wandering Champion
 
 </details>
 
@@ -212,7 +212,6 @@
 | at the beginning of combat on your turn, you may pay {M}{M}{M}. if you do, gain control of target creature an opponent controls with power less than ~'s power u | 1 | Yasova Dragonclaw | frf |
 | at the beginning of each opponent's end step, that player chooses up to two creatures they control, then sacrifices the rest. | 1 | Archfiend of Depravity | frf |
 | at the beginning of your end step, bolster N, where N is the number of tapped creatures you control. | 1 | Dragonscale General | frf |
-| at the beginning of your upkeep, draw a card if you control the creature with the greatest toughness or tied for the greatest toughness. | 1 | Abzan Beastmaster | frf |
 | bolster N. (choose a creature with the least toughness among creatures you control and put three +N/+N counters on it.) | 1 | Cached Defenses | frf |
 | cast ~ only if you've cast another spell ~. | 1 | Hewed Stone Retainers | frf |
 | choose target creature you control and target creature an opponent controls. each of those creatures deals damage equal to its toughness to the other. | 1 | Grim Contest | frf |
@@ -259,7 +258,6 @@
 | whenever a permanent you control is turned face up, if it"..."t control. | 1 | Temur War Shaman | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
-| whenever ~ attacks, target creature can't block ~. | 1 | Goblin Heelcutter | frf |
 | whenever ~ attacks, you may return target creature to its owner's hand if its power is less than ~ power. | 1 | Sage-Eye Avengers | frf |
 | whenever ~ deals combat damage to a player, it deals N damage to each creature that player controls. | 1 | Shockmaw Dragon | frf |
 | whenever ~ or another warrior you control enters, you may exile target creature card from a graveyard. if you do, you gain N life. | 1 | Mardu Woe-Reaper | frf |
@@ -268,7 +266,6 @@
 | {M}, {M}: search your library for a card named heart-piercer bow or vial of dragonfire, reveal it, put it into your hand, then shuffle. | 1 | Renowned Weaponsmith | frf |
 | {M}, {M}: target creature you control gets +N/+N until end of turn for each lore counter on ~. | 1 | Scroll of the Masters | frf |
 | {M}: draw two cards. target opponent gains control of ~. activate only during your turn. | 1 | Humble Defector | frf |
-| {M}: target creature with power N or less gains haste until end of turn and can't be blocked ~. | 1 | Break Through the Line | frf |
 | {M}{M}: you may return another creature you control to its owner's hand. if you do, ~ gains indestructible until end of turn. | 1 | Temur Sabertooth | frf |
 | {M}{M}: ~ becomes a human warrior with base power and toughness N/N. | 1 | Warden of the First Tree | frf |
 | {M}{M}{M}: mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | 1 | Tasigur, the Golden Fang | frf |

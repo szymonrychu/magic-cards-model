@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 2.8% |
+| Tested | 6 | 4.2% |
 | Works (untested) | 64 | 44.8% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 63 | 44.1% |
+| Not working | 61 | 42.7% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Bant Sureblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloven Casting | silent | Whenever you cast a multicolored instant or sorcery spell, you may pay {1}. If you do, copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crystallization | silent | When enchanted creature becomes the target of a spell or ability, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Demonic Dread | silent | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonspine Whip | silent | {X}: Equipped creature gets +X/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Double Negative | silent | Counter up to two target spells. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dragon Broodmother | silent | At the beginning of each upkeep, create a 1/1 red and green Dragon creature token with flying and devour 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -55,7 +54,7 @@
 | Karrthus, Tyrant of Jund | silent | When Karrthus enters, gain control of all Dragons, then untap all Dragons. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of New Alara | silent | Each other multicolored creature you control gets +1/+1 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich Lord of Unx | silent | {U}{U}{B}{B}: Target player loses X life and mills X cards, where X is the number of Zombies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lightning Reaver | silent | At the beginning of your end step, this creature deals damage equal to the number of charge counters on it to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Lightning Reaver | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Lord of Extinction | silent | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mage Slayer | silent | Whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Marrow Chomper | silent | When this creature enters, you gain 2 life for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,7 +84,6 @@
 | Aven Mimeomancer | notice | At the beginning of your upkeep, you may put a feather counter on target creature. If you do, that creature has base power and toughness 3/1 and has flying for  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Maelstrom Pulse | notice | Destroy target nonland permanent and all other permanents with the same name as that permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Uril, the Miststalker | notice | Uril gets +2/+2 for each Aura attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Rebirth | notice | Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wargate | notice | Search your library for a permanent card with mana value X or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -114,6 +112,7 @@
 | Deadshot Minotaur | handled | When this creature enters, it deals 3 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deathbringer Thoctar | handled | Whenever another creature dies, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Defiler of Souls | handled | At the beginning of each player's upkeep, that player sacrifices a monocolored creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Demonic Dread | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deny Reality | handled | Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enlisted Wurm | handled | Cascade | machines/keywords.py | Y/-/- | not_tested |
 | Esper Sojourners | handled | When you cycle this card and when this creature dies, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -143,7 +142,6 @@
 | Naya Sojourners | handled | When you cycle this card and when this creature dies, you may put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offering to Asha | handled | Counter target spell unless its controller pays {4}. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pale Recluse | handled | Reach | machines/combat.py | Y/-/- | not_tested |
-| Predatory Advantage | handled | At the beginning of each opponent's end step, if that player didn't cast a creature spell this turn, create a 2/2 green Lizard creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reborn Hope | handled | Return target multicolored card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Retaliator Griffin | handled | Whenever a source an opponent controls deals damage to you, you may put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rhox Brute | handled |  |  | Y/-/- | not_tested |
@@ -151,7 +149,6 @@
 | Sangrite Backlash | handled | Enchanted creature gets +3/-3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sewn-Eye Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Shield of the Righteous | handled | Equipped creature gets +0/+2 and has vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Sigil Captain | handled | Whenever a creature you control enters, if that creature is 1/1, put two +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soul Manipulation | handled | Choose one or both — • Counter target creature spell. • Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sphinx of the Steel Wind | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Stormcaller's Boon | handled | Sacrifice this enchantment: Creatures you control gain flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -159,6 +156,7 @@
 | Thopter Foundry | handled | {1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Time Sieve | handled | {T}, Sacrifice five artifacts: Take an extra turn after this one. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unbender Tine | handled | {T}: Untap another target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Uril, the Miststalker | handled | Uril gets +2/+2 for each Aura attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Valley Rannet | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
 | Vectis Dominator | handled | {T}: Tap target creature unless its controller pays 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Heretic | handled | Whenever this creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,11 +167,13 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>6 cards</summary>
 
 - Architects of Will
 - Bloodbraid Elf
+- Predatory Advantage
 - Putrid Leech
+- Sigil Captain
 - Violent Outburst
 
 </details>
@@ -184,6 +184,7 @@
 |---|---|---|---|
 | you may pay {M} and return a basic land you control to its owner's hand rather than pay ~ mana cost. | 5 | Fieldmist Borderpost, Firewild Borderpost, Mistvein Borderpost, Veinfire Borderpost, Wildfield Borderpost | arb |
 | exalted | 4 | Ardent Plea, Ethercaste Knight, Qasali Pridemage, Sigiled Behemoth | arb |
+| fear | 2 | Jhessian Zombies, Lightning Reaver | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has deathtouch. | 1 | Grixis Grimblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has first strike. | 1 | Bant Sureblade | arb |
 | as long as you control another multicolored permanent, ~ gets +N/+N and has flying. | 1 | Esper Stormblade | arb |
@@ -191,11 +192,9 @@
 | as long as you control another multicolored permanent, ~ gets +N/+N and has shroud. | 1 | Naya Hushblade | arb |
 | as ~ enters, you may reveal any number of other artifact cards from your hand. ~ enters with a +N/+N counter on it for each card revealed ~. | 1 | Arsenal Thresher | arb |
 | at the beginning of each upkeep, create a N/N red and green dragon creature token with flying and devour N. | 1 | Dragon Broodmother | arb |
-| at the beginning of your end step, ~ deals damage equal to the number of charge counters on it to each opponent. | 1 | Lightning Reaver | arb |
 | at the beginning of your upkeep, choose target opponent. ~, that player can"..."s hand ~. | 1 | Sen Triplets | arb |
 | at the beginning of your upkeep, put a +N/+N counter on each creature you control if you control a creature with power N or greater. then you gain N life if you | 1 | Mayael's Aria | arb |
 | at the beginning of your upkeep, you may put a feather counter on target creature. if you do, that creature has base power and toughness N/N and has flying for  | 1 | Aven Mimeomancer | arb |
-| cascade (when you cast ~, exile cards from the top of your library until you exile a nonland card that costs less. you may cast it without paying its mana cost. | 1 | Demonic Dread | arb |
 | choose a nonland card name. target player reveals their hand. ~ deals N damage to that player for each card with the chosen name revealed ~. search that player' | 1 | Thought Hemorrhage | arb |
 | counter up to two target spells. | 1 | Double Negative | arb |
 | create N N/N white bird soldier creature tokens with flying, where N is the number of attacking creatures. | 1 | Flurry of Wings | arb |
@@ -211,7 +210,6 @@
 | equipped creature has fear. | 1 | Mask of Riddles | arb |
 | exile all cards from target player's hand and graveyard. | 1 | Identity Crisis | arb |
 | exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
-| fear | 1 | Jhessian Zombies | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | if you would draw a card, instead reveal the top three cards of your library. put all creature cards revealed ~ into your hand and the rest on the bottom of you | 1 | Sages of the Anima | arb |
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
@@ -221,7 +219,6 @@
 | target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
 | the first spell you cast each turn has cascade. | 1 | Maelstrom Nexus | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
-| uril gets +N/+N for each aura attached to it. | 1 | Uril, the Miststalker | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |
 | when karrthus enters, gain control of all dragons, then untap all dragons. | 1 | Karrthus, Tyrant of Jund | arb |
 | when ~ enters, exile all creature cards from target player's graveyard, then create a N/N black zombie creature token for each card exiled ~. | 1 | Necromancer's Covenant | arb |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 5.6% |
-| Works (untested) | 56 | 39.2% |
-| Partial (unaudited) | 12 | 8.4% |
-| Not working | 67 | 46.9% |
+| Works (untested) | 57 | 39.9% |
+| Partial (unaudited) | 13 | 9.1% |
+| Not working | 65 | 45.5% |
 
 ## Cards needing work
 
@@ -45,9 +45,7 @@
 | Field Marshal | silent | Other Soldier creatures get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fury of the Horde | silent | You may exile two red cards from your hand rather than pay this spell's mana cost. Untap all creatures that attacked this turn. After this main phase, there is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garza's Assassin | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Gelid Shackles | silent | {S}: Enchanted creature gains defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glacial Plating | silent | Enchanted creature gets +3/+3 for each age counter on this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Goblin Rimerunner | silent | {T}: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grim Harvest | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Herald of Leshrac | silent | When this creature leaves the battlefield, each player gains control of each land they own that you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hibernation's End | silent | Whenever you pay this enchantment's cumulative upkeep, you may search your library for a creature card with mana value equal to the number of age counters on th | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -95,6 +93,7 @@
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cover of Winter | unaudited | If a creature would deal combat damage to you and/or one or more creatures you control, prevent X of that damage, where X is the number of age counters on this  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Freyalise's Radiance | unaudited | Snow permanents don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Gelid Shackles | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Furrier | unaudited | Prevent all damage that this creature would deal to snow creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Greater Stone Spirit | unaudited | This creature can't be blocked by creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Haakon, Stromgald Scourge | unaudited | You may cast this card from your graveyard, but not from anywhere else. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -122,6 +121,7 @@
 | Frost Marsh | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frost Raptor | handled | {S}{S}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Garza Zol, Plague Queen | handled | Whenever a creature dealt damage by Garza Zol this turn dies, put a +1/+1 counter on Garza Zol. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goblin Rimerunner | handled | {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gristle Grinner | handled | Whenever a creature dies, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gutless Ghoul | handled | {1}, Sacrifice a creature: You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heidar, Rimewind Master | handled | {2}, {T}: Return target permanent to its owner's hand. Activate only if you control four or more snow permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,6 +195,7 @@
 | creatures you control get +N/+N until end of turn, where N is N plus the number of cards named ~ in all graveyards. | 1 | Kjeldoran War Cry | csp |
 | destroy target artifact or enchantment. draw a card at the beginning of the next turn's upkeep. | 1 | Mystic Melting | csp |
 | draw two cards, then sacrifice a permanent. | 1 | Perilous Research | csp |
+| enchanted creature can"..."t be activated. | 1 | Gelid Shackles | csp |
 | enchanted creature gets +N/+N for each age counter on ~. | 1 | Glacial Plating | csp |
 | exile target creature. you draw cards equal to that creature"..."s control. if you do, discard cards equal to that creature's toughness. | 1 | Vanish into Memory | csp |
 | fear | 1 | Phobian Phantasm | csp |
@@ -231,11 +232,9 @@
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
 | {M}, reveal N black cards from your hand, sacrifice ~: exile up to N target cards from a single graveyard. | 1 | Martyr of Bones | csp |
 | {M}, {M}: target snow land becomes a N/N blue elemental creature with flying. it's still a land. | 1 | Balduvian Frostwaker | csp |
-| {M}: enchanted creature gains defender until end of turn. | 1 | Gelid Shackles | csp |
 | {M}: remove an ice counter from ~. | 1 | Dark Depths | csp |
 | {M}: remove target blocking creature from combat. creatures it was blocking that hadn't become blocked by another creature ~ become unblocked, then it blocks an | 1 | Balduvian Warlord | csp |
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
-| {M}: target creature can't block ~. | 1 | Goblin Rimerunner | csp |
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
 | {M}{M}: snow creatures you control get +N/+N until end of turn. | 1 | Diamond Faerie | csp |

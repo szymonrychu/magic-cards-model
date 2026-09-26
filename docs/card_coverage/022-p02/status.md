@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 1 | 3.8% |
-| Works (untested) | 19 | 73.1% |
+| Works (untested) | 20 | 76.9% |
 | Partial (unaudited) | 1 | 3.8% |
-| Not working | 5 | 19.2% |
+| Not working | 4 | 15.4% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Denizen of the Deep | silent | When this creature enters, return each other creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Lore | silent | Draw four cards, then discard three cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Magma Giant | silent | When this creature enters, it deals 2 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sea Drake | silent | When this creature enters, return two target lands you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sylvan Basilisk | silent | Whenever this creature becomes blocked by a creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lone Wolf | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -41,6 +40,7 @@
 | Goblin Mountaineer | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Goblin Piker | handled |  |  | Y/-/- | not_tested |
 | Goblin Raider | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Magma Giant | handled | When this creature enters, it deals 2 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Norwood Ranger | handled |  |  | Y/-/- | not_tested |
 | Ogre Taskmaster | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ravenous Rats | handled | When this creature enters, target opponent discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -66,7 +66,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | draw four cards, then discard three cards at random. | 1 | Goblin Lore | p02 |
-| when ~ enters, it deals N damage to each creature and each player. | 1 | Magma Giant | p02 |
 | when ~ enters, return each other creature you control to its owner's hand. | 1 | Denizen of the Deep | p02 |
 | when ~ enters, return two target lands you control to their owner's hand. | 1 | Sea Drake | p02 |
 | whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Sylvan Basilisk | p02 |

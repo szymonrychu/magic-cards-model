@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 4.9% |
+| Tested | 12 | 5.3% |
 | Works (untested) | 136 | 60.2% |
 | Partial (unaudited) | 10 | 4.4% |
-| Not working | 69 | 30.5% |
+| Not working | 68 | 30.1% |
 
 ## Cards needing work
 
@@ -93,7 +93,6 @@
 | Herald of Kozilek | notice | Colorless spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lithomancer's Focus | notice | Target creature gets +2/+2 until end of turn. Prevent all damage that would be dealt to that creature this turn by colorless sources. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oran-Rief Hydra | notice | Landfall — Whenever a land you control enters, put a +1/+1 counter on this creature. If that land is a Forest, put two +1/+1 counters on this creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Retreat to Valakut | notice | Landfall — Whenever a land you control enters, choose one — • Target creature gets +2/+0 until end of turn. • Target creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unnatural Aggression | notice | Devoid (This card has no color.) Target creature you control fights target creature an opponent controls. If the creature an opponent controls would die this tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Breaker of Armies | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kor Castigator | unaudited | This creature can't be blocked by Eldrazi Scions. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -138,7 +137,6 @@
 | Desolation Twin | handled | When you cast this spell, create a 10/10 colorless Eldrazi creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drana's Emissary | handled | At the beginning of your upkeep, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drowner of Hope | handled | When this creature enters, create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Dust Stalker | handled | At the beginning of each end step, if you control no other colorless creatures, return this creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eldrazi Devastator | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Eldrazi Skyspawner | handled | When this creature enters, create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expedition Envoy | handled |  |  | Y/Y/- | not_tested |
@@ -201,6 +199,7 @@
 | Retreat to Coralhelm | handled | Landfall — Whenever a land you control enters, choose one — • You may tap or untap target creature. • Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retreat to Emeria | handled | Landfall — Whenever a land you control enters, choose one — • Create a 1/1 white Kor Ally creature token. • Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Retreat to Hagra | handled | Landfall — Whenever a land you control enters, choose one — • Target creature gets +1/+0 and gains deathtouch until end of turn. • Each opponent loses 1 life an | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Retreat to Valakut | handled | Landfall — Whenever a land you control enters, choose one — • Target creature gets +2/+0 until end of turn. • Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roil's Retribution | handled | Roil's Retribution deals 5 damage divided as you choose among any number of target attacking or blocking creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rot Shambler | handled | Whenever another creature you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruin Processor | handled | When you cast this spell, you may put a card an opponent owns from exile into that player's graveyard. If you do, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -245,10 +244,11 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Blisterpod
 - Canopy Vista
+- Dust Stalker
 - Endless One
 - Kiora, Master of the Depths
 - Murk Strider
@@ -267,8 +267,8 @@
 |---|---|---|---|
 | Converge | 12 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Painful Truths | bfz |
 | awaken | 11 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
-| Landfall | 6 | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra | bfz |
 | ingest | 6 | Benthic Infiltrator, Culling Drone, Mist Intruder, Salvage Drone, Sludge Crawler | bfz |
+| Landfall | 5 | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra | bfz |
 | other colorless creatures you control get +N/+N. | 2 | Ruination Guide, Tide Drifter | bfz |
 | Rally | 1 | Munda, Ambush Leader | bfz |
 | +N: until end of turn, gideon becomes a N/N human soldier ally creature with indestructible that's still a planeswalker. prevent all damage that would be dealt  | 1 | Gideon, Ally of Zendikar | bfz |

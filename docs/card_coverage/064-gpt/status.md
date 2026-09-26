@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.0% |
-| Works (untested) | 66 | 44.3% |
-| Partial (unaudited) | 7 | 4.7% |
-| Not working | 67 | 45.0% |
+| Tested | 10 | 6.7% |
+| Works (untested) | 76 | 51.0% |
+| Partial (unaudited) | 8 | 5.4% |
+| Not working | 55 | 36.9% |
 
 ## Cards needing work
 
@@ -29,13 +29,11 @@
 | Absolver Thrull | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Abyssal Nocturnus | silent | Whenever an opponent discards a card, this creature gets +2/+2 and gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Agent of Masks | silent | At the beginning of your upkeep, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Battering Wurm | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Beastmaster's Magemark | silent | Creatures you control that are enchanted get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Belfry Spirit | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Benediction of Moons | silent | You gain 1 life for each player. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bioplasm | silent | Whenever this creature attacks, exile the top card of your library. If it's a creature card, this creature gets +X/+Y until end of turn, where X is the exiled c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blind Hunter | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Bloodscale Prowler | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Conjurer's Ban | silent | Choose a card name. Until your next turn, spells with the chosen name can't be cast and lands with the chosen name can't be played. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crash Landing | silent | Target creature with flying loses flying until end of turn. Crash Landing deals damage to that creature equal to the number of Forests you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cry of Contrition | silent | Target player discards a card. Haunt (When this spell card is put into a graveyard after resolving, exile it haunting target creature.) When the creature this c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,25 +42,20 @@
 | Earth Surge | silent | Each land gets +2/+2 as long as it's a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Exhumer Thrull | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Fencer's Magemark | silent | Creatures you control that are enchanted get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Feral Animist | silent | {3}: This creature gets +X/+0 until end of turn, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graven Dominator | silent | When this creature enters or the creature it haunts dies, each other creature has base power and toughness 1/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gristleback | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Hissing Miasma | silent | Whenever a creature attacks you, its controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Hypervolt Grasp | silent | {1}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ink-Treader Nephilim | silent | Whenever a player casts an instant or sorcery spell, if that spell targets only this creature, copy the spell for each other creature that spell could target. E | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Izzet Guildmage | silent | {2}{U}: Copy target instant spell you control with mana value 2 or less. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Living Inferno | silent | {T}: This creature deals damage equal to its power divided as you choose among any number of target creatures. Each of those creatures deals damage equal to its | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Martyred Rusalka | silent | {W}, Sacrifice a creature: Target creature can't attack this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mimeofacture | silent | Replicate {3}{U} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Choose target permane | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moratorium Stone | silent | {2}{W}{B}, {T}, Sacrifice this artifact: Exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all pe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourning Thrull | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Necromancer's Magemark | silent | Creatures you control that are enchanted get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nivix, Aerie of the Firemind | silent | {2}{U}{R}, {T}: Exile the top card of your library. Until your next turn, you may cast it if it's an instant or sorcery spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orzhov Euthanist | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Orzhov Guildmage | silent | {2}{B}: Each player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orzhov Pontiff | silent | Haunt | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Parallectric Feedback | silent | Parallectric Feedback deals damage to target spell's controller equal to that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Petrified Wood-Kin | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Poisonbelly Ogre | silent | Whenever another creature enters, its controller loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Predatory Focus | silent | You may have creatures you control assign their combat damage this turn as though they weren't blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primeval Light | silent | Destroy all enchantments target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -72,9 +65,6 @@
 | Seize the Soul | silent | Destroy target nonwhite, nonblack creature. Create a 1/1 white Spirit creature token with flying. Haunt (When this spell card is put into a graveyard after reso | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow Lance | silent | {1}{B}: Enchanted creature gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Siege of Towers | silent | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Target Mountain becom | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Skarrgan Firebird | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Skarrgan Pit-Skulk | silent | Bloodthirst | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Skarrgan Skybreaker | silent | {1}, Sacrifice this creature: It deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sky Swallower | silent | When this creature enters, target opponent gains control of all other permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Smogsteed Rider | silent | Whenever this creature attacks, each other attacking creature gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Souls of the Faultless | silent | Whenever this creature is dealt combat damage, you gain that much life and attacking player loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,22 +75,22 @@
 | Vedalken Plotter | silent | When this creature enters, exchange control of target land you control and target land an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vertigo Spawn | silent | Whenever this creature blocks a creature, tap that creature. That creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witch-Maw Nephilim | silent | Whenever this creature attacks, it gains trample until end of turn if its power is 10 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Yore-Tiller Nephilim | silent | Whenever this creature attacks, return target creature card from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aetherplasm | notice | Whenever this creature blocks a creature, you may return this creature to its owner's hand. If you do, you may put a creature card from your hand onto the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cerebral Vortex | notice | Target player draws two cards, then Cerebral Vortex deals damage to that player equal to the number of cards they've drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gatherer of Graces | notice | This creature gets +1/+1 for each Aura attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ghost Council of Orzhova | notice | {1}, Sacrifice a creature: Exile Ghost Council of Orzhova. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ghostway | notice | Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Killer Instinct | notice | At the beginning of your upkeep, reveal the top card of your library. If it's a creature card, put it onto the battlefield. That creature gains haste until end  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thunderheads | notice | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Create a 3/3 blue Weird creature token with defender and flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Battering Wurm | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Djinn Illuminatus | unaudited | Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Lifeforce | unaudited | Creature spells can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Singularity | unaudited | All nonland permanents are legendary. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Pillory of the Sleepless | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Silhana Ledgewalker | unaudited | This creature can't be blocked except by creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Skarrgan Pit-Skulk | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stratozeppelid | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ulasht, the Hate Seed | unaudited | Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Angel of Despair | handled | When this creature enters, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bloodscale Prowler | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
 | Borborygmos | handled | Whenever Borborygmos deals combat damage to a player, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Castigate | handled | Target opponent reveals their hand. You choose a nonland card from it and exile that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caustic Rain | handled | Exile target land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -112,13 +102,16 @@
 | Douse in Gloom | handled | Douse in Gloom deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drowned Rusalka | handled | {U}, Sacrifice a creature: Discard a card, then draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dune-Brood Nephilim | handled | Whenever this creature deals combat damage to a player, create a 1/1 colorless Sand creature token for each land you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Feral Animist | handled | {3}: This creature gets +X/+0 until end of turn, where X is its power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frazzle | handled | Counter target nonblue spell. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gatherer of Graces | handled | This creature gets +1/+1 for each Aura attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gelectrode | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghor-Clan Bloodscale | handled | {3}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost Warden | handled | {T}: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Giant Solifuge | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Glint-Eye Nephilim | handled | Whenever this creature deals combat damage to a player, draw that many cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Flectomancer | handled | Sacrifice this creature: You may change the targets of target instant or sorcery spell. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gristleback | handled | Sacrifice this creature: You gain life equal to this creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Guildmage | handled | {3}{R}, Sacrifice a land: This creature deals 2 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Signet | handled |  |  | Y/-/- | not_tested |
 | Gruul War Plow | handled | Creatures you control have trample. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -131,15 +124,18 @@
 | Leap of Flame | handled | Replicate {U}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Target creature gets  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leyline of Lightning | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lionheart Maverick | handled | {4}{W}: This creature gets +1/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Martyred Rusalka | handled | {W}, Sacrifice a creature: Target creature can't attack this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mizzium Transreliquat | handled | {3}: This artifact becomes a copy of target artifact until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mortify | handled | Destroy target creature or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Niv-Mizzet, the Firemind | handled | Whenever you draw a card, Niv-Mizzet deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ogre Savant | handled | When this creature enters, if {U} was spent to cast it, return target creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Orzhov Basilica | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Orzhov Guildmage | handled | {2}{W}: Target player gains 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Orzhov Signet | handled |  |  | Y/-/- | not_tested |
 | Orzhova, the Church of Deals | handled | {3}{W}{B}, {T}: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ostiary Thrull | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Petrahydrox | handled | When this creature becomes the target of a spell or ability, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Petrified Wood-Kin | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyromatics | handled | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Pyromatics deals 1 da | the engine reads this text and performs it | Y/-/- | not_tested |
 | Repeal | handled | Return target nonland permanent with mana value X to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Restless Bones | handled | {3}{B}, {T}: Target creature gains swampwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -149,7 +145,9 @@
 | Scorched Rusalka | handled | {R}, Sacrifice a creature: This creature deals 1 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shattering Spree | handled | Replicate {R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shrieking Grotesque | handled | When this creature enters, if {B} was spent to cast it, target player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Silhana Ledgewalker | handled | This creature can't be blocked except by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Silhana Starfletcher | handled | As this creature enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Skarrgan Skybreaker | handled | {1}, Sacrifice this creature: It deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skeletal Vampire | handled | When this creature enters, create two 1/1 black Bat creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Starved Rusalka | handled | {G}, Sacrifice a creature: You gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steamcore Weird | handled | When this creature enters, if {R} was spent to cast it, it deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,11 +164,12 @@
 | Withstand | handled | Prevent the next 3 damage that would be dealt to any target this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wreak Havoc | handled | This spell can't be countered. Destroy target artifact or land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wurmweaver Coil | handled | Enchanted creature gets +6/+6. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Yore-Tiller Nephilim | handled | Whenever this creature attacks, return target creature card from your graveyard to the battlefield tapped and attacking. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Burning-Tree Shaman
 - Electrolyze
@@ -179,6 +178,7 @@
 - Gruul Turf
 - Leyline of the Void
 - Order of the Stars
+- Skarrgan Firebird
 - Steam Vents
 - Stomping Ground
 
@@ -188,8 +188,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| bloodthirst | 6 | Battering Wurm, Bloodscale Prowler, Gristleback, Petrified Wood-Kin, Skarrgan Firebird | gpt |
 | haunt | 6 | Absolver Thrull, Belfry Spirit, Blind Hunter, Exhumer Thrull, Orzhov Euthanist | gpt |
+| creatures with power less than ~ power can't block it. | 2 | Battering Wurm, Skarrgan Pit-Skulk | gpt |
 | creatures you control that are enchanted get +N/+N. | 2 | Beastmaster's Magemark, Necromancer's Magemark | gpt |
 | all nonland permanents are legendary. | 1 | Leyline of Singularity | gpt |
 | as long as equipped creature is tapped, tapped creatures you control get +N/+N. | 1 | Sword of the Paruns | gpt |
@@ -227,7 +227,6 @@
 | whenever ~ attacks, each other attacking creature gains fear until end of turn. | 1 | Smogsteed Rider | gpt |
 | whenever ~ attacks, exile the top card of your library. if it"..."s power and y is its toughness. | 1 | Bioplasm | gpt |
 | whenever ~ attacks, it gains trample until end of turn if its power is N or greater. | 1 | Witch-Maw Nephilim | gpt |
-| whenever ~ attacks, return target creature card from your graveyard to the battlefield tapped and attacking. | 1 | Yore-Tiller Nephilim | gpt |
 | whenever ~ blocks a creature, tap that creature. that creature doesn"..."s next untap step. | 1 | Vertigo Spawn | gpt |
 | whenever ~ blocks a creature, you may return ~ to its owner's hand. if you do, you may put a creature card from your hand onto the battlefield blocking that cre | 1 | Aetherplasm | gpt |
 | whenever ~ deals damage, you gain that much life. | 1 | Mourning Thrull | gpt |
@@ -235,22 +234,16 @@
 | you gain N life for each player. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies | 1 | Benediction of Moons | gpt |
 | you may have creatures you control assign their combat damage ~ as though they weren't blocked. | 1 | Predatory Focus | gpt |
 | {M}, sacrifice a creature: exile ~. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Ghost Council of Orzhova | gpt |
-| {M}, sacrifice a creature: target creature can't attack ~. | 1 | Martyred Rusalka | gpt |
-| {M}, sacrifice ~: it deals damage equal to its power to any target. | 1 | Skarrgan Skybreaker | gpt |
 | {M}, {M}: attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Rabble-Rouser | gpt |
 | {M}, {M}: each creature with mana value N can't attack or block ~. | 1 | Droning Bureaucrats | gpt |
 | {M}: ~ deals damage equal to its power divided as you choose among any number of target creatures. each of those creatures deals damage equal to its power to ~. | 1 | Living Inferno | gpt |
-| {M}: ~ gets +N/+N until end of turn, where N is its power. | 1 | Feral Animist | gpt |
 | {M}{M}: copy target instant spell you control with mana value N or less. you may choose new targets for the copy. | 1 | Izzet Guildmage | gpt |
-| {M}{M}: each player loses N life. | 1 | Orzhov Guildmage | gpt |
 | {M}{M}: enchanted creature gets +N/+N until end of turn. | 1 | Shadow Lance | gpt |
 | {M}{M}: return ~ to its owner's hand. | 1 | Hypervolt Grasp | gpt |
 | {M}{M}{M}, {M}, sacrifice ~: exile target nonland card from a graveyard, all other cards from graveyards with the same name as that card, and all permanents wit | 1 | Moratorium Stone | gpt |
 | {M}{M}{M}, {M}: exile the top card of your library. until your next turn, you may cast it if it's an instant or sorcery spell. | 1 | Nivix, Aerie of the Firemind | gpt |
 | ~ can block only creatures with flying. | 1 | Stratozeppelid | gpt |
-| ~ can't be blocked except by creatures with flying. | 1 | Silhana Ledgewalker | gpt |
 | ~ deals damage to target spell"..."s mana value. | 1 | Parallectric Feedback | gpt |
-| ~ gets +N/+N for each aura attached to it. | 1 | Gatherer of Graces | gpt |
 
 ## Notes
 

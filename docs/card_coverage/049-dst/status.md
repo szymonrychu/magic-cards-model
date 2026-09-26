@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 1.9% |
-| Works (untested) | 72 | 44.4% |
+| Tested | 4 | 2.5% |
+| Works (untested) | 71 | 43.8% |
 | Partial (unaudited) | 11 | 6.8% |
 | Not working | 76 | 46.9% |
 
@@ -131,7 +131,6 @@
 | Dragon's Claw | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Echoing Decay | handled | Target creature and all other creatures with the same name as that creature get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Drain | handled | Essence Drain deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Furnace Dragon | handled | When this creature enters, if you cast it from your hand, exile all artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geth's Grimoire | handled | Whenever an opponent discards a card, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grimclaw Bats | handled | {B}, Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartseeker | handled | Equipped creature gets +2/+1 and has "{T}, Unattach Heartseeker: Destroy target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -189,9 +188,10 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
 - Echoing Courage
+- Furnace Dragon
 - Sword of Fire and Ice
 - Trinisphere
 

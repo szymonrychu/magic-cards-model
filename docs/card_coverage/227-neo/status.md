@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.5% |
-| Works (untested) | 116 | 43.4% |
+| Tested | 23 | 8.6% |
+| Works (untested) | 118 | 44.2% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 121 | 45.3% |
+| Not working | 116 | 43.4% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Chainflail Centipede | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Clawing Torment | silent | As long as enchanted permanent is a creature, it gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloudsteel Kirin | silent | Equipped creature has flying and "You can't lose the game and your opponents can't win the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Containment Construct | silent | Whenever you discard a card, you may exile that card from your graveyard. If you do, you may play that card this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Covert Technician | silent | Whenever this creature deals combat damage to a player, you may put an artifact card with mana value less than or equal to that damage from your hand onto the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Discover the Impossible | silent | Look at the top five cards of your library. Exile one of them face down and put the rest on the bottom of your library in a random order. You may cast the exile | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonspark Reactor | silent | {4}, Sacrifice this artifact: It deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -91,12 +90,10 @@
 | Peerless Samurai | silent | Whenever a Samurai or Warrior you control attacks alone, the next spell you cast this turn costs {1} less to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rabbit Battery | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Raiyuu, Storm's Edge | silent | Whenever a Samurai or Warrior you control attacks alone, untap it. If it's the first combat phase of the turn, there is an additional combat phase after this ph | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Reckoner Bankbuster | silent | {2}, {T}, Remove a charge counter from this Vehicle: Draw a card. Then if there are no charge counters on this Vehicle, create a Treasure token and a 1/1 colorl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reckoner Shakedown | silent | Target opponent reveals their hand. You may choose a nonland card from it. If you do, that player discards that card. If you don't, put two +1/+1 counters on a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Replication Specialist | silent | Whenever a nontoken artifact you control enters, you may pay {1}{U}. If you do, create a token that's a copy of that artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Risona, Asari Commander | silent | Whenever combat damage is dealt to you, remove an indestructible counter from Risona. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Satoru Umezawa | silent | Whenever you activate a ninjutsu ability, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your library | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Satsuki, the Living Lore | silent | When Satsuki dies, choose up to one — • Return target Saga or enchantment creature you control to its owner's hand. • Return target Saga card from your graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrap Welder | silent | {T}, Sacrifice an artifact with mana value X: Return target artifact card with mana value less than X from your graveyard to the battlefield. It gains haste unt | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shigeki, Jukai Visionary | silent | {1}{G}, {T}, Return Shigeki to its owner's hand: Reveal the top four cards of your library. You may put a land card from among them onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Short Circuit | silent | As long as enchanted permanent is a creature, it gets -3/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -117,7 +114,6 @@
 | Thundering Raiju | silent | Whenever this creature attacks, put a +1/+1 counter on target creature you control. Then this creature deals X damage to each opponent, where X is the number of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tribute to Horobi // Echo of Death's Wail | silent | I, II — Each opponent creates a 1/1 black Rat Rogue creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Twisted Embrace | silent | As long as enchanted permanent is a creature, it gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Unstoppable Ogre | silent | When this creature enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weaver of Harmony | silent | Other enchantment creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Webspinner Cuff | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ancestral Katana | notice | Whenever a Samurai or Warrior you control attacks alone, you may pay {1}. When you do, attach this Equipment to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -139,7 +135,6 @@
 | Kappa Tech-Wrecker | notice | Whenever this creature deals combat damage to a player, you may remove a deathtouch counter from it. When you do, exile target artifact or enchantment that play | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitsune Ace | notice | Whenever a Vehicle you control attacks, choose one — • That Vehicle gains first strike until end of turn. • Untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lethal Exploit | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each modified creature you controlled as you cast this spell. (E | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mukotai Soulripper | notice | Whenever this Vehicle attacks, you may sacrifice another artifact or creature. If you do, put a +1/+1 counter on this Vehicle and it gains menace until end of t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Okiba Salvage | notice | Return target creature or Vehicle card from your graveyard to the battlefield. Then put two +1/+1 counters on that permanent if you control an artifact and an e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Regent's Authority | notice | Target creature gets +2/+2 until end of turn. If it's an enchantment creature or legendary creature, instead put a +1/+1 counter on it and it gets +1/+1 until e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Runaway Trash-Bot | notice | This creature gets +1/+0 for each artifact and/or enchantment card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -190,7 +185,6 @@
 | Go-Shintai of Hidden Cruelty | handled | At the beginning of your end step, you may pay {1}. When you do, destroy target creature with toughness X or less, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Go-Shintai of Shared Purpose | handled | At the beginning of your end step, you may pay {1}. If you do, create a 1/1 colorless Spirit creature token for each Shrine you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golden-Tail Disciple | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
-| Goro-Goro, Disciple of Ryusei | handled | {R}: Creatures you control gain haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greater Tanuki | handled | Channel — {2}{G}, Discard this card: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heiko Yamazaki, the General | handled | Whenever a Samurai or Warrior you control attacks alone, you may cast target artifact card from your graveyard this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | High-Speed Hoverbike | handled | When this Vehicle enters, tap up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -204,7 +198,6 @@
 | Jukai Trainee | handled | Whenever this creature blocks or becomes blocked, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kami of Industry | handled | When this creature enters, return target artifact card with mana value 3 or less from your graveyard to the battlefield. It gains haste. Sacrifice it at the beg | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kami of Terrible Secrets | handled | When this creature enters, if you control an artifact and an enchantment, you draw a card and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Kami of Transience | handled | Whenever you cast an enchantment spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kura, the Boundless Sky | handled | When Kura dies, choose one — • Search your library for up to three land cards, reveal them, put them into your hand, then shuffle. • Create an X/X green Spirit  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kyodai, Soul of Kamigawa | handled | When Kyodai enters, another target permanent gains indestructible for as long as you control Kyodai. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Life of Toshiro Umezawa // Memory of Toshiro | handled | I, II — Choose one — • Target creature gets +2/+2 until end of turn. • Target creature gets -1/-1 until end of turn. • You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -218,6 +211,7 @@
 | Moonsnare Specialist | handled | When this creature enters, return up to one target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mothrider Patrol | handled | {3}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mukotai Ambusher | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
+| Mukotai Soulripper | handled | Whenever this Vehicle attacks, you may sacrifice another artifact or creature. If you do, put a +1/+1 counter on this Vehicle and it gains menace until end of t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naomi, Pillar of Order | handled | Whenever Naomi enters or attacks, if you control an artifact and an enchantment, create a 2/2 white Samurai creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Network Disruptor | handled | When this creature enters, tap target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Network Terminal | handled | {1}, {T}, Tap another untapped artifact you control: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -231,6 +225,7 @@
 | Planar Incision | handled | Exile target artifact or creature, then return it to the battlefield under its owner's control with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prodigy's Prototype | handled | Whenever one or more Vehicles you control attack, create a 1/1 colorless Pilot creature token with "This token crews Vehicles as though its power were 2 greater | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prosperous Thief | handled | Whenever one or more Ninja or Rogue creatures you control deal combat damage to a player, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Reckoner Bankbuster | handled | This Vehicle enters with three charge counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reckoner's Bargain | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. You gain life equal to the sacrificed permanent's mana value. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reinforced Ronin | handled | At the beginning of your end step, return this creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reito Sentinel | handled | When this creature enters, target player mills three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -239,6 +234,7 @@
 | Roadside Reliquary | handled | {2}, {T}, Sacrifice this land: Draw a card if you control an artifact. Draw a card if you control an enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roaring Earth | handled | Landfall — Whenever a land you control enters, put a +1/+1 counter on target creature or Vehicle you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Saiba Trespassers | handled | Channel — {3}{U}, Discard this card: Tap up to two target creatures you don't control. Those creatures don't untap during their controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Satsuki, the Living Lore | handled | {T}: Put a lore counter on each Saga you control. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scrapyard Steelbreaker | handled | {1}, Sacrifice another artifact: This creature gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Searchlight Companion | handled | When this creature enters, create a 1/1 colorless Spirit creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Season of Renewal | handled | Choose one or both — • Return target creature card from your graveyard to your hand. • Return target enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -268,6 +264,7 @@
 | Uncharted Haven | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Undercity Scrounger | handled | {T}: Create a Treasure token. Activate only if a creature died this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unforgiving One | handled | Whenever this creature attacks, return target creature card with mana value X or less from your graveyard to the battlefield, where X is the number of modified  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Unstoppable Ogre | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Virus Beetle | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Voltage Surge | handled | As an additional cost to cast this spell, you may sacrifice an artifact. Voltage Surge deals 2 damage to target creature or planeswalker. If this spell's additi | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wanderer's Intervention | handled | Wanderer's Intervention deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -277,16 +274,19 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>23 cards</summary>
 
 - Boseiju, Who Endures
 - Colossal Skyturtle
+- Containment Construct
 - Eiganjo, Seat of the Empire
 - Experimental Synthesizer
 - Fable of the Mirror-Breaker // Reflection of Kiki-Jiki
 - Go-Shintai of Boundless Vigor
+- Goro-Goro, Disciple of Ryusei
 - Greasefang, Okiba Boss
 - Jin-Gitaxias, Progress Tyrant
+- Kami of Transience
 - March of Otherworldly Light
 - Mirror Box
 - Moon-Circuit Hacker
@@ -371,7 +371,6 @@
 | when junji dies, choose one — • each opponent discards two cards and loses N life. • put target non-dragon creature card from a graveyard onto the battlefield u | 1 | Junji, the Midnight Sky | neo |
 | when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
 | when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
-| when satsuki dies, choose up to one — • return target saga or enchantment creature you control to its owner's hand. • return target saga card from your graveyar | 1 | Satsuki, the Living Lore | neo |
 | when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Kumano Faces Kakkazan // Etching of Kumano | neo |
 | when ~ dies, if it had counters on it, put those counters on target creature you control. | 1 | Iron Apprentice | neo |
 | when ~ enters, choose one — • return up to one target ninja or rogue creature card from your graveyard to your hand. • put target creature card from your gravey | 1 | Kami of Restless Shadows | neo |
@@ -381,7 +380,6 @@
 | when ~ enters, look at the top five cards of your library. you may reveal a creature or enchantment card from among them and put it into your hand. put the rest | 1 | Blossom Prancer | neo |
 | when ~ enters, put N +N/+N counters on enchanted permanent. | 1 | Awakened Awareness | neo |
 | when ~ enters, tap enchanted permanent. if it's an equipment, unattach it. | 1 | Tamiyo's Compleation | neo |
-| when ~ enters, target creature can't block ~. | 1 | Unstoppable Ogre | neo |
 | when ~ enters, you may return an enchantment you control to its owner's hand. if you do, you gain N life. | 1 | Geothermal Kami | neo |
 | whenever a nontoken artifact you control enters, you may pay {M}{M}. if you do, create a token that's a copy of that artifact. | 1 | Replication Specialist | neo |
 | whenever a samurai or warrior you control attacks alone, it gets +N/+N until end of turn for each samurai or warrior you control. | 1 | Asari Captain | neo |
@@ -393,10 +391,8 @@
 | whenever combat damage is dealt to you, remove an indestructible counter from risona. | 1 | Risona, Asari Commander | neo |
 | whenever one or more artifacts you control leave the battlefield during your turn, create a N/N colorless construct artifact creature token. ~ triggers only onc | 1 | Oni-Cult Anvil | neo |
 | whenever you activate a ninjutsu ability, look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library | 1 | Satoru Umezawa | neo |
-| whenever you discard a card, you may exile that card from your graveyard. if you do, you may play that card ~. | 1 | Containment Construct | neo |
 | whenever ~ attacks, choose one — • exile target creature card from a graveyard. when you do, create a N/N colorless spirit creature token. • exile target noncre | 1 | Teachings of the Kirin // Kirin-Touched Orochi | neo |
 | whenever ~ attacks, put a +N/+N counter on target creature you control. then ~ deals N damage to each opponent, where N is the number of modified creatures you  | 1 | Thundering Raiju | neo |
-| whenever ~ attacks, you may sacrifice another artifact or creature. if you do, put a +N/+N counter on ~ and it gains menace until end of turn. | 1 | Mukotai Soulripper | neo |
 | whenever ~ becomes attached to a creature, tap that creature. | 1 | Enormous Energy Blade | neo |
 | whenever ~ becomes blocked, untap up to three lands you control. | 1 | Azusa's Many Journeys // Likeness of the Seeker | neo |
 | whenever ~ becomes crewed for the first time each turn, until end of turn, ~ becomes a copy of target nonlegendary creature that crewed it ~, except it"..."s a  | 1 | Mindlink Mech | neo |
@@ -412,7 +408,6 @@
 | {M}, exile ~ and four other artifact creatures and/or vehicles you control: create mechtitan, a legendary N/N construct artifact creature token with flying, vig | 1 | Mechtitan Core | neo |
 | {M}, sacrifice an artifact with mana value N: return target artifact card with mana value less than N from your graveyard to the battlefield. it gains haste unt | 1 | Scrap Welder | neo |
 | {M}, sacrifice ~: it deals damage equal to the number of charge counters on it to target player and that much damage to up to one target creature. | 1 | Dragonspark Reactor | neo |
-| {M}, {M}, remove a charge counter from ~: draw a card. then if there are no charge counters on ~, create a treasure token and a N/N colorless pilot creature tok | 1 | Reckoner Bankbuster | neo |
 | {M}, {M}: target vehicle becomes an artifact creature until end of turn. | 1 | Mech Hangar | neo |
 | {M}: until end of turn, equipped creature gets +N/+N, where N is the number of times ~ has resolved ~. | 1 | Bronze Cudgels | neo |
 | {M}{M}, {M}, return shigeki to its owner's hand: reveal the top four cards of your library. you may put a land card from among them onto the battlefield tapped. | 1 | Shigeki, Jukai Visionary | neo |

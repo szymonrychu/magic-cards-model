@@ -1,15 +1,15 @@
-# Commander 2017 (c17)
+# The Brothers' War Retro Artifacts (brr)
 
-- Expansion: 182
-- Set code: `c17`
-- Release date: 2017-08-25
-- Cards in scope (Modern/Pioneer/Standard-legal): 2
+- Expansion: 295
+- Set code: `brr`
+- Release date: 2022-11-18
+- Cards in scope (Modern/Pioneer/Standard-legal): 1
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 2 |
+| Modern | 1 |
 | Pioneer | 1 |
 | Standard | 1 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 50.0% |
+| Tested | 0 | 0.0% |
 | Works (untested) | 0 | 0.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 1 | 50.0% |
+| Not working | 1 | 100.0% |
 
 ## Cards needing work
 
@@ -31,9 +31,8 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>0 cards</summary>
 
-- Kess, Dissident Mage
 
 </details>
 
@@ -41,7 +40,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| whenever you cast a spell, put a +N/+N counter on ramos for each of that spell's colors. | 1 | Ramos, Dragon Engine | c17 |
+| whenever you cast a spell, put a +N/+N counter on ramos for each of that spell's colors. | 1 | Ramos, Dragon Engine | brr |
 
 ## Notes
 

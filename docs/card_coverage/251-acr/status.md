@@ -3,13 +3,13 @@
 - Expansion: 251
 - Set code: `acr`
 - Release date: 2024-07-05
-- Cards in scope (Modern/Pioneer/Standard-legal): 105
+- Cards in scope (Modern/Pioneer/Standard-legal): 106
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 105 |
+| Modern | 106 |
 | Pioneer | 0 |
 | Standard | 0 |
 
@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 4.8% |
-| Works (untested) | 29 | 27.6% |
-| Partial (unaudited) | 9 | 8.6% |
-| Not working | 62 | 59.0% |
+| Tested | 7 | 6.6% |
+| Works (untested) | 33 | 31.1% |
+| Partial (unaudited) | 9 | 8.5% |
+| Not working | 57 | 53.8% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Assassin Gauntlet | silent | When this Equipment enters, attach it to up to one target creature you control. Tap all creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Assassin Initiate | silent | {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aveline de Grandpré | silent | Whenever a creature you control with deathtouch deals combat damage to a player, put that many +1/+1 counters on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ballad of the Black Flag | silent | I, II, III — Mill three cards. You may put a historic card from among them into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Basim Ibn Ishaq | silent | Whenever you cast a historic spell, draw a card. Basim Ibn Ishaq can't be blocked this turn. This ability triggers only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bayek of Siwa | silent | During your turn, other historic creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Become Anonymous | silent | Exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. They enter tapped.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,11 +69,9 @@
 | Roshan, Hidden Magister | silent | Other creatures you control are Assassins in addition to their other types. The same is true for creature spells you control and creature cards you own that are | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Senu, Keen-Eyed Protector | silent | When a legendary creature you control attacks and isn't blocked, if this card is exiled, put it onto the battlefield attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shaun & Rebecca, Agents | silent | When Shaun & Rebecca enters, search your graveyard, hand, and library for a card named The Animus and put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sigurd, Jarl of Ravensthorpe | silent | Whenever you put a lore counter on a Saga you control, put a +1/+1 counter on up to one other target creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Staff of Eden, Vault's Key | silent | {T}: Draw a card for each permanent you control but don't own. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tax Collector | silent | Detain | no machine in the engine executes this keyword | Y/-/- | not_working |
 | The Aesir Escape Valhalla | silent | I — Exile a permanent card from your graveyard. You gain life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| The Animus | silent | {T}: Until your next turn, target legendary creature you control becomes a copy of target creature card in exile with a memory counter on it. Activate only as a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viewpoint Synchronization | silent | Freerunning {2}{G} (You may cast this spell for its freerunning cost if you dealt combat damage to a player this turn with an Assassin or commander.) Search you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yggdrasil, Rebirth Engine | silent | When Yggdrasil enters, exile all creature cards from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Adrestia | notice | Whenever Adrestia attacks, if an Assassin crewed it this turn, draw a card. Adrestia becomes an Assassin in addition to its other types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -83,13 +80,11 @@
 | Auditore Ambush | notice | Choose one or both — • Return target creature to its owner's hand. • Target player searches their library and/or graveyard for a card named Ezio, Blade of Venge | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Labyrinth Adversary | notice | Whenever you attack, you may pay {1}{R}. When you do, target creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Misthios's Fury | notice | Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sokrates, Athenian Teacher | notice | Sokrates has hexproof as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| The Spear of Leonidas | notice | Whenever equipped creature attacks, choose one — • Bull Rush — It gains double strike until end of turn. • Summon — Create Phobos, a legendary 3/2 red Horse cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bureau Headmaster | unaudited | Equip abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Crystal Skull, Isu Spyglass | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Crystal Skull, Isu Spyglass | unaudited | You may play historic lands and cast historic spells from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Detained by Legionnaires | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Excalibur, Sword of Eden | unaudited | This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ezio Auditore da Firenze | unaudited | Assassin spells you cast have freerunning {B}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -101,6 +96,7 @@
 | Arno Dorian | handled | Other Assassins you control get +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Assassin Den | handled | {3}{U}: Put a +1/+1 counter on target creature you control. It can't be blocked this turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aya of Alexandria | handled | Whenever a historic creature you control deals combat damage to a player, create a 1/1 black Assassin creature token with menace. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Black Market Connections | handled | At the beginning of your first main phase, choose one or more — • Sell Contraband — Create a Treasure token. You lose 1 life. • Buy Information — Draw a card. Y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bleeding Effect | handled | At the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. The same is true f | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brotherhood Headquarters | handled |  |  | Y/-/- | not_tested |
 | Brotherhood Patriarch | handled | When this creature dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -120,23 +116,28 @@
 | Settlement Blacksmith | handled | When this creature enters, if you control an Equipment, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shao Jun | handled | Leap Strike — During your turn, Shao Jun has flying and first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shay Cormac | handled | {1}: Permanents your opponents control lose hexproof, indestructible, protection, shroud, and ward until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sigurd, Jarl of Ravensthorpe | handled | Boast — {1}: Put a lore counter on target Saga you control or remove one from it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spartan Veteran | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surtr, Fiery Jötun | handled | Whenever you cast a historic spell, Surtr deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Animus | handled | At the beginning of your end step, exile up to one target legendary creature card from a graveyard with a memory counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | The Capitoline Triad | handled | Those Who Came Before — This spell costs {1} less to cast for each historic card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | The Revelations of Ezio | handled | I — Destroy target tapped creature an opponent controls. | the engine reads this text and performs it | Y/-/- | not_tested |
+| The Spear of Leonidas | handled | Whenever equipped creature attacks, choose one — • Bull Rush — It gains double strike until end of turn. • Summon — Create Phobos, a legendary 3/2 red Horse cre | the engine reads this text and performs it | Y/-/- | not_tested |
 | Towering Viewpoint | handled | Leap of Faith — {3}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tranquilize | handled | Tap target creature an opponent controls and put three stun counters on it. (If a permanent with a stun counter would become untapped, remove one from it instea | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>7 cards</summary>
 
 - Abstergo Entertainment
+- Ballad of the Black Flag
 - Eivor, Battle-Ready
 - Evie Frye
 - Haystack
 - Jacob Frye
+- Labyrinth Adversary
 
 </details>
 
@@ -171,7 +172,6 @@
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) search your library for up  | 1 | Viewpoint Synchronization | acr |
 | freerunning {M}{M} (you may cast ~ for its freerunning cost if you dealt combat damage to a player ~ with an assassin or commander.) untap all creatures you con | 1 | Overpowering Attack | acr |
 | havi has indestructible as long as there are four or more historic cards in your graveyard. | 1 | Havi, the All-Father | acr |
-| mill three cards. you may put a historic card from among them into your hand. | 1 | Ballad of the Black Flag | acr |
 | other creatures you control are assassins in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Roshan, Hidden Magister | acr |
 | other knights you control get +N/+N and have protection from assassins. | 1 | Haytham Kenway | acr |
 | return each nonland permanent that"..."s hand. (artifacts, legendaries, and sagas are historic.) | 1 | Desynchronization | acr |
@@ -190,20 +190,16 @@
 | whenever a creature you control with deathtouch deals combat damage to a player, put that many +N/+N counters on that creature. | 1 | Aveline de Grandpré | acr |
 | whenever altaïr attacks, exile up to one target assassin creature card from your graveyard with a memory counter on it. then for each creature card you own in e | 1 | Altaïr Ibn-La'Ahad | acr |
 | whenever eivor deals combat damage to a player, you mill that many cards. you may put a saga card and/or a land card from among them onto the battlefield. | 1 | Eivor, Wolf-Kissed | acr |
-| whenever equipped creature attacks, choose one — • bull rush — it gains double strike until end of turn. • summon — create phobos, a legendary N/N red horse cre | 1 | The Spear of Leonidas | acr |
 | whenever equipped creature attacks, tap target creature defending player controls and put a stun counter on it. then mjölnir deals damage to each opponent equal | 1 | Mjölnir, Storm Hammer | acr |
-| whenever you attack, you may pay {M}{M}. when you do, target creature can't block ~. | 1 | Labyrinth Adversary | acr |
 | whenever you cast a historic spell, draw a card. ~ can't be blocked ~. ~ triggers only once each turn. | 1 | Basim Ibn Ishaq | acr |
 | whenever you discard an island, pirate, or vehicle card, create a tapped treasure token. | 1 | Mary Read and Anne Bonny | acr |
-| whenever you put a lore counter on a saga you control, put a +N/+N counter on up to one other target creature. | 1 | Sigurd, Jarl of Ravensthorpe | acr |
 | whenever ~ attacks, if an assassin crewed it ~, draw a card. ~ becomes an assassin in addition to its other types until end of turn. | 1 | Adrestia | acr |
 | whenever ~ deals combat damage to a player, surveil N, where N is the amount of damage it dealt to that player. | 1 | Desmond Miles | acr |
 | you and target opponent each draw two cards. | 1 | Fall of the First Civilization | acr |
-| you may look at the top card of your library any time. | 1 | Crystal Skull, Isu Spyglass | acr |
+| you may play historic lands and cast historic spells from the top of your library. | 1 | Crystal Skull, Isu Spyglass | acr |
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |
 | {M}: draw a card for each permanent you control but don't own. | 1 | Staff of Eden, Vault's Key | acr |
-| {M}: until your next turn, target legendary creature you control becomes a copy of target creature card in exile with a memory counter on it. activate only as a | 1 | The Animus | acr |
 | {M}: ~ gains your choice of flying, deathtouch, or lifelink until end of turn. | 1 | Assassin Initiate | acr |
 | {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
 | ~ can't be blocked by creatures with power N or greater. | 1 | Lydia Frye | acr |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 8.2% |
-| Works (untested) | 119 | 42.5% |
-| Partial (unaudited) | 19 | 6.8% |
-| Not working | 119 | 42.5% |
+| Tested | 24 | 8.6% |
+| Works (untested) | 125 | 44.6% |
+| Partial (unaudited) | 15 | 5.4% |
+| Not working | 116 | 41.4% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Incandescent Soulstoke | silent | Other Elemental creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incremental Growth | silent | Put a +1/+1 counter on target creature, two +1/+1 counters on another target creature, and three +1/+1 counters on a third target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jagged-Scar Archers | silent | Jagged-Scar Archers's power and toughness are each equal to the number of Elves you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Judge of Currents | silent | Whenever a Merfolk you control becomes tapped, you may gain 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Kinsbaile Balloonist | silent | Whenever this creature attacks, you may have target creature gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Greatheart | silent | As long as you control a Giant, this creature gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kithkin Mourncaller | silent | Whenever an attacking Kithkin or Elf is put into your graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -98,13 +97,11 @@
 | Scattering Stroke | silent | Counter target spell. Clash with an opponent. If you win, at the beginning of your next main phase, you may add an amount of {C} equal to that spell's mana valu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scion of Oona | silent | Other Faerie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sentry Oak | silent | At the beginning of combat on your turn, you may clash with an opponent. If you win, this creature gets +2/+0 and loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shapesharer | silent | {2}{U}: Target Shapeshifter becomes a copy of target creature until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shelldock Isle | silent | {U}, {T}: You may play the exiled card without paying its mana cost if a library has twenty or fewer cards in it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shields of Velis Vel | silent | Changeling (This card is every creature type.) Creatures target player controls get +0/+1 and gain all creature types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shriekmaw | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Silvergill Douser | silent | {T}: Target creature gets -X/-0 until end of turn, where X is the number of Merfolk and/or Faeries you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soaring Hope | silent | {W}: Put this Aura on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sower of Temptation | silent | When this creature enters, gain control of target creature for as long as this creature remains on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spiderwig Boggart | silent | When this creature enters, target creature gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spinerock Knoll | silent | {R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spring Cleaning | silent | Destroy target enchantment. Clash with an opponent. If you win, destroy all enchantments your opponents control. (Each clashing player reveals the top card of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -149,21 +146,17 @@
 | Doran, the Siege Tower | unaudited | Each creature assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ethereal Whiskergill | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Favor of the Mighty | unaudited | Each creature with the greatest mana value has protection from each color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Flamekin Bladewhirl | unaudited | As an additional cost to cast this spell, reveal an Elemental card from your hand or pay {3}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gaddock Teeg | unaudited | Noncreature spells with mana value 4 or greater can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goldmeadow Dodger | unaudited | This creature can't be blocked by creatures with power 4 or greater. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Goldmeadow Stalwart | unaudited | As an additional cost to cast this spell, reveal a Kithkin card from your hand or pay {3}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lairwatch Giant | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lignify | unaudited | Enchanted creature is a Treefolk with base power and toughness 0/4 and loses all abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nettlevine Blight | unaudited | Enchanted permanent has "At the beginning of your end step, sacrifice this permanent and attach Nettlevine Blight to a creature or land you control." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Protective Bubble | unaudited | Enchanted creature can't be blocked and has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Silvergill Adept | unaudited | As an additional cost to cast this spell, reveal a Merfolk card from your hand or pay {3}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vivid Crag | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vivid Creek | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vivid Grove | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vivid Marsh | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vivid Meadow | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Wren's Run Vanquisher | unaudited | As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Aethersnipe | handled | When this creature enters, return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ajani Goldmane | handled | +1: You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ancient Amphitheater | handled | As this land enters, you may reveal a Giant card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -204,6 +197,7 @@
 | Familiar's Ruse | handled | As an additional cost to cast this spell, return a creature you control to its owner's hand. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faultgrinder | handled | When this creature enters, destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Final Revels | handled | Choose one — • All creatures get +2/+0 until end of turn. • All creatures get -0/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Flamekin Bladewhirl | handled | As an additional cost to cast this spell, reveal an Elemental card from your hand or pay {3}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flamekin Brawler | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flamekin Harbinger | handled | When this creature enters, you may search your library for an Elemental card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flamekin Spitfire | handled | {3}{R}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -216,6 +210,7 @@
 | Glen Elendra Pranksters | handled | Whenever you cast a spell during an opponent's turn, you may return target creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmerdust Nap | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldmeadow Harrier | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goldmeadow Stalwart | handled | As an additional cost to cast this spell, reveal a Kithkin card from your hand or pay {3}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of Cloverdell | handled | When this creature enters, create three 1/1 white Kithkin Soldier creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hamletback Goliath | handled | Whenever another creature enters, you may put X +1/+1 counters on this creature, where X is that creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Harpoon Sniper | handled | {W}, {T}: This creature deals X damage to target attacking or blocking creature, where X is the number of Merfolk you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,6 +227,7 @@
 | Inkfathom Divers | handled | When this creature enters, look at the top four cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inner-Flame Acolyte | handled | When this creature enters, target creature gets +2/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inner-Flame Igniter | handled | {2}{R}: Creatures you control get +1/+0 until end of turn. If this is the third time this ability has resolved this turn, creatures you control gain first strik | the engine reads this text and performs it | Y/-/- | not_tested |
+| Judge of Currents | handled | Whenever a Merfolk you control becomes tapped, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Daggerdare | handled | {G}, {T}: Target attacking creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Harbinger | handled | When this creature enters, you may search your library for a Kithkin card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kithkin Healer | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -255,7 +251,6 @@
 | Needle Drop | handled | Needle Drop deals 1 damage to any target that was dealt damage this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightshade Stinger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oakgnarl Warrior | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
-| Oona's Prowler | handled | Discard a card: This creature gets -2/-0 until end of turn. Any player may activate this ability. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pestermite | handled | When this creature enters, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plover Knights | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Profane Command | handled | Choose two — • Target player loses X life. • Return target creature card with mana value X or less from your graveyard to the battlefield. • Target creature get | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -264,9 +259,12 @@
 | Secluded Glen | handled | As this land enters, you may reveal a Faerie card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seedguide Ash | handled | When this creature dies, you may search your library for up to three Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sentinels of Glen Elendra | handled | Flying | machines/combat.py | Y/-/- | not_tested |
+| Shapesharer | handled | {2}{U}: Target Shapeshifter becomes a copy of target creature until your next turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shimmering Grotto | handled |  |  | Y/Y/- | not_tested |
+| Silvergill Adept | handled | As an additional cost to cast this spell, reveal a Merfolk card from your hand or pay {3}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skeletal Changeling | handled | {1}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soulbright Flamekin | handled | {2}: Target creature gains trample until end of turn. If this is the third time this ability has resolved this turn, you may add {R}{R}{R}{R}{R}{R}{R}{R}. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sower of Temptation | handled | When this creature enters, gain control of target creature for as long as this creature remains on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stinkdrinker Daredevil | handled | Giant spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stonybrook Angler | handled | {1}{U}, {T}: You may tap or untap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surge of Thoughtweft | handled | Creatures you control get +1/+1 until end of turn. If you control a Kithkin, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -281,13 +279,14 @@
 | Warren-Scourge Elf | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Wispmare | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Woodland Changeling | handled | Changeling | machines/keywords.py | Y/-/- | not_tested |
+| Wren's Run Vanquisher | handled | As an additional cost to cast this spell, reveal an Elf card from your hand or pay {3}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wydwen, the Biting Gale | handled | {U}{B}, Pay 1 life: Return Wydwen to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zephyr Net | handled | Enchanted creature has defender and flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Aquitect's Will
 - Battle Mastery
@@ -304,6 +303,7 @@
 - Mirror Entity
 - Mosswort Bridge
 - Mulldrifter
+- Oona's Prowler
 - Peppersmoke
 - Ponder
 - Smokebraider
@@ -326,10 +326,6 @@
 | fear | 3 | Shriekmaw, Squeaking Pie Sneak, Wort, Boggart Auntie | lrw |
 | clash | 2 | Fistful of Force, Whirlpool Whelm | lrw |
 | Choose two | 1 | Primal Command | lrw |
-| as an additional cost to cast ~, reveal a kithkin card from your hand or pay {M}. | 1 | Goldmeadow Stalwart | lrw |
-| as an additional cost to cast ~, reveal a merfolk card from your hand or pay {M}. | 1 | Silvergill Adept | lrw |
-| as an additional cost to cast ~, reveal an elemental card from your hand or pay {M}. | 1 | Flamekin Bladewhirl | lrw |
-| as an additional cost to cast ~, reveal an elf card from your hand or pay {M}. | 1 | Wren's Run Vanquisher | lrw |
 | as an additional cost to cast ~, sacrifice a goblin. target creature gets -N/-N until end of turn. ~ deals N damage to that creature's controller. | 1 | Fodder Launch | lrw |
 | as long as a creature card with flying is in a graveyard, ~ has flying. the same is true for fear, first strike, double strike, deathtouch, haste, landwalk, lif | 1 | Cairn Wanderer | lrw |
 | as long as you control a faerie, ~ gets +N/+N and has flying. | 1 | Boggart Sprite-Chaser | lrw |
@@ -382,7 +378,6 @@
 | when ~ dies, clash with an opponent. if you win, return ~ to its owner's hand. | 1 | Ringskipper | lrw |
 | when ~ enters, each player's life total becomes the highest life total among all players. | 1 | Arbiter of Knollridge | lrw |
 | when ~ enters, exile the top seven cards of your library face down. | 1 | Colfenor's Plans | lrw |
-| when ~ enters, gain control of target creature for as long as ~ remains on the battlefield. | 1 | Sower of Temptation | lrw |
 | when ~ enters, it deals N damage to each creature with flying and each player. | 1 | Cloudthresher | lrw |
 | when ~ enters, it deals damage equal to the number of giants you control to each non-giant creature. | 1 | Thundercloud Shaman | lrw |
 | when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
@@ -394,7 +389,6 @@
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Oblivion Ring | lrw |
 | whenever a creature deals damage to you, destroy it. | 1 | Dread | lrw |
 | whenever a creature with toughness N or greater is put into your graveyard from the battlefield, you may exile it. | 1 | Colfenor's Urn | lrw |
-| whenever a merfolk you control becomes tapped, you may gain N life. | 1 | Judge of Currents | lrw |
 | whenever a player casts a kithkin spell, you may have target player lose N life. | 1 | Quill-Slinger Boggart | lrw |
 | whenever an attacking kithkin or elf is put into your graveyard from the battlefield, you may draw a card. | 1 | Kithkin Mourncaller | lrw |
 | whenever another nontoken elf is put into your graveyard from the battlefield, you may create a N/N green elf warrior creature token. | 1 | Prowess of the Fair | lrw |
@@ -427,7 +421,6 @@
 | {M}{M}: prevent all damage that would be dealt to target tapped merfolk or kithkin creature ~. | 1 | Wellgabber Apothecary | lrw |
 | {M}{M}: put a +N/+N counter on ashling. if ~ the third time ~ has resolved ~, remove all +N/+N counters from ashling, and it deals that much damage to each crea | 1 | Ashling the Pilgrim | lrw |
 | {M}{M}: switch ~ power and toughness until end of turn. | 1 | Turtleshell Changeling | lrw |
-| {M}{M}: target shapeshifter becomes a copy of target creature until your next turn. | 1 | Shapesharer | lrw |
 | {M}{M}{M}{M}{M}: you may play target elemental card from your graveyard without paying its mana cost. | 1 | Horde of Notions | lrw |
 | ~ can block an additional creature each combat. | 1 | Lairwatch Giant | lrw |
 | ~ can't attack unless defending player controls an island. | 1 | Ethereal Whiskergill | lrw |

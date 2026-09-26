@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 4.3% |
+| Tested | 3 | 6.5% |
 | Works (untested) | 26 | 56.5% |
-| Partial (unaudited) | 5 | 10.9% |
+| Partial (unaudited) | 4 | 8.7% |
 | Not working | 13 | 28.3% |
 
 ## Cards needing work
@@ -40,7 +40,6 @@
 | Sever Soul | notice | Destroy target nonblack creature. It can't be regenerated. You gain life equal to its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vendetta | notice | Destroy target nonblack creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Arrest | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Cho-Manno, Revolutionary | unaudited | Prevent all damage that would be dealt to Cho-Manno. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cloud Sprite | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Conspiracy | unaudited | Creatures you control are the chosen type. The same is true for creature spells you control and creature cards you own that aren't on the battlefield. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Two-Headed Dragon | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -74,8 +73,9 @@
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>3 cards</summary>
 
+- Cho-Manno, Revolutionary
 - Ivory Mask
 - Last Breath
 
@@ -93,7 +93,6 @@
 | enchanted creature can"..."t be activated. | 1 | Arrest | mmq |
 | exile N target creature cards from your graveyard. for each creature card exiled ~, create a N/N black zombie creature token. | 1 | Midnight Ritual | mmq |
 | exile all nontoken permanents. starting with you, each player chooses one of the exiled cards and puts it onto the battlefield tapped under their control. repea | 1 | Thieves' Auction | mmq |
-| prevent all damage that would be dealt to cho-manno. | 1 | Cho-Manno, Revolutionary | mmq |
 | search target opponent's library for a creature card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Bribery | mmq |
 | when ~ enters, each other player may put a creature card from their hand onto the battlefield. | 1 | Hunted Wumpus | mmq |
 | whenever a creature becomes the target of a spell or ability, return that creature to its owner's hand. | 1 | Cowardice | mmq |

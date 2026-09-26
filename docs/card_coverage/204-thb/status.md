@@ -3,24 +3,24 @@
 - Expansion: 204
 - Set code: `thb`
 - Release date: 2020-01-24
-- Cards in scope (Modern/Pioneer/Standard-legal): 245
+- Cards in scope (Modern/Pioneer/Standard-legal): 246
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 245 |
-| Pioneer | 245 |
+| Modern | 246 |
+| Pioneer | 246 |
 | Standard | 3 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 5.7% |
-| Works (untested) | 121 | 49.4% |
-| Partial (unaudited) | 31 | 12.7% |
-| Not working | 79 | 32.2% |
+| Tested | 16 | 6.5% |
+| Works (untested) | 123 | 50.0% |
+| Partial (unaudited) | 31 | 12.6% |
+| Not working | 76 | 30.9% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Ashiok's Forerunner | silent | When this creature enters, you may search your library and/or graveyard for a card named Ashiok, Sculptor of Fears, reveal it, and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Muse | silent | −3: Return target nonland permanent to its owner's hand, then that player exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Sculptor of Fears | silent | −11: Gain control of all creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aspect of Manticore | silent | When this Aura enters, enchanted creature gains first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Atris, Oracle of Half-Truths | silent | When Atris enters, target opponent looks at the top three cards of your library and separates them into a face-down pile and a face-up pile. Put one pile into y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blight-Breath Catoblepas | silent | When this creature enters, target creature an opponent controls gets -X/-X until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Aspirant | silent | {1}{R}, {T}, Sacrifice a creature or enchantment: This creature deals 1 damage to target creature. That creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,10 +78,9 @@
 | Skola Grovedancer | silent | Whenever a land card is put into your graveyard from anywhere, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Skophos Maze-Warden | silent | Whenever another creature becomes the target of an ability of a land you control named Labyrinth of Skophos, you may have this creature fight that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx Mindbreaker | silent | When this creature enters, each opponent mills ten cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Starlit Mantle | silent | When this Aura enters, enchanted creature gains hexproof until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storm Herald | silent | When this creature enters, return any number of Aura cards from your graveyard to the battlefield attached to creatures you control. Exile those Auras at the be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thassa's Oracle | silent | When this creature enters, look at the top X cards of your library, where X is your devotion to blue. Put up to one of them on top of your library and the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Akroan War | silent | I — Gain control of target creature for as long as this Saga remains on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| The Akroan War | silent | II — Until your next turn, creatures your opponents control attack each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Binding of the Titans | silent | II — Exile up to two target cards from graveyards. For each creature card exiled this way, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The First Iroan Games | silent | IV — Create a Gold token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Triumph of Anax | silent | I, II, III — Until end of turn, target creature gains trample and gets +X/+0, where X is the number of lore counters on this Saga. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,7 +95,6 @@
 | Klothys's Design | notice | Creatures you control get +X/+X until end of turn, where X is your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Naiad of Hidden Coves | notice | During turns other than yours, spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nylea's Intervention | notice | Choose one — • Search your library for up to X land cards, reveal them, put them into your hand, then shuffle. • Nylea's Intervention deals twice X damage to ea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Phalanx Tactics | notice | Target creature you control gets +2/+1 until end of turn. Each other creature you control gets +1/+1 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Purphoros's Intervention | notice | Choose one — • Create an X/1 red Elemental creature token with trample and haste. Sacrifice it at the beginning of the next end step. • Purphoros's Intervention | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Purphoros, Bronze-Blooded | notice | {2}{R}: You may put a red creature card or an artifact creature card from your hand onto the battlefield. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sunlit Hoplite | notice | This creature gets +1/+0 as long as you control an Elspeth planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -113,7 +110,7 @@
 | Daybreak Chimera | unaudited | This spell costs {X} less to cast, where X is your devotion to white. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Eidolon of Obstruction | unaudited | Loyalty abilities of planeswalkers your opponents control cost {1} more to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Entrancing Lyre | unaudited | You may choose not to untap this artifact during your untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Haktos the Unscarred | unaudited | Haktos attacks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Haktos the Unscarred | unaudited | As Haktos enters, choose 2, 3, or 4 at random. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Heliod's Punishment | unaudited | Enchanted creature can't attack or block. It loses all abilities and has "{T}: Remove a task counter from Heliod's Punishment. Then if it has no task counters o | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ichthyomorphosis | unaudited | Enchanted creature loses all abilities and is a blue Fish with base power and toughness 0/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Incendiary Oracle | unaudited | If a creature dealt damage by this creature this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -142,13 +139,14 @@
 | Archon of Falling Stars | handled | When this creature dies, you may return target enchantment card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arena Trickster | handled | Whenever you cast your first spell during each opponent's turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aspect of Lamprey | handled | When this Aura enters, target opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Aspect of Manticore | handled | When this Aura enters, enchanted creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Athreos, Shroud-Veiled | handled | As long as your devotion to white and black is less than seven, Athreos isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brine Giant | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/Y/- | not_tested |
 | Bronze Sword | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Captivating Unicorn | handled | Constellation — Whenever an enchantment you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Careless Celebrant | handled | When this creature dies, it deals 2 damage to target creature or planeswalker an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chain to Memory | handled | Target creature gets -4/-0 until end of turn. Scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Commanding Presence | handled | Enchanted creature gets +2/+2 and has first strike and "Whenever this creature deals combat damage to a player, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Dawn Evangel | handled | Whenever a creature dies, if an Aura you controlled was attached to it, return target creature card with mana value 2 or less from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathbellow War Cry | handled | Search your library for up to four Minotaur creature cards with different names, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demon of Loathing | handled | Whenever this creature deals combat damage to a player, that player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deny the Divine | handled | Counter target creature or enchantment spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,7 +194,6 @@
 | Mogis's Favor | handled | Enchanted creature gets +2/-1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moss Viper | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Nadir Kraken | handled | Whenever you draw a card, you may pay {1}. If you do, put a +1/+1 counter on this creature and create a 1/1 blue Tentacle creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Nessian Hornbeetle | handled | At the beginning of combat on your turn, if you control another creature with power 4 or greater, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nexus Wardens | handled | Constellation — Whenever an enchantment you control enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nylea's Forerunner | handled | Other creatures you control have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyx Herald | handled | At the beginning of combat on your turn, target enchanted creature or enchantment creature you control gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -212,6 +209,7 @@
 | Omen of the Sea | handled | When this enchantment enters, scry 2, then draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Omen of the Sun | handled | When this enchantment enters, create two 1/1 white Human Soldier creature tokens and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oread of Mountain's Blaze | handled | {2}{R}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Phalanx Tactics | handled | Target creature you control gets +2/+1 until end of turn. Each other creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharika's Libation | handled | Choose one — • Target opponent sacrifices a creature of their choice. • Target opponent sacrifices an enchantment of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pheres-Band Brawler | handled | When this creature enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pious Wayfarer | handled | Constellation — Whenever an enchantment you control enters, target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -236,6 +234,7 @@
 | Soulreaper of Mogis | handled | {2}{B}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Staggering Insight | handled | Enchanted creature gets +1/+1 and has lifelink and "Whenever this creature deals combat damage to a player, draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stampede Rider | handled | At the beginning of each combat, if you control a creature with power 4 or greater, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Starlit Mantle | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stern Dismissal | handled | Return target creature or enchantment an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stinging Lionfish | handled | Whenever you cast your first spell during each opponent's turn, you may tap or untap target nonland permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Storm's Wrath | handled | Storm's Wrath deals 4 damage to each creature and each planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -261,15 +260,17 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
 - Cling to Dust
+- Dawn Evangel
 - Dryad of the Ilysian Grove
 - Enigmatic Incarnation
 - Flicker of Fate
 - Klothys, God of Destiny
 - Kroxa, Titan of Death's Hunger
 - Kunoros, Hound of Athreos
+- Nessian Hornbeetle
 - Nylea, Keen-Eyed
 - Nyxbloom Ancient
 - Shadowspear
@@ -291,6 +292,7 @@
 | +N: look at the top four cards of your library. you may reveal an enchantment card from among them and put that card into your hand. put the rest on the bottom  | 1 | Calix, Destiny's Hand | thb |
 | alirios doesn't untap during your untap step if you control a reflection. | 1 | Alirios, Enraptured | thb |
 | all creatures able to block ~ do so. | 1 | Treeshaker Chimera | thb |
+| as haktos enters, choose N, N, or N at random. | 1 | Haktos the Unscarred | thb |
 | at the beginning of your end step, if you control a creature with power N or greater, exile the top card of your library. you may play that card until you exile | 1 | Furious Rise | thb |
 | at the beginning of your end step, you may exile an enchantment card from your graveyard. if you do, create a N/N black zombie creature token. | 1 | Aphemia, the Cacophony | thb |
 | at the beginning of your end step, you may pay {M}{M} and sacrifice a nonland permanent. if you do, reveal cards from the top of your library until you reveal a | 1 | Dreamshaper Shaman | thb |
@@ -311,8 +313,6 @@
 | exile target opponent's graveyard. | 1 | Elspeth's Nightmare | thb |
 | exile up to two target cards from graveyards. for each creature card exiled ~, you gain N life. | 1 | The Binding of the Titans | thb |
 | for each spell and ability your opponents control, counter it unless its controller pays {M}. | 1 | Whirlwind Denial | thb |
-| gain control of target creature for as long as ~ remains on the battlefield. | 1 | The Akroan War | thb |
-| haktos attacks each combat if able. | 1 | Haktos the Unscarred | thb |
 | if a creature dealt damage by ~ ~ would die, exile it instead. | 1 | Incendiary Oracle | thb |
 | if a creature would deal combat damage to ~, prevent that damage and put a +N/+N counter on ~. | 1 | Ironscale Hydra | thb |
 | if damage would be dealt to polukranos while it has a +N/+N counter on it, prevent that damage and remove that many +N/+N counters from it. | 1 | Polukranos, Unchained | thb |
@@ -330,18 +330,16 @@
 | spells you cast with mana value N or greater cost {M} less to cast and can't be countered. | 1 | Thryx, the Sudden Storm | thb |
 | tap all nonland permanents target opponent controls. they don"..."s next untap step. | 1 | Kiora Bests the Sea God | thb |
 | target creature gets +N/+N until end of turn. if it"..."t be the target of spells or abilities your opponents control. damage and effects that say "..." don't d | 1 | Karametra's Blessing | thb |
-| target creature you control gets +N/+N until end of turn. each other creature you control gets +N/+N until end of turn. | 1 | Phalanx Tactics | thb |
 | target opponent reveals their hand. you choose a nonland card from it or a card from their graveyard. exile that card. you lose N life. | 1 | Agonizing Remorse | thb |
 | tymaret's toughness is equal to your devotion to black. | 1 | Tymaret, Chosen from Death | thb |
 | until end of turn, target creature gains trample and gets +N/+N, where N is the number of lore counters on ~. | 1 | The Triumph of Anax | thb |
+| until your next turn, creatures your opponents control attack each combat if able. | 1 | The Akroan War | thb |
 | when atris enters, target opponent looks at the top three cards of your library and separates them into a face-down pile and a face-up pile. put one pile into y | 1 | Atris, Oracle of Half-Truths | thb |
 | when ~ dies, put all cards exiled with it onto the battlefield. | 1 | Underworld Sentinel | thb |
 | when ~ dies, return it to the battlefield. it's an aura enchantment with enchant creature you control and "..." and it loses all other abilities. | 1 | Bronzehide Lion | thb |
 | when ~ enters, create a number of N/N white human soldier creature tokens equal to your devotion to white. | 1 | Reverent Hoplite | thb |
 | when ~ enters, each opponent mills ten cards. | 1 | Sphinx Mindbreaker | thb |
 | when ~ enters, enchanted creature fights up to one target creature you don't control. | 1 | Warbriar Blessing | thb |
-| when ~ enters, enchanted creature gains first strike until end of turn. | 1 | Aspect of Manticore | thb |
-| when ~ enters, enchanted creature gains hexproof until end of turn. | 1 | Starlit Mantle | thb |
 | when ~ enters, it deals damage equal to its power to target creature with flying an opponent controls. | 1 | Chainweb Aracnir | thb |
 | when ~ enters, look at the top N cards of your library, where N is your devotion to blue. put up to one of them on top of your library and the rest on the botto | 1 | Thassa's Oracle | thb |
 | when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Hydra's Growth | thb |

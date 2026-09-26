@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.5% |
-| Works (untested) | 104 | 41.3% |
+| Tested | 23 | 9.1% |
+| Works (untested) | 100 | 39.7% |
 | Partial (unaudited) | 10 | 4.0% |
 | Not working | 119 | 47.2% |
 
@@ -37,7 +37,6 @@
 | Blue Sun's Twilight | silent | Gain control of target creature with mana value X or less. If X is 5 or more, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bonepicker Skirge | silent | Corrupted — As long as an opponent has three or more poison counters, this creature has deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bring the Ending | silent | Counter target spell unless its controller pays {2}. Corrupted — Counter that spell instead if its controller has three or more poison counters. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cacophony Scamp | silent | When this creature dies, it deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Capricious Hellraiser | silent | When this creature enters, exile three cards at random from your graveyard. Choose a noncreature, nonland card from among them and copy it. You may cast the cop | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conduit of Worlds | silent | {T}: Choose target nonland permanent card in your graveyard. If you haven't cast a spell this turn, you may cast that card. If you do, you can't cast additional | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Contagious Vorrac | silent | When this creature enters, look at the top four cards of your library. You may reveal a land card from among them and put it into your hand. Put the rest on the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -125,6 +124,7 @@
 | Atraxa's Skitterfang | notice | At the beginning of combat on your turn, you may remove an oil counter from this creature. When you do, target creature you control gains your choice of flying, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Black Sun's Twilight | notice | Up to one target creature gets -X/-X until end of turn. If X is 5 or more, return a creature card with mana value X or less from your graveyard to the battlefie | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Cacophony Scamp | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, proliferate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Carnivorous Canopy | notice | Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate. (Choose any number of permanents and/o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Charge of the Mites | notice | Choose one — • Charge of the Mites deals damage equal to the number of creatures you control to target creature or planeswalker. • Create two 1/1 colorless Phyr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compleat Devotion | notice | Target creature you control gets +2/+2 until end of turn. If that creature has toxic, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -172,7 +172,6 @@
 | Chimney Rabble | handled | When this creature enters, create a 1/1 red Phyrexian Goblin creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chittering Skitterling | handled | Corrupted — Sacrifice an artifact or creature: Draw a card. Activate only if an opponent has three or more poison counters and only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chrome Prowler | handled | When this creature enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Churning Reservoir | handled | At the beginning of your upkeep, put an oil counter on another target nontoken artifact or creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Copper Longlegs | handled | {1}{G}, Sacrifice this creature: Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cutthroat Centurion | handled | Sacrifice another artifact or creature: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Distorted Curiosity | handled | Corrupted — This spell costs {2} less to cast if an opponent has three or more poison counters. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -195,7 +194,6 @@
 | Incubation Sac | handled | This artifact enters with three oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jawbone Duelist | handled | Toxic | machines/combat.py | Y/Y/- | not_tested |
 | Malcator's Watcher | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Malcator, Purity Overseer | handled | When Malcator enters, create a 3/3 colorless Phyrexian Golem artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mandible Justiciar | handled | Whenever another artifact you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maze Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maze's Mantle | handled | When this Aura enters, if enchanted creature has toxic, that creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -234,7 +232,6 @@
 | Staff of Compleation | handled | {T}, Pay 1 life: Destroy target permanent you own. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Surgical Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sword of Forge and Frontier | handled | Equipped creature gets +2/+2 and has protection from red and from green. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Tablet of Compleation | handled | {T}: Put an oil counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tainted Observer | handled | Whenever another creature you control enters, you may pay {2}. If you do, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tamiyo's Immobilizer | handled | This artifact enters with four oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tamiyo's Logbook | handled | {5}{U}, {T}: Draw a card. This ability costs {1} less to activate for each other artifact you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -253,7 +250,6 @@
 | Vat of Rebirth | handled | Whenever another artifact or creature you control is put into a graveyard from the battlefield, put an oil counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Veil of Assimilation | handled | Whenever this artifact or another artifact you control enters, target creature you control gets +1/+1 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Venomous Brutalizer | handled | When this creature enters, you may pay {1}{G}. If you do, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Vivisection Evangelist | handled | Corrupted — When this creature enters, if an opponent has three or more poison counters, destroy target creature or planeswalker an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vivisurgeon's Insight | handled | Draw three cards. Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraan, Executioner Thane | handled | Whenever one or more other creatures you control die, each opponent loses 2 life and you gain 2 life. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraska's Fall | handled | Each opponent sacrifices a creature or planeswalker of their choice and gets a poison counter. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -263,14 +259,16 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>23 cards</summary>
 
 - Atraxa, Grand Unifier
 - Bilious Skulldweller
 - Blazing Crescendo
+- Churning Reservoir
 - Cruel Grimnarch
 - Elesh Norn, Mother of Machines
 - Koth, Fire of Resistance
+- Malcator, Purity Overseer
 - Mindsplice Apparatus
 - Myr Convert
 - Nahiri, the Unforgiving
@@ -280,10 +278,12 @@
 - Solphim, Mayhem Dominus
 - Soulless Jailer
 - Swooping Lookout
+- Tablet of Compleation
 - The Filigree Sylex
 - The Mycosynth Gardens
 - Tyvar, Jubilant Brawler
 - Venerated Rotpriest
+- Vivisection Evangelist
 
 </details>
 
@@ -351,7 +351,6 @@
 | up to one target creature gets -N/-N until end of turn. if N is N or more, return a creature card with mana value N or less from your graveyard to the battlefie | 1 | Black Sun's Twilight | one |
 | when ezuri enters, you may pay {M}. if you do, proliferate twice. | 1 | Ezuri, Stalker of Spheres | one |
 | when you proliferate, return ~ from your graveyard to your hand. | 1 | Voidwing Hybrid | one |
-| when ~ dies, it deals damage equal to its power to any target. | 1 | Cacophony Scamp | one |
 | when ~ enters, another target creature you control with toxic gets +N/+N and gains flying until end of turn. | 1 | Flensing Raptor | one |
 | when ~ enters, create two N/N colorless phyrexian mite artifact creature tokens with toxic N and "..." | 1 | Basilica Shepherd | one |
 | when ~ enters, create two N/N green phyrexian beast creature tokens with toxic N. | 1 | Goliath Hatchery | one |
@@ -384,6 +383,7 @@
 | whenever ~ attacks, you may remove two oil counters from it. when you do, target creature can't block ~. | 1 | Forgehammer Centurion | one |
 | whenever ~ becomes attached to a creature, for as long as ~ remains attached to it, you may have that creature become a copy of another target creature you cont | 1 | Blade of Shared Souls | one |
 | whenever ~ deals combat damage to a player, you may remove two oil counters from it. if you do, when you next cast an instant or sorcery spell ~, copy that spel | 1 | Mercurial Spelldancer | one |
+| whenever ~ deals combat damage to a player, you may sacrifice it. if you do, proliferate. | 1 | Cacophony Scamp | one |
 | you draw three cards and you lose N life. corrupted — each opponent who has three or more poison counters loses N life. | 1 | Feed the Infection | one |
 | you draw two cards and you lose N life. each opponent gets a poison counter. | 1 | Infectious Inquiry | one |
 | you gain N life. create N N/N colorless phyrexian mite artifact creature tokens with toxic N and "..." if N is N or more, destroy all other creatures. (players  | 1 | White Sun's Twilight | one |

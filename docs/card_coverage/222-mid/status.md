@@ -11,16 +11,16 @@
 |---|---|
 | Modern | 249 |
 | Pioneer | 249 |
-| Standard | 4 |
+| Standard | 9 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.6% |
-| Works (untested) | 109 | 43.8% |
-| Partial (unaudited) | 15 | 6.0% |
-| Not working | 106 | 42.6% |
+| Tested | 24 | 9.6% |
+| Works (untested) | 106 | 42.6% |
+| Partial (unaudited) | 14 | 5.6% |
+| Not working | 105 | 42.2% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Intrepid Adversary | silent | When this creature enters, you may pay {1}{W} any number of times. When you pay this cost one or more times, put that many valor counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jadar, Ghoulcaller of Nephalia | silent | At the beginning of your end step, if you control no creatures with decayed, create a 2/2 black Zombie creature token with decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kessig Naturalist // Lord of the Ulvenwald | silent | Whenever this creature attacks, add {R} or {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lambholt Harrier | silent | {3}{R}: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loyal Gryff | silent | When this creature enters, you may return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | silent | {X}{U}{U}{B}{B}, Exile X creature cards from your graveyard: Transform Ludevic. X can't be 0. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lunarch Veteran // Luminous Phantom | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -132,14 +131,13 @@
 | Voldaren Stinger | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wake to Slaughter | notice | Choose up to two target creature cards in your graveyard. An opponent chooses one of them. Return that card to your hand. Return the other to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Winterthorn Blessing | notice | Put a +1/+1 counter on up to one target creature you control. Tap up to one target creature you don't control, and that creature doesn't untap during its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Augur of Autumn | unaudited | You may look at the top card of your library any time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Augur of Autumn | unaudited | Coven — As long as you control three or more creatures with different powers, you may cast creature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Consuming Blob | unaudited | Consuming Blob's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Curse of Leeches // Leeching Lurker | unaudited | As this permanent transforms into Curse of Leeches, attach it to a player. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grizzly Ghoul | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Hedgewitch's Mask | unaudited | Equipped creature can't be blocked by creatures with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Katilda, Dawnhart Prime | unaudited | Human creatures you control have "{T}: Add one mana of any of this creature's colors." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lier, Disciple of the Drowned | unaudited | Spells can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Morkrut Behemoth | unaudited | As an additional cost to cast this spell, sacrifice a creature or pay {1}{B}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mounted Dreadknight | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mystic Skull // Mystic Monstrosity | unaudited | Lands you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rem Karolus, Stalwart Slayer | unaudited | If a spell would deal damage to you or another permanent you control, prevent that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -157,13 +155,11 @@
 | Bladestitched Skaab | handled | Other Zombies you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodtithe Collector | handled | When this creature enters, if an opponent lost life this turn, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Borrowed Time | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Bounding Wolf | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Bramble Armor | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brood Weaver | handled | When this creature dies, create a 1/2 green Spider creature token with reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burly Breaker // Dire-Strain Demolisher | handled | Transform | no code needed | Y/Y/- | not_tested |
 | Burn the Accursed | handled | Burn the Accursed deals 5 damage to target creature and 2 damage to that creature's controller. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Candlegrove Witch | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Candlelit Cavalry | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathar Commando | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cathartic Pyre | handled | Choose one — • Cathartic Pyre deals 3 damage to target creature or planeswalker. • Discard up to two cards, then draw that many cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of the Perished | handled | Whenever another Zombie you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -176,7 +172,6 @@
 | Curse of Shaken Faith | handled | Whenever enchanted player casts a spell other than the first spell they cast each turn or copies a spell, this Aura deals 2 damage to them. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dawnhart Mentor | handled | When this creature enters, create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dawnhart Rejuvenator | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Dawnhart Wardens | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, creatures you control get +1/+0 until end of turn | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defend the Celestus | handled | Distribute three +1/+1 counters among one, two, or three target creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defenestrate | handled | Destroy target creature without flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Diregraf Rebirth | handled | This spell costs {1} less to cast for each creature that died this turn. Return target creature card from your graveyard to the battlefield. Flashback {5}{B}{G} | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -187,7 +182,6 @@
 | Eccentric Farmer | handled | When this creature enters, mill three cards, then you may return a land card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ecstatic Awakener // Awoken Demon | handled | {2}{B}, Sacrifice another creature: Draw a card, then transform this creature. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Electric Revelation | handled | As an additional cost to cast this spell, discard a card. Draw two cards. Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost an | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Falkenrath Pit Fighter | handled | {1}{R}, Discard a card, Sacrifice a Vampire: Draw two cards. Activate only if an opponent lost life this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Famished Foragers | handled | When this creature enters, if an opponent lost life this turn, add {R}{R}{R}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fangblade Brigand // Fangblade Eviscerator | handled | {1}{R}: This creature gets +1/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Festival Crasher | handled | Whenever you cast an instant or sorcery spell, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -198,7 +192,6 @@
 | Galvanic Iteration | handled | When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. Flashback {1}{U}{R} (You may cast this card  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gavony Silversmith | handled | When this creature enters, put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gavony Trapper | handled | {2}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Geistflame Reservoir | handled | Whenever you cast an instant or sorcery spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Geistwave | handled | Return target nonland permanent to its owner's hand. If you controlled that permanent, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grafted Identity | handled | As an additional cost to cast this spell, sacrifice a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harvesttide Infiltrator // Harvesttide Assailant | handled | Transform | no code needed | Y/Y/- | not_tested |
@@ -208,6 +201,7 @@
 | Jack-o'-Lantern | handled | {1}, {T}, Sacrifice this artifact: Exile up to one target card from a graveyard. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jerren, Corrupted Bishop // Ormendahl, the Corrupter | handled | Whenever Jerren enters or another nontoken Human you control dies, you lose 1 life and create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Join the Dance | handled | Create two 1/1 white Human creature tokens. Flashback {3}{G}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lambholt Harrier | handled | {3}{R}: Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Larder Zombie | handled | Tap three untapped creatures you control: Surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liesa, Forgotten Archangel | handled | Whenever another nontoken creature you control dies, return that card to its owner's hand at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Locked in the Cemetery | handled | When this Aura enters, if there are five or more cards in your graveyard, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -215,6 +209,7 @@
 | Might of the Old Ways | handled | Target creature gets +2/+2 until end of turn. Coven — Then if you control three or more creatures with different powers, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moonrager's Slash | handled | This spell costs {2} less to cast if it's night. Moonrager's Slash deals 3 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Morbid Opportunist | handled | Whenever one or more other creatures die, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Morkrut Behemoth | handled | As an additional cost to cast this spell, sacrifice a creature or pay {1}{B}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mysterious Tome // Chilling Chronicle | handled | {2}, {T}: Draw a card. Transform this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nebelgast Intruder | handled | When this creature enters, up to one target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Novice Occultist | handled | When this creature dies, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -260,14 +255,19 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>24 cards</summary>
 
 - Blood Pact
+- Bounding Wolf
 - Brimstone Vandal
 - Brutal Cathar // Moonrage Brute
+- Candlelit Cavalry
+- Dawnhart Wardens
 - Deserted Beach
 - Faithful Mending
+- Falkenrath Pit Fighter
 - Gavony Dawnguard
+- Geistflame Reservoir
 - Haunted Ridge
 - Moonsilver Key
 - Otherworldly Gaze
@@ -289,12 +289,11 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | disturb | 10 | Baithook Angler // Hook-Haunt Drifter, Beloved Beggar // Generous Soul, Chaplain of Alms // Chapel Shieldgeist, Covert Cutpurse // Covetous Geist, Covetous Castaway // Ghostly Castigator | mid |
-| Coven | 4 | Candletrap, Duel for Dominance, Harvesttide Sentry, Sungold Sentinel | mid |
+| Coven | 5 | Augur of Autumn, Candletrap, Duel for Dominance, Harvesttide Sentry, Sungold Sentinel | mid |
 | Choose one | 2 | Bloodline Culling, Burn Down the House | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
 | angelic enforcer's power and toughness are each equal to your life total. | 1 | Enduring Angel // Angelic Enforcer | mid |
-| as an additional cost to cast ~, sacrifice a creature or pay {M}{M}. | 1 | Morkrut Behemoth | mid |
 | as an additional cost to cast ~, sacrifice any number of creatures. create an N/N blue and black zombie creature token with menace, where N is the total power o | 1 | Corpse Cobble | mid |
 | as long as an opponent lost life ~, each other vampire you control enters with an additional +N/+N counter on it. | 1 | Vampire Socialite | mid |
 | as long as you control a token, ~ gets +N/+N. | 1 | Briarbridge Tracker | mid |
@@ -380,12 +379,10 @@
 | whenever ~ becomes blocked, each creature blocking it gets -N/-N until end of turn. | 1 | Baneblade Scoundrel // Baneclaw Marauder | mid |
 | whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card was exiled ~, each opponent loses N life and you gain N life. | 1 | Graveyard Trespasser // Graveyard Glutton | mid |
 | wolves and werewolves you control have haste. | 1 | Village Watch // Village Reavers | mid |
-| you may look at the top card of your library any time. | 1 | Augur of Autumn | mid |
 | {M}, sacrifice ~: counter target noncreature spell unless its controller pays {M}. | 1 | Malevolent Hermit // Benevolent Geist | mid |
 | {M}, {M}, pay N life, discard a card: draw a card, mill a card, then put a ritual counter on ~. then if it has three or more ritual counters on it, remove them  | 1 | Heirloom Mirror // Inherited Fiend | mid |
 | {M}, {M}: if it's night, it becomes day. otherwise, it becomes night. activate only as a sorcery. | 1 | The Celestus | mid |
 | {M}{M}, {M}, exile ~: return target card with flashback you own from exile to your hand. | 1 | Rootcoil Creeper | mid |
-| {M}{M}: target creature can't block ~. | 1 | Lambholt Harrier | mid |
 | {M}{M}: ~ can't be blocked ~. | 1 | Drownyard Amalgam | mid |
 | {M}{M}{M}{M}{M}, exile N creature cards from your graveyard: transform ludevic. N can't be N. activate only as a sorcery. | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | ~ costs {M} less to cast for each creature you attacked with ~. | 1 | Search Party Captain | mid |

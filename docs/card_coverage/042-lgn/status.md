@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 0 | 0.0% |
-| Works (untested) | 10 | 58.8% |
+| Tested | 1 | 5.9% |
+| Works (untested) | 9 | 52.9% |
 | Partial (unaudited) | 2 | 11.8% |
 | Not working | 5 | 29.4% |
 
@@ -37,7 +37,6 @@
 | Enormous Baloth | handled |  |  | Y/-/- | not_tested |
 | Flamewave Invoker | handled | {7}{R}: This creature deals 5 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fugitive Wizard | handled |  |  | Y/Y/- | not_tested |
-| Lavaborn Muse | handled | At the beginning of each opponent's upkeep, if that player has two or fewer cards in hand, this creature deals 3 damage to that player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merchant of Secrets | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Starlight Invoker | handled | {7}{W}: You gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Willbender | handled | When this creature is turned face up, change the target of target spell or ability with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -47,8 +46,9 @@
 ## Fully supported
 
 <details>
-<summary>0 cards</summary>
+<summary>1 cards</summary>
 
+- Lavaborn Muse
 
 </details>
 

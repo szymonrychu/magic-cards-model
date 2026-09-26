@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 4.1% |
-| Works (untested) | 93 | 42.9% |
+| Tested | 12 | 5.5% |
+| Works (untested) | 99 | 45.6% |
 | Partial (unaudited) | 18 | 8.3% |
-| Not working | 97 | 44.7% |
+| Not working | 88 | 40.6% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Builder's Blessing | silent | Untapped creatures you control get +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Burn at the Stake | silent | As an additional cost to cast this spell, tap any number of untapped creatures you control. Burn at the Stake deals damage to any target equal to three times th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Butcher Ghoul | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Call to Serve | silent | Enchanted creature gets +1/+2, has flying, and is an Angel in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deadeye Navigator | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Demonic Taskmaster | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonlord of Ashmouth | silent | When this creature enters, exile it unless you sacrifice another creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -55,7 +54,6 @@
 | Evernight Shade | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Exquisite Blood | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Favorable Winds | silent | Creatures you control with flying get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fervent Cathar | silent | When this creature enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fettergeist | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {1} for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galvanic Alchemist | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Geist Trappers | silent | As long as this creature is paired with another creature, both creatures have reach. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,11 +83,8 @@
 | Second Guess | silent | Counter target spell that's the second spell cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silverblade Paladin | silent | As long as this creature is paired with another creature, both creatures have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Somberwald Vigilante | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soulcage Fiend | silent | When this creature dies, each player loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Gateguards | silent | As long as this creature is paired with another creature, both creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spectral Prison | silent | When enchanted creature becomes the target of a spell, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stern Mentor | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Stolen Goods | silent | Target opponent exiles cards from the top of their library until they exile a nonland card. Until end of turn, you may cast that card without paying its mana co | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stonewright | silent | As long as Stonewright is paired with another creature, each of those creatures has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tamiyo, the Moon Sage | silent | −2: Draw a card for each tapped creature target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tandem Lookout | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -98,11 +93,8 @@
 | Tibalt, the Fiend-Blooded | silent | +1: Draw a card, then discard a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tormentor's Trident | silent | Equipped creature gets +3/+0 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Treacherous Pit-Dweller | silent | When this creature enters from a graveyard, target opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Triumph of Cruelty | silent | At the beginning of your upkeep, target opponent discards a card if you control the creature with the greatest power or tied for the greatest power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Triumph of Ferocity | silent | At the beginning of your upkeep, draw a card if you control the creature with the greatest power or tied for the greatest power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trusted Forcemage | silent | As long as this creature is paired with another creature, each of those creatures gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tyrant of Discord | silent | When this creature enters, target opponent chooses a permanent they control at random and sacrifices it. If a nonland permanent is sacrificed this way, repeat t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ulvenwald Tracker | silent | {1}{G}, {T}: Target creature you control fights another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Undead Executioner | silent | When this creature dies, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vanguard's Shield | silent | Equipped creature gets +0/+3 and can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vanishment | silent | Put target nonland permanent on top of its owner's library. Miracle {U} (You may cast this card for its miracle cost when you draw it if it's the first card you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -110,7 +102,6 @@
 | Wildwood Geist | silent | During your turn, this creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wingcrafter | silent | As long as this creature is paired with another creature, both creatures have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolfir Silverheart | silent | As long as this creature is paired with another creature, each of those creatures gets +4/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Yew Spirit | silent | {2}{G}{G}: This creature gets +X/+X until end of turn, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death Wind | notice | Target creature gets -X/-X until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Defy Death | notice | Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Descent into Madness | notice | At the beginning of your upkeep, put a despair counter on this enchantment, then each player exiles X permanents they control and/or cards from their hand, wher | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -148,6 +139,7 @@
 | Blessings of Nature | handled | Distribute four +1/+1 counters among any number of target creatures. Miracle {G} (You may cast this card for its miracle cost when you draw it if it's the first | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodflow Connoisseur | handled | Sacrifice a creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bonfire of the Damned | handled | Bonfire of the Damned deals X damage to target player or planeswalker and each creature that player or that planeswalker's controller controls. Miracle {X}{R} ( | the engine reads this text and performs it | Y/-/- | not_tested |
+| Call to Serve | handled | Enchanted creature gets +1/+2, has flying, and is an Angel in addition to its other types. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Captain of the Mists | handled | Whenever another Human you control enters, untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cathars' Crusade | handled | Whenever a creature you control enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cathedral Sanctifier | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -159,7 +151,6 @@
 | Cursebreak | handled | Destroy target enchantment. You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dangerous Wager | handled | Discard your hand, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Impostor | handled | {4}{B}{B}: Exile target creature and put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Demonic Rising | handled | At the beginning of your end step, if you control exactly one creature, create a 5/5 black Demon creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Desolate Lighthouse | handled | {1}{U}{R}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devastation Tide | handled | Return all nonland permanents to their owners' hands. Miracle {1}{U} (You may cast this card for its miracle cost when you draw it if it's the first card you dr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Devout Chaplain | handled | {T}, Tap two untapped Humans you control: Exile target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -168,6 +159,7 @@
 | Dual Casting | handled | Enchanted creature has "{R}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Falkenrath Exterminator | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Farbog Explorer | handled | Landwalk | no code needed | Y/-/- | not_tested |
+| Fervent Cathar | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gallows at Willow Hill | handled | {3}, {T}, Tap three untapped Humans you control: Destroy target creature. Its controller creates a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gang of Devils | handled | When this creature dies, it deals 3 damage divided as you choose among one, two, or three targets. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geist Snatch | handled | Counter target creature spell. Create a 1/1 blue Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -185,7 +177,6 @@
 | Kessig Malcontents | handled | When this creature enters, it deals damage to target player or planeswalker equal to the number of Humans you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kruin Striker | handled | Whenever another creature you control enters, this creature gets +1/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Latch Seeker | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Lone Revenant | handled | Whenever this creature deals combat damage to a player, if you control no other creatures, look at the top four cards of your library. Put one of them into your | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lunar Mystic | handled | Whenever you cast an instant spell, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maalfeld Twins | handled | When this creature dies, create two 2/2 black Zombie creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mad Prophet | handled | {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -221,10 +212,15 @@
 | Snare the Skies | handled | Target creature gets +1/+1 and gains reach until end of turn. (It can block creatures with flying.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Somberwald Sage | handled |  |  | Y/-/- | not_tested |
 | Soul of the Harvest | handled | Whenever another nontoken creature you control enters, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Soulcage Fiend | handled | When this creature dies, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Spectral Prison | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spirit Away | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thatcher Revolt | handled | Create three 1/1 red Human creature tokens with haste. Sacrifice those tokens at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thraben Valiant | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Timberland Guide | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Triumph of Cruelty | handled | At the beginning of your upkeep, target opponent discards a card if you control the creature with the greatest power or tied for the greatest power. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Triumph of Ferocity | handled | At the beginning of your upkeep, draw a card if you control the creature with the greatest power or tied for the greatest power. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ulvenwald Tracker | handled | {1}{G}, {T}: Target creature you control fights another target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Uncanny Speed | handled | Target creature gets +3/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vessel of Endless Rest | handled | When this artifact enters, put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vigilante Justice | handled | Whenever a Human you control enters, this enchantment deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,20 +228,24 @@
 | Vorstclaw | handled |  |  | Y/Y/- | not_tested |
 | Wild Defiance | handled | Whenever a creature you control becomes the target of an instant or sorcery spell, that creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wolfir Avenger | handled | {1}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Yew Spirit | handled | {2}{G}{G}: This creature gets +X/+X until end of turn, where X is its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zealous Conscripts | handled | When this creature enters, gain control of target permanent until end of turn. Untap that permanent. It gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zealous Strike | handled | Target creature gets +2/+2 and gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>12 cards</summary>
 
 - Blood Artist
 - Cavern of Souls
 - Craterhoof Behemoth
+- Demonic Rising
 - Entreat the Angels
 - Griselbrand
+- Lone Revenant
 - Reforge the Soul
+- Stolen Goods
 - Terminus
 - Thunderous Wrath
 - Unhallowed Pact
@@ -275,12 +275,10 @@
 | as long as ~ is paired with another creature, both creatures have trample. | 1 | Pathbreaker Wurm | avr |
 | as long as ~ is paired with another creature, both creatures have vigilance. | 1 | Spectral Gateguards | avr |
 | as long as ~ is paired with another creature, each of those creatures has "..." | 1 | Stonewright | avr |
-| at the beginning of your upkeep, draw a card if you control the creature with the greatest power or tied for the greatest power. | 1 | Triumph of Ferocity | avr |
 | at the beginning of your upkeep, put a despair counter on ~, then each player exiles N permanents they control and/or cards from their hand, where N is the numb | 1 | Descent into Madness | avr |
 | at the beginning of your upkeep, reveal the top card of your library. if it"..."t cast it, put it on the bottom of your library. | 1 | Descendants' Path | avr |
 | at the beginning of your upkeep, sacrifice a creature other than ~. | 1 | Demonic Taskmaster | avr |
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M} for each other creature you control. | 1 | Fettergeist | avr |
-| at the beginning of your upkeep, target opponent discards a card if you control the creature with the greatest power or tied for the greatest power. | 1 | Triumph of Cruelty | avr |
 | choose an order for artifacts, creatures, and lands. each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | 1 | Rite of Ruin | avr |
 | counter target spell that targets a player. | 1 | Outwit | avr |
 | counter target spell that's the second spell cast ~. | 1 | Second Guess | avr |
@@ -290,7 +288,6 @@
 | creatures you control with flying get +N/+N. | 1 | Favorable Winds | avr |
 | destroy target creature with flying and all equipment attached to that creature. | 1 | Eaten by Spiders | avr |
 | during your turn, ~ gets +N/+N. | 1 | Wildwood Geist | avr |
-| enchanted creature gets +N/+N, has flying, and is an angel in addition to its other types. | 1 | Call to Serve | avr |
 | enchanted creature gets +N/-N and attacks each combat if able. | 1 | Guise of Fire | avr |
 | enchanted creature gets -N/-N and is a black zombie in addition to its other colors and types. | 1 | Ghoulflesh | avr |
 | enchanted creature has haste and "..." | 1 | Lightning Prowess | avr |
@@ -324,15 +321,12 @@
 | target creature gets +N/+N until end of turn. if it's paired with a creature, that creature also gets +N/+N until end of turn. | 1 | Joint Assault | avr |
 | target creature gets -N/-N until end of turn. | 1 | Death Wind | avr |
 | target creature you control gains hexproof until end of turn. you gain life equal to that creature"..."t be the target of spells or abilities your opponents con | 1 | Sheltering Word | avr |
-| target opponent exiles cards from the top of their library until they exile a nonland card. until end of turn, you may cast that card without paying its mana co | 1 | Stolen Goods | avr |
 | target opponent reveals their hand. you choose a card from it with mana value N or greater and exile that card. | 1 | Appetite for Brains | avr |
 | target player loses N life and you gain N life, where N is the greatest power among creatures you control. | 1 | Essence Harvest | avr |
 | target player mills N cards, where N is the number of lands you control. | 1 | Dreadwaters | avr |
 | untapped creatures you control get +N/+N. | 1 | Builder's Blessing | avr |
 | until end of turn, target creature gets +N/+N and gains trample, and all creatures able to block it ~ do so. miracle {M} (you may cast ~ for its miracle cost wh | 1 | Revenge of the Hunted | avr |
 | up to two target creatures can't be blocked ~. | 1 | Ghostform | avr |
-| when enchanted creature becomes the target of a spell, sacrifice ~. | 1 | Spectral Prison | avr |
-| when ~ dies, each player loses N life. | 1 | Soulcage Fiend | avr |
 | when ~ dies, you may have target creature get -N/-N until end of turn. | 1 | Undead Executioner | avr |
 | when ~ enters attached to a creature, each other nontoken creature you control becomes a copy of that creature. | 1 | Infinite Reflection | avr |
 | when ~ enters from a graveyard, target opponent gains control of it. | 1 | Treacherous Pit-Dweller | avr |
@@ -340,7 +334,6 @@
 | when ~ enters, exile all zombies, then return all human creature cards from your graveyard to the battlefield. | 1 | Angel of Glory's Rise | avr |
 | when ~ enters, exile it unless you sacrifice another creature. | 1 | Demonlord of Ashmouth | avr |
 | when ~ enters, return a permanent you control to its owner's hand. | 1 | Emancipation Angel | avr |
-| when ~ enters, target creature can't block ~. | 1 | Fervent Cathar | avr |
 | when ~ enters, target opponent chooses a permanent they control at random and sacrifices it. if a nonland permanent is sacrificed ~, repeat ~. | 1 | Tyrant of Discord | avr |
 | whenever a creature dealt damage by ~ ~ dies, return it to the battlefield under your control. that creature is a black zombie in addition to its other colors a | 1 | Dread Slaver | avr |
 | whenever a creature you control enters, you may have ~ become a N/N white angel artifact creature with flying until end of turn. | 1 | Angel's Tomb | avr |
@@ -351,10 +344,8 @@
 | whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Somberwald Vigilante | avr |
 | you may cast ~ from exile. | 1 | Misthollow Griffin | avr |
 | {M}{M}, {M}: tap target creature. if that creature is a zombie, exile it. | 1 | Holy Justiciar | avr |
-| {M}{M}, {M}: target creature you control fights another target creature. | 1 | Ulvenwald Tracker | avr |
 | {M}{M}, {M}: you may cast spells ~ as though they had flash. | 1 | Alchemist's Refuge | avr |
 | {M}{M}: prevent all combat damage that would be dealt to and dealt by ~ ~. | 1 | Moonlight Geist | avr |
-| {M}{M}{M}: ~ gets +N/+N until end of turn, where N is its power. | 1 | Yew Spirit | avr |
 | ~ can block only creatures with flying. | 1 | Scrapskin Drake | avr |
 | ~ can"..."s paired with a creature with soulbond. | 1 | Flowering Lumberknot | avr |
 | ~ can't block humans. | 1 | Hunted Ghoul | avr |

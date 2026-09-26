@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.5% |
-| Works (untested) | 92 | 34.3% |
+| Tested | 23 | 8.6% |
+| Works (untested) | 94 | 35.1% |
 | Partial (unaudited) | 29 | 10.8% |
-| Not working | 127 | 47.4% |
+| Not working | 122 | 45.5% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Blazing Blade Askari | silent | {2}: This creature becomes colorless until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonesplitter Sliver | silent | All Sliver creatures get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Candles of Leng | silent | {4}, {T}: Reveal the top card of your library. If it has the same name as a card in your graveyard, put it into your graveyard. Otherwise, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Careful Consideration | silent | Target player draws four cards, then discards three cards. If you cast this spell during your main phase, instead that player draws four cards, then discards tw | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Castle Raptors | silent | As long as this creature is untapped, it gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cavalry Master | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Celestial Crusader | silent | Other white creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -67,7 +66,6 @@
 | Ghitu Firebreathing | silent | {R}: Enchanted creature gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghostflame Sliver | silent | All Slivers are colorless. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glass Asp | silent | Whenever this creature deals combat damage to a player, that player loses 2 life at the beginning of their next draw step unless they pay {2} before that step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ground Rift | silent | Target creature without flying can't block this turn. Storm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targe | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gustcloak Cavalier | silent | Flanking | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Haunting Hymn | silent | Target player discards two cards. If you cast this spell during your main phase, that player discards four cards instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hivestone | silent | Creatures you control are Slivers in addition to their other creature types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -79,7 +77,6 @@
 | Ixidron | silent | Ixidron's power and toughness are each equal to the number of face-down creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jaya Ballard, Task Mage | silent | {1}{R}, {T}, Discard a card: Jaya Ballard deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhoira's Timebug | silent | {T}: Choose target permanent you control or suspended card you own. If that permanent or card has a time counter on it, you may remove a time counter from it or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kaervek the Merciless | silent | Whenever an opponent casts a spell, Kaervek deals damage equal to that spell's mana value to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of the Holy Nimbus | silent | {2}: This creature can't be regenerated this turn. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Pit | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lim-Dûl the Necromancer | silent | Whenever a creature an opponent controls dies, you may pay {1}{B}. If you do, return that card to the battlefield under your control. If it's a creature, it's a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -104,7 +101,6 @@
 | Pulmonic Sliver | silent | All Sliver creatures have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reiterate | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Restore Balance | silent | Suspend 6—{W} Each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Return to Dust | silent | Exile target artifact or enchantment. If you cast this spell during your main phase, you may exile up to one other target artifact or enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Saffi Eriksdotter | silent | Sacrifice Saffi Eriksdotter: When target creature is put into your graveyard this turn, return that card to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sangrophage | silent | At the beginning of your upkeep, tap this creature unless you pay 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sarpadian Empires, Vol. VII | silent | {3}, {T}: Create a 1/1 creature token of the chosen color and type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -146,7 +142,6 @@
 | Gorgon Recluse | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Locket of Yesterdays | notice | Spells you cast cost {1} less to cast for each card with the same name as that spell in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Magus of the Jar | notice | {T}, Sacrifice this creature: Each player exiles all cards from their hand face down and draws seven cards. At the beginning of the next end step, each player d | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Might of Old Krosa | notice | Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Molder | notice | Destroy target artifact or enchantment with mana value X. It can't be regenerated. You gain X life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Norin the Wary | notice | When a player casts a spell or a creature attacks, exile Norin. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Phthisis | notice | Destroy target creature. Its controller loses life equal to its power plus its toughness. Suspend 5—{1}{B} (Rather than cast this card from your hand, you may p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -193,9 +188,9 @@
 | Calciform Pools | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Call to the Netherworld | handled | Return target black creature card from your graveyard to your hand. Madness {0} (If you discard this card, discard it into exile. When you do, cast it for its m | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cancel | handled | Counter target spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Careful Consideration | handled | Target player draws four cards, then discards three cards. If you cast this spell during your main phase, instead that player draws four cards, then discards tw | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chromatic Star | handled | When this artifact is put into a graveyard from the battlefield, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cloudchaser Kestrel | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Coal Stoker | handled | When this creature enters, if you cast it from your hand, add {R}{R}{R}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conflagrate | handled | Conflagrate deals X damage divided as you choose among any number of targets. Flashback—{R}{R}, Discard X cards. (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Coral Trickster | handled | When this creature is turned face up, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | D'Avenant Healer | handled | {T}: This creature deals 1 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -221,9 +216,11 @@
 | Gaze of Justice | handled | As an additional cost to cast this spell, tap three untapped white creatures you control. Exile target creature. Flashback {5}{W} (You may cast this card from y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greenseeker | handled | {G}, {T}, Discard a card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Guide | handled | Enchanted creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ground Rift | handled | Target creature without flying can't block this turn. Storm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targe | the engine reads this text and performs it | Y/-/- | not_tested |
 | Havenwood Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Icatian Crier | handled | {1}{W}, {T}, Discard a card: Create two 1/1 white Citizen creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ironclaw Buzzardiers | handled | This creature can't block creatures with power 2 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kaervek the Merciless | handled | Whenever an opponent casts a spell, Kaervek deals damage equal to that spell's mana value to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Keldon Halberdier | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Kher Keep | handled | {1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of Kher Keep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Axe | handled | As an additional cost to cast this spell, discard a card or pay {5}. Lightning Axe deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -231,19 +228,19 @@
 | Magus of the Disk | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Mirror | handled | {T}, Sacrifice this creature: Exchange life totals with target opponent. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mana Skimmer | handled | Whenever this creature deals damage to a player, tap target land that player controls. That land doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Might of Old Krosa | handled | Target creature gets +2/+2 until end of turn. If you cast this spell during your main phase, that creature gets +4/+4 until end of turn instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mindstab | handled | Target player discards three cards. Suspend 4—{B} (Rather than cast this card from your hand, you may pay {B} and exile it with four time counters on it. At the | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Slagheap | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Momentary Blink | handled | Exile target creature you control, then return it to the battlefield under its owner's control. Flashback {3}{U} (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mwonvuli Acid-Moss | handled | Destroy target land. Search your library for a Forest card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nantuko Shaman | handled | When this creature enters, if you control no tapped lands, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Opal Guardian | handled | When an opponent casts a creature spell, if this permanent is an enchantment, this enchantment becomes a 3/4 Gargoyle creature with flying and protection from r | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ophidian Eye | handled | Whenever enchanted creature deals damage to an opponent, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Paradise Plume | handled | As this artifact enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Penumbra Spider | handled | When this creature dies, create a 2/4 black Spider creature token with reach. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Pit Keeper | handled | When this creature enters, if you have four or more creature cards in your graveyard, you may return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Plunder | handled | Destroy target artifact or land. Suspend 4—{1}{R} (Rather than cast this card from your hand, you may pay {1}{R} and exile it with four time counters on it. At  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Premature Burial | handled | Destroy target nonblack creature that entered since your last turn ended. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prismatic Lens | handled |  |  | Y/-/- | not_tested |
+| Return to Dust | handled | Exile target artifact or enchantment. If you cast this spell during your main phase, you may exile up to one other target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Riftwing Cloudskate | handled | When this creature enters, return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sage of Epityr | handled | When this creature enters, look at the top four cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Saltcrusted Steppe | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -278,12 +275,13 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>23 cards</summary>
 
 - Ancestral Vision
 - Assembly-Worker
 - Brine Elemental
 - Children of Korlis
+- Coal Stoker
 - Empty the Warrens
 - Flagstones of Trokair
 - Gemstone Caverns
@@ -293,6 +291,8 @@
 - Living End
 - Lotus Bloom
 - Mystical Teachings
+- Opal Guardian
+- Pit Keeper
 - Rift Bolt
 - Snapback
 - Sudden Shock
@@ -345,7 +345,6 @@
 | enchanted creature has flying and "..." | 1 | Fallen Ideal | tsp |
 | enchanted creature has protection from the chosen color. ~ doesn't remove ~. | 1 | Pentarch Ward | tsp |
 | enchanted creature has shadow. | 1 | Temporal Isolation | tsp |
-| exile target artifact or enchantment. if you cast ~ during your main phase, you may exile up to one other target artifact or enchantment. | 1 | Return to Dust | tsp |
 | fear | 1 | Corpulent Corpse | tsp |
 | if a spell would deal damage to a permanent or player, prevent N damage that spell would deal to that permanent or player. | 1 | Plated Pegasus | tsp |
 | if damage would be dealt to dralnu, sacrifice that many permanents instead. | 1 | Dralnu, Lich Lord | tsp |
@@ -366,11 +365,8 @@
 | split second (as long as ~ is on the stack, players can"..."t mana abilities.) you can"..."t win the game ~. until end of turn, damage that would reduce your li | 1 | Angel's Grace | tsp |
 | suspend N—{M} each player chooses a number of lands they control equal to the number of lands controlled by the player who controls the fewest, then sacrifices  | 1 | Restore Balance | tsp |
 | suspend N—{M}{M}{M} starting with you, each player may put an artifact, creature, enchantment, or land card from their hand onto the battlefield. repeat ~ until | 1 | Hypergenesis | tsp |
-| target creature gets +N/+N until end of turn. if you cast ~ during your main phase, that creature gets +N/+N until end of turn instead. | 1 | Might of Old Krosa | tsp |
 | target creature gets +N/+N, becomes black, and gains shadow until end of turn. (it can block or be blocked by only creatures with shadow.) flashback {M}{M} (you | 1 | Traitor's Clutch | tsp |
-| target creature without flying can't block ~. storm (when you cast ~, copy it for each spell cast before it ~. you may choose new targets for the copies.) | 1 | Ground Rift | tsp |
 | target player discards two cards. if you cast ~ during your main phase, that player discards four cards instead. | 1 | Haunting Hymn | tsp |
-| target player draws four cards, then discards three cards. if you cast ~ during your main phase, instead that player draws four cards, then discards two cards. | 1 | Careful Consideration | tsp |
 | target player reveals a card at random from their hand. ~ deals damage to that player equal to that card's mana value. storm (when you cast ~, copy it for each  | 1 | Ignite Memories | tsp |
 | target player reveals their hand and the top card of their library. you choose a card revealed ~. that player puts the chosen card on the bottom of their librar | 1 | Psychotic Episode | tsp |
 | target player sacrifices half the permanents they control of their choice, rounded down. suspend N—{M}{M}{M} (rather than cast ~ from your hand, you may pay {M} | 1 | Curse of the Cabal | tsp |
@@ -388,7 +384,6 @@
 | whenever a creature an opponent controls dies, you may pay {M}{M}. if you do, return that card to the battlefield under your control. if it"..."s a zombie in ad | 1 | Lim-Dûl the Necromancer | tsp |
 | whenever an opponent casts a spell, if ~ is suspended, remove a time counter from it. | 1 | Deep-Sea Kraken | tsp |
 | whenever an opponent casts a spell, if ~ is suspended, that player may put a time counter on ~. | 1 | Pardic Dragon | tsp |
-| whenever an opponent casts a spell, kaervek deals damage equal to that spell's mana value to any target. | 1 | Kaervek the Merciless | tsp |
 | whenever another creature is put into your graveyard from the battlefield, you may pay {M}. if you do, return ~ from your graveyard to the battlefield. | 1 | Nether Traitor | tsp |
 | whenever another goblin you control becomes blocked, sacrifice it. if you do, it deals N damage to each creature blocking it. | 1 | Ib Halfheart, Goblin Tactician | tsp |
 | whenever enchanted creature deals damage, you gain that much life. | 1 | Spirit Loop | tsp |

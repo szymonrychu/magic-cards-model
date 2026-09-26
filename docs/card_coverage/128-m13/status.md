@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 2.8% |
-| Works (untested) | 55 | 51.4% |
+| Works (untested) | 56 | 52.3% |
 | Partial (unaudited) | 3 | 2.8% |
-| Not working | 46 | 43.0% |
+| Not working | 45 | 42.1% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Duty-Bound Dead | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Elderscale Wurm | silent | When this creature enters, if your life total is less than 7, your life total becomes 7. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gem of Becoming | silent | {3}, {T}, Sacrifice this artifact: Search your library for an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Goblin Battle Jester | silent | Whenever you cast a red spell, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harbor Bandit | silent | {1}{U}: This creature can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of Glory | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Knight of Infamy | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -49,7 +48,7 @@
 | Nefarox, Overlord of Grixis | silent | Whenever Nefarox attacks alone, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Odric, Master Tactician | silent | Whenever Odric and at least three other creatures attack, you choose which creatures block this combat and how those creatures block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Public Execution | silent | Destroy target creature an opponent controls. Each other creature that player controls gets -2/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ring of Evos Isle | silent | {2}: Equipped creature gains hexproof until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Ring of Evos Isle | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ring of Kalonia | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's green. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ring of Thune | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's white. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ring of Valkas | silent | At the beginning of your upkeep, put a +1/+1 counter on equipped creature if it's red. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -95,6 +94,7 @@
 | Firewing Phoenix | handled | {1}{R}{R}{R}: Return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flames of the Firebrand | handled | Flames of the Firebrand deals 3 damage divided as you choose among one, two, or three targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fungal Sprouting | handled | Create X 1/1 green Saproling creature tokens, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goblin Battle Jester | handled | Whenever you cast a red spell, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Protector | handled | Whenever another creature you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guardian Lions | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Healer of the Pride | handled | Whenever another creature you control enters, you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -148,6 +148,7 @@
 |---|---|---|---|
 | exalted | 7 | Cathedral of War, Duskmantle Prowler, Duty-Bound Dead, Knight of Glory, Knight of Infamy | m13 |
 | at the beginning of your upkeep, count the number of permanents you control. your life total becomes that number. | 1 | Touch of the Eternal | m13 |
+| at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's blue. | 1 | Ring of Evos Isle | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's green. | 1 | Ring of Kalonia | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's red. | 1 | Ring of Valkas | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's white. | 1 | Ring of Thune | m13 |
@@ -169,11 +170,9 @@
 | whenever a creature attacks you or a planeswalker you control, that creature's controller loses N life. | 1 | Blood Reckoning | m13 |
 | whenever nefarox attacks alone, defending player sacrifices a creature of their choice. | 1 | Nefarox, Overlord of Grixis | m13 |
 | whenever odric and at least three other creatures attack, you choose which creatures block ~ and how those creatures block. | 1 | Odric, Master Tactician | m13 |
-| whenever you cast a red spell, target creature can't block ~. | 1 | Goblin Battle Jester | m13 |
 | you may cast green creature spells as though they had flash. | 1 | Yeva, Nature's Herald | m13 |
 | you may cast spells from your hand without paying their mana costs. | 1 | Omniscience | m13 |
 | {M}, {M}, sacrifice ~: search your library for an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Gem of Becoming | m13 |
-| {M}: equipped creature gains hexproof until end of turn. | 1 | Ring of Evos Isle | m13 |
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
 | {M}: target creature blocks ~ if able. | 1 | Courtly Provocateur | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |

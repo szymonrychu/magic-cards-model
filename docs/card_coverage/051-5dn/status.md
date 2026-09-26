@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 5.6% |
-| Works (untested) | 88 | 54.3% |
-| Partial (unaudited) | 19 | 11.7% |
-| Not working | 46 | 28.4% |
+| Works (untested) | 91 | 56.2% |
+| Partial (unaudited) | 18 | 11.1% |
+| Not working | 44 | 27.2% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Acquire | silent | Search target opponent's library for an artifact card and put that card onto the battlefield under your control. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | All Suns' Dawn | silent | For each color, return up to one target card of that color from your graveyard to your hand. Exile All Suns' Dawn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Wanderer | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Auriok Windwalker | silent | {T}: Attach target Equipment you control to target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Avarice Totem | silent | {5}: Exchange control of this artifact and target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Immortality | silent | Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -46,7 +45,6 @@
 | Fold into Aether | silent | Counter target spell. If that spell is countered this way, its controller may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Wargear | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Helm of Kaldra | silent | {1}: If you control Equipment named Helm of Kaldra, Sword of Kaldra, and Shield of Kaldra, create Kaldra, a legendary 4/4 colorless Avatar creature token. Attac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Krark-Clan Ogre | silent | {R}, Sacrifice an artifact: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lunar Avenger | silent | Remove a +1/+1 counter from this creature: This creature gains your choice of flying, first strike, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Theft | silent | Attach target Equipment to target creature. (Control of the Equipment doesn't change.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mana Geyser | silent | Add {R} for each tapped land your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -90,7 +88,6 @@
 | Silent Arbiter | unaudited | No more than one creature can attack each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stasis Cocoon | unaudited | Enchanted artifact can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tornado Elemental | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Vedalken Orrery | unaudited | You may cast spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abuna's Chant | handled | Choose one — • You gain 5 life. • Prevent the next 5 damage that would be dealt to target creature this turn. Entwine {2} (Choose both if you pay the entwine co | the engine reads this text and performs it | Y/-/- | not_tested |
 | Advanced Hoverguard | handled | {U}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Anodet Lurker | handled | When this creature dies, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -99,6 +96,7 @@
 | Artificer's Intuition | handled | {U}, Discard an artifact card: Search your library for an artifact card with mana value 1 or less, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Champion | handled | Whenever another creature enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Auriok Salvagers | handled | {1}{W}: Return target artifact card with mana value 1 or less from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Auriok Windwalker | handled | {T}: Attach target Equipment you control to target creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Baton of Courage | handled | Remove a charge counter from this artifact: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battered Golem | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Beacon of Creation | handled | Create a 1/1 green Insect creature token for each Forest you control. Shuffle Beacon of Creation into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -139,6 +137,7 @@
 | Iron-Barb Hellion | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Engineers | handled | {R}, Sacrifice two artifacts: Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Ironworks | handled |  |  | Y/-/- | not_tested |
+| Krark-Clan Ogre | handled | {R}, Sacrifice an artifact: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leonin Squire | handled | When this creature enters, return target artifact card with mana value 1 or less from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lose Hope | handled | Target creature gets -1/-1 until end of turn. Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Anchorite | handled | {T}: Prevent the next 2 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -176,6 +175,7 @@
 | Tyrranax | handled | {1}{G}: This creature gets -1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vanquish | handled | Destroy target blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Mastermind | handled | {U}, {T}: Return target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vedalken Orrery | handled | You may cast spells as though they had flash. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Viridian Scout | handled | {2}{G}, Sacrifice this creature: It deals 2 damage to target creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vulshok Sorcerer | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wayfarer's Bauble | handled | {2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -246,14 +246,11 @@
 | whenever ~ becomes unattached from a permanent, sacrifice that permanent. | 1 | Grafted Wargear | 5dn |
 | whenever ~ blocks or becomes blocked by a creature, destroy that creature at end of combat. | 1 | Tangle Asp | 5dn |
 | whenever ~ deals combat damage to a player, you may remove a counter from target permanent. | 1 | Ferropede | 5dn |
-| you may cast spells as though they had flash. | 1 | Vedalken Orrery | 5dn |
 | you may have ~ assign its combat damage as though it weren't blocked. | 1 | Tornado Elemental | 5dn |
 | you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Fist of Suns | 5dn |
-| {M}, sacrifice an artifact: target creature can't block ~. | 1 | Krark-Clan Ogre | 5dn |
 | {M}, sacrifice ~: counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | 1 | Ouphe Vandals | 5dn |
 | {M}, {M}: double the amount of each type of unspent mana you have. | 1 | Doubling Cube | 5dn |
 | {M}, {M}: gain control of target creature with power less than or equal to the number of islands you control for as long as ~ remains tapped. | 1 | Vedalken Shackles | 5dn |
-| {M}: attach target equipment you control to target creature you control. | 1 | Auriok Windwalker | 5dn |
 | {M}: exchange control of ~ and target nonland permanent. | 1 | Avarice Totem | 5dn |
 | {M}: if you control equipment named ~, sword of kaldra, and shield of kaldra, create kaldra, a legendary N/N colorless avatar creature token. attach those equip | 1 | Helm of Kaldra | 5dn |
 | {M}: switch ~ power and toughness until end of turn. | 1 | Myr Quadropod | 5dn |

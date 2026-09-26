@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 9.2% |
+| Tested | 24 | 10.0% |
 | Works (untested) | 134 | 56.1% |
-| Partial (unaudited) | 17 | 7.1% |
-| Not working | 66 | 27.6% |
+| Partial (unaudited) | 16 | 6.7% |
+| Not working | 65 | 27.2% |
 
 ## Cards needing work
 
@@ -41,7 +41,6 @@
 | Corpse Lunge | silent | As an additional cost to cast this spell, exile a creature card from your graveyard. Corpse Lunge deals damage equal to the exiled card's power to target creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Creeping Renaissance | silent | Choose a permanent type. Return all cards of the chosen type from your graveyard to your hand. Flashback {5}{G}{G} (You may cast this card from your graveyard f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Creepy Doll | silent | Whenever this creature deals combat damage to a creature, flip a coin. If you win the flip, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crossway Vampire | silent | When this creature enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Death's Hold | silent | Creatures enchanted player controls get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of the Pierced Heart | silent | At the beginning of enchanted player's upkeep, this Aura deals 1 damage to that player or a planeswalker that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desperate Ravings | silent | Draw two cards, then discard a card at random. Flashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -92,7 +91,6 @@
 | Scourge of Geier Reach | notice | This creature gets +1/+1 for each creature your opponents control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sever the Bloodline | notice | Exile target creature and all other creatures with the same name as that creature. Flashback {5}{B}{B} (You may cast this card from your graveyard for its flash | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tribute to Hunger | notice | Target opponent sacrifices a creature of their choice. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Angelic Overseer | unaudited | As long as you control a Human, this creature has hexproof and indestructible. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Curse of the Nightly Hunt | unaudited | Creatures enchanted player controls attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dearly Departed | unaudited | As long as this creature is in your graveyard, each Human creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Essence of the Wild | unaudited | Creatures you control enter as a copy of this creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -112,6 +110,7 @@
 | Abbey Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Altar's Reap | handled | As an additional cost to cast this spell, sacrifice a creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angel of Flight Alabaster | handled | At the beginning of your upkeep, return target Spirit card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Angelic Overseer | handled | As long as you control a Human, this creature has hexproof and indestructible. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Armored Skaab | handled | When this creature enters, mill four cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Avacyn's Pilgrim | handled |  |  | Y/-/- | not_tested |
 | Avacynian Priest | handled | {1}, {T}: Tap target non-Human creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -123,9 +122,9 @@
 | Burning Vengeance | handled | Whenever you cast a spell from your graveyard, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Champion of the Parish | handled | Whenever another Human you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chapel Geist | handled | Flying | machines/combat.py | Y/-/- | not_tested |
-| Claustrophobia | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clifftop Retreat | handled | This land enters tapped unless you control a Mountain or a Plains. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cobbled Wings | handled | Equipped creature has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Crossway Vampire | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curse of Stalked Prey | handled | Whenever a creature deals combat damage to enchanted player, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curse of the Bloody Tome | handled | At the beginning of enchanted player's upkeep, that player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darkthicket Wolf | handled | {2}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -175,7 +174,6 @@
 | Lost in the Mist | handled | Counter target spell. Return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lumberknot | handled | Whenever a creature dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Makeshift Mauler | handled | As an additional cost to cast this spell, exile a creature card from your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Manor Skeleton | handled | {1}{B}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Markov Patrician | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Mask of Avacyn | handled | Equipped creature gets +1/+2 and has hexproof. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mausoleum Guard | handled | When this creature dies, create two 1/1 white Spirit creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -247,7 +245,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -256,6 +254,7 @@
 - Boneyard Wurm
 - Brimstone Volley
 - Cackling Counterpart
+- Claustrophobia
 - Cloistered Youth // Unholy Fiend
 - Curse of Oblivion
 - Delver of Secrets // Insectile Aberration
@@ -265,6 +264,7 @@
 - Intangible Virtue
 - Liliana of the Veil
 - Ludevic's Test Subject // Ludevic's Abomination
+- Manor Skeleton
 - Moonmist
 - Parallel Lives
 - Past in Flames
@@ -285,7 +285,6 @@
 | as long as equipped creature is a human, it gets +N/+N. | 1 | Sharpened Pitchfork | isd |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | Silver-Inlaid Dagger | isd |
 | as long as equipped creature is a human, it has lifelink. | 1 | Butcher's Cleaver | isd |
-| as long as you control a human, ~ has hexproof and indestructible. | 1 | Angelic Overseer | isd |
 | as long as ~ is in your graveyard, each human creature you control enters with an additional +N/+N counter on it. | 1 | Dearly Departed | isd |
 | at the beginning of enchanted player's upkeep, ~ deals N damage to that player or a planeswalker that player controls. | 1 | Curse of the Pierced Heart | isd |
 | at the beginning of your end step, if ~ didn't attack ~, tap ~, then transform it. | 1 | Civilized Scholar // Homicidal Brute | isd |
@@ -329,7 +328,6 @@
 | when ~ dies, you may search your library for a curse card, put it onto the battlefield attached to target player, then shuffle. | 1 | Bitterheart Witch | isd |
 | when ~ enters, destroy all curses attached to you. | 1 | Witchbane Orb | isd |
 | when ~ enters, return a zombie card at random from your graveyard to your hand. | 1 | Ghoulraiser | isd |
-| when ~ enters, target creature can't block ~. | 1 | Crossway Vampire | isd |
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Fiend Hunter | isd |
 | whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a N/N black zombie creature token. | 1 | Undead Alchemist | isd |
 | whenever a creature dealt damage by ~ ~ dies, you gain life equal to that creature's toughness. | 1 | Abattoir Ghoul | isd |

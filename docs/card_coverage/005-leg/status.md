@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 2 | 6.9% |
-| Works (untested) | 18 | 62.1% |
+| Tested | 4 | 13.8% |
+| Works (untested) | 16 | 55.2% |
 | Partial (unaudited) | 2 | 6.9% |
 | Not working | 7 | 24.1% |
 
@@ -41,7 +41,6 @@
 | Fallen Angel | handled | Sacrifice a creature: This creature gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flash Counter | handled | Counter target instant spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greed | handled | {B}, Pay 2 life: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Hell's Caretaker | handled | {T}, Sacrifice a creature: Return target creature card from your graveyard to the battlefield. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Holy Day | handled | Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horror of Horrors | handled | Sacrifice a Swamp: Regenerate target black creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Immolation | handled | Enchanted creature gets +2/-2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -52,15 +51,16 @@
 | Sol'kanar the Swamp King | handled | Whenever a player casts a black spell, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tundra Wolves | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Underworld Dreams | handled | Whenever an opponent draws a card, this enchantment deals 1 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Whirling Dervish | handled | At the beginning of each end step, if this creature dealt damage to an opponent this turn, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>2 cards</summary>
+<summary>4 cards</summary>
 
+- Hell's Caretaker
 - Pyrotechnics
 - Vampire Bats
+- Whirling Dervish
 
 </details>
 

@@ -3,24 +3,24 @@
 - Expansion: 206
 - Set code: `iko`
 - Release date: 2020-04-24
-- Cards in scope (Modern/Pioneer/Standard-legal): 227
+- Cards in scope (Modern/Pioneer/Standard-legal): 228
 
 ## Legality
 
 | Format | Legal cards |
 |---|---|
-| Modern | 227 |
-| Pioneer | 227 |
+| Modern | 228 |
+| Pioneer | 228 |
 | Standard | 6 |
 
 ## Coverage
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.2% |
-| Works (untested) | 92 | 40.5% |
-| Partial (unaudited) | 20 | 8.8% |
-| Not working | 101 | 44.5% |
+| Tested | 15 | 6.6% |
+| Works (untested) | 93 | 40.8% |
+| Partial (unaudited) | 22 | 9.6% |
+| Not working | 98 | 43.0% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Cavern Whisperer | silent | Whenever this creature mutates, each opponent discards a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Charge of the Forever-Beast | silent | As an additional cost to cast this spell, reveal a creature card from your hand. Charge of the Forever-Beast deals damage to target creature or planeswalker equ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chittering Harvester | silent | Whenever this creature mutates, each opponent sacrifices a creature of their choice. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Clash of Titans | silent | Target creature fights another target creature. (Each deals damage equal to its power to the other.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cloudpiercer | silent | Whenever this creature mutates, you may discard a card. If you do, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Crystalline Giant | silent | At the beginning of combat on your turn, choose a kind of counter at random that this creature doesn't have on it from among flying, first strike, deathtouch, h | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cubwarden | silent | Whenever this creature mutates, create two 1/1 white Cat creature tokens with lifelink. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -109,7 +108,6 @@
 | Yidaro, Wandering Monster | silent | When you cycle this card, shuffle it into your library from your graveyard. If you've cycled a card named Yidaro, Wandering Monster four or more times this game | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zagoth Mamba | silent | Whenever this creature mutates, target creature an opponent controls gets -2/-2 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Zenith Flare | silent | Zenith Flare deals X damage to any target and you gain X life, where X is the number of cards with a cycling ability in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Zirda, the Dawnwaker | silent | {1}, {T}: Target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Back for More | notice | Return target creature card from your graveyard to the battlefield. When you do, it fights up to one target creature you don't control. (Each deals damage equal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bushmeat Poacher | notice | {1}, {T}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -117,7 +115,6 @@
 | Flame Spill | notice | Flame Spill deals 4 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jubilant Skybonder | notice | Creatures you control with flying have "Spells your opponents cast that target this creature cost {2} more to cast." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Kogla, the Titan Ape | notice | {1}{G}: Return target Human you control to its owner's hand. Kogla gains indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lavabrink Venturer | notice | This creature has protection from each mana value of the chosen quality. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -147,6 +144,8 @@
 | Umori, the Collector | unaudited | Companion — Each nonland card in your starting deck shares a card type. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Unpredictable Cyclone | unaudited | If a cycling ability of another nonland card would cause you to draw a card, instead exile cards from the top of your library until you exile a card that shares | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Wingfold Pteron | unaudited | This creature enters with your choice of a flying counter or a hexproof counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Zilortha, Strength Incarnate | unaudited | Lethal damage dealt to creatures you control is determined by their power rather than their toughness. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Zirda, the Dawnwaker | unaudited | Companion — Each permanent card in your starting deck has an activated ability. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adaptive Shimmerer | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aegis Turtle | handled |  |  | Y/Y/Y | not_tested |
 | Almighty Brushwagg | handled | {3}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -158,7 +157,7 @@
 | Boon of the Wish-Giver | handled | Draw four cards. Cycling {1} ({1}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Channeled Force | handled | As an additional cost to cast this spell, discard X cards. Target player draws X cards. Channeled Force deals X damage to up to one target creature or planeswal | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Checkpoint Officer | handled | {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Chevill, Bane of Monsters | handled | At the beginning of your upkeep, if your opponents control no permanents with bounty counters on them, put a bounty counter on target creature or planeswalker a | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Clash of Titans | handled | Target creature fights another target creature. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Colossification | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Coordinated Charge | handled | Creatures you control get +2/+1 until end of turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crystacean | handled | Flash | machines/casting.py (timing) | Y/Y/- | not_tested |
@@ -190,6 +189,7 @@
 | Ketria Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Ketria Triome | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kinnan, Bonder Prodigy | handled | Whenever you tap a nonland permanent for mana, add one mana of any type that permanent produced. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kogla, the Titan Ape | handled | When Kogla enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lava Serpent | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Light of Hope | handled | Choose one — • You gain 4 life. • Destroy target enchantment. • Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Luminous Broodmoth | handled | Whenever a creature you control without flying dies, return it to the battlefield under its owner's control with a flying counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,10 +243,11 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Blade Banish
 - Blitz Leech
+- Chevill, Bane of Monsters
 - Fiend Artisan
 - Fight as One
 - Gyruda, Doom of Depths
@@ -266,7 +267,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Companion | 3 | Jegantha, the Wellspring, Lutri, the Spellchaser, Umori, the Collector | iko |
+| Companion | 4 | Jegantha, the Wellspring, Lutri, the Spellchaser, Umori, the Collector, Zirda, the Dawnwaker | iko |
 | mutate | 3 | Brokkos, Apex of Forever, Parcelbeast, Sea-Dasher Octopus | iko |
 | whenever ~ mutates, put a +N/+N counter on it. | 2 | Mysterious Egg, Vulpikeet | iko |
 | +N: create a N/N green beast creature token. put your choice of a reach counter, a vigilance counter, or a trample counter on it. | 1 | Vivien, Monsters' Advocate | iko |
@@ -297,6 +298,7 @@
 | if noncombat damage would be dealt to ~, prevent that damage. put a +N/+N counter on ~ for each N damage prevented ~. | 1 | Stormwild Capridor | iko |
 | if {M}{M} was spent to cast ~, search your library for a card, put that card into your graveyard, then shuffle. return up to two permanent cards from your grave | 1 | Mythos of Brokkos | iko |
 | legendary humans you control have indestructible. | 1 | General's Enforcer | iko |
+| lethal damage dealt to creatures you control is determined by their power rather than their toughness. | 1 | Zilortha, Strength Incarnate | iko |
 | look at the top five cards of your library. put any number of permanent cards from among them onto the battlefield and the rest into your hand. exile ~. | 1 | Genesis Ultimatum | iko |
 | once during each of your turns, you may cast a permanent spell with mana value N or less from your graveyard. | 1 | Lurrus of the Dream-Den | iko |
 | prevent all damage that would be dealt ~ by creatures your opponents control. | 1 | Thwart the Enemy | iko |
@@ -306,7 +308,6 @@
 | return up to two target creature cards with total mana value N or less from your graveyard to the battlefield. put a deathtouch counter on either of them. then  | 1 | Call of the Death-Dweller | iko |
 | search your library for up to three monocolored cards with different names and exile them. an opponent chooses one of those cards. shuffle that card into your l | 1 | Emergent Ultimatum | iko |
 | spells with flash you cast cost {M} less to cast and can't be countered. | 1 | Cunning Nightbonder | iko |
-| target creature fights another target creature. (each deals damage equal to its power to the other.) | 1 | Clash of Titans | iko |
 | target creature gets +N/+N until end of turn. if it's blocking, instead put two +N/+N counters on it. cycling {M} ({M}, discard ~: draw a card.) | 1 | Will of the All-Hunter | iko |
 | target creature gets +N/+N until end of turn. put a first strike counter on it. | 1 | Heightened Reflexes | iko |
 | target creature gets +N/+N until end of turn. up to one other target creature blocks it ~ if able. cycling {M} ({M}, discard ~: draw a card.) | 1 | Monstrous Step | iko |
@@ -358,14 +359,12 @@
 | your opponents can't cast spells from anywhere other than their hands. | 1 | Drannith Magistrate | iko |
 | {M}, sacrifice ~: target creature doesn"..."s next untap step. | 1 | Sleeper Dart | iko |
 | {M}, {M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. draw a card. | 1 | Bushmeat Poacher | iko |
-| {M}, {M}: target creature can't block ~. | 1 | Zirda, the Dawnwaker | iko |
 | {M}: ~ deals N damage to any target, where N is the number of times ~ has mutated. | 1 | Porcuparrot | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with flying. | 1 | Wingspan Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with lifelink. | 1 | Duskfang Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with menace. | 1 | Frillscare Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with trample. | 1 | Hornbash Mentor | iko |
 | {M}{M}, {M}: put a +N/+N counter on each creature you control with vigilance. | 1 | Keensight Mentor | iko |
-| {M}{M}: return target human you control to its owner's hand. kogla gains indestructible until end of turn. | 1 | Kogla, the Titan Ape | iko |
 | {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Whisper Squad | iko |
 | ~ deals N damage divided as you choose among any number of target creatures and/or planeswalkers. if {M}{M} was spent to cast ~, until your next turn, those per | 1 | Mythos of Vadrok | iko |
 | ~ deals N damage to any target and you gain N life, where N is the number of cards with a cycling ability in your graveyard. | 1 | Zenith Flare | iko |

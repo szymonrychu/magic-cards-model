@@ -17,26 +17,23 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 4.2% |
-| Works (untested) | 156 | 59.8% |
+| Tested | 14 | 5.4% |
+| Works (untested) | 157 | 60.2% |
 | Partial (unaudited) | 11 | 4.2% |
-| Not working | 83 | 31.8% |
+| Not working | 79 | 30.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Accursed Witch // Infectious Curse | silent | When this creature dies, return it to the battlefield transformed under your control attached to target opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Avacynian Missionaries // Lunarch Inquisitors | silent | At the beginning of your end step, if this creature is equipped, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brain in a Jar | silent | {1}, {T}: Put a charge counter on this artifact, then you may cast an instant or sorcery spell with mana value equal to the number of charge counters on this ar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Breakneck Rider // Neck Breaker | silent | Attacking creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Confront the Unknown | silent | Investigate, then target creature gets +1/+1 until end of turn for each Clue you control. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corrupted Grafstone | silent | {T}: Choose a color of a card in your graveyard. Add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Crawling Sensation | silent | Whenever one or more land cards are put into your graveyard from anywhere for the first time each turn, create a 1/1 green Insect creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Creeping Dread | silent | At the beginning of your upkeep, each player discards a card. Each opponent who discarded a card that shares a card type with the card you discarded loses 3 lif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cult of the Waxing Moon | silent | Whenever a permanent you control transforms into a non-Human creature, create a 2/2 green Wolf creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Deathcap Cultivator | silent | Delirium — This creature has deathtouch as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dissension in the Ranks | silent | Target blocking creature fights another target blocking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elusive Tormentor // Insidious Mist | silent | Whenever this creature attacks and isn't blocked, you may pay {2}{B}. If you do, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Engulf the Shore | silent | Return to their owners' hands all creatures with toughness less than or equal to the number of Islands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Epiphany at the Drownyard | silent | Reveal the top X plus one cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -91,10 +88,9 @@
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thing in the Ice // Awoken Horror | silent | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | To the Slaughter | silent | Target player sacrifices a creature or planeswalker of their choice. Delirium — If there are four or more card types among cards in your graveyard, instead that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Uninvited Geist // Unimpeded Trespasser | silent | When this creature deals combat damage to a player, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Uninvited Geist // Unimpeded Trespasser | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vessel of Malignity | silent | {1}{B}, Sacrifice this enchantment: Target opponent exiles two cards from their hand. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vessel of Nascency | silent | {1}{G}, Sacrifice this enchantment: Reveal the top four cards of your library. You may put an artifact, creature, enchantment, land, or planeswalker card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Voldaren Duelist | silent | When this creature enters, target creature can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Welcome to the Fold | silent | Madness {X}{U}{U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Gain control of ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wolf of Devil's Breach | silent | Whenever this creature attacks, you may pay {1}{R} and discard a card. If you do, this creature deals damage to target creature or planeswalker equal to the dis | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Altered Ego | notice | You may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -132,7 +128,6 @@
 | Autumnal Gloom // Ancient of the Equinox | handled | {B}: Mill a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Biting Rain | handled | All creatures get -2/-2 until end of turn. Madness {2}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodmad Vampire | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Briarbridge Patrol | handled | Whenever this creature deals damage to one or more creatures, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Broken Concentration | handled | Counter target spell. Madness {3}{U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bygone Bishop | handled | Whenever you cast a creature spell with mana value 3 or less, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Byway Courier | handled | When this creature dies, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -142,6 +137,7 @@
 | Choked Estuary | handled | As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Confirm Suspicions | handled | Counter target spell. Investigate three times. (To investigate, create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Convicted Killer // Branded Howler | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Crawling Sensation | handled | At the beginning of your upkeep, you may mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crow of Dark Tidings | handled | When this creature enters or dies, mill two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dance with Devils | handled | Create two 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Sleuth // Bearer of Overwhelming Truths | handled | When you sacrifice a Clue, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -150,6 +146,7 @@
 | Descend upon the Sinful | handled | Exile all creatures. Delirium — Create a 4/4 white Angel creature token with flying if there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devils' Playground | handled | Create four 1/1 red Devil creature tokens. They have "When this token dies, it deals 1 damage to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devilthorn Fox | handled |  |  | Y/Y/- | not_tested |
+| Dissension in the Ranks | handled | Target blocking creature fights another target blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drogskol Cavalry | handled | Whenever another Spirit you control enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drownyard Explorers | handled | When this creature enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drownyard Temple | handled | {3}: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -234,7 +231,6 @@
 | Silverfur Partisan | handled | Whenever a Wolf or Werewolf you control becomes the target of an instant or sorcery spell, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverstrike | handled | Destroy target attacking creature. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sinister Concoction | handled | {B}, Pay 1 life, Mill a card, Discard a card, Sacrifice this enchantment: Destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Slayer's Plate | handled | Equipped creature gets +4/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sleep Paralysis | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Solitary Hunter // One of the Pack | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul Swallower | handled | Delirium — At the beginning of your upkeep, if there are four or more card types among cards in your graveyard, put three +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -271,6 +267,7 @@
 | Vessel of Volatility | handled |  |  | Y/Y/- | not_tested |
 | Veteran Cathar | handled | {3}{W}: Target Human gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Village Messenger // Moonrise Intruder | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Voldaren Duelist | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warped Landscape | handled | {2}, {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Westvale Abbey // Ormendahl, Profane Prince | handled | {5}, {T}, Pay 1 life: Create a 1/1 white and black Human Cleric creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wicker Witch | handled |  |  | Y/Y/- | not_tested |
@@ -280,11 +277,13 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>14 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
+- Avacynian Missionaries // Lunarch Inquisitors
 - Behold the Beyond
+- Briarbridge Patrol
 - Clip Wings
 - Diregraf Colossus
 - Dual Shot
@@ -293,6 +292,7 @@
 - Nahiri, the Harbinger
 - Port Town
 - Prized Amalgam
+- Slayer's Plate
 
 </details>
 
@@ -301,12 +301,11 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Delirium | 8 | Deathcap Cultivator, Hound of the Farbogs, Inquisitor's Ox, Kessig Dire Swine, Moldgraf Scavenger | soi |
-| skulk | 4 | Farbog Revenant, Furtive Homunculus, Pale Rider of Trostad, Rancid Rats | soi |
+| skulk | 5 | Farbog Revenant, Furtive Homunculus, Pale Rider of Trostad, Rancid Rats, Uninvited Geist // Unimpeded Trespasser | soi |
 | +N: reveal the top card of your library and put that card into your hand. each opponent loses life equal to its mana value. | 1 | Sorin, Grim Nemesis | soi |
 | as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | True-Faith Censer | soi |
 | as long as equipped creature is a human, it has menace. | 1 | Harvest Hand // Scrounged Scythe | soi |
-| at the beginning of your end step, if ~ is equipped, transform it. | 1 | Avacynian Missionaries // Lunarch Inquisitors | soi |
 | at the beginning of your upkeep, choose one — • each player with exactly N life loses the game, then each player gains N life. • each player with exactly N life | 1 | Triskaidekaphobia | soi |
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
 | at the beginning of your upkeep, reveal the top card of your library. any opponent may have you put that card into your graveyard. if a player does, ~ deals dam | 1 | Sin Prodder | soi |
@@ -343,7 +342,6 @@
 | reveal the top N plus one cards of your library and separate them into two piles. an opponent chooses one of those piles. put that pile into your hand and the o | 1 | Epiphany at the Drownyard | soi |
 | reveal the top five cards of your library. put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | 1 | Pieces of the Puzzle | soi |
 | search your library for up to two basic land cards and reveal them. put one into your hand and the other into your graveyard. then shuffle. | 1 | Fork in the Road | soi |
-| target blocking creature fights another target blocking creature. | 1 | Dissension in the Ranks | soi |
 | target creature deals damage to itself equal to its power. | 1 | Inner Struggle | soi |
 | target opponent mills thirteen cards. {M}{M}{M}: put ~ from your graveyard onto the battlefield transformed. activate only as a sorcery. | 1 | Startled Awake // Persistent Nightmare | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
@@ -352,17 +350,14 @@
 | when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
 | when ~ attacks or blocks, sacrifice it at end of combat. | 1 | Runaway Carriage | soi |
-| when ~ deals combat damage to a player, transform it. | 1 | Uninvited Geist // Unimpeded Trespasser | soi |
 | when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |
 | when ~ enters, another target human you control gets +N/+N until end of turn. | 1 | Intrepid Provisioner | soi |
 | when ~ enters, each opponent mills three cards. | 1 | Manic Scribe | soi |
-| when ~ enters, target creature can't block ~. | 1 | Voldaren Duelist | soi |
 | when ~ enters, you may discard a land card. if you do, create a N/N green wolf creature token. | 1 | Pack Guardian | soi |
 | whenever a permanent you control transforms into a non-human creature, create a N/N green wolf creature token. | 1 | Cult of the Waxing Moon | soi |
 | whenever a source an opponent controls deals damage to you or a permanent you control, you may have ~ deal N damage to that source's controller. | 1 | Flameblade Angel | soi |
 | whenever a werewolf you control enters, you may transform it. | 1 | Geier Reach Bandit // Vildin-Pack Alpha | soi |
 | whenever another creature you control enters, you may discard a card. if you do, put a +N/+N counter on that creature, it gains haste until end of turn, and it  | 1 | Olivia, Mobilized for War | soi |
-| whenever one or more land cards are put into your graveyard from anywhere for the first time each turn, create a N/N green insect creature token. | 1 | Crawling Sensation | soi |
 | whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | 1 | Harness the Storm | soi |
 | whenever you cast an instant or sorcery spell, remove an ice counter from ~. then if it has no ice counters on it, transform it. | 1 | Thing in the Ice // Awoken Horror | soi |
 | whenever you investigate for the first time each turn, investigate an additional time. | 1 | Erdwal Illuminator | soi |
