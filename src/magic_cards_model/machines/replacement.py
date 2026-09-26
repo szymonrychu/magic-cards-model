@@ -6629,6 +6629,49 @@ def _bloodthirst_entering_counters(game: "Game", event: ReplaceableEvent) -> lis
     return found
 
 
+def _vanishing_entering_counters(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
+    """CR 702.63a's first ability: "'Vanishing N' means 'This permanent enters
+    with N time counters on it,' ...' " - a CR 614.1c "enters with" replacement
+    on the entering permanent itself, cast or not (unlike impending's own
+    version of the same shape, which is gated on an alternative cost paid;
+    vanishing's own wording carries no such condition, so a Deadly Grub
+    reanimated or put onto the battlefield by any effect still enters with its
+    time counters). CR 702.63b: vanishing printed with no number is only the
+    other two abilities, so a printing whose `KeywordAbility.count` is `None`
+    gets nothing here. CR 702.63c: each instance applies separately, the same
+    per-instance loop `_bloodthirst_entering_counters` above already uses."""
+    from ..models.card_state import Counter
+    from .abilities import keyword_abilities
+
+    entering = event.card
+    if entering is None:
+        return []
+    amounts = [
+        ability.count
+        for ability in keyword_abilities(entering.card)
+        if ability.canonical.lower() == "vanishing" and ability.count is not None
+    ]
+    if not amounts:
+        return []
+    found = []
+    for index, amount in enumerate(amounts):
+
+        def apply(
+            game: "Game", source: CardState, event: ReplaceableEvent, n: int = amount
+        ) -> None:
+            event.counters[Counter.TIME] = event.counters.get(Counter.TIME, 0) + n
+
+        found.append(
+            ApplicableEffect(
+                key=f"{entering.id}:vanishing:{index}",
+                source=entering,
+                label=f"vanishing: enters with {amount} time counters (CR 702.63a)",
+                apply=apply,
+            )
+        )
+    return found
+
+
 def _protection_effects(game: "Game", event: ReplaceableEvent) -> list[ApplicableEffect]:
     """Protection preventing damage from a source with the stated quality.
 
@@ -7322,6 +7365,7 @@ def applicable_effects(game: "Game", event: ReplaceableEvent) -> list[Applicable
             )
         found.extend(_impending_entering_counters(game, event))
         found.extend(_bloodthirst_entering_counters(game, event))
+        found.extend(_vanishing_entering_counters(game, event))
 
     found.extend(_stack_replacements(game, event))
 

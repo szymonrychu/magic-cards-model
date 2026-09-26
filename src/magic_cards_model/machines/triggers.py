@@ -3461,7 +3461,14 @@ _NTH_COUNTER_PUT_CONDITION = re.compile(
 #: writes it out: "the last time counter is removed from this card". Never
 #: printed as a line of condition text on any card - suspend prints it as one
 #: word, and the only text on Lotus Bloom that resembles it is reminder text.
-_LAST_TIME_COUNTER_CONDITION = re.compile(r"^the last time counter is removed from this card$")
+#: CR 702.63a's own third ability writes the identical condition over "this
+#: permanent" instead of "this card" (`machines/keywords._vanishing_abilities`)
+#: - the same fact asked about a battlefield permanent rather than an exiled
+#: card - so this accepts both nouns rather than becoming two near-duplicate
+#: patterns.
+_LAST_TIME_COUNTER_CONDITION = re.compile(
+    r"^the last time counter is removed from this (?:card|permanent)$"
+)
 
 #: CR 702.94a's second ability, as `machines/keywords._miracle_ability` writes
 #: it out: "you reveal this card this way". Miracle prints it as one word, so
@@ -4089,11 +4096,13 @@ def _unread_condition_matches(
         )
 
     if _LAST_TIME_COUNTER_CONDITION.match(condition):
-        # CR 702.62a's third ability. "This card" is the source itself and
-        # nothing else - `machines/casting.remove_suspend_time_counter` raises
-        # the event only for the card it just took the last counter off, so
-        # two suspended cards reaching zero in the same upkeep each match only
-        # their own.
+        # CR 702.62a's third ability ("this card") and CR 702.63a's own third
+        # ability ("this permanent") - both name the source itself and
+        # nothing else. `machines/casting.remove_suspend_time_counter` and
+        # `machines/keywords._remove_vanishing_time_counter` each raise the
+        # event only for the object they just took the last counter off, so
+        # two cards or permanents reaching zero in the same upkeep each match
+        # only their own.
         return (
             event.event is ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED
             and event.subject_id == source.id
@@ -5171,6 +5180,27 @@ def intervening_if_answer(
         # by `machines/keywords._cumulative_upkeep_ability`: a zone question
         # (CR 400.1), fully readable, so False is a real answer.
         return source.zone is Zone.BATTLEFIELD
+
+    if clause == "this permanent has a time counter on it":
+        # CR 702.63a's second ability, written out by `machines/keywords.
+        # _vanishing_abilities`. Fully readable off the object itself, so a
+        # permanent whose last time counter already came off some other way
+        # (or that has since left the battlefield) answers False here rather
+        # than through `_fail_closed` - both on the event (CR 603.4) and again
+        # on resolution (CR 608.2a), which is what stops the tick once the
+        # counters are gone.
+        return source.zone is Zone.BATTLEFIELD and source.counter_count(Counter.TIME) > 0
+
+    if clause == "it had no time counters on it":
+        # Deadly Grub's own dies trigger ("if it had no time counters on it"),
+        # the identical look-back shape persist's "it had no -1/-1 counters on
+        # it" already reads just above, generalised to time counters: CR
+        # 603.10a's look-back plus CR 122.2's counters ceasing to exist on the
+        # move is what makes `last_known_counters` the answer, for any
+        # permanent's own dies trigger that asks this about its counters as it
+        # last existed on the battlefield - not only a permanent with
+        # vanishing, since nothing about the clause names the keyword.
+        return not source.last_known_counters[Counter.TIME]
 
     if match := _POWER_GREATER_THAN_SELF_RE.fullmatch(clause):
         if match.group("name") not in (source.name or "").lower():
