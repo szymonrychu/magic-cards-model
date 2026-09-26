@@ -154,6 +154,7 @@ class KeywordRule(StrEnum):
     ANNIHILATOR = "CR 702.86a"
     RENOWN = "CR 702.112a"
     CRAFT = "CR 702.167a"
+    DECAYED = "CR 702.147a"
 
 
 def executes(keyword: str) -> bool:
@@ -407,6 +408,14 @@ def executes(keyword: str) -> bool:
         # `machines/effects._parse_renown_clause`, and the designation is
         # `CardState.renowned` (CR 702.112b).
         "renown",
+        # CR 702.147a: two abilities, one per machine. The static "can't
+        # block" half is `machines/combat.block_refusal`'s own `has_keyword`
+        # check (credited to "machines/combat.py" first, since `printing.
+        # keywords` is walked against `combat.Keyword` before this set is
+        # ever asked); the triggered "sacrifice it at end of combat" half is
+        # `_decayed_ability` below (`_TRIGGER_EXPANSIONS`), whose effect text
+        # `machines/effects._parse_delayed_single_clause` reads.
+        "decayed",
     }
 
 
@@ -863,6 +872,33 @@ def _renown_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _decayed_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.147a: "Decayed represents a static ability and a triggered
+    ability. 'Decayed' means 'This creature can't block' and 'When this
+    creature attacks, sacrifice it at end of combat.'"
+
+    Only the triggered half is written out here. The static "can't block"
+    half (CR 509.1b) is read directly off the keyword by `machines/combat.
+    block_refusal` (`has_keyword`), the same way flying/reach's own combat
+    rule is read there rather than as parsed ability-line text - so it needs
+    no `TriggeredAbility` of its own.
+
+    "Sacrifice it" is self-referential: `machines/effects.py`'s own
+    `_parse_delayed_single_clause` reads it off the ATTACKS event's own
+    `subject_id` (CR 508.1a), which for this ability is always this
+    creature, and creates the CR 603.7 delayed trigger that fires "at end of
+    combat" (CR 511.2).
+    """
+    return _expansion(
+        ability,
+        keyword="decayed",
+        word=TriggerWord.WHEN,
+        condition="this creature attacks",
+        effect="sacrifice it at end of combat",
+        event=TriggerEvent.ATTACKS,
+    )
+
+
 #: The N on an annihilator line: "Annihilator 2", or "Annihilator X, where X
 #: is the number of +1/+1 counters on it" (the line Ulamog, the Defiler's
 #: static ability grants it).
@@ -1312,6 +1348,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "renown": _single(_renown_ability),
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
+    "decayed": _single(_decayed_ability),
 }
 
 

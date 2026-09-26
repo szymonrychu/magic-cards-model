@@ -5662,15 +5662,15 @@ through `magic_cards_model.numbers`.
 Newly visible, not closed here (effect or static gaps on proof printings, all
 effects.py/layers.py work): Agent of Treachery's "gain control of target
 permanent", Beamsplitter Mage's copy, Betor's layered draw/untap/half-life,
-Liliana's Contract / Happily Ever After's "you win the game", Jadar's
-"token with decayed", Chainer's and Phage's effects, Wild Pair's search,
-Wumpus Aberration's "may put a creature card", Boreal Outrider's "enters with
-an additional counter", Historian's Wisdom's "as long as" static, Puca's
-Eye's "becomes the chosen color", Quicksilver Fountain, Haphazard
-Bombardment, Sothera, Siege Dragon's "each creature without flying that
-player controls", Haunted Plate Mail's animation, Anti-Venom's prevention
-replacement, Ana Battlemage's {1}{B} effect, Inga and Esika's granted mana
-ability.
+Liliana's Contract / Happily Ever After's "you win the game", Chainer's and
+Phage's effects, Wild Pair's search, Wumpus Aberration's "may put a creature
+card", Boreal Outrider's "enters with an additional counter", Historian's
+Wisdom's "as long as" static, Puca's Eye's "becomes the chosen color",
+Quicksilver Fountain, Haphazard Bombardment, Sothera, Siege Dragon's "each
+creature without flying that player controls", Haunted Plate Mail's
+animation, Anti-Venom's prevention replacement, Ana Battlemage's {1}{B}
+effect, Inga and Esika's granted mana ability. Jadar's own "token with
+decayed" is closed by the regaudit-decayed round below (`_TOKEN_KEYWORDS`).
 ### EC4: turn-history conditions (clusters H1-H5)
 
 Every turn-history clause below is read by `machines/conditions/history.py`
@@ -5813,3 +5813,26 @@ leaves its source on the battlefield.
 | Room effects built for the three dungeons: "each player loses N life", "each player loses N life unless they discard a card / sacrifice a `<quality>` of their choice", "sacrifice a creature, an artifact, and a land" (one of each, none twice), "target creature can't attack [or block] until your next turn / this turn" (combat now reads a creature's own "This creature can't attack."), "You may play them." with no duration (CR 611.2a), "Draw three cards and reveal them. You may cast one of them without paying its mana cost." (CR 608.2g) | `effects._loses_life_unless_step`, `_merge_sacrifice_one_of_each_clauses`, `_TARGET_CANT_BLOCK_RE`, `combat._self_attack_restriction_sentence`, `_permission_duration`, `_merge_draw_reveal_cast_one_free_clauses` | Tomb of Annihilation, Dungeon of the Mad Mage | - | `test_venture_into_the_dungeon.py` |
 
 Not read here, and why: "as long as you've completed a dungeon" statics (Nadaar, Selfless Paladin; Gloom Stalker) need a `LayerContext` field populated in `models/game.py` (EC4's); "Whenever you complete a dungeon" needs a trigger event in `machines/triggers.py` (closed after round 1); "an opponent attacks with creatures" (Tomik, Mangara) is matched per attacker by `triggers.condition_matches`, not once per declaration - the clause reads right, the trigger count is `triggers.py`'s; saddle is activated through `keywords.saddle_activation` but not yet offered by `Game.object_cost_offers`/`legal_actions` (game.py).
+
+### regaudit-decayed: Decayed (CR 702.147a)
+
+Decayed was previously parsed (Scryfall keyword vocabulary, `KEYWORD_ABILITY_NAMES`)
+but executed nowhere - `test_the_pool_wide_ignored_keyword_report_matches_the_expected_gap_list`
+listed it against Rot-Curse Rakshasa. Built as two abilities, per the rule's
+own text: the static "This creature can't block" is
+`machines/combat.py::block_refusal`'s own `has_keyword(blocker, Keyword.
+DECAYED, game)` check (`Keyword.DECAYED` new member), so a printed keyword,
+a CR 122.1b keyword counter, or a grant all refuse the block the same way -
+`machines/keyword_counters.py::KEYWORD_COUNTER_KEYWORDS` now lists decayed,
+since layers.py's own generic per-`Keyword`-member counter-to-line grant now
+has a reading vocabulary for it. The triggered "sacrifice it at end of
+combat" is `machines/keywords.py::_decayed_ability` (`_TRIGGER_EXPANSIONS`),
+whose effect text is read by a new `_parse_delayed_single_clause` branch in
+`machines/effects.py` (self-referential "it" off the ATTACKS event's own
+subject) as a CR 603.7 delayed trigger reusing the same `sacrificed_by_its_
+controller` effect The Ring's third ability already uses. Jadar, Ghoulcaller
+of Nephalia's own "create a 2/2 black Zombie creature token with decayed"
+needed `_TOKEN_KEYWORDS` widened in `machines/effects.py` (its "if you
+control no creatures with decayed" condition was already read generally by
+`conditions/board.py::quality`'s "with `<keyword>`" suffix - `KEYWORD_
+ABILITY_NAMES` already had decayed). `tests/scenarios/test_decayed.py`.
