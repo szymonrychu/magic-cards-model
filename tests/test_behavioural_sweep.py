@@ -1753,7 +1753,15 @@ def _activation_step(ability: ActivatedAbility) -> Step:
     """The step an "Activate only during ..." instruction (CR 602.1b) allows
     the activation in: the named step ("during your upkeep", "during the end
     of combat step"), the beginning of combat for "during combat", the
-    precombat main phase otherwise."""
+    precombat main phase otherwise.
+
+    CR 702.57b's own forecast timing - "only during the upkeep step of the
+    card's owner" - is never printed as one of those instructions
+    (`ActivatedAbility.forecast` is set off the keyword itself, not off
+    `instructions`), so it is read here the same generic way, off the
+    ability's own timing field rather than any one card's name."""
+    if ability.forecast:
+        return Step.UPKEEP
     for window in read_activation_instructions(ability.instructions).windows:
         lowered = window.lower()
         for name, step in sorted(_STEP_NAMES.items(), key=lambda item: -len(item[0])):
@@ -3712,9 +3720,6 @@ KNOWN_ENGINE_GAPS: dict[str, str] = {
     "The Filigree Sylex #2 [activated]": (
         "cost 'Remove ten oil counters from among permanents you control and "
         "sacrifice The Filigree Sylex' cannot be built"
-    ),
-    "Writ of Passage #0 [activated]": (
-        "Forecast (CR 702.57) is not built: its hand-zone activation is never offered"
     ),
 }
 
