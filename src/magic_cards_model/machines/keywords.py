@@ -154,6 +154,7 @@ class KeywordRule(StrEnum):
     ANNIHILATOR = "CR 702.86a"
     RENOWN = "CR 702.112a"
     CRAFT = "CR 702.167a"
+    FLANKING = "CR 702.25a"
 
 
 def executes(keyword: str) -> bool:
@@ -259,6 +260,12 @@ def executes(keyword: str) -> bool:
         # (`_TRIGGER_EXPANSIONS`), and `machines/effects._parse_firebending_
         # add_mana` reads the "add N {R}" effect it puts on the stack.
         "firebending",
+        # CR 702.25a/b: `_flanking_ability` above (`_TRIGGER_EXPANSIONS`) -
+        # the "without flanking" qualifier is `machines/triggers.condition_
+        # matches`'s own `BLOCKS` branch, and "the blocking creature" is
+        # `machines/effects._parse_event_subject_pump_clause`'s existing
+        # event-subject reader.
+        "flanking",
         # CR 702.145b / CR 702.145e. Static abilities driven by the game's
         # day/night designation (CR 731): `apply_daybound_nightbound` below
         # transforms and sets the designation, `enters_transformed_at_night`
@@ -867,6 +874,36 @@ def _renown_ability(ability: KeywordAbility) -> TriggeredAbility:
     )
 
 
+def _flanking_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.25a: "Flanking is a triggered ability that triggers during the
+    declare blockers step. (See rule 509, 'Declare Blockers Step.') 'Flanking'
+    means 'Whenever this creature becomes blocked by a creature without
+    flanking, the blocking creature gets -1/-1 until end of turn.'"
+
+    CR 702.25b's "each triggers separately" for several printed instances is
+    `keyword_triggered_abilities`'s own one-`TriggeredAbility`-per-line shape,
+    the same free ride ward, prowess and battle cry already get. CR 509.3d's
+    "becomes blocked by a creature" already triggers once per blocking pair -
+    `Game.declare_blockers` emits one `TriggerEvent.BLOCKS` event per blocker,
+    `subject_id` always the blocker - so a creature with flanking blocked by
+    several creatures needs no extra machinery here either: the "without
+    flanking" qualifier is read off that same event's blocker by
+    `machines/triggers.condition_matches`'s `BLOCKS` branch, and "the blocking
+    creature" in the effect is `machines/effects._parse_event_subject_pump_
+    clause`'s existing "event's own subject" pump, which already reads
+    `AbilityOnStack.event.subject_id` - the blocker, once again - rather than
+    the ability's own source.
+    """
+    return _expansion(
+        ability,
+        keyword="flanking",
+        word=TriggerWord.WHENEVER,
+        condition="this creature becomes blocked by a creature without flanking",
+        effect="the blocking creature gets -1/-1 until end of turn",
+        event=TriggerEvent.BLOCKS,
+    )
+
+
 #: The N on an annihilator line: "Annihilator 2", or "Annihilator X, where X
 #: is the number of +1/+1 counters on it" (the line Ulamog, the Defiler's
 #: static ability grants it).
@@ -1316,6 +1353,7 @@ _TRIGGER_EXPANSIONS: dict[str, Callable[[KeywordAbility], list[TriggeredAbility]
     "renown": _single(_renown_ability),
     "extort": _single(_extort_ability),
     "increment": _single(_increment_ability),
+    "flanking": _single(_flanking_ability),
 }
 
 
