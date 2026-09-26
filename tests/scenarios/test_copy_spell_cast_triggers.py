@@ -329,3 +329,47 @@ def test_the_last_known_copy_may_still_choose_new_targets():
     resolve_everything(scenario)
     assert lions.zone is Zone.GRAVEYARD
     assert scenario.player("bob").life == 20
+
+
+def test_the_last_known_copy_keeps_the_announced_x():
+    """CR 707.10 copies "the value of X" with the rest of the cast decisions,
+    and a Fireball countered before Mica's trigger resolves is copied as it
+    last existed on the stack (CR 608.2h) - X=3 included, not a record that
+    left with it (X=0)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Fireball"],
+            library=["Island"] * 5,
+            battlefield=[MICA, "Ornithopter", *["Mountain"] * 4],
+        )
+        .player(
+            "bob",
+            life=20,
+            hand=["Counterspell"],
+            library=["Island"] * 5,
+            battlefield=["Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Fireball", targets=["bob"])
+    payment = casting.determine_cost(x_value=3)
+    scenario.pay_with(payment, *scenario.untapped_sources(*["Mountain"] * 4))
+    fireball = scenario.put_on_stack(casting)
+    scenario.pass_priority("alice")
+    blue = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_onto_stack("Counterspell", *blue, username="bob", targets=[fireball])
+    scenario.resolve_top()  # Counterspell
+    assert fireball.zone is Zone.GRAVEYARD
+
+    scenario.will_take_the_may(True, username="alice", source=MICA)
+    scenario.will_take_the_may(False, username="alice", source=MICA)
+    scenario.resolve_top()  # Mica's trigger
+
+    (copy,) = [s for s in scenario.game.stack if getattr(s, "name", "") == "Fireball"]
+    assert copy.is_copy
+    assert scenario.game.cast_record(copy).x_value == 3
+    resolve_everything(scenario)
+    assert scenario.player("bob").life == 17

@@ -43306,12 +43306,14 @@ def _put_spell_in_library(
     if spell not in game.stack:
         return
     game.stack.remove(spell)
-    game.forget_cast_record(spell)
     if spell.owner is None:
+        game.forget_cast_record(spell)
         return
     # One CR 401.1 instruction, so the move raises the library event and is
     # known to every player, who saw the spell on the stack (CR 400.2).
     game.put_cards_into_library([spell], to_bottom=not top)
+    # Forgotten after the move, so `last_known_spell` keeps it (CR 608.2h).
+    game.forget_cast_record(spell)
     if top and depth:
         _reposition_in_owners_library(game, spell, depth=depth)
 

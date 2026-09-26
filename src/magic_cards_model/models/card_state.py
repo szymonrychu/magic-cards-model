@@ -634,6 +634,11 @@ class SpellSnapshot(EngineModel):
     stamp: UUID
     targets: tuple[TargetRef, ...] = ()
     division: tuple[int, ...] | None = None
+    cast_record: dict[str, Any] | None = None
+    """The spell's `Game.cast_records` entry, dumped as JSON by
+    `Game.forget_cast_record` before it drops the live one: the modes, X,
+    face and cost decisions CR 707.10 copies. A plain dict because
+    `CastRecord` lives in `models/game.py`, which builds on this module."""
 
 
 class AttachmentSnapshot(EngineModel):

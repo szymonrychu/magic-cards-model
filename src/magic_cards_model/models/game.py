@@ -4045,7 +4045,8 @@ class Game(EngineModel):
     #: `last_known_attachments` (EC6's object-state readers - bumped at the
     #: EC round 2 merge).
     #: 86: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5), and
-    #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5).
+    #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5), carrying
+    #: its `CastRecord` as JSON.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6621,9 +6622,21 @@ class Game(EngineModel):
         return found if found is not None else CastRecord()
 
     def forget_cast_record(self, state: StackObject) -> None:
-        """Drop every record of `state`'s card, whichever object it described."""
+        """Drop every record of `state`'s card, whichever object it described.
+
+        The record of the stack object the card last was is kept on its
+        `last_known_spell` first (CR 608.2h): a "copy that spell" trigger
+        resolving after the spell left still copies its modes, X and cost
+        decisions (CR 707.10, `copy_spell_as_last_known`)."""
         if not isinstance(state, CardState):
             return
+        last_known = state.last_known_spell
+        if last_known is not None and last_known.cast_record is None:
+            record = self.cast_records.get(last_known.stamp)
+            if record is not None:
+                state.last_known_spell = last_known.model_copy(
+                    update={"cast_record": record.model_dump(mode="json")}
+                )
         for stamp in [
             key for key, record in self.cast_records.items() if record.card_id == state.id
         ]:
@@ -8691,11 +8704,14 @@ class Game(EngineModel):
         last_known = spell.last_known_spell
         if last_known is None:
             return None
-        record = self.cast_record_as_last_known(last_known.stamp)
+        if last_known.cast_record is not None:
+            record = CastRecord.model_validate(last_known.cast_record)
+        else:
+            record = self.cast_record_as_last_known(last_known.stamp) or CastRecord()
         return self._put_spell_copy(
             spell,
             controller,
-            original_record=record if record is not None else CastRecord(),
+            original_record=record,
             targets=list(last_known.targets),
             division=list(last_known.division) if last_known.division is not None else None,
         )
