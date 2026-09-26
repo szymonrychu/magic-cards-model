@@ -24323,6 +24323,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if conditional_remove_counter_from_self is not None:
         return conditional_remove_counter_from_self
+    may_tap_untapped_if_you_do = _parse_may_tap_untapped_if_you_do_clause(effect_text)
+    if may_tap_untapped_if_you_do is not None:
+        return may_tap_untapped_if_you_do
     reflexive_sacrifice_or_discard = _parse_reflexive_sacrifice_or_discard_clause(effect_text)
     if reflexive_sacrifice_or_discard is not None:
         return reflexive_sacrifice_or_discard
@@ -32337,7 +32340,10 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
         # Any other instruction ("untap this creature", "return a creature
         # card from your graveyard to the battlefield ...") is read by the
         # ordinary clause parser and run against the same resolving object.
-        clause = (
+        # "copy that spell and you may choose new targets for the copy"
+        # (Mica, Reader of Ruins) is one CR 707.10c instruction the
+        # clause splitter's bare "and" cut would slice in two.
+        clause = _parse_copy_that_spell_clause(consequence_text, for_spell=for_spell) or (
             parse_mixed_effect_for_spell(consequence_text)  # type: ignore[assignment]
             if for_spell
             else parse_mixed_effect(consequence_text)
@@ -32386,6 +32392,89 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
             consequence(game, player, power, source_name, source_id_of(stack_object))
         elif clause is not None:
             clause(game, stack_object)  # type: ignore[arg-type]
+
+    return effect
+
+
+#: Aziza, Mage Tower Captain: "you may tap three untapped creatures you
+#: control. If you do, copy that spell. You may choose new targets for the
+#: copy." Raff, Weatherlight Stalwart: "you may tap two untapped creatures you
+#: control. If you do, draw a card." Tidal Terror: "you may tap two other
+#: untapped creatures you control. If you do, ..." - CR 118.12's shape with
+#: tapping (CR 701.26a) as the optional cost: a count, an optional "other"
+#: (not the ability's source), and a description of the untapped permanents.
+_MAY_TAP_UNTAPPED_IF_YOU_DO_RE = re.compile(
+    r"^you may tap (?P<count>[\w-]+) (?P<other>other )?untapped (?P<description>[^.]+?) "
+    r"you control\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_tap_untapped_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_TAP_UNTAPPED_IF_YOU_DO_RE`'s shape. The permanents are read the
+    way `_sacrifice_restriction` reads a counted description ("three other
+    creatures"), then narrowed to the untapped ones as the ability resolves.
+    The "you may" is a `MAY` legal only while enough of them are untapped
+    (CR 118.3); a yes chooses exactly that many (`CHOOSE_CARDS`), taps them,
+    and runs the consequence - `pay_consequence_effect`'s, "copy that
+    spell" included - on the same ability (CR 118.12)."""
+    match = _MAY_TAP_UNTAPPED_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    other = "other " if match.group("other") else ""
+    restriction = _sacrifice_restriction(
+        f"{match.group('count')} {other}{match.group('description').strip()}"
+    )
+    if restriction is None or restriction.is_self:
+        return None
+    quantity = restriction.quantity
+    if not quantity.exact or quantity.amount is None:
+        return None
+    count = quantity.amount
+    consequence = pay_consequence_effect(match.group("consequence").strip())
+    if consequence is None:
+        return None
+    prompt = (
+        f"tap {match.group('count')} {other}untapped {match.group('description').strip()} "
+        "you control"
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        candidates = [
+            permanent
+            for permanent in restriction.candidates(game, player, source_id)
+            if not permanent.tapped
+        ]
+        if not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=prompt,
+                source=source_name,
+                affirmative_is_legal=len(candidates) >= count,
+                source_id=source_id_of(ability),
+            )
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose {count} to tap",
+                source=source_name,
+                amount=count,
+                cards=tuple(candidate.id for candidate in candidates),
+                source_id=source_id_of(ability),
+            )
+        )
+        chosen = [candidate for candidate in candidates if candidate.id in set(chosen_ids)]
+        if len(chosen) < count:
+            return
+        for permanent in chosen:
+            game.tap_permanent(permanent)
+        consequence(game, ability)
 
     return effect
 
@@ -33076,6 +33165,9 @@ def pay_consequence_effect(text: str) -> AbilityEffect | None:
     118.12), run on the same ability that paid: an ordinary clause sequence
     (`parse_mixed_effect`), or one of `_layer_consequence`'s one-shot
     continuous effects. `None` when none of them reads it."""
+    copy_that_spell = _parse_copy_that_spell_clause(text, for_spell=False)
+    if copy_that_spell is not None:
+        return copy_that_spell
     return parse_mixed_effect(text) or _layer_consequence(text)
 
 
@@ -40102,9 +40194,12 @@ def _parse_counter_that_spell_clause(clause: str, *, for_spell: bool) -> Targete
 #: offer_new_targets_for_copy`) - the same two primitives `_parse_target_
 #: opponent_draw_then_copy_that_spell_clause` already uses for Alania,
 #: Divergent Storm's richer two-clause chain, here with nothing in front of
-#: the copy at all.
+#: the copy at all. Mica, Reader of Ruins joins the two with "and" instead of
+#: a period ("copy that spell and you may choose new targets for the copy") -
+#: the same permission (CR 707.10c).
 _COPY_THAT_SPELL_RE = re.compile(
-    r"^copy that spell\.?(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
+    r"^copy that spell(?:\.|,)?"
+    r"(?P<new_targets>\s*(?:and )?you may choose new targets for the copy\.?)?$",
     re.IGNORECASE,
 )
 
