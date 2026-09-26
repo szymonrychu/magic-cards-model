@@ -202,9 +202,11 @@ def test_select_first_printing_memorabilia_and_token_set_types_are_promo_like():
     assert cc.select_first_printing([token_set])["set"] == "tok2"
 
 
-def test_select_first_printing_does_not_treat_commander_sets_as_promo():
-    """Commander sets stay as they are: a card first printed in a Commander
-    set really does belong there."""
+def test_select_first_printing_prefers_non_commander_reprint():
+    """Owner instruction 2026-09-26: Commander products must never win a
+    card's home over a genuine (non-Commander, non-promo) reprint - the
+    same preference mechanism as the promo fix, generalized to Commander
+    set types (e.g. msc, lcc, clb)."""
     commander = make_card(
         "Command Zone Legend", set_code="cmd", set_type="commander", released_at="2020-01-01"
     )
@@ -212,7 +214,39 @@ def test_select_first_printing_does_not_treat_commander_sets_as_promo():
         "Command Zone Legend", set_code="main", set_type="expansion", released_at="2021-01-01"
     )
     first = cc.select_first_printing([commander, later_main])
+    assert first["set"] == "main"
+
+
+def test_select_first_printing_falls_back_to_commander_when_no_other_printing_exists():
+    """A card with no genuine and no promo printing at all - only ever
+    printed in a Commander product - still gets *some* home (mirrors the
+    promo-only fallback); whether that ever surfaces as a campaign row is
+    `modern_legal_codes`'s job, not `select_first_printing`'s."""
+    commander = make_card(
+        "Commander Exclusive", set_code="cmd", set_type="commander", released_at="2020-01-01"
+    )
+    first = cc.select_first_printing([commander])
     assert first["set"] == "cmd"
+
+
+def test_select_first_printing_prefers_promo_over_commander_when_no_genuine_printing():
+    """When a card's only printings are Commander and promo (no normal
+    set), the promo printing wins - Commander is the least-preferred tier,
+    strictly behind both genuine and promo-like printings."""
+    commander = make_card(
+        "Commander And Promo Only",
+        set_code="cmd",
+        set_type="commander",
+        released_at="2019-01-01",
+    )
+    promo = make_card(
+        "Commander And Promo Only",
+        set_code="promo",
+        set_type="promo",
+        released_at="2020-01-01",
+    )
+    first = cc.select_first_printing([commander, promo])
+    assert first["set"] == "promo"
 
 
 def test_select_first_printing_promo_set_code_no_longer_wins_tiebreak():
@@ -293,6 +327,51 @@ def test_modern_legal_codes_requires_at_least_one_modern_legal_card():
     never_modern = make_card("Never Modern", set_code="nomod", legal_modern="not_legal")
     index = cc.build_set_index(_first_printings(modern_legal, never_modern).values())
     assert cc.modern_legal_codes(index) == {"mod"}
+
+
+def test_modern_legal_codes_never_includes_a_commander_set():
+    """Owner instruction 2026-09-26: Commander products (set_type
+    "commander") must never be a campaign row, even in the hypothetical
+    case where a card's only home ends up being one (the fallback tier in
+    `select_first_printing`)."""
+    commander_legal = make_card(
+        "Commander Exclusive Legal",
+        set_code="cmd",
+        set_type="commander",
+        legal_modern="legal",
+    )
+    ordinary_legal = make_card("Ordinary Legal", set_code="mod", legal_modern="legal")
+    index = cc.build_set_index(_first_printings(commander_legal, ordinary_legal).values())
+    assert cc.modern_legal_codes(index) == {"mod"}
+
+
+def test_in_target_formats_scope_is_exactly_standard_pioneer_modern():
+    """Owner instruction 2026-09-26 scope check: only legality (legal or
+    banned - anything other than "not_legal") in Standard, Pioneer or
+    Modern puts a card in scope. Legality in Commander, Legacy, Vintage or
+    any other format must never pull a card in on its own."""
+    legal_modern = make_card("Legal Modern", legal_modern="legal")
+    banned_pioneer = make_card("Banned Pioneer", legal_modern="not_legal", legal_pioneer="banned")
+    legal_standard_only = make_card(
+        "Legal Standard",
+        legal_modern="not_legal",
+        legal_pioneer="not_legal",
+        legal_standard="legal",
+    )
+    out_of_scope = make_card("Out Of Scope", legal_modern="not_legal")
+    out_of_scope["legalities"] = {
+        "standard": "not_legal",
+        "pioneer": "not_legal",
+        "modern": "not_legal",
+        "commander": "legal",
+        "legacy": "legal",
+        "vintage": "legal",
+    }
+
+    assert cc._in_target_formats(legal_modern)
+    assert cc._in_target_formats(banned_pioneer)
+    assert cc._in_target_formats(legal_standard_only)
+    assert not cc._in_target_formats(out_of_scope)
 
 
 def test_order_newest_first_sorts_by_release_date_descending():
@@ -1331,6 +1410,117 @@ def test_generate_all_uses_default_cards_for_first_print_attribution(tmp_path: P
     assert result.set_count == 1
     assert (out_dir / "001-og" / "status.md").exists()
     assert not (out_dir / "001-newest").exists()
+
+
+def test_generate_all_rehomes_commander_reprint_and_never_writes_a_commander_dir(
+    tmp_path: Path,
+):
+    """Owner instruction 2026-09-26: a card first printed in a Commander
+    product but reprinted in a normal set is homed at the normal set, and
+    no directory is ever written for the Commander product itself."""
+    oid = str(uuid.uuid4())
+    oracle_cards = [
+        make_card(
+            "Command Zone Legend",
+            set_code="cmd",
+            set_name="Commander Legends",
+            released_at="2020-01-01",
+            legal_modern="legal",
+            oracle_id=oid,
+        )
+    ]
+    default_cards = [
+        make_card(
+            "Command Zone Legend",
+            set_code="cmd",
+            set_name="Commander Legends",
+            set_type="commander",
+            released_at="2020-01-01",
+            legal_modern="legal",
+            oracle_id=oid,
+        ),
+        make_card(
+            "Command Zone Legend",
+            set_code="main",
+            set_name="Main Set",
+            set_type="expansion",
+            released_at="2021-01-01",
+            legal_modern="legal",
+            oracle_id=oid,
+        ),
+    ]
+    bulk_path = tmp_path / "oracle-cards.json"
+    bulk_path.write_text(json.dumps(oracle_cards))
+    default_path = tmp_path / "default-cards.json"
+    default_path.write_text(json.dumps(default_cards))
+
+    out_dir = tmp_path / "docs" / "card_coverage"
+    printings_dir = tmp_path / "printings"
+    printings_dir.mkdir()
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    golden_dir = tests_dir / "golden"
+    golden_dir.mkdir()
+
+    result = cc.generate_all(
+        bulk_path=bulk_path,
+        default_bulk_path=default_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+
+    assert result.set_count == 1
+    assert (out_dir / "001-main" / "status.md").exists()
+    assert not (out_dir / "001-cmd").exists()
+    status_text = (out_dir / "001-main" / "status.md").read_text()
+    assert "Command Zone Legend" in status_text
+
+
+def test_generate_all_prunes_a_preexisting_commander_dir(tmp_path: Path):
+    """A `docs/card_coverage/<NNN>-<code>/` directory left over from before
+    this fix (Commander set, no notes) is pruned by a regeneration, exactly
+    like any other orphaned set - no bespoke Commander-pruning code needed."""
+    bulk_path = tmp_path / "oracle-cards.json"
+    out_dir = tmp_path / "docs" / "card_coverage"
+    printings_dir = tmp_path / "printings"
+    printings_dir.mkdir()
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    golden_dir = tests_dir / "golden"
+    golden_dir.mkdir()
+
+    stale_dir = out_dir / "001-cmd"
+    stale_dir.mkdir(parents=True)
+    (stale_dir / "status.md").write_text("# Commander Legends (cmd)\n\n## Notes\n\n")
+
+    bulk_path.write_text(
+        json.dumps(
+            [
+                make_card(
+                    "Ordinary Legal",
+                    set_code="mod",
+                    set_name="Modern Set",
+                    released_at="2020-01-01",
+                    legal_modern="legal",
+                )
+            ]
+        )
+    )
+    result = cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+    assert not stale_dir.exists()
+    assert result.pruned_codes == ("cmd",)
 
 
 def test_generate_all_end_to_end(tmp_path: Path):

@@ -141,8 +141,7 @@ def is_eligible_printing(raw: dict) -> bool:
 
 #: Scryfall `set_type` values that mark a set as promo-like rather than a
 #: card's genuine gameplay home - a WPN/Prerelease/Pro-Tour promo, a
-#: memorabilia object, or a token set. Commander sets are deliberately not
-#: here: a card first printed in a Commander set really does belong there.
+#: memorabilia object, or a token set.
 _PROMO_LIKE_SET_TYPES = {"promo", "memorabilia", "token"}
 
 
@@ -150,9 +149,9 @@ def is_promo_like_printing(raw: dict) -> bool:
     """Whether a printing is promo-like for first-printing-attribution
     purposes: a promo/memorabilia/token `set_type`, or flagged `promo: true`
     or `digital: true` on the printing itself. A card whose earliest
-    printing is promo-like but that also has a genuine (non-promo-like)
-    printing is homed in that genuine printing, never the promo - see
-    `select_first_printing`."""
+    printing is promo-like but that also has a genuine (non-promo-like,
+    non-Commander-like) printing is homed in that genuine printing, never
+    the promo - see `select_first_printing`."""
     return (
         raw.get("set_type") in _PROMO_LIKE_SET_TYPES
         or bool(raw.get("promo"))
@@ -160,20 +159,46 @@ def is_promo_like_printing(raw: dict) -> bool:
     )
 
 
+#: Scryfall `set_type` values that mark a set as a Commander product (e.g.
+#: msc, lcc, clb). Owner instruction 2026-09-26: Commander products must
+#: never be a card's preferred home, and must never become a campaign row
+#: (`modern_legal_codes`) - unlike promo, which is still allowed to be a
+#: card's home when nothing else exists at all.
+_COMMANDER_SET_TYPES = {"commander"}
+
+
+def is_commander_like_printing(raw: dict) -> bool:
+    """Whether a printing is a Commander-product printing for first-printing-
+    attribution purposes. A card whose earliest printing is Commander-like
+    but that also has a genuine (non-Commander, non-promo) printing is homed
+    in that genuine printing, never the Commander one - see
+    `select_first_printing`."""
+    return raw.get("set_type") in _COMMANDER_SET_TYPES
+
+
 def select_first_printing(printings: Sequence[dict]) -> dict | None:
     """The printing a card "belongs to" for coverage purposes: the eligible,
-    non-promo-like printing with the earliest `released_at` - a prerelease or
-    promo printing sharing or preceding the main expansion's release date
-    must not win the card's home away from that expansion. Only when a card
-    has no eligible non-promo-like printing at all (e.g. a WPN- or Pro-Tour-
-    only card) does the earliest eligible promo-like printing win. Ties are
-    broken by set code so the choice is deterministic when two sets shipped
-    the same day."""
+    genuine (non-promo-like, non-Commander-like) printing with the earliest
+    `released_at` - a prerelease, promo, or Commander-product printing
+    sharing or preceding the main expansion's release date must not win the
+    card's home away from that expansion. When a card has no genuine
+    printing at all, the earliest eligible promo-like printing wins over a
+    Commander-like one; only when *nothing* else is eligible at all (a WPN-,
+    Pro-Tour-, or Commander-exclusive card) does the earliest eligible
+    printing of any kind win - Commander is the least-preferred tier, never
+    the most. Ties are broken by set code so the choice is deterministic
+    when two sets shipped the same day."""
     eligible = [p for p in printings if is_eligible_printing(p)]
     if not eligible:
         return None
-    non_promo = [p for p in eligible if not is_promo_like_printing(p)]
-    pool = non_promo if non_promo else eligible
+    genuine = [
+        p for p in eligible if not is_promo_like_printing(p) and not is_commander_like_printing(p)
+    ]
+    if genuine:
+        pool = genuine
+    else:
+        non_commander = [p for p in eligible if not is_commander_like_printing(p)]
+        pool = non_commander if non_commander else eligible
     return min(pool, key=lambda p: (p.get("released_at") or "9999-99-99", p.get("set") or "zzzzzz"))
 
 
@@ -275,13 +300,26 @@ def _in_target_formats(raw: dict) -> bool:
     return any(legalities.get(fmt) != "not_legal" for fmt in ("standard", "pioneer", "modern"))
 
 
+def _is_commander_set(meta: SetMeta) -> bool:
+    """Whether `meta` is a Commander product (`set_type` is uniform across a
+    set's own cards). A defense-in-depth backstop alongside
+    `select_first_printing`'s Commander-last preference: even in the
+    hypothetical case where a card's only eligible printing at all is a
+    Commander one, that product still never earns a campaign row - owner
+    instruction 2026-09-26, "Commander products must never be a campaign
+    row" has no stated exception."""
+    return bool(meta.cards) and meta.cards[0].get("set_type") in _COMMANDER_SET_TYPES
+
+
 def modern_legal_codes(index: dict[str, SetMeta]) -> set[str]:
     """Every set with at least one first-printed card that is Modern-legal -
-    the "expansions available in modern" the campaign covers."""
+    the "expansions available in modern" the campaign covers - excluding
+    Commander products outright (`_is_commander_set`)."""
     return {
         code
         for code, meta in index.items()
-        if any((c.get("legalities") or {}).get("modern") != "not_legal" for c in meta.cards)
+        if not _is_commander_set(meta)
+        and any((c.get("legalities") or {}).get("modern") != "not_legal" for c in meta.cards)
     }
 
 
