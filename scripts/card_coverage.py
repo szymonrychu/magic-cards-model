@@ -159,21 +159,33 @@ def is_promo_like_printing(raw: dict) -> bool:
     )
 
 
-#: Scryfall `set_type` values that mark a set as a Commander product (e.g.
-#: msc, lcc, clb). Owner instruction 2026-09-26: Commander products must
-#: never be a card's preferred home, and must never become a campaign row
-#: (`modern_legal_codes`) - unlike promo, which is still allowed to be a
-#: card's home when nothing else exists at all.
+#: Scryfall `set_type` values that mark a set as a Commander preconstructed-
+#: deck product (e.g. msc, lcc). Owner instruction 2026-09-26: Commander
+#: products must never be a card's preferred home, and must never become a
+#: campaign row (`modern_legal_codes`) - unlike promo, which is still
+#: allowed to be a card's home when nothing else exists at all.
 _COMMANDER_SET_TYPES = {"commander"}
 
 
 def is_commander_like_printing(raw: dict) -> bool:
     """Whether a printing is a Commander-product printing for first-printing-
-    attribution purposes. A card whose earliest printing is Commander-like
-    but that also has a genuine (non-Commander, non-promo) printing is homed
-    in that genuine printing, never the Commander one - see
-    `select_first_printing`."""
-    return raw.get("set_type") in _COMMANDER_SET_TYPES
+    attribution purposes: `set_type == "commander"` (an ordinary Commander
+    precon), or the set's own name contains "Commander" - Scryfall's own
+    `set_type` is not consistent for the Commander Legends draft-innovation
+    line (`clb`'s `set_type` is `draft_innovation`, not `commander`) or for
+    Commander-dedicated Masters sets (`cmm`'s is `masters`), so `set_type`
+    alone under-detects the owner's named examples (msc, lcc, **clb**). A
+    set's declared name is a much more reliable "is this a Commander
+    product" signal than its `set_type` bucket, and does not risk catching
+    an unrelated `draft_innovation`/`masters` set (Conspiracy, Battlebond,
+    Modern Masters, ... none of those have "Commander" in their name).
+
+    A card whose earliest printing is Commander-like but that also has a
+    genuine (non-Commander, non-promo) printing is homed in that genuine
+    printing, never the Commander one - see `select_first_printing`."""
+    if raw.get("set_type") in _COMMANDER_SET_TYPES:
+        return True
+    return "commander" in (raw.get("set_name") or "").lower()
 
 
 def select_first_printing(printings: Sequence[dict]) -> dict | None:
@@ -301,14 +313,15 @@ def _in_target_formats(raw: dict) -> bool:
 
 
 def _is_commander_set(meta: SetMeta) -> bool:
-    """Whether `meta` is a Commander product (`set_type` is uniform across a
-    set's own cards). A defense-in-depth backstop alongside
+    """Whether `meta` is a Commander product, by `is_commander_like_printing`
+    on one of its own cards (a set's `set_type`/`set_name` are uniform
+    across its cards). A defense-in-depth backstop alongside
     `select_first_printing`'s Commander-last preference: even in the
     hypothetical case where a card's only eligible printing at all is a
     Commander one, that product still never earns a campaign row - owner
     instruction 2026-09-26, "Commander products must never be a campaign
     row" has no stated exception."""
-    return bool(meta.cards) and meta.cards[0].get("set_type") in _COMMANDER_SET_TYPES
+    return bool(meta.cards) and is_commander_like_printing(meta.cards[0])
 
 
 def modern_legal_codes(index: dict[str, SetMeta]) -> set[str]:

@@ -229,6 +229,63 @@ def test_select_first_printing_falls_back_to_commander_when_no_other_printing_ex
     assert first["set"] == "cmd"
 
 
+def test_is_commander_like_printing_catches_set_type_commander():
+    assert cc.is_commander_like_printing(
+        make_card(
+            "Marvel Legend",
+            set_code="msc",
+            set_type="commander",
+            set_name="Marvel Super Heroes Commander",
+        )
+    )
+
+
+def test_is_commander_like_printing_catches_draft_innovation_commander_legends_by_name():
+    """Scryfall classifies the Commander Legends line as `draft_innovation`,
+    not `commander` - clb (Commander Legends: Battle for Baldur's Gate) is
+    one of the owner's own named examples, so `set_type` alone is not
+    enough; the set's own name is."""
+    assert cc.is_commander_like_printing(
+        make_card(
+            "Some Legend",
+            set_code="clb",
+            set_type="draft_innovation",
+            set_name="Commander Legends: Battle for Baldur's Gate",
+        )
+    )
+    assert cc.is_commander_like_printing(
+        make_card(
+            "Some Legend",
+            set_code="cmr",
+            set_type="draft_innovation",
+            set_name="Commander Legends",
+        )
+    )
+
+
+def test_is_commander_like_printing_catches_commander_masters_by_name():
+    """Commander Masters is `set_type == "masters"`, shared with unrelated
+    Masters sets (Modern Masters, Ultimate Masters, ...) that must NOT be
+    excluded - only the name distinguishes it."""
+    assert cc.is_commander_like_printing(
+        make_card("Some Reprint", set_code="cmm", set_type="masters", set_name="Commander Masters")
+    )
+    assert not cc.is_commander_like_printing(
+        make_card("Some Reprint", set_code="mma", set_type="masters", set_name="Modern Masters")
+    )
+
+
+def test_is_commander_like_printing_false_for_ordinary_draft_innovation_sets():
+    """Conspiracy/Battlebond are `draft_innovation` too, but are not
+    Commander products and must not be excluded."""
+    assert not cc.is_commander_like_printing(
+        make_card("Some Card", set_code="cns", set_type="draft_innovation", set_name="Conspiracy")
+    )
+    assert not cc.is_commander_like_printing(
+        make_card("Some Card", set_code="bbd", set_type="draft_innovation", set_name="Battlebond")
+    )
+
+
 def test_select_first_printing_prefers_promo_over_commander_when_no_genuine_printing():
     """When a card's only printings are Commander and promo (no normal
     set), the promo printing wins - Commander is the least-preferred tier,
