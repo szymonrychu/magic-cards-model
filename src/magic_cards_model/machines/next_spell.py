@@ -13,6 +13,11 @@ resolving spell or ability"):
   chapter II, Ballad of the Black Flag's chapter IV) - CR 601.2f's cost
   reduction for every such spell its controller casts this turn
   (`SpellCostReductionGrant`).
+- "The next `<quality>` spell you cast this turn has `<keyword>`." (Don &
+  Raph, Hard Science's affinity for artifacts, Archway of Innovation's
+  improvise) - a cost keyword the next such spell has while its total cost is
+  determined (CR 601.2f), used up as that spell becomes cast (CR 601.2i)
+  (`NextSpellKeywordGrant`).
 
 `spell_has_quality` reads the quality phrase off the spell: its colour words
 (CR 105.1) are one disjunction applying to the whole phrase ("red or green
@@ -92,3 +97,54 @@ class SpellCostReductionGrant(EngineModel):
     amount: int
     turn: int
     """`TurnMachine.turns_taken` when it was created - "this turn"."""
+
+
+#: The keywords "the next `<quality>` spell you cast this turn has `<keyword>`"
+#: is read for, each with the rule of the machine that executes it - both
+#: act while the total cost is determined (CR 601.2f), before the spell
+#: becomes cast and uses the grant up, so nothing is left for a keyword that
+#: acts later (storm and cascade trigger on the cast itself).
+NEXT_SPELL_KEYWORDS: dict[str, str] = {
+    "affinity": "CR 702.41a",
+    "improvise": "CR 702.126a",
+}
+
+
+class NextSpellKeywordGrant(EngineModel):
+    """ "The next `<quality>` spell you cast this turn has `<keyword>`." -
+    read by `machines/spell_grants.granted_spell_keyword_lines` (affinity)
+    and `Game.has_granted_improvise` (improvise) for its controller's next
+    such spell, and removed by `Game` as that spell becomes cast (CR 601.2i).
+    Two of them for the same spell each apply (Don & Raph's own ruling:
+    "Those abilities are cumulative")."""
+
+    model_config = ConfigDict(frozen=True)
+
+    controller: str
+    source_name: str
+    quality: str
+    """The printed quality phrase, `""` for "the next spell"."""
+    keyword: str
+    """Lower case - a key of `NEXT_SPELL_KEYWORDS`."""
+    line: str
+    """The keyword written out as a card prints it ("Affinity for artifacts")."""
+    turn: int
+    """`TurnMachine.turns_taken` when it was created - "this turn"."""
+
+
+def next_spell_keyword_grants_for(
+    game: object, spell: "CardState", caster: str
+) -> "list[NextSpellKeywordGrant]":
+    """The live grants `spell`, which `caster` is casting, answers for: this
+    turn's, `caster`'s own, and of a quality `spell` has. Nothing is live for
+    a spell that has already become cast - its grant was used up then."""
+    turn = getattr(game, "turn", None)
+    if turn is None:
+        return []
+    return [
+        grant
+        for grant in getattr(game, "next_spell_keyword_grants", [])
+        if grant.controller == caster
+        and grant.turn == turn.turns_taken
+        and (not grant.quality or spell_has_quality(spell, grant.quality))
+    ]

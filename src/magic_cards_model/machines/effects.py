@@ -42706,6 +42706,56 @@ _SPELLS_COST_LESS_THIS_TURN_RE = re.compile(
     r"^(?P<quality>[^.]+?) spells you cast this turn cost \{(?P<n>\d+)\} less to cast\.?$",
     re.IGNORECASE,
 )
+#: "The next noncreature spell you cast this turn has affinity for
+#: artifacts." (Don & Raph, Hard Science, CR 702.41a) and "The next spell you
+#: cast this turn has improvise." (Archway of Innovation, CR 702.126a) - a
+#: cost keyword for the next such spell (`next_spell.NextSpellKeywordGrant`),
+#: the keyword phrase read by `spell_grants`'s own reader. Trailing reminder
+#: text is stripped before the match.
+_NEXT_SPELL_HAS_KEYWORD_RE = re.compile(
+    r"^the next (?:(?P<quality>[^.]+?) )?spell you cast this turn has (?P<keyword>[^.(]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_next_spell_has_keyword(text: str) -> TargetedClause | None:
+    """`_NEXT_SPELL_HAS_KEYWORD_RE`, for the resolving object's controller,
+    this turn - or None when the quality or the keyword is not one this
+    reads (`next_spell.NEXT_SPELL_KEYWORDS`)."""
+    from .next_spell import NEXT_SPELL_KEYWORDS, NextSpellKeywordGrant, spell_quality_is_readable
+    from .spell_grants import _keyword_line
+
+    stripped = re.sub(r"\s*\([^()]*\)\s*$", "", text).strip()
+    match = _NEXT_SPELL_HAS_KEYWORD_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    quality = (match.group("quality") or "").strip()
+    if quality and not spell_quality_is_readable(quality):
+        return None
+    read = _keyword_line(match.group("keyword"), NEXT_SPELL_KEYWORDS)
+    if read is None:
+        return None
+    keyword, line = read
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        game.next_spell_keyword_grants = [
+            *game.next_spell_keyword_grants,
+            NextSpellKeywordGrant(
+                controller=game.controller_of(stack_object).username,
+                source_name=source_name,
+                quality=quality,
+                keyword=keyword,
+                line=line,
+                turn=game.turn.turns_taken if game.turn is not None else 0,
+            ),
+        ]
+
+    return effect
 
 
 def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -42718,6 +42768,9 @@ def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> Targ
     )
 
     text = " ".join(clause.strip().split())
+    keyword_grant = _parse_next_spell_has_keyword(text)
+    if keyword_grant is not None:
+        return keyword_grant
     free = _NEXT_SPELL_FREE_CAST_RE.fullmatch(text)
     cheaper = _SPELLS_COST_LESS_THIS_TURN_RE.fullmatch(text)
     matched = free or cheaper

@@ -233,7 +233,9 @@ from ..machines.layers import (
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
 from ..machines.next_spell import (
     NextSpellFreeCastGrant,
+    NextSpellKeywordGrant,
     SpellCostReductionGrant,
+    next_spell_keyword_grants_for,
     spell_has_quality,
 )
 from ..machines.objects_as_costs import convoke as pay_convoke
@@ -3604,6 +3606,12 @@ class Game(EngineModel):
     its mana cost." (CR 118.9) - live until that spell becomes cast (CR
     601.2i) or the turn ends. See `machines/next_spell.py`."""
 
+    next_spell_keyword_grants: list[NextSpellKeywordGrant] = Field(default_factory=list)
+    """"The next `<quality>` spell you cast this turn has `<keyword>`." (Don &
+    Raph, Hard Science's affinity for artifacts, CR 702.41a; Archway of
+    Innovation's improvise, CR 702.126a) - live until that spell becomes cast
+    (CR 601.2i) or the turn ends. See `machines/next_spell.py`."""
+
     spell_cost_reduction_grants: list[SpellCostReductionGrant] = Field(default_factory=list)
     """"`<Quality>` spells you cast this turn cost {N} less to cast." (CR
     601.2f) - live for the rest of the turn it was created in. See
@@ -6810,6 +6818,14 @@ class Game(EngineModel):
             for grant in self.next_spell_free_cast_grants
             if not (grant.controller == controller and spell_has_quality(card_state, grant.quality))
         ]
+        # CR 601.2i again: "the next `<quality>` spell you cast this turn has
+        # `<keyword>`" - every such grant this spell answers for is used up
+        # by it (two Don & Raph triggers both applied to this one spell).
+        used = next_spell_keyword_grants_for(self, card_state, controller)
+        if used:
+            self.next_spell_keyword_grants = [
+                grant for grant in self.next_spell_keyword_grants if grant not in used
+            ]
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -19219,6 +19235,13 @@ class Game(EngineModel):
         against `spell.types`; "non`<type>`" reads as that type's absence
         the same way `_named_type_matcher`'s own "non`<type>`" branch does.
         """
+        if any(
+            grant.keyword == "improvise"
+            for grant in next_spell_keyword_grants_for(self, spell, caster)
+        ):
+            # "The next spell you cast this turn has improvise." (Archway of
+            # Innovation) - a resolved effect's grant rather than a static.
+            return True
         board = self.computed_board()
         for permanent in self.permanents_controlled_by(caster):
             for line in board.of(permanent).abilities:
@@ -24422,6 +24445,7 @@ class Game(EngineModel):
             self.graveyard_arrivals_this_turn = []
             self.graveyard_arrivals_announced = 0
             self.next_spell_free_cast_grants = []
+            self.next_spell_keyword_grants = []
             self.spell_cost_reduction_grants = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and
