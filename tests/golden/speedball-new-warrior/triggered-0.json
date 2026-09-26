@@ -55,7 +55,7 @@
         "source": "Speedball, New Warrior"
       }
     ],
-    "fields_changed": ["continuous_effects"],
+    "fields_changed": ["continuous_effects", "spells_cast_this_turn"],
     "notices": {},
     "objects": {
       "Speedball, New Warrior@alice#1": {
@@ -73,6 +73,7 @@
   "recipe": {
     "attempt": "cast_probe",
     "index": 1,
+    "optional_targets": "some",
     "params": {
       "caster": "alice",
       "probe": "Lightning Bolt"

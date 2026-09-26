@@ -65,6 +65,7 @@
   "recipe": {
     "attempt": "entered",
     "index": 1,
+    "optional_targets": "some",
     "params": {},
     "variant": "war"
   }

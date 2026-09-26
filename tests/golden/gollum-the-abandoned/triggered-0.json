@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Gollum the Abandoned@alice#1",
-    "targets": [],
+    "targets": ["Grizzly Bears@bob#2"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,13 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["exile_residents_seen", "turn_counts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Grizzly Bears@bob#2": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
     "players": {
       "bob": {
         "life": [20, 18]
@@ -53,6 +57,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

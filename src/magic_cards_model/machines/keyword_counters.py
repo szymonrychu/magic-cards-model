@@ -66,19 +66,25 @@ from .combat import Keyword
 
 #: CR 122.1b's own closed list of keywords a keyword counter can be, spelled
 #: as the counter kind (`CardState.counters`' own docstring: "a flying
-#: counter is `counters['flying']`" - lower-cased, spaces kept). Decayed,
-#: exalted and shadow are in the rule's own list but have no reading
-#: vocabulary anywhere in this engine yet (no `Keyword` member, no
-#: `KEYWORDS_OUTSIDE_COMBAT` entry) - granting a line for them would be
-#: correct and inert, since nothing reads it, so they are left off this
-#: constant rather than granted a dead line; see this module's own docstring
-#: for the two names that *did* need adding (indestructible, hexproof).
+#: counter is `counters['flying']`" - lower-cased, spaces kept). Exalted and
+#: shadow are in the rule's own list but have no reading vocabulary anywhere
+#: in this engine yet (no `Keyword` member, no `KEYWORDS_OUTSIDE_COMBAT`
+#: entry) - granting a line for them would be correct and inert, since
+#: nothing reads it, so they are left off this constant rather than granted a
+#: dead line; see this module's own docstring for the two names that *did*
+#: need adding here (indestructible, hexproof). Decayed is now read
+#: (`Keyword.DECAYED`, `machines/combat.block_refusal`,
+#: `machines/keywords._decayed_ability`), so it is listed below even though
+#: `_KEYWORD_COUNTER_LINE_TEXT` grants it no line of its own - `_ALREADY_
+#: GRANTED_BY_LAYERS` already excludes every `Keyword` member, `machines/
+#: layers.py::_keyword_counter_lines` grants its line instead.
 KEYWORD_COUNTER_KEYWORDS: frozenset[str] = frozenset(
     {
         Keyword.FLYING.value,
         Keyword.FIRST_STRIKE.value,
         Keyword.DOUBLE_STRIKE.value,
         Keyword.DEATHTOUCH.value,
+        Keyword.DECAYED.value,
         Keyword.HASTE.value,
         Keyword.LIFELINK.value,
         Keyword.MENACE.value,

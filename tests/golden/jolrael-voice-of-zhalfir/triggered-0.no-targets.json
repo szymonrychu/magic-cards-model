@@ -1,0 +1,56 @@
+{
+  "ability": "At the beginning of combat on your turn, up to one target land you control becomes an X/X green and blue Bird creature with flying and haste until end of turn, where X is the number of cards in your hand. It's still a land.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Jolrael, Voice of Zhalfir@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Jolrael, Voice of Zhalfir"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Jolrael, Voice of Zhalfir",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": [],
+    "notices": {},
+    "objects": {},
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 0,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "optional_targets": "none",
+    "params": {},
+    "variant": "quiet"
+  }
+}

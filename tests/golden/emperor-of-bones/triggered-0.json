@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Emperor of Bones@alice#1",
-    "targets": [],
+    "targets": ["Grizzly Bears@alice#2"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,13 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["exile_residents_seen", "turn_counts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Grizzly Bears@alice#2": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +53,7 @@
   "recipe": {
     "attempt": "staged",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

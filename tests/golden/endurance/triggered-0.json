@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Endurance@alice#1",
-    "targets": [],
+    "targets": ["player:alice"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,40 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["shuffles_performed"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Bonesplitter@alice#2": {
+        "zone": ["graveyard", "library"]
+      },
+      "Forest@alice#5": {
+        "zone": ["graveyard", "library"]
+      },
+      "Grizzly Bears@alice#2": {
+        "zone": ["graveyard", "library"]
+      },
+      "Island@alice#4": {
+        "zone": ["graveyard", "library"]
+      },
+      "Lightning Bolt@alice#2": {
+        "zone": ["graveyard", "library"]
+      },
+      "Llanowar Elves@alice#1": {
+        "zone": ["graveyard", "library"]
+      },
+      "Memnite@alice#2": {
+        "zone": ["graveyard", "library"]
+      },
+      "Opt@alice#2": {
+        "zone": ["graveyard", "library"]
+      },
+      "Serra Angel@alice#1": {
+        "zone": ["graveyard", "library"]
+      },
+      "Swamp@alice#4": {
+        "zone": ["graveyard", "library"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +80,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

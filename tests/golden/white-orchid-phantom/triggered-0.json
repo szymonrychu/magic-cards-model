@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "White Orchid Phantom@alice#1",
-    "targets": [],
+    "targets": ["Abstergo Entertainment@bob#1"],
     "x": 0
   },
   "board": {
@@ -35,10 +35,36 @@
   "card": "White Orchid Phantom",
   "delta": {
     "created": {},
-    "decisions": [],
-    "fields_changed": [],
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "bob",
+        "players": [],
+        "prompt": "search your library for a basic land card",
+        "source": "White Orchid Phantom"
+      },
+      {
+        "amount": 1,
+        "cards": ["Forest@bob#4", "Island@bob#3", "Swamp@bob#3", "Forest@bob#5", "Island@bob#4", "Swamp@bob#4", "Forest@bob#6", "Island@bob#5", "Swamp@bob#5", "Forest@bob#7", "Island@bob#6", "Swamp@bob#6", "Forest@bob#8", "Island@bob#7", "Swamp@bob#7"],
+        "kind": "choose_cards",
+        "player": "bob",
+        "players": [],
+        "prompt": "choose up to 1 card(s) to find while searching your library",
+        "source": "White Orchid Phantom"
+      }
+    ],
+    "fields_changed": ["continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "shuffles_performed", "turn_facts", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Abstergo Entertainment@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      },
+      "Forest@bob#4": {
+        "zone": ["library", "battlefield"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +75,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

@@ -103,6 +103,7 @@ from magic_cards_model.machines.conditions import cast_record as cast_record_con
 from magic_cards_model.machines.conditions.player import _QUANTITY, _SUBJECT, _quantity_test
 from magic_cards_model.machines.cost import ComponentKind, cost_component_for_phrase
 from magic_cards_model.machines.counter_effects import singular_subtype
+from magic_cards_model.machines.decisions import Decision, DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.keywords import (
     craft_abilities,
@@ -273,9 +274,37 @@ class _Staging:
     #: Set by `staged_board`: stop the case at the board its event is
     #: raised on (or its ability activated on) and hand that board back.
     halt: bool = False
+    #: How a trigger case answers its own optional ("up to") target (CR
+    #: 115.6): "some" takes the first legal target, "none" declines - the
+    #: engine's own default, and the second golden of such a case.
+    optional_targets: str = "some"
+    #: Whether "some" actually answered an optional target this attempt.
+    optional_chosen: bool = False
 
 
 _STAGING = _Staging()
+
+
+@dataclass
+class _OneOptionalTarget(ScriptedAnswer):
+    """Answers the case card's own optional-target question (`target_minimum`
+    0, CR 115.6) with the first legal target offered, so the recorded
+    resolution acts on something; a mandatory question keeps the engine's
+    default. Scripted, not mocked: the value is one of the targets `Game.ask`
+    itself offered and still validates."""
+
+    card: str = ""
+
+    def matches(self, decision: Decision) -> bool:
+        if decision.kind is not DecisionKind.CHOOSE_TARGETS:
+            return False
+        if decision.target_minimum > 0 or not decision.targets:
+            return False
+        if decision.source is None or not _same_card(decision.source, self.card):
+            return False
+        self.value = tuple(decision.targets[:1])
+        _STAGING.optional_chosen = True
+        return True
 
 
 class _Halt(Exception):  # noqa: N818 - control flow, not an error
@@ -418,6 +447,12 @@ def build_recorded(
             create_predefined_tokens(played.game, name, owner)
     finally:
         reset_id_allocator(token)
+    if case is not None and case.kind != "activated" and _STAGING.optional_targets == "some":
+        played.game.decisions.add(
+            _OneOptionalTarget(
+                kind=DecisionKind.CHOOSE_TARGETS, value=(), uses=None, card=case.card
+            )
+        )
     if before is not None:
         before(played)
     step = Step(board["step"]) if board["step"] is not None else None
@@ -1753,7 +1788,15 @@ def _activation_step(ability: ActivatedAbility) -> Step:
     """The step an "Activate only during ..." instruction (CR 602.1b) allows
     the activation in: the named step ("during your upkeep", "during the end
     of combat step"), the beginning of combat for "during combat", the
-    precombat main phase otherwise."""
+    precombat main phase otherwise.
+
+    CR 702.57b's own forecast timing - "only during the upkeep step of the
+    card's owner" - is never printed as one of those instructions
+    (`ActivatedAbility.forecast` is set off the keyword itself, not off
+    `instructions`), so it is read here the same generic way, off the
+    ability's own timing field rather than any one card's name."""
+    if ability.forecast:
+        return Step.UPKEEP
     for window in read_activation_instructions(ability.instructions).windows:
         lowered = window.lower()
         for name, step in sorted(_STEP_NAMES.items(), key=lambda item: -len(item[0])):
@@ -3713,9 +3756,6 @@ KNOWN_ENGINE_GAPS: dict[str, str] = {
         "cost 'Remove ten oil counters from among permanents you control and "
         "sacrifice The Filigree Sylex' cannot be built"
     ),
-    "Writ of Passage #0 [activated]": (
-        "Forecast (CR 702.57) is not built: its hand-zone activation is never offered"
-    ),
 }
 
 
@@ -3969,6 +4009,8 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
     tried: list[str] = []
     outcome: Outcome | None = None
     closed: str | None = None
+    declined = only is not None and only.get("optional_targets") == "none"
+    _STAGING.optional_targets = "none" if declined else "some"
     for variant in VARIANTS:
         if only is not None and variant != only["variant"]:
             continue
@@ -3989,6 +4031,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
                     "params": _params_of(attempt),
                 }
                 _STAGING.board = None
+                _STAGING.optional_chosen = False
                 try:
                     scenario, source_id = attempt()
                 except (_Unavailable, ValueError) as unavailable:
@@ -4029,6 +4072,15 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
                     continue
                 labels = golden.Labels(scenario.game)
                 effect, action, delta = _resolve_ours(scenario, found, labels)
+                if declined:
+                    # The declined branch of an optional target (CR 115.6):
+                    # recorded whatever it did, doing nothing included.
+                    recipe["optional_targets"] = "none"
+                    return Outcome(
+                        "declined", repr(effect), _golden_record(case, recipe, action, delta)
+                    )
+                if _STAGING.optional_chosen:
+                    recipe["optional_targets"] = "some"
                 if effect.did_something:
                     return Outcome(
                         "executed", repr(effect), _golden_record(case, recipe, action, delta)
@@ -4036,6 +4088,7 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
                 outcome = Outcome("failed", f"{variant} {attempt.__name__}: resolved: {effect!r}")
         finally:
             _STAGING.variant, _STAGING.case, _STAGING.material = QUIET, None, ()
+            _STAGING.optional_targets, _STAGING.optional_chosen = "some", False
     if outcome is not None:
         return outcome
     if closed is not None:
@@ -4054,6 +4107,15 @@ def test_every_handled_trigger_fires_and_does_something(
     _record("triggered", case.kind, _reported(case, outcome.status))
     assert outcome.status == "executed", f"{case.card}: {case.text!r} - {outcome.detail}"
     _check_golden(case, outcome.record, request)
+    assert outcome.record is not None
+    if outcome.record["recipe"].get("optional_targets") == "some":
+        # The same recipe with the optional target declined (CR 115.6): its
+        # own golden, so both branches of the choice are pinned.
+        declined = run_trigger_case(
+            case, only={**outcome.record["recipe"], "optional_targets": "none"}
+        )
+        assert declined.status == "declined", f"{case.id}: {declined.detail}"
+        _check_golden(case, declined.record, request, declined=True)
 
 
 # ---------------------------------------------------------------------------
@@ -4733,14 +4795,18 @@ def _updating(request: pytest.FixtureRequest) -> bool:
 
 
 def _check_golden(
-    case: Case, record: dict[str, Any] | None, request: pytest.FixtureRequest
+    case: Case,
+    record: dict[str, Any] | None,
+    request: pytest.FixtureRequest,
+    *,
+    declined: bool = False,
 ) -> None:
     """Compare the live record to the case's golden - or write it, under
     `--update-golden` / `mise run golden:update`. A mismatch fails this
     case's own test id with a unified diff."""
     assert record is not None, f"{case.id}: executed without a golden record"
     family = "activated" if case.kind == "activated" else "triggered"
-    path = golden.golden_path(case.card, family, case.number)
+    path = golden.golden_path(case.card, family, case.number, declined=declined)
     text = golden.dumps(record)
     if _updating(request):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -4769,6 +4835,11 @@ def _expected_goldens() -> set[Path]:
     for case in activation_cases():
         if case.id not in KNOWN_ENGINE_GAPS:
             paths.add(golden.golden_path(case.card, "activated", case.number))
+    for path in list(paths):
+        # A trigger whose golden took an optional target has a second,
+        # declined golden beside it.
+        if path.exists() and json.loads(path.read_text())["recipe"].get("optional_targets"):
+            paths.add(path.with_name(path.stem + ".no-targets.json"))
     return paths
 
 

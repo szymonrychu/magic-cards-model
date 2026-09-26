@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Ugin, Eye of the Storms@alice#1",
-    "targets": [],
+    "targets": ["Kaito, Bane of Nightmares@bob#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,19 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Kaito, Bane of Nightmares@bob#1": {
+        "counters": [
+          {
+            "loyalty": 4
+          },
+          {}
+        ],
+        "zone": ["battlefield", "exile"]
+      }
+    },
     "players": {},
     "stack": ["Memnite@alice#2"]
   },
@@ -49,6 +59,7 @@
   "recipe": {
     "attempt": "cast_probe",
     "index": 2,
+    "optional_targets": "some",
     "params": {
       "caster": "alice",
       "probe": "Memnite"

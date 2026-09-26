@@ -60,6 +60,7 @@
   "recipe": {
     "attempt": "staged",
     "index": 0,
+    "optional_targets": "some",
     "params": {},
     "variant": "quiet"
   }

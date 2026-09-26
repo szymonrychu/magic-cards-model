@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Solitude@alice#1",
-    "targets": [],
+    "targets": ["Memnite@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,10 +36,18 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["exile_residents_seen", "life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
-    "objects": {},
-    "players": {},
+    "objects": {
+      "Memnite@alice#1": {
+        "zone": ["battlefield", "exile"]
+      }
+    },
+    "players": {
+      "alice": {
+        "life": [20, 21]
+      }
+    },
     "stack": []
   },
   "family": "triggered",
@@ -49,6 +57,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

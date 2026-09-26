@@ -3245,6 +3245,15 @@ class Game(EngineModel):
     announcement is discarded and the next activation announces its own.
     Not persisted: both calls run inside one command, and a command that
     pauses is replayed from its start, `begin_activating` included."""
+    _departure_epoch: int = PrivateAttr(default=0)
+    """Which batch of simultaneous events the game is in, for CR 603.10a's
+    look-back: bumped as each resolution (CR 608.2) and each round of
+    state-based actions (CR 704.3) begins, so the permanents one of them
+    moves off the battlefield share it. A leaves-the-battlefield ability of
+    an object that left in the current batch still triggers on the others
+    (CR 603.10a's own example); one that left in an earlier batch is just a
+    card in a graveyard (CR 113.6). Not persisted: it only compares objects
+    within one command."""
     _left_battlefield_characteristics: dict[UUID, Characteristics] = PrivateAttr(
         default_factory=dict
     )
@@ -3705,6 +3714,19 @@ class Game(EngineModel):
     planeswalker's loyalty abilities having been activated refuses the next
     one. Cleared when a new turn begins."""
 
+    forecast_activations: SortedSet[str] = Field(default_factory=set)
+    """Which forecast abilities (CR 702.57a) have been activated this turn,
+    keyed `"<card id>:<zone_change_stamp>"` - `Game._activation_key`'s own
+    id-plus-incarnation scoping, without an ability index, since a hand card
+    only ever prints one forecast line. CR 702.57b: "A forecast ability may
+    be activated only ... once each turn" - read and written by
+    `machines/keywords.KeywordActivation.why_not`/`_activate_impl`, which
+    (unlike `Game.activate_ability`'s battlefield path, the one that fills
+    `activations` below) is the only entry point a hand-zone activation ever
+    reaches. Cleared when a new turn begins, alongside `activations`/
+    `loyalty_activations` - a `SortedSet` for the same canonical-dump reason
+    `exhausted` is one."""
+
     once_per_turn_triggers: dict[str, int] = Field(default_factory=dict)
     """How often a "this ability triggers only once each turn" ability has
     already triggered this turn, keyed `"<source id>:<printed condition>"` -
@@ -3967,7 +3989,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 86
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 87
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4035,10 +4057,16 @@ class Game(EngineModel):
     #: `renowned`, `venture_room`, `dungeon_completions` and
     #: `last_known_attachments` (EC6's object-state readers - bumped at the
     #: EC round 2 merge).
-    #: 86: `CardState` gained `manifested` (CR 701.40a), which distinguishes a
+    #: 86: `Game` gained `forecast_activations` (CR 702.57b's own once-each-
+    #: turn restriction on a forecast ability, tracked per card incarnation
+    #: - `KeywordActivation.why_not`/`_activate_impl` in `machines/
+    #: keywords.py` are the reader and writer, reachable from a decoded
+    #: `Game` the moment a Forecast card sits in a hand).
+    #: 87: `CardState` gained `manifested` (CR 701.40a), which distinguishes a
     #: manifested permanent from a face-down morph/disguise spell so
     #: CR 701.40b's own turn-up procedure (pay the card's mana cost) is
-    #: offered only where it actually applies (FD1's special-action wiring).
+    #: offered only where it actually applies (FD1's special-action wiring;
+    #: renumbered from 86 at the main merge).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6770,6 +6798,8 @@ class Game(EngineModel):
         stack, **including the object that's resolving**." `Game.resolving` is
         that answer, live only for the length of one resolution.
         """
+        # CR 608.2: one resolution is one batch for CR 603.10a's look-back.
+        self._departure_epoch += 1
         self._refuse_if_over()
         if self.stack_is_empty:
             raise ValueError("the stack is empty")
@@ -10317,10 +10347,28 @@ class Game(EngineModel):
         # (via CR 603.3d) fixes the number as it goes on the stack, and "that
         # many" is what the triggering event carried.
         text = event_count_target_text(text, ability.event)
-        profile = profile_for_text(text).for_event_player(_that_player_of(ability))
+        profile = (
+            profile_for_text(text)
+            .for_event_player(_that_player_of(ability))
+            .for_defending_player(self._defending_player_of(ability))
+        )
         return self._ask_targets(
             profile, ability.controller, ability.source_id, ability.source_name, text
         )
+
+    def _defending_player_of(self, ability: Any) -> str | None:
+        """CR 508.5's defending player for a triggered ability whose event is
+        an attack: the player the attacker attacks, or the controller or
+        protector of the planeswalker or battle it attacks
+        (`combat.defending_player`, off `GameEvent.defender`). `None` for any
+        other ability - its "defending player" restriction stays unbound."""
+        from ..machines.combat import defending_player
+
+        event = getattr(ability, "event", None)
+        defender = getattr(event, "defender", None)
+        if defender is None:
+            return None
+        return defending_player(self, defender)
 
     def _ask_targets(
         self,
@@ -10842,6 +10890,7 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        permanent.note_departure_epoch(self._departure_epoch)
         if permanent in self.battlefield:
             self._left_battlefield_characteristics[permanent.id] = self.characteristics_of(
                 permanent
@@ -11155,6 +11204,25 @@ class Game(EngineModel):
             for kind, putter, amount in event.counters_put_by:
                 # CR 702.104a's tribute: the opponent is the one who puts them.
                 self.add_counters(card_state, kind, amount, putter=putter)
+
+            if event.grants_haste:
+                # CR 702.136a's riot, declined: "it gains haste." No duration
+                # is stated, so CR 611.2a's default is indefinite -
+                # `only_this_incarnation`-scoped (CR 400.7) the same way dash's
+                # `_grant_dash_haste` (CR 702.109a) and unearth's `_unearth_
+                # effect` (CR 702.84a) already grant their own haste, so a
+                # later re-entry is a new object and is asked again rather
+                # than inheriting this incarnation's grant.
+                store = self.continuous_effects
+                store.add(
+                    ContinuousEffect(
+                        description=f"{card_state.name}: riot grants haste (CR 702.136a)",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        selector=only_this_incarnation(card_state, card_state.zone_change_stamp),
+                        modification=grant_ability("Haste"),
+                    )
+                )
 
             if event.loyalty_reduction:
                 # CR 702.150a (compleated): "minus two for each" of the
@@ -15011,7 +15079,11 @@ class Game(EngineModel):
                 and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
             )
-            profile = profile_for_text(ability_text).for_event_player(_that_player_of(spell))
+            profile = (
+                profile_for_text(ability_text)
+                .for_event_player(_that_player_of(spell))
+                .for_defending_player(self._defending_player_of(spell))
+            )
             if not profile.understood or not profile.requirements:
                 return thing
             caster = spell.controller
@@ -17998,6 +18070,8 @@ class Game(EngineModel):
         for CR 704.5e's own scope; CR 722.3c's exile copy is that rule's one
         written exception, and this method is not where the exception lives.
         """
+        # CR 704.3: the round is one simultaneous event (CR 603.10a).
+        self._departure_epoch += 1
         gone_tokens = tokens_that_cease_to_exist(self)  # CR 704.5d, CR 111.7
         gone_copies = self._copies_that_cease_to_exist()  # CR 704.5e/707.10a
         self._remember_sources_that_ceased_to_exist(gone_tokens + gone_copies)
@@ -24182,6 +24256,7 @@ class Game(EngineModel):
             self.extra_land_plays = {}  # Way of the Paradox's own "this turn" grant
             self.activations = {}  # CR 602.5b restrictions are per turn
             self.loyalty_activations = {}  # CR 606.3's once-per-turn is per turn too
+            self.forecast_activations = set()  # CR 702.57b's once-per-turn is per turn too
             self.once_per_turn_triggers = {}  # CR 603.2h restrictions are per turn too
             self.once_per_turn_cast_permissions_used = {}  # "Once during each of your turns"
             # Snapshotted, not dropped: "last turn" is a question the

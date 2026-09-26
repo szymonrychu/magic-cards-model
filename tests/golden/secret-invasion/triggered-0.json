@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Secret Invasion@alice#1",
-    "targets": [],
+    "targets": ["Icehide Golem@alice#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,17 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "exile_residents_seen", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Icehide Golem@alice#1": {
+        "zone": ["battlefield", "exile"]
+      },
+      "Memnite@alice#1": {
+        "power": [1, 2],
+        "toughness": [1, 2]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +57,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

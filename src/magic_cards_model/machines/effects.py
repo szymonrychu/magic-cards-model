@@ -17980,6 +17980,19 @@ _TOKEN_KEYWORDS = {
     # Crib Swap's Shapeshifter. The keyword line is all it takes; the creature
     # types are `CardState.subtypes`/`machines/layers._changeling_effects`.
     "changeling",
+    # CR 702.18a: "This permanent or player can't be the target of spells or
+    # abilities" - a static ability read the same bare-word way as every other
+    # entry here (`Game.hexproof_refusal`, the shared targeting check, already
+    # reads it off `has_keyword`/the computed board once it is on the token;
+    # Deadly Grub's own Insect is the pool's first token to print it).
+    "shroud",
+    # CR 702.147a - Jadar, Ghoulcaller of Nephalia's own "create a 2/2 black
+    # Zombie creature token with decayed." `TokenDefinition.keywords` puts
+    # "Decayed" on the token exactly as a real printing carries it, so
+    # `machines/combat.has_keyword`/`machines/keywords.keyword_triggered_
+    # abilities` read it off the token the same way they read Rot-Curse
+    # Rakshasa's own printed keyword.
+    "decayed",
 }
 
 _TOKEN_COLOR_WORDS = {
@@ -20022,8 +20035,15 @@ def _parse_layer_counter_instead_upgrade(
 #: `AbilityOnStack.event.subject_id` (the same field `event_subject_power`
 #: already reads for a dying creature's power) instead of from `Game.
 #: resolve_card_targets`.
+#:
+#: "The blocking creature" (Flanking, CR 702.25a) is the identical anaphor,
+#: one noun phrase over: CR 509.1a's blocking creature is exactly what a
+#: `TriggerEvent.BLOCKS` event's own `subject_id` already names, whichever
+#: side of the block declared the trigger's own "this creature" - so it needs
+#: no noun captured at all, only the `creature` default below.
 _EVENT_SUBJECT_PUMP_RE = re.compile(
-    r"^(?:that (?P<noun>creature|permanent)|it)\b(?P<rest>.*)$", re.IGNORECASE | re.DOTALL
+    r"^(?:that (?P<noun>creature|permanent)|the blocking creature|it)\b(?P<rest>.*)$",
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -20041,7 +20061,15 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
     if match is None:
         return None
     noun = match.group("noun") or "creature"
-    rewritten = f"target {noun}{match.group('rest')}"
+    rewritten = f"target {noun}{match.group('rest')}".rstrip()
+    if not rewritten.endswith("."):
+        # A keyword's own `_TRIGGER_EXPANSIONS` effect text (Flanking's "the
+        # blocking creature gets -1/-1 until end of turn") carries no
+        # trailing period - `_expansion` never adds one - unlike a printed
+        # oracle sentence, which always keeps its own. `parsed_layer_effects`
+        # reads by sentence (`_effect_sentences`) and needs one to see this
+        # as a complete sentence rather than nothing at all.
+        rewritten += "."
     if not is_genuine_resolution_layer_sentence(rewritten):
         return None
     builder = parsed_layer_effects(rewritten)
@@ -39022,14 +39050,21 @@ def _parse_if_graveyard_count_clause(clause: str, *, for_spell: bool) -> Targete
 def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """A whole ability whose *only* clause is a delayed-trigger creation, with
     no antecedent clause of its own to supply "it": either there is no object
-    at all (Mishra's Bauble's "draw a card"), or the object is the trigger's
-    own event subject rather than anything targeted (Aether Membrane's "return
-    that creature to its owner's hand at end of combat" - CR 509.1a's "the
-    other creature in a blocking pair", read off `ability.event.related_id`
-    the same way `damage_the_other_combatant` already does).
+    at all (Mishra's Bauble's "draw a card"), the object is the trigger's own
+    event subject read off `ability.event.related_id` (Aether Membrane's
+    "return that creature to its owner's hand at end of combat" - CR 509.1a's
+    "the other creature in a blocking pair", the same way
+    `damage_the_other_combatant` already does), or the object is the
+    ability's own source - decayed's CR 702.147a "sacrifice it at end of
+    combat" (CR 511.2's own fixed timing; a delayed "sacrifice it" naming any
+    other timing is the anaphoric token-copy-then-sacrifice shape
+    `_parse_put_then_grant_then_delayed_whole_text` reads instead, off a
+    *preceding* clause's own antecedent, so this only ever claims the "end of
+    combat" wording that shape never prints).
 
     Ability-only (`for_spell=False`): a spell has no `ability.event` to read a
-    bare pronoun off, and neither shape appears on a spell in this pool.
+    bare pronoun off, and none of these shapes appears on a spell in this
+    pool.
     """
     if for_spell:
         return None
@@ -39100,6 +39135,31 @@ def _parse_delayed_single_clause(clause: str, *, for_spell: bool) -> TargetedCla
 
         return return_to_hand_effect
 
+    if step is Step.END_OF_COMBAT and _DECAYED_SACRIFICE_IT_RE.fullmatch(verb):
+
+        def sacrifice_it_effect(game: "Game", stack_object: "StackObject") -> None:
+            ability = stack_object
+            assert isinstance(ability, AbilityOnStack)
+            subject = ability.source(game)
+            if subject is None or subject.zone is not Zone.BATTLEFIELD:
+                return
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=clause,
+                    event=TriggerEvent.BEGINNING_OF_STEP,
+                    step=step,
+                    controller=ability.controller,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    subject_id=subject.id,
+                    expected_zone=Zone.BATTLEFIELD,
+                    expected_stamp=subject.zone_change_stamp,
+                    effect=sacrificed_by_its_controller,
+                )
+            )
+
+        return sacrifice_it_effect
+
     return None
 
 
@@ -39110,6 +39170,18 @@ _RETURN_TO_HAND_RE = re.compile(
     r"(?:its owner's|your|their owner's|their) hand$",
     re.IGNORECASE,
 )
+
+#: CR 702.147a's own triggered half, "sacrifice it at end of combat" -
+#: decayed's own wording, self-referential to the ability's own source the
+#: same way `_parse_sacrifice_self_clause`'s own (immediate, non-delayed)
+#: "sacrifice it" is. Named apart from that function's own `_SACRIFICE_IT_RE`
+#: - this one is only ever tried already gated on `step is Step.END_OF_COMBAT`
+#: by its caller, which is what keeps it from claiming a Kiki-Jiki/Reflection-
+#: style "[create a token ...] Sacrifice it at the beginning of the next end
+#: step." - a *different* pronoun, resolved from the antecedent clause by
+#: `_parse_put_then_grant_then_delayed_whole_text`, never printed with "end of
+#: combat" timing anywhere in the pool.
+_DECAYED_SACRIFICE_IT_RE = re.compile(r"^sacrifice it$", re.IGNORECASE)
 
 #: "if it entered under your control, put N +1/+1 counter(s) on <recipient>" -
 #: Phelia's own rider, generalised: `<recipient>` is read and checked against

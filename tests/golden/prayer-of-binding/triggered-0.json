@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Prayer of Binding@alice#1",
-    "targets": [],
+    "targets": ["Kaito, Bane of Nightmares@bob#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,19 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["life_gained_amount_this_turn", "life_gained_this_turn"],
+    "fields_changed": ["delayed_triggers", "exile_residents_seen", "life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn", "turn_counts"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Kaito, Bane of Nightmares@bob#1": {
+        "counters": [
+          {
+            "loyalty": 4
+          },
+          {}
+        ],
+        "zone": ["battlefield", "exile"]
+      }
+    },
     "players": {
       "alice": {
         "life": [20, 22]
@@ -53,6 +63,7 @@
   "recipe": {
     "attempt": "put",
     "index": 0,
+    "optional_targets": "some",
     "params": {
       "tapped": false
     },

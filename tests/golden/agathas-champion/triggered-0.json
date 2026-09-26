@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Agatha's Champion@alice#1",
-    "targets": [],
+    "targets": ["Fleecemane Lion@bob#1"],
     "x": 0
   },
   "board": {
@@ -36,9 +36,16 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": [],
+    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "spells_cast_this_turn", "turn_history"],
     "notices": {},
-    "objects": {},
+    "objects": {
+      "Agatha's Champion@alice#1": {
+        "damage": [0, 3]
+      },
+      "Fleecemane Lion@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
     "players": {},
     "stack": []
   },
@@ -49,6 +56,7 @@
   "recipe": {
     "attempt": "optional",
     "index": 2,
+    "optional_targets": "some",
     "params": {
       "option": "keyword='bargain' cost='Sacrifice an artifact, enchantment, or token' rule='CR 702.166a' repeatable=False understood=True"
     },

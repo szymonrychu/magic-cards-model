@@ -132,3 +132,45 @@ def test_a_golden_builds_the_spell_its_ability_targets_on_the_stack():
     assert all(getattr(item, "source_name", None) != "Spellskite" for item in built.game.stack), (
         "the board is the one the activation is made on, not after it"
     )
+
+
+# -- "up to one target": both branches pinned -------------------------------
+
+
+def test_an_optional_trigger_target_is_taken_when_one_is_legal():
+    """CR 115.6 lets "up to one target" choose none, and the engine's own
+    default does; a sweep answering that way records an ability that never
+    acts. Jacob Frye's combat-damage trigger - "exile up to one target
+    Assassin card ... If you do, copy it" - takes the Assassin card in the
+    graveyard, exiles it, and its golden says so."""
+    from tests import test_behavioural_sweep as sweep
+
+    case = sweep.case_named("Jacob Frye", "triggered", 0)
+    outcome = sweep.run_trigger_case(case)
+
+    assert outcome.status == "executed"
+    record = outcome.record
+    assert record is not None
+    assert record["recipe"]["optional_targets"] == "some"
+    assert len(record["action"]["targets"]) == 1
+    moved = record["delta"]["objects"]
+    assert any(change.get("zone") == ["graveyard", "exile"] for change in moved.values())
+
+
+def test_an_optional_trigger_target_is_also_recorded_declined():
+    """The other branch of the same choice, replayed from the same recipe:
+    no target, so nothing is exiled or copied - its own golden."""
+    from tests import test_behavioural_sweep as sweep
+
+    case = sweep.case_named("Jacob Frye", "triggered", 0)
+    chosen = sweep.run_trigger_case(case).record
+    assert chosen is not None
+    declined = sweep.run_trigger_case(case, only={**chosen["recipe"], "optional_targets": "none"})
+
+    assert declined.record is not None
+    assert declined.record["recipe"]["optional_targets"] == "none"
+    assert declined.record["action"]["targets"] == []
+    assert declined.record["delta"]["objects"] == {}
+    none_path = golden_path("Jacob Frye", "triggered", 0, declined=True)
+    assert none_path.name == "triggered-0.no-targets.json"
+    assert none_path.exists()

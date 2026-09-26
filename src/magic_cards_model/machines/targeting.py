@@ -139,6 +139,15 @@ class ControllerRestriction(StrEnum):
     posture every restriction here takes when the caller cannot supply what
     it needs."""
 
+    DEFENDING_PLAYER = "defending_player"
+    """"... target creature defending player controls" - CR 508.5: for an
+    ability of an attacking creature (or one that refers to an attacking
+    creature), the player that creature is attacking, or the controller or
+    protector of the planeswalker or battle it attacks. Bound off the trigger
+    event's own `GameEvent.defender` by `TargetingProfile.for_defending_
+    player` into `TargetRequirement.event_player`; unbound, it restricts
+    nothing, like `EVENT_PLAYER`."""
+
     PRIOR_TARGET_PLAYER = "prior_target_player"
     """"... target creature that player or that planeswalker's controller
     controls" after "target player or planeswalker" - Searing Blaze, Soul of
@@ -771,7 +780,10 @@ class TargetRequirement(EngineModel):
         controller = getattr(target, "controller", None)
         if self.controller is ControllerRestriction.ANY or controller is None:
             return None
-        if self.controller is ControllerRestriction.EVENT_PLAYER:
+        if self.controller in (
+            ControllerRestriction.EVENT_PLAYER,
+            ControllerRestriction.DEFENDING_PLAYER,
+        ):
             return self._rejects_event_player_control(target, controller)
         if self.controller is ControllerRestriction.YOU and controller != caster:
             return f"{self.phrase} needs an ability {caster} controls, and {target.name} is not"
@@ -1395,7 +1407,10 @@ class TargetRequirement(EngineModel):
         controller = getattr(target, "controller_or_owner", target.controller)
         if self.controller in _UNRESTRICTED_ALONE or controller is None:
             return None
-        if self.controller is ControllerRestriction.EVENT_PLAYER:
+        if self.controller in (
+            ControllerRestriction.EVENT_PLAYER,
+            ControllerRestriction.DEFENDING_PLAYER,
+        ):
             return self._rejects_event_player_control(target, controller)
         if self.controller is ControllerRestriction.YOU and controller != caster:
             return f"{self.phrase} needs a permanent {caster} controls, and {target.name} is not"
@@ -1523,6 +1538,26 @@ class TargetingProfile(EngineModel):
                 "requirements": tuple(
                     requirement.model_copy(update={"event_player": player})
                     if requirement.controller is ControllerRestriction.EVENT_PLAYER
+                    else requirement
+                    for requirement in self.requirements
+                )
+            }
+        )
+
+    def for_defending_player(self, player: str | None) -> "TargetingProfile":
+        """Bind `ControllerRestriction.DEFENDING_PLAYER` to the defending
+        player CR 508.5 names - the twin of `for_event_player`, read off the
+        attack the trigger event records. `None` leaves it unbound."""
+        if player is None or not any(
+            requirement.controller is ControllerRestriction.DEFENDING_PLAYER
+            for requirement in self.requirements
+        ):
+            return self
+        return self.model_copy(
+            update={
+                "requirements": tuple(
+                    requirement.model_copy(update={"event_player": player})
+                    if requirement.controller is ControllerRestriction.DEFENDING_PLAYER
                     else requirement
                     for requirement in self.requirements
                 )
@@ -2351,7 +2386,7 @@ _CONTROL_CLAUSE = re.compile(
     r"^(?:that\s+)?(you\s+control|you\s+own|you\s+don't\s+control|an\s+opponent\s+controls|"
     r"your\s+opponents\s+control|"
     r"that\s+player\s+or\s+that\s+planeswalker's\s+controller\s+controls|"
-    r"that\s+player\s+controls)\b",
+    r"that\s+player\s+controls|defending\s+player\s+controls)\b",
     re.IGNORECASE,
 )
 _ZONE_CLAUSE = re.compile(
@@ -5042,6 +5077,7 @@ _CONTROLLERS = {
     "an opponent controls": ControllerRestriction.OPPONENT,
     "your opponents control": ControllerRestriction.OPPONENT,
     "that player controls": ControllerRestriction.EVENT_PLAYER,
+    "defending player controls": ControllerRestriction.DEFENDING_PLAYER,
     "that player or that planeswalker's controller controls": (
         ControllerRestriction.PRIOR_TARGET_PLAYER
     ),
