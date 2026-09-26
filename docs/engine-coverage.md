@@ -6098,3 +6098,94 @@ needed `_TOKEN_KEYWORDS` widened in `machines/effects.py` (its "if you
 control no creatures with decayed" condition was already read generally by
 `conditions/board.py::quality`'s "with `<keyword>`" suffix - `KEYWORD_
 ABILITY_NAMES` already had decayed). `tests/scenarios/test_decayed.py`.
+
+## 271-tmt T1: the Mutagen predefined token, LKI token riders, token-count
+## ETBs, artifact-token activation cost reduction
+
+CR 111.10v's Mutagen token ("a colorless Mutagen artifact token with '{1},
+{T}, Sacrifice this token: Put a +1/+1 counter on target creature. Activate
+only as a sorcery.'") was added to `models/token.PREDEFINED`, the same data
+row every other CR 111.10 entry already is. Every "create a Mutagen token"
+shape the Teenage Mutant Ninja Turtles set prints turned out to already be
+generic once that one row existed - no new parser needed for a plain ETB
+(Crustacean Commando, Slithering Cryptid), a self-named ETB (Michelangelo,
+Weirdness to 11; Ray Fillet, Man Ray), the self-or-another-subtype-enters
+condition (Genghis Frog, off `_self_or_other_enters_match` from an earlier
+wave), a leaves-the-battlefield trigger (Zoo Escapees), an `{X}` spell's own
+ETB count (Mutagen Man, Living Ooze, off the existing CR 107.3m `_etb_x_
+effect_text` substitution), or a spell rider after a destroy/counter (Mutant
+Chain Reaction's "Destroy up to one target ... Create a Mutagen token.",
+Ooze Spill's "Counter target spell. Create a Mutagen token.") - each of
+these is just two independent clauses `_parse_mixed_clauses` already reads
+apart. `tests/scenarios/test_mutagen_tokens.py`.
+
+What genuinely needed new code:
+
+- **The counter-qualified leaves-the-battlefield condition** - "a creature
+  you control **with a +1/+1 counter on it** leaves the battlefield" (The
+  Ooze). `machines/triggers.py`'s `_leaves_battlefield_counter_qualifier_
+  holds` mirrors the entering side's own `_ENTERS_WITH_COUNTER_RE`, reading
+  `last_known_counters` (CR 603.10a's look-back, CR 704.8) since the object
+  has already left by the time the condition is checked.
+- **The event-subject counter multiplier** - "create a Mutagen token for
+  each +1/+1 counter on it", where "it" is the *departed* creature the
+  condition named, not the ability's own source the way Hangarback Walker's
+  identical-looking "for each +1/+1 counter on this creature" already reads
+  (`machines/effects._COUNTER_ON_IT_RE`/`_for_each_multiplier`). New:
+  `machines/token_riders.event_subject_counter_multiplier`, reading
+  `AbilityOnStack.event.subject_id` rather than the ability's `source_id`,
+  wired into `machines/effects._parse_token_clause`'s own "for each" branch
+  as a fallback when `count_expression` (a board-wide count) does not match.
+- **The "if its mana value was N or less" destroy rider**, generalised past
+  Tainted Treats' own "create a Food token" consequence: `machines/token_
+  riders.parse_destroy_if_mv_then_consequence_clause_pair` reads the
+  destroyed object's mana value into a local variable before `Game.destroy`
+  runs (CR 400.7/603.10a's look-back needs no persistent LKI field when the
+  whole read-then-act happens inside one Python call), and supports a token-
+  creation consequence or a life-gain one - proven on Extinguish the Light
+  (real, in-format, off the deck pool: "Destroy target creature or
+  planeswalker. If its mana value was 3 or less, you gain 3 life.").
+- **The owner's choice of top or bottom, plus a token** - Return to the
+  Sewers' "Target creature's owner puts it on their choice of the top or
+  bottom of their library." was *already* read by `machines/effects.
+  _owner_puts_it_into_library_effect` (CR 110.2's owner, not the caster);
+  only the trailing "You create a Mutagen token." sentence needed Mutagen to
+  exist, and it is an ordinary second clause once it did.
+- **Search, else create a token** - "You may search your library for a
+  `<quality>` card, reveal it, put it into your hand, then shuffle. If you
+  don't put a card into your hand this way, create a `<token>`." (Courier of
+  Comestibles). New: `machines/token_riders.parse_search_or_else_create_
+  token_clause`, read as one whole-text instruction (CR 118.12's "this way"
+  anaphora points back across the period, which the ordinary per-clause
+  splitter cannot rejoin) ahead of `_parse_mixed_clauses`'s own splitting.
+- **"nontoken" in a count expression** - `machines/effects._COUNT_YOU_
+  CONTROL_RE` read a leading "tapped"/"untapped" status word but not
+  "nontoken" (CR 111.1); Sally Pride, Lioness Leader's own "the number of
+  nontoken creatures you control" and, off the reported card and off the
+  deck pool, Lena, Selfless Champion's "for each nontoken creature you
+  control" (the same regex reached through `_TOKEN_FOR_EACH_TAIL_RE`'s tail
+  instead of "where X is the number of") both needed it.
+- **"Activated abilities of `<group>` you control cost `{N}` less to
+  activate."** (CR 601.2f via CR 602.2b) - Mutagen Man, Living Ooze's own
+  "artifact tokens" static was `static_unaudited`: nothing read the shape at
+  all. `machines/cost.activated_ability_group_discount_effect` is the pure
+  text parse (mirroring `cost_modifier_effect`'s own split from `Game.
+  static_cost_modifiers_for`), and `Game._activated_ability_group_discount`
+  is the board-wide aggregation, wired into `Game.activation_cost` right
+  after every other reduction. The group phrase is read generically off its
+  own words (`Game._permanent_matches_group_quality`: CR 205.4a supertypes,
+  CR 205.2a card types, CR 205.3 subtypes via `canonical_subtype`, and a
+  trailing "token(s)" word read separately since CR 111.1's token is none of
+  those three) - proven on the Mutagen token's own `{1}` ability (reduced to
+  `{0}`), on a Food and a Clue token (a different predefined token than
+  Mutagen Man's own), on a non-token artifact staying undiscounted (Sewer-
+  veillance Cam), and off the reported card entirely on Forensic Gadgeteer (a
+  real, in-format printing, not in the deck pool)'s own "artifacts" group
+  plus its "This effect can't reduce the mana in that cost to less than one
+  mana" floor, which Mutagen Man's own printing does not carry and which is
+  clamped against the cost being reduced rather than folded into the flat
+  amount.
+
+`tests/scenarios/test_token_riders_lki.py`,
+`tests/scenarios/test_artifact_token_ability_cost_reduction.py`,
+`tests/scenarios/test_token_count_etbs_tmt.py`.

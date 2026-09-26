@@ -1857,6 +1857,64 @@ def _power_or_toughness_qualifier_holds(
     return any(compare(value, threshold) for value in values)
 
 
+def _counter_kind_word(word: str) -> Counter | str:
+    """Normalise a printed counter-kind word the identical way `machines/
+    effects._counter_kind` does - the two CR 122.1a power/toughness spellings
+    as `Counter.PLUS_ONE`/`Counter.MINUS_ONE`, any other named `Counter`
+    member by its own value, and a plain lower-cased string for CR 122.1's
+    open set otherwise. Kept as its own small copy rather than imported:
+    `machines/effects.py` imports this module for `GameEvent`/`condition_
+    matches`, so an import the other way would close the cycle.
+    """
+    lowered = word.lower()
+    if lowered == "+1/+1":
+        return Counter.PLUS_ONE
+    if lowered == "-1/-1":
+        return Counter.MINUS_ONE
+    try:
+        return Counter(lowered)
+    except ValueError:
+        return lowered
+
+
+#: "a creature you control with a +1/+1 counter on it leaves the battlefield"
+#: (The Ooze) - CR 122.1's "with a `<kind>` counter on it" qualifier on a
+#: LEAVES_THE_BATTLEFIELD condition's own subject, the identical shape CR
+#: 603.6d's `_ENTERS_WITH_COUNTER_RE` already reads for an *entering*
+#: permanent, mirrored here for a *leaving* one.
+_LEAVES_WITH_COUNTER_QUALIFIER_RE = re.compile(
+    r"\bwith (?:a|an|one or more|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it\b"
+)
+
+
+def _leaves_battlefield_counter_qualifier_holds(
+    game: "Game", condition: str, subject_id: "UUID | None"
+) -> bool | None:
+    """Whether a LEAVES_THE_BATTLEFIELD condition's "with a `<kind>` counter
+    on it" qualifier holds for `subject_id`, or `None` when the condition
+    names no such qualifier at all - the same "nothing to check" reading
+    `_power_or_toughness_qualifier_holds` gives its own callers.
+
+    Read off `last_known_counters` (CR 603.10a's look-back, CR 704.8) rather
+    than the live `.counters`: CR 122.2 empties a permanent's counters the
+    instant it leaves the battlefield, the same "gone by the time anyone
+    asks" moment `_COUNTER_ON_IT_RE`'s own ternary in `machines/effects.py`
+    already reads around for a dies trigger's own "for each ... counter on
+    it".
+    """
+    match = _LEAVES_WITH_COUNTER_QUALIFIER_RE.search(condition.lower())
+    if match is None:
+        return None
+    if subject_id is None:
+        return False
+    subject = game.find_by_id(subject_id)
+    if subject is None:
+        return False
+    kind = _counter_kind_word(match.group("kind"))
+    counters = subject.counters if subject.zone is Zone.BATTLEFIELD else subject.last_known_counters
+    return bool(counters[kind])
+
+
 #: Flanking's own qualifier (CR 702.25a): "becomes blocked by a creature
 #: without `<keyword>`". Not fixed to "flanking" - a differently worded card
 #: could as easily name any other keyword here, the same reasoning
@@ -2669,6 +2727,11 @@ def condition_matches(
         if event.subject_id == source.id:
             return mine
         if mine and "another" not in lowered and "other" not in lowered:
+            return False
+        counter_qualifier = _leaves_battlefield_counter_qualifier_holds(
+            game, condition, event.subject_id
+        )
+        if counter_qualifier is False:
             return False
         return (
             _controller_clause_holds(condition, controller, event.subject_controller)

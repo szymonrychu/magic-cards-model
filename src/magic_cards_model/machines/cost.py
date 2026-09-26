@@ -4598,6 +4598,81 @@ def looks_like_unparsed_cost_modifier(text: str) -> bool:
 
 
 # --------------------------------------------------------------------------
+# "Activated abilities of <group> you control cost {N} less to activate"
+# (CR 601.2f via CR 602.2b) - a board-wide static discount on *other*
+# permanents' activation costs, the general template Hulk, Gamma Goliath's
+# own narrower "Power-up abilities of other creatures you control cost {N}
+# less to activate" (`Game._POWER_UP_GROUP_DISCOUNT_RE`) is one hardcoded
+# instance of. Read here as a pure text parse - the group it names and the
+# amount - the same division of labour `cost_modifier_effect` already keeps
+# with `Game.static_cost_modifiers_for`'s own board-wide aggregation: this
+# function answers "what does this one line say", `Game.activation_cost`
+# answers "which of my permanents does it apply to, right now".
+# --------------------------------------------------------------------------
+
+
+class ActivatedAbilityGroupDiscount(EngineModel):
+    """One "activated abilities of `<group>` you control cost `{N}` less to
+    activate" static line (CR 601.2f, via CR 602.2b), read off its own text.
+
+    `quality` is left as the printed words ("artifact tokens", "creatures",
+    "Foods") for `Game`'s own board-wide reader to match against a
+    permanent's computed characteristics - the identical split
+    `ActivationCostReduction.quality` already keeps for a *self* discount's
+    own "for each `<quality>` you control" (`Game.activation_cost_reduction_
+    for`), generalised here to a *group* discount that names no "for each"
+    count at all: every qualifying permanent's activation gets the flat
+    `amount`, not a multiple of how many there are.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    quality: str
+    amount: int
+    floor_one: bool
+    """"This effect can't reduce the mana in that cost to less than one
+    mana." - Forensic Gadgeteer's, Training Grounds's, Heartstone's own
+    trailing sentence (Mutagen Man's own printing carries no such sentence at
+    all, `floor_one=False`). Read as a flag rather than folded into `amount`
+    because it is a *cap* on the result of subtracting `amount`, not a
+    further subtraction of its own - `Game._activated_ability_group_discount`
+    is what actually clamps a reduction against the cost it is reducing."""
+
+
+#: "Activated abilities of `<group>` you control cost `{N}` less to
+#: activate[. This effect can't reduce the mana in that cost to less than one
+#: mana]." - Mutagen Man, Living Ooze's own "artifact tokens", Sam, Loyal
+#: Attendant's "Foods", Blossoming Tortoise's "lands", Embalmer's Tools's
+#: "creature cards in your graveyard" (not modelled: that names a zone, not
+#: "you control", so it never matches this group-scoped shape), Training
+#: Grounds's/Heartstone's/Biomancer's Familiar's/Agatha of the Vile
+#: Cauldron's/Convergence of Dominion's "creatures"/"cards in your graveyard"
+#: each paired with the "can't reduce ... to less than one mana" floor, and
+#: Forensic Gadgeteer's "artifacts" with the identical floor. `<group>` is
+#: read generically off its own words by `Game`'s board-wide reader, not
+#: hardcoded to any one of these - a future printing naming a different
+#: quality needs no new row here.
+_ACTIVATED_ABILITY_GROUP_DISCOUNT_RE = re.compile(
+    r"^activated abilities of (?P<quality>[a-z][a-z '-]*?) you control cost "
+    r"\{(?P<amount>\d+)\} less to activate\.?"
+    r"(?:\s*this effect can'?t reduce the mana in that cost to less than one mana\.?)?$",
+    re.IGNORECASE,
+)
+
+
+def activated_ability_group_discount_effect(text: str) -> ActivatedAbilityGroupDiscount | None:
+    """`_ACTIVATED_ABILITY_GROUP_DISCOUNT_RE`'s shape, or `None`."""
+    match = _ACTIVATED_ABILITY_GROUP_DISCOUNT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    return ActivatedAbilityGroupDiscount(
+        quality=match.group("quality").strip(),
+        amount=int(match.group("amount")),
+        floor_one="less than one mana" in text.lower(),
+    )
+
+
+# --------------------------------------------------------------------------
 # Reading a card's own additional and alternative costs
 # --------------------------------------------------------------------------
 

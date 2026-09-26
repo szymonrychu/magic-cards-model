@@ -106,6 +106,7 @@ from ..numbers import (
 )
 from ..snapshot import EngineModel
 from . import combat as combat_rules
+from . import token_riders
 from .abilities import (
     _ABILITY_WORD,
     KEYWORD_ABILITY_NAMES,
@@ -1214,9 +1215,18 @@ _COLOR_NAME: dict[Color, str] = {
 #: untapped Mountains you control" - which a single `[a-z]+` group used to
 #: swallow as part of the qualifier itself rather than reading separately,
 #: so a status-qualified phrase never matched this pattern at all.
+#:
+#: A leading "nontoken" (CR 111.1) reads the identical way - Sally Pride,
+#: Lioness Leader's own "the number of nontoken creatures you control" and
+#: Lena, Selfless Champion's off-set "a ... token for each nontoken creature
+#: you control" (`_TOKEN_FOR_EACH_TAIL_RE`'s own "each" tail reaches this
+#: same function) - excluding a token from the count rather than requiring
+#: one the way a bare "token(s)" qualifier does not exist in this shape at
+#: all (Caretaker's Talent's own "one or more tokens" is an *entry*
+#: condition, not a count expression).
 _COUNT_YOU_CONTROL_RE = re.compile(
-    r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped) )?(?P<qualifier>[a-z]+) "
-    r"(?P<whose>you control|your opponents control)$",
+    r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped) )?(?:(?P<nontoken>nontoken) )?"
+    r"(?P<qualifier>[a-z]+) (?P<whose>you control|your opponents control)$",
     re.IGNORECASE,
 )
 #: Same relaxation, for Lotleth Giant's "for each creature card in your
@@ -1473,6 +1483,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # documents (a permanent with no controller at all belongs to
         # neither side).
         wants_opponents = match.group("whose").lower() == "your opponents control"
+        wants_nontoken = match.group("nontoken") is not None
 
         def _belongs_to_group(board_controller: str | None, controller: str) -> bool:
             if wants_opponents:
@@ -1496,6 +1507,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     if _belongs_to_group(board.of(permanent).controller, controller)
                     and any(word.lower() == subtype for word in board.of(permanent).subtypes)
                     and (wants_tapped is None or permanent.tapped == wants_tapped)
+                    and (not wants_nontoken or not is_token(permanent))
                 )
 
             return count_subtype_on_board
@@ -1508,6 +1520,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                 if _belongs_to_group(board.of(permanent).controller, controller)
                 and card_type in board.of(permanent).types
                 and (wants_tapped is None or permanent.tapped == wants_tapped)
+                and (not wants_nontoken or not is_token(permanent))
             )
 
         return count_on_board
@@ -18950,11 +18963,24 @@ def _parse_token_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     # instruction of the same spell left it.
     for_each = _TOKEN_FOR_EACH_TAIL_RE.search(clause)
     if for_each is not None:
-        multiplier = count_expression(for_each.group("each"))
+        each_phrase = for_each.group("each")
         template = _parse_token_clause(clause[: for_each.start()], for_spell=for_spell)
-        if multiplier is None or template is None:
+        if template is None:
             return None
-        return _token_clause_for_each(template, multiplier)
+        multiplier = count_expression(each_phrase)
+        if multiplier is not None:
+            return _token_clause_for_each(template, multiplier)
+        # "create a Mutagen token for each +1/+1 counter on it" (The Ooze) -
+        # not a board-wide `count_expression` at all: "it" is the *other*
+        # object this trigger's own condition named (CR 603.10a's look-back),
+        # read off the resolving ability's own `event` rather than off the
+        # controller's battlefield.
+        event_subject_multiplier = token_riders.event_subject_counter_multiplier(each_phrase)
+        if event_subject_multiplier is not None:
+            return token_riders.token_clause_for_each_event_subject_counter(
+                template, event_subject_multiplier
+            )
+        return None
 
     match = _TOKEN_CLAUSE_RE.fullmatch(clause)
     if match is None:
@@ -52341,6 +52367,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     token_list = _parse_token_list_clause(text, for_spell=for_spell)
     if token_list is not None:
         return [token_list]
+    search_or_else_token = token_riders.parse_search_or_else_create_token_clause(
+        text, for_spell=for_spell
+    )
+    if search_or_else_token is not None:
+        # Read whole, ahead of the comma/clause split: the second sentence's
+        # "this way" is CR 118.12 anaphora straight back to the first
+        # sentence's own search outcome, which no per-clause parser below
+        # reads once the period has already cut the two apart.
+        return [search_or_else_token]
     explores_whole_text = _parse_explores_clause(text, for_spell=for_spell)
     if explores_whole_text is not None:
         # Read whole, ahead of the comma/clause split, for the same reason
@@ -53156,6 +53191,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_destroy_then_if_that_permanent_was_draw_clause_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = token_riders.parse_destroy_if_mv_then_consequence_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

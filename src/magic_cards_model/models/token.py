@@ -524,6 +524,24 @@ YOUNG_HERO_ROLE = TokenDefinition(
     ),
 )
 
+#: CR 111.10v: "A Mutagen token is a colorless Mutagen artifact token with
+#: '{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature.
+#: Activate only as a sorcery.'" - the Teenage Mutant Ninja Turtles set's own
+#: predefined token, read the identical data-row way every other CR 111.10
+#: entry is: a card that says "create a Mutagen token" needs no parser of its
+#: own once this row exists, and every reader that already dispatches off
+#: `PREDEFINED` (`_parse_token_clause`'s bare-name branch, `_etb_x_effect_text`'s
+#: CR 107.3m substitution, `_parse_variable_count_token_clause`'s "where X is")
+#: sees it everywhere a card prints it.
+MUTAGEN = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Mutagen",),
+    rules_text=(
+        "{1}, {T}, Sacrifice this token: Put a +1/+1 counter on target creature. "
+        "Activate only as a sorcery."
+    ),
+)
+
 #: CR 111.10x: "A Heartwood token is a red and green Heartwood artifact token
 #: with '{T}: Add {R} or {G}.'" - Reality Fracture's own addition to CR 111.10,
 #: read the same way every other predefined token is: as a data row, not a
@@ -568,6 +586,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Food": FOOD,
     "Clue": CLUE,
     "Powerstone": POWERSTONE,
+    "Mutagen": MUTAGEN,
     "Heartwood": HEARTWOOD,
     "Jace": JACE,
     "Monster": MONSTER_ROLE,
