@@ -1117,14 +1117,29 @@ def _spell_quality(phrase: str | None) -> "Callable[[CardState], bool] | None":
 
 def _cast_a_spell(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "you've cast an instant or sorcery spell this turn", "that player
-    didn't cast a creature spell this turn" (CR 601.2i)."""
+    didn't cast a creature spell this turn", "you've cast another instant or
+    sorcery spell this turn" (CR 601.2i).
+
+    "another" (Burrog Barrage's own resolution-time "if you've cast another
+    instant or sorcery spell this turn") excludes the clause's own source by
+    id (CR 201.5's "just that particular object") - `Game.spells_cast_this_
+    turn` already carries the resolving spell itself, cast before its own
+    effect runs, so without this a spell asking "another" this way would
+    count its own cast as satisfying it. A clause with no `source` in
+    context (nothing to exclude) reads "another" the same as a bare "a"."""
     quality = _spell_quality(match.group("quality"))
     if quality is None:
         return False
+    exclude_id = (
+        context.source.id
+        if (match.group("quant") or "").lower() == "another" and context.source is not None
+        else None
+    )
     cast = any(
         quality(state)
         for player in _players(context, match.group("who"))
         for state in context.game.spells_cast_this_turn.get(player, [])
+        if exclude_id is None or state.id != exclude_id
     )
     return not cast if match.group("neg") else cast
 
@@ -1485,7 +1500,8 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(
             rf"{_WHO}(?:'ve| have| has)? (?:(?P<neg>didn't cast|haven't cast|hasn't cast)|cast) "
-            rf"(?:an?|one or more) (?P<quality>[a-z][a-z /,-]*? or [a-z][a-z /,-]*?|[a-z-]+) "
+            rf"(?P<quant>an?|one or more|another) "
+            rf"(?P<quality>[a-z][a-z /,-]*? or [a-z][a-z /,-]*?|[a-z-]+) "
             r"spells? this turn"
         ),
         _cast_a_spell,

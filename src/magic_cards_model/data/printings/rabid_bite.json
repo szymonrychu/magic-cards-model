@@ -1,0 +1,140 @@
+{
+  "object": "card",
+  "id": "53a73200-b798-4bfd-a431-8b94e17b70be",
+  "oracle_id": "6d5dc34b-3eea-4b77-8db7-94bc30b14c4c",
+  "multiverse_ids": [
+    670769
+  ],
+  "mtgo_id": 137676,
+  "arena_id": 91807,
+  "tcgplayer_id": 559547,
+  "cardmarket_id": 778542,
+  "name": "Rabid Bite",
+  "lang": "en",
+  "released_at": "2024-08-02",
+  "uri": "https://api.scryfall.com/cards/53a73200-b798-4bfd-a431-8b94e17b70be",
+  "scryfall_uri": "https://scryfall.com/card/blb/394/rabid-bite?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:45:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.jpg?1783910739",
+    "normal": "https://cards.scryfall.io/normal/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.jpg?1783910739",
+    "large": "https://cards.scryfall.io/large/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.jpg?1783910739",
+    "png": "https://cards.scryfall.io/png/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.png?1783910739",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.jpg?1783910739",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.jpg?1783910739",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.webp?1783910739",
+    "grid": "https://cards.scryfall.io/grid/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.webp?1783910739",
+    "display": "https://cards.scryfall.io/display/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.webp?1783910739",
+    "art": "https://cards.scryfall.io/art/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.webp?1783910739",
+    "crop": "https://cards.scryfall.io/crop/front/5/3/53a73200-b798-4bfd-a431-8b94e17b70be.webp?1783910739"
+  },
+  "mana_cost": "{1}{G}",
+  "cmc": 2.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target creature you control deals damage equal to its power to target creature you don't control.",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a2f58272-bba6-439d-871e-7a46686ac018",
+  "set": "blb",
+  "set_name": "Bloomburrow",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a2f58272-bba6-439d-871e-7a46686ac018",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ablb&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/blb?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/53a73200-b798-4bfd-a431-8b94e17b70be/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A6d5dc34b-3eea-4b77-8db7-94bc30b14c4c&unique=prints",
+  "collector_number": "394",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "A healthy felidar is voracious yet regal. A rabid felidar is nothing more than appetite lashed to frothing jaws.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "John Thacker",
+  "artist_ids": [
+    "38ee615a-e59f-4e2e-b894-2b74c6e75541"
+  ],
+  "illustration_id": "c49362b1-99da-4e6b-b29e-2576f803e7e8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "starterdeck"
+  ],
+  "edhrec_rank": 7815,
+  "penny_rank": 10437,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "",
+    "previewed_at": "2024-07-16"
+  },
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.13",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=670769&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRabid%2BBite",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRabid%2BBite",
+    "edhrec": "https://edhrec.com/route/?cc=Rabid+Bite"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F559547%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=778542&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/137676?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

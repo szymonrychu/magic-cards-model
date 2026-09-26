@@ -1484,6 +1484,19 @@ def _targets_only_single_creature_other_than_re(
 #: every other restriction a "spell that targets ..." condition can name.
 _SPELL_THAT_TARGETS_RE = re.compile(r"\bthat targets (?P<target>.+)$", re.IGNORECASE)
 
+#: Geometer's Arthropod's and Matterbending Mage's own "a spell with {X} in
+#: its mana cost" (CR 107.3's X, CR 202.1's mana cost as printed symbols).
+#: The restriction is about the cast spell's own *printed* mana cost - which
+#: symbols it names at all, not the mana value or colour those symbols pay
+#: for - so it is read off `CardState.mana_cost` directly rather than through
+#: `_types_match`/`_color_matches`, which know nothing about mana symbols.
+#: One template, keyed by whichever symbol the card prints, not a hardcoded
+#: "{X}": a future card restricting on some other symbol in this same
+#: position reads for free.
+_CAST_SPELL_MANA_COST_SYMBOL_RE = re.compile(
+    r"with \{(?P<symbol>[a-z0-9/]+)\} in its mana cost", re.IGNORECASE
+)
+
 #: Where a CAST_SPELL condition names more than one kind of qualifying spell
 #: (Danitha, Sword of Hope's own "an Equipment spell or a spell that targets
 #: a creature you control") splits: an " or " immediately followed by
@@ -2790,6 +2803,20 @@ def condition_matches(
             if target_clause is None
             else _SPELL_THAT_TARGETS_RE.sub("", without_frontline_clause)
         )
+        mana_cost_symbol_match = _CAST_SPELL_MANA_COST_SYMBOL_RE.search(caster_condition)
+        if mana_cost_symbol_match is not None:
+            # "a spell with {X} in its mana cost" (CR 107.3, CR 202.1): the
+            # cast spell's own printed mana cost has to carry that exact
+            # symbol - checked here, off the object the event names, and the
+            # clause stripped out before `_types_match`/`_color_matches` see
+            # it below, the same treatment `_SPELL_THAT_TARGETS_RE` already
+            # gets for the identical reason (those two only know card types
+            # and colours, never mana symbols).
+            spell = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+            symbol = f"{{{mana_cost_symbol_match.group('symbol').upper()}}}"
+            if spell is None or symbol not in (spell.mana_cost or "").upper():
+                return False
+            caster_condition = _CAST_SPELL_MANA_COST_SYMBOL_RE.sub("", caster_condition)
         if "an opponent" in caster_condition.lower():
             # Jin-Gitaxias, Progress Tyrant's own "Whenever an opponent
             # casts ..." - `_controller_clause_holds` only ever recognises

@@ -101,7 +101,7 @@ from .layers import (
     only_this_incarnation,
 )
 from .triggers import AbilityOnStack, GameEvent
-from .turn import Step
+from .turn import MAIN_PHASES, Step
 
 if TYPE_CHECKING:
     from ..models.game import Game
@@ -458,6 +458,40 @@ class DrawACardForController(DelayedEffectSpecBase):
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         if game.is_in_game(trigger.controller):
             game.draw_cards(trigger.controller, self.count)
+
+
+class AddManaAmountForController(DelayedEffectSpecBase):
+    """ "Add an amount of `<color>` equal to `<n>` at the beginning of your
+    next main phase" - Mana Sculpt's own delayed trigger (CR 603.7), created
+    only when its own "if you control a Wizard" condition already held as the
+    countering spell resolved (`machines/effects._parse_counter_then_wizard_
+    mana_from_countered_pair` reads and gates that condition before ever
+    creating this trigger; it is not re-checked here). `amount` is CR
+    601.2h's mana spent casting the *countered* spell, captured as a plain
+    integer while that spell still existed on the stack - by the time this
+    trigger is even created it is on its way to a graveyard (CR 608.2b), let
+    alone by the time it resolves, so nothing here ever needs its long-gone
+    `CastRecord` again.
+
+    Not CR 605.1b's mana ability: CR 605.1b's second criterion is that it
+    "triggers from the activation or resolution of an activated mana ability
+    ... or from mana being added to a player's mana pool" - a step
+    beginning is neither, so this goes on the stack and waits for priority
+    like any other triggered ability, the same reasoning `machines/effects.
+    _parse_add_mana_clause` already gives for Ugin, Eye of the Storms' own
+    "Add {C}{C}{C}" loyalty ability.
+    """
+
+    kind: Literal["add_mana_amount_for_controller"] = "add_mana_amount_for_controller"
+    amount: int
+    color: Color
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller) or self.amount <= 0:
+            return
+        pool = game.mana_pool_receiving(trigger.controller)
+        for _ in range(self.amount):
+            pool.add(self.color)
 
 
 class DestroySubject(DelayedEffectSpecBase):
@@ -1800,6 +1834,7 @@ DelayedEffectSpec = Annotated[
     | ReboundRecast
     | ParadigmCopyAndCast
     | DrawACardForController
+    | AddManaAmountForController
     | DestroySubject
     | TapSubject
     | TransformSubject
@@ -1890,6 +1925,14 @@ class DelayedTrigger(EngineModel):
 
     step: Step | None = None
     """For a `BEGINNING_OF_STEP` trigger, which step. None matches any step."""
+
+    any_main_phase: bool = False
+    """Match either main phase (CR 505.1, `machines.turn.MAIN_PHASES`) rather
+    than one fixed `step` - "at the beginning of your next main phase" (Mana
+    Sculpt) means whichever of precombat or postcombat main comes first, not
+    a printed choice between the two the way `step` names one exactly.
+    `False` (the default) leaves `step` as the sole gate, unchanged for every
+    delayed trigger that predates this."""
 
     controller: str
     """CR 603.7d/e: the controller of the spell or ability that created this, as
@@ -2078,6 +2121,8 @@ class DelayedTrigger(EngineModel):
         if event.event is not self.event:
             return False
         if self.step is not None and event.step is not self.step:
+            return False
+        if self.any_main_phase and event.step not in MAIN_PHASES:
             return False
         if self.subjectless_only and event.subject_id is not None:
             return False
