@@ -44,7 +44,7 @@
       }
     },
     "players": {},
-    "stack": ["ability of Syr Vondam, Sunstar Exemplar@alice#1: Whenever another creature you control dies or is put into exile, put a +1/+1 counter on Syr Vondam and you gain 1 life."]
+    "stack": []
   },
   "family": "triggered",
   "format": 1,
