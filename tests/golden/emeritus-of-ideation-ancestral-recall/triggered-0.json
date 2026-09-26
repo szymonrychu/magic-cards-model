@@ -1,0 +1,104 @@
+{
+  "ability": "Whenever this creature attacks, you may exile eight cards from your graveyard. If you do, this creature becomes prepared.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Emeritus of Ideation@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Emeritus of Ideation // Ancestral Recall"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Emeritus of Ideation // Ancestral Recall",
+  "delta": {
+    "created": {
+      "Ancestral Recall@alice+1": {
+        "counters": {},
+        "zone": "exile"
+      }
+    },
+    "decisions": [
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "exile eight cards from your graveyard",
+        "source": "Emeritus of Ideation"
+      },
+      {
+        "amount": 8,
+        "cards": ["Grizzly Bears@alice#2", "Lightning Bolt@alice#2", "Forest@alice#5", "Bonesplitter@alice#2", "Opt@alice#2", "Memnite@alice#2", "Island@alice#4", "Llanowar Elves@alice#1", "Swamp@alice#4", "Serra Angel@alice#1"],
+        "kind": "choose_cards",
+        "player": "alice",
+        "players": [],
+        "prompt": "exile 8 card(s) from your graveyard",
+        "source": "Emeritus of Ideation"
+      }
+    ],
+    "fields_changed": ["exile_residents_seen", "play_permissions", "turn_counts"],
+    "notices": {},
+    "objects": {
+      "Bonesplitter@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Forest@alice#5": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Island@alice#4": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Llanowar Elves@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Memnite@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Opt@alice#2": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Serra Angel@alice#1": {
+        "zone": ["graveyard", "exile"]
+      },
+      "Swamp@alice#4": {
+        "zone": ["graveyard", "exile"]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "attacks",
+  "number": 0,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}
