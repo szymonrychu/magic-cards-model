@@ -379,6 +379,29 @@ def _choose_pile() -> tuple[list[Decision], CardState]:
     return _asked(scenario.questions_asked(), DecisionKind.CHOOSE_PILE), liliana
 
 
+def _dinas_guidance_hand_or_graveyard() -> tuple[list[Decision], CardState]:
+    """Dina's Guidance's own "put it into your hand or graveyard" (CR 608.2d),
+    asked by the spell while it is on the stack."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Dina's Guidance"],
+            battlefield=["Swamp", "Forest", "Plains"],
+            library=["Island", "Grizzly Bears", "Mountain"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    guidance = scenario.find("Dina's Guidance", Zone.HAND, "alice")
+    sources = scenario.untapped_sources("Swamp", "Forest", "Plains", username="alice")
+    scenario.will_choose_hand_or_graveyard(True, username="alice")
+    scenario.cast_and_resolve("Dina's Guidance", *sources, username="alice")
+
+    return _asked(scenario.questions_asked(), DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD), guidance
+
+
 SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.MAY: _may_trigger,
     DecisionKind.PAY_LIFE: _shockland_pay_life,
@@ -396,6 +419,7 @@ SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.CHOOSE_A_MODE: _modal_trigger_mode,
     DecisionKind.PUT_ON_TOP_OR_BOTTOM: _top_or_bottom,
     DecisionKind.CHOOSE_PILE: _choose_pile,
+    DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD: _dinas_guidance_hand_or_graveyard,
 }
 
 

@@ -44520,14 +44520,6 @@ _TOKEN_COPY_EXCEPT_PT_COLOR_TYPE_RE = re.compile(
     re.IGNORECASE,
 )
 
-_COLOR_WORD_TO_COLOR: dict[str, Color] = {
-    "white": Color.WHITE,
-    "blue": Color.BLUE,
-    "black": Color.BLACK,
-    "red": Color.RED,
-    "green": Color.GREEN,
-}
-
 
 def _read_token_copy_replacing_except(
     except_text: str | None,
