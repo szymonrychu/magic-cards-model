@@ -564,7 +564,7 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/old-fat-spider-cant-see-me/triggered-3.json - APPROVED (opus reviewer): no own target; both draw one card.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/petrifying-meddler/triggered-0.json - APPROVED (opus reviewer): taps Memnite and puts one stun counter; declined does nothing.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/phelia-exuberant-shepherd/triggered-0.json - APPROVED (opus reviewer): legal nonland permanent exiled with end-step return; declined does nothing.
-- 2026-09-26: regression-audit-engine vs 57bcac56 - reviewer) tests/golden/polukranos-world-eater/triggered-0.json - REJECTED: reviewer read action.x=0 as monstrosity X=0.
+- 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/polukranos-world-eater/triggered-0.json - first-round REJECT by an opus reviewer (reviewer read action.x=0 as monstrosity X=0.), superseded by the APPROVED line for the same file.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/prayer-of-binding/triggered-0.json - APPROVED (opus reviewer): Kaito legal (hexproof only on his controller's turn), exiled with return, alice gains 2.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/rangers-of-ithilien/triggered-0.json - APPROVED (opus reviewer): Memnite legal lesser-power target; control of own creature a no-op; Ring tempts.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/justice-vance-astrovik/triggered-0.json - APPROVED (opus reviewer): legal nonland nontoken target bounced; declined does nothing.
@@ -597,7 +597,7 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/speedball-new-warrior/triggered-0.json - APPROVED (opus reviewer): no own target; pump and may-retarget unchanged.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/subtlety/triggered-0.json - APPROVED (opus reviewer): creature spell put into library by owner's choice; declined leaves it.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/super-soldier-serum/triggered-0.json - APPROVED (opus reviewer): Bonesplitter attached; declined attaches nothing.
-- 2026-09-26: regression-audit-engine vs 57bcac56 - reviewer) tests/golden/syr-vondam-sunstar-exemplar/triggered-1.json - REJECTED: Syr Vondam's "another creature you control dies" trigger fired from the graveyard.
+- 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/syr-vondam-sunstar-exemplar/triggered-1.json - first-round REJECT by an opus reviewer (Syr Vondam's "another creature you control dies" trigger fired from the graveyard.), superseded by the APPROVED line for the same file.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/tamiyo-meets-the-story-circle/triggered-2.json - APPROVED (opus reviewer): graveyard card shuffled in, Saga sacrificed; declined sacrifices only.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/taskmaster-mercenary-mimic/triggered-0.json - APPROVED (opus reviewer): becomes a copy of Memnite; declined nothing.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/thassa-deep-dwelling/triggered-0.json - APPROVED (opus reviewer): own creature blinked; declined nothing.
@@ -626,7 +626,7 @@ Flagged by `mise run regression:guard -- --base 57bcac56 --ratchet` on this bran
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/aang-swift-savior-aang-and-la-oceans-fury/triggered-0.json - APPROVED (opus reviewer): legal other creature airbended; declined nothing.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/absolving-lammasu/triggered-1.json - APPROVED (opus reviewer): Lion suspected (not projected), alice gains 3 in both.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/absorbing-man/triggered-0.json - APPROVED (opus reviewer): becomes a copy of the land; declined nothing.
-- 2026-09-26: regression-audit-engine vs 57bcac56 - reviewer) tests/golden/aetherstorm-roc/triggered-1.json - REJECTED: tapped alice's own Memnite; "creature defending player controls" (CR 508.5) is bob's only.
+- 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/aetherstorm-roc/triggered-1.json - first-round REJECT by an opus reviewer (tapped alice's own Memnite; "creature defending player controls" (CR 508.5) is bob's only.), superseded by the APPROVED line for the same file.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/agathas-champion/triggered-0.json - APPROVED (opus reviewer): fights the Lion; declined nothing.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/appa-steadfast-guardian/triggered-0.json - APPROVED (opus reviewer): own nonland permanent airbended; declined nothing.
 - 2026-09-26: regression-audit-engine vs 57bcac56 - tests/golden/azog-morias-ruin/triggered-0.json - APPROVED (opus reviewer): Memnite destroyed, its controller amasses 1 and draws; declined nothing.
