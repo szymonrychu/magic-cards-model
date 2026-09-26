@@ -24,7 +24,7 @@ run = ["uv run ruff format .", "uv run ruff check --fix ."]
 
 [tasks.test]
 description = "Run the test suite (all but the behavioural pool sweep)"
-run = "uv run pytest --ignore=tests/test_behavioural_sweep.py"
+run = "uv run pytest --ignore=tests/test_behavioural_sweep.py -n 6"
 
 # The behavioural pool sweep (`tests/test_behavioural_sweep.py`) executes
 # every handled trigger and activation of every Modern/Pioneer/Standard card
@@ -33,20 +33,28 @@ run = "uv run pytest --ignore=tests/test_behavioural_sweep.py"
 # included) is what the full-suite/merge flow runs before anything lands.
 [tasks."test:behaviour"]
 description = "Run the behavioural pool sweep: every handled trigger fires, every activation resolves"
-run = "uv run pytest tests/test_behavioural_sweep.py"
+run = "uv run pytest tests/test_behavioural_sweep.py -n 6"
 
 [tasks."test:full"]
 description = "Run the whole suite, behavioural pool sweep included (the merge gate)"
-run = "uv run pytest"
+run = "uv run pytest -n 6"
 
 # The sweep also compares what each executed ability did against its golden,
 # `tests/golden/<card-slug>/<triggered|activated>-<n>.json` (see
 # `tests/golden/__init__.py`). When a behaviour change is intended - a new
 # card handled, a reader fixed - regenerate them here and review the golden
 # diff in the commit. Never edit a golden by hand.
+# Safe to parallelise: each executed case writes its own
+# tests/golden/<card-slug>/<triggered|activated>-<n>.json path (unique per
+# card+family+number - see `_check_golden`), so no two workers ever write the
+# same file. The one non-parametrized cleanup test in this module,
+# `test_every_golden_belongs_to_a_swept_case`, deletes goldens that exist on
+# disk but aren't in the full expected set computed from the whole pool - that
+# set doesn't depend on which worker has written what yet, so it's correct
+# regardless of xdist's execution order relative to the write cases.
 [tasks."golden:update"]
 description = "Regenerate the behavioural sweep's golden files (tests/golden/) from the engine as it is now"
-run = "uv run pytest tests/test_behavioural_sweep.py --update-golden"
+run = "uv run pytest tests/test_behavioural_sweep.py --update-golden -n 6"
 
 [tasks."golden:replay"]
 description = "Replay golden files as scenarios and print any difference: mise run golden:replay tests/golden/<card>/<ability>.json"
