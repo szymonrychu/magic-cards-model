@@ -2073,6 +2073,20 @@ def _first_reading(mode_text: str, *, card_name: str | None = None) -> object | 
     return None
 
 
+def _x_substituted_layer_text(printing: Card, text: str, x_value: int | None) -> str | None:
+    """The spell face's text with a probe X written in, when the real engine
+    would read it that way: `machines/effects.create_continuous_effect`
+    hands the layer reader the X-substituted text (Fractalize's "base power
+    and toughness each equal to X plus 1") for a spell whose text names X,
+    and a `LAYER_EFFECTS` name row still wins over it there, so it does here
+    too. `None` keeps `_layer_category` on the printed text, as before."""
+    if x_value is None or printing.name in LAYER_EFFECTS:
+        return None
+    if not re.search(r"(?<![\w{])X(?![\w}])", text):
+        return None
+    return substitute_x(text, x_value)
+
+
 def _dispatch_category(effect: object, printing: Card, ability_text: str | None = None) -> str:
     """What actually happens if `effect` - what a real dispatcher just
     returned for this card - runs: a real effect, a fail-closed notice, or
@@ -2968,7 +2982,12 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             effects = [
                 effect_for(face.name, face.text, x_value=x_value) for x_value in x_candidates
             ]
-            categories = [_dispatch_category(effect, printing) for effect in effects]
+            categories = [
+                _dispatch_category(
+                    effect, printing, _x_substituted_layer_text(printing, face.text, x_value)
+                )
+                for effect, x_value in zip(effects, x_candidates, strict=True)
+            ]
             category = _best(categories)
             # The quoted-text closure only asks about the one dispatch `_best`
             # could have picked from unambiguously - a face carrying both CR

@@ -3531,6 +3531,10 @@ _SUBJECT = (
 #: which were targeted; the builders below apply to every resolved target.
 _PLURAL_TARGET_SUBJECT = (
     rf"(?:(?:up to )?(?:\d+|{COUNT})|any number of) target{_QUALIFIER} creatures"
+    # "you control" / "an opponent controls" (Rabid Attack's "any number of
+    # target creatures you control each get ...") - the same recognise-only
+    # controller clause the singular subject carries.
+    rf"{_CONTROLLER_CLAUSE}"
 )
 _PLURAL_PUMP_SUBJECT = rf"{_PLURAL_TARGET_SUBJECT}(?: each)?"
 
@@ -3571,8 +3575,16 @@ _PUMP_RE = re.compile(
 #: in layer 6 (CR 613.1f) beside each keyword, while the pump is sublayer 7c
 #: (CR 613.4c). A sibling rather than a widening of `_PUMP_RE`, whose keyword
 #: group is a bare word list and must never swallow a quote.
+#:
+#: Widened (sos T7) to a plural target subject with the plural verbs - Rabid
+#: Attack's "Until end of turn, any number of target creatures you control
+#: each get +1/+0 and gain "When this creature dies, draw a card."" and
+#: Setessan Tactics' "... any number of target creatures each get +1/+1 and
+#: gain "{T}: This creature fights another target creature."" - every
+#: resolved target gets the same pump and the same quoted ability.
 _PUMP_AND_QUOTED_GRANT_RE = re.compile(
-    rf"^{_SUBJECT} gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and gains "
+    rf"^(?:{_SUBJECT} gets|{_PLURAL_PUMP_SUBJECT} get) "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and gains? "
     r"(?:(?P<keywords>[a-z][a-z ,]*?),? and )?"
     r'"(?P<granted>[^"]+)" until end of turn\.?$',
     re.IGNORECASE,
@@ -4380,6 +4392,15 @@ _MASS_PUMP_UNTIL_EOT_RE = re.compile(
     # additional +1/+1 and gain vigilance").
     r"|get (?:an additional )?(?P<power_only>[+-]\d+)/(?P<toughness_only>[+-]\d+)"
     r"(?: and gain (?P<keywords_after>[a-z][a-z,'\- ]*?))?"
+    # Root Manipulation's "creatures you control get +2/+2 and gain menace
+    # and "Whenever this creature attacks, you gain 1 life."" and Storm the
+    # Citadel's "... get +2/+2 and gain "Whenever this creature deals combat
+    # damage to a player or planeswalker, ..."" (sos T7): a quoted ability
+    # as the last granted item, added in layer 6 beside any keyword (CR
+    # 113.10, CR 613.1f).
+    r"|get (?P<power_quoted>[+-]\d+)/(?P<toughness_quoted>[+-]\d+) and gain "
+    r"(?:(?P<keywords_quoted>[a-z][a-z,'\- ]*?),? and )?"
+    r'"(?P<granted>[^"]+)"'
     r") until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -4508,9 +4529,45 @@ _GROUP_POWER_OR_TOUGHNESS_UNBLOCKABLE_RE = re.compile(
 #: kind of subject. Scoped to "you control" only: nothing in the pool grants
 #: an ability to an *opponent's* planeswalkers, and building an untested
 #: selector for a shape no card needs would be guessing, not reading.
+#:
+#: Widened (sos T7) to any printed card-type group and to the chosen-name
+#: qualifier: Resonating Lute's "Lands you control have "{T}: Add two mana of
+#: any one color. Spend this mana only to cast instant and sorcery spells."",
+#: Cryptolith Rite's "Creatures you control have "{T}: Add one mana of any
+#: color."" and Petrified Hamlet's "Lands with the chosen name have "{T}: Add
+#: {C}."" - the chosen name is the one `CardState.choice` recorded (CR 201.4),
+#: read by the same `PermanentsWithName` selector Alpine Moon's own group uses,
+#: and with no "you control" it reaches every player's permanents. At least
+#: one of the two qualifiers must be printed: a bare "Lands have ..." is a
+#: different, unread shape.
 _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
-    r'^planeswalkers you control have "(?P<ability>.+)"\.?$', re.IGNORECASE | re.DOTALL
+    r"^(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
+    r"(?P<scope> you control)?(?P<named> with the chosen name)? have "
+    r'"(?P<ability>.+)"\.?$',
+    re.IGNORECASE | re.DOTALL,
 )
+
+
+def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState) -> Selector | None:
+    """The group `_GROUP_QUOTED_ABILITY_GRANT_RE` names, for `source` - `None`
+    when neither qualifier is printed, or a chosen-name group's source has no
+    card name chosen (it entered without CR 201.4's choice being made)."""
+    card_type = _card_type_word(match.group("subject"))
+    if card_type is None:
+        return None
+    you = match.group("scope") is not None
+    if match.group("named") is None:
+        return permanents_controlled_by(source.controller, card_type) if you else None
+    chosen = source.choice
+    if chosen is None or chosen.kind is not ChoiceKind.CARD_NAME or not chosen.value:
+        return None
+    return PermanentsWithName(
+        name=chosen.value,
+        card_type=card_type,
+        username=source.controller,
+        scope="you" if you else "any",
+    )
+
 
 #: "If Loot's power is negative, he assigns combat damage as though his power
 #: were positive." (Loot, the Anomaly) - the card's own name is already
@@ -4642,12 +4699,20 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
 #: and subtype, "a '[creature type] artifact creature'" every one but the
 #: creature types, which it replaces; a bare creature-type list replaces the
 #: creature types alone (CR 205.1a).
+#:
+#: Widened (sos T7) to two colours and a base P/T "each equal to <n>[ plus
+#: <m>]" - Fractalize's "Until end of turn, target creature becomes a green
+#: and blue Fractal with base power and toughness each equal to X plus 1."
+#: X reaches this reader already substituted with the announced value (CR
+#: 107.3a) by `machines/effects.create_continuous_effect`; the colours are
+#: all set together in layer 5 (CR 613.1e), replacing every other colour.
 _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
     rf"^(?:{_SUBJECT}) (?P<loses>loses all abilities and )?becomes an? "
-    r"(?:(?P<color>white|blue|black|red|green) )?"
+    r"(?:(?P<color>(?:white|blue|black|red|green)(?: and (?:white|blue|black|red|green))?) )?"
     r"(?:(?P<artifact_types>(?:[a-z'-]+ )*?)(?P<artifact>artifact creature)"
     r"|(?P<subtype>[a-z'-]+(?: [a-z'-]+)*?)) with base power and "
-    r"toughness (?P<power>\d+)/(?P<toughness>\d+)"
+    r"toughness (?:(?P<power>\d+)/(?P<toughness>\d+)"
+    r"|each equal to (?P<each>\d+)(?: plus (?P<plus>\d+))?)"
     r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))? until end of turn\.?$",
     re.IGNORECASE,
 )
@@ -6887,7 +6952,7 @@ def _base_pt_set_and_type_builder(
 
 def _becomes_creature_type_with_base_pt_builder(
     subtypes: Sequence[str],
-    color: Color | None,
+    colors: Sequence[Color],
     power: int,
     toughness: int,
     *,
@@ -6927,8 +6992,15 @@ def _becomes_creature_type_with_base_pt_builder(
             parts: list[tuple[str, Layer, Sublayer | None, Modification]] = [
                 (f"is a {named}", Layer.TYPE, None, modification) for modification in type_parts
             ]
-            if color is not None:
-                parts.append((f"is {color.name.lower()}", Layer.COLOR, None, set_colors(color)))
+            if colors:
+                parts.append(
+                    (
+                        "is " + " and ".join(color.name.lower() for color in colors),
+                        Layer.COLOR,
+                        None,
+                        set_colors(*colors),
+                    )
+                )
             if loses_abilities:
                 parts.append(("loses all abilities", Layer.ABILITY, None, lose_all_abilities))
             parts.extend(
@@ -8786,9 +8858,11 @@ def quoted_ability_grants(
             if not text:
                 continue
             grantable.add(text)
+            selector = group_quoted_ability_grant_selector(match, source)
+            if selector is None:
+                continue
             for permanent in permanents:
-                chars = printed_characteristics(permanent)
-                if Type.PLANESWALKER in chars.types and chars.controller == source.controller:
+                if selector(printed_characteristics(permanent), {}):
                     wanted.setdefault(permanent.id, set()).add(text)
     return grantable, wanted
 
@@ -10071,7 +10145,9 @@ def _group_power_or_toughness_unblockable_builder(threshold: int, *, line: str) 
     return builder
 
 
-def _group_quoted_ability_grant_builder(granted: str, *, line: str) -> EffectBuilder:
+def _group_quoted_ability_grant_builder(
+    granted: str, match: re.Match[str], *, line: str
+) -> EffectBuilder:
     """ "Planeswalkers you control have "`<ability>`"." - see
     `_GROUP_QUOTED_ABILITY_GRANT_RE` above.
 
@@ -10093,14 +10169,18 @@ def _group_quoted_ability_grant_builder(granted: str, *, line: str) -> EffectBui
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
+        selector = group_quoted_ability_grant_selector(match, source)
+        if selector is None:
+            return []
         return [
             ContinuousEffect(
-                description=f'{source.name}: planeswalkers you control have "{granted}"',
+                description=f"{source.name}: {match.group('subject').lower()}"
+                f'{match.group("scope") or ""}{match.group("named") or ""} have "{granted}"',
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
                 source_ability=_source_line_for(source, line),
-                selector=permanents_controlled_by(source.controller, Type.PLANESWALKER),
+                selector=selector,
                 modification=grant_ability(granted),
             )
         ]
@@ -10930,14 +11010,26 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _MASS_PUMP_UNTIL_EOT_RE.fullmatch(sentence):
         keywords: list[str] = []
-        keyword_text = match.group("keywords") or match.group("keywords_after")
+        keyword_text = (
+            match.group("keywords")
+            or match.group("keywords_after")
+            or match.group("keywords_quoted")
+        )
         if keyword_text is not None:
             validated = _split_and_validate_keywords(keyword_text)
             if validated is None:
                 return None
             keywords = validated
-        power_text = match.group("power") or match.group("power_only")
-        toughness_text = match.group("toughness") or match.group("toughness_only")
+        if match.group("granted") is not None:
+            keywords = [*keywords, match.group("granted").strip()]
+        power_text = (
+            match.group("power") or match.group("power_only") or match.group("power_quoted")
+        )
+        toughness_text = (
+            match.group("toughness")
+            or match.group("toughness_only")
+            or match.group("toughness_quoted")
+        )
         if power_text is None and not keywords:
             return None
         power = int(power_text) if power_text is not None else None
@@ -11032,11 +11124,16 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         if keywords is None:
             return None
         color = match.group("color")
+        colors = tuple(_COLOR_WORDS[word] for word in color.lower().split(" and ")) if color else ()
+        if match.group("each") is not None:
+            power = toughness = int(match.group("each")) + int(match.group("plus") or 0)
+        else:
+            power, toughness = int(match.group("power")), int(match.group("toughness"))
         return _becomes_creature_type_with_base_pt_builder(
             tuple(subtypes),
-            _COLOR_WORDS[color.lower()] if color else None,
-            int(match.group("power")),
-            int(match.group("toughness")),
+            colors,
+            power,
+            toughness,
             loses_abilities=match.group("loses") is not None,
             artifact_creature=artifact,
             keywords=tuple(keywords),
@@ -11918,9 +12015,11 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _GROUP_QUOTED_ABILITY_GRANT_RE.fullmatch(sentence):
         granted = match.group("ability").strip()
-        if not granted:
+        if not granted or _card_type_word(match.group("subject")) is None:
             return None
-        return _group_quoted_ability_grant_builder(granted, line=sentence)
+        if match.group("scope") is None and match.group("named") is None:
+            return None
+        return _group_quoted_ability_grant_builder(granted, match, line=sentence)
     return None
 
 

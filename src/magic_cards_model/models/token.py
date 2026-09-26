@@ -820,6 +820,27 @@ def _type_line_with_added_creature_type(type_line: str, subtype: str) -> str:
     return f"{new_left} \u2014 {' '.join(right_words)}" if right_words else new_left
 
 
+def _type_line_with_creature_types(type_line: str, creature_types: Sequence[str]) -> str:
+    """`type_line` with its creature types replaced by `creature_types` (CR
+    205.1a: setting a subtype replaces the old subtypes of that kind, and
+    only that kind) - Croaking Counterpart's "except it's a 1/1 green Frog".
+    Every card type, supertype and non-creature subtype (a land type on Dryad
+    Arbor, an artifact type) is kept; "Creature" is added on the left when
+    the copied object was not one, since only a creature has creature
+    types."""
+    from ..data.subtypes import creature_type_vocabulary
+
+    vocabulary = creature_type_vocabulary()
+    left, _, right = type_line.partition("\u2014")
+    left_words = left.split()
+    if "Creature" not in left_words:
+        left_words.append("Creature")
+    kept = [word for word in right.split() if word not in vocabulary]
+    right_words = [*kept, *(subtype for subtype in creature_types if subtype not in kept)]
+    new_left = " ".join(left_words)
+    return f"{new_left} \u2014 {' '.join(right_words)}" if right_words else new_left
+
+
 def token_copy_of(
     game: "Game",
     original: CardState,
@@ -830,6 +851,8 @@ def token_copy_of(
     toughness: int | None = None,
     added_creature_type: str | None = None,
     not_legendary: bool = False,
+    colors: Sequence[Color] | None = None,
+    creature_types: Sequence[str] | None = None,
     **options: Any,
 ) -> list[TokenState]:
     """ "Create a token that's a copy of [something]" (CR 701.7a, CR 707.2).
@@ -890,6 +913,11 @@ def token_copy_of(
     Incursion): the legendary supertype is taken off the copiable type line,
     so the copy is never subject to the legend rule alongside its original.
 
+    `colors` and `creature_types` are CR 707.9b's *replacing* exception -
+    Croaking Counterpart's "except it's a 1/1 green Frog": the copiable colour
+    is set to exactly `colors` and the creature types to exactly
+    `creature_types` (CR 205.1a), every other copiable value kept.
+
     **Not modelled**: CR 707.2's "as ... enters" power-and-toughness setting
     (a *different* rule from the "except" override above - that one reads a
     characteristic off the object as it arrives, this one is stated by the
@@ -925,6 +953,8 @@ def token_copy_of(
             or toughness is not None
             or added_creature_type is not None
             or not_legendary
+            or colors is not None
+            or creature_types is not None
         ):
             update: dict[str, Any] = {}
             if power is not None:
@@ -935,6 +965,33 @@ def token_copy_of(
                 update["type_line"] = _type_line_with_added_creature_type(
                     copiable.type_line, added_creature_type
                 )
+            if creature_types is not None:
+                update["type_line"] = _type_line_with_creature_types(
+                    update.get("type_line", copiable.type_line), creature_types
+                )
+            if colors is not None:
+                update["colors"] = list(colors)
+            if copiable.card_faces and (colors is not None or creature_types is not None):
+                # A double-faced original reads its characteristics off the
+                # face that is up (CR 712.8d), so each face takes the
+                # replacing exception too.
+                update["card_faces"] = [
+                    face.model_copy(
+                        update={
+                            **({"colors": list(colors)} if colors is not None else {}),
+                            **(
+                                {
+                                    "type_line": _type_line_with_creature_types(
+                                        face.type_line, creature_types
+                                    )
+                                }
+                                if creature_types is not None and face.type_line
+                                else {}
+                            ),
+                        }
+                    )
+                    for face in copiable.card_faces
+                ]
             if not_legendary:
                 update["type_line"] = " // ".join(
                     _type_line_without_legendary(half)
@@ -949,12 +1006,14 @@ def token_copy_of(
                         )
                         if face.type_line
                         else face
-                        for face in copiable.card_faces
+                        for face in update.get("card_faces", copiable.card_faces)
                     ]
             new_card_id = uuid5(
                 NAMESPACE_OID,
                 f"{_TOKEN_CARD_ID_PREFIX}:{copiable.id}:pt:{power}/{toughness}:type:{added_creature_type}"
-                + (":nonlegendary" if not_legendary else ""),
+                + (":nonlegendary" if not_legendary else "")
+                + (f":colors:{''.join(c.value for c in colors)}" if colors is not None else "")
+                + (f":types:{' '.join(creature_types)}" if creature_types is not None else ""),
             )
             copiable = copiable.model_copy(update={"id": new_card_id, **update})
 

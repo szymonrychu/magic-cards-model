@@ -69,6 +69,7 @@ from ..models.card import Color, Layout, Supertype, Type, types_of
 from ..models.card_state import (
     PERMANENT_TYPES,
     CardState,
+    Choice,
     ChoiceKind,
     Counter,
     ExileAnnotation,
@@ -581,8 +582,26 @@ def create_continuous_effect(game: "Game", spell: CardState) -> None:
         spell,
         targets=game.resolve_card_targets(spell),
         context=layer_context_for(game, game.controller_of(spell)),
+        ability_text=_x_substituted_spell_text(game, spell),
         game=game,
     )
+
+
+def _x_substituted_spell_text(game: "Game", spell: CardState) -> str | None:
+    """The spell's own text with CR 107.3a's announced X written in, when its
+    mana cost carries `{X}` and its text names X - `None` otherwise, which
+    leaves `effects_for` reading the printed text exactly as before.
+    Fractalize's "base power and toughness each equal to X plus 1" is only a
+    number once X is known; X is fixed for the spell's whole resolution
+    (CR 107.3a), so substituting it before the layer reader runs is the
+    same substitution `effect_for` already made to route the spell here."""
+    text = spell.oracle_text or ""
+    if "{X}" not in (spell.mana_cost or "") or not re.search(r"(?<![\w{])X(?![\w}])", text):
+        return None
+    record = game.cast_record_of(spell)
+    if record is None:
+        return None
+    return substitute_x(text, record.x_value)
 
 
 #: "Switch target creature's power and toughness until end of turn. Draw N
@@ -3961,8 +3980,13 @@ def effect_for(
     if is_modal_text(effect_text):
         return resolve_modal_spell
     effect = _spell_effect_or_notice(effect_text)
-    if effect is None and x_value is not None:
-        effect = _spell_effect_or_notice(substitute_x(effect_text, x_value))
+    if (effect is None or _is_notice_only(effect)) and x_value is not None:
+        # A notice on the literal "X" is not the last word: Fractalize's
+        # "base power and toughness each equal to X plus 1" reads only once
+        # the announced X is written in (CR 107.3a).
+        substituted = _spell_effect_or_notice(substitute_x(effect_text, x_value))
+        if substituted is not None and (effect is None or not _is_notice_only(substituted)):
+            effect = substituted
     if effect is not None and not _is_notice_only(effect):
         return effect
     time_counters: int | None = None
@@ -19920,6 +19944,10 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
         for sentence in sentences
         if not is_genuine_resolution_layer_sentence(sentence)
         and not _is_resolution_neutral_keyword_line(sentence)
+        # Strive's per-target cost increase (Setessan Tactics) is CR 601.2f's
+        # cost, already charged as the spell was cast - never an instruction
+        # of its resolution (`_strip_non_effect_preamble` drops the same line).
+        and not _COST_INCREASE_PER_TARGET_LINE_RE.match(sentence.strip())
     ]
     if remainder and any(_looks_like_embedded_ability_line(sentence) for sentence in remainder):
         # `effect_text` is not one clean resolution paragraph at all - it is
@@ -24075,6 +24103,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
+    choose_card_name = _parse_choose_card_name_for_source_clause(effect_text)
+    if choose_card_name is not None:
+        return choose_card_name
     source_relative = _source_relative_whole_text_ability_effect(effect_text)
     if source_relative is not None:
         return source_relative
@@ -42356,11 +42387,18 @@ def _parse_for_each_creature_you_control_copy_clause(
 #: stop of its own (the quoted-ability shape) or contains its own "and"
 #: (the type/P-T shape), either of which `split_effect_clauses` would cut the
 #: sentence at, leaving fragments neither of which is a clause at all.
+#:
+#: A trailing "Put `<n>` +1/+1 counters on it." (Applied Geometry, whose
+#: "except it's a 0/0 Fractal creature in addition to its other types" would
+#: otherwise die to CR 704.5f the moment it entered) is read as part of the
+#: same instruction: "it" is the token just created (CR 608.2c), and the
+#: counters go on before state-based actions are next checked (CR 704.3).
 _CREATE_TOKEN_COPIES_EXCEPT_RE = re.compile(
     rf"^create {count_pattern('count')} tokens? "
     r"that(?: are copies|'s a copy|’s a copy| is a copy) of "
     r"(?P<phrase>(?:another )?target .+?)"
-    r"(?:, except (?P<except>.+))?\.?$",
+    r"(?:, except (?P<except>.+?))?"
+    rf"(?:\.\s*put {count_pattern('counters')} \+1/\+1 counters? on (?:it|them))?\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -42378,7 +42416,9 @@ _TOKEN_COPY_EXCEPT_QUOTED_RE = re.compile(
 #: CR 205.1b's "in addition to" already keeps whatever types and subtypes the
 #: copied permanent had).
 _TOKEN_COPY_EXCEPT_TYPE_PT_RE = re.compile(
-    r"^(?:they'?re|it'?s) (?P<power>\d+)/(?P<toughness>\d+) "
+    # "a 0/0 Fractal creature" (Applied Geometry) prints the singular with its
+    # article; "3/3 Dragon creatures" (Astral Dragon) the bare plural.
+    r"^(?:they'?re|it'?s) (?:an? )?(?P<power>\d+)/(?P<toughness>\d+) "
     r"(?:(?P<subtype>[A-Za-z]+) )?creatures? in addition to (?:their|its) other types"
     r"(?:,? and (?:they|it) (?:have|has) (?P<abilities>.+))?$",
     re.IGNORECASE | re.DOTALL,
@@ -42395,6 +42435,50 @@ _TOKEN_COPY_EXCEPT_KEYWORDS_RE = re.compile(
 _TOKEN_COPY_EXCEPT_PT_RE = re.compile(
     r"^(?:it'?s|they'?re) (?P<power>\d+)/(?P<toughness>\d+)$", re.IGNORECASE
 )
+
+
+#: CR 707.9b's *replacing* characteristic exception - Croaking Counterpart's
+#: "except it's a 1/1 green Frog": a set P/T, a set colour (or two), and a
+#: set creature-type list, with no "in addition to its other types" - so the
+#: copy's colour and creature types are exactly those named (CR 205.1a),
+#: every other copiable value kept. The type words are checked against CR
+#: 205.3m's creature types (`_read_token_copy_replacing_except`).
+_TOKEN_COPY_EXCEPT_PT_COLOR_TYPE_RE = re.compile(
+    r"^(?:they'?re|it'?s) (?:an? )?(?P<power>\d+)/(?P<toughness>\d+) "
+    r"(?P<colors>(?:white|blue|black|red|green)(?: and (?:white|blue|black|red|green))?) "
+    r"(?P<subtypes>[a-z][a-z'-]*(?: [a-z][a-z'-]*)*?)(?: creatures?)?$",
+    re.IGNORECASE,
+)
+
+_COLOR_WORD_TO_COLOR: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def _read_token_copy_replacing_except(
+    except_text: str | None,
+) -> tuple[int, int, tuple[Color, ...], tuple[str, ...]] | None:
+    """`_TOKEN_COPY_EXCEPT_PT_COLOR_TYPE_RE`'s tail as `(power, toughness,
+    colors, creature_types)`, or `None` when it is not that shape or names a
+    word that is not a creature type."""
+    if except_text is None:
+        return None
+    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    match = _TOKEN_COPY_EXCEPT_PT_COLOR_TYPE_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    vocabulary = creature_type_vocabulary()
+    subtypes = tuple(word[:1].upper() + word[1:] for word in match.group("subtypes").split())
+    if not subtypes or any(subtype not in vocabulary for subtype in subtypes):
+        return None
+    colors = tuple(
+        _COLOR_WORD_TO_COLOR[word] for word in match.group("colors").lower().split(" and ")
+    )
+    return int(match.group("power")), int(match.group("toughness")), colors, subtypes
 
 
 def _normalize_keyword_list(text: str) -> str:
@@ -42478,16 +42562,30 @@ def _parse_create_token_copies_except_clause(
     count = parse_count(match.group("count"))
     if count is None:
         return None
-    exception = _read_token_copy_except(match.group("except"))
-    if exception is None:
-        return None
-    added, power, toughness, added_type = exception
+    counters = 0
+    if match.group("counters") is not None:
+        read_counters = parse_count(match.group("counters"))
+        if not read_counters:
+            return None
+        counters = read_counters
+    colors: tuple[Color, ...] | None = None
+    creature_types: tuple[str, ...] | None = None
+    replacing = _read_token_copy_replacing_except(match.group("except"))
+    if replacing is not None:
+        power, toughness, colors, creature_types = replacing
+        added: tuple[str, ...] = ()
+        added_type: str | None = None
+    else:
+        exception = _read_token_copy_except(match.group("except"))
+        if exception is None:
+            return None
+        added, power, toughness, added_type = exception
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         for target in game.resolve_targets(stack_object):
             if isinstance(target, CardState):
-                token_copy_of(
+                created = token_copy_of(
                     game,
                     target,
                     controller.username,
@@ -42496,7 +42594,17 @@ def _parse_create_token_copies_except_clause(
                     power=power,
                     toughness=toughness,
                     added_creature_type=added_type,
+                    colors=colors,
+                    creature_types=creature_types,
                 )
+                if counters and created:
+                    # "it" is each copy just made - not an extra token a
+                    # replacement effect added beside it (`token_copy_of`
+                    # appends those after the copies, on their own card).
+                    copy_card = created[0].card.id
+                    for token in created:
+                        if token.card.id == copy_card and token.zone is Zone.BATTLEFIELD:
+                            game.add_counters(token, "+1/+1", counters, putter=controller.username)
 
     return effect
 
@@ -47080,6 +47188,59 @@ def _search_and_exile_matching_name(
             if zone is Zone.HAND:
                 exiled_from_hand += 1
     return exiled, exiled_from_hand
+
+
+#: "Choose a[n] <quality> card name." as a triggered ability's whole effect -
+#: Petrified Hamlet's "When this land enters, choose a land card name." The
+#: same CR 201.4/201.4a choice Pithing Needle's CR 614.12a "As this enters,
+#: choose a card name" makes, but made as the trigger resolves (CR 608.2)
+#: rather than before the permanent enters, and recorded on the same
+#: `CardState.choice` - so every static reader of "the chosen name" (the
+#: activation prohibition, the chosen-name groups in `machines/layers.py`)
+#: reads it unchanged. The quality words are the ones `machines/replacement`'s
+#: own "choose a <quality> card name" reads, judged by the same refusal.
+_CHOOSE_A_CARD_NAME_EFFECT_RE = re.compile(
+    r"^choose an? (?:(?P<quality>(?:non-?)?[a-z]+(?: (?:non-?)?[a-z]+)?) )?card name\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_choose_card_name_for_source_clause(text: str) -> AbilityEffect | None:
+    """`_CHOOSE_A_CARD_NAME_EFFECT_RE`'s shape: ask the ability's controller
+    for a card name, refuse one whose Oracle text does not match the printed
+    characteristics (CR 201.4a), and record it on the ability's source while
+    that source is still on the battlefield - a source that has left has no
+    static ability left to read it (CR 604.2)."""
+    from .replacement import _card_name_quality_refusal
+
+    match = _CHOOSE_A_CARD_NAME_EFFECT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    quality = (match.group("quality") or "").lower() or None
+    noun = f"{quality} card name" if quality else "card name"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        value = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=controller.username,
+                prompt=f"choose {with_indefinite_article(noun)}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                quality=ChoiceKind.CARD_NAME.value,
+            )
+        )
+        assert isinstance(value, str)
+        if quality is not None:
+            refusal = _card_name_quality_refusal(value, quality)
+            if refusal is not None:
+                raise ValueError(f"{ability.source_name}: {refusal}")
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.choice = Choice(kind=ChoiceKind.CARD_NAME, value=value)
+
+    return effect
 
 
 #: The Stone Brain: "Choose a card name. Search target opponent's graveyard,
