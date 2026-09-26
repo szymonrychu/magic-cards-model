@@ -35,7 +35,9 @@ if TYPE_CHECKING:  # pragma: no cover - import cycle: game.py builds on this mod
 __all__ = ["why_cannot_turn_face_up_as"]
 
 
-def why_cannot_turn_face_up_as(game: "Game", username: str, permanent: CardState) -> str | None:
+def why_cannot_turn_face_up_as(
+    game: "Game", username: str, permanent: CardState, *, procedure: str | None = None
+) -> str | None:
     """Why `username` cannot turn `permanent` face up right now, or None.
 
     Checked in the order a seat meets them:
@@ -48,8 +50,14 @@ def why_cannot_turn_face_up_as(game: "Game", username: str, permanent: CardState
        say "a permanent **you** control".
     3. Can `username` actually pay the cost right now (CR 118.3: an unpayable
        special action is not one a seat can be told to just go take).
+
+    `procedure` (`"morph"` or `"manifest"`) asks about one specific one of
+    CR 701.40c-d's two procedures for a card that is manifested *and* has
+    morph or disguise; `None` keeps asking about whichever the old default
+    preference reaches first - see `Game.why_cannot_turn_face_up`'s and
+    `turn_face_up_cost`'s own docstrings.
     """
-    reason = game.why_cannot_turn_face_up(permanent)
+    reason = game.why_cannot_turn_face_up(permanent, procedure=procedure)
     if reason is not None:
         return reason
     controller = game.controller_of(permanent).username
@@ -58,7 +66,7 @@ def why_cannot_turn_face_up_as(game: "Game", username: str, permanent: CardState
             f"{username} does not control {permanent.card.name}, so only {controller} "
             f"may turn it face up (CR 702.37e, CR 702.168d, CR 701.40b)"
         )
-    total = turn_face_up_cost(permanent, username)
+    total = turn_face_up_cost(permanent, username, procedure=procedure)
     # `Game.why_cannot_turn_face_up` already returned None above, which is
     # exactly the condition under which `turn_face_up_cost` returns a real
     # cost rather than None - see both functions' own docstrings.

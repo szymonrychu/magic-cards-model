@@ -1433,16 +1433,25 @@ class PlayedScenario:
         return self.game.bring_companion_to_hand(player)
 
     def turn_face_up(
-        self, permanent: CardState, *mana_sources: CardState, username: str | None = None
+        self,
+        permanent: CardState,
+        *mana_sources: CardState,
+        username: str | None = None,
+        procedure: str | None = None,
     ) -> CardState:
         """CR 702.37e: pay the morph cost and turn a face-down permanent
-        face up, paying with `mana_sources`."""
+        face up, paying with `mana_sources`.
+
+        `procedure` ("morph" or "manifest") picks CR 701.40c-d's alternative
+        for a permanent that is manifested *and* has morph or disguise;
+        `None` keeps the engine's own default preference.
+        """
         controller = username or self.game.controller_of(permanent).username
-        payment = self.game.begin_turning_face_up(permanent, controller)
+        payment = self.game.begin_turning_face_up(permanent, controller, procedure=procedure)
         for mana_source in mana_sources:
             payment.tap_for_mana(mana_source, mana_from(mana_source))
         payment.pay()
-        turned = self.game.turn_face_up(permanent, controller)
+        turned = self.game.turn_face_up(permanent, controller, procedure=procedure)
         self.game.retain_priority(controller)
         return turned
 

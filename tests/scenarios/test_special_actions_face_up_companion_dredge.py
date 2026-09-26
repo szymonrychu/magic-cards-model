@@ -15,6 +15,9 @@ that wrote this file:
 - **CR 701.40a-b**: manifest's own face-down/turn-up pair - a manifested
   permanent is turned face up by paying the *card's own mana cost*, not a
   morph cost, and only when that card is a creature card with one.
+- **CR 701.40c-d**: "If a card with morph [disguise] is manifested, its
+  controller may turn that card face up using either" procedure - the choice
+  a manifested-and-morph/disguise card gets, not morph/disguise by default.
 - **CR 116.2g**: bringing a chosen companion into hand for {3} - already
   fully built and tested (`tests/scenarios/test_companion.py`); the tests
   here are a second, independent proof on an off-pool companion.
@@ -25,25 +28,42 @@ that wrote this file:
   `Game.draw_cards` actually offering it as the draw happens.
 - **CR 616.1e**: "any of the applicable replacement ... effects may be
   chosen" - governs declining dredge as much as taking it.
+- **CR 121.2/121.2a**: "cards may only be drawn one at a time" - an
+  instruction for more than one is that many individual draws, and a
+  replacement effect may modify the number before any of them happen.
+- **CR 121.6b**: "If an effect replaces a draw within a sequence of card
+  draws, the replacement effect is completed before resuming the sequence" -
+  each individual draw in that sequence is its own event.
+- **CR 614.5**: "A replacement effect doesn't invoke itself repeatedly; it
+  gets only one opportunity to affect an event or any modified events that
+  may replace that event" - why a doubler never doubles its own output, and
+  why that does not stop a *different* effect (dredge) from reaching it.
 
 Cards used and why: Marang River Skeleton (Megamorph {3}{B}, no other
-turned-face-up trigger, so the counter is the whole story), Bolrac-Clan
-Basher (Disguise {3}{R}{R}, likewise no rider), Elvish Warrior (a vanilla
-{G}{G} 2/2 with no text at all, proving manifest's turn-up on a card that
-never had morph or disguise to begin with), Obosh, the Preypiercer (a
-companion this pool has not used elsewhere), Golgari Thug (Dredge 4), Life
-from the Loam (Dredge 3, a sorcery - proving the mechanic is read off the
-graveyard card's ability, not off being a creature) and Greater Mossdog
-(Dredge 3, a plain vanilla creature with no other ability, used only to be
-named as an *ineligible* pick alongside Golgari Thug). None of these is in
-any existing scenario's deck pool.
+turned-face-up trigger, so the counter is the whole story - also manifested
+here to prove CR 701.40c's choice both ways), Bolrac-Clan Basher (Disguise
+{3}{R}{R}, likewise no rider - manifested too, for CR 701.40d's identical
+choice on a different cost shape), Elvish Warrior (a vanilla {G}{G} 2/2 with
+no text at all, proving manifest's turn-up on a card that never had morph or
+disguise to begin with), Obosh, the Preypiercer (a companion this pool has
+not used elsewhere), Golgari Thug (Dredge 4), Life from the Loam (Dredge 3, a
+sorcery - proving the mechanic is read off the graveyard card's ability, not
+off being a creature), Greater Mossdog (Dredge 3, a plain vanilla creature
+with no other ability, used only to be named as an *ineligible* pick
+alongside Golgari Thug), Thought Reflection (off-pool: "If you would draw a
+card, draw two cards instead.", no exception clause, so it doubles every
+draw and proves dredge reaches each resulting draw) and Plagiarize (already
+used, for a different mechanic, in `test_turn_scoped_replacements_from_
+resolution.py`; reused here for its redirect, the only one this pool
+implements, to prove dredge reaches the *redirected* drawer). None of the
+newly-added cards is in any existing scenario's deck pool.
 """
 
 import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionPending
-from magic_cards_model.machines.keywords import why_cannot_dredge
+from magic_cards_model.machines.keywords import turn_face_up_cost, why_cannot_dredge
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Type
 from tests.scenarios.harness import PlayedScenario, Scenario
@@ -178,6 +198,147 @@ def test_a_manifested_noncreature_card_cannot_be_turned_face_up_this_way():
 
     assert refusal is not None
     assert "not a creature card" in refusal
+
+
+# ---------------------------------------------------------------------------
+# CR 701.40c-d: a manifested card that also has morph/disguise may turn up
+# through either procedure - the controller's choice, not always morph's.
+# ---------------------------------------------------------------------------
+
+
+def test_a_manifested_megamorph_card_may_choose_the_manifest_procedure():
+    """CR 701.40c: Marang River Skeleton manifested, then turned up for its
+    own {1}{B} mana cost rather than its {3}{B} megamorph cost - and getting
+    no counter, since the megamorph cost was never paid (CR 702.37b)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Marang River Skeleton"],
+            battlefield=["Mastery of the Unseen", *["Plains"] * 4, *["Swamp"] * 4],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    skeleton = manifest_top_card(scenario)
+    assert skeleton.manifested
+
+    # Both procedures are available, at different costs.
+    assert scenario.game.why_cannot_turn_face_up_as("alice", skeleton, procedure="morph") is None
+    assert scenario.game.why_cannot_turn_face_up_as("alice", skeleton, procedure="manifest") is None
+    assert str(turn_face_up_cost(skeleton, "alice", procedure="morph").mana) == "{3}{B}"
+    assert str(turn_face_up_cost(skeleton, "alice", procedure="manifest").mana) == "{1}{B}"
+
+    turned = scenario.turn_face_up(
+        skeleton,
+        *scenario.untapped_sources("Swamp", "Swamp"),
+        username="alice",
+        procedure="manifest",
+    )
+
+    assert turned.face_up
+    assert turned.name == "Marang River Skeleton"
+    assert not turned.manifested
+    assert turned.counters.counts == {}
+
+
+def test_choosing_the_morph_procedure_still_grants_the_megamorph_counter():
+    """The other half of CR 701.40c: choosing the morph/megamorph procedure
+    instead - on the very same manifested-and-megamorph shape - still pays
+    the megamorph cost and still gets the counter (CR 702.37b)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Marang River Skeleton"],
+            battlefield=["Mastery of the Unseen", *["Plains"] * 4, *["Swamp"] * 4],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    skeleton = manifest_top_card(scenario)
+
+    turned = scenario.turn_face_up(
+        skeleton,
+        *scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp"),
+        username="alice",
+        procedure="morph",
+    )
+
+    assert turned.face_up
+    assert not turned.manifested
+    assert turned.counters["+1/+1"] == 1
+
+
+def test_generality_a_manifested_disguise_card_may_also_choose_either_procedure():
+    """CR 701.40d states the identical choice for disguise; Bolrac-Clan
+    Basher - different cost shape, no counter to worry about - proves the
+    manifest branch is not special-cased to morph/megamorph alone."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Bolrac-Clan Basher"],
+            battlefield=["Mastery of the Unseen", *["Plains"] * 4, *["Mountain"] * 6],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    basher = manifest_top_card(scenario)
+
+    assert str(turn_face_up_cost(basher, "alice", procedure="morph").mana) == "{3}{R}{R}"
+    assert str(turn_face_up_cost(basher, "alice", procedure="manifest").mana) == "{4}{R}{R}"
+
+    turned = scenario.turn_face_up(
+        basher,
+        *scenario.untapped_sources(*["Mountain"] * 6),
+        username="alice",
+        procedure="manifest",
+    )
+
+    assert turned.face_up
+    assert turned.name == "Bolrac-Clan Basher"
+    assert not turned.manifested
+
+
+def test_refusal_manifest_procedure_on_a_non_manifested_morph_permanent():
+    """`procedure="manifest"` asked of a card that has morph but was never
+    manifested (CR 701.40c's own precondition)."""
+    scenario = face_up_board(hand="Marang River Skeleton", battlefield=["Swamp"] * 8)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    permanent = cast_face_down(
+        scenario, "Marang River Skeleton", "Megamorph", "Swamp", "Swamp", "Swamp"
+    )
+
+    refusal = scenario.game.why_cannot_turn_face_up_as("alice", permanent, procedure="manifest")
+
+    assert refusal is not None
+    assert "not manifested" in refusal
+
+
+def test_refusal_morph_procedure_on_a_manifested_card_with_no_morph():
+    """`procedure="morph"` asked of a manifested vanilla creature that never
+    had a morph/disguise ability to begin with."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            library=["Elvish Warrior"],
+            battlefield=["Mastery of the Unseen", *["Plains"] * 4, "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    warrior = manifest_top_card(scenario)
+
+    refusal = scenario.game.why_cannot_turn_face_up_as("alice", warrior, procedure="morph")
+
+    assert refusal is not None
+    assert "no morph cost" in refusal
 
 
 def test_refusal_the_permanent_is_already_face_up():
@@ -395,3 +556,70 @@ def test_dredge_appears_in_a_pending_decision_s_legal_answers():
 
 def card_or_none(scenario: PlayedScenario, name: str):
     return scenario.find(name, Zone.GRAVEYARD, "alice")
+
+
+# ---------------------------------------------------------------------------
+# CR 121.2a/121.6b: dredge offered again for each individual draw a doubler
+# or a redirect produces, not only for the original would-draw instruction.
+# ---------------------------------------------------------------------------
+
+
+def test_dredge_is_offered_again_for_each_card_a_doubler_produces():
+    """Thought Reflection ("If you would draw a card, draw two cards
+    instead.") - off-pool, no exception clause, so it doubles every draw.
+    Declining dredge on the original draw and letting the doubler apply
+    (CR 614.5: that is the doubler's own one opportunity) still leaves each
+    of the two resulting individual draws (CR 121.2) able to be dredged."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Thought Reflection"],
+            library=["Mountain"] * 6,
+            graveyard=["Golgari Thug"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_dredge(None, username="alice")
+    scenario.will_dredge("Golgari Thug", username="alice")
+
+    drawn = scenario.draw(1, "alice")
+
+    assert [c.name for c in drawn] == ["Mountain"]
+    hand_names = sorted(c.name for c in scenario.player("alice").hand)
+    assert hand_names == ["Golgari Thug", "Mountain"]
+    # Dredge 4 milled 4 off the doubled second draw; one more was drawn
+    # normally out of what was left (6 - 4 - 1 = 1).
+    assert len(scenario.player("alice").library) == 1
+
+
+def test_dredge_is_offered_to_the_actual_drawer_after_a_redirect():
+    """CR 616.1: Plagiarize's own created replacement hands bob's draw to
+    alice. That redirected draw is alice's own individual draw (CR 121.2), so
+    it is her graveyard - not bob's - that gets offered dredge for it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Plagiarize"],
+            battlefield=["Island"] * 4,
+            library=["Forest"] * 6,
+            graveyard=["Golgari Thug"],
+        )
+        .player("bob", library=["Swamp"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Plagiarize", username="alice", targets=["bob"], auto=True)
+    scenario.will_dredge("Golgari Thug", username="alice")
+
+    drawn = scenario.draw(1, "bob")
+
+    assert drawn == []  # bob's draw was skipped and handed to alice (CR 614.6)
+    assert [c.name for c in scenario.player("bob").hand] == []
+    assert [c.name for c in scenario.player("alice").hand] == ["Golgari Thug"]
+    assert len(scenario.player("alice").library) == 6 - 4

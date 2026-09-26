@@ -13854,9 +13854,17 @@ class Game(EngineModel):
         CR 121.2: "Cards may only be drawn one at a time. If a player is
         instructed to draw multiple cards, that player performs that many
         individual card draws." Each of those individual draws is its own
-        replaceable event (CR 121.6), so Alhammarret's Archive replacing one
-        draw with two does not then replace the two it produced - CR 614.5 gives
-        each effect one opportunity per event.
+        replaceable event (CR 121.6). CR 614.5 gives each replacement effect
+        only one opportunity per event or modified event descending from it -
+        which is exactly why `apply_replacements` below is called only once
+        per instruction and never again on whatever it produces: a second
+        call would let the same doubler (Alhammarret's Archive, Thought
+        Reflection) double its own output. But CR 121.2a/121.6b make each of
+        the resulting cards its own fresh individual draw once the doubler (or
+        a redirect such as Plagiarize) has settled the amount and who draws
+        it - a *different*, not-yet-applied effect can still apply to each of
+        those, dredge (CR 702.52a) chief among them - `_offer_dredge` below is
+        called again, once per resulting card, for exactly that reason.
 
         CR 121.6a applies a draw replacement "even if no cards could be drawn
         because there are no cards in the affected player's library", which is
@@ -13905,11 +13913,38 @@ class Game(EngineModel):
                 # ("that player skips that draw and you draw a card") - the
                 # modified event is what happens, so whoever it now names draws.
                 drawer = event.player or player
+                if drawer is player and event.amount == 1:
+                    # The overwhelmingly common case: nothing besides dredge
+                    # (already offered and declined above) touched this draw.
+                    # Skip straight to drawing it - re-running the per-card
+                    # loop below would ask about dredge a second time for the
+                    # exact same, unmodified individual draw.
+                    cards = list(player.draw_up_to(1))
+                else:
+                    # Some other replacement changed who draws and/or how many
+                    # cards result (a doubler, a Plagiarize-style redirect).
+                    # CR 121.2/121.2a settle that *once*, above; CR 121.6b then
+                    # makes each of the resulting cards its own individual
+                    # draw, so each gets its own dredge opportunity - this
+                    # time the actual drawer's own graveyard, not `player`'s
+                    # (CR 616.1: a different effect, never yet applied to this
+                    # event, is free to apply to it). This never re-invokes
+                    # `apply_replacements`, so the doubler that produced
+                    # `event.amount` never gets a second, self-invoked
+                    # opportunity at its own output (CR 614.5).
+                    cards = []
+                    remaining = event.amount
+                    while remaining > 0:
+                        if self._offer_dredge(drawer) is not None:
+                            remaining -= 1
+                            continue
+                        cards.extend(drawer.draw_up_to(1))
+                        remaining -= 1
                 # CR 121.2: each card actually drawn is its own draw, so each is
                 # its own trigger event - a replacement that turns one draw into
                 # two still produces two events. A draw replaced down to nothing
                 # never happened, so it triggers nothing (CR 603.2g).
-                for card in drawer.draw_up_to(event.amount) if event.amount > 0 else []:
+                for card in cards:
                     if drawer is player:
                         # Only `player`'s own draws are what the caller asked
                         # for; a draw handed to someone else is theirs.
@@ -13962,12 +13997,17 @@ class Game(EngineModel):
         no legal options is not asked" convention `Game.ask`'s own module
         docstring already states.
 
-        This engine does not also model choosing among *other*
-        simultaneously-applicable draw replacements (Plagiarize's redirect, a
-        second Alhammarret's Archive-style double) for the identical draw
-        alongside a dredge - `apply_replacements` runs those, immediately
-        after, on whatever draw dredge did not consume; see
-        `docs/engine-coverage.md`.
+        Called once for `player`'s own would-draw instruction before any
+        other replacement runs, and again by `draw_cards` for each resulting
+        individual draw once a doubler or a redirect has settled who draws
+        and how many - `player` there is whoever that turns out to be, so a
+        redirected draw (Plagiarize, Notion Thief) is offered against *its*
+        own graveyard, not the original drawer's (CR 616.1e). This engine
+        does not also model a seat *ordering* several other simultaneously-
+        applicable, non-dredge draw replacements (two redirects, two
+        doublers) against each other for the identical draw - `apply_
+        replacements` applies those on its own, in whatever order its own
+        registry tries them; see `docs/engine-coverage.md`.
         """
         candidates = [
             card
@@ -22750,7 +22790,11 @@ class Game(EngineModel):
         return ability.mana.any_color_count if ability.mana.any_color_mixed else 1
 
     def begin_turning_face_up(
-        self, permanent: CardState, controller: str | None = None
+        self,
+        permanent: CardState,
+        controller: str | None = None,
+        *,
+        procedure: str | None = None,
     ) -> CostPayment:
         """Announce turning a face-down morph creature face up, and open its
         payment (CR 702.37e).
@@ -22766,37 +22810,57 @@ class Game(EngineModel):
         be taken any time its controller could take one, not only once the
         whole cost is already in hand.
 
+        `procedure` (`"morph"` or `"manifest"`) picks which of CR 701.40c-d's
+        two procedures to pay when the permanent is manifested *and* has
+        morph or disguise; pass the same value to `turn_face_up` below, the
+        way `controller` is already passed to both. `None` keeps the old
+        default preference - see `turn_face_up_cost`'s own docstring.
+
         Raises if the special action is unavailable at all (CR 702.37e's own
         parenthetical, or a permanent that is not face down here), before
         anything has been spent.
         """
         self._refuse_if_over()
-        refusal = self.why_cannot_turn_face_up(permanent)
+        refusal = self.why_cannot_turn_face_up(permanent, procedure=procedure)
         if refusal is not None:
             raise ValueError(refusal)
         controller = controller or self.controller_of(permanent).username
-        total = turn_face_up_cost(permanent, controller)
+        total = turn_face_up_cost(permanent, controller, procedure=procedure)
         assert total is not None  # `why_cannot_turn_face_up` already checked this
         return CostPayment.for_total(total, game=self, payer=controller)
 
-    def why_cannot_turn_face_up(self, permanent: CardState) -> str | None:
+    def why_cannot_turn_face_up(
+        self, permanent: CardState, *, procedure: str | None = None
+    ) -> str | None:
         """Why this permanent cannot be turned face up right now, or None:
         CR 702.37e's own conditions (`keywords.why_cannot_turn_face_up`, which
         also covers CR 702.168d's disguise and CR 701.40b's manifest
         procedures), then any static ban a permanent on the battlefield puts
         on it (`keywords.turn_face_up_ban` - Unable to Scream, Karlov
-        Watchdog)."""
-        return why_cannot_turn_face_up(permanent) or turn_face_up_ban(self, permanent)
+        Watchdog). `procedure` is CR 701.40c-d's own choice between the two
+        procedures - see `keywords.why_cannot_turn_face_up`'s docstring."""
+        return why_cannot_turn_face_up(permanent, procedure=procedure) or turn_face_up_ban(
+            self, permanent
+        )
 
-    def why_cannot_turn_face_up_as(self, username: str, permanent: CardState) -> str | None:
+    def why_cannot_turn_face_up_as(
+        self, username: str, permanent: CardState, *, procedure: str | None = None
+    ) -> str | None:
         """Why `username` specifically cannot turn `permanent` face up right
         now, or None - the seat-facing refusal `why_cannot_turn_face_up`
         above does not give, because that one never asks who is asking or
         whether they can pay. See `machines/special_actions.why_cannot_turn_
-        face_up_as`'s own docstring for the three checks, in order."""
-        return why_cannot_turn_face_up_as(self, username, permanent)
+        face_up_as`'s own docstring for the three checks, in order, and for
+        `procedure`."""
+        return why_cannot_turn_face_up_as(self, username, permanent, procedure=procedure)
 
-    def turn_face_up(self, permanent: CardState, controller: str | None = None) -> CardState:
+    def turn_face_up(
+        self,
+        permanent: CardState,
+        controller: str | None = None,
+        *,
+        procedure: str | None = None,
+    ) -> CardState:
         """Finish turning a face-down permanent face up (CR 702.37e, 708.8).
 
         The cost is paid by the caller through `begin_turning_face_up`; this
@@ -22811,13 +22875,17 @@ class Game(EngineModel):
         a player would receive priority) - a special action skips the stack
         for *itself*, not for what it triggers.
 
-        CR 702.37b: "As this permanent is turned face up, put a +1/+1 counter
-        on it if its megamorph cost was paid to turn it face up." Every path
-        that reaches this method for a face-down permanent with morph pays
-        exactly that permanent's own morph (or megamorph) cost - there is no
-        other way in this engine to turn one face up - so a megamorph card
-        always gets its counter here, through `add_counters` (CR 122.1,
-        replacement effects such as Doubling Season included).
+        `procedure` mirrors whatever was passed to `begin_turning_face_up`
+        for this same turn-up (CR 701.40c-d's choice, when the permanent is
+        manifested *and* has morph or disguise, between paying the morph/
+        disguise cost and paying the card's own mana cost). It matters here
+        only for CR 702.37b: "As this permanent is turned face up, put a
+        +1/+1 counter on it if its megamorph cost was paid to turn it face
+        up." That is true whenever the morph/disguise procedure was the one
+        actually used - `procedure == "morph"`, or `None` falling back to
+        the same default `turn_face_up_cost` used to price it - and false
+        for `"manifest"`, CR 701.40b's own procedure, which never touches a
+        morph cost at all no matter how the card's megamorph reads.
         """
         self._refuse_if_over()
         ban = turn_face_up_ban(self, permanent)
@@ -22826,7 +22894,11 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             controller = controller or self.controller_of(permanent).username
             ability = morph_ability(permanent.card)
-            megamorph = ability is not None and ability.canonical.lower() == "megamorph"
+            megamorph = (
+                procedure != "manifest"
+                and ability is not None
+                and ability.canonical.lower() == "megamorph"
+            )
             permanent.turn_face_up()
             self.emit(
                 GameEvent(
