@@ -87,6 +87,7 @@ from magic_cards_model.machines.cost import (
     cost_announces_x,
     cost_modifier_effect,
     looks_like_unparsed_cost_modifier,
+    static_free_cast_grant,
     waterbend_mana_cost,
 )
 from magic_cards_model.machines.counter_effects import (
@@ -1958,6 +1959,12 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if static_free_cast_grant(text) is not None:
+        # CR 118.9: "you may cast ... without paying its mana cost" off a
+        # permanent (Omniscience; Zaffai and the Tempests' once each turn) -
+        # `casting.static_free_cast_grants` offers it as an alternative cost
+        # and `casting.static_free_cast_refusal` enforces its limits.
         return HANDLED
     if reads_spell_keyword_grant_line(text):
         # CR 604.2: "<quality> spells you cast have storm/cascade/affinity/

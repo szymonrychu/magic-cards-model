@@ -2915,6 +2915,9 @@ class AlternativeCostOption(EngineModel):
     """How many objects `use_alternative_cost(choosing=...)` must supply."""
     unavailable: str | None = None
     """Why it cannot be announced right now, or None if it can."""
+    once_per_turn_key: str | None = None
+    """For a once-each-turn `STATIC` grant, the granting permanent's key -
+    recorded as used when the spell becomes cast (CR 601.2i)."""
 
     @property
     def available(self) -> bool:
@@ -4741,30 +4744,6 @@ class Casting(EngineModel):
             )
 
         for source_name, grant in self._static_free_cast_grants():
-            unavailable = None
-            if self.origin_zone is not grant.zone:
-                unavailable = (
-                    f"{source_name} only applies to spells cast from your "
-                    f"{grant.zone.value} (CR 118.9)"
-                )
-            elif grant.type_word and not self._spell_is_type(grant.type_word):
-                unavailable = (
-                    f"{source_name} only applies to {grant.type_word} spells, and "
-                    f"{self.spell.name} is not one"
-                )
-            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
-                cap = mana_value_cap_for(grant, self.game, self.caster)
-                if cap is None:
-                    unavailable = (
-                        f"{source_name}'s mana value cap "
-                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
-                        "(CR 118.9)"
-                    )
-                elif self.spell.mana_value > cap:
-                    unavailable = (
-                        f"{source_name} only applies to spells with mana value {cap} or "
-                        f"less, and {self.spell.name} is {self.spell.mana_value}"
-                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -4773,7 +4752,15 @@ class Casting(EngineModel):
                     source_name=source_name,
                     description="nothing",
                     cost=None,
-                    unavailable=unavailable,
+                    unavailable=static_free_cast_refusal(
+                        self.game,
+                        self.caster,
+                        self._as_announced,
+                        self.origin_zone,
+                        source_name,
+                        grant,
+                    ),
+                    once_per_turn_key=grant.once_per_turn_key,
                 )
             )
 
@@ -4873,6 +4860,11 @@ class Casting(EngineModel):
         self._enter_modes()
         if option.source is AlternativeCostSource.STATIC:
             self.free_cast_source = option.source_name
+            if option.once_per_turn_key is not None:
+                # "Once during each of your turns": recorded as used when the
+                # spell becomes cast (`cast`), not before - a cast that is
+                # reversed (CR 601.6) used nothing.
+                self.keyword_once_per_turn_key = option.once_per_turn_key
         remaining = list(choosing or [])
         for component in cost.components:
             if component.required and not component.cards:
@@ -6772,14 +6764,70 @@ def static_free_cast_grants(game: Any, caster: str) -> list[tuple[str, StaticFre
         for line in static_lines:
             grant = static_free_cast_grant(line)
             if grant is not None:
+                if grant.once_each_of_your_turns:
+                    grant = grant.model_copy(
+                        update={"once_per_turn_key": once_per_turn_key(permanent)}
+                    )
                 found.append((permanent.card.name, grant))
     return found
 
 
+def static_free_cast_refusal(
+    game: Any,
+    caster: str,
+    card: CardState,
+    origin_zone: Zone,
+    source_name: str,
+    grant: StaticFreeCastGrant,
+) -> str | None:
+    """Why `grant` (an Omniscience- or Zaffai-shaped static free cast, CR
+    118.9) does not apply to `card` cast by `caster` from `origin_zone`
+    right now, or None when it does.
+
+    The one answer both `Casting.alternative_costs` and `Game.
+    alternative_costs_for` give, so the listing a seat reads and the cast it
+    makes agree: the zone the grant names (the top card of the library too,
+    for "or the top of your library"), the card type it names (CR 205.2b's
+    any-of-them), a mana value cap, and for "Once during each of your turns"
+    whose turn it is and whether that permanent's one use this turn is gone.
+    """
+    in_zone = origin_zone is grant.zone
+    if not in_zone and grant.also_top_of_library and origin_zone is Zone.LIBRARY:
+        library = game.player(caster).library if game is not None else []
+        in_zone = bool(library) and library[0] is card
+    if not in_zone:
+        return f"{source_name} only applies to spells cast from your {grant.zone.value} (CR 118.9)"
+    if grant.type_word and not spell_has_type_word(card.card, grant.type_word):
+        return f"{source_name} only applies to {grant.type_word} spells, and {card.name} is not one"
+    if grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
+        cap = mana_value_cap_for(grant, game, caster)
+        if cap is None:
+            return (
+                f"{source_name}'s mana value cap ({grant.max_mana_value_quality!r}) is not read "
+                "by this engine (CR 118.9)"
+            )
+        if card.mana_value > cap:
+            return (
+                f"{source_name} only applies to spells with mana value {cap} or less, and "
+                f"{card.name} is {card.mana_value}"
+            )
+    if grant.once_each_of_your_turns:
+        turn = getattr(game, "turn", None)
+        if turn is None or turn.active_player != caster:
+            return f"{source_name} applies only during your turns (CR 118.9)"
+        used = getattr(game, "once_per_turn_cast_permissions_used", {})
+        if grant.once_per_turn_key in used:
+            return f"{source_name} was already used once this turn"
+    return None
+
+
 def spell_has_type_word(card: Card, type_word: str) -> bool:
     """Whether `card` has the card type a static grant names (CR 205.2b: a
-    card with more than one type has all of them)."""
-    return type_word.lower() in (card.type_line or "").lower()
+    card with more than one type has all of them). "instant or sorcery" is
+    CR 205.1's type list read as the disjunction it is - either will do."""
+    type_line = (card.type_line or "").lower()
+    words = [word for word in re.split(r"\s+(?:or|and)\s+", type_word.lower()) if word]
+    return any(word in type_line for word in words)
 
 
 # --------------------------------------------------------------------------

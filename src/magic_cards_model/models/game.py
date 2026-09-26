@@ -54,14 +54,13 @@ from ..machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     life_or_mana_additional_costs,
-    mana_value_cap_for,
     marker_cast_options,
     optional_additional_costs,
     play_permissions_on,
     player_keyword_grant_of_line,
-    spell_has_type_word,
     split_second_restriction_source,
     static_free_cast_grants,
+    static_free_cast_refusal,
     types_being_cast,
     usable_play_permission,
     why_cannot_cast_restriction,
@@ -19515,30 +19514,6 @@ class Game(EngineModel):
             )
 
         for source_name, grant in static_free_cast_grants(self, caster):
-            unavailable = None
-            if origin_zone is not grant.zone:
-                unavailable = (
-                    f"{source_name} only applies to spells cast from your "
-                    f"{grant.zone.value} (CR 118.9)"
-                )
-            elif grant.type_word and not spell_has_type_word(card.card, grant.type_word):
-                unavailable = (
-                    f"{source_name} only applies to {grant.type_word} spells, and "
-                    f"{card.name} is not one"
-                )
-            elif grant.max_mana_value is not None or grant.max_mana_value_quality is not None:
-                cap = mana_value_cap_for(grant, self, caster)
-                if cap is None:
-                    unavailable = (
-                        f"{source_name}'s mana value cap "
-                        f"({grant.max_mana_value_quality!r}) is not read by this engine "
-                        "(CR 118.9)"
-                    )
-                elif card.mana_value > cap:
-                    unavailable = (
-                        f"{source_name} only applies to spells with mana value {cap} or "
-                        f"less, and {card.name} is {card.mana_value}"
-                    )
             options.append(
                 AlternativeCostOption(
                     index=len(options),
@@ -19547,7 +19522,10 @@ class Game(EngineModel):
                     source_name=source_name,
                     description="nothing",
                     cost=None,
-                    unavailable=unavailable,
+                    unavailable=static_free_cast_refusal(
+                        self, caster, card, origin_zone, source_name, grant
+                    ),
+                    once_per_turn_key=grant.once_per_turn_key,
                 )
             )
         return options
