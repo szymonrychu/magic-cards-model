@@ -233,7 +233,7 @@ def test_no_unblocked_attacker_no_sneak():
     bears = scenario.creature("Grizzly Bears", "alice")
     scenario.attack_with(bears)
     scenario.start_at(Step.DECLARE_BLOCKERS)
-    # Level 2 gave the Bears menace (CR 702.110b): two blockers.
+    # Level 2 gave the Bears menace (CR 702.111b): two blockers.
     scenario.block(
         bears, scenario.creature("Hill Giant", "bob"), scenario.creature("Llanowar Elves", "bob")
     )

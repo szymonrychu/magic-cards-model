@@ -1,0 +1,98 @@
+{
+  "ability": "Whenever Etali deals combat damage to a player, they get that many poison counters.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Etali, Primal Sickness@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Etali, Primal Conqueror // Etali, Primal Sickness"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Etali, Primal Conqueror // Etali, Primal Sickness",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["losers", "turn", "winner"],
+    "notices": {},
+    "objects": {
+      "Dragonfire Blade@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Fleecemane Lion@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Forest@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Island@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Kaito, Bane of Nightmares@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Mountain@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Plains@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Shadowspear@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Swamp@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Wastes@bob#1": {
+        "zone": ["battlefield", null]
+      }
+    },
+    "players": {
+      "bob": {
+        "counters": [
+          {},
+          {
+            "poison": 11
+          }
+        ]
+      }
+    },
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "deals_damage",
+  "number": 1,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}
