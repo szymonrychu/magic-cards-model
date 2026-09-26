@@ -1342,3 +1342,28 @@ def test_a_snapshot_written_before_the_object_state_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_OBJECT_STATE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The last version before CR 614.10's skip-turn counter:
+#: `machines.turn.TurnMachine.skipped_turns`.
+_SCHEMA_VERSION_BEFORE_SKIPPED_TURNS = 85
+
+
+def test_the_skipped_turns_bump_moved_the_version_past_eighty_five() -> None:
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SKIPPED_TURNS
+
+
+def test_a_snapshot_written_before_skipped_turns_is_refused() -> None:
+    """A version-85 dump has no `turn.skipped_turns`: decoded as current, a
+    player Ral Zarek's own "-7" made skip their next turns would read as
+    having none pending, and CR 614.10's skip would silently not happen on
+    their next turn."""
+    dumped = _a_played_game().model_dump(mode="json")
+    del dumped["turn"]["skipped_turns"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_SKIPPED_TURNS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_SKIPPED_TURNS}",
+    ):
+        Game.model_validate(dumped)
