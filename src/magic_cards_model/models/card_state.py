@@ -622,6 +622,20 @@ class ExileAnnotation(EngineModel):
         )
 
 
+class SpellSnapshot(EngineModel):
+    """A spell as it last existed on the stack (CR 608.2h's last known
+    information): the stamp its stack incarnation carried, which keys its
+    `Game.cast_records` entry, and the targets and division it had as it
+    left. A "copy that spell" trigger that resolves after the spell was
+    countered still copies it (CR 707.10) from this."""
+
+    model_config = ConfigDict(frozen=True)
+
+    stamp: UUID
+    targets: tuple[TargetRef, ...] = ()
+    division: tuple[int, ...] | None = None
+
+
 class AttachmentSnapshot(EngineModel):
     """One Aura or Equipment attached to a permanent as that permanent left
     the battlefield (CR 603.10a, CR 608.2h) - who controlled it and what it
@@ -918,6 +932,9 @@ class CardState(EngineModel):
     the game"). A completed dungeon is kept outside the game (CR 400.11a) with
     this count, so "you've completed a dungeon" and "you haven't completed
     Tomb of Annihilation" have something to read after it has gone."""
+    last_known_spell: SpellSnapshot | None = None
+    """This card as it last left the stack (`SpellSnapshot`), taken by
+    `move_to` and overwritten only by its next departure from the stack."""
     last_known_attachments: tuple["AttachmentSnapshot", ...] = ()
     """The Auras and Equipment attached to this object the last time it left
     the battlefield (CR 603.10a's look-back, CR 608.2h's last known
@@ -2693,6 +2710,12 @@ class CardState(EngineModel):
             self.renowned = False
             if zone is Zone.GRAVEYARD:
                 self._note_put_into_graveyard_with_counters()
+        if origin is Zone.STACK and zone is not Zone.STACK and not self.is_copy:
+            self.last_known_spell = SpellSnapshot(
+                stamp=self.zone_change_stamp,
+                targets=tuple(self.targets),
+                division=tuple(self.division) if self.division is not None else None,
+            )
         self.zone_change_stamp = new_id()
         self.zone = zone
         self._granted_as_it_left = ()

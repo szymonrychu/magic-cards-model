@@ -246,3 +246,86 @@ def test_mirari_without_the_mana_copies_nothing():
     bolt_bob(scenario)
     scenario.resolve_top()
     assert len(bolts_on_stack(scenario)) == 1
+
+
+# -- The spell left the stack before the trigger resolved ------------------------------
+#
+# CR 608.2h: an effect that needs information from a specific object uses its
+# last known information once the object has left the zone it was expected to
+# be in. The trigger's "copy that spell" is not a target (CR 608.2b does not
+# remove it), so a countered Bolt is still copied - as it last existed on the
+# stack, its target included (CR 707.10) - and the cost paid for it is not
+# wasted.
+
+
+def _countered_in_response(copier: str, *extra: str) -> PlayedScenario:
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            library=["Island"] * 5,
+            battlefield=[copier, *extra, "Mountain"],
+        )
+        .player(
+            "bob",
+            life=20,
+            hand=["Counterspell"],
+            library=["Island"] * 5,
+            battlefield=["Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = bolt_bob(scenario)
+    scenario.pass_priority("alice")
+    blue = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.cast_onto_stack("Counterspell", *blue, username="bob", targets=[bolt])
+    scenario.resolve_top()  # Counterspell
+    assert bolt.zone is Zone.GRAVEYARD
+    return scenario
+
+
+def test_aziza_copies_a_bolt_countered_in_response():
+    scenario = _countered_in_response(AZIZA, "Savannah Lions", "Goblin Guide")
+    creatures = [
+        scenario.creature(AZIZA, "alice"),
+        scenario.creature("Savannah Lions", "alice"),
+        scenario.creature("Goblin Guide", "alice"),
+    ]
+    scenario.will_take_the_may(True, username="alice", source=AZIZA)
+    scenario.will_choose_cards(*creatures, username="alice", source=AZIZA)
+    scenario.will_take_the_may(False, username="alice", source=AZIZA)
+
+    scenario.resolve_top()  # Aziza's trigger
+
+    assert all(creature.tapped for creature in creatures)
+    (copy,) = bolts_on_stack(scenario)
+    assert copy.is_copy
+    resolve_everything(scenario)
+    assert scenario.player("bob").life == 17
+
+
+def test_mica_copies_a_bolt_countered_in_response():
+    scenario = _countered_in_response(MICA, "Ornithopter")
+    ornithopter = scenario.creature("Ornithopter", "alice")
+    scenario.will_take_the_may(True, username="alice", source=MICA)
+    scenario.will_take_the_may(False, username="alice", source=MICA)
+
+    scenario.resolve_top()  # Mica's trigger
+
+    assert ornithopter.zone is Zone.GRAVEYARD
+    (copy,) = bolts_on_stack(scenario)
+    assert copy.is_copy
+    resolve_everything(scenario)
+    assert scenario.player("bob").life == 17
+
+
+def test_the_last_known_copy_may_still_choose_new_targets():
+    scenario = _countered_in_response(MICA, "Ornithopter", "Savannah Lions")
+    lions = scenario.creature("Savannah Lions", "alice")
+    scenario.will_take_the_may(True, username="alice", source=MICA, times=2)
+    scenario.will_choose_targets(lions, username="alice", source=MICA)
+    resolve_everything(scenario)
+    assert lions.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").life == 20

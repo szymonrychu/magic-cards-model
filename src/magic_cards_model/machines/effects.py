@@ -40224,9 +40224,11 @@ def _parse_copy_that_spell_clause(clause: str, *, for_spell: bool) -> TargetedCl
         if event is None or event.subject_id is None:
             return
         spell = game.find_by_id(event.subject_id)
-        if spell is None or spell not in game.stack:
+        if spell is None:
             return
-        copy = game.copy_spell(spell, controller=ability.controller)
+        # CR 608.2h: "that spell" is not a target, so one countered in
+        # response is still copied, as it last existed on the stack.
+        copy = game.copy_spell_as_last_known(spell, controller=ability.controller)
         if offer_new_targets:
             game.offer_new_targets_for_copy(
                 copy,

@@ -4044,7 +4044,8 @@ class Game(EngineModel):
     #: `renowned`, `venture_room`, `dungeon_completions` and
     #: `last_known_attachments` (EC6's object-state readers - bumped at the
     #: EC round 2 merge).
-    #: 86: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5).
+    #: 86: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5), and
+    #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -8667,11 +8668,51 @@ class Game(EngineModel):
         A copy of a non-permanent spell (an instant or sorcery) never becomes
         a token at all, so it stays a plain `CardState`.
         """
+        return self._put_spell_copy(
+            spell,
+            controller,
+            original_record=self.cast_record(spell),
+            targets=list(spell.targets),
+            division=spell.division,
+        )
+
+    def copy_spell_as_last_known(
+        self, spell: CardState, controller: str | None = None
+    ) -> CardState | None:
+        """`copy_spell` for "copy that spell" (CR 707.10) naming a spell that
+        may have left the stack since the ability triggered: still on the
+        stack, it is copied as it is; gone, it is copied as it last existed
+        there (CR 608.2h, `CardState.last_known_spell`) - its targets,
+        division and the record of how it was cast. `None` for a spell that
+        never left the stack as a cast card (a copy ceases to exist, CR
+        707.10a) or that can't be copied (CR 113.6g)."""
+        if spell in self.stack:
+            return self.copy_spell(spell, controller)
+        last_known = spell.last_known_spell
+        if last_known is None:
+            return None
+        record = self.cast_record_as_last_known(last_known.stamp)
+        return self._put_spell_copy(
+            spell,
+            controller,
+            original_record=record if record is not None else CastRecord(),
+            targets=list(last_known.targets),
+            division=list(last_known.division) if last_known.division is not None else None,
+        )
+
+    def _put_spell_copy(
+        self,
+        spell: CardState,
+        controller: str | None,
+        *,
+        original_record: CastRecord,
+        targets: list[TargetRef],
+        division: list[int] | None,
+    ) -> CardState | None:
         if cannot_be_copied(spell):
             return None
         with self._id_allocator_scope():
             controller = controller or spell.controller or self.controller_of(spell).username
-            original_record = self.cast_record(spell)
             state_type = TokenState if spell.is_permanent else CardState
             copy = state_type(
                 card=spell.card,
@@ -8680,10 +8721,10 @@ class Game(EngineModel):
                 owner=controller,
                 is_copy=True,
                 token=False,
-                targets=list(spell.targets),
+                targets=targets,
                 face_played=spell.face_played,
                 land_face_played=spell.land_face_played,
-                division=spell.division,
+                division=division,
                 # CR 722.3d: "If a prepare spell is copied, the copy is also
                 # a prepare spell" - carried onto any further copy of a
                 # CR 722.3c exile copy, so it keeps reading its inset face's
