@@ -107,6 +107,7 @@ from .casting import (
     granted_cast_options,
     granted_optional_additional_costs,
     keyword_cast_options,
+    linked_exile_play_source,
     mandatory_additional_costs,
     marker_cast_options,
     modal_dfc_spell_back_faces,
@@ -1130,6 +1131,7 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
         and game.play_permission_for(card, player, PlayAction.PLAY) is None
         and game.graveyard_land_permission(card, player) is None
         and game.land_from_top_of_library_permission(card, player) is None
+        and linked_exile_play_source(game, card, player) is None
     ):
         return []
     actions: list[Action] = []

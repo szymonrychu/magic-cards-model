@@ -54,6 +54,7 @@ from ..machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     life_or_mana_additional_costs,
+    linked_exile_play_source,
     marker_cast_options,
     optional_additional_costs,
     play_permissions_on,
@@ -20156,6 +20157,7 @@ class Game(EngineModel):
                 permission is None
                 and self.graveyard_land_permission(land, username) is None
                 and self.land_from_top_of_library_permission(land, username) is None
+                and linked_exile_play_source(self, land, username) is None
             ):
                 granted = play_permissions_on(self, land)
                 if granted:

@@ -1341,6 +1341,9 @@ def granted_cast_options(
                 rezoned = _rezoned_by_using(printed, spell, origin_zone, using)
                 if rezoned is not None:
                     found.append(GrantedCastOption(source_name=spell.name, option=rezoned))
+    linked = _linked_exile_play_option(game, spell, caster, origin_zone)
+    if linked is not None:
+        found.append(GrantedCastOption(source_name=spell.name, option=linked))
     # CR 114.4: an emblem's abilities function in the command zone, so the
     # caster's own emblems grant exactly as a permanent's statics do.
     for emblem in game.emblems_of(caster):
@@ -1715,6 +1718,98 @@ def _static_zone_cast_option(
         timing=CastTiming.OWN,
         additional_cost=additional,
         enters_with_counters=counters,
+    )
+
+
+# --------------------------------------------------------------------------
+# A permanent's standing permission to play the cards exiled with it
+# (CR 601.3, CR 607.2a)
+# --------------------------------------------------------------------------
+
+#: "[During your turn, ]you may play cards exiled with `<this>`." (The
+#: Temporal Anchor) and "You may play lands and cast spells from among cards
+#: exiled with this creature." (Nightveil Specter) - CR 601.1a's "play" (a
+#: land drop or a cast) opened to CR 607.2a's linked pile, read after the
+#: object's own name is normalised to "this `<noun>`" (CR 201.5).
+_PLAY_CARDS_EXILED_WITH_STATIC_RE = re.compile(
+    r"^(?P<during>during your turn, )?you may play (?:cards|lands and cast spells from among "
+    r"cards) exiled with this \w+\.?$",
+    re.IGNORECASE,
+)
+
+
+def play_cards_exiled_with_line(
+    permanent_name: str, text: str, *, legendary: bool = True
+) -> tuple[bool] | None:
+    """`(during_your_turn,)` for a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` line
+    of the permanent named `permanent_name`, or None."""
+    from .abilities import self_normalized_effect_text
+
+    normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
+    match = _PLAY_CARDS_EXILED_WITH_STATIC_RE.fullmatch(normalized.strip())
+    if match is None:
+        return None
+    return (match.group("during") is not None,)
+
+
+def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    from ..models.card import Supertype
+
+    return (
+        play_cards_exiled_with_line(
+            card.name, text, legendary=Supertype.LEGENDARY in card.supertypes
+        )
+        is not None
+    )
+
+
+def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
+    """The permanent `player` controls whose "you may play cards exiled with
+    `<this>`" lets them play `card` right now, or None: `card` is face up in
+    exile (CR 406.3b), exiled with that very object (CR 607.2a, CR 400.7 -
+    `ExileAnnotation.links_to`), and the line's "during your turn" holds."""
+    if game is None or card.zone is not Zone.EXILE or not card.face_up:
+        return None
+    annotation = card.exile_annotation
+    if annotation is None:
+        return None
+    from ..models.card import Supertype
+
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(player):
+        if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
+            continue
+        legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        for line in class_gated_lines(permanent, board.of(permanent).abilities):
+            read = play_cards_exiled_with_line(permanent.name, line, legendary=legendary)
+            if read is None:
+                continue
+            (during_your_turn,) = read
+            if during_your_turn:
+                turn = getattr(game, "turn", None)
+                if turn is None or turn.active_player != player:
+                    continue
+            return permanent
+    return None
+
+
+def _linked_exile_play_option(
+    game: Any, spell: CardState, caster: str, origin_zone: Zone
+) -> KeywordCastOption | None:
+    """`linked_exile_play_source`'s cast half: CR 601.3's permission to cast
+    `spell` out of the pile, at its own cost and its own timing."""
+    if origin_zone is not Zone.EXILE:
+        return None
+    probe = spell if spell.zone is Zone.EXILE else None
+    if probe is None or linked_exile_play_source(game, probe, caster) is None:
+        return None
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 607.2a",
+        zone=Zone.EXILE,
+        pays_mana_cost=True,
+        timing=CastTiming.OWN,
     )
 
 
@@ -4584,7 +4679,10 @@ class Casting(EngineModel):
         """CR 610.5's grants, as they stand at this announcement."""
         return granted_cast_options(
             self.game,
-            self.spell,
+            # As of the proposal (CR 601.3): the pile of exile the card sat in
+            # and the zone it left are what a grant asks about, and CR 601.2a
+            # has already moved the card itself.
+            self._as_announced,
             self.caster,
             self.origin_zone,
             library_top=self.announced_library_top,

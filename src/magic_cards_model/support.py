@@ -64,6 +64,7 @@ from magic_cards_model.machines.casting import (
     reads_granted_zone_keyword_line,
     reads_mandatory_additional_cost_line,
     reads_or_pay_additional_cost_line,
+    reads_play_cards_exiled_with_line,
     reads_printed_zone_permission_line,
     reads_static_zone_cast_permission_line,
     reads_using_keyword_permission_line,
@@ -1916,6 +1917,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 611.3d / CR 601.3: `casting._grant_on_a_card_in_a_zone` grants
         # the keyword where the card lies and `_rezoned_by_using` opens that
         # zone to it (Ninja Teen's level 3; Iroh, Grand Lotus's flashback).
+        return HANDLED
+    if reads_play_cards_exiled_with_line(printing, text):
+        # CR 601.3 / CR 607.2a: `casting.linked_exile_play_source` opens the
+        # linked pile to casts (`granted_cast_options`) and to the land drop
+        # (`Game.play_land`, `legal_actions`) - The Temporal Anchor.
         return HANDLED
     if keyword_machine.as_enters_day_night(text, printing.name) is not None:
         # CR 731.1: "If it's neither day nor night, it becomes day as this
