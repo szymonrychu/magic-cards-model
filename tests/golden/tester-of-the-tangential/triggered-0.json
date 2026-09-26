@@ -1,0 +1,267 @@
+{
+  "ability": "At the beginning of combat on your turn, you may pay {X}. When you do, move X +1/+1 counters from this creature onto another target creature.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Tester of the Tangential@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Tester of the Tangential"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Tester of the Tangential",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 1,
+        "cards": [],
+        "kind": "pay_mana",
+        "player": "alice",
+        "players": [],
+        "prompt": "pay {1}",
+        "source": "Tester of the Tangential"
+      },
+      {
+        "amount": 0,
+        "cards": [],
+        "kind": "choose_targets",
+        "player": "alice",
+        "players": [],
+        "prompt": "choose targets for Tester of the Tangential",
+        "source": "Tester of the Tangential"
+      }
+    ],
+    "fields_changed": ["became_tapped_count_this_turn", "delayed_triggers"],
+    "notices": {},
+    "objects": {
+      "Forest@alice#1": {
+        "tapped": [false, true]
+      },
+      "Forest@alice#2": {
+        "tapped": [false, true]
+      },
+      "Forest@alice#3": {
+        "tapped": [false, true]
+      },
+      "Island@alice#1": {
+        "tapped": [false, true]
+      },
+      "Island@alice#2": {
+        "tapped": [false, true]
+      },
+      "Island@alice#3": {
+        "tapped": [false, true]
+      },
+      "Mountain@alice#1": {
+        "tapped": [false, true]
+      },
+      "Mountain@alice#2": {
+        "tapped": [false, true]
+      },
+      "Mountain@alice#3": {
+        "tapped": [false, true]
+      },
+      "Plains@alice#2": {
+        "tapped": [false, true]
+      },
+      "Plains@alice#3": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#1": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#2": {
+        "tapped": [false, true]
+      },
+      "Swamp@alice#3": {
+        "tapped": [false, true]
+      },
+      "Wastes@alice#1": {
+        "tapped": [false, true]
+      },
+      "Wastes@alice#2": {
+        "tapped": [false, true]
+      }
+    },
+    "players": {},
+    "stack": ["ability of Tester of the Tangential@alice#1: move 16 +1/+1 counters from this creature onto another target creature."]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 0,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}
