@@ -13,6 +13,7 @@ from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
+from ..data.card_names import is_card_name
 from ..data.creature_types import creature_types
 from ..data.printing_pool import resolve_printing
 from ..data.subtypes import canonical_subtype
@@ -13128,20 +13129,17 @@ class Game(EngineModel):
                     f"{decision.prompt}: {value!r} is not among the legal choices "
                     f"({', '.join(decision.options)})"
                 )
-            if decision.quality == ChoiceKind.CARD_NAME and resolve_printing(value) is None:
+            if decision.quality == ChoiceKind.CARD_NAME and not (
+                is_card_name(value) or resolve_printing(value) is not None
+            ):
                 # CR 201.4: "the player must choose the name of a card in the
                 # Oracle card reference" - not merely a non-empty string.
                 # `decision.options` is deliberately never enumerated for a
                 # card name (too large a universe, `machines/legal_actions.
                 # py`'s own CHOOSE_A_QUALITY branch), so this is the one
-                # place a card-name choice is actually checked against
-                # anything real. `resolve_printing` is this engine's own
-                # bundled Scryfall printings pool (`data/printing_pool.py`),
-                # not the full CR 108.1 Oracle card reference this engine
-                # does not ship - a real card this pool has simply never
-                # bundled reads the same as an invented one, a documented
-                # limitation (`docs/engine-coverage.md`), not a silent
-                # acceptance of whatever string was offered.
+                # place a card-name choice is checked: against Scryfall's own
+                # card-name catalog (`data/card_names.py`), and the bundled
+                # printings pool for a card newer than the bundled catalog.
                 raise ValueError(
                     f"{decision.prompt}: {value!r} is not a card name this engine "
                     f"recognises (CR 201.4)"

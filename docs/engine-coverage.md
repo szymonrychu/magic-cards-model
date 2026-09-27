@@ -6922,11 +6922,9 @@ documented exception" rule rather than left silently asserted.
   branch`.
 - **A chosen card name must be a real card (CR 201.4)** - `Game.ask`'s
   `CHOOSE_A_QUALITY` branch now checks `ChoiceKind.CARD_NAME` answers
-  against `data.printing_pool.resolve_printing`, this engine's own bundled
-  Scryfall printings (not the full CR 108.1 Oracle card reference, which
-  this engine does not ship - a real card this pool has simply never
-  bundled reads the same as an invented one, a known and accepted
-  limitation of using the pool as the validation source). Applies to every
+  against `data.card_names`, Scryfall's own card-name catalog of the whole
+  CR 108.1 Oracle card reference (bundled by `scripts/add_card_names.py`),
+  and the bundled printings pool for a card newer than that catalog. Applies to every
   "choose a card name" question in the engine, not only Vexing Arcanix and
   Conundrum Sphinx (`_ask_name_reveal_top_and_branch` and the pre-existing
   "as this enters, choose a card name" grants - Runed Halo, Pithing Needle,

@@ -253,13 +253,12 @@ def test_an_invalid_name_is_refused():
         scenario.resolve_top()
 
 
-def test_a_real_but_unbundled_card_name_is_also_refused():
-    """The engine validates against `data.printing_pool` - every Scryfall
-    printing this build has ever added with `scripts/add_card.py` - not the
-    full Oracle card reference (CR 108.1), which this engine does not ship.
-    A genuinely real Magic card this pool has simply never bundled reads
-    the same as an invented one; documented as a known limitation in
-    `docs/engine-coverage.md` rather than silently accepted."""
+def test_a_real_card_name_outside_the_printing_pool_is_accepted():
+    """CR 201.4: the name of any card in the Oracle card reference - checked
+    against Scryfall's own card-name catalog (`data/card_names.json`), not
+    only the printings this pool bundles. Erosion (Ice Age) is real and not
+    in the pool; it is a legal name, it just never matches the revealed
+    Lightning Bolt, so the miss branch runs."""
     scenario = (
         Scenario()
         .player(
@@ -271,13 +270,12 @@ def test_a_real_but_unbundled_card_name_is_also_refused():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    # A real Magic card (Scryfall-verified: Ice Age's Erosion), just never
-    # added to this repo's bundled printing pool.
     scenario.will_choose("Erosion", source=ARCANIX)
     _activate_arcanix(scenario, targets=["alice"])
 
-    with pytest.raises(ValueError, match="CR 201.4"):
-        scenario.resolve_top()
+    scenario.resolve_top()
+
+    assert [state.name for state in scenario.game.player("alice").graveyard] == ["Lightning Bolt"]
 
 
 def test_generalises_off_a_differently_worded_miss_branch():
