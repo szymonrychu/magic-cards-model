@@ -14,6 +14,7 @@ from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
 from ..data.creature_types import creature_types
+from ..data.printing_pool import resolve_printing
 from ..data.subtypes import canonical_subtype
 from ..ids import install_id_allocator, new_id, reset_id_allocator
 from ..machines import combat as combat_rules
@@ -4317,7 +4318,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 100
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 101
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4488,6 +4489,11 @@ class Game(EngineModel):
     #: `turn_history` event kinds gained "blocked" and "fought"; generic P/T
     #: counters joined `_counter_effects`; and protection gained CR 112.1's
     #: "spell" quality.
+    #: 101: `machines/triggers.GameEvent` gained `subject_stamp` (ec7-rv-rules:
+    #: a cast-trigger's own X, Hydroid Krasis/Genesis Hydra/Old Stickfingers/
+    #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
+    #: the cast spell has left the stack - CR 608.2h - rather than lost the
+    #: moment a countered spell's zone change stamps it fresh).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -7291,6 +7297,7 @@ class Game(EngineModel):
                 subject_name=card_state.name,
                 subject_controller=controller,
                 subject_card=card_state.card,
+                subject_stamp=card_state.zone_change_stamp,
                 subject_types=card_state.types,
                 subject_subtypes=card_state.subtypes,
                 subject_colors=card_state.colors,
@@ -12945,6 +12952,16 @@ class Game(EngineModel):
                 )
             return value
 
+        if decision.kind is DecisionKind.CHOOSE_AN_AMOUNT:
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs an integer amount")
+            if value < 0 or value > decision.amount:
+                raise ValueError(
+                    f"{decision.prompt}: cannot choose {value}, at most {decision.amount} "
+                    f"is legal (CR 608.2d)"
+                )
+            return value
+
         if decision.kind is DecisionKind.CHOOSE_CARDS:
             if not isinstance(value, tuple) or not all(isinstance(v, UUID) for v in value):
                 raise ValueError(f"{decision.prompt}: needs a tuple of chosen card ids")
@@ -13077,6 +13094,24 @@ class Game(EngineModel):
                 raise ValueError(
                     f"{decision.prompt}: {value!r} is not among the legal choices "
                     f"({', '.join(decision.options)})"
+                )
+            if decision.quality == ChoiceKind.CARD_NAME and resolve_printing(value) is None:
+                # CR 201.4: "the player must choose the name of a card in the
+                # Oracle card reference" - not merely a non-empty string.
+                # `decision.options` is deliberately never enumerated for a
+                # card name (too large a universe, `machines/legal_actions.
+                # py`'s own CHOOSE_A_QUALITY branch), so this is the one
+                # place a card-name choice is actually checked against
+                # anything real. `resolve_printing` is this engine's own
+                # bundled Scryfall printings pool (`data/printing_pool.py`),
+                # not the full CR 108.1 Oracle card reference this engine
+                # does not ship - a real card this pool has simply never
+                # bundled reads the same as an invented one, a documented
+                # limitation (`docs/engine-coverage.md`), not a silent
+                # acceptance of whatever string was offered.
+                raise ValueError(
+                    f"{decision.prompt}: {value!r} is not a card name this engine "
+                    f"recognises (CR 201.4)"
                 )
             return value
 
@@ -13701,6 +13736,46 @@ class Game(EngineModel):
         if paid > 0:
             self.lose_life(player, paid)
         return paid
+
+    def choose_an_amount(
+        self,
+        player: Player | str,
+        ceiling: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+        prompt: str = "choose an amount",
+    ) -> int:
+        """ "Put up to N `<kind>` counters on `<this>`" (Clockwork Steed) and
+        any other resolution-time "choose an amount from 0 up to `ceiling`"
+        with no cost or payment attached (CR 608.2d) - `pay_any_amount_of_
+        life`/`pay_any_amount_of_energy`'s own shape, generalised past
+        paying something: a real choice from 0 up to `ceiling`, never
+        defaulted upward for an unscripted answer, since nothing here makes
+        choosing fewer worse than choosing the maximum (unlike `_parse_
+        remove_up_to_n_counters_from_target_clause`'s own "remove up to N",
+        where fewer is never better and the effect always takes the
+        maximum without asking).
+
+        Returns whatever amount was actually chosen; unlike `pay_any_amount_
+        of_life`, nothing here spends it - callers apply the chosen amount
+        themselves, since "up to N counters" has no single universal
+        payment this method could make on a caller's behalf the way losing
+        life or removing energy counters is.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_AN_AMOUNT,
+            player=player.username,
+            prompt=prompt,
+            source=source,
+            source_id=source_id,
+            amount=max(ceiling, 0),
+        )
+        chosen = self.ask(decision)
+        assert isinstance(chosen, int)
+        return chosen
 
     def _look_at_top(self, player: Player, count: int) -> list[CardState]:
         """The top `count` cards, or as many as there are (CR 701.22a, 701.25a)."""

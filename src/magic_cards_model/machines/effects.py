@@ -282,7 +282,7 @@ from .zone_resets import (
 )
 
 if TYPE_CHECKING:
-    from ..models.game import Game, StackObject
+    from ..models.game import CastRecord, Game, StackObject
     from .layers import Modification
 
 Effect = Callable[["Game", CardState], None]
@@ -712,14 +712,59 @@ _CAST_TRIGGER_MANA_SPENT_WHERE_X_RE = re.compile(
 )
 
 
-def _cast_trigger_mana_spent_x_value(game: "Game", ability: AbilityOnStack) -> int | None:
-    """The mana spent (CR 601.2h) casting the spell that triggered `ability`,
-    or `None` when there is no cast-trigger event or no record of it."""
+def _cast_trigger_record(game: "Game", ability: AbilityOnStack) -> "CastRecord | None":
+    """The `CastRecord` of the spell that triggered `ability` via a
+    cast-trigger event (CR 601.2i), or `None` when there is no cast-trigger
+    event or no record of it.
+
+    The cast trigger sits *above* the spell that made it (CR 603.3), so it
+    can still be waiting to resolve after that spell was countered in
+    response - and the Oracle rulings for every card built on this shape
+    (Hydroid Krasis, Genesis Hydra, Old Stickfingers, Geometer's Arthropod)
+    agree the trigger still resolves with the cast X even then. `Game.find_
+    by_id` still finds the same card object once countered - CR 400.7's "new
+    object" is about the permanent that would have entered, not the id this
+    engine mints - but `Game.cast_record_of` is keyed by the object's
+    *current* `zone_change_stamp`, which a counter's own zone change (CR
+    701.6a: to the graveyard) has already moved past, and `Game.counter`
+    (deliberately, per its own docstring) calls `forget_cast_record` right
+    after, which drops the stale stack-side entry entirely so a later
+    intervening *if* fails closed rather than misreading it.
+
+    So this reads it the same way `Game.copy_spell_as_last_known` already
+    does for CR 707.10's "copy that spell" naming a spell that may have left
+    the stack: still on the stack, `cast_record_of` answers directly; gone,
+    `CardState.last_known_spell.cast_record` is the copy `forget_cast_record`
+    preserved there *before* dropping the live one (CR 608.2h). `event.
+    subject_stamp` - the stack-side stamp `Game._put_on_stack` captured once,
+    at the `CAST_SPELL` event itself - is the last resort, for a spell this
+    engine somehow never gave a `last_known_spell` snapshot (a copy, CR
+    707.10a, never had one to begin with) or one this event's own stamp does
+    not match (a same-named recast in between)."""
+    from ..models.game import CastRecord
+
     event = ability.event
     if event is None or event.event is not TriggerEvent.CAST_SPELL or event.subject_id is None:
         return None
     spell = game.find_by_id(event.subject_id)
-    record = game.cast_record_of(spell) if spell is not None else None
+    if not isinstance(spell, CardState):
+        return None
+    if spell in game.stack:
+        return game.cast_record_of(spell)
+    last_known = spell.last_known_spell
+    if last_known is not None:
+        if last_known.cast_record is not None:
+            return CastRecord.model_validate(last_known.cast_record)
+        return game.cast_record_as_last_known(last_known.stamp)
+    if event.subject_stamp is not None:
+        return game.cast_record_as_last_known(event.subject_stamp)
+    return None
+
+
+def _cast_trigger_mana_spent_x_value(game: "Game", ability: AbilityOnStack) -> int | None:
+    """The mana spent (CR 601.2h) casting the spell that triggered `ability`,
+    or `None` when there is no cast-trigger event or no record of it."""
+    record = _cast_trigger_record(game, ability)
     return None if record is None else record.total_mana_spent
 
 
@@ -729,15 +774,11 @@ def _cast_trigger_x_value(game: "Game", ability: AbilityOnStack) -> int | None:
     cast record of it - `_cast_trigger_mana_spent_x_value`'s own twin, for a
     "When you cast this spell, ... X ..." clause whose X is the just-
     announced value on the spell itself (Genesis Hydra, Old Stickfingers)
-    rather than a "where X is <expr>" self-defined one (CR 107.3f), which
+    rather than a "where X is <expr>" self-defined one (CR 107.3c), which
     `amount_expression` already reads for those. A triggered ability
     announces no X of its own (`AbilityOnStack.x_value`'s docstring), so this
     is never read off `ability` itself."""
-    event = ability.event
-    if event is None or event.event is not TriggerEvent.CAST_SPELL or event.subject_id is None:
-        return None
-    spell = game.find_by_id(event.subject_id)
-    record = game.cast_record_of(spell) if spell is not None else None
+    record = _cast_trigger_record(game, ability)
     return None if record is None else record.x_value
 
 
@@ -5826,8 +5867,30 @@ def damage_each_player_spell(amount: int) -> Effect:
 #: to that player equal to the number of Swamps they control", where "they"
 #: is that player too, so the count is read off their board, not the
 #: controller's.
+#: `[^.]*` rather than a bare `.*`: this reader is tried against the *whole*
+#: remaining effect text at several call sites (`_ability_effect_or_notice`,
+#: `_spell_effect_or_notice`), not a pre-split single clause, and a bare
+#: `.*` - greedy but not `DOTALL`, so it still crosses every ". " sentence
+#: boundary in a single-line string - swallowed every earlier sentence of a
+#: longer paragraph right along with its own subject clause. Vexing
+#: Arcanix's whole `{3}, {T}` ability ("Target player chooses a card name,
+#: then reveals the top card of their library. If that card has the chosen
+#: name, ... Otherwise, they put it into their graveyard and this artifact
+#: deals 2 damage to them.") is the reported shape: `_parse_damage_that_
+#: player_clause` on its own still matches the whole paragraph and returns a
+#: closure that only deals the trailing 2 damage, discarding the naming
+#: choice, the reveal, and the hand branch outright - masked in the actual
+#: dispatch chain only because `_parse_target_player_name_reveal_branch_
+#: clause` is tried first and wins, not because this reader was safe. `[^.]*`
+#: still reads every legitimate one-sentence subject clause this reader
+#: already handled (Roiling Vortex's "this enchantment", Tetsuko Umezawa's
+#: "Tetsuko Umezawa", Karma's identical single-sentence shape) - none of them
+#: has an internal period - so nothing that used to match here stops
+#: matching; only a match that had to cross a full stop to get there does,
+#: and it now correctly fails through to the per-clause split instead.
 _DAMAGE_THAT_PLAYER_RE = re.compile(
-    rf".*\bdeals? (?:(?P<n>{COUNT}) )?damage to (?:that player|them|that creature'?s controller)"
+    rf"^[^.]*\bdeals? (?:(?P<n>{COUNT}) )?damage to "
+    r"(?:that player|them|that creature'?s controller)"
     r"(?: equal to (?P<equal>[^.]+))?\.?$",
     re.IGNORECASE,
 )
@@ -15807,11 +15870,15 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
 #: is this reader's only in-format proof; the generality is in the grammar
 #: itself (any counter kind, any cap) rather than a second pool card.
 #:
-#: "Up to N" (CR 608.2d) always permits choosing fewer, including none, and
-#: nothing on the card ever makes fewer counters better - the same "always
-#: take the maximum" reading `_parse_remove_up_to_n_counters_from_target_
-#: clause` already takes for "remove up to N counters", capped a second time
-#: by the printed total ceiling, whichever is smaller.
+#: "Up to N" (CR 608.2d) always permits choosing fewer, including none - the
+#: controller's own real choice, per Clockwork Steed's own Scryfall ruling
+#: (2008-10-01): "When Clockwork Steed's last ability resolves, you can
+#: choose to put fewer than X +1/+0 counters on it." Asked through `Game.
+#: choose_an_amount` rather than defaulted to the ceiling the way `_parse_
+#: remove_up_to_n_counters_from_target_clause`'s own "remove up to N
+#: counters" always takes the maximum - fewer counters removed is never
+#: better than more, but fewer counters *added* can matter (a threshold the
+#: controller does not want crossed yet), so this is not that shape's twin.
 #: Any "+X/+Y"/"-X/-Y"-shaped counter kind (CR 122.1a's own open-ended
 #: numbers, never just the ±1/±1 pair `_COUNTER_ON_SELF_RE`'s own `kind`
 #: group is fitted to) or a plain named kind ("charge").
@@ -15839,13 +15906,23 @@ def _parse_put_up_to_n_counters_on_self_capped_clause(text: str) -> AbilityEffec
     kind = _counter_kind(match.group("kind"))
     if kind != _counter_kind(match.group("kind2")):
         return None  # the two sentences name different counter kinds
+    kind_word = match.group("kind")
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         room = max(cap - source.counter_count(kind), 0)
-        amount = min(limit, room)
+        ceiling = min(limit, room)
+        if ceiling <= 0:
+            return
+        amount = game.choose_an_amount(
+            game.controller_of(ability),
+            ceiling,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            prompt=f"choose how many {kind_word} counters to put on {source.name}",
+        )
         if amount > 0:
             game.add_counters(source, kind, amount)
 
@@ -28027,9 +28104,24 @@ def _parse_attach_self_then_conditional_rider_clause(text: str) -> AbilityEffect
     )
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        target = _attach_self_to_announced_target(game, ability)
+        # CR 608.2b: the target is the one this ability already announced
+        # (CR 603.3d), and it stays "that creature" for the rider below even
+        # when the attach itself cannot happen - Hidden Blade destroyed in
+        # response to its own ETB trigger, before the trigger resolves,
+        # still leaves a legal target creature for "If that creature is an
+        # Assassin, it gains deathtouch" to check (CR 608.2c: the attach
+        # failing is not the same as the target becoming illegal). Resolving
+        # the target here, rather than only through `_attach_self_to_
+        # announced_target`'s own loop (which returns `None` outright once
+        # `ability.source(game)` is gone), is what keeps the two questions -
+        # "is there still a legal target" and "did the attach happen" -
+        # separate instead of collapsing the second into the first.
+        target = next((t for t in game.resolve_targets(ability) if isinstance(t, CardState)), None)
         if target is None:
             return
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            attach_permanent(game, source, target)
         controller = game.controller_of(ability).username
         holds = game.condition_holds(controller, condition_text, target)
         if holds is None:
@@ -29637,7 +29729,7 @@ def _parse_cast_trigger_look_top_x_take_one_clause(effect_text: str) -> AbilityE
 #: rest on the bottom of your library in a random order.]" - Genesis Hydra's
 #: own cast trigger (X is CR 107.3a's announced value on the spell itself,
 #: `_cast_trigger_x_value`) and Hatchery Spider's Undergrowth twin (X is CR
-#: 107.3f's self-defined "the number of creature cards in your graveyard",
+#: 107.3c's self-defined "the number of creature cards in your graveyard",
 #: read the same `amount_expression` way `_LOOK_TOP_X_PUT_PERMANENTS_RE`
 #: already reads a self-defined X for its own "look at"/"any number of"
 #: cousin of this shape). CR 701.20a's "reveal" is never CR 701.20e's "look
@@ -29664,9 +29756,15 @@ def _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(
     never `_LOOK_TOP_X_PUT_PERMANENTS_RE`'s "any number of" - the established
     `Game.may` + mandatory-single-pick idiom `_parse_mill_then_may_put_on_
     top_clause` already uses for exactly this "you may put A card" phrasing.
-    X at 0 or less (CR 107.3a's caster announced none, CR 107.3f's
+    X at 0 or less (CR 107.3a's caster announced none, CR 107.3c's
     expression evaluates to nothing, or there is no cast-trigger event at
-    all) reveals nothing, the same as any other "top N" reader at N=0.
+    all) reveals nothing, the same as any other "top N" reader at N=0 - but
+    "then shuffle the rest into your library" still runs even then (Genesis
+    Hydra's own Oracle ruling: the library is shuffled even when the rest is
+    zero cards - CR 701.24d, "shuffle a set of objects into a library ...
+    even if there are no objects in that set"), so this never skips straight
+    past the tail the way the sibling "put the rest on the bottom" branch
+    harmlessly could.
     """
     whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
     match = _CAST_TRIGGER_REVEAL_TOP_X_PUT_ONE_PERMANENT_RE.fullmatch(whole)
@@ -29686,11 +29784,8 @@ def _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(
             x = amount_reader(game, ability.controller, ability.source(game), 0)
         else:
             x = _cast_trigger_x_value(game, ability) or 0
-        if x <= 0:
-            return
-        revealed = list(controller.library[:x])
-        if not revealed:
-            return
+        x = max(x, 0)
+        revealed = list(controller.library[:x]) if x > 0 else []
         for state in revealed:
             game.reveal(state, source=ability.source_name)
         candidates = [
@@ -29720,6 +29815,10 @@ def _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(
             game.put_onto_battlefield(chosen, controller.username)
         rest = [state for state in revealed if state is not chosen and state.zone is Zone.LIBRARY]
         if shuffle_tail:
+            # Oracle ruling (Genesis Hydra): the library is still shuffled
+            # even when X is 0 or the library was already empty, so "the
+            # rest" is zero cards - CR 701.24d's shuffle-of-an-empty-set
+            # still counts, not gated on there being anything to reveal first.
             game.shuffle_library(controller.username)
         else:
             _bottom_in_random_order(game, controller, rest)
@@ -29888,14 +29987,7 @@ def _parse_half_x_life_and_draw_half_x_cards_clause(effect_text: str) -> Ability
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         controller = game.controller_of(ability)
         if is_x:
-            event = ability.event
-            spell = (
-                game.find_by_id(event.subject_id)
-                if event is not None and event.subject_id is not None
-                else None
-            )
-            record = game.cast_record_of(spell) if spell is not None else None
-            amount = record.x_value if record is not None else 0
+            amount = _cast_trigger_x_value(game, ability) or 0
         else:
             source = ability.source_or_last_known(game)
             assert magnitude is not None
@@ -58020,7 +58112,7 @@ def _parse_surgical_extraction_clause(text: str, *, for_spell: bool) -> Targeted
 
 
 #: --- "Chooses a card name, then reveals the top card ... If that card has
-#: the chosen name, ..." (CR 608.2c, CR 701.20a, CR 201.4a) ---------------
+#: the chosen name, ..." (CR 608.2c, CR 701.20a, CR 201.4, CR 201.1) -------
 #:
 #: The shared core Vexing Arcanix and Conundrum Sphinx both print: ask
 #: someone to name a card, reveal a library's own top card, and branch on
@@ -58042,9 +58134,11 @@ def _ask_name_reveal_top_and_branch(
     """Ask `chooser` to name a card (CR 601.2c's own kind of resolution-time
     choice, not tied to any `CardState.choice`, since nothing here re-reads
     "the chosen name" later the way a static CR 614.1c "as this enters,
-    choose..." grant does), reveal `revealer`'s own top library card
-    (CR 701.20a), and run `on_match` when its printed name equals what was
-    chosen (CR 201.4a) or `on_miss` otherwise.
+    choose..." grant does; CR 201.4 makes the chosen name a real card's,
+    checked by `Game.ask` itself against `data.printing_pool`), reveal
+    `revealer`'s own top library card (CR 701.20a), and run `on_match` when
+    its printed name (CR 201.1) equals what was chosen or `on_miss`
+    otherwise.
 
     An empty library has no top card to reveal, so nothing happens at all
     (CR 609.3, CR 101.3) - not even the naming question, which nothing could
@@ -58059,6 +58153,7 @@ def _ask_name_reveal_top_and_branch(
             prompt="choose a card name",
             source=source,
             source_id=source_id,
+            quality=ChoiceKind.CARD_NAME.value,
         )
     )
     assert isinstance(name, str)
@@ -58141,50 +58236,81 @@ def _parse_target_player_name_reveal_branch_clause(text: str) -> AbilityEffect |
 #: "Each player chooses a card name. Then each player reveals the top card
 #: of their library. If the card a player revealed has the name they chose,
 #: that player puts it into their hand. If it doesn't, that player puts it
-#: on the bottom of their library." - Conundrum Sphinx's own attack trigger
-#: (the "Whenever this creature attacks" condition is a plain, already-read
-#: `TriggerEvent.ATTACKS`; only this effect sentence reaches this reader).
-#: The identical `_ask_name_reveal_top_and_branch` core as Vexing Arcanix's
-#: own reader, run once per player instead of once for a single target -
-#: CR 101.4's APNAP order for the naming choices (`_players_in_apnap_order`,
-#: already shared with every other simultaneous-choice reader in this
-#: module), each player naming and revealing only their own library, never
-#: another's (CR 400.7's "a player" here is each player in turn, not a
-#: single target the way Vexing Arcanix's "that player" is).
+#: on the bottom of their library[./ into their graveyard.]" - Conundrum
+#: Sphinx's own attack trigger (the "Whenever this creature attacks"
+#: condition is a plain, already-read `TriggerEvent.ATTACKS`; only this
+#: effect sentence reaches this reader). The identical `_ask_name_reveal_
+#: top_and_branch` core as Vexing Arcanix's own reader, run once per player
+#: instead of once for a single target - CR 101.4's APNAP order for the
+#: naming choices (`_players_in_apnap_order`, already shared with every
+#: other simultaneous-choice reader in this module), each player naming and
+#: revealing only their own library, never another's (CR 400.7's "a player"
+#: here is each player in turn, not a single target the way Vexing
+#: Arcanix's "that player" is).
+#:
+#: The miss branch is read generically rather than pinned to Conundrum
+#: Sphinx's own literal "puts it on the bottom of their library" - Vexing
+#: Arcanix's identical shape prints "puts it into their graveyard" for the
+#: same miss instead, so a card sharing this exact "each player" template
+#: with that consequence reads for free, proved directly (`test_choose_
+#: name_reveal_top_and_branch.py`'s own generalises-off-a-differently-
+#: worded-variant test) - Conundrum Sphinx and Petra Sphinx are this
+#: template's only two known printings and neither one uses it, but the
+#: reader is not fitted to either one's exact sentence.
 _EACH_PLAYER_NAME_REVEAL_BRANCH_RE = re.compile(
     r"^each player chooses a card name\.\s*"
     r"then each player reveals the top card of their library\.\s*"
     r"if the card a player revealed has the name they chose, that player "
     r"puts it into their hand\.\s*"
-    r"if it doesn'?t, that player puts it on the bottom of their "
-    r"library\.?$",
+    r"if it doesn'?t, that player puts it (?P<miss>on the bottom of their "
+    r"library|into their graveyard)\.?$",
     re.IGNORECASE,
 )
 
 
 def _parse_each_player_name_reveal_branch_clause(text: str) -> AbilityEffect | None:
-    """`_EACH_PLAYER_NAME_REVEAL_BRANCH_RE`'s shape; see the banner above."""
-    if _EACH_PLAYER_NAME_REVEAL_BRANCH_RE.fullmatch(text.strip()) is None:
+    """`_EACH_PLAYER_NAME_REVEAL_BRANCH_RE`'s shape; see the banner above.
+
+    CR 101.4's APNAP order governs the *naming*, and only the naming: "each
+    player chooses a card name" is one simultaneous action every player
+    takes in turn order before anyone's own library is shown (the identical
+    reading `_players_in_apnap_order`'s other callers already give a
+    simultaneous choice), so this asks every player for their name first,
+    in a whole first pass, and only then reveals and branches for each of
+    them in a second pass - never name-reveal-branch one player at a time,
+    which would let a later player's own choice follow an earlier player's
+    already-revealed card.
+    """
+    match = _EACH_PLAYER_NAME_REVEAL_BRANCH_RE.fullmatch(text.strip())
+    if match is None:
         return None
+    miss_to_graveyard = match.group("miss").lower().startswith("into their graveyard")
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        for player in _players_in_apnap_order(game):
-
-            def on_match(top: CardState, player: Player = player) -> None:
-                player.move(top, Zone.HAND)
-
-            def on_miss(top: CardState, player: Player = player) -> None:
-                player.move(top, Zone.LIBRARY)
-
-            _ask_name_reveal_top_and_branch(
-                game,
-                player,
-                chooser=player,
-                source=ability.source_name,
-                source_id=source_id_of(ability),
-                on_match=on_match,
-                on_miss=on_miss,
+        players = [player for player in _players_in_apnap_order(game) if player.library]
+        chosen_names: dict[str, str] = {}
+        for player in players:
+            name = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=player.username,
+                    prompt="choose a card name",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    quality=ChoiceKind.CARD_NAME.value,
+                )
             )
+            assert isinstance(name, str)
+            chosen_names[player.username] = name
+        for player in players:
+            top = player.library[0]
+            game.reveal(top, source=ability.source_name)
+            if top.name == chosen_names[player.username]:
+                player.move(top, Zone.HAND)
+            elif miss_to_graveyard:
+                game.put_into_graveyard(top)
+            else:
+                player.move(top, Zone.LIBRARY)
 
     return effect
 
