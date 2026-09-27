@@ -6732,3 +6732,23 @@ CR numbers verified this session with `mise run rules:find`: **614.1c**, **614.1
 **614.12**, **614.12a**, **305.6**, **305.7**, **205.4c**, **102.1**, **500.7**,
 **601.2f**, **601.2i**, **601.2b**, **118.7**, **118.7a**, **715.2**, **205.3m**,
 **702.9b**, **107.1b**.
+
+**Follow-up (same task, a scope-audit finding, not a static):** Conduit of
+Ruin's own cast trigger - "you may search your library for a colorless
+creature card with mana value 7 or greater, reveal it, then shuffle and put
+that card on top" - was `silent`, not `handled`: its Oracle text is a mana-
+value **floor** ("or greater"), and both search-and-put readers
+(`effects._SEARCH_AND_PUT_RE`'s "into your hand" family and
+`effects._SEARCH_REVEAL_SHUFFLE_TOP_RE`'s "shuffle and put on top" family,
+via the `_search_descriptions`/`_bounded_quality_matcher`/`_quality_description`
+pipeline they share) only ever read a ceiling ("or less"), so the clause
+failed to match at all and fell through to no effect and no notice - the
+"unrelated silent clause" MEMORY.md never mentioned when Conduit of Ruin was
+substituted in as this task's proof card.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "search your library for a `<quality>` card with mana value `<N>` or greater, ..." (CR 202.3's number, a floor instead of a ceiling) across both search-and-put destinations | `effects._bounded_quality_matcher`/`_quality_description`/`_search_descriptions` widened with an `mv_cmp` direction (`"less"`/`"greater"`), `_SEARCH_AND_PUT_RE` and `_SEARCH_REVEAL_SHUFFLE_TOP_RE` each gain an `mv_cmp` capture group | Conduit of Ruin | Fierce Empath (the *other* search destination - "reveal it, put it into your hand, then shuffle" - carrying the identical floor, Standard/Pioneer/Modern-legal, not in this task's own card list) | `test_search_mana_value_or_greater.py` |
+
+CR number verified this session with `mise run rules:find` for this
+follow-up: **202.3** (mana value is the number compared either direction).

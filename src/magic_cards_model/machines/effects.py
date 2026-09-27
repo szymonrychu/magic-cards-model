@@ -6459,7 +6459,11 @@ _SEARCH_AND_PUT_RE = re.compile(
     # qualifies".
     r"(?:(?P<quality>.+?) )?card(?:s)?"
     r"(?P<basic_land_type> with a basic land type)?"
-    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    # "with mana value N or less" (Ranger-Captain of Eos's ceiling) or "with
+    # mana value N or greater" (Fierce Empath's/Treasure Mage's floor) - CR
+    # 202.3's number, bounded either direction the same way `_HAND_EXILE_RE`'s
+    # imprint quality already is (`_hand_exile_mv_matcher`).
+    r"(?: with mana value (?P<max_mv>\d+) or (?P<mv_cmp>less|greater))?"
     # "with mana cost {0} or {1}" (Urza's Saga chapter III) names printed
     # mana costs, not mana values: CR 202.1 makes a mana cost the mana
     # symbols, so {X} (mana value 0 in a library, CR 202.3e) is neither, and
@@ -6795,6 +6799,7 @@ def _quality_description(
     basic_land_type: bool = False,
     mana_costs: str | None = None,
     having: str | None = None,
+    mv_cmp: str = "less",
 ) -> str:
     """One card description for a `Game.may`/`Game.ask` prompt, article and
     all - "a basic land card", "a creature card with mana value 1 or less".
@@ -6803,12 +6808,17 @@ def _quality_description(
     appending "card" after the bound produced "a creature with mana value 1 or
     less card" (battle report B5-07). `None` is an unrestricted search ("a
     card", CR 701.23d), which names no quality word at all.
+
+    `mv_cmp` names which side of the bound the card printed - "less" (Ranger-
+    Captain of Eos's ceiling, the long-standing default) or "greater" (a
+    floor, Conduit of Ruin's/Fierce Empath's own "with mana value N or
+    greater" - CR 202.3's number compared the other direction).
     """
     noun = "card" if quality is None else f"{quality} card"
     if basic_land_type:
         noun += " with a basic land type"
     if max_mv is not None:
-        noun += f" with mana value {max_mv} or less"
+        noun += f" with mana value {max_mv} or {mv_cmp}"
     if mana_costs is not None:
         noun += f" with mana cost {mana_costs}"
     if having is not None:
@@ -6823,7 +6833,7 @@ def _quality_description(
 #: with this.
 _SEARCH_DESCRIPTION_RE = re.compile(
     r"(?:(?P<quality>.+?) )?card(?P<basic_land_type> with a basic land type)?"
-    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    r"(?: with mana value (?P<max_mv>\d+) or (?P<mv_cmp>less|greater))?"
     r"(?: with mana cost (?P<mana_costs>" + _MANA_COST_LIST + r"))?"
     r"(?: with (?P<having>" + _HAVING_PATTERN + r"))?",
     re.IGNORECASE,
@@ -6927,7 +6937,13 @@ def _search_descriptions(
     if groups.get("basic_land_type"):
         whole += " with a basic land type"
     if match.group("max_mv") is not None:
-        whole += f" with mana value {match.group('max_mv')} or less"
+        # `mv_cmp` is only captured by the regexes widened for a mana-value
+        # *floor* (Conduit of Ruin's/Fierce Empath's "or greater") - every
+        # other search regex still names only `max_mv` with a bare "or less"
+        # baked into its own pattern, so `groups.get` (never `match.group`,
+        # which raises for a name absent from the pattern that matched)
+        # defaults those to the ceiling reading they have always had.
+        whole += f" with mana value {match.group('max_mv')} or {groups.get('mv_cmp') or 'less'}"
     if groups.get("mana_costs"):
         whole += f" with mana cost {groups['mana_costs']}"
     if groups.get("having"):
@@ -6944,7 +6960,8 @@ def _search_descriptions(
         if half_quality is not None and not _card_description_is_readable(half_quality):
             return None
         max_mv = piece.group("max_mv")
-        matcher = _bounded_quality_matcher(half_quality, max_mv)
+        mv_cmp = piece.group("mv_cmp") or "less"
+        matcher = _bounded_quality_matcher(half_quality, max_mv, mv_cmp)
         with_basic_land_type = bool(piece.group("basic_land_type"))
         if with_basic_land_type:
             # CR 305.6/305.8: a *subtype* question, not the "basic" supertype -
@@ -6969,6 +6986,7 @@ def _search_descriptions(
                 basic_land_type=with_basic_land_type,
                 mana_costs=mana_costs or None,
                 having=having or None,
+                mv_cmp=mv_cmp,
             )
         )
     if len(matchers) == 1:
@@ -7049,10 +7067,12 @@ def _unreadable_search_count(text: str) -> str | None:
 
 
 def _bounded_quality_matcher(
-    quality: str | None, max_mv: str | None
+    quality: str | None, max_mv: str | None, mv_cmp: str = "less"
 ) -> Callable[[CardState], bool]:
-    """`_quality_matcher`, ANDed with a mana value ceiling when the sentence
-    names one - Ranger-Captain of Eos's "with mana value 1 or less".
+    """`_quality_matcher`, ANDed with a mana value bound when the sentence
+    names one - Ranger-Captain of Eos's ceiling ("with mana value 1 or less")
+    or Conduit of Ruin's/Fierce Empath's floor ("with mana value 7/6 or
+    greater").
 
     Mana value is CR 202.3's number, `Card.cmc` here. An **X** in this spot
     (Green Sun's Zenith, Fiend Artisan) never reaches this function at all:
@@ -7067,12 +7087,18 @@ def _bounded_quality_matcher(
     base = (lambda _state: True) if quality is None else _quality_matcher(quality)
     if max_mv is None:
         return base
-    ceiling = int(max_mv)
+    bound = int(max_mv)
+    if mv_cmp == "greater":
 
-    def matches(state: CardState) -> bool:
-        return base(state) and state.mana_value <= ceiling
+        def matches_floor(state: CardState) -> bool:
+            return base(state) and state.mana_value >= bound
 
-    return matches
+        return matches_floor
+
+    def matches_ceiling(state: CardState) -> bool:
+        return base(state) and state.mana_value <= bound
+
+    return matches_ceiling
 
 
 def _read_search_count(match: re.Match[str]) -> Callable[["Game", str], int | None] | None:
@@ -7653,7 +7679,9 @@ _SEARCH_REVEAL_SHUFFLE_TOP_RE = re.compile(
     rf"(?P<upto>up to )?(?:(?P<n>{COUNT})|(?P<that_many>that many)) "
     r"(?:(?P<quality>.+?) )?card(?:s)?"
     r"(?P<basic_land_type> with a basic land type)?"
-    r"(?: with mana value (?P<max_mv>\d+) or less)?"
+    # Conduit of Ruin's own floor, "with mana value 7 or greater" - the same
+    # bidirectional bound `_SEARCH_AND_PUT_RE` reads, widened here too.
+    r"(?: with mana value (?P<max_mv>\d+) or (?P<mv_cmp>less|greater))?"
     r"(?P<reveal>, reveal (?:it|them|that card|those cards))?, then shuffle"
     r"(?: (?:your|their) library)? "
     r"and put (?:it|them|that card|those cards) on top(?: of (?:your|their) library)?\.?$",
