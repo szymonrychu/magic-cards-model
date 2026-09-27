@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn", "creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
+    "fields_changed": ["cards_drawn_this_turn", "creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "nontoken_creatures_died_under_control_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Baron Helmut Zemo"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Doomsday Excruciator", "Divinity of Pride", "Pox Plague"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Doomsday Excruciator", "Demigod of Revenge", "Divinity of Pride"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -35,15 +35,15 @@
   "card": "Baron Helmut Zemo",
   "delta": {
     "created": {
+      "Demigod of Revenge@alice+1": {
+        "counters": {},
+        "zone": "stack"
+      },
       "Divinity of Pride@alice+1": {
         "counters": {},
         "zone": "stack"
       },
       "Doomsday Excruciator@alice+1": {
-        "counters": {},
-        "zone": "stack"
-      },
-      "Pox Plague@alice+1": {
         "counters": {},
         "zone": "stack"
       }
@@ -60,20 +60,20 @@
       },
       {
         "amount": 0,
+        "cards": ["Demigod of Revenge@alice+1"],
+        "kind": "may",
+        "player": "alice",
+        "players": [],
+        "prompt": "cast the copy of Demigod of Revenge without paying its mana cost",
+        "source": "Baron Helmut Zemo"
+      },
+      {
+        "amount": 0,
         "cards": ["Divinity of Pride@alice+1"],
         "kind": "may",
         "player": "alice",
         "players": [],
         "prompt": "cast the copy of Divinity of Pride without paying its mana cost",
-        "source": "Baron Helmut Zemo"
-      },
-      {
-        "amount": 0,
-        "cards": ["Pox Plague@alice+1"],
-        "kind": "may",
-        "player": "alice",
-        "players": [],
-        "prompt": "cast the copy of Pox Plague without paying its mana cost",
         "source": "Baron Helmut Zemo"
       }
     ],
@@ -81,7 +81,7 @@
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": ["Doomsday Excruciator@alice+1", "Divinity of Pride@alice+1", "Pox Plague@alice+1"]
+    "stack": ["Doomsday Excruciator@alice+1", "Demigod of Revenge@alice+1", "ability of Demigod of Revenge@alice+1: When you cast this spell, return all cards named Demigod of Revenge from your graveyard to the battlefield.", "Divinity of Pride@alice+1"]
   },
   "family": "activated",
   "format": 1,
