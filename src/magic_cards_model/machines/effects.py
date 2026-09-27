@@ -7504,6 +7504,12 @@ def _parse_search_put_battlefield_tapped_then_behold_untap_clause(
 #: Treasure token." Distinct from `_SEARCH_PUT_BATTLEFIELD_TAPPED_THEN_
 #: BEHOLD_UNTAP_RE` above, which reads the identical CR 701.4a action bundled
 #: with a search this shape has none of.
+#:
+#: No off-pool proof: Scryfall's `o:"behold" o:"if you do"` returns only
+#: Sarkhan, Theorist's Sanctum ("if you don't" - the opposite polarity), and
+#: Elven Passage, whose own "if you do" is consumed whole by that bundled
+#: search-first reader above, never reaching this one. See MEMORY.md's dated
+#: line.
 _OPTIONAL_BEHOLD_THEN_IF_YOU_DO_RE = re.compile(
     r"^you may behold an? (?P<quality>[a-z' -]+?)\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
     re.IGNORECASE | re.DOTALL,
@@ -36338,70 +36344,6 @@ def _parse_counter_unless_pays_then_condition_upgrade_pair(
     return effect
 
 
-#: Dispelling Exhale's own second sentence: "If a Dragon was beheld, counter
-#: that spell unless its controller pays {4} instead." Unlike Stubborn
-#: Denial's own "instead" (`_COUNTER_INSTEAD_IF_POWER_RE`), which *replaces*
-#: CR 118.12a's payment with an unconditional counter, this "instead"
-#: replaces only the *amount* - the counter is still conditional on a
-#: payment either way, just a steeper one. The condition itself is any
-#: `Game.condition_holds` reads (CR 701.4b's own "if a `<quality>` was
-#: beheld" among them, `cast_record._beheld_for_cost`), not pinned to
-#: Dragons, so a future card pairing a different behold quality with the
-#: same amount-upgrade shape reads here too.
-_COUNTER_UNLESS_PAYS_INSTEAD_CONDITIONAL_AMOUNT_RE = re.compile(
-    r"^if (?P<condition>[^,]+), counter that spell unless its controller pays "
-    r"\{(?P<n>\d+)\} instead\.?$",
-    re.IGNORECASE,
-)
-
-
-def _parse_counter_unless_pays_then_condition_amount_upgrade_pair(
-    first: str, second: str, *, for_spell: bool
-) -> TargetedClause | None:
-    """`_COUNTER_UNLESS_PAYS_INSTEAD_CONDITIONAL_AMOUNT_RE`'s shape - see the
-    banner above. Read as a pair for the identical reason `_parse_counter_
-    unless_pays_then_condition_upgrade_pair` is: taken apart, the second
-    sentence would counter the same spell a second time, which "instead" -
-    replacing the first sentence's own outcome - never means.
-
-    The condition is checked once, as this spell resolves (CR 608.2: in the
-    order written), through `Game.condition_holds` - the same reader every
-    other printed condition in this module goes through - against the spell
-    itself as `source` (CR 701.4b's own quality was met by *this spell's*
-    cast, not by its target's). An unreadable condition fails closed with a
-    `ConditionalClauseNotice` rather than guessing which amount to charge.
-    """
-    if not for_spell:
-        return None
-    unless = _COUNTER_UNLESS_PAYS_RE.fullmatch(first.strip())
-    upgrade = _COUNTER_UNLESS_PAYS_INSTEAD_CONDITIONAL_AMOUNT_RE.fullmatch(second.strip())
-    if unless is None or upgrade is None:
-        return None
-    base_amount = int(unless.group("n"))
-    upgraded_amount = int(upgrade.group("n"))
-    condition_text = upgrade.group("condition").strip()
-    if not _effect_condition_is_readable(condition_text):
-        return None
-    base_effect = _counter_unless_pays_effect(base_amount)
-    upgraded_effect = _counter_unless_pays_effect(upgraded_amount)
-
-    def effect(game: "Game", spell: CardState) -> None:
-        controller = game.controller_of(spell)
-        held = game.condition_holds(controller.username, condition_text, spell)
-        if held is None:
-            notice = ConditionalClauseNotice(
-                source_id=source_id_of(spell),
-                source_name=spell.name,
-                text=second,
-            )
-            if notice not in game.conditional_clause_notices:
-                game.conditional_clause_notices.append(notice)
-            held = False
-        (upgraded_effect if held else base_effect)(game, spell)
-
-    return effect
-
-
 #: Disrupting Shoal: "Counter target spell if its mana value is X." The "if"
 #: is a condition on the counter itself rather than a target restriction
 #: (CR 601.2c would have to read it at announcement for that, and the card
@@ -57965,13 +57907,6 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_counter_unless_pays_then_condition_upgrade_pair(
-                clauses[index], clauses[index + 1], for_spell=for_spell
-            )
-            if paired is not None:
-                parsed.append(paired)
-                index += 2
-                continue
-            paired = _parse_counter_unless_pays_then_condition_amount_upgrade_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:

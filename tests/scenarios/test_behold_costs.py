@@ -285,8 +285,11 @@ def test_champions_of_the_shoal_taps_and_stuns_on_enter():
 # linked exile (the five Champions' own "and exile it" tail above): the
 # beheld object stays exactly where it was. `Casting.behold_for_cost` is
 # the new method; `cast_record._beheld_for_cost` is what the linked "if a
-# Dragon was beheld" (CR 701.4b) reads back, through the amount-upgrade
-# pair `_parse_counter_unless_pays_then_condition_amount_upgrade_pair`.
+# Dragon was beheld" (CR 701.4b) reads back - through the pre-existing,
+# general `_parse_condition_instead_clause` (CR 608.2c's own "if
+# <condition>, <alternative> instead"), which already wins this exact
+# two-sentence shape at `_spell_effect_or_notice`'s own top level before a
+# per-clause pair reader is ever tried; see MEMORY.md's dated line.
 # --------------------------------------------------------------------------
 
 
@@ -385,6 +388,79 @@ def test_dispelling_exhale_forces_the_upgraded_payment_when_a_dragon_was_beheld(
     scenario.resolve_top()
 
     assert bolt.zone is Zone.GRAVEYARD, "bob declined the steeper {4} payment too"
+
+
+# --------------------------------------------------------------------------
+# Dazzling Denial: "Counter target spell unless its controller pays {2}. If
+# you control a Bird, counter that spell unless its controller pays {4}
+# instead." - the same amount-upgrade "if <condition>, <alternative>
+# instead" grammar as Dispelling Exhale, resolved by the identical
+# pre-existing `_parse_condition_instead_clause` (CR 608.2c), proven
+# off-pool on a second, differently-conditioned printing (CR 701.4b's "if a
+# Dragon was beheld" swapped for a plain "if you control a `<quality>`"
+# board condition already read generally by `Game.condition_holds`). Legal
+# in Modern, Pioneer and Standard; not in the deck pool.
+# --------------------------------------------------------------------------
+
+
+def test_dazzling_denial_counters_for_two_with_no_bird_controlled():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Dazzling Denial"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    casting = scenario.cast("Dazzling Denial", username="alice")
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(False, username="bob")
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD, "no Bird controlled: bob declined the base {2}"
+
+
+def test_dazzling_denial_forces_the_upgraded_payment_while_a_bird_is_controlled():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player(
+            "alice",
+            hand=["Dazzling Denial"],
+            battlefield=["Island", "Island", "Birds of Paradise"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    casting = scenario.cast("Dazzling Denial", username="alice")
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(False, username="bob")
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD, "controlling a Bird: bob declined the upgraded {4} too"
 
 
 # --------------------------------------------------------------------------
