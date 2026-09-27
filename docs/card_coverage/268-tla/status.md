@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 14.1% |
-| Works (untested) | 124 | 44.8% |
-| Partial (unaudited) | 22 | 7.9% |
-| Not working | 92 | 33.2% |
+| Tested | 42 | 15.2% |
+| Works (untested) | 126 | 45.5% |
+| Partial (unaudited) | 19 | 6.9% |
+| Not working | 90 | 32.5% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Obsessive Pursuit | silent | Whenever you attack, put X +1/+1 counters on target attacking creature, where X is the number of permanents you've sacrificed this turn. If X is three or more,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Otter-Penguin | silent | Whenever you draw your second card each turn, this creature gets +1/+2 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ozai's Cruelty | silent | Ozai's Cruelty deals 2 damage to target player. That player discards two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Path to Redemption | silent | {5}, Sacrifice this Aura: Exile enchanted creature. Create a 1/1 white Ally creature token. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Platypus-Bear | silent | As long as there is a Lesson card in your graveyard, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rabaroo Troop | silent | Landfall — Whenever a land you control enters, this creature gains flying until end of turn and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ran and Shaw | silent | When Ran and Shaw enter, if you cast them and there are three or more Dragon and/or Lesson cards in your graveyard, create a token that's a copy of Ran and Shaw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -103,7 +102,6 @@
 | Yue, the Moon Spirit | silent | Waterbend {5}, {T}: You may cast a noncreature spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zhao, the Moon Slayer | silent | As long as Zhao has a conqueror counter on him, nonbasic lands are Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Earth Rumble Wrestlers | notice | This creature gets +1/+0 and has trample as long as you control a land creature or a land entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Ember Island Production | notice | Choose one — • Create a token that's a copy of target creature you control, except it's not legendary and it's a 4/4 Hero in addition to its other types. • Crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fire Nation Cadets | notice | This creature has firebending 2 as long as there's a Lesson card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | First-Time Flyer | notice | This creature gets +1/+1 as long as there's a Lesson card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hei Bai, Spirit of Balance | notice | Whenever Hei Bai enters or attacks, you may sacrifice another creature or artifact. If you do, put two +1/+1 counters on Hei Bai. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -125,11 +123,8 @@
 | Cruel Administrator | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dragonfly Swarm | unaudited | This creature's power is equal to the number of noncreature, nonland cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Fated Firepower | unaudited | If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus an amount of damage equal to the nu | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Flopsie, Bumi's Buddy | unaudited | Each creature you control with power 4 or greater can't be blocked by more than one creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Great Divide Guide | unaudited | Each land and Ally you control has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Hakoda, Selfless Commander | unaudited | You may cast Ally spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Honest Work | unaudited | Enchanted creature loses all abilities and is a Citizen with base power and toughness 1/1 and "{T}: Add {C}" named Humble Merchant. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Iroh, Grand Lotus | unaudited | During your turn, each non-Lesson instant and sorcery card in your graveyard has flashback. The flashback cost is equal to that card's mana cost. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | June, Bounty Hunter | unaudited | June can't be blocked as long as you've drawn two or more cards this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Momo, Friendly Flier | unaudited | The first non-Lemur creature spell with flying you cast during each of your turns costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Ozai, the Phoenix King | unaudited | If you would lose unspent mana, that mana becomes red instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -186,6 +181,7 @@
 | Glider Kids | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glider Staff | handled | When this Equipment enters, airbend up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Guru Pathik | handled | When Guru Pathik enters, look at the top five cards of your library. You may reveal a Lesson, Saga, or Shrine card from among them and put it into your hand. Pu | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Hakoda, Selfless Commander | handled | You may look at the top card of your library any time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Haru, Hidden Talent | handled | Whenever another Ally you control enters, earthbend 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hermitic Herbalist | handled |  |  | Y/Y/Y | not_tested |
 | Hog-Monkey | handled | At the beginning of combat on your turn, target creature you control with a +1/+1 counter on it gains menace until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -214,6 +210,7 @@
 | Northern Air Temple | handled | When Northern Air Temple enters, each opponent loses X life and you gain X life, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Octopus Form | handled | Target creature you control gets +1/+1 and gains hexproof until end of turn. Untap it. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Omashu City | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Path to Redemption | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pillar Launch | handled | Target creature gets +2/+2 and gains reach until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pirate Peddlers | handled | Whenever you sacrifice another permanent, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pretending Poxbearers | handled | When this creature dies, create a 1/1 white Ally creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -268,7 +265,7 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>42 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -283,16 +280,19 @@
 - Combustion Technique
 - Earthbender Ascension
 - Earthen Ally
+- Ember Island Production
 - Enter the Avatar State
 - Fire Lord Azula
 - Fire Navy Trebuchet
 - Firebending Lesson
 - Firebending Student
 - Flexible Waterbender
+- Flopsie, Bumi's Buddy
 - Geyser Leaper
 - Gran-Gran
 - Invasion Tactics
 - Iroh's Demonstration
+- Iroh, Grand Lotus
 - It'll Quench Ya!
 - Kyoshi Battle Fan
 - Origin of Metalbending
@@ -319,7 +319,6 @@
 | waterbend | 4 | Benevolent River Spirit, Foggy Swamp Visions, North Pole Patrol, Ruinous Waterbending | tla |
 | ~ enters tapped unless you control a basic land. | 4 | Abandoned Air Temple, Agna Qel'a, Ba Sing Se, Realm of Koh | tla |
 | Exhaust | 3 | Invasion Submersible, Jeong Jeong, the Deserter, Mai, Jaded Edge | tla |
-| Choose one | 1 | Ember Island Production | tla |
 | Landfall | 1 | Rabaroo Troop | tla |
 | Raid | 1 | Cruel Administrator | tla |
 | affinity for allies (~ costs {M} less to cast for each ally you control.) up to two target creatures you control each deal damage equal to their power to target | 1 | Allies at Last | tla |
@@ -338,10 +337,8 @@
 | creatures you control with flying get +N/+N. | 1 | Air Nomad Legacy | tla |
 | draw a card if there's a creature or lesson card in your graveyard. | 1 | Leaves from the Vine | tla |
 | draw three cards. then discard a card unless you waterbend {M}. (while paying a waterbend cost, you can tap your artifacts and creatures to help. each one pays  | 1 | Waterbending Lesson | tla |
-| during your turn, each non-lesson instant and sorcery card in your graveyard has flashback. the flashback cost is equal to that card's mana cost. | 1 | Iroh, Grand Lotus | tla |
 | each creature with mana value N or less loses all abilities until end of turn. destroy those creatures. | 1 | Day of Black Sun | tla |
 | each creature you control gains firebending N until end of turn. (whenever it attacks, add {M}{M}{M}{M}{M}. ~ lasts until end of combat.) foretell {M}{M} (durin | 1 | Sozin's Comet | tla |
-| each creature you control with power N or greater can't be blocked by more than one creature. | 1 | Flopsie, Bumi's Buddy | tla |
 | each land and ally you control has "..." | 1 | Great Divide Guide | tla |
 | each non-human creature you control gets +N/+N for each of its creature types, to a maximum of N. | 1 | Diligent Zookeeper | tla |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Destined Confrontation | tla |
@@ -404,8 +401,6 @@
 | whenever ~ attacks, each opponent loses N life and you gain N life, where N is the number of creatures you control with +N/+N counters on them. | 1 | Dai Li Agents | tla |
 | whenever ~ becomes tapped, target player mills N cards, where N is the number of lesson cards in your graveyard. | 1 | Master Pakku | tla |
 | whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card is exiled ~, create a clue token. | 1 | Raven Eagle | tla |
-| you may cast ally spells from the top of your library. | 1 | Hakoda, Selfless Commander | tla |
-| {M}, sacrifice ~: exile enchanted creature. create a N/N white ally creature token. activate only during your turn. | 1 | Path to Redemption | tla |
 | {M}, {M}: surveil N. create a token that's a copy of ~, then sacrifice an artifact or creature. activate only as a sorcery. | 1 | Joo Dee, One of Many | tla |
 | {M}, {M}: two target creatures you control that share a creature type can't be blocked ~. | 1 | Secret Tunnel | tla |
 | {M}: add N mana of any one color, where N is the greatest number of creatures you control that have a creature type in common. | 1 | White Lotus Tile | tla |

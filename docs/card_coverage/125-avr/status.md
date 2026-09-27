@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 5.5% |
-| Works (untested) | 100 | 46.1% |
+| Works (untested) | 102 | 47.0% |
 | Partial (unaudited) | 18 | 8.3% |
-| Not working | 87 | 40.1% |
+| Not working | 85 | 39.2% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Primal Surge | silent | Exile the top card of your library. If it's a permanent card, you may put it onto the battlefield. If you do, repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Riot Ringleader | silent | Whenever this creature attacks, Human creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rite of Ruin | silent | Choose an order for artifacts, creatures, and lands. Each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Second Guess | silent | Counter target spell that's the second spell cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silverblade Paladin | silent | As long as this creature is paired with another creature, both creatures have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Somberwald Vigilante | silent | Whenever this creature becomes blocked by a creature, this creature deals 1 damage to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Gateguards | silent | As long as this creature is paired with another creature, both creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -88,7 +87,6 @@
 | Stonewright | silent | As long as Stonewright is paired with another creature, each of those creatures has "{R}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tamiyo, the Moon Sage | silent | −2: Draw a card for each tapped creature target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tandem Lookout | silent | Soulbond | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Temporal Mastery | silent | Take an extra turn after this one. Exile Temporal Mastery. Miracle {1}{U} (You may cast this card for its miracle cost when you draw it if it's the first card y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Terrifying Presence | silent | Prevent all combat damage that would be dealt by creatures other than target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tibalt, the Fiend-Blooded | silent | +1: Draw a card, then discard a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tormentor's Trident | silent | Equipped creature gets +3/+0 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -206,6 +204,7 @@
 | Scroll of Avacyn | handled | {1}, Sacrifice this artifact: Draw a card. If you control an Angel, you gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scroll of Griselbrand | handled | {1}, Sacrifice this artifact: Target opponent discards a card. If you control a Demon, that player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Searchlight Geist | handled | {3}{B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Second Guess | handled | Counter target spell that's the second spell cast this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seraph Sanctuary | handled | When this land enters, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seraph of Dawn | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Slayers' Stronghold | handled | {R}{W}, {T}: Target creature gets +2/+0 and gains vigilance and haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,6 +214,7 @@
 | Soulcage Fiend | handled | When this creature dies, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spectral Prison | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spirit Away | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Temporal Mastery | handled | Take an extra turn after this one. Exile Temporal Mastery. Miracle {1}{U} (You may cast this card for its miracle cost when you draw it if it's the first card y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thatcher Revolt | handled | Create three 1/1 red Human creature tokens with haste. Sacrifice those tokens at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thraben Valiant | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Timberland Guide | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -281,7 +281,6 @@
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M} for each other creature you control. | 1 | Fettergeist | avr |
 | choose an order for artifacts, creatures, and lands. each player sacrifices one permanent of their choice of the first type, sacrifices two of their choice of t | 1 | Rite of Ruin | avr |
 | counter target spell that targets a player. | 1 | Outwit | avr |
-| counter target spell that's the second spell cast ~. | 1 | Second Guess | avr |
 | creatures with flying can't block creatures you control. | 1 | Bower Passage | avr |
 | creatures with power less than ~ power can't block creatures you control. | 1 | Champion of Lambholt | avr |
 | creatures with power less than ~ power can't block it. | 1 | Wandering Wolf | avr |
@@ -314,7 +313,6 @@
 | return target creature card from your graveyard to the battlefield. if it's an angel, put two +N/+N counters on it. | 1 | Defy Death | avr |
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |
 | spells and abilities your opponents control can't cause you to sacrifice permanents. | 1 | Sigarda, Host of Herons | avr |
-| take an extra turn after ~. exile ~. miracle {M}{M} (you may cast ~ for its miracle cost when you draw it if it's the first card you drew ~.) | 1 | Temporal Mastery | avr |
 | target creature gains deathtouch until end of turn. regenerate it. (the next time that creature would be destroyed ~, instead tap it, remove it from combat, and | 1 | Necrobite | avr |
 | target creature gains flying until end of turn. prevent all damage that would be dealt to that creature ~. | 1 | Leap of Faith | avr |
 | target creature gets +N/+N until end of turn, where N is its power. | 1 | Rush of Blood | avr |

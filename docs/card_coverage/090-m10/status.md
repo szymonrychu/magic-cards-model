@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 9.9% |
-| Works (untested) | 62 | 55.9% |
+| Works (untested) | 63 | 56.8% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 30 | 27.0% |
+| Not working | 29 | 26.1% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Captain of the Watch | silent | Other Soldier creatures you control get +1/+1 and have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cemetery Reaper | silent | Other Zombie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Archdruid | silent | Other Elf creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Goblin Artillery | silent | {T}: This creature deals 2 damage to any target and 3 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Goblin Chieftain | silent | Other Goblin creatures you control get +1/+1 and have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harm's Way | silent | The next 2 damage that a source of your choice would deal to you and/or permanents you control this turn is dealt to any target instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hive Mind | silent | Whenever a player casts an instant or sorcery spell, each other player copies that spell. Each of those players may choose new targets for their copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -90,6 +89,7 @@
 | Gargoyle Castle | handled | {5}, {T}, Sacrifice this land: Create a 3/4 colorless Gargoyle artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glacial Fortress | handled | This land enters tapped unless you control a Plains or an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glorious Charge | handled | Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goblin Artillery | handled | {T}: This creature deals 2 damage to any target and 3 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gorgon Flail | handled | Equipped creature gets +1/+1 and has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Great Sable Stag | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -181,7 +181,6 @@
 | {M}, sacrifice ~: choose up to seven face-up exiled cards you own. exile all the cards from your library, then put the chosen cards on top of your library. | 1 | Mirror of Fate | m10 |
 | {M}: tap all untapped wolf creatures you control. each wolf tapped ~ deals damage equal to its power to target creature. that creature deals damage equal to its | 1 | Master of the Wild Hunt | m10 |
 | {M}: target creature an opponent controls attacks you ~ if able. | 1 | Alluring Siren | m10 |
-| {M}: ~ deals N damage to any target and N damage to you. | 1 | Goblin Artillery | m10 |
 | {M}{M}{M}, remove a wish counter from ~: reveal the top card of your library. you may play that card without paying its mana cost. if you don't, exile it. | 1 | Djinn of Wishes | m10 |
 | ~ can block any number of creatures. | 1 | Palace Guard | m10 |
 | ~ can't attack or block alone. | 1 | Jackal Familiar | m10 |

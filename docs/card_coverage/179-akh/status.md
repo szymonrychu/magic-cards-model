@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.2% |
-| Works (untested) | 127 | 52.7% |
-| Partial (unaudited) | 22 | 9.1% |
+| Works (untested) | 128 | 53.1% |
+| Partial (unaudited) | 21 | 8.7% |
 | Not working | 77 | 32.0% |
 
 ## Cards needing work
@@ -109,7 +109,6 @@
 | Bontu the Glorified | unaudited | Bontu can't attack or block unless a creature died under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Champion of Rhonas | unaudited | You may exert this creature as it attacks. When you do, you may put a creature card from your hand onto the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Combat Celebrant | unaudited | If this creature hasn't been exerted this turn, you may exert it as it attacks. When you do, untap all other creatures you control and after this phase, there i | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Compulsory Rest | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Devoted Crop-Mate | unaudited | You may exert this creature as it attacks. When you do, return target creature card with mana value 2 or less from your graveyard to the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Embalmer's Tools | unaudited | Activated abilities of creature cards in your graveyard cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Enigma Drake | unaudited | Enigma Drake's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -123,7 +122,7 @@
 | Prowling Serpopard | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rhonas the Indomitable | unaudited | Rhonas can't attack or block unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Soul-Scar Mage | unaudited | If a source you control would deal noncombat damage to a creature an opponent controls, put that many -1/-1 counters on that creature instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vizier of the Menagerie | unaudited | You may cast creature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Vizier of the Menagerie | unaudited | You can spend mana of any type to cast creature spells. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Watchful Naga | unaudited | You may exert this creature as it attacks. When you do, draw a card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Anointed Procession | handled | If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Baleful Ammit | handled | When this creature enters, put a -1/-1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -146,6 +145,7 @@
 | Colossapede | handled |  |  | Y/Y/- | not_tested |
 | Companion of the Trials | handled | {1}{W}: Untap target creature. Activate only if you control a Gideon planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Compelling Argument | handled | Target player mills five cards. Cycling {U} ({U}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Compulsory Rest | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Consuming Fervor | handled | Enchanted creature gets +3/+3 and has "At the beginning of your upkeep, put a -1/-1 counter on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cradle of the Accursed | handled | {3}, {T}, Sacrifice this land: Create a 2/2 black Zombie creature token. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crocodile of the Crossing | handled | When this creature enters, put a -1/-1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -304,7 +304,6 @@
 | choose an artifact card name. search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. then that playe | 1 | Dispossess | akh |
 | creature spells you control can't be countered. | 1 | Prowling Serpopard | akh |
 | damage can't be prevented ~. if a source you control would deal damage ~, it deals double that damage instead. | 1 | Insult // Injury | akh |
-| enchanted creature can't attack or block. | 1 | Compulsory Rest | akh |
 | enchanted land has "..." | 1 | Gift of Paradise | akh |
 | end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |
 | exile up to three target cards from a single graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Scarab Feast | akh |
@@ -337,7 +336,7 @@
 | whenever ~ attacks, remove a -N/-N counter from it. if you do, you gain N life. | 1 | Exemplar of Strength | akh |
 | whenever ~ attacks, remove a -N/-N counter from target creature you control and put a -N/-N counter on up to one target creature defending player controls. | 1 | Decimator Beetle | akh |
 | whenever ~ becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | 1 | Glyph Keeper | akh |
-| you may cast creature spells from the top of your library. | 1 | Vizier of the Menagerie | akh |
+| you can spend mana of any type to cast creature spells. | 1 | Vizier of the Menagerie | akh |
 | you may exert ~ as it attacks. when you do, creatures you control get +N/+N until end of turn. | 1 | Tah-Crop Elite | akh |
 | you may exert ~ as it attacks. when you do, draw a card. | 1 | Watchful Naga | akh |
 | you may exert ~ as it attacks. when you do, it deals N damage to target non-dragon creature an opponent controls. | 1 | Glorybringer | akh |

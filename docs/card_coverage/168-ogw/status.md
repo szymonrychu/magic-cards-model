@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 9.1% |
-| Works (untested) | 103 | 58.5% |
+| Works (untested) | 104 | 59.1% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 52 | 29.5% |
+| Not working | 51 | 29.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Chandra, Flamecaller | silent | 0: Discard all the cards in your hand, then draw that many cards plus one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Crush of Tentacles | silent | Surge {3}{U}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.) Return all nonland permanents to their owner | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dazzling Reflection | silent | You gain life equal to target creature's power. The next time that creature would deal damage this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dimensional Infiltrator | silent | {1}{C}: Target opponent exiles the top card of their library. If it's a land card, you may return this creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -107,6 +106,7 @@
 | Containment Membrane | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Corpse Churn | handled | Mill three cards, then you may return a creature card from your graveyard to your hand. (To mill three cards, put the top three cards of your library into your  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Corrupted Crossroads | handled |  |  | Y/Y/- | not_tested |
+| Crush of Tentacles | handled | Surge {3}{U}{U} (You may cast this spell for its surge cost if you or a teammate has cast another spell this turn.) Return all nonland permanents to their owner | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cultivator Drone | handled | Devoid | no code needed | Y/Y/- | not_tested |
 | Cyclone Sire | handled | When this creature dies, you may put three +1/+1 counters on target land you control. If you do, that land becomes a 0/0 Elemental creature with haste that's st | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deepfathom Skulker | handled | Whenever a creature you control deals combat damage to a player, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -239,7 +239,6 @@
 | support N. (put a +N/+N counter on each of up to two target creatures.) choose up to one target creature an opponent controls. each creature you control with a  | 1 | Nissa's Judgment | ogw |
 | support N. (put a +N/+N counter on each of up to two target creatures.) draw a card. | 1 | Shoulder to Shoulder | ogw |
 | support N. (put a +N/+N counter on each of up to two target creatures.) untap each creature you control with a +N/+N counter on it. | 1 | Unity of Purpose | ogw |
-| surge {M}{M}{M} (you may cast ~ for its surge cost if you or a teammate has cast another spell ~.) return all nonland permanents to their owners' hands. if ~ su | 1 | Crush of Tentacles | ogw |
 | target land you control becomes a N/N elemental creature with haste until end of turn. it's still a land. it must be blocked ~ if able. | 1 | Elemental Uprising | ogw |
 | target opponent loses N life unless that player discards two cards or sacrifices a creature or planeswalker of their choice. repeat ~ once. | 1 | Remorseless Punishment | ogw |
 | untap ~ during each other player's untap step. | 1 | Endbringer | ogw |

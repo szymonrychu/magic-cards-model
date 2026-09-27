@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 6.7% |
-| Works (untested) | 71 | 28.1% |
+| Works (untested) | 72 | 28.5% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 155 | 61.3% |
+| Not working | 154 | 60.9% |
 
 ## Cards needing work
 
@@ -124,7 +124,7 @@
 | Retrieve | silent | Return up to one target creature card and up to one target noncreature permanent card from your graveyard to your hand. Exile Retrieve. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rot-Tide Gargantua | silent | When this creature exploits a creature, each opponent sacrifices a creature of their choice. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Runebound Wolf | silent | {3}{R}, {T}: This creature deals damage equal to the number of Wolves and Werewolves you control to target opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Runo Stromkirk // Krothuss, Lord of the Deep | silent | When Runo enters, put up to one target creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Runo Stromkirk // Krothuss, Lord of the Deep | silent | At the beginning of your upkeep, look at the top card of your library. You may reveal that card. If a creature card with mana value 6 or greater is revealed thi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rural Recruit | silent | Training | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sanguine Statuette | silent | When this artifact enters, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Savior of Ollenbock | silent | Whenever this creature trains, exile up to one other target creature from the battlefield or creature card from a graveyard. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -151,7 +151,7 @@
 | Voldaren Bloodcaster // Bloodbat Summoner | silent | Whenever this creature or another nontoken creature you control dies, create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voldaren Epicure | silent | When this creature enters, it deals 1 damage to each opponent. Create a Blood token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voldaren Estate | silent | {5}, {T}: Create a Blood token. This ability costs {1} less to activate for each Vampire you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wash Away | silent | Cleave {1}{U}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Counter target spell [that wasn't cast from its  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Wash Away | silent | Cleave | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Wedding Announcement // Wedding Festivity | silent | At the beginning of your end step, put an invitation counter on this enchantment. If you attacked with two or more creatures this turn, draw a card. Otherwise,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Winged Portent | silent | Cleave {4}{G}{U} (You may cast this spell for its cleave cost. If you do, remove the words in square brackets.) Draw a card for each creature you control [with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Witness the Future | silent | Target player shuffles up to four target cards from their graveyard into their library. You look at the top four cards of your library, then put one of those ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -177,7 +177,6 @@
 | Reclusive Taxidermist | notice | This creature gets +3/+2 as long as there are four or more creature cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rending Flame | notice | Rending Flame deals 5 damage to target creature or planeswalker. If that permanent is a Spirit, Rending Flame also deals 2 damage to that permanent's controller | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spiked Ripsaw | notice | Whenever equipped creature attacks, you may sacrifice a Forest. If you do, that creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Undead Butler | notice | When this creature dies, you may exile it. When you do, return target creature card from your graveyard to your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Undying Malice | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Wedding Invitation | notice | {T}, Sacrifice this artifact: Target creature can't be blocked this turn. If it's a Vampire, it also gains lifelink until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wolf Strike | notice | Target creature you control gets +2/+0 until end of turn if it's night. Then it deals damage equal to its power to target creature you don't control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -251,6 +250,7 @@
 | Toxic Scorpion | handled | When this creature enters, another target creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Traveling Minister | handled | {T}: Target creature gets +1/+0 until end of turn. You gain 1 life. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Oddity // Ulvenwald Behemoth | handled | {5}{G}{G}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Undead Butler | handled | When this creature enters, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unhallowed Phalanx | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unholy Officiant | handled | {4}{W}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vilespawn Spider | handled | At the beginning of your upkeep, mill a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -295,7 +295,7 @@
 | disturb | 10 | Binding Geist // Spectral Binding, Brine Comber // Brinebound Gift, Distracting Geist // Clever Distraction, Dorothea, Vengeful Victim // Dorothea's Retribution, Drogskol Infantry // Drogskol Armaments | vow |
 | training | 7 | Apprentice Sharpshooter, Cloaked Cadet, Gryff Rider, Gryffwing Cavalry, Hopeful Initiate | vow |
 | when ~ enters, create a blood token. | 6 | Blood Fountain, Blood Servitor, Bloodcrazed Socialite, Bloodtithe Harvester, Gluttonous Guest | vow |
-| cleave | 4 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp | vow |
+| cleave | 5 | Alchemist's Retrieval, Fierce Retribution, Lunar Rejection, Parasitic Grasp, Wash Away | vow |
 | when ~ enters, exile a card from a graveyard. | 2 | Cemetery Gatekeeper, Cemetery Protector | vow |
 | whenever ~ deals combat damage to a player, create a blood token. | 2 | Belligerent Guest, Falkenrath Forebear | vow |
 | whenever ~ enters or attacks, exile a card from a graveyard. | 2 | Cemetery Illuminator, Cemetery Prowler | vow |
@@ -321,10 +321,10 @@
 | at the beginning of your upkeep, any opponent may sacrifice a creature of their choice. if no one does, transform ~. | 1 | Innocent Traveler // Malicious Invader | vow |
 | at the beginning of your upkeep, create a N/N white and black vampire creature token with lifelink and put a bloodline counter on edgar markov's coffin. then if | 1 | Edgar, Charmed Groom // Edgar Markov's Coffin | vow |
 | at the beginning of your upkeep, create a token that"..."s a spirit in addition to its other types. | 1 | Mirrorhall Mimic // Ghastly Mimicry | vow |
+| at the beginning of your upkeep, look at the top card of your library. you may reveal that card. if a creature card with mana value N or greater is revealed ~,  | 1 | Runo Stromkirk // Krothuss, Lord of the Deep | vow |
 | bloodsworn knight's power and toughness are each equal to the number of creature cards in your graveyard. | 1 | Bloodsworn Squire // Bloodsworn Knight | vow |
 | choose a number between N and N. each player sacrifices that many creatures of their choice. | 1 | By Invitation Only | vow |
 | cleave {M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) target player reveals their hand. you choose a nonland card  | 1 | Dread Fugue | vow |
-| cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) counter target spell [that wasn"..."s hand]. | 1 | Wash Away | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) destroy all creatures [with mana value N or less]. | 1 | Path of Peril | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) draw a card for each creature you control [with flying]. | 1 | Winged Portent | vow |
 | cleave {M}{M}{M} (you may cast ~ for its cleave cost. if you do, remove the words in square brackets.) draw three cards. [your maximum hand size is reduced by t | 1 | Inspired Idea | vow |
@@ -360,11 +360,9 @@
 | until end of turn, target creature gets +N/+N, up to one other target creature gets +N/+N, and up to one other target creature gets +N/+N. those creatures gain  | 1 | Arm the Cathars | vow |
 | when enchanted creature dies, return ~ to the battlefield transformed under your control attached to target opponent. | 1 | Radiant Grace // Radiant Restraints | vow |
 | when odric enters, create N blood tokens, where N is the number of abilities from among flying, first strike, double strike, deathtouch, haste, hexproof, indest | 1 | Odric, Blood-Cursed | vow |
-| when runo enters, put up to one target creature card from your graveyard on top of your library. | 1 | Runo Stromkirk // Krothuss, Lord of the Deep | vow |
 | when you sacrifice ~, return it to the battlefield transformed under its owner's control at the beginning of the next end step. | 1 | Biolume Egg // Biolume Serpent | vow |
 | when ~ dies, create a blood token. | 1 | Blood Petal Celebrant | vow |
 | when ~ dies, you gain life equal to its power. | 1 | Packsong Pup | vow |
-| when ~ dies, you may exile it. when you do, return target creature card from your graveyard to your hand. | 1 | Undead Butler | vow |
 | when ~ dies, you may search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Wretched Throng | vow |
 | when ~ enters and at the beginning of your upkeep, mill a card. if a land card is milled ~, create a treasure token. if a creature card is milled ~, create a N/ | 1 | Old Rutstein | vow |
 | when ~ enters or dies, exile another card from a graveyard. when you do, choose one — • remove N counters from target permanent, where N is the mana value of th | 1 | Cemetery Desecrator | vow |

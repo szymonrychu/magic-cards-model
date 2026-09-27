@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 6.2% |
-| Works (untested) | 92 | 56.8% |
+| Tested | 11 | 6.8% |
+| Works (untested) | 94 | 58.0% |
 | Partial (unaudited) | 17 | 10.5% |
-| Not working | 43 | 26.5% |
+| Not working | 40 | 24.7% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Blinkmoth Infusion | silent | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bringer of the Black Dawn | silent | At the beginning of your upkeep, you may pay 2 life. If you do, search your library for a card, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosmic Larva | silent | At the beginning of your upkeep, sacrifice this creature unless you sacrifice two lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cranial Plating | silent | Equipped creature gets +1/+0 for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desecration Elemental | silent | Whenever a player casts a spell, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door to Nothingness | silent | {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this artifact: Target player loses the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Doubling Cube | silent | {3}, {T}: Double the amount of each type of unspent mana you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,16 +43,13 @@
 | Fold into Aether | silent | Counter target spell. If that spell is countered this way, its controller may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grafted Wargear | silent | Whenever this Equipment becomes unattached from a permanent, sacrifice that permanent. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Helm of Kaldra | silent | {1}: If you control Equipment named Helm of Kaldra, Sword of Kaldra, and Shield of Kaldra, create Kaldra, a legendary 4/4 colorless Avatar creature token. Attac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lunar Avenger | silent | Remove a +1/+1 counter from this creature: This creature gains your choice of flying, first strike, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Theft | silent | Attach target Equipment to target creature. (Control of the Equipment doesn't change.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mana Geyser | silent | Add {R} for each tapped land your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephidross Vampire | silent | Each creature you control is a Vampire in addition to its other creature types and has "Whenever this creature deals damage to a creature, put a +1/+1 counter o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Quadropod | silent | {3}: Switch this creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Servitor | silent | At the beginning of your upkeep, if this creature is on the battlefield, each player returns all cards named Myr Servitor from their graveyard to the battlefiel | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ouphe Vandals | silent | {G}, Sacrifice this creature: Counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Possessed Portal | silent | At the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raksha Golden Cub | silent | As long as Raksha Golden Cub is equipped, Cat creatures you control get +2/+2 and have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Razormane Masticore | silent | At the beginning of your upkeep, sacrifice this creature unless you discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Retaliate | silent | Destroy all creatures that dealt damage to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reversal of Fortune | silent | Target opponent reveals their hand. You may copy an instant or sorcery card in it. If you do, you may cast the copy without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Roar of Reclamation | silent | Each player returns all artifact cards from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,6 +60,7 @@
 | Vedalken Shackles | silent | {2}, {T}: Gain control of target creature with power less than or equal to the number of Islands you control for as long as this artifact remains tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Devour in Shadow | notice | Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Ouphe Vandals | notice | {G}, Sacrifice this creature: Counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plunge into Darkness | notice | Choose one — • Sacrifice any number of creatures. You gain 3 life for each creature sacrificed this way. • Pay any amount of life, then look at that many cards  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rude Awakening | notice | Choose one — • Untap all lands you control. • Until end of turn, lands you control become 2/2 creatures that are still lands. Entwine {2}{G} (Choose both if you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -141,6 +138,7 @@
 | Lose Hope | handled | Target creature gets -1/-1 until end of turn. Scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Anchorite | handled | {T}: Prevent the next 2 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Stalwart | handled | {W}: This creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lunar Avenger | handled | Remove a +1/+1 counter from this creature: This creature gains your choice of flying, first strike, or haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moriok Rigger | handled | Whenever an artifact is put into a graveyard from the battlefield, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Neurok Stealthsuit | handled | Equipped creature has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Night's Whisper | handled | You draw two cards and lose 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -149,6 +147,7 @@
 | Plasma Elemental | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Qumulox | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Rain of Rust | handled | Choose one — • Destroy target artifact. • Destroy target land. Entwine {3}{R} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Razormane Masticore | handled | At the beginning of your upkeep, sacrifice this creature unless you discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rite of Passage | handled | Whenever a creature you control is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Salvaging Station | handled | {T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sawtooth Thresher | handled | Remove two +1/+1 counters from this creature: It gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -182,9 +181,10 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Beacon of Unrest
+- Cranial Plating
 - Crucible of Worlds
 - Engineered Explosives
 - Eternal Witness
@@ -213,7 +213,6 @@
 | at the beginning of each end step, each player sacrifices a permanent of their choice unless they discard a card. | 1 | Possessed Portal | 5dn |
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |
 | at the beginning of your upkeep, if ~ is on the battlefield, each player returns all cards named ~ from their graveyard to the battlefield. | 1 | Myr Servitor | 5dn |
-| at the beginning of your upkeep, sacrifice ~ unless you discard a card. | 1 | Razormane Masticore | 5dn |
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice two lands. | 1 | Cosmic Larva | 5dn |
 | at the beginning of your upkeep, you may pay N life. if you do, search your library for a card, then shuffle and put that card on top. | 1 | Bringer of the Black Dawn | 5dn |
 | attach target equipment to target creature. (control of the equipment doesn't change.) | 1 | Magnetic Theft | 5dn |
@@ -226,14 +225,12 @@
 | each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |
 | enchanted artifact can"..."t be activated. | 1 | Stasis Cocoon | 5dn |
 | enchanted artifact has "..." | 1 | Disruption Aura | 5dn |
-| equipped creature gets +N/+N for each artifact you control. | 1 | Cranial Plating | 5dn |
 | equipped creature gets +N/+N, where N is the number of charge counters on ~. | 1 | Opaline Bracers | 5dn |
 | for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
 | modular | 1 | Arcbound Wanderer | 5dn |
 | no more than one creature can attack each combat. | 1 | Silent Arbiter | 5dn |
 | players play with the top card of their libraries revealed. | 1 | Lantern of Insight | 5dn |
 | players skip their upkeep steps. | 1 | Eon Hub | 5dn |
-| remove a +N/+N counter from ~: ~ gains your choice of flying, first strike, or haste until end of turn. | 1 | Lunar Avenger | 5dn |
 | remove two +N/+N counters from ~: remove a counter from target permanent. | 1 | Spinal Parasite | 5dn |
 | search target opponent's library for an artifact card and put that card onto the battlefield under your control. then that player shuffles. | 1 | Acquire | 5dn |
 | target opponent reveals their hand. you may copy an instant or sorcery card in it. if you do, you may cast the copy without paying its mana cost. | 1 | Reversal of Fortune | 5dn |

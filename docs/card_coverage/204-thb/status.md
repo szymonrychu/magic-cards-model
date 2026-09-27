@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.5% |
-| Works (untested) | 125 | 50.8% |
-| Partial (unaudited) | 31 | 12.6% |
-| Not working | 74 | 30.1% |
+| Works (untested) | 127 | 51.6% |
+| Partial (unaudited) | 30 | 12.2% |
+| Not working | 73 | 29.7% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Destiny Spinner | silent | {3}{G}: Target land you control becomes an X/X Elemental creature with trample and haste until end of turn, where X is the number of enchantments you control. I | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Devourer of Memory | silent | Whenever one or more cards are put into your graveyard from your library, this creature gets +1/+1 until end of turn and can't be blocked this turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Drag to the Underworld | silent | This spell costs {X} less to cast, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to black | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dreadful Apathy | silent | {2}{W}: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreamshaper Shaman | silent | At the beginning of your end step, you may pay {2}{R} and sacrifice a nonland permanent. If you do, reveal cards from the top of your library until you reveal a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth Conquers Death | silent | II — Noncreature spells your opponents cast cost {2} more to cast until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elspeth's Devotee | silent | When this creature enters, you may search your library and/or graveyard for a card named Elspeth, Undaunted Hero, reveal it, and put it into your hand. If you s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -109,7 +108,6 @@
 | Eidolon of Obstruction | unaudited | Loyalty abilities of planeswalkers your opponents control cost {1} more to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Entrancing Lyre | unaudited | You may choose not to untap this artifact during your untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Haktos the Unscarred | unaudited | As Haktos enters, choose 2, 3, or 4 at random. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Heliod's Punishment | unaudited | Enchanted creature can't attack or block. It loses all abilities and has "{T}: Remove a task counter from Heliod's Punishment. Then if it has no task counters o | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ichthyomorphosis | unaudited | Enchanted creature loses all abilities and is a blue Fish with base power and toughness 0/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Incendiary Oracle | unaudited | If a creature dealt damage by this creature this turn would die, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ironscale Hydra | unaudited | If a creature would deal combat damage to this creature, prevent that damage and put a +1/+1 counter on this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -150,6 +148,7 @@
 | Demon of Loathing | handled | Whenever this creature deals combat damage to a player, that player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deny the Divine | handled | Counter target creature or enchantment spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Discordant Piper | handled | When this creature dies, create a 0/1 white Goat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dreadful Apathy | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dream Trawler | handled | Whenever you draw a card, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreamstalker Manticore | handled | Whenever you cast your first spell during each opponent's turn, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eat to Extinction | handled | Exile target creature or planeswalker. Surveil 1. (Look at the top card of your library. You may put that card into your graveyard.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -170,6 +169,7 @@
 | Glory Bearers | handled | Whenever another creature you control attacks, it gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gravebreaker Lamia | handled | When this creature enters, search your library for a card, put it into your graveyard, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grim Physician | handled | When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Heliod's Punishment | handled | This Aura enters with four task counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heliod, Sun-Crowned | handled | As long as your devotion to white is less than five, Heliod isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hero of the Games | handled | Whenever you cast a spell that targets this creature, creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hero of the Nyxborn | handled | When this creature enters, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -303,7 +303,6 @@
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Naiad of Hidden Coves | thb |
 | each nonland card in your graveyard has escape. the escape cost is equal to the card's mana cost plus exile three other cards from your graveyard. | 1 | Underworld Breach | thb |
 | each player who controls a creature with power N or greater draws a card. then destroy all creatures. | 1 | Shatter the Sky | thb |
-| enchanted creature can't attack or block. it loses all abilities and has "..." | 1 | Heliod's Punishment | thb |
 | enchanted creature gets +N/+N and attacks each combat if able. | 1 | Impending Doom | thb |
 | enchanted creature loses all abilities and is a blue fish with base power and toughness N/N. | 1 | Ichthyomorphosis | thb |
 | enchanted permanent is an enchantment and loses all other card types. | 1 | One with the Stars | thb |
@@ -367,7 +366,6 @@
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ashiok's Erasure | thb |
 | {M}, {M}: remove target attacking or blocking creature from combat. | 1 | Labyrinth of Skophos | thb |
 | {M}{M}, {M}, sacrifice a creature or enchantment: ~ deals N damage to target creature. that creature can't block ~. | 1 | Blood Aspirant | thb |
-| {M}{M}: exile enchanted creature. | 1 | Dreadful Apathy | thb |
 | {M}{M}: target land you control becomes an N/N elemental creature with trample and haste until end of turn, where N is the number of enchantments you control. i | 1 | Destiny Spinner | thb |
 | {M}{M}: you may put a red creature card or an artifact creature card from your hand onto the battlefield. sacrifice it at the beginning of the next end step. | 1 | Purphoros, Bronze-Blooded | thb |
 | ~ can't attack unless you control another creature with power N or greater. | 1 | Warden of the Chained | thb |

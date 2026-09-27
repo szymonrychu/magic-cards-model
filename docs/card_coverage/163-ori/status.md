@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 7.7% |
-| Works (untested) | 102 | 56.4% |
+| Works (untested) | 103 | 56.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 58 | 32.0% |
+| Not working | 57 | 31.5% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Gilt-Leaf Winnower | silent | When this creature enters, you may destroy target non-Elf creature whose power and toughness aren't equal. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Glory Chaser | silent | As long as this creature is renowned, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graveblade Marauder | silent | Whenever this creature deals combat damage to a player, that player loses life equal to the number of creature cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Helm of the Gods | silent | Equipped creature gets +1/+1 for each enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hixus, Prison Warden | silent | Whenever a creature deals combat damage to you, if Hixus entered this turn, exile that creature until Hixus leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honored Hierarch | silent | As long as this creature is renowned, it has vigilance and "{T}: Add one mana of any color." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hydrolash | silent | Attacking creatures get -2/-0 until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -133,6 +132,7 @@
 | Guardian Automaton | handled | When this creature dies, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Healing Hands | handled | Target player gains 4 life. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heavy Infantry | handled | When this creature enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Helm of the Gods | handled | Equipped creature gets +1/+1 for each enchantment you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herald of the Pantheon | handled | Enchantment spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hitchclaw Recluse | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Infernal Scarring | handled | Enchanted creature gets +2/+0 and has "When this creature dies, draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -237,7 +237,6 @@
 | each player shuffles all cards from their hand and all permanents they own into their library, then draws that many cards. each player may put any number of lan | 1 | The Great Aurora | ori |
 | enchanted creature gets +N/+N, has haste, and attacks each combat if able. | 1 | Infectious Bloodlust | ori |
 | enchanted permanent can"..."t be activated. | 1 | Suppression Bonds | ori |
-| equipped creature gets +N/+N for each enchantment you control. | 1 | Helm of the Gods | ori |
 | for each player, you choose from among the permanents that player controls an artifact, a creature, an enchantment, and a planeswalker. then each player sacrifi | 1 | Tragic Arrogance | ori |
 | if a creature would deal damage to you, prevent N of that damage. | 1 | Orbs of Warding | ori |
 | if an opponent would gain life, that player loses that much life instead. | 1 | Tainted Remedy | ori |

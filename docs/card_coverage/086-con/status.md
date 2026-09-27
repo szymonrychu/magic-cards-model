@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 6.4% |
-| Works (untested) | 72 | 51.1% |
+| Works (untested) | 73 | 51.8% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 55 | 39.0% |
+| Not working | 54 | 38.3% |
 
 ## Cards needing work
 
@@ -71,7 +71,6 @@
 | Wandering Goblins | silent | Domain — {3}: This creature gets +1/+0 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Leotau | silent | At the beginning of your upkeep, sacrifice this creature unless you pay {G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wretched Banquet | silent | Destroy target creature if it has the least power or is tied for least power among creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Yoke of the Damned | silent | When a creature dies, destroy enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brackwater Elemental | notice | When this creature attacks or blocks, sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cliffrunner Behemoth | notice | This creature has haste as long as you control a red permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Court Homunculus | notice | This creature gets +1/+1 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -157,6 +156,7 @@
 | Valiant Guard | handled |  |  | Y/-/- | not_tested |
 | Vedalken Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Viashino Slaughtermaster | handled | {B}{G}: This creature gets +1/+1 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Yoke of the Damned | handled | When a creature dies, destroy enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zombie Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 
 ## Fully supported
@@ -199,7 +199,6 @@
 | search your library for a white card, a blue card, a black card, a red card, and a green card. reveal those cards, put them into your hand, then shuffle. | 1 | Conflux | con |
 | target creature gains flying until end of turn. if you control a white permanent, return ~ to its owner's hand. | 1 | View from Above | con |
 | target opponent reveals cards from the top of their library until they reveal a creature card. that player puts all noncreature cards revealed ~ into their grav | 1 | Telemin Performance | con |
-| when a creature dies, destroy enchanted creature. | 1 | Yoke of the Damned | con |
 | when ~ attacks or blocks, sacrifice it at the beginning of the next end step. | 1 | Brackwater Elemental | con |
 | when ~ dies, destroy all nonland permanents. they can't be regenerated. | 1 | Child of Alara | con |
 | when ~ enters, discard your hand. each opponent sacrifices a creature of their choice for each card discarded ~. | 1 | Malfegor | con |

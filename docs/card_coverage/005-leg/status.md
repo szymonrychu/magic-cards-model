@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 5 | 17.2% |
-| Works (untested) | 16 | 55.2% |
+| Works (untested) | 17 | 58.6% |
 | Partial (unaudited) | 2 | 6.9% |
-| Not working | 6 | 20.7% |
+| Not working | 5 | 17.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Avoid Fate | silent | Counter target instant or Aura spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Craw Giant | silent | Rampage | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kobold Taskmaster | silent | Other Kobold creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas | silent | At the beginning of your upkeep, sacrifice Nicol Bolas unless you pay {U}{B}{R}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -34,6 +33,7 @@
 | Spirit Link | silent | Whenever enchanted creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elven Riders | unaudited | This creature can't be blocked except by Walls and/or creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Evil Eye of Orms-by-Gore | unaudited | Non-Eye creatures you control can't attack. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Avoid Fate | handled | Counter target instant or Aura spell that targets a permanent you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Azure Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Boomerang | handled | Return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Darkness | handled | Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -69,7 +69,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}{M}. | 1 | Nicol Bolas | leg |
-| counter target instant or aura spell that targets a permanent you control. | 1 | Avoid Fate | leg |
 | non-eye creatures you control can't attack. | 1 | Evil Eye of Orms-by-Gore | leg |
 | other kobold creatures you control get +N/+N. | 1 | Kobold Taskmaster | leg |
 | rampage | 1 | Craw Giant | leg |

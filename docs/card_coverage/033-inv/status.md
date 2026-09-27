@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 9.1% |
-| Works (untested) | 31 | 70.5% |
+| Works (untested) | 32 | 72.7% |
 | Partial (unaudited) | 2 | 4.5% |
-| Not working | 7 | 15.9% |
+| Not working | 6 | 13.6% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Elvish Champion | silent | Other Elf creatures get +1/+1 and have forestwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fact or Fiction | silent | Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Obliterate | silent | This spell can't be countered. Destroy all artifacts, creatures, and lands. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Prohibit | silent | Kicker {2} (You may pay an additional {2} as you cast this spell.) Counter target spell if its mana value is 2 or less. If this spell was kicked, counter that s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Verdeloth the Ancient | silent | Saproling creatures and other Treefolk creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Void | silent | Choose a number. Destroy all artifacts and creatures with mana value equal to that number. Then target player reveals their hand and discards all nonland cards  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sterling Grove | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -50,6 +49,7 @@
 | Might Weaver | handled | {2}: Target red or white creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molimo, Maro-Sorcerer | handled | Molimo's power and toughness are each equal to the number of lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Planar Portal | handled | {6}, {T}: Search your library for a card, put that card into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Prohibit | handled | Kicker {2} (You may pay an additional {2} as you cast this spell.) Counter target spell if its mana value is 2 or less. If this spell was kicked, counter that s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rage Weaver | handled | {2}: Target black or green creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razorfoot Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Recover | handled | Return target creature card from your graveyard to your hand. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -85,7 +85,6 @@
 |---|---|---|---|
 | choose a number. destroy all artifacts and creatures with mana value equal to that number. then target player reveals their hand and discards all nonland cards  | 1 | Void | inv |
 | creatures of the chosen color without flying can't attack you. | 1 | Teferi's Moat | inv |
-| kicker {M} (you may pay an additional {M} as you cast ~.) counter target spell if its mana value is N or less. if ~ was kicked, counter that spell if its mana v | 1 | Prohibit | inv |
 | other elf creatures get +N/+N and have forestwalk. | 1 | Elvish Champion | inv |
 | other enchantments you control have shroud. | 1 | Sterling Grove | inv |
 | reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your graveyard. | 1 | Fact or Fiction | inv |

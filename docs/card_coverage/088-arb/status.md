@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.9% |
-| Works (untested) | 65 | 45.5% |
+| Works (untested) | 66 | 46.2% |
 | Partial (unaudited) | 11 | 7.7% |
-| Not working | 60 | 42.0% |
+| Not working | 59 | 41.3% |
 
 ## Cards needing work
 
@@ -67,7 +67,6 @@
 | Qasali Pridemage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sanity Gnawers | silent | When this creature enters, target player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sen Triplets | silent | At the beginning of your upkeep, choose target opponent. This turn, that player can't cast spells or activate abilities and plays with their hand revealed. You  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sigil of the Nayan Gods | silent | Enchanted creature gets +1/+1 for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sigiled Behemoth | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Singe-Mind Ogre | silent | When this creature enters, target player reveals a card at random from their hand, then loses life equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skyclaw Thrash | silent | Whenever this creature attacks, flip a coin. If you win the flip, this creature gets +1/+1 and gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -148,6 +147,7 @@
 | Sangrite Backlash | handled | Enchanted creature gets +3/-3. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sewn-Eye Drake | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Shield of the Righteous | handled | Equipped creature gets +0/+2 and has vigilance. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sigil of the Nayan Gods | handled | Enchanted creature gets +1/+1 for each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soul Manipulation | handled | Choose one or both — • Counter target creature spell. • Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sphinx of the Steel Wind | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Stormcaller's Boon | handled | Sacrifice this enchantment: Creatures you control gain flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -205,7 +205,6 @@
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
 | during your turn, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
-| enchanted creature gets +N/+N for each creature you control. | 1 | Sigil of the Nayan Gods | arb |
 | enchanted land has shroud. | 1 | Trace of Abundance | arb |
 | equipped creature has fear. | 1 | Mask of Riddles | arb |
 | exile all cards from target player's hand and graveyard. | 1 | Identity Crisis | arb |

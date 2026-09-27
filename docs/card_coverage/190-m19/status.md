@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.0% |
+| Tested | 11 | 6.1% |
 | Works (untested) | 121 | 67.2% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 43 | 23.9% |
+| Not working | 41 | 22.8% |
 
 ## Cards needing work
 
@@ -41,10 +41,8 @@
 | Elvish Clancaller | silent | {4}{G}{G}, {T}: Search your library for a card named Elvish Clancaller, put it onto the battlefield, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fraying Omnipotence | silent | Each player loses half their life, then discards half the cards in their hand, then sacrifices half the creatures they control of their choice. Round up each ti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goreclaw, Terror of Qal Sisma | silent | Whenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hungering Hydra | silent | Whenever this creature is dealt damage, put that many +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infernal Reckoning | silent | Exile target colorless creature. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inferno Hellion | silent | At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lena, Selfless Champion | silent | When Lena enters, create a 1/1 white Soldier creature token for each nontoken creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana's Contract | silent | At the beginning of your upkeep, if you control four or more Demons with different names, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, the Necromancer | silent | −7: Destroy up to two target creatures. Put up to two creature cards from graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Militia Bugler | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -201,11 +199,13 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
 - Doublecast
+- Hungering Hydra
+- Lena, Selfless Champion
 - Liliana, Untouched by Death
 - Mistcaller
 - Nicol Bolas, the Ravager // Nicol Bolas, the Arisen
@@ -238,7 +238,6 @@
 | palladia-mors has hexproof as long as it hasn't dealt damage yet. | 1 | Palladia-Mors, the Ruiner | m19 |
 | target creature gets +N/+N until end of turn. all creatures able to block it ~ do so. | 1 | Declare Dominance | m19 |
 | when enchanted creature blocks, destroy it. | 1 | Dwindle | m19 |
-| when lena enters, create a N/N white soldier creature token for each nontoken creature you control. | 1 | Lena, Selfless Champion | m19 |
 | when ~ enters, choose one — • remove all counters from target creature. it can"..."t get counters for as long as ~ remains on the battlefield. | 1 | Suncleanser | m19 |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Militia Bugler | m19 |
 | when ~ enters, target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Skilled Animator | m19 |
@@ -250,7 +249,6 @@
 | whenever you activate an ability of a sarkhan planeswalker, ~ deals N damage to any target. | 1 | Sarkhan's Whelp | m19 |
 | whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {M}. | 1 | Amulet of Safekeeping | m19 |
 | whenever you draw a card, each opponent mills two cards. | 1 | Psychic Corrosion | m19 |
-| whenever ~ is dealt damage, put that many +N/+N counters on it. | 1 | Hungering Hydra | m19 |
 | you gain N life. target creature gets -N/-N until end of turn, where N is the amount of life you gained ~. | 1 | Nightmare's Thirst | m19 |
 | you may have ~ enter as a copy of a creature you control. | 1 | Mirror Image | m19 |
 | {M}, {M}: target opponent exiles cards from the top of their library until they exile an instant or sorcery card. you may cast that card without paying its mana | 1 | Chaos Wand | m19 |

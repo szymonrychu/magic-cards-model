@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.5% |
-| Works (untested) | 152 | 62.0% |
-| Partial (unaudited) | 15 | 6.1% |
-| Not working | 62 | 25.3% |
+| Tested | 17 | 6.9% |
+| Works (untested) | 153 | 62.4% |
+| Partial (unaudited) | 14 | 5.7% |
+| Not working | 61 | 24.9% |
 
 ## Cards needing work
 
@@ -65,7 +65,6 @@
 | Run Aground | silent | Put target artifact or creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanguine Sacrament | silent | You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadowed Caravel | silent | Whenever a creature you control explores, put a +1/+1 counter on this Vehicle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Siren Stormtamer | silent | {U}, Sacrifice this creature: Counter target spell or ability that targets you or a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spell Swindle | silent | Counter target spell. Create X Treasure tokens, where X is that spell's mana value. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any colo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Storm Sculptor | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sun-Blessed Mount | silent | When this creature enters, you may search your library and/or graveyard for a card named Huatli, Dinosaur Knight, reveal it, then put it into your hand. If you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,7 +96,6 @@
 | Ixalan's Binding | unaudited | Your opponents can't cast spells with the same name as the exiled card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kopala, Warden of Waves | unaudited | Abilities your opponents activate that target a Merfolk you control cost {2} more to activate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | New Horizons | unaudited | Enchanted land has "{T}: Add two mana of any one color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Pious Interdiction | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rigging Runner | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sorcerous Spyglass | unaudited | As this artifact enters, look at an opponent's hand, then choose any card name. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Spike-Tailed Ceratops | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -185,6 +183,7 @@
 | Overflowing Insight | handled | Target player draws seven cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Paladin of the Bloodstained | handled | When this creature enters, create a 1/1 white Vampire creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pillar of Origins | handled | As this artifact enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pious Interdiction | handled | When this Aura enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pirate's Cutlass | handled | When this Equipment enters, attach it to target Pirate you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Pirate's Prize | handled | Draw two cards. Create a Treasure token. (It's an artifact with "{T}, Sacrifice this token: Add one mana of any color.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pounce | handled | Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -259,7 +258,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Bellowing Aegisaur
 - Captivating Crew
@@ -273,6 +272,7 @@
 - Ranging Raptors
 - Search for Azcanta // Azcanta, the Sunken Ruin
 - Settle the Wreckage
+- Siren Stormtamer
 - Snapping Sailback
 - Treasure Map // Treasure Cove
 - Unclaimed Territory
@@ -304,7 +304,6 @@
 | creatures you control with +N/+N counters on them can't be blocked. | 1 | Herald of Secret Streams | xln |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Belligerent Brontodon | xln |
 | each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | 1 | Trove of Temptation | xln |
-| enchanted creature can't attack or block. | 1 | Pious Interdiction | xln |
 | enchanted land has "..." | 1 | New Horizons | xln |
 | exile target creature you control, then return that card to the battlefield under its owner's control. if a pirate was exiled ~, draw a card. | 1 | Siren's Ruse | xln |
 | exile up to five target creature cards from graveyards. an opponent separates those cards into two piles. put all cards from the pile of your choice onto the ba | 1 | Boneyard Parley | xln |
@@ -346,7 +345,6 @@
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ixalan's Binding | xln |
 | {M}, sacrifice a creature: you gain life equal to the sacrificed creature's toughness. | 1 | Arguel's Blood Fast // Temple of Aclazotz | xln |
-| {M}, sacrifice ~: counter target spell or ability that targets you or a creature you control. | 1 | Siren Stormtamer | xln |
 | {M}, {M}: target attacking vampire gets +N/+N until end of turn. | 1 | Duskborne Skymarcher | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
 | ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |

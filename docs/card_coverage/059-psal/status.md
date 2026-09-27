@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 2.5% |
-| Works (untested) | 47 | 59.5% |
-| Partial (unaudited) | 5 | 6.3% |
+| Works (untested) | 48 | 60.8% |
+| Partial (unaudited) | 4 | 5.1% |
 | Not working | 25 | 31.6% |
 
 ## Cards needing work
@@ -53,7 +53,6 @@
 | Strength in Numbers | notice | Until end of turn, target creature gains trample and gets +X/+X, where X is the number of attacking creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Detainment Spell | unaudited | Enchanted creature's activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Freewind Equenaut | unaudited | As long as this creature is enchanted, it has "{T}: This creature deals 2 damage to target attacking or blocking creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Goblin Fire Fiend | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Grifter's Blade | unaudited | As this Equipment enters, choose a creature you control it could be attached to. If you do, it enters attached to that creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nacatl War-Pride | unaudited | This creature must be blocked by exactly one creature if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Balduvian Rage | handled | Target attacking creature gets +X/+0 until end of turn. Draw a card at the beginning of the next turn's upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -62,6 +61,7 @@
 | Dimir Infiltrator | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flight of Fancy | handled | When this Aura enters, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghor-Clan Savage | handled | Bloodthirst | machines/keywords.py | Y/-/- | not_tested |
+| Goblin Fire Fiend | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Golgari Guildmage | handled | {4}{B}, Sacrifice a creature: Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Nodorog | handled | {R}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gruul Scrapper | handled | When this creature enters, if {R} was spent to cast it, it gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -147,7 +147,6 @@
 | {M}{M}{M}, {M}: destroy target land. if that land was nonbasic, untap ~. | 1 | Helldozer | psal |
 | ~ has flying as long as it's enchanted. | 1 | Skyrider Trainee | psal |
 | ~ must be blocked by exactly one creature if able. | 1 | Nacatl War-Pride | psal |
-| ~ must be blocked if able. | 1 | Goblin Fire Fiend | psal |
 
 ## Notes
 

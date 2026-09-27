@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.8% |
+| Tested | 34 | 13.2% |
 | Works (untested) | 121 | 46.9% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 92 | 35.7% |
+| Not working | 91 | 35.3% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Dermotaxi | silent | Tap two untapped creatures you control: Until end of turn, this Vehicle becomes a copy of the exiled card, except it's a Vehicle artifact in addition to its oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dihada's Ploy | silent | Jump | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Discerning Taste | silent | Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain life equal to the greatest power among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Echoing Return | silent | Return target creature card and all other cards with the same name as that card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Esper Sentinel | silent | Whenever an opponent casts their first noncreature spell each turn, draw a card unless that player pays {X}, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flametongue Yearling | silent | When this creature enters, it deals damage equal to its power to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Foul Watcher | silent | Delirium — This creature gets +1/+0 as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -255,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
@@ -264,6 +263,7 @@
 - Chatterfang, Squirrel General
 - Dragon's Rage Channeler
 - Dress Down
+- Echoing Return
 - Endurance
 - Gilt-Blade Prowler
 - Glorious Enforcer
@@ -339,7 +339,6 @@
 | look at the top four cards of your library. put one of them into your hand and the rest into your graveyard. you gain life equal to the greatest power among cre | 1 | Discerning Taste | mh2 |
 | overload | 1 | Break the Ice | mh2 |
 | planeswalkers' loyalty abilities you activate cost an additional [+N] to activate. | 1 | Carth the Lion | mh2 |
-| return target creature card and all other cards with the same name as that card from your graveyard to your hand. | 1 | Echoing Return | mh2 |
 | reveal cards from the top of your library until you reveal a nonland card. put the revealed cards on the bottom of your library in a random order. when you reve | 1 | Calibrated Blast | mh2 |
 | scavenge | 1 | Bannerhide Krushok | mh2 |
 | search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | 1 | Unmarked Grave | mh2 |

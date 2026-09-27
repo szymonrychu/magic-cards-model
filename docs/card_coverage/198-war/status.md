@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 7.4% |
-| Works (untested) | 136 | 55.7% |
-| Partial (unaudited) | 19 | 7.8% |
+| Works (untested) | 138 | 56.6% |
+| Partial (unaudited) | 17 | 7.0% |
 | Not working | 71 | 29.1% |
 
 ## Cards needing work
@@ -100,8 +100,6 @@
 | Arlinn, Voice of the Pack | unaudited | Each creature you control that's a Wolf or a Werewolf enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Bioessence Hydra | unaudited | This creature enters with a +1/+1 counter on it for each loyalty counter on planeswalkers you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Bolas's Citadel | unaudited | You may play lands and cast spells from the top of your library. If you cast a spell this way, pay life equal to its mana value rather than pay its mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Challenger Troll | unaudited | Each creature you control with power 4 or greater can't be blocked by more than one creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Duskmantle Operative | unaudited | This creature can't be blocked by creatures with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Gleaming Overseer | unaudited | Zombie tokens you control have hexproof and menace. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | God-Eternal Kefnet | unaudited | You may reveal the first card you draw each turn as you draw it. Whenever you reveal an instant or sorcery card this way, copy that card and you may cast the co | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Huatli, the Sun's Heart | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -138,6 +136,7 @@
 | Casualties of War | handled | Choose one or more — • Destroy target artifact. • Destroy target creature. • Destroy target enchantment. • Destroy target land. • Destroy target planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Centaur Nurturer | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chainwhip Cyclops | handled | {3}{R}: Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Challenger Troll | handled | Each creature you control with power 4 or greater can't be blocked by more than one creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra's Triumph | handled | Chandra's Triumph deals 3 damage to target creature or planeswalker an opponent controls. Chandra's Triumph deals 5 damage instead if you control a Chandra plan | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charity Extractor | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Charmed Stray | handled | When this creature enters, put a +1/+1 counter on each other creature you control named Charmed Stray. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -157,6 +156,7 @@
 | Dreadhorde Butcher | handled | Whenever this creature deals combat damage to a player or planeswalker, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadhorde Invasion | handled | At the beginning of your upkeep, you lose 1 life and amass Zombies 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dreadmalkin | handled | {2}{B}, Sacrifice another creature or planeswalker: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Duskmantle Operative | handled | This creature can't be blocked by creatures with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elite Guardmage | handled | When this creature enters, you gain 3 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enforcer Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Erratic Visionary | handled | {1}{U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -304,7 +304,6 @@
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Huatli, the Sun's Heart | war |
 | each creature you control that's a wolf or a werewolf enters with an additional +N/+N counter on it. | 1 | Arlinn, Voice of the Pack | war |
 | each creature you control with a +N/+N counter on it has "..." | 1 | Jiang Yanggu, Wildcrafter | war |
-| each creature you control with power N or greater can't be blocked by more than one creature. | 1 | Challenger Troll | war |
 | each opponent sacrifices a creature of their choice. if you control a liliana planeswalker, each opponent also discards a card. | 1 | Liliana's Triumph | war |
 | each player chooses a creature or planeswalker they control, then sacrifices the rest. players can't cast creature or planeswalker spells until the end of your  | 1 | Single Combat | war |
 | each player mills four cards. return up to two instant and/or sorcery cards from your graveyard to your hand. exile ~. | 1 | Bond of Insight | war |
@@ -365,7 +364,6 @@
 | {M}: return a tapped land you control to its owner's hand. | 1 | Living Twister | war |
 | {M}{M}: look at the top card of your library. if it"..."t put the card into your hand, put it on the bottom of your library. | 1 | Vivien's Grizzly | war |
 | ~ can't attack alone. | 1 | Raging Kronch | war |
-| ~ can't be blocked by creatures with power N or greater. | 1 | Duskmantle Operative | war |
 | ~ deals N damage to target creature and you gain life equal to the damage dealt ~. target player mills four cards. amass zombies N. (put four +N/+N counters on  | 1 | Enter the God-Eternals | war |
 | ~ enters with a +N/+N counter on it for each loyalty counter on planeswalkers you control. | 1 | Bioessence Hydra | war |
 | ~ has hexproof as long as it's untapped. | 1 | Paradise Druid | war |

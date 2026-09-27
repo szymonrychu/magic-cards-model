@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 3.6% |
-| Works (untested) | 133 | 59.6% |
+| Works (untested) | 134 | 60.1% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 73 | 32.7% |
+| Not working | 72 | 32.3% |
 
 ## Cards needing work
 
@@ -68,7 +68,6 @@
 | Predator Dragon | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Prince of Thralls | silent | Whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Puppet Conjurer | silent | At the beginning of your upkeep, sacrifice a Homunculus. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Quietus Spike | silent | Whenever equipped creature deals combat damage to a player, that player loses half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rafiq of the Many | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Realm Razer | silent | When this creature leaves the battlefield, return the exiled cards to the battlefield tapped under their owners' control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Resounding Scream | silent | Target player discards a card at random. Cycling {5}{U}{B}{R} ({5}{U}{B}{R}, Discard this card: Draw a card.) When you cycle this card, target player discards t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -192,6 +191,7 @@
 | Obelisk of Naya | handled |  |  | Y/-/- | not_tested |
 | Onyx Goblet | handled | {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Protomatter Powder | handled | {4}{W}, {T}, Sacrifice this artifact: Return target artifact card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quietus Spike | handled | Equipped creature has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakeclaw Gargantuan | handled | {1}: Target creature with power 5 or greater gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ranger of Eos | handled | When this creature enters, you may search your library for up to two creature cards with mana value 1 or less, reveal them, put them into your hand, then shuffl | the engine reads this text and performs it | Y/-/- | not_tested |
 | Resounding Roar | handled | Target creature gets +3/+3 until end of turn. Cycling {5}{R}{G}{W} ({5}{R}{G}{W}, Discard this card: Draw a card.) When you cycle this card, target creature get | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -306,7 +306,6 @@
 | whenever a nontoken creature you control enters, you may pay {M}. if you do, create a token that's a copy of that creature, except it has haste and "..." | 1 | Minion Reflector | ala |
 | whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays N life. | 1 | Prince of Thralls | ala |
 | whenever a player taps a mountain, forest, or plains for mana, that player adds one mana of any type that land produced. | 1 | Keeper of Progenitus | ala |
-| whenever equipped creature deals combat damage to a player, that player loses half their life, rounded up. | 1 | Quietus Spike | ala |
 | whenever you cast a spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Manaplasm | ala |
 | whenever you gain life, you may pay {M}{M}. if you do, put a +N/+N counter on target creature for each N life you gained. | 1 | Cradle of Vitality | ala |
 | you gain life equal to target creature's power. | 1 | Soul's Grace | ala |

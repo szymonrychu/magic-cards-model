@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 11.7% |
-| Works (untested) | 74 | 45.7% |
+| Works (untested) | 75 | 46.3% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 58 | 35.8% |
+| Not working | 57 | 35.2% |
 
 ## Cards needing work
 
@@ -43,13 +43,12 @@
 | Isolation Cell | silent | Whenever an opponent casts a creature spell, that player loses 2 life unless they pay {2}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jor Kadeen, the Prevailer | silent | Metalcraft — Creatures you control get +3/+0 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karn Liberated | silent | +4: Target player exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lashwrithe | silent | Equipped creature gets +1/+1 for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Lashwrithe | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Life's Finale | silent | Destroy all creatures, then search target opponent's library for up to three creature cards and put them into their graveyard. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Marrow Shards | silent | ({W/P} can be paid with either {W} or 2 life.) Marrow Shards deals 1 damage to each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maul Splicer | silent | Golem creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mortis Dogs | silent | When this creature dies, target player loses life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Necropouncer | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Noxious Revival | silent | ({G/P} can be paid with either {G} or 2 life.) Put target card from a graveyard on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Omen Machine | silent | At the beginning of each player's draw step, that player exiles the top card of their library. If it's a land card, the player puts it onto the battlefield. Oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Parasitic Implant | silent | At the beginning of your upkeep, enchanted creature's controller sacrifices it and you create a 1/1 colorless Phyrexian Myr artifact creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phyrexian Metamorph | silent | You may have this creature enter as a copy of any artifact or creature on the battlefield, except it's an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -133,6 +132,7 @@
 | Mindculling | handled | You draw two cards and target opponent discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moltensteel Dragon | handled | {R/P}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycosynth Wellspring | handled | When this artifact enters or is put into a graveyard from the battlefield, you may search your library for a basic land card, reveal it, put it into your hand,  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Noxious Revival | handled | ({G/P} can be paid with either {G} or 2 life.) Put target card from a graveyard on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Numbing Dose | handled | Enchanted permanent doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ogre Menial | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pestilent Souleater | handled | {B/P}: This creature gains infect until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -201,10 +201,9 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
+| living weapon | 3 | Lashwrithe, Necropouncer, Sickleslicer | nph |
 | Metalcraft | 2 | Jor Kadeen, the Prevailer, Puresteel Paladin | nph |
-| living weapon | 2 | Necropouncer, Sickleslicer | nph |
 | ({M} can be paid with either {M} or N life.) nonartifact creatures can't block ~. | 1 | Ruthless Invasion | nph |
-| ({M} can be paid with either {M} or N life.) put target card from a graveyard on top of its owner's library. | 1 | Noxious Revival | nph |
 | ({M} can be paid with either {M} or N life.) target artifact or creature you control gains protection from artifacts or from the color of your choice until end  | 1 | Apostle's Blessing | nph |
 | ({M} can be paid with either {M} or N life.) ~ deals N damage to each attacking creature. | 1 | Marrow Shards | nph |
 | +N: target player exiles a card from their hand. | 1 | Karn Liberated | nph |
@@ -221,7 +220,6 @@
 | each creature you control is the chosen type in addition to its other types. | 1 | Xenograft | nph |
 | each noncreature, non-equipment artifact is an equipment with equip {M} and "..." where N is that artifact's mana value. | 1 | Bludgeon Brawl | nph |
 | each opponent's maximum hand size is reduced by seven. | 1 | Jin-Gitaxias, Core Augur | nph |
-| equipped creature gets +N/+N for each swamp you control. | 1 | Lashwrithe | nph |
 | golem creatures you control have flying. | 1 | Wing Splicer | nph |
 | golem creatures you control have trample. | 1 | Maul Splicer | nph |
 | golem creatures you control have vigilance. | 1 | Sensor Splicer | nph |

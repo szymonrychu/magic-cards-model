@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.6% |
+| Tested | 16 | 7.0% |
 | Works (untested) | 94 | 41.2% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 97 | 42.5% |
+| Not working | 96 | 42.1% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Everquill Phoenix | silent | Whenever this creature mutates, create a red artifact token named Feather with "{1}, Sacrifice this token: Return target Phoenix card from your graveyard to the | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Extinction Event | silent | Choose odd or even. Exile each creature with mana value of the chosen quality. (Zero is even.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exuberant Wolfbear | silent | Whenever this creature attacks, you may have the base power and toughness of target Human you control become equal to this creature's power and toughness until  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fire Prophecy | silent | Fire Prophecy deals 3 damage to target creature. You may put a card from your hand on the bottom of your library. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Footfall Crater | silent | Enchanted land has "{T}: Target creature gains trample and haste until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Frillscare Mentor | silent | {2}{R}, {T}: Put a +1/+1 counter on each creature you control with menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gemrazer | silent | Whenever this creature mutates, destroy target artifact or enchantment an opponent controls. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -243,13 +242,14 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Blade Banish
 - Blitz Leech
 - Chevill, Bane of Monsters
 - Fiend Artisan
 - Fight as One
+- Fire Prophecy
 - Gyruda, Doom of Depths
 - Heartless Act
 - Indatha Triome
@@ -369,7 +369,6 @@
 | ~ deals N damage divided as you choose among any number of target creatures and/or planeswalkers. if {M}{M} was spent to cast ~, until your next turn, those per | 1 | Mythos of Vadrok | iko |
 | ~ deals N damage to any target and you gain N life, where N is the number of cards with a cycling ability in your graveyard. | 1 | Zenith Flare | iko |
 | ~ deals N damage to target creature. excess damage is dealt to that creature's controller instead. | 1 | Flame Spill | iko |
-| ~ deals N damage to target creature. you may put a card from your hand on the bottom of your library. if you do, draw a card. | 1 | Fire Prophecy | iko |
 | ~ deals damage to target creature or planeswalker equal to the number of instant and sorcery cards in your graveyard. if that creature or planeswalker would die | 1 | Blitz of the Thunder-Raptor | iko |
 | ~ enters with your choice of a deathtouch counter or a lifelink counter on it. | 1 | Boot Nipper | iko |
 | ~ enters with your choice of a flying counter or a first strike counter on it. | 1 | Helica Glider | iko |

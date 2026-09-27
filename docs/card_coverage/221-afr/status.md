@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.2% |
-| Works (untested) | 111 | 43.2% |
-| Partial (unaudited) | 18 | 7.0% |
-| Not working | 112 | 43.6% |
+| Works (untested) | 113 | 44.0% |
+| Partial (unaudited) | 17 | 6.6% |
+| Not working | 111 | 43.2% |
 
 ## Cards needing work
 
@@ -108,7 +108,6 @@
 | Vorpal Sword | silent | {5}{B}{B}{B}: Until end of turn, this Equipment gains "Whenever equipped creature deals combat damage to a player, that player loses the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warlock Class | silent | At the beginning of your end step, each opponent loses life equal to the life they lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Werewolf Pack Leader | silent | {3}{G}: Until end of turn, this creature has base power and toughness 5/3, gains trample, and isn't a Human. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Westgate Regent | silent | Whenever this creature deals combat damage to a player, put that many +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wight | silent | Life Drain — Whenever a creature dealt damage by this creature this turn dies, create a tapped 2/2 black Zombie creature token and exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wizard's Spellbook | silent | {T}: Exile target instant or sorcery card from a graveyard. Roll a d20. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Xanathar, Guild Kingpin | silent | At the beginning of your upkeep, choose target opponent. Until end of turn, that player can't cast spells, you may look at the top card of their library any tim | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -152,7 +151,6 @@
 | Leather Armor | unaudited | Equip {0}. Activate only once each turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Minimus Containment | unaudited | Enchanted permanent is a Treasure artifact with "{T}, Sacrifice this artifact: Add one mana of any color," and it loses all other abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Pixie Guide | unaudited | Grant an Advantage — If you would roll one or more dice, instead roll that many dice plus one and ignore the lowest roll. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Ranger Class | unaudited | You may cast creature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Temple of the Dragon Queen | unaudited | As this land enters, you may reveal a Dragon card from your hand. This land enters tapped unless you revealed a Dragon card this way or you control a Dragon. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Xorn | unaudited | If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Yuan-Ti Malison | unaudited | This creature can't be blocked as long as it's attacking alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -227,6 +225,7 @@
 | Priest of Ancient Lore | handled | When this creature enters, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prosperous Innkeeper | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Purple Worm | handled | This spell costs {2} less to cast if a creature died this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ranger Class | handled | When this Class enters, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger's Hawk | handled | {3}, {T}, Tap another untapped creature you control: Venture into the dungeon. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger's Longbow | handled | Equipped creature gets +2/+1 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Red Dragon | handled | Fire Breath — When this creature enters, it deals 4 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -255,6 +254,7 @@
 | Vampire Spawn | handled | When this creature enters, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Volo, Guide to Monsters | handled | Whenever you cast a creature spell that doesn't share a creature type with a creature you control or a creature card in your graveyard, copy that spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wandering Troubadour | handled | At the beginning of your end step, if you had a land enter the battlefield under your control this turn, venture into the dungeon. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Westgate Regent | handled | Whenever this creature deals combat damage to a player, put that many +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | White Dragon | handled | Cold Breath — When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | You Find a Cursed Idol | handled | Choose one — • Smash It — Destroy target artifact. • Lift the Curse — Destroy target enchantment. • Steal Its Eyes — Create a Treasure token and venture into th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | You Happen On a Glade | handled | Choose one — • Journey On — Search your library for up to two basic land cards, reveal them, put them into your hand, then shuffle. • Make Camp — Return target  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -391,8 +391,6 @@
 | whenever you roll one or more dice, target creature you control gets +N/+N and gains menace until end of turn. | 1 | Barbarian Class | afr |
 | whenever you roll one or more dice, ~ deals N damage to each opponent. | 1 | Brazen Dwarf | afr |
 | whenever ~ deals combat damage to a player, exile up to that many target cards from their graveyard. put a +N/+N counter on ~ for each creature card exiled ~. y | 1 | Froghemoth | afr |
-| whenever ~ deals combat damage to a player, put that many +N/+N counters on it. | 1 | Westgate Regent | afr |
-| you may cast creature spells from the top of your library. | 1 | Ranger Class | afr |
 | you may cast ~ from your graveyard if a creature not named ~ died ~. | 1 | Ebondeath, Dracolich | afr |
 | {M}, exile ~ and artifacts you control named eye of vecna and hand of vecna: create vecna, a legendary N/N black zombie god creature token with indestructible a | 1 | The Book of Vile Darkness | afr |
 | {M}, sacrifice ~: roll a dN. | 1 | Treasure Chest | afr |

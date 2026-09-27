@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 6.1% |
-| Works (untested) | 48 | 32.4% |
-| Partial (unaudited) | 6 | 4.1% |
-| Not working | 85 | 57.4% |
+| Works (untested) | 54 | 36.5% |
+| Partial (unaudited) | 7 | 4.7% |
+| Not working | 78 | 52.7% |
 
 ## Cards needing work
 
@@ -30,14 +30,11 @@
 | Boldwyr Heavyweights | silent | When this creature enters, each opponent may search their library for a creature card and put it onto the battlefield. Then each player who searched their libra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brighthearth Banneret | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Burrenton Bombardier | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Cloak and Dagger | silent | Whenever a Rogue creature enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Coordinated Barrage | silent | Choose a creature type. Coordinated Barrage deals damage to target attacking or blocking creature equal to the number of permanents you control of the chosen ty | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Countryside Crusher | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a land card, put it into your graveyard and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cream of the Crop | silent | Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Daily Regimen | silent | {1}{W}: Put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Declaration of Naught | silent | {U}: Counter target spell with the chosen name. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Distant Melody | silent | Choose a creature type. Draw a card for each permanent you control of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Diviner's Wand | silent | Whenever a Wizard creature enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door of Destinies | silent | Creatures you control of the chosen type get +1/+1 for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthbrawn | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -69,7 +66,6 @@
 | Nightshade Schemers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noggin Whack | silent | Prowl {1}{B} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Target player reveals three cards from their  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Notorious Throng | silent | Prowl {5}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Create X 1/1 black Faerie Rogue creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Obsidian Battle-Axe | silent | Whenever a Warrior creature enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orchard Warden | silent | Whenever another Treefolk creature you control enters, you may gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Preeminent Captain | silent | Whenever this creature attacks, you may put a Soldier creature card from your hand onto the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Prickly Boggart | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -94,14 +90,11 @@
 | Sunflare Shaman | silent | {1}{R}, {T}: This creature deals X damage to any target and X damage to itself, where X is the number of Elemental cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Supreme Exemplar | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Swell of Courage | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Thornbite Staff | silent | Whenever a Shaman creature enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Titan's Revenge | silent | Titan's Revenge deals X damage to any target. Clash with an opponent. If you win, return Titan's Revenge to its owner's hand. (Each clashing player reveals the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unstoppable Ash | silent | Whenever a creature you control becomes blocked, it gets +0/+5 until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Veteran's Armaments | silent | Whenever a Soldier creature enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wandering Graybeard | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Warren Weirding | silent | Target player sacrifices a creature of their choice. If a Goblin is sacrificed this way, that player creates two 1/1 black Goblin Rogue creature tokens, and tho | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waterspout Weavers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Weight of Conscience | silent | Tap two untapped creatures you control that share a creature type: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Winnower Patrol | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wolf-Skull Shaman | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ballyrush Banneret | notice | Kithkin spells and Soldier spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -117,6 +110,7 @@
 | Hostile Realm | unaudited | Enchanted land has "{T}: Target creature can't block this turn." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Oona's Blackguard | unaudited | Each other Rogue creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sage of Fables | unaudited | Each other Wizard creature you control enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Weight of Conscience | unaudited | Enchanted creature can't attack. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ambassador Oak | handled | When this creature enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bitterblossom | handled | At the beginning of your upkeep, you lose 1 life and create a 1/1 black Faerie Rogue creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blightsoil Druid | handled |  |  | Y/-/- | not_tested |
@@ -124,8 +118,11 @@
 | Burrenton Shield-Bearers | handled | Whenever this creature attacks, target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chameleon Colossus | handled | {2}{G}{G}: This creature gets +X/+X until end of turn, where X is its power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Changeling Sentinel | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
+| Cloak and Dagger | handled | Equipped creature gets +2/+0 and has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Declaration of Naught | handled | As this enchantment enters, choose a card name. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dewdrop Spy | handled | When this creature enters, look at the top card of target player's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Disperse | handled | Return target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Diviner's Wand | handled | Equipped creature has "Whenever you draw a card, this creature gets +1/+1 and gains flying until end of turn" and "{4}: Draw a card." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Everbark Shaman | handled | {T}, Exile a Treefolk card from your graveyard: Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fencer Clique | handled | {U}: Put this creature on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feudkiller's Verdict | handled | You gain 10 life. Then if you have more life than an opponent, create a 5/5 white Giant Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -142,6 +139,7 @@
 | Moonglove Changeling | handled | {B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mothdust Changeling | handled | Tap an untapped creature you control: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Murmuring Bosk | handled | As this land enters, you may reveal a Treefolk card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Obsidian Battle-Axe | handled | Equipped creature gets +2/+1 and has haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offalsnout | handled | When this creature leaves the battlefield, exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Order of the Golden Cricket | handled | Whenever this creature attacks, you may pay {W}. If you do, it gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Primal Beyond | handled | As this land enters, you may reveal an Elemental card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -160,6 +158,8 @@
 | Stonybrook Schoolmaster | handled | Whenever this creature becomes tapped, you may create a 1/1 blue Merfolk Wizard creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stream of Unconsciousness | handled | Target creature gets -4/-0 until end of turn. If you control a Wizard, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Taurean Mauler | handled | Whenever an opponent casts a spell, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Thornbite Staff | handled | Equipped creature has "{2}, {T}: This creature deals 1 damage to any target" and "Whenever a creature dies, untap this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Veteran's Armaments | handled | Equipped creature has "Whenever this creature attacks or blocks, it gets +1/+1 until end of turn for each attacking creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Violet Pall | handled | Destroy target nonblack creature. Create a 1/1 black Faerie Rogue creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Walker of the Grove | handled | When this creature leaves the battlefield, create a 4/4 green Elemental creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | War-Spike Changeling | handled | {R}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -207,6 +207,7 @@
 | each other rogue creature you control enters with an additional +N/+N counter on it. | 1 | Oona's Blackguard | mor |
 | each other warrior creature you control enters with an additional +N/+N counter on it. | 1 | Bramblewood Paragon | mor |
 | each other wizard creature you control enters with an additional +N/+N counter on it. | 1 | Sage of Fables | mor |
+| enchanted creature can't attack. | 1 | Weight of Conscience | mor |
 | enchanted land has "..." | 1 | Hostile Realm | mor |
 | fear | 1 | Prickly Boggart | mor |
 | goblin spells and rogue spells you cast cost {M} less to cast. | 1 | Frogtosser Banneret | mor |
@@ -223,7 +224,6 @@
 | reveal cards from the top of your library until you reveal a land card. put that card onto the battlefield and the rest on the bottom of your library in any ord | 1 | Recross the Paths | mor |
 | reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. if a card named ~ was revealed ~, ~ deals N damage  | 1 | Stomping Slabs | mor |
 | tap seven untapped druids you control: gain control of all lands target player controls. | 1 | Gilt-Leaf Archdruid | mor |
-| tap two untapped creatures you control that share a creature type: exile enchanted creature. | 1 | Weight of Conscience | mor |
 | target player discards N cards at random. | 1 | Mind Shatter | mor |
 | target player sacrifices a creature of their choice. if a goblin is sacrificed ~, that player creates two N/N black goblin rogue creature tokens, and those toke | 1 | Warren Weirding | mor |
 | treefolk spells and shaman spells you cast cost {M} less to cast. | 1 | Bosk Banneret | mor |
@@ -240,17 +240,11 @@
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
 | whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
-| whenever a rogue creature enters, you may attach ~ to it. | 1 | Cloak and Dagger | mor |
-| whenever a shaman creature enters, you may attach ~ to it. | 1 | Thornbite Staff | mor |
-| whenever a soldier creature enters, you may attach ~ to it. | 1 | Veteran's Armaments | mor |
-| whenever a warrior creature enters, you may attach ~ to it. | 1 | Obsidian Battle-Axe | mor |
-| whenever a wizard creature enters, you may attach ~ to it. | 1 | Diviner's Wand | mor |
 | whenever another treefolk creature you control enters, you may gain life equal to that creature's toughness. | 1 | Orchard Warden | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
 | whenever ~ becomes blocked, clash with an opponent. if you win, ~ deals N damage to each creature blocking it. | 1 | Fire Juggler | mor |
 | whenever ~ becomes tapped, exile the top three cards of target opponent's library face down. | 1 | Grimoire Thief | mor |
 | {M}, remove a +N/+N counter from ~: target land becomes an island until end of turn. | 1 | Floodchaser | mor |
-| {M}: counter target spell with the chosen name. | 1 | Declaration of Naught | mor |
 | {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |
 | {M}: ~ becomes a N/N creature with all creature types until end of turn. it's still a land. | 1 | Mutavault | mor |
 | {M}{M}, remove a +N/+N counter from ~: all other creatures get -N/-N until end of turn. | 1 | Festercreep | mor |

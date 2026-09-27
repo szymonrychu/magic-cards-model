@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 4.9% |
-| Works (untested) | 85 | 46.4% |
+| Tested | 10 | 5.5% |
+| Works (untested) | 86 | 47.0% |
 | Partial (unaudited) | 6 | 3.3% |
-| Not working | 83 | 45.4% |
+| Not working | 81 | 44.3% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Ammit Eternal | silent | Whenever this creature deals combat damage to a player, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Apocalypse Demon | silent | Apocalypse Demon's power and toughness are each equal to the number of cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Appeal // Authority | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Bloodwater Entity | silent | When this creature enters, you may put target instant or sorcery card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bontu's Last Reckoning | silent | Destroy all creatures. Lands you control don't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Champion of Wits | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Chaos Maw | silent | When this creature enters, it deals 3 damage to each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,7 +42,6 @@
 | Dreamstealer | silent | Whenever this creature deals combat damage to a player, that player discards that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Driven // Despair | silent | Until end of turn, creatures you control gain trample and "Whenever this creature deals combat damage to a player, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthshaker Khenra | silent | When this creature enters, target creature with power less than or equal to this creature's power can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Endless Sands | silent | {4}, {T}, Sacrifice this land: Return each creature card exiled with this land to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eternal of Harsh Truths | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Farm // Market | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Fraying Sanity | silent | At the beginning of each end step, enchanted player mills X cards, where X is the number of cards put into their graveyard from anywhere this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -126,6 +124,7 @@
 | Banewhip Punisher | handled | When this creature enters, you may put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beneath the Sands | handled | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bitterbow Sharpshooters | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
+| Bloodwater Entity | handled | When this creature enters, you may put target instant or sorcery card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brambleweft Behemoth | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Burning-Fist Minotaur | handled | {1}{R}, Discard a card: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrion Screecher | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -204,10 +203,11 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Abrade
 - Desert of the True
+- Endless Sands
 - Hollow One
 - Liliana's Defeat
 - Nissa's Defeat
@@ -269,7 +269,6 @@
 | when ~ enters, target creature with power less than or equal to ~ power can't block ~. | 1 | Earthshaker Khenra | hou |
 | when ~ enters, you gain life equal to its power. | 1 | Sunscourge Champion | hou |
 | when ~ enters, you may have target creature get +N/+N until end of turn, where N is ~ power. | 1 | Resilient Khenra | hou |
-| when ~ enters, you may put target instant or sorcery card from your graveyard on top of your library. | 1 | Bloodwater Entity | hou |
 | when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
 | whenever unesh or another sphinx you control enters, reveal the top four cards of your library. an opponent separates those cards into two piles. put one pile i | 1 | Unesh, Criosphinx Sovereign | hou |
 | whenever you activate an eternalize or embalm ability, draw a card. | 1 | Vizier of the Anointed | hou |
@@ -289,7 +288,6 @@
 | you may exert ~ as it attacks. when you do, it gets +N/+N until end of turn. | 1 | Khenra Scrapper | hou |
 | you may exert ~ as it attacks. when you do, prevent all combat damage that would be dealt to it ~. | 1 | Oketra's Avenger | hou |
 | your life total becomes equal to your starting life total. lands you control don't untap during your next untap step. | 1 | Oketra's Last Mercy | hou |
-| {M}, {M}, sacrifice ~: return each creature card exiled with ~ to the battlefield under its owner's control. | 1 | Endless Sands | hou |
 | ~ deals N damage to target red creature or red planeswalker. if that permanent is a chandra planeswalker, you may discard a card. if you do, draw a card. | 1 | Chandra's Defeat | hou |
 | ~ deals damage to target spell"..."s mana value. | 1 | Refuse // Cooperate | hou |
 | ~ gets +N/+N as long as you control a desert. | 1 | Ramunap Hydra | hou |

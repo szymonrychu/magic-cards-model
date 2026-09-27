@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.5% |
-| Works (untested) | 104 | 41.3% |
+| Works (untested) | 106 | 42.1% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 114 | 45.2% |
+| Not working | 112 | 44.4% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Leonin Lightbringer | silent | As long as this creature is equipped, it gets +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lukka, Bound to Ruin | silent | −1: Create a 3/3 green Phyrexian Beast creature token with toxic 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Magmatic Sprinter | silent | At the beginning of your end step, return this creature to its owner's hand unless you remove two oil counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Meldweb Curator | silent | When this creature enters, put up to one target instant or sorcery card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meldweb Strider | silent | Remove an oil counter from this Vehicle: It becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Melira, the Living Cure | silent | Exile Melira: Choose another target creature or artifact. When it's put into a graveyard this turn, return that card to the battlefield under its owner's contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mercurial Spelldancer | silent | Whenever this creature deals combat damage to a player, you may remove two oil counters from it. If you do, when you next cast an instant or sorcery spell this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +86,6 @@
 | Monument to Perfection | silent | {3}: This artifact becomes a 9/9 Phyrexian Construct artifact creature, loses all abilities, and gains indestructible and toxic 9. Activate only if there are ni | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Myr Custodian | silent | When this creature enters, scry 2. Then each opponent may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necrogen Rotpriest | silent | Whenever a creature you control with toxic deals combat damage to a player, that player gets an additional poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ossification | silent | When this Aura enters, exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ovika, Enigma Goliath | silent | Whenever you cast a noncreature spell, create X 1/1 red Phyrexian Goblin creature tokens, where X is the mana value of that spell. They gain haste until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Phyrexian Atlas | silent | Corrupted — Whenever this artifact becomes tapped, each opponent who has three or more poison counters loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plague Nurse | silent | {2}{G}: Each other creature you control with toxic gains toxic 1 until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -193,6 +191,7 @@
 | Mandible Justiciar | handled | Whenever another artifact you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maze Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maze's Mantle | handled | When this Aura enters, if enchanted creature has toxic, that creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Meldweb Curator | handled | When this creature enters, put up to one target instant or sorcery card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mesmerizing Dose | handled | When this Aura enters, tap enchanted creature, then proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Migloz, Maze Crusher | handled | Migloz enters with five oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minor Misstep | handled | Counter target spell with mana value 1 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -207,6 +206,7 @@
 | Noxious Assault | handled | Creatures you control get +2/+2 until end of turn. Whenever a creature blocks this turn, its controller gets a poison counter. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Offer Immortality | handled | Target creature gains deathtouch and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oil-Gorger Troll | handled | When this creature enters, you gain 3 life. Then if you control a permanent with an oil counter on it, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ossification | handled | When this Aura enters, exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oxidda Finisher | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/Y/- | not_tested |
 | Paladin of Predation | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pestilent Syphoner | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -351,11 +351,9 @@
 | when ~ enters, another target creature you control with toxic gets +N/+N and gains flying until end of turn. | 1 | Flensing Raptor | one |
 | when ~ enters, create two N/N colorless phyrexian mite artifact creature tokens with toxic N and "..." | 1 | Basilica Shepherd | one |
 | when ~ enters, create two N/N green phyrexian beast creature tokens with toxic N. | 1 | Goliath Hatchery | one |
-| when ~ enters, exile target creature or planeswalker an opponent controls until ~ leaves the battlefield. | 1 | Ossification | one |
 | when ~ enters, exile three cards at random from your graveyard. choose a noncreature, nonland card from among them and copy it. you may cast the copy without pa | 1 | Capricious Hellraiser | one |
 | when ~ enters, it deals N damage to any target, where N is the number of permanents you control with oil counters on them. | 1 | Urabrask's Anointer | one |
 | when ~ enters, look at the top four cards of your library. you may reveal a land card from among them and put it into your hand. put the rest on the bottom of y | 1 | Contagious Vorrac | one |
-| when ~ enters, put up to one target instant or sorcery card from your graveyard on top of your library. | 1 | Meldweb Curator | one |
 | when ~ enters, scry N. then each opponent may scry N. | 1 | Myr Custodian | one |
 | when ~ enters, up to one target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Unctus's Retrofitter | one |
 | when ~ enters, you may pay N life. when you do, target creature gets -N/-N until end of turn. | 1 | Ambulatory Edifice | one |

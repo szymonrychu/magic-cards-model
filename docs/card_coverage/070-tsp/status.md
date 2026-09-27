@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 98 | 36.6% |
+| Works (untested) | 99 | 36.9% |
 | Partial (unaudited) | 30 | 11.2% |
-| Not working | 117 | 43.7% |
+| Not working | 116 | 43.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Academy Ruins | silent | {1}{U}, {T}: Put target artifact card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aether Web | silent | Enchanted creature gets +1/+1, has reach, and can block creatures with shadow as though they didn't have shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel's Grace | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) You can't lose the game this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Barbed Shocker | silent | Whenever this creature deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -173,6 +172,7 @@
 | Vampiric Sliver | unaudited | All Sliver creatures have "Whenever a creature dealt damage by this creature this turn dies, put a +1/+1 counter on this creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vesuvan Shapeshifter | unaudited | As this creature enters or is turned face up, you may choose another creature on the battlefield. If you do, until this creature is turned face down, it becomes | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Weathered Bodyguards | unaudited | As long as this creature is untapped, all combat damage that would be dealt to you by unblocked creatures is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Academy Ruins | handled | {1}{U}, {T}: Put target artifact card from your graveyard on top of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ancient Grudge | handled | Destroy target artifact. Flashback {G} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashcoat Bear | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 | Aspect of Mongoose | handled | Enchanted creature has shroud. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -421,7 +421,6 @@
 | {M}{M}, {M}, discard a card: each other player loses N life. you gain life equal to the life lost ~. | 1 | Urborg Syphon-Mage | tsp |
 | {M}{M}, {M}, discard a card: jaya ballard deals N damage to any target. a creature dealt damage ~ can't be regenerated ~. | 1 | Jaya Ballard, Task Mage | tsp |
 | {M}{M}, {M}: if ~ is on the battlefield, it deals damage equal to its power to target attacking creature. that creature deals damage equal to its power to ~. | 1 | Durkwood Tracker | tsp |
-| {M}{M}, {M}: put target artifact card from your graveyard on top of your library. | 1 | Academy Ruins | tsp |
 | {M}{M}: creatures with shadow get +N/+N until end of turn and creatures without shadow get -N/-N until end of turn. | 1 | Stronghold Overseer | tsp |
 | {M}{M}: return ~ from your graveyard to the battlefield tapped. you skip your next turn. | 1 | Chronosavant | tsp |
 | ~ can block an additional creature each combat. | 1 | Foriysian Interceptor | tsp |

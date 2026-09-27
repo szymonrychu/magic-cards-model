@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 6.4% |
-| Works (untested) | 118 | 41.7% |
+| Works (untested) | 120 | 42.4% |
 | Partial (unaudited) | 13 | 4.6% |
-| Not working | 134 | 47.3% |
+| Not working | 132 | 46.6% |
 
 ## Cards needing work
 
@@ -58,7 +58,6 @@
 | Hanabi Blast | silent | Hanabi Blast deals 2 damage to any target. Return Hanabi Blast to its owner's hand, then discard a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Harsh Deceiver | silent | {2}: Reveal the top card of your library. If it's a land card, untap this creature and it gets +1/+1 until end of turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | He Who Hungers | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Hisoka's Defiance | silent | Counter target Spirit or Arcane spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hisoka's Guard | silent | {1}{U}, {T}: Target creature you control other than this creature has shroud for as long as this creature remains tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hisoka, Minamo Sensei | silent | {2}{U}, Discard a card: Counter target spell if it has the same mana value as the discarded card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hold the Line | silent | Blocking creatures get +7/+7 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -126,7 +125,6 @@
 | Sensei's Divining Top | silent | {T}: Draw a card, then put this artifact on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Serpent Skin | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seshiro the Anointed | silent | Other Snake creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shell of the Last Kappa | silent | {3}, {T}: Exile target instant or sorcery spell that targets you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shisato, Whispering Hunter | silent | At the beginning of your upkeep, sacrifice a Snake. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shizo, Death's Storehouse | silent | {B}, {T}: Target legendary creature gains fear until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sift Through Sands | silent | Draw two cards, then discard a card. If you've cast a spell named Peer Through Depths and a spell named Reach Through Mists this turn, you may search your libra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -208,6 +206,7 @@
 | Heartbeat of Spring | handled | Whenever a player taps a land for mana, that player adds one mana of any type that land produced. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hearth Kami | handled | {X}, Sacrifice this creature: Destroy target artifact with mana value X. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hideous Laughter | handled | All creatures get -2/-2 until end of turn. Splice onto Arcane {3}{B}{B} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hisoka's Defiance | handled | Counter target Spirit or Arcane spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Honden of Life's Web | handled | At the beginning of your upkeep, create a 1/1 colorless Spirit creature token for each Shrine you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Honden of Seeing Winds | handled | At the beginning of your upkeep, draw a card for each Shrine you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Honor-Worn Shaku | handled | Tap an untapped legendary permanent you control: Untap this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -262,6 +261,7 @@
 | Ryusei, the Falling Star | handled | When Ryusei dies, it deals 5 damage to each creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sakura-Tribe Elder | handled | Sacrifice this creature: Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seizan, Perverter of Truth | handled | At the beginning of each player's upkeep, that player loses 2 life and draws two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shell of the Last Kappa | handled | {3}, {T}: Exile target instant or sorcery spell that targets you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shinka, the Bloodsoaked Keep | handled | {R}, {T}: Target legendary creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sideswipe | handled | You may change any targets of target Arcane spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sire of the Storm | handled | Whenever you cast a Spirit or Arcane spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -349,7 +349,6 @@
 | choose a nonland card name and a number greater than N. target player reveals their library. if that library contains exactly the chosen number of cards with th | 1 | Mindblaze | chk |
 | choose a nonland card name. search target player's graveyard, hand, and library for all cards with that name and exile them. then that player shuffles. | 1 | Cranial Extraction | chk |
 | counter target spell. if that spell is countered ~, put that card on your choice of the top or bottom of its owner"..."s graveyard. | 1 | Hinder | chk |
-| counter target spirit or arcane spell. | 1 | Hisoka's Defiance | chk |
 | creatures that share a color with equipped creature get +N/+N. | 1 | Konda's Banner | chk |
 | destroy target land. if that land was legendary, its controller sacrifices another land of their choice. | 1 | Feast of Worms | chk |
 | draw two cards, then discard a card. if you've cast a spell named peer through depths and a spell named reach through mists ~, you may search your library for a | 1 | Sift Through Sands | chk |
@@ -413,7 +412,6 @@
 | {M}, tap an untapped creature you control: untap enchanted creature. | 1 | Aura of Dominion | chk |
 | {M}, {M}: attacking creatures gain first strike until end of turn. | 1 | Akki Coalflinger | chk |
 | {M}, {M}: create a N/N green snake creature token for each charge counter on ~. | 1 | Orochi Hatchery | chk |
-| {M}, {M}: exile target instant or sorcery spell that targets you. | 1 | Shell of the Last Kappa | chk |
 | {M}, {M}: target legendary creature gains fear until end of turn. | 1 | Shizo, Death's Storehouse | chk |
 | {M}: draw a card, then put ~ on top of its owner's library. | 1 | Sensei's Divining Top | chk |
 | {M}: prevent all damage that would be dealt to target legendary creature ~. | 1 | Kitsune Healer | chk |

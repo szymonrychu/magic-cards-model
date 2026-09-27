@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.0% |
-| Works (untested) | 72 | 44.7% |
+| Tested | 9 | 5.6% |
+| Works (untested) | 73 | 45.3% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 70 | 43.5% |
+| Not working | 68 | 42.2% |
 
 ## Cards needing work
 
@@ -51,7 +51,6 @@
 | Ghastly Conscription | silent | Exile all creature cards from target player's graveyard in a face-down pile, shuffle that pile, then manifest those cards. (To manifest a card, put it onto the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grave Strength | silent | Choose target creature. Mill three cards, then put a +1/+1 counter on that creature for each creature card in your graveyard. (To mill three cards, put the top  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grim Contest | silent | Choose target creature you control and target creature an opponent controls. Each of those creatures deals damage equal to its toughness to the other. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hero's Blade | silent | Whenever a legendary creature you control enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Honor's Reward | silent | You gain 4 life. Bolster 2. (Choose a creature with the least toughness among creatures you control and put two +1/+1 counters on it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Humble Defector | silent | {T}: Draw two cards. Target opponent gains control of this creature. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jeskai Infiltrator | silent | When this creature deals combat damage to a player, exile it and the top card of your library in a face-down pile, shuffle that pile, then manifest those cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -92,7 +91,6 @@
 | Bloodfire Enforcers | notice | This creature has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crux of Fate | notice | Choose one — • Destroy all Dragon creatures. • Destroy all non-Dragon creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fearsome Awakening | notice | Return target creature card from your graveyard to the battlefield. If it's a Dragon, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mob Rule | notice | Choose one — • Gain control of all creatures with power 4 or greater until end of turn. Untap those creatures. They gain haste until end of turn. • Gain control | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rally the Ancestors | notice | Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Ra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reality Shift | notice | Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Supplant Form | notice | Return target creature to its owner's hand. You create a token that's a copy of that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -135,6 +133,7 @@
 | Great-Horn Krushok | handled |  |  | Y/Y/- | not_tested |
 | Gurmag Angler | handled | Delve | machines/keywords.py | Y/Y/- | not_tested |
 | Harsh Sustenance | handled | Harsh Sustenance deals X damage to any target and you gain X life, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hero's Blade | handled | Equipped creature gets +3/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hooded Assassin | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Barricade | handled | When this creature enters, you may return another target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jeskai Sage | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -183,13 +182,14 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Ainok Guide
 - Break Through the Line
 - Dark Deal
 - Ethereal Ambush
 - Mastery of the Unseen
+- Mob Rule
 - Shifting Loyalties
 - Temur Battle Rage
 - Wandering Champion
@@ -202,8 +202,8 @@
 |---|---|---|---|
 | as ~ enters, choose khans or dragons. | 5 | Citadel Siege, Frontier Siege, Monastery Siege, Outpost Siege, Palace Siege | frf |
 | when ~ enters, it becomes an aura with enchant creature. manifest the top card of your library and attach ~ to it. | 3 | Cloudform, Lightform, Rageform | frf |
-| Choose one | 2 | Crux of Fate, Mob Rule | frf |
 | when ~ enters, bolster N. | 2 | Elite Scaleguard, Sandsteppe Mastodon | frf |
+| Choose one | 1 | Crux of Fate | frf |
 | Ferocious | 1 | Frontier Mastodon | frf |
 | add {M} for each attacking creature you control. until end of turn, attacking creatures you control gain "..." | 1 | Dragonrage | frf |
 | as long as you control a green or blue permanent, you may cast ~ as though it had flash. | 1 | Hungering Yeti | frf |
@@ -254,7 +254,6 @@
 | whenever a creature you control attacks, defending player loses N life and you gain N life. | 1 | Brutal Hordechief | frf |
 | whenever a dragon you control attacks, bolster N. | 1 | Dromoka, the Eternal | frf |
 | whenever a dragon you control attacks, creatures defending player controls get -N/-N until end of turn. | 1 | Silumgar, the Drifting Death | frf |
-| whenever a legendary creature you control enters, you may attach ~ to it. | 1 | Hero's Blade | frf |
 | whenever a permanent you control is turned face up, if it"..."t control. | 1 | Temur War Shaman | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |

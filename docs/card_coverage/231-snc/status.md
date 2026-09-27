@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.7% |
-| Works (untested) | 130 | 51.4% |
+| Tested | 18 | 7.1% |
+| Works (untested) | 129 | 51.0% |
 | Partial (unaudited) | 12 | 4.7% |
 | Not working | 94 | 37.2% |
 
@@ -182,7 +182,6 @@
 | Fake Your Own Death | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies, return it to the battlefield tapped under its owner's control and you create a | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fleetfoot Dancer | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Forge Boss | handled | Whenever you sacrifice one or more other creatures, this creature deals 2 damage to each opponent. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Gala Greeters | handled | Alliance — Whenever another creature you control enters, choose one that hasn't been chosen this turn — • Put a +1/+1 counter on this creature. • Create a tappe | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gilded Pinions | handled | When this Equipment enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glittering Stockpile | handled |  |  | Y/Y/- | not_tested |
 | Glittermonger | handled | {T}: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -266,13 +265,14 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
 - Expendable Lackey
 - Fight Rigging
 - For the Family
+- Gala Greeters
 - Getaway Car
 - Hypnotic Grifter
 - Join the Maestros

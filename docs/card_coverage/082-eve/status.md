@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 2.2% |
-| Works (untested) | 87 | 48.6% |
-| Partial (unaudited) | 5 | 2.8% |
+| Works (untested) | 88 | 49.2% |
+| Partial (unaudited) | 4 | 2.2% |
 | Not working | 83 | 46.4% |
 
 ## Cards needing work
@@ -111,7 +111,6 @@
 | Unwilling Recruit | notice | Gain control of target creature until end of turn. Untap that creature. It gets +X/+0 and gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Canker Abomination | unaudited | As this creature enters, choose an opponent. This creature enters with a -1/-1 counter on it for each creature that player controls. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hotheaded Giant | unaudited | This creature enters with two -1/-1 counters on it unless you've cast another red spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Recumbent Bliss | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Talara's Battalion | unaudited | Cast this spell only if you've cast another green spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ward of Bones | unaudited | Each opponent who controls more creatures than you can't cast creature spells. The same is true for artifacts and enchantments. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Archon of Justice | handled | When this creature dies, exile target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -171,6 +170,7 @@
 | Puncture Blast | handled | Wither (This deals damage to creatures in the form of -1/-1 counters.) Puncture Blast deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quillspike | handled | {B/G}, Remove a -1/-1 counter from a creature you control: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razorfin Abolisher | handled | {1}{U}, {T}: Return target creature with a counter on it to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Recumbent Bliss | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rekindled Flame | handled | Rekindled Flame deals 4 damage to any target. At the beginning of your upkeep, if an opponent has no cards in hand, you may return this card from your graveyard | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rendclaw Trow | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
 | Restless Apparition | handled | {W/B}{W/B}{W/B}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -238,7 +238,6 @@
 | destroy target nongreen creature. its controller loses N life if you've cast another black spell ~. | 1 | Soul Reap | eve |
 | each opponent who controls more creatures than you can't cast creature spells. the same is true for artifacts and enchantments. | 1 | Ward of Bones | eve |
 | each player returns each creature card from their graveyard to the battlefield with an additional -N/-N counter on it. | 1 | Pyrrhic Revival | eve |
-| enchanted creature can't attack or block. | 1 | Recumbent Bliss | eve |
 | fear | 1 | Lingering Tormentor | eve |
 | gain control of target creature until end of turn. untap that creature. it gets +N/+N and gains haste until end of turn. | 1 | Unwilling Recruit | eve |
 | if {M} was spent to cast ~, you may have target creature get -N/-N until end of turn. if {M} was spent to cast ~, you may have target creature get +N/+N until e | 1 | Cankerous Thirst | eve |

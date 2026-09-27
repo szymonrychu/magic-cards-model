@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 26 | 10.4% |
 | Works (untested) | 119 | 47.8% |
-| Partial (unaudited) | 14 | 5.6% |
-| Not working | 90 | 36.1% |
+| Partial (unaudited) | 15 | 6.0% |
+| Not working | 89 | 35.7% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Bereaved Survivor // Dauntless Avenger | silent | Whenever this creature attacks, return target creature card with mana value 2 or less from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blessed Defiance | silent | Target creature you control gets +2/+0 and gains lifelink until end of turn. When that creature dies this turn, create a 1/1 white Spirit creature token with fl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Briarbridge Tracker | silent | As long as you control a token, this creature gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Candletrap | silent | Coven — {2}{W}, Sacrifice this Aura: Exile enchanted creature. Activate only if you control three or more creatures with different powers. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cathar's Call | silent | Enchanted creature has vigilance and "At the beginning of your end step, create a 1/1 white Human creature token." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Celestus Sanctifier | silent | Whenever day becomes night or night becomes day, look at the top two cards of your library. Put one of them into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaplain of Alms // Chapel Shieldgeist | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -117,6 +116,7 @@
 | Wake to Slaughter | notice | Choose up to two target creature cards in your graveyard. An opponent chooses one of them. Return that card to your hand. Return the other to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Winterthorn Blessing | notice | Put a +1/+1 counter on up to one target creature you control. Tap up to one target creature you don't control, and that creature doesn't untap during its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Augur of Autumn | unaudited | Coven — As long as you control three or more creatures with different powers, you may cast creature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Candletrap | unaudited | Prevent all combat damage that would be dealt by enchanted creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Consuming Blob | unaudited | Consuming Blob's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Curse of Leeches // Leeching Lurker | unaudited | As this permanent transforms into Curse of Leeches, attach it to a player. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grizzly Ghoul | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -289,7 +289,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | disturb | 10 | Baithook Angler // Hook-Haunt Drifter, Beloved Beggar // Generous Soul, Chaplain of Alms // Chapel Shieldgeist, Covert Cutpurse // Covetous Geist, Covetous Castaway // Ghostly Castigator | mid |
-| Coven | 5 | Augur of Autumn, Candletrap, Duel for Dominance, Harvesttide Sentry, Sungold Sentinel | mid |
+| Coven | 4 | Augur of Autumn, Duel for Dominance, Harvesttide Sentry, Sungold Sentinel | mid |
 | Choose one | 2 | Bloodline Culling, Burn Down the House | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
@@ -326,6 +326,7 @@
 | look at the top two cards of target opponent's library. exile one of them face down and put the other on the bottom of that library. you may play the exiled car | 1 | Siphon Insight | mid |
 | non-horror creatures with slime counters on them lose all abilities and have base power and toughness N/N. | 1 | Sludge Monster | mid |
 | other tapped creatures you control have deathtouch. | 1 | Saryth, the Viper's Fang | mid |
+| prevent all combat damage that would be dealt by enchanted creature. | 1 | Candletrap | mid |
 | put a +N/+N counter on up to one target creature you control. tap up to one target creature you don"..."t untap during its controller's next untap step. flashba | 1 | Winterthorn Blessing | mid |
 | return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." flashback {M}{M}{M} (you may cast ~ from your grave | 1 | Can't Stay Away | mid |
 | return target creature to its owner's hand. if its mana value was N or less, scry N. (look at the top card of your library. you may put that card on the bottom. | 1 | Fading Hope | mid |

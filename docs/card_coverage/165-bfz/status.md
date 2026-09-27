@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.2% |
-| Works (untested) | 139 | 61.5% |
+| Works (untested) | 140 | 61.9% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 67 | 29.6% |
+| Not working | 66 | 29.2% |
 
 ## Cards needing work
 
@@ -55,10 +55,9 @@
 | Infuse with the Elements | silent | Converge — Put X +1/+1 counters on target creature, where X is the number of colors of mana spent to cast this spell. That creature gains trample until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mire's Malice | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mist Intruder | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Mortuary Mire | silent | When this land enters, you may put target creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Munda, Ambush Leader | silent | Rally — Whenever Munda or another Ally you control enters, you may look at the top four cards of your library. If you do, reveal any number of Ally cards from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ondu Rising | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Part the Waterveil | silent | Take an extra turn after this one. Exile Part the Waterveil. Awaken 6—{6}{U}{U}{U} (If you cast this spell for {6}{U}{U}{U}, also put six +1/+1 counters on targ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Part the Waterveil | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Planar Outburst | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Quarantine Field | silent | When this enchantment enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until this enchantment leaves the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Radiant Flames | silent | Converge — Radiant Flames deals X damage to each creature, where X is the number of colors of mana spent to cast this spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -172,6 +171,7 @@
 | March from the Tomb | handled | Return any number of target Ally creature cards with total mana value 8 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mind Raker | handled | When this creature enters, you may put a card an opponent owns from exile into that player's graveyard. If you do, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Molten Nursery | handled | Whenever you cast a colorless spell, this enchantment deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mortuary Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murasa Ranger | handled | Landfall — Whenever a land you control enters, you may pay {3}{G}. If you do, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Natural Connection | handled | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nettle Drone | handled | {T}: This creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -265,7 +265,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| awaken | 11 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
+| awaken | 12 | Boiling Earth, Clutch of Currents, Coastal Discovery, Earthen Arms, Mire's Malice | bfz |
 | Converge | 7 | Brilliant Spectrum, Bring to Light, Exert Influence, Infuse with the Elements, Radiant Flames | bfz |
 | ingest | 6 | Benthic Infiltrator, Culling Drone, Mist Intruder, Salvage Drone, Sludge Crawler | bfz |
 | Landfall | 5 | Akoum Hellkite, Akoum Stonewaker, Emeria Shepherd, Guardian of Tazeem, Oran-Rief Hydra | bfz |
@@ -288,7 +288,6 @@
 | if damage would be dealt to ~ while it has a +N/+N counter on it, prevent that damage and remove a +N/+N counter from ~. | 1 | Undergrowth Champion | bfz |
 | prevent all combat damage that would be dealt ~ by creatures target opponent controls. awaken N—{M}{M} (if you cast ~ for {M}{M}, also put two +N/+N counters on | 1 | Encircling Fissure | bfz |
 | put target creature on top of its owner"..."s still a land.) | 1 | Roil Spout | bfz |
-| take an extra turn after ~. exile ~. awaken N—{M}{M}{M}{M} (if you cast ~ for {M}{M}{M}{M}, also put six +N/+N counters on target land you control and it become | 1 | Part the Waterveil | bfz |
 | target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
 | until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
 | when you cast ~, you may search your library for a colorless creature card with mana value N or greater, reveal it, then shuffle and put that card on top. | 1 | Conduit of Ruin | bfz |
@@ -297,7 +296,6 @@
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |
 | when ~ enters, you may look at the top five cards of your library. if you do, reveal up to one basic land card from among them, then put that card on top of you | 1 | Fertile Thicket | bfz |
-| when ~ enters, you may put target creature card from your graveyard on top of your library. | 1 | Mortuary Mire | bfz |
 | whenever a land an opponent controls enters, that player exiles the top two cards of their library and you draw two cards. | 1 | Sire of Stagnation | bfz |
 | whenever drana deals combat damage to a player, put a +N/+N counter on each attacking creature you control. | 1 | Drana, Liberator of Malakir | bfz |
 | whenever equipped creature attacks, you may return a land you control to its owner's hand. if you do, the creature gets +N/+N until end of turn. | 1 | Slab Hammer | bfz |

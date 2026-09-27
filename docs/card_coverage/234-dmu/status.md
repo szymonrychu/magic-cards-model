@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.4% |
+| Tested | 19 | 7.8% |
 | Works (untested) | 107 | 43.9% |
 | Partial (unaudited) | 19 | 7.8% |
-| Not working | 100 | 41.0% |
+| Not working | 99 | 40.6% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evolved Sleeper | silent | {B}: This creature becomes a Human Cleric with base power and toughness 2/2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Extinguish the Light | silent | Destroy target creature or planeswalker. If its mana value was 3 or less, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garna, Bloodfist of Keld | silent | Whenever another creature you control dies, draw a card if it was attacking. Otherwise, Garna deals 1 damage to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guardian of New Benalia | silent | Whenever this creature enlists a creature, scry 2. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -256,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Ajani, Sleeper Agent
 - Archangel of Wrath
@@ -264,6 +263,7 @@
 - Colossal Growth
 - Cosmic Epiphany
 - Cult Conscript
+- Extinguish the Light
 - Ivy, Gleeful Spellthief
 - Lagomos, Hand of Hatred
 - Leyline Binding
@@ -305,7 +305,6 @@
 | at the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. if you do, each opponent may sacrifice a permane | 1 | Braids, Arisen Nightmare | dmu |
 | choose target creature you control and target creature you don't control. if you cast ~ during your main phase, the creature you control gets +N/+N until end of | 1 | Tail Swipe | dmu |
 | destroy all creatures. for each creature destroyed ~, its controller creates a N/N black phyrexian creature token. | 1 | The Phasing of Zhalfir | dmu |
-| destroy target creature or planeswalker. if its mana value was N or less, you gain N life. | 1 | Extinguish the Light | dmu |
 | destroy target creature with total power and toughness N or less. | 1 | Cut Down | dmu |
 | enchantment creatures you control have deathtouch, lifelink, and hexproof. | 1 | Zur, Eternal Schemer | dmu |
 | equipment you control have equip {M}. | 1 | Astor, Bearer of Blades | dmu |

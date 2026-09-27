@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 8.5% |
-| Works (untested) | 145 | 58.9% |
+| Works (untested) | 147 | 59.8% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 73 | 29.7% |
+| Not working | 71 | 28.9% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Die Young | silent | Choose target creature. You get {E}{E} (two energy counters), then you may pay any amount of {E}. The creature gets -1/-1 until end of turn for each {E} paid th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dovin Baan | silent | +1: Until your next turn, up to one target creature gets -3/-0 and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dubious Challenge | silent | Look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. Target opponent may choose one of the exiled cards and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dukhara Scavenger | silent | When this creature enters, you may put target artifact or creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eager Construct | silent | When this creature enters, each player may scry 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elegant Edgecrafters | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Empyreal Voyager | silent | Whenever this creature deals combat damage to a player, you get that many {E} . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,7 +65,6 @@
 | Hazardous Conditions | silent | Creatures with no counters on them get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Highspire Artisan | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hightide Hermit | silent | Pay {E}{E}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Inventor's Goggles | silent | Whenever an Artificer you control enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Iron League Steed | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Lost Legacy | silent | Choose a nonartifact, nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. That player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Madcap Experiment | silent | Reveal cards from the top of your library until you reveal an artifact card. Put that card onto the battlefield and the rest on the bottom of your library in a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -75,7 +73,7 @@
 | Metallurgic Summonings | silent | Whenever you cast an instant or sorcery spell, create an X/X colorless Construct artifact creature token, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Midnight Oil | silent | At the beginning of your draw step, draw an additional card and remove two hour counters from this enchantment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Morbid Curiosity | silent | As an additional cost to cast this spell, sacrifice an artifact or creature. Draw cards equal to the mana value of the sacrificed permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Multiform Wonder | silent | Pay {E}: This creature gains your choice of flying, vigilance, or lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Multiform Wonder | silent | Pay {E}: This creature gets +2/-2 or -2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Nature's Artisan | silent | −4: Reveal the top two cards of your library. Put all land cards from among them onto the battlefield and the rest into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Noxious Gearhulk | silent | When this creature enters, you may destroy another target creature. If a creature is destroyed this way, you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Paradoxical Outcome | silent | Return any number of target nonland, nontoken permanents you control to their owners' hands. Draw a card for each card returned to your hand this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -138,6 +136,7 @@
 | Decoction Module | handled | Whenever a creature you control enters, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disappearing Act | handled | As an additional cost to cast this spell, return a permanent you control to its owner's hand. Counter target spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dukhara Peafowl | handled | {U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dukhara Scavenger | handled | When this creature enters, you may put target artifact or creature card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Durable Handicraft | handled | Whenever a creature you control enters, you may pay {1}. If you do, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dynavolt Tower | handled | Whenever you cast an instant or sorcery spell, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Electrostatic Pummeler | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -169,6 +168,7 @@
 | Incendiary Sabotage | handled | As an additional cost to cast this spell, sacrifice an artifact. Incendiary Sabotage deals 3 damage to each creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Vantage | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Inventor's Apprentice | handled | This creature gets +1/+1 as long as you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Inventor's Goggles | handled | Equipped creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inventors' Fair | handled | At the beginning of your upkeep, if you control three or more artifacts, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Janjeet Sentry | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kambal, Consul of Allocation | handled | Whenever an opponent casts a noncreature spell, that player loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -309,7 +309,7 @@
 | exchange control of target artifact you control and target artifact or creature you don't control. | 1 | Shrewd Negotiation | kld |
 | look at the top ten cards of your library, exile up to two creature cards from among them, then shuffle. target opponent may choose one of the exiled cards and  | 1 | Dubious Challenge | kld |
 | pay eight {M}: return all other creatures to their owners' hands. activate only as a sorcery. | 1 | Aethersquall Ancient | kld |
-| pay {M}: ~ gains your choice of flying, vigilance, or lifelink until end of turn. | 1 | Multiform Wonder | kld |
+| pay {M}: ~ gets +N/-N or -N/+N until end of turn. | 1 | Multiform Wonder | kld |
 | pay {M}{M}: prevent all damage that would be dealt to you ~ by a source of your choice. | 1 | Consulate Surveillance | kld |
 | pay {M}{M}: ~ can attack ~ as though it didn't have defender. | 1 | Hightide Hermit | kld |
 | prevent all combat damage that would be dealt to players ~. | 1 | Commencement of Festivities | kld |
@@ -326,10 +326,8 @@
 | when ~ enters, move any number of +N/+N counters from other permanents you control onto ~. | 1 | Aetherborn Marauder | kld |
 | when ~ enters, target opponent may have you draw three cards. if the player doesn't, you mill three cards, then ~ deals damage to that player equal to the total | 1 | Combustible Gearhulk | kld |
 | when ~ enters, you may destroy another target creature. if a creature is destroyed ~, you gain life equal to its toughness. | 1 | Noxious Gearhulk | kld |
-| when ~ enters, you may put target artifact or creature card from your graveyard on top of your library. | 1 | Dukhara Scavenger | kld |
 | when ~ enters, you may return another permanent you control to its owner's hand. | 1 | Aviary Mechanic | kld |
 | whenever a permanent you control is put into a graveyard, you get {M} . | 1 | Aetherworks Marvel | kld |
-| whenever an artificer you control enters, you may attach ~ to it. | 1 | Inventor's Goggles | kld |
 | whenever an opponent casts a spell, if it has a single target, change the target to enchanted creature if able. | 1 | Captured by the Consulate | kld |
 | whenever you cast a spell, you gain N life for each spell you've cast ~. | 1 | Aetherflux Reservoir | kld |
 | whenever you cast an instant or sorcery spell, create an N/N colorless construct artifact creature token, where N is that spell's mana value. | 1 | Metallurgic Summonings | kld |

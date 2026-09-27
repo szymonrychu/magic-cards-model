@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 8.6% |
+| Tested | 28 | 9.2% |
 | Works (untested) | 126 | 41.4% |
-| Partial (unaudited) | 19 | 6.2% |
+| Partial (unaudited) | 17 | 5.6% |
 | Not working | 133 | 43.8% |
 
 ## Cards needing work
@@ -169,7 +169,6 @@
 | Emet-Selch, Unsundered // Hades, Sorcerer of Eld | unaudited | Echo of the Lost — During your turn, you may play cards from your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Exdeath, Void Warlock // Neo Exdeath, Dimension's End | unaudited | Neo Exdeath's power is equal to the number of permanent cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Kuja, Genome Sorcerer // Trance Kuja, Fate Defied | unaudited | Flare Star — If a Wizard you control would deal damage to a permanent or player, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Noctis, Prince of Lucis | unaudited | You may cast artifact spells from your graveyard by paying 3 life in addition to paying their other costs. If you cast a spell this way, that artifact enters wi | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Relentless X-ATM092 | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Serah Farron // Crystallized Serah | unaudited | The first legendary creature spell you cast each turn costs {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Starting Town | unaudited | This land enters tapped unless it's your first, second, or third turn of the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -177,7 +176,6 @@
 | The Darkness Crystal | unaudited | If a nontoken creature an opponent controls would die, instead exile it and you gain 2 life. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Lunar Whale | unaudited | As long as The Lunar Whale attacked this turn, you may play the top card of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tonberry | unaudited | This creature enters tapped with a stun counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Traveling Chocobo | unaudited | You may play lands and cast Bird spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Adelbert Steiner | handled | Adelbert Steiner gets +1/+1 for each Equipment you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Adventurer's Airship | handled | Whenever this Vehicle attacks, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Adventurer's Inn | handled | When this land enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -308,7 +306,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Blitzball
 - Cactuar
@@ -320,6 +318,7 @@
 - Jill, Shiva's Dominant // Shiva, Warden of Ice
 - Joshua, Phoenix's Dominant // Phoenix, Warden of Fire
 - Matoya, Archon Elder
+- Noctis, Prince of Lucis
 - Prompto Argentum
 - Quina, Qu Gourmet
 - Raubahn, Bull of Ala Mhigo
@@ -334,6 +333,7 @@
 - Summon: Fat Chocobo
 - Summon: Primal Garuda
 - Thunder Magic
+- Traveling Chocobo
 - Vivi Ornitier
 - You're Not Alone
 
@@ -468,8 +468,6 @@
 | whenever ~ deals combat damage to a player, exile the top card of that player's library. then you may sacrifice another creature or artifact. if you do, you may | 1 | Reno and Rude | fin |
 | xande gets +N/+N for each noncreature, nonland card in your graveyard. | 1 | Xande, Dark Mage | fin |
 | you have protection from each of your opponents. | 1 | Absolute Virtue | fin |
-| you may cast artifact spells from your graveyard by paying N life in addition to paying their other costs. if you cast a spell ~, that artifact enters with a fi | 1 | Noctis, Prince of Lucis | fin |
-| you may play lands and cast bird spells from the top of your library. | 1 | Traveling Chocobo | fin |
 | {M}, sacrifice ~: target creature you control gains indestructible until end of turn. put ~'s counters on that creature and attach an equipment that was attache | 1 | Zack Fair | fin |
 | {M}, {M}, exile ~: shuffle all nonland cards from your graveyard into your library. you gain life equal to the number of cards shuffled into your library ~. | 1 | Elixir | fin |
 | {M}, {M}: flip a coin. if you win the flip, create a treasure token. | 1 | The Gold Saucer | fin |

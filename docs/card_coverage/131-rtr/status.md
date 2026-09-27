@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 7.1% |
-| Works (untested) | 97 | 43.3% |
+| Works (untested) | 99 | 44.2% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 101 | 45.1% |
+| Not working | 99 | 44.2% |
 
 ## Cards needing work
 
@@ -40,7 +40,7 @@
 | Chronic Flooding | silent | Whenever enchanted land becomes tapped, its controller mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Civic Saber | silent | Equipped creature gets +1/+0 for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conjured Currency | silent | At the beginning of your upkeep, you may exchange control of this enchantment and target permanent you neither own nor control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Counterflux | silent | This spell can't be countered. Counter target spell you don't control. Overload {1}{U}{U}{R} (You may cast this spell for its overload cost. If you do, change " | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Counterflux | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Coursers' Accord | silent | Create a 3/3 green Centaur creature token, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cyclonic Rift | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Dead Reveler | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -66,7 +66,6 @@
 | Grim Roustabout | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Growing Ranks | silent | At the beginning of your upkeep, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Guild Feud | silent | At the beginning of your upkeep, target opponent reveals the top three cards of their library, may put a creature card from among them onto the battlefield, the | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Havoc Festival | silent | At the beginning of each player's upkeep, that player loses half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hellhole Flailer | silent | {2}{B}{R}, Sacrifice this creature: It deals damage equal to its power to target player or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Horncaller's Chant | silent | Create a 4/4 green Rhino creature token with trample, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inaction Injunction | silent | Detain target creature an opponent controls. (Until your next turn, that creature can't attack or block and its activated abilities can't be activated.) Draw a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,7 +81,6 @@
 | Mercurial Chemister | silent | {R}, {T}, Discard a card: This creature deals damage to target creature equal to the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mizzium Mortars | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Mizzium Skin | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Necropolis Regent | silent | Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | New Prahv Guildmage | silent | {3}{W}{U}: Detain target nonland permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ogre Jailbreaker | silent | This creature can attack as though it didn't have defender as long as you control a Gate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Spiral | silent | Shuffle all cards from your graveyard into your library. Target player mills that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -178,6 +176,7 @@
 | Golgari Keyrune | handled | {B}{G}: This artifact becomes a 2/2 black and green Insect artifact creature with deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golgari Longlegs | handled |  |  | Y/Y/- | not_tested |
 | Grove of the Guardian | handled | {3}{G}{W}, {T}, Tap two untapped creatures you control, Sacrifice this land: Create an 8/8 green and white Elemental creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Havoc Festival | handled | Players can't gain life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hover Barrier | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Hussar Patrol | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Izzet Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -189,6 +188,7 @@
 | Lotleth Troll | handled | Discard a creature card: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mana Bloom | handled | This enchantment enters with X charge counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Minotaur Aggressor | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
+| Necropolis Regent | handled | Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Niv-Mizzet, Dracogenius | handled | Whenever Niv-Mizzet deals damage to a player, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nivmagus Elemental | handled | Exile an instant or sorcery spell you control: Put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pack Rat | handled | Pack Rat's power and toughness are each equal to the number of Rats you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -264,8 +264,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | unleash | 10 | Bloodfray Giant, Carnival Hellsteed, Chaos Imps, Dead Reveler, Gore-House Chainwalker | rtr |
+| overload | 9 | Blustersquall, Counterflux, Cyclonic Rift, Dynacharge, Electrickery | rtr |
 | scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
-| overload | 8 | Blustersquall, Cyclonic Rift, Dynacharge, Electrickery, Mizzium Mortars | rtr |
 | enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
 | Choose one | 3 | Azorius Charm, Golgari Charm, Rakdos Charm | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
@@ -273,7 +273,6 @@
 | +N: until your next turn, whenever a creature deals combat damage to vraska, destroy that creature. | 1 | Vraska the Unseen | rtr |
 | all damage that would be dealt to you and other permanents you control is dealt to ~ instead. | 1 | Palisade Giant | rtr |
 | at the beginning of each combat, any opponent may sacrifice a creature of their choice. if a player does, tap ~ and put a +N/+N counter on it. | 1 | Desecration Demon | rtr |
-| at the beginning of each player's upkeep, that player loses half their life, rounded up. | 1 | Havoc Festival | rtr |
 | at the beginning of the upkeep of enchanted permanent's controller, that player sacrifices it unless they pay {M}, where N is its mana value. | 1 | Soul Tithe | rtr |
 | at the beginning of your upkeep, detain target creature an opponent controls. | 1 | Martial Law | rtr |
 | at the beginning of your upkeep, populate. | 1 | Growing Ranks | rtr |
@@ -315,7 +314,6 @@
 | when ~ leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | 1 | Detention Sphere | rtr |
 | when ~ leaves the battlefield, return the exiled cards to their owners' hands. | 1 | Angel of Serenity | rtr |
 | whenever a creature attacks you or a planeswalker you control, you may draw a card. | 1 | Isperia, Supreme Judge | rtr |
-| whenever a creature you control deals combat damage to a player, put that many +N/+N counters on it. | 1 | Necropolis Regent | rtr |
 | whenever a creature you control dies, put N +N/+N counters on target creature you control, where N is the power of the creature that died. | 1 | Death's Presence | rtr |
 | whenever a creature you don't control dies, return it to the battlefield under your control with an additional +N/+N counter on it at the beginning of the next  | 1 | Grave Betrayal | rtr |
 | whenever a source deals damage to you, remove a filibuster counter from ~. | 1 | Azor's Elocutors | rtr |
@@ -340,7 +338,6 @@
 | {M}{M}{M}: populate. | 1 | Vitu-Ghazi Guildmage | rtr |
 | ~ can attack as though it didn't have defender as long as you control a gate. | 1 | Ogre Jailbreaker | rtr |
 | ~ can"..."s graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles. | 1 | Slaughter Games | rtr |
-| ~ can"..."t control. overload {M}{M}{M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its text to "...") | 1 | Counterflux | rtr |
 | ~ deals N damage to each opponent. those players each discard two cards at random. | 1 | Skull Rend | rtr |
 | ~ deals N damage to target opponent or planeswalker. that player or that planeswalker's controller discards N cards. | 1 | Rakdos's Return | rtr |
 

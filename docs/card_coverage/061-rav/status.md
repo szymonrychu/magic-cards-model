@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.5% |
-| Works (untested) | 115 | 46.6% |
+| Tested | 20 | 8.1% |
+| Works (untested) | 114 | 46.2% |
 | Partial (unaudited) | 16 | 6.5% |
-| Not working | 100 | 40.5% |
+| Not working | 97 | 39.3% |
 
 ## Cards needing work
 
@@ -35,12 +35,10 @@
 | Bottled Cloister | silent | At the beginning of each opponent's upkeep, exile all cards from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breath of Fury | silent | When enchanted creature deals combat damage to a player, sacrifice it and attach this Aura to a creature you control. If you do, untap all creatures you control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chant of Vitu-Ghazi | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Prevent all | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Char | silent | Char deals 4 damage to any target and 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Circu, Dimir Lobotomist | silent | Whenever you cast a blue spell, exile the top card of target player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudstone Curio | silent | Whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Coalhauler Swine | silent | Whenever this creature is dealt damage, it deals that much damage to each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Compulsive Research | silent | Target player draws three cards. Then that player discards two cards unless they discard a land card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Conclave's Blessing | silent | Enchanted creature gets +0/+2 for each other creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Congregation at Dawn | silent | Search your library for up to three creature cards, reveal them, then shuffle and put those cards on top in any order. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crown of Convergence | silent | As long as the top card of your library is a creature card, creatures you control that share a color with that card get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dimir House Guard | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -55,7 +53,6 @@
 | Followed Footsteps | silent | At the beginning of your upkeep, create a token that's a copy of enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gleancrawler | silent | At the beginning of your end step, return to your hand all creature cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Golgari Brownscale | silent | When this card is put into your hand from your graveyard, you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Golgari Thug | silent | When this creature dies, put target creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grozoth | silent | When this creature enters, you may search your library for any number of cards that have mana value 9, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halcyon Glaze | silent | Whenever you cast a creature spell, this enchantment becomes a 4/4 Illusion creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hammerfist Giant | silent | {T}: This creature deals 4 damage to each creature without flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -160,6 +157,7 @@
 | Concerted Effort | handled | At the beginning of each upkeep, creatures you control gain flying until end of turn if a creature you control has flying. The same is true for fear, first stri | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conclave Equenaut | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Conclave Phalanx | handled | When this creature enters, you gain 1 life for each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Conclave's Blessing | handled | Enchanted creature gets +0/+2 for each other creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Consult the Necrosages | handled | Choose one — • Target player draws two cards. • Target player discards two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Convolute | handled | Counter target spell unless its controller pays {4}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Copy Enchantment | handled | You may have this enchantment enter as a copy of any enchantment on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -199,7 +197,6 @@
 | Grave-Shell Scarab | handled | {1}, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grayscaled Gharial | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Greater Forgeling | handled | {1}{R}: This creature gets +3/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Greater Mossdog | handled | Dredge | machines/keywords.py | Y/-/- | not_tested |
 | Guardian of Vitu-Ghazi | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Hex | handled | Destroy six target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunted Dragon | handled | When this creature enters, target opponent creates three 2/2 white Knight creature tokens with first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -211,7 +208,6 @@
 | Junktroller | handled | {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Last Gasp | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leashling | handled | Put a card from your hand on top of your library: Return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Life from the Loam | handled | Return up to three target land cards from your graveyard to your hand. Dredge 3 (If you would draw a card, you may mill three cards instead. If you do, return t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lore Broker | handled | {T}: Each player draws a card, then discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mausoleum Turnkey | handled | When this creature enters, return target creature card of an opponent's choice from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moldervine Cloak | handled | Enchanted creature gets +3/+3. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -261,16 +257,20 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>20 cards</summary>
 
 - Blazing Archon
 - Boros Fury-Shield
 - Cerulean Sphinx
+- Char
 - Dark Confidant
 - Doubling Season
 - Firemane Angel
+- Golgari Thug
+- Greater Mossdog
 - Hunted Horror
 - Instill Furor
+- Life from the Loam
 - Lightning Helix
 - Muddle the Mixture
 - Overgrown Tomb
@@ -316,7 +316,6 @@
 | each player returns all creature cards from their graveyard to their hand. | 1 | Empty the Catacombs | rav |
 | each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
 | each player shuffles their graveyard into their library. | 1 | Mnemonic Nexus | rav |
-| enchanted creature gets +N/+N for each other creature you control. | 1 | Conclave's Blessing | rav |
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Faith's Fetters | rav |
 | exile up to four target cards from a single graveyard. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana value as ~,  | 1 | Shred Memory | rav |
 | if a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | 1 | Ghosts of the Innocent | rav |
@@ -342,7 +341,6 @@
 | until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. if that spell would be put into your graveyard, | 1 | Sins of the Past | rav |
 | when enchanted creature deals combat damage to a player, sacrifice it and attach ~ to a creature you control. if you do, untap all creatures you control and aft | 1 | Breath of Fury | rav |
 | when ~ dies, each player puts a card from their hand on top of their library. | 1 | Sadistic Augermage | rav |
-| when ~ dies, put target creature card from your graveyard on top of your library. | 1 | Golgari Thug | rav |
 | when ~ enters, each opponent loses N life for each creature they control. | 1 | Netherborn Phalanx | rav |
 | when ~ enters, sacrifice a creature. | 1 | Vindictive Mob | rav |
 | when ~ enters, sacrifice it unless you return an enchantment to its owner's hand. | 1 | Drake Familiar | rav |
@@ -389,7 +387,6 @@
 | {M}{M}{M}: put a plague counter on ~ or remove a plague counter from it. | 1 | Plague Boiler | rav |
 | {M}{M}{M}: until end of turn, ~ becomes a black and green plant zombie creature with "..." it's still a land. | 1 | Svogthos, the Restless Tomb | rav |
 | ~ can block an additional creature each combat. | 1 | Selesnya Sagittars | rav |
-| ~ deals N damage to any target and N damage to you. | 1 | Char | rav |
 | ~ deals N damage to each creature and each player. | 1 | Rain of Embers | rav |
 | ~ deals N damage to target creature and you gain N life. if {M} was spent to cast ~, draw a card. | 1 | Ribbons of Night | rav |
 | ~ deals damage to any target equal to the number of attacking creatures you control. | 1 | Dogpile | rav |

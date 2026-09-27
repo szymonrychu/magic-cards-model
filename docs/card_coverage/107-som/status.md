@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 8.4% |
+| Tested | 20 | 9.3% |
 | Works (untested) | 121 | 56.3% |
 | Partial (unaudited) | 9 | 4.2% |
-| Not working | 67 | 31.2% |
+| Not working | 65 | 30.2% |
 
 ## Cards needing work
 
@@ -63,9 +63,7 @@
 | Kemba, Kha Regent | silent | At the beginning of your upkeep, create a 2/2 white Cat creature token for each Equipment attached to Kemba. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Tangle | silent | Whenever this creature deals combat damage to a player, you may choose any number of target lands you control and put an awakening counter on each of them. Each | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memoricide | silent | Choose a nonland card name. Search target player's graveyard, hand, and library for any number of cards with that name and exile them. Then that player shuffles | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mimic Vat | silent | Imprint — Whenever a nontoken creature dies, you may exile that card. If you do, return each other card exiled with this artifact to its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Molten Psyche | silent | Each player shuffles the cards from their hand into their library, then draws that many cards. Metalcraft — If you control three or more artifacts, Molten Psych | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Molten-Tail Masticore | silent | At the beginning of your upkeep, sacrifice this creature unless you discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Battlesphere | silent | Whenever this creature attacks, you may tap X untapped Myr you control. If you do, this creature gets +X/+0 until end of turn and deals X damage to the player o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Galvanizer | silent | Other Myr creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nim Deathmantle | silent | Equipped creature gets +2/+2, has intimidate, and is a black Zombie. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -227,7 +225,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Asceticism
 - Assault Strobe
@@ -236,6 +234,8 @@
 - Kuldotha Phoenix
 - Liquimetal Coating
 - Memnite
+- Mimic Vat
+- Molten-Tail Masticore
 - Mox Opal
 - Necrotic Ooze
 - Nihil Spellbomb
@@ -255,11 +255,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Metalcraft | 11 | Argent Sphinx, Auriok Edgewright, Auriok Sunchaser, Carapace Forger, Chrome Steed | som |
-| Imprint | 2 | Clone Shell, Mimic Vat | som |
+| Imprint | 1 | Clone Shell | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
 | as long as ~ is equipped, it has first strike and lifelink. | 1 | Sunspear Shikari | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
-| at the beginning of your upkeep, sacrifice ~ unless you discard a card. | 1 | Molten-Tail Masticore | som |
 | at the beginning of your upkeep, you gain N life for each card in your hand. | 1 | Venser's Journal | som |
 | choose a nonland card name. search target player's graveyard, hand, and library for any number of cards with that name and exile them. then that player shuffles | 1 | Memoricide | som |
 | choose two target creatures. tap those creatures, then unattach all equipment from them. | 1 | Fulgent Distraction | som |

@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 6.7% |
-| Works (untested) | 76 | 51.0% |
-| Partial (unaudited) | 8 | 5.4% |
+| Works (untested) | 77 | 51.7% |
+| Partial (unaudited) | 7 | 4.7% |
 | Not working | 55 | 36.9% |
 
 ## Cards needing work
@@ -85,7 +85,6 @@
 | Djinn Illuminatus | unaudited | Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Lifeforce | unaudited | Creature spells can't be countered. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leyline of Singularity | unaudited | All nonland permanents are legendary. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Pillory of the Sleepless | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Skarrgan Pit-Skulk | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stratozeppelid | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ulasht, the Hate Seed | unaudited | Ulasht enters with a +1/+1 counter on it for each other red creature you control and a +1/+1 counter on it for each other green creature you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -136,6 +135,7 @@
 | Ostiary Thrull | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Petrahydrox | handled | When this creature becomes the target of a spell or ability, return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Petrified Wood-Kin | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Pillory of the Sleepless | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyromatics | handled | Replicate {1}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Pyromatics deals 1 da | the engine reads this text and performs it | Y/-/- | not_tested |
 | Repeal | handled | Return target nonland permanent with mana value X to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Restless Bones | handled | {3}{B}, {T}: Target creature gains swampwalk until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -203,7 +203,6 @@
 | destroy target nonwhite, nonblack creature. create a N/N white spirit creature token with flying. haunt (when ~ card is put into a graveyard after resolving, ex | 1 | Seize the Soul | gpt |
 | each instant and sorcery spell you cast has replicate. the replicate cost is equal to its mana cost. | 1 | Djinn Illuminatus | gpt |
 | each land gets +N/+N as long as it's a creature. | 1 | Earth Surge | gpt |
-| enchanted creature can't attack or block. | 1 | Pillory of the Sleepless | gpt |
 | exile each creature you control. return those cards to the battlefield under their owner's control at the beginning of the next end step. | 1 | Ghostway | gpt |
 | flip a coin. if you win the flip, take an extra turn after ~. | 1 | Stitch in Time | gpt |
 | nonbasic landwalk | 1 | Dryad Sophisticate | gpt |

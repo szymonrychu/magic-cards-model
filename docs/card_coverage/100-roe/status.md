@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 7.7% |
-| Works (untested) | 103 | 46.8% |
-| Partial (unaudited) | 10 | 4.5% |
-| Not working | 90 | 40.9% |
+| Works (untested) | 105 | 47.7% |
+| Partial (unaudited) | 9 | 4.1% |
+| Not working | 89 | 40.5% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Not of This World | silent | Counter target spell or ability that targets a permanent you control. This spell costs {7} less to cast if it targets a spell or ability that targets a creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Null Champion | silent | Level Up | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Oust | silent | Put target creature into its owner's library second from the top. Its controller gains 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pennon Blade | silent | Equipped creature gets +1/+1 for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Perish the Thought | silent | Target opponent reveals their hand. You choose a card from it. That player shuffles that card into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raid Bombardment | silent | Whenever a creature you control with power 2 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -124,7 +123,6 @@
 | Lust for War | unaudited | Enchanted creature attacks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Pathrazer of Ulamog | unaudited | This creature can't be blocked except by three or more creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Tajuru Preserver | unaudited | Spells and abilities your opponents control can't cause you to sacrifice permanents. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Training Grounds | unaudited | Activated abilities of creatures you control cost {2} less to activate. This effect can't reduce the mana in that cost to less than one mana. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Umbra Mystic | unaudited | Auras attached to permanents you control have umbra armor. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Affa Guard Hound | handled | When this creature enters, target creature gets +0/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Akoum Boulderfoot | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -198,6 +196,7 @@
 | Overgrown Battlement | handled | Defender | machines/combat.py | Y/-/- | not_tested |
 | Pawn of Ulamog | handled | Whenever this creature or another nontoken creature you control dies, you may create a 0/1 colorless Eldrazi Spawn creature token. It has "Sacrifice this token: | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pelakka Wurm | handled | When this creature enters, you gain 7 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Pennon Blade | handled | Equipped creature gets +1/+1 for each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pestilence Demon | handled | {B}: This creature deals 1 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phantasmal Abomination | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prey's Vengeance | handled | Target creature gets +2/+2 until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -225,6 +224,7 @@
 | Stomper Cub | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Survival Cache | handled | You gain 2 life. Then if you have more life than an opponent, draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the begin | the engine reads this text and performs it | Y/-/- | not_tested |
 | Totem-Guide Hartebeest | handled | When this creature enters, you may search your library for an Aura card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Training Grounds | handled | Activated abilities of creatures you control cost {2} less to activate. This effect can't reduce the mana in that cost to less than one mana. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tuktuk the Explorer | handled | When Tuktuk the Explorer dies, create Tuktuk the Returned, a legendary 5/5 colorless Goblin Golem artifact creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Virulent Swipe | handled | Target creature gets +2/+0 and gains deathtouch until end of turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wildheart Invoker | handled | {8}: Target creature gets +5/+5 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -262,7 +262,6 @@
 | level up | 12 | Brimstone Mage, Enclave Cryptologist, Guul Draz Assassin, Hada Spy Patrol, Hedron-Field Purists | roe |
 | +N: during target opponent's next turn, creatures that player controls attack ~ if able. | 1 | Gideon Jura | roe |
 | N: reveal the top card of your library and put it into your hand. sarkhan deals damage to himself equal to that card's mana value. | 1 | Sarkhan the Mad | roe |
-| activated abilities of creatures you control cost {M} less to activate. ~ can't reduce the mana in that cost to less than one mana. | 1 | Training Grounds | roe |
 | after the second main phase ~, there's an additional combat phase followed by an additional main phase. at the beginning of that combat, untap all creatures tha | 1 | World at War | roe |
 | as an additional cost to cast ~, reveal a creature card from your hand. target creature gets -N/-N until end of turn, where N is the revealed card's mana value. | 1 | Induce Despair | roe |
 | as an additional cost to cast ~, reveal a creature card from your hand. ~ deals N damage to each creature your opponents control, where N is the revealed card's | 1 | Disaster Radius | roe |
@@ -288,7 +287,6 @@
 | enchanted creature attacks each combat if able. | 1 | Lust for War | roe |
 | enchanted creature gets +N/+N and has trample and annihilator N. | 1 | Eldrazi Conscription | roe |
 | enchanted land is a swamp. | 1 | Contaminated Ground | roe |
-| equipped creature gets +N/+N for each creature you control. | 1 | Pennon Blade | roe |
 | equipped creature gets +N/+N, where N is its mana value. | 1 | Hedron Matrix | roe |
 | exile N target cards from target player's graveyard. for each card exiled ~, that player loses N life and you gain N life. | 1 | Suffer the Past | roe |
 | gain control of target creature until end of turn. untap that creature. until end of turn, it gets +N/+N and gains haste. | 1 | Traitorous Instinct | roe |

@@ -35,7 +35,7 @@
 | Arcbound Lancer | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Overseer | silent | At the beginning of your upkeep, put a +1/+1 counter on each creature you control with modular. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Ravager | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Arcbound Reclaimer | silent | Remove a +1/+1 counter from this creature: Put target artifact card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Arcbound Reclaimer | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Slith | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Stinger | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Worker | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -201,7 +201,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| modular | 8 | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager | dst |
+| modular | 9 | Arcbound Bruiser, Arcbound Crusher, Arcbound Hybrid, Arcbound Lancer, Arcbound Ravager | dst |
 | Choose one | 3 | Second Sight, Shriveling Rot, Stir the Pride | dst |
 | Imprint | 1 | Panoptic Mirror | dst |
 | all combat damage that would be dealt to you ~ is dealt to target attacking creature instead. | 1 | Turn the Tables | dst |
@@ -238,7 +238,6 @@
 | prevent the next N damage that would be dealt to target creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Test of Faith | dst |
 | put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
 | put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
-| remove a +N/+N counter from ~: put target artifact card from your graveyard on top of your library. | 1 | Arcbound Reclaimer | dst |
 | remove all counters from all permanents and exile all tokens. | 1 | Aether Snap | dst |
 | return all artifacts you control to their owner's hand. | 1 | Retract | dst |
 | return target nonland permanent and all other permanents with the same name as that permanent to their owners' hands. | 1 | Echoing Truth | dst |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.2% |
-| Works (untested) | 129 | 50.4% |
-| Partial (unaudited) | 14 | 5.5% |
-| Not working | 92 | 35.9% |
+| Tested | 24 | 9.4% |
+| Works (untested) | 130 | 50.8% |
+| Partial (unaudited) | 12 | 4.7% |
+| Not working | 90 | 35.2% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Depth Charge Colossus | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Draconic Destiny | silent | Enchanted creature gets +1/+1 and has flying, haste, and "{1}: This creature gets +1/+0 until end of turn." It's a Dragon in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dreams of Steel and Oil | silent | Target opponent reveals their hand. You choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. Exile the ch | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dredging Claw | silent | Whenever a creature enters from your graveyard, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Evangel of Synthesis | silent | As long as you've drawn two or more cards this turn, this creature gets +1/+0 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fade from History | silent | Each player who controls an artifact or enchantment creates a 2/2 green Bear creature token. Then destroy all artifacts and enchantments. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fallaji Dragon Engine | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -59,7 +58,6 @@
 | Hostile Negotiations | silent | Exile the top three cards of your library in a face-down pile, then exile the top three cards of your library in another face-down pile. Look at the cards in ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hulking Metamorph | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Hurkyl's Final Meditation | silent | During turns other than yours, this spell costs {3} more to cast. Return all nonland permanents to their owners' hands. End the turn. (Exile all spells and abil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hurkyl, Master Wizard | silent | At the beginning of your end step, if you've cast a noncreature spell this turn, reveal the top five cards of your library. For each card type among noncreature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Iron-Craw Crusher | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Kayla's Reconstruction | silent | Look at the top seven cards of your library. Put up to X artifact and/or creature cards with mana value 3 or less from among them onto the battlefield. Put the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mishra's Domination | silent | As long as you control enchanted creature, it gets +2/+2. Otherwise, it can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -125,12 +123,10 @@
 | Mechanized Warfare | unaudited | If a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mishra, Tamer of Mak Fawa | unaudited | Permanents you control have "Ward—Sacrifice a permanent." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Myrel, Shield of Argive | unaudited | During your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| One with the Multiverse | unaudited | You may play lands and cast spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Prison Sentence | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rescue Retriever | unaudited | Prevent all damage that would be dealt to other attacking Soldiers you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sardian Cliffstomper | unaudited | As long as it's your turn and you control four or more Mountains, this creature gets +X/+0, where X is the number of Mountains you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Steel Exemplar | unaudited | This creature enters with two +1/+1 counters on it unless two or more colors of mana were spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| The Temporal Anchor | unaudited | During your turn, you may play cards exiled with The Temporal Anchor. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Warlord's Elite | unaudited | As an additional cost to cast this spell, tap two untapped artifacts, creatures, and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aeronaut's Wings | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Air Marshal | handled | {3}: Target Soldier gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -155,6 +151,7 @@
 | Defabricate | handled | Choose one — • Counter target artifact or enchantment spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. • C | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Desynchronize | handled | Target nonland permanent's owner puts it on their choice of the top or bottom of their library. Scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disciples of Gix | handled | When this creature enters, search your library for up to three artifact cards, put them into your graveyard, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dredging Claw | handled | Equipped creature gets +1/+0 and has menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dwarven Forge-Chanter | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
 | Emergency Weld | handled | Return target artifact or creature card from your graveyard to your hand. Create a 1/1 colorless Soldier artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Energy Refractor | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -265,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>24 cards</summary>
 
 - Aeronaut Cavalry
 - Awaken the Woods
@@ -278,13 +275,16 @@
 - Gix, Yawgmoth Praetor
 - Goblin Blast-Runner
 - Haywire Mite
+- Hurkyl, Master Wizard
 - In the Trenches
 - Mine Worker
+- One with the Multiverse
 - Penregon Strongbull
 - Power Plant Worker
 - Recruitment Officer
 - Tawnos's Tinkering
 - The Stone Brain
+- The Temporal Anchor
 - Tower Worker
 - Visions of Phyrexia
 - Yotian Tactician
@@ -306,7 +306,6 @@
 | as long as you've drawn two or more cards ~, ~ has deathtouch and lifelink. | 1 | Trench Stalker | bro |
 | as ~ enters, you may reveal a soldier card from your hand. ~ enters tapped unless you revealed a soldier card ~ or you control a soldier. | 1 | Fortified Beachhead | bro |
 | at the beginning of combat on your turn, target creature you control gains your choice of flying, vigilance, or lifelink until end of turn. | 1 | Steel Seraph | bro |
-| at the beginning of your end step, if you"..."ve cast ~, you may put a card of that type from among the revealed cards into your hand. put the rest on the botto | 1 | Hurkyl, Master Wizard | bro |
 | at the beginning of your upkeep, if there are four or more land cards in your graveyard and you both own and control ~ and a land named argoth, sanctum of natur | 1 | Titania, Voice of Gaea | bro |
 | at the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. it's a phyrexian in addition to its other ty | 1 | Portal to Phyrexia | bro |
 | at the beginning of your upkeep, tap ~ unless you pay {M}. | 1 | Heavyweight Demolisher | bro |
@@ -315,7 +314,6 @@
 | creatures you control with mana value N or less get +N/+N. | 1 | Hero of the Dunes | bro |
 | draw cards equal to the mana value of target artifact or creature you control. an opponent gains control of that permanent. | 1 | Fateful Handoff | bro |
 | during turns other than yours, ~ costs {M} more to cast. return all nonland permanents to their owners' hands. end the turn. (exile all spells and abilities fro | 1 | Hurkyl's Final Meditation | bro |
-| during your turn, you may play cards exiled with ~. | 1 | The Temporal Anchor | bro |
 | during your turn, your opponents can't cast spells or activate abilities of artifacts, creatures, or enchantments. | 1 | Myrel, Shield of Argive | bro |
 | each player reveals a number of cards from the top of their library equal to the number of nonland permanents they control, puts all permanent cards they reveal | 1 | Over the Top | bro |
 | each player who controls an artifact or enchantment creates a N/N green bear creature token. then destroy all artifacts and enchantments. | 1 | Fade from History | bro |
@@ -350,7 +348,6 @@
 | when ~ enters, you and target opponent each create a tapped powerstone token. | 1 | Thran Spider | bro |
 | when ~ enters, you gain life equal to its power. | 1 | Boulderbranch Golem | bro |
 | when ~ leaves the battlefield, sacrifice a powerstone. | 1 | Horned Stoneseeker | bro |
-| whenever a creature enters from your graveyard, you may attach ~ to it. | 1 | Dredging Claw | bro |
 | whenever an artifact you control enters, look at the top card of your library. if it"..."t put the card into your hand, you may put it into your graveyard. | 1 | Sarinth Steelseeker | bro |
 | whenever feldon is dealt damage, exile that many cards from the top of your library. choose one of them. until the end of your next turn, you may play that card | 1 | Feldon, Ronom Excavator | bro |
 | whenever mishra enters or attacks, choose three — • target opponent discards two cards. • mishra deals N damage to any target. • destroy target artifact or plan | 1 | Mishra, Lost to Phyrexia | bro |
@@ -363,7 +360,6 @@
 | whenever ~ attacks, you may sacrifice another creature or artifact. if you do, ~ gains flying until end of turn. | 1 | Kill-Zone Acrobat | bro |
 | you gain N life for each creature on the battlefield. prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Fog of War | bro |
 | you may cast colorless spells and artifact spells as though they had flash. | 1 | Liberator, Urza's Battlethopter | bro |
-| you may play lands and cast spells from the top of your library. | 1 | One with the Multiverse | bro |
 | {M}, {M}, exile ~: you gain protection from everything until your next turn. | 1 | The Stasis Coffin | bro |
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |
 | {M}, {M}: discard all the cards in your hand, then draw that many cards. you may choose an artifact or creature card with mana value N you discarded ~, then do  | 1 | Queen Kayla bin-Kroog | bro |

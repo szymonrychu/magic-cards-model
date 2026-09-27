@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 6.6% |
-| Works (untested) | 33 | 31.1% |
-| Partial (unaudited) | 9 | 8.5% |
-| Not working | 57 | 53.8% |
+| Works (untested) | 36 | 34.0% |
+| Partial (unaudited) | 7 | 6.6% |
+| Not working | 56 | 52.8% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Adéwalé, Breaker of Chains | silent | When Adéwalé enters, reveal the top six cards of your library. Put an Assassin, Pirate, or Vehicle card from among them into your hand and the rest on the botto | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Alexios, Deimos of Kosmos | silent | At the beginning of each player's upkeep, that player gains control of Alexios, untaps it, and puts a +1/+1 counter on it. It gains haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Assassin Gauntlet | silent | When this Equipment enters, attach it to up to one target creature you control. Tap all creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Assassin Initiate | silent | {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aveline de Grandpré | silent | Whenever a creature you control with deathtouch deals combat damage to a player, put that many +1/+1 counters on that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bayek of Siwa | silent | During your turn, other historic creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Become Anonymous | silent | Exile target nontoken creature you own and the top two cards of your library in a face-down pile, shuffle that pile, then cloak those cards. They enter tapped.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,21 +84,21 @@
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bureau Headmaster | unaudited | Equip abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Crystal Skull, Isu Spyglass | unaudited | You may play historic lands and cast historic spells from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Detained by Legionnaires | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Excalibur, Sword of Eden | unaudited | This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ezio Auditore da Firenze | unaudited | Assassin spells you cast have freerunning {B}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lydia Frye | unaudited | Lydia Frye can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ratonhnhaké꞉ton | unaudited | As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Smoke Bomb | unaudited | All creatures have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Templar Knight | unaudited | A deck can have any number of cards named Templar Knight. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arbaaz Mir | handled | Whenever Arbaaz Mir or another nontoken historic permanent you control enters, Arbaaz Mir deals 1 damage to each opponent and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arno Dorian | handled | Other Assassins you control get +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Assassin Den | handled | {3}{U}: Put a +1/+1 counter on target creature you control. It can't be blocked this turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Assassin Initiate | handled | {1}: This creature gains your choice of flying, deathtouch, or lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Aya of Alexandria | handled | Whenever a historic creature you control deals combat damage to a player, create a 1/1 black Assassin creature token with menace. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Black Market Connections | handled | At the beginning of your first main phase, choose one or more — • Sell Contraband — Create a Treasure token. You lose 1 life. • Buy Information — Draw a card. Y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bleeding Effect | handled | At the beginning of combat on your turn, creatures you control gain flying until end of turn if a creature card in your graveyard has flying. The same is true f | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brotherhood Headquarters | handled |  |  | Y/-/- | not_tested |
 | Brotherhood Patriarch | handled | When this creature dies, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Detained by Legionnaires | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Escarpment Fortress | handled | Other creatures you control get +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ezio, Blade of Vengeance | handled | Whenever an Assassin you control deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Headsplitter | handled | When this Equipment enters, create a 1/1 black Assassin creature token with menace, then attach this Equipment to it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -110,6 +109,7 @@
 | Jackdaw | handled | Whenever Jackdaw deals combat damage to a player, you may discard your hand. If you do, draw a card for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Keen-Eyed Raven | handled | When this creature enters, put a +1/+1 counter on another target creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Layla Hassan | handled | When Layla Hassan enters and whenever one or more Assassins you control deal combat damage to a player, return target historic card from your graveyard to your  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lydia Frye | handled | Lydia Frye can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Origin of the Hidden Ones | handled | I — This Saga deals 4 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Poison-Blade Mentor | handled | Whenever this creature attacks, another target Assassin you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rooftop Bypass | handled | Whenever one or more nontoken creatures you control deal combat damage to a player, create a 1/1 black Assassin creature token with menace. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -162,7 +162,6 @@
 | during your turn, equipped creature has flying. | 1 | Hookblade | acr |
 | during your turn, other historic creatures you control have double strike. | 1 | Bayek of Siwa | acr |
 | each player chooses three nonland permanents they control. destroy all other nonland permanents. | 1 | Fall of the First Civilization | acr |
-| enchanted creature can't attack or block. | 1 | Detained by Legionnaires | acr |
 | equip abilities you activate cost {M} less to activate. | 1 | Bureau Headmaster | acr |
 | equipped creature has ward {M}, is an assassin in addition to its other types, and can't be blocked. | 1 | Brotherhood Regalia | acr |
 | exile a permanent card from your graveyard. you gain life equal to its mana value. | 1 | The Aesir Escape Valhalla | acr |
@@ -200,9 +199,7 @@
 | {M}, pay N life, sacrifice apple of eden: look at target opponent"..."s hand. activate only as a sorcery. | 1 | Apple of Eden, Isu Relic | acr |
 | {M}, {M}, sacrifice ~: each equipped creature and equipment you control gains deathtouch until end of turn. | 1 | Hemlock Vial | acr |
 | {M}: draw a card for each permanent you control but don't own. | 1 | Staff of Eden, Vault's Key | acr |
-| {M}: ~ gains your choice of flying, deathtouch, or lifelink until end of turn. | 1 | Assassin Initiate | acr |
 | {M}{M}{M}: until end of turn, thopters you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Leonardo da Vinci | acr |
-| ~ can't be blocked by creatures with power N or greater. | 1 | Lydia Frye | acr |
 | ~ costs {M} less to cast, where N is the total mana value of historic permanents you control. | 1 | Excalibur, Sword of Eden | acr |
 | ~ deals N damage to target creature. if you control an equipment, ~ also deals N damage to that creature's controller. | 1 | Misthios's Fury | acr |
 

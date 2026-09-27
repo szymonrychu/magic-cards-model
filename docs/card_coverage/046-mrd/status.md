@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 7.4% |
-| Works (untested) | 151 | 56.1% |
+| Works (untested) | 152 | 56.5% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 88 | 32.7% |
+| Not working | 87 | 32.3% |
 
 ## Cards needing work
 
@@ -65,7 +65,6 @@
 | Mindstorm Crown | silent | At the beginning of your upkeep, draw a card if you had no cards in hand at the beginning of this turn. If you had a card in hand, this artifact deals 1 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Myr Incubator | silent | {6}, {T}, Sacrifice this artifact: Search your library for any number of artifact cards, exile them, then create that many 1/1 colorless Myr artifact creature t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nightmare Lash | silent | Equipped creature gets +1/+1 for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nim Devourer | silent | {B}{B}: Return this card from your graveyard to the battlefield, then sacrifice a creature. Activate only during your upkeep. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ogre Leadfoot | silent | Whenever this creature becomes blocked by an artifact creature, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Override | silent | Counter target spell unless its controller pays {1} for each artifact you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -196,6 +195,7 @@
 | Needlebug | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Neurok Familiar | handled | When this creature enters, reveal the top card of your library. If it's an artifact card, put it into your hand. Otherwise, put it into your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Neurok Hoversail | handled | Equipped creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nightmare Lash | handled | Equipped creature gets +1/+1 for each Swamp you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Lasher | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Replica | handled | {2}{B}, Sacrifice this creature: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Shambler | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -340,7 +340,6 @@
 | equipped creature gets +N/+N for each card in your hand. | 1 | Empyrial Plate | mrd |
 | equipped creature gets +N/+N for each charge counter on ~. | 1 | Banshee's Blade | mrd |
 | equipped creature gets +N/+N for each equipment attached to it. | 1 | Golem-Skin Gauntlets | mrd |
-| equipped creature gets +N/+N for each swamp you control. | 1 | Nightmare Lash | mrd |
 | exile target attacking creature and all equipment attached to it. | 1 | Soul Nova | mrd |
 | flip a coin until you lose a flip or choose to stop flipping. if you lose a flip, ~ has no effect. if you win one or more flips, ~ deals N damage to target crea | 1 | Fiery Gambit | mrd |
 | if a player would draw a card, that player exiles the top card of one of their opponents' libraries face down instead. | 1 | Shared Fate | mrd |

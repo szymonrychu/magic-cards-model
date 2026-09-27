@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 6.8% |
-| Works (untested) | 61 | 37.7% |
-| Partial (unaudited) | 13 | 8.0% |
-| Not working | 77 | 47.5% |
+| Works (untested) | 63 | 38.9% |
+| Partial (unaudited) | 12 | 7.4% |
+| Not working | 76 | 46.9% |
 
 ## Cards needing work
 
@@ -94,7 +94,6 @@
 | Wild Pair | silent | Whenever a creature enters, if you cast it from your hand, you may search your library for a creature card with the same total power and toughness, put it onto  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ana Battlemage | notice | When this creature enters, if it was kicked with its {1}{B} kicker, tap target untapped creature and that creature deals damage equal to its power to its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Blightspeaker | notice | {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Dawn Charm | notice | Choose one — • Prevent all combat damage that would be dealt this turn. • Regenerate target creature. • Counter target spell that targets you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fatal Frenzy | notice | Until end of turn, target creature you control gains trample and gets +X/+0, where X is its power. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fury Charm | notice | Choose one — • Destroy target artifact. • Target creature gets +1/+1 and gains trample until end of turn. • Remove two time counters from target permanent or su | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Hedge Troll | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -114,7 +113,6 @@
 | Pouncing Wurm | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it and with haste. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Primal Plasma | unaudited | As this creature enters, it becomes your choice of a 3/3 creature, a 2/2 creature with flying, or a 1/6 creature with defender. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Skirk Shaman | unaudited | This creature can't be blocked except by artifact creatures and/or red creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Utopia Vow | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Voidstone Gargoyle | unaudited | Spells with the chosen name can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Akroma, Angel of Fury | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Big Game Hunter | handled | When this creature enters, destroy target creature with power 4 or greater. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -127,6 +125,7 @@
 | Circle of Affliction | handled | As this enchantment enters, choose a color. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Citanul Woodreaders | handled | When this creature enters, if it was kicked, draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Damnation | handled | Destroy all creatures. They can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dawn Charm | handled | Choose one — • Prevent all combat damage that would be dealt this turn. • Regenerate target creature. • Counter target spell that targets you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dead // Gone | handled | Dead deals 2 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deadwood Treefolk | handled | When this creature enters or leaves the battlefield, return another target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamscape Artist | handled | {2}{U}, {T}, Discard a card, Sacrifice a land: Search your library for up to two basic land cards, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -173,6 +172,7 @@
 | Simian Spirit Guide | handled |  |  | Y/-/- | not_tested |
 | Teneb, the Harvester | handled | Whenever Teneb deals combat damage to a player, you may pay {2}{B}. If you do, put target creature card from a graveyard onto the battlefield under your control | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torchling | handled | {R}: Untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Utopia Vow | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vitaspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vorosh, the Hunter | handled | Whenever Vorosh deals combat damage to a player, you may pay {2}{G}. If you do, put six +1/+1 counters on Vorosh. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Waning Wurm | handled | Vanishing | machines/keywords.py | Y/-/- | not_tested |
@@ -202,8 +202,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | all slivers have "..." | 5 | Cautery Sliver, Darkheart Sliver, Frenetic Sliver, Necrotic Sliver, Poultice Sliver | plc |
-| Choose one | 3 | Dawn Charm, Fury Charm, Timecrafting | plc |
 | echo | 3 | Hammerheim Deadeye, Stingscourger, Uktabi Drake | plc |
+| Choose one | 2 | Fury Charm, Timecrafting | plc |
 | all creatures have "..." | 1 | Magus of the Tabernacle | plc |
 | all damage that would be dealt ~ to target creature you control by a source of your choice is dealt to another target creature instead. | 1 | Kor Dirge | plc |
 | all forests and all saprolings are N/N green saproling creatures and forest lands in addition to their other types. | 1 | Life and Limb | plc |
@@ -226,7 +226,6 @@
 | counter target spell that targets a permanent you control. | 1 | Rebuff the Wicked | plc |
 | counter target spell. its controller discards a card. | 1 | Dismal Failure | plc |
 | destroy target creature. it can't be regenerated. its controller creates a N/N green ape creature token. | 1 | Pongify | plc |
-| enchanted creature can't attack or block. | 1 | Utopia Vow | plc |
 | enchanted creature gets +N/+N and can't be blocked by creatures with flying. | 1 | Dust Corona | plc |
 | enchanted creature gets +N/+N as long as it's white. otherwise, it gets -N/-N. | 1 | Serra's Boon | plc |
 | enchanted creature gets +N/+N for each aura attached to it and has vigilance. | 1 | Auramancer's Guise | plc |

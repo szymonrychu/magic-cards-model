@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 10.1% |
-| Works (untested) | 88 | 49.4% |
-| Partial (unaudited) | 12 | 6.7% |
-| Not working | 60 | 33.7% |
+| Tested | 19 | 10.7% |
+| Works (untested) | 89 | 50.0% |
+| Partial (unaudited) | 11 | 6.2% |
+| Not working | 59 | 33.1% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Merfolk Mistbinder | silent | Other Merfolk you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mutiny | silent | Target creature an opponent controls deals damage equal to its power to another target creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Paladin of Atonement | silent | When this creature dies, you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path of Mettle // Metzali, Tower of Triumph | silent | When Path of Mettle enters, it deals 1 damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Silent Gravestone | silent | {4}, {T}: Exile this artifact and all cards from all graveyards. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,7 +87,6 @@
 | Vraska's Scorn | notice | Target opponent loses 4 life. You may search your library and/or graveyard for a card named Vraska, Scheming Gorgon, reveal it, and put it into your hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Sun | unaudited | All lands lose all abilities except mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Charging Tuskodon | unaudited | If this creature would deal combat damage to a player, it deals double that damage to that player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Luminous Bonds | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oathsworn Vampire | unaudited | You may cast this card from your graveyard if you gained life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Protean Raider | unaudited | Raid — If you attacked this turn, you may have this creature enter as a copy of any creature on the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relentless Raptor | unaudited | This creature attacks or blocks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -138,6 +136,7 @@
 | Knight of the Stampede | handled | Dinosaur spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kumena, Tyrant of Orazca | handled | Tap another untapped Merfolk you control: Kumena can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Legion Lieutenant | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Luminous Bonds | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Majestic Heliopterus | handled | Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Martyr of Dusk | handled | When this creature dies, create a 1/1 white Vampire creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mist-Cloaked Herald | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -190,7 +189,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -204,6 +203,7 @@
 - Mausoleum Harpy
 - Needletooth Raptor
 - Orazca Relic
+- Paladin of Atonement
 - Ravenous Chupacabra
 - Resplendent Griffin
 - Secrets of the Golden City
@@ -235,7 +235,6 @@
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each opponent loses N life for each creature you control. | 1 | Gruesome Fate | rix |
 | each player chooses any number of creatures they control with total power N or less, then sacrifices all other creatures they control. | 1 | Slaughter the Strong | rix |
-| enchanted creature can't attack or block. | 1 | Luminous Bonds | rix |
 | enchanted creature gets +N/+N as long as it's a pirate. otherwise, it gets -N/-N. | 1 | Sea Legs | rix |
 | equipped creature gets +N/+N, has menace, and is a pirate in addition to its other creature types. | 1 | Captain's Hook | rix |
 | exile target creature with power greater than or equal to your life total. | 1 | Blazing Hope | rix |
@@ -252,7 +251,6 @@
 | when enchanted creature dies, exile cards equal to its power from the top of its owner's library. you may cast spells from among those cards for as long as they | 1 | Dead Man's Chest | rix |
 | when enchanted creature dies, return it to the battlefield under your control, then return ~ to the battlefield transformed under your control. | 1 | Journey to Eternity // Atzal, Cave of Eternity | rix |
 | when tetzimoc enters, destroy each creature your opponents control with a prey counter on it. | 1 | Tetzimoc, Primal Death | rix |
-| when ~ dies, you gain life equal to its toughness. | 1 | Paladin of Atonement | rix |
 | when ~ dies, you may cast dinosaur spells ~ as though they had flash, and whenever you cast a dinosaur spell ~, it gains "..." | 1 | Cherished Hatchling | rix |
 | when ~ enters, it deals N damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | 1 | Path of Mettle // Metzali, Tower of Triumph | rix |
 | when ~ enters, it deals N damage to enchanted creature. | 1 | Tilonalli's Crown | rix |

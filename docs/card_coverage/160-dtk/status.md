@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 5.6% |
-| Works (untested) | 122 | 52.4% |
+| Tested | 14 | 6.0% |
+| Works (untested) | 123 | 52.8% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 87 | 37.3% |
+| Not working | 85 | 36.5% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Assault Formation | silent | {G}: Target creature with defender can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aven Tactician | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Belltoll Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Berserkers' Onslaught | silent | Attacking creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood-Chin Rager | silent | Whenever this creature attacks, Warrior creatures you control gain menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crater Elemental | silent | Formidable — {2}{R}: This creature has base power 8 until end of turn. Activate only if creatures you control have total power 8 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dance of the Skywise | silent | Until end of turn, target creature you control becomes a blue Dragon Illusion with base power and toughness 4/4, loses all abilities, and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,7 +87,6 @@
 | Silumgar Butcher | silent | When this creature exploits a creature, target creature gets -3/-3 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Silumgar Sorcerer | silent | When this creature exploits a creature, counter target creature spell. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Silumgar Spell-Eater | silent | When this creature is turned face up, counter target spell unless its controller pays {3}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stormrider Rig | silent | Whenever a creature you control enters, you may attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormwing Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunbringer's Touch | silent | Bolster | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Virulent Plague | silent | Creature tokens get -2/-2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -133,6 +131,7 @@
 | Atarka Monument | handled | {4}{R}{G}: This artifact becomes a 4/4 red and green Dragon artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atarka Pummeler | handled | Formidable — {3}{R}{R}: Creatures you control gain menace until end of turn. Activate only if creatures you control have total power 8 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Sunstriker | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Berserkers' Onslaught | handled | Attacking creatures you control have double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boltwing Marauder | handled | Whenever another creature you control enters, target creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Champion of Arashin | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Circle of Elders | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
@@ -182,7 +181,6 @@
 | Lightning Berserker | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lose Calm | handled | Gain control of target creature until end of turn. Untap that creature. It gains haste and menace until end of turn. (A creature with menace can't be blocked ex | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lurking Arynx | handled | Formidable — {2}{G}: Target creature blocks this creature this turn if able. Activate only if creatures you control have total power 8 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Marang River Skeleton | handled | {B}: Regenerate this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marsh Hulk | handled | Megamorph | machines/casting.py | Y/Y/- | not_tested |
 | Misthoof Kirin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Monastery Loremaster | handled | When this creature is turned face up, return target noncreature, nonland card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -226,6 +224,7 @@
 | Skywise Teachings | handled | Whenever you cast a noncreature spell, you may pay {1}{U}. If you do, create a 2/2 blue Djinn Monk creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sprinting Warbrute | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormcrag Elemental | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
+| Stormrider Rig | handled | Equipped creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stratus Dancer | handled | When this creature is turned face up, counter target instant or sorcery spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strongarm Monk | handled | Whenever you cast a noncreature spell, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Student of Ojutai | handled | Whenever you cast a noncreature spell, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -250,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
@@ -262,6 +261,7 @@
 - Dragon-Scarred Bear
 - Impact Tremors
 - Kolaghan's Command
+- Marang River Skeleton
 - Myth Realized
 - Stampeding Elk Herd
 - Zurgo Bellstriker
@@ -284,7 +284,6 @@
 | as long as you control a dragon, ~ gets +N/+N and has flying and trample. | 1 | Dragonloft Idol | dtk |
 | as long as you control exactly one creature, that creature gets +N/+N and has deathtouch and lifelink. | 1 | Deadly Wanderings | dtk |
 | attacking creatures get +N/+N and gain trample until end of turn. | 1 | Volcanic Rush | dtk |
-| attacking creatures you control have double strike. | 1 | Berserkers' Onslaught | dtk |
 | bolster | 1 | Sunbringer's Touch | dtk |
 | bolster N, then put a +N/+N counter on each creature you control with a +N/+N counter on it. (to bolster N, choose a creature with the least toughness among cre | 1 | Scale Blessing | dtk |
 | bolster N. (choose a creature with the least toughness among creatures you control and put four +N/+N counters on it.) | 1 | Dromoka's Gift | dtk |
@@ -332,7 +331,6 @@
 | when ~ exploits a creature, you draw two cards and you lose N life. | 1 | Vulturous Aven | dtk |
 | when ~ is turned face up, counter target spell unless its controller pays {M}. | 1 | Silumgar Spell-Eater | dtk |
 | whenever a creature an opponent controls enters, attach ~ to that creature. | 1 | Illusory Gains | dtk |
-| whenever a creature you control enters, you may attach ~ to it. | 1 | Stormrider Rig | dtk |
 | whenever a permanent you control is turned face up, you may return ~ from your graveyard to the battlefield face up or face down. | 1 | Deathmist Raptor | dtk |
 | whenever another nontoken creature you control enters, bolster N. | 1 | Anafenza, Kin-Tree Spirit | dtk |
 | whenever enchanted creature attacks, you may create a token that's a copy of that creature. exile that token at end of combat. | 1 | Mirror Mockery | dtk |

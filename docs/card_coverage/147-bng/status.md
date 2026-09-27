@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 7.5% |
-| Works (untested) | 80 | 50.0% |
+| Works (untested) | 82 | 51.2% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 58 | 36.2% |
+| Not working | 56 | 35.0% |
 
 ## Cards needing work
 
@@ -53,13 +53,11 @@
 | Mindreaver | silent | Heroic — Whenever you cast a spell that targets this creature, exile the top three cards of target player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis, God of Slaughter | silent | At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Wilds Ravager | silent | When this creature enters, if tribute wasn't paid, you may have this creature fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nullify | silent | Counter target creature or Aura spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oracle of Bones | silent | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Peregrination | silent | Search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. Shuffle, then scry | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perplexing Chimera | silent | Whenever an opponent casts a spell, you may exchange control of this creature and that spell. If you do, you may choose new targets for the spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pheres-Band Raiders | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{G}. If you do, create a 3/3 green Centaur enchantment creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pillar of War | silent | As long as this creature is enchanted, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Raised by Wolves | silent | Enchanted creature gets +1/+1 for each Wolf you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanguimancy | silent | You draw X cards and you lose X life, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to bl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Nyx-Smith | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{R}. If you do, create a 3/1 red Elemental enchantment creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Servant of Tymaret | silent | Inspired — Whenever this creature becomes untapped, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -140,6 +138,7 @@
 | Mortal's Ardor | handled | Target creature gets +1/+1 and gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mortal's Resolve | handled | Target creature gets +1/+1 and gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nessian Demolok | handled | When this creature enters, if tribute wasn't paid, destroy target noncreature permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Nullify | handled | Counter target creature or Aura spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyxborn Eidolon | handled | Enchanted creature gets +2/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyxborn Rollicker | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyxborn Shieldmate | handled | Enchanted creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -153,6 +152,7 @@
 | Pheres-Band Tromper | handled | Inspired — Whenever this creature becomes untapped, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pinnacle of Rage | handled | Pinnacle of Rage deals 3 damage to each of two targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plea for Guidance | handled | Search your library for up to two enchantment cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Raised by Wolves | handled | When this Aura enters, create two 2/2 green Wolf creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reap What Is Sown | handled | Put a +1/+1 counter on each of up to three target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reckless Reveler | handled | {R}, Sacrifice this creature: Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rise to the Challenge | handled | Target creature gets +2/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -205,7 +205,6 @@
 | all creatures able to block ~ or enchanted creature do so. | 1 | Noble Quarry | bng |
 | as long as ~ is enchanted, it can attack as though it didn't have defender. | 1 | Pillar of War | bng |
 | at the beginning of each opponent's upkeep, mogis deals N damage to that player unless they sacrifice a creature of their choice. | 1 | Mogis, God of Slaughter | bng |
-| counter target creature or aura spell. | 1 | Nullify | bng |
 | counter target spell unless its controller pays {M}, where N is your devotion to blue. (each {M} in the mana costs of permanents you control counts toward your  | 1 | Thassa's Rebuff | bng |
 | create two N/N green centaur enchantment creature tokens. if it's your turn, scry N. | 1 | Fated Intervention | bng |
 | creatures with power less than the number of islands you control can't block ~. | 1 | Kraken of the Straits | bng |
@@ -217,7 +216,6 @@
 | destroy all creatures and planeswalkers. if it's your turn, scry N. | 1 | Fated Retribution | bng |
 | enchanted creature can block only creatures with flying. | 1 | Stratus Walk | bng |
 | enchanted creature gets +N/+N and can't be blocked. | 1 | Flitterstep Eidolon | bng |
-| enchanted creature gets +N/+N for each wolf you control. | 1 | Raised by Wolves | bng |
 | enchanted creature has intimidate. | 1 | Grisly Transformation | bng |
 | exile target creature. create a gold token. (it's an artifact with "...") | 1 | Gild | bng |
 | minotaur spells you cast cost {M}{M} less to cast. ~ reduces only the amount of colored mana you pay. | 1 | Ragemonger | bng |

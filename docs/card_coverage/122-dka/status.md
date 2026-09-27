@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 9.7% |
-| Works (untested) | 68 | 44.2% |
-| Partial (unaudited) | 6 | 3.9% |
-| Not working | 65 | 42.2% |
+| Works (untested) | 70 | 45.5% |
+| Partial (unaudited) | 5 | 3.2% |
+| Not working | 64 | 41.6% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Gavony Ironwright | silent | Fateful hour — As long as you have 5 or less life, other creatures you control get +1/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Geralf's Messenger | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Geralf's Mindcrusher | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Gravepurge | silent | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Griptide | silent | Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Haunted Fengraf | silent | {3}, {T}, Sacrifice this land: Return a creature card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -95,7 +94,6 @@
 | Executioner's Hood | unaudited | Equipped creature has intimidate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gravecrawler | unaudited | You may cast this card from your graveyard as long as you control a Zombie. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Heavy Mattock | unaudited | As long as equipped creature is a Human, it gets an additional +1/+1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hinterland Hermit // Hinterland Scourge | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Warden of the Wall | unaudited | During turns other than yours, this artifact is a 2/3 Gargoyle artifact creature with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Altar of the Lost | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Artful Dodge | handled | Target creature can't be blocked this turn. Flashback {U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -122,11 +120,13 @@
 | Favor of the Woods | handled | Whenever enchanted creature blocks, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fires of Undeath | handled | Fires of Undeath deals 2 damage to any target. Flashback {5}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghoultree | handled | This spell costs {1} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gravepurge | handled | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gravetiller Wurm | handled | Morbid — This creature enters with four +1/+1 counters on it if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grim Backwoods | handled | {2}{B}{G}, {T}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grim Flowering | handled | Draw a card for each creature card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Harrowing Journey | handled | Target player draws three cards and loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Headless Skaab | handled | As an additional cost to cast this spell, exile a creature card from your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hinterland Hermit // Hinterland Scourge | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hollowhenge Beast | handled |  |  | Y/-/- | not_tested |
 | Hunger of the Howlpack | handled | Put a +1/+1 counter on target creature. Morbid — Put three +1/+1 counters on that creature instead if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Increasing Savagery | handled | Put five +1/+1 counters on target creature. If this spell was cast from a graveyard, put ten +1/+1 counters on that creature instead. Flashback {5}{G}{G} (You m | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -217,7 +217,6 @@
 | other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
 | other zombie creatures you control get +N/+N. | 1 | Diregraf Captain | dka |
 | prevent all combat damage that would be dealt ~. fateful hour — if you have N or less life, tap all attacking creatures. those creatures don"..."s next untap st | 1 | Clinging Mists | dka |
-| put any number of target creature cards from your graveyard on top of your library. draw a card. | 1 | Gravepurge | dka |
 | put target creature on top of its owner's library. | 1 | Griptide | dka |
 | return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |
 | return target creature you own to your hand. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Saving Grasp | dka |
@@ -249,7 +248,6 @@
 | {M}: gain control of target creature with power less than or equal to the number of creatures you control. | 1 | Beguiler of Wills | dka |
 | {M}: you may cast target creature card in a graveyard ~. when you cast it ~, ~ gains all activated abilities of that card until end of turn. | 1 | Havengul Lich | dka |
 | {M}{M}, {M}, exile a creature card from your graveyard: create a N/N black zombie creature token, then put a +N/+N counter on each zombie creature you control. | 1 | Havengul Runebinder | dka |
-| ~ must be blocked if able. | 1 | Hinterland Hermit // Hinterland Scourge | dka |
 | −N: destroy up to three target creatures and/or other planeswalkers. return each card put into a graveyard ~ to the battlefield under your control. | 1 | Sorin, Lord of Innistrad | dka |
 
 ## Notes

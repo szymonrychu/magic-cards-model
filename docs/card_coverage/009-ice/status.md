@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 11.4% |
-| Works (untested) | 19 | 54.3% |
+| Works (untested) | 20 | 57.1% |
 | Partial (unaudited) | 2 | 5.7% |
-| Not working | 10 | 28.6% |
+| Not working | 9 | 25.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Brown Ouphe | silent | {1}{G}, {T}: Counter target activated ability from an artifact source. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Enduring Renewal | silent | Whenever a creature is put into your graveyard from the battlefield, return it to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Goblin Snowman | silent | Whenever this creature blocks, prevent all combat damage that would be dealt to and dealt by it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incinerate | silent | Incinerate deals 3 damage to any target. A creature dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -42,6 +41,7 @@
 | Adarkar Wastes | handled |  |  | Y/Y/- | not_tested |
 | Balduvian Barbarians | handled |  |  | Y/-/- | not_tested |
 | Blinking Spirit | handled | {0}: Return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Brown Ouphe | handled | {1}{G}, {T}: Counter target activated ability from an artifact source. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brushland | handled |  |  | Y/Y/- | not_tested |
 | Dark Banishing | handled | Destroy target nonblack creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deflection | handled | Change the target of target spell with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -83,7 +83,6 @@
 | {M}: all combat damage that would be dealt to you by unblocked creatures ~ is dealt to ~ instead. | 1 | Kjeldoran Royal Guard | ice |
 | {M}: gain control of target creature for as long as you control ~. when ~ leaves the battlefield or becomes untapped, destroy that creature. it can't be regener | 1 | Merieke Ri Berit | ice |
 | {M}: ~ deals damage equal to its power to target creature. that creature deals damage equal to its power to ~. | 1 | Karplusan Yeti | ice |
-| {M}{M}, {M}: counter target activated ability from an artifact source. | 1 | Brown Ouphe | ice |
 | ~ deals N damage to any target. a creature dealt damage ~ can't be regenerated ~. | 1 | Incinerate | ice |
 | ~'s power is equal to the number of creature cards in all graveyards and its toughness is equal to that number plus N. | 1 | Lhurgoyf | ice |
 

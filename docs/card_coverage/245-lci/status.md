@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 39 | 14.2% |
+| Tested | 40 | 14.5% |
 | Works (untested) | 138 | 50.2% |
 | Partial (unaudited) | 15 | 5.5% |
-| Not working | 83 | 30.2% |
+| Not working | 82 | 29.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Abuelo's Awakening | silent | Return target artifact or non-Aura enchantment card from your graveyard to the battlefield with X additional +1/+1 counters on it. It's a 1/1 Spirit creature wi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aclazotz, Deepest Betrayal // Temple of the Dead | silent | Whenever an opponent discards a land card, create a 1/1 black Bat creature token with flying. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Anim Pakal, Thousandth Moon | silent | Whenever you attack with one or more non-Gnome creatures, put a +1/+1 counter on Anim Pakal, then create X 1/1 colorless Gnome artifact creature tokens that are | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Another Chance | silent | You may mill two cards. Then return up to two creature cards from your graveyard to your hand. (To mill two cards, put the top two cards of your library into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -266,8 +265,9 @@
 ## Fully supported
 
 <details>
-<summary>39 cards</summary>
+<summary>40 cards</summary>
 
+- Abuelo's Awakening
 - Akawalli, the Seething Tower
 - Amalia Benavides Aguirre
 - Basking Capybara
@@ -341,7 +341,6 @@
 | locus of enlightenment has each activated ability of the exiled cards used to craft it. you may activate each of those abilities only once each turn. | 1 | The Enigma Jewel // Locus of Enlightenment | lci |
 | mastercraft raptor's power is equal to the total power of the exiled cards used to craft it. | 1 | Saheeli's Lattice // Mastercraft Raptor | lci |
 | other caves you control have "..." | 1 | Forgotten Monument | lci |
-| return target artifact or non-aura enchantment card from your graveyard to the battlefield with N additional +N/+N counters on it. it's a N/N spirit creature wi | 1 | Abuelo's Awakening | lci |
 | sacrifice ~: exile up to four target cards from a single graveyard. activate only as a sorcery. | 1 | Digsite Conservator | lci |
 | skeletons you control get +N/+N and have haste. | 1 | Corpses of the Lost | lci |
 | spells you control can't be countered. | 1 | Chimil, the Inner Sun | lci |

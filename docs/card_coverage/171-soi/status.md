@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.1% |
-| Works (untested) | 159 | 60.9% |
+| Works (untested) | 160 | 61.3% |
 | Partial (unaudited) | 11 | 4.2% |
-| Not working | 75 | 28.7% |
+| Not working | 74 | 28.4% |
 
 ## Cards needing work
 
@@ -51,7 +51,7 @@
 | Hanweir Militia Captain // Westvale Cult Leader | silent | Westvale Cult Leader's power and toughness are each equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness the Storm | silent | Whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvest Hand // Scrounged Scythe | silent | As long as equipped creature is a Human, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hope Against Hope | silent | Enchanted creature gets +1/+1 for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Hope Against Hope | silent | As long as enchanted creature is a Human, it has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hound of the Farbogs | silent | Delirium — This creature has menace as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inner Struggle | silent | Target creature deals damage to itself equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inquisitor's Ox | silent | Delirium — This creature gets +1/+0 and has vigilance as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,7 +82,6 @@
 | Skin Invasion // Skin Shedder | silent | When enchanted creature dies, return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Grim Nemesis | silent | +1: Reveal the top card of your library and put that card into your hand. Each opponent loses life equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Startled Awake // Persistent Nightmare | silent | {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Stensia Masquerade | silent | Attacking creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thing in the Ice // Awoken Horror | silent | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | To the Slaughter | silent | Target player sacrifices a creature or planeswalker of their choice. Delirium — If there are four or more card types among cards in your graveyard, instead that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -235,6 +234,7 @@
 | Spectral Shepherd | handled | {1}{U}: Return target Spirit you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spiteful Motives | handled | Enchanted creature gets +3/+0 and has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stallion of Ashmouth | handled | Delirium — {1}{B}: This creature gets +1/+1 until end of turn. Activate only if there are four or more card types among cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Stensia Masquerade | handled | Attacking creatures you control have first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stern Constable | handled | {T}, Discard a card: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stitched Mangler | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stitchwing Skaab | handled | {1}{U}, Discard two cards: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -303,6 +303,7 @@
 | Delirium | 8 | Deathcap Cultivator, Hound of the Farbogs, Inquisitor's Ox, Kessig Dire Swine, Moldgraf Scavenger | soi |
 | skulk | 5 | Farbog Revenant, Furtive Homunculus, Pale Rider of Trostad, Rancid Rats, Uninvited Geist // Unimpeded Trespasser | soi |
 | +N: reveal the top card of your library and put that card into your hand. each opponent loses life equal to its mana value. | 1 | Sorin, Grim Nemesis | soi |
+| as long as enchanted creature is a human, it has first strike. | 1 | Hope Against Hope | soi |
 | as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | True-Faith Censer | soi |
 | as long as equipped creature is a human, it has menace. | 1 | Harvest Hand // Scrounged Scythe | soi |
@@ -312,13 +313,11 @@
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice a land. | 1 | The Gitrog Monster | soi |
 | at the beginning of your upkeep, you may discard all the cards in your hand. if you do, draw that many cards. | 1 | Forgotten Creation | soi |
 | attacking creatures you control get +N/+N and have trample. | 1 | Breakneck Rider // Neck Breaker | soi |
-| attacking creatures you control have first strike. | 1 | Stensia Masquerade | soi |
 | choose target creature you don"..."s a wolf or a werewolf deals damage equal to its power to that creature. | 1 | Moonlight Hunt | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
 | creatures you control have skulk. | 1 | Behind the Scenes | soi |
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
 | enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
-| enchanted creature gets +N/+N for each creature you control. | 1 | Hope Against Hope | soi |
 | enchanted land has "..." | 1 | Weirding Wood | soi |
 | equipped creature has skulk. | 1 | Skeleton Key | soi |
 | exile target artifact or land. ~ deals N damage to that permanent's controller. | 1 | Structural Distortion | soi |

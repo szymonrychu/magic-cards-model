@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.8% |
+| Tested | 21 | 8.2% |
 | Works (untested) | 123 | 48.2% |
-| Partial (unaudited) | 22 | 8.6% |
+| Partial (unaudited) | 21 | 8.2% |
 | Not working | 90 | 35.3% |
 
 ## Cards needing work
@@ -77,7 +77,7 @@
 | Relic Robber | silent | Whenever this creature deals combat damage to a player, that player creates a 0/1 colorless Goblin Construct artifact creature token with "This token can't bloc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Roiling Regrowth | silent | Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin Crab | silent | Landfall — Whenever a land you control enters, each opponent mills three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Scourge of the Skyclaves | silent | When you cast this spell, if it was kicked, each player loses half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Scourge of the Skyclaves | silent | Scourge of the Skyclaves's power and toughness are each equal to 20 minus the highest life total among players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Gate Stormcaller | silent | When this creature enters, copy the next instant or sorcery spell with mana value 2 or less you cast this turn when you cast it. If this creature was kicked, co | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seafloor Stalker | silent | {4}{U}: This creature gets +1/+0 until end of turn and can't be blocked this turn. This ability costs {1} less to activate for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadows' Verdict | silent | Exile all creatures and planeswalkers with mana value 3 or less from the battlefield and all creature and planeswalker cards with mana value 3 or less from all  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -127,7 +127,6 @@
 | Lithoform Blight | unaudited | Enchanted land loses all land types and abilities and has "{T}: Add {C}" and "{T}, Pay 1 life: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Moss-Pit Skeleton | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nahiri's Binding | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Nimble Trapfinder | unaudited | This creature can't be blocked if you had another Cleric, Rogue, Warrior, or Wizard enter the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nissa's Zendikon | unaudited | Enchanted land is a 4/4 Elemental creature with reach and haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relic Golem | unaudited | This creature can't attack or block unless an opponent has eight or more cards in their graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relic Vial | unaudited | As long as you control a Cleric, this artifact has "Whenever a creature you control dies, each opponent loses 1 life and you gain 1 life." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -265,7 +264,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Ancient Greenwarden
 - Beyeen Veil // Beyeen Coast
@@ -277,6 +276,7 @@
 - Jwari Disruption // Jwari Ruins
 - Might of Murasa
 - Nighthawk Scavenger
+- Nimble Trapfinder
 - Omnath, Locus of Creation
 - Resolute Strike
 - Roiling Vortex
@@ -347,7 +347,6 @@
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |
 | when phylath enters, create a N/N green plant creature token for each basic land you control. | 1 | Phylath, World Sculptor | znr |
 | when yasharn enters, search your library for a basic forest card and a basic plains card, reveal those cards, put them into your hand, then shuffle. | 1 | Yasharn, Implacable Earth | znr |
-| when you cast ~, if it was kicked, each player loses half their life, rounded up. | 1 | Scourge of the Skyclaves | znr |
 | when ~ becomes the target of a spell, sacrifice it and create a number of N/N colorless construct artifact creature tokens equal to its power. | 1 | Myriad Construct | znr |
 | when ~ enters, add {M} for each creature in your party. | 1 | Ardent Electromancer | znr |
 | when ~ enters, copy the next instant or sorcery spell with mana value N or less you cast ~ when you cast it. if ~ was kicked, copy that spell twice instead. you | 1 | Sea Gate Stormcaller | znr |
@@ -387,13 +386,13 @@
 | {M}{M}: ~ gets +N/+N until end of turn and can't be blocked ~. ~ costs {M} less to activate for each creature in your party. | 1 | Seafloor Stalker | znr |
 | {M}{M}{M}, return an unblocked attacking rogue you control to its owner's hand: put ~ from your hand onto the battlefield tapped and attacking. | 1 | Zareth San, the Trickster | znr |
 | ~ can't attack or block unless an opponent has eight or more cards in their graveyard. | 1 | Relic Golem | znr |
-| ~ can't be blocked if you had another cleric, rogue, warrior, or wizard enter the battlefield under your control ~. | 1 | Nimble Trapfinder | znr |
 | ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) return target creature  | 1 | Thwart the Grave | znr |
 | ~ costs {M} less to cast for each creature in your party. (your party consists of up to one each of cleric, rogue, warrior, and wizard.) search your library for | 1 | Coveted Prize | znr |
 | ~ costs {M} less to cast if it targets a creature whose controller has eight or more cards in their graveyard. gain control of target creature with mana value N | 1 | Lullmage's Domination | znr |
 | ~ deals N damage to target creature and N damage to that creature's controller, where N is the number of creatures in your party. (your party consists of up to  | 1 | Synchronized Spellcraft | znr |
 | ~ gets +N/+N as long as an opponent has eight or more cards in their graveyard. | 1 | Blackbloom Rogue // Blackbloom Bog | znr |
 | ~ gets +N/+N as long as you control another warrior. | 1 | Expedition Champion | znr |
+| ~'s power and toughness are each equal to N minus the highest life total among players. | 1 | Scourge of the Skyclaves | znr |
 | ~'s power is equal to the number of creatures in your party. | 1 | Archpriest of Iona | znr |
 | −N: you may put a creature card with mana value less than or equal to the number of lands you control onto the battlefield from your hand or graveyard with two  | 1 | Nissa of Shadowed Boughs | znr |
 

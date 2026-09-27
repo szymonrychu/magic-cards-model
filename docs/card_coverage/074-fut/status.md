@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 9.6% |
-| Works (untested) | 64 | 36.0% |
-| Partial (unaudited) | 20 | 11.2% |
-| Not working | 77 | 43.3% |
+| Works (untested) | 66 | 37.1% |
+| Partial (unaudited) | 19 | 10.7% |
+| Not working | 76 | 42.7% |
 
 ## Cards needing work
 
@@ -99,12 +99,10 @@
 | Dust of Moments | notice | Choose one — • Remove two time counters from each permanent and each suspended card. • Put two time counters on each permanent with a time counter on it and eac | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grave Peril | notice | When a nonblack creature enters, sacrifice this enchantment. If you do, destroy that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Intervention Pact | notice | The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. At the begi | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Quiet Disrepair | notice | At the beginning of your upkeep, choose one — • Destroy enchanted permanent. • You gain 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Saltskitter | notice | Whenever another creature enters, exile this creature. Return this creature to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Shivan Sand-Mage | notice | When this creature enters, choose one — • Remove two time counters from target permanent or suspended card. • Put two time counters on target permanent with a t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sword of the Meek | notice | Whenever a 1/1 creature you control enters, you may return this card from your graveyard to the battlefield, then attach it to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aven Mindcensor | unaudited | If an opponent would search a library, that player searches the top four cards of that library instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Bound in Silence | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cloud Key | unaudited | As this artifact enters, choose artifact, creature, enchantment, instant, or sorcery. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cutthroat il-Dal | unaudited | Hellbent — This creature has shadow as long as you have no cards in hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Frenzy Sliver | unaudited | All Sliver creatures have frenzy 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -128,6 +126,7 @@
 | Blind Phantasm | handled |  |  | Y/-/- | not_tested |
 | Bogardan Lancer | handled | Flanking | machines/keywords.py | Y/-/- | not_tested |
 | Bonded Fetch | handled | {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bound in Silence | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Centaur Omenreader | handled | As long as this creature is tapped, creature spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Char-Rumbler | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cryptic Annelid | handled | When this creature enters, scry 1, then scry 2, then scry 3. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,6 +165,7 @@
 | Pact of the Titan | handled | Create a 4/4 red Giant creature token. At the beginning of your next upkeep, pay {4}{R}. If you don't, you lose the game. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Patrician's Scorn | handled | If you've cast another white spell this turn, you may cast this spell without paying its mana cost. Destroy all enchantments. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Petrified Plating | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quiet Disrepair | handled | At the beginning of your upkeep, choose one — • Destroy enchanted permanent. • You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ramosian Revivalist | handled | {6}, {T}: Return target Rebel permanent card with mana value 5 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reality Strobe | handled | Return target permanent to its owner's hand. Exile Reality Strobe with three time counters on it. Suspend 3—{2}{U} (Rather than cast this card from your hand, y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rift Elemental | handled | {1}{R}, Remove a time counter from a permanent you control or suspended card you own: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,7 +232,6 @@
 | as ~ enters, choose artifact, creature, enchantment, instant, or sorcery. | 1 | Cloud Key | fut |
 | at the beginning of each opponent"..."s a creature card, the player puts the card into their graveyard and ~ becomes a copy of that card. | 1 | Shapeshifter's Marrow | fut |
 | at the beginning of your first main phase, remove all charge counters from ~. add one mana of any color for each charge counter removed ~. | 1 | Coalition Relic | fut |
-| at the beginning of your upkeep, choose one — • destroy enchanted permanent. • you gain N life. | 1 | Quiet Disrepair | fut |
 | at the beginning of your upkeep, if you control no permanents other than ~ and have no cards in hand, you win the game. | 1 | Barren Glory | fut |
 | aura swap | 1 | Arcanum Wings | fut |
 | cards in graveyards lose all abilities. | 1 | Yixlid Jailer | fut |
@@ -243,7 +242,6 @@
 | creatures without flying can't attack. | 1 | Magus of the Moat | fut |
 | each player may play an additional land on each of their turns. | 1 | Rites of Flourishing | fut |
 | each sliver card in each player's hand has slivercycling {M}. | 1 | Homing Sliver | fut |
-| enchanted creature can't attack or block. | 1 | Bound in Silence | fut |
 | enchanted creature gets +N/+N and doesn"..."s untap step. | 1 | Leaden Fists | fut |
 | enchanted creature has poisonous N. | 1 | Snake Cult Initiation | fut |
 | fateseal | 1 | Mesmeric Sliver | fut |

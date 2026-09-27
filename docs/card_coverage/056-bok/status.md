@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 1.9% |
-| Works (untested) | 70 | 44.0% |
+| Tested | 4 | 2.5% |
+| Works (untested) | 71 | 44.7% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 76 | 47.8% |
+| Not working | 74 | 46.5% |
 
 ## Cards needing work
 
@@ -76,7 +76,6 @@
 | Reduce to Dreams | silent | Return all artifacts and enchantments to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ronin Cliffrider | silent | Whenever this creature attacks, you may have it deal 1 damage to each creature defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ronin Warclub | silent | Whenever a creature you control enters, attach this Equipment to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sakiko, Mother of Summer | silent | Whenever a creature you control deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sakura-Tribe Springcaller | silent | At the beginning of your upkeep, add {G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Glasskite | silent | Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shining Shoal | silent | You may exile a white card with mana value X from your hand rather than pay this spell's mana cost. The next X damage that a source of your choice would deal to | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -84,7 +83,6 @@
 | Shirei, Shizo's Caretaker | silent | Whenever a creature with power 1 or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Shizuko, Caller of Autumn | silent | At the beginning of each player's upkeep, that player adds {G}{G}{G}. Until end of turn, they don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Silverstorm Samurai | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Skullsnatcher | silent | Whenever this creature deals combat damage to a player, exile up to two target cards from that player's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slumbering Tora | silent | {2}, Discard a Spirit or Arcane card: This artifact becomes an X/X Cat artifact creature until end of turn, where X is the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stream of Consciousness | silent | Target player shuffles up to four target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sway of the Stars | silent | Each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. Each player's life total becomes 7. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -163,6 +161,7 @@
 | Shuriken | handled | Equipped creature has "{T}, Unattach Shuriken: Shuriken deals 2 damage to target creature. That creature's controller gains control of Shuriken unless it was un | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sickening Shoal | handled | You may exile a black card with mana value X from your hand rather than pay this spell's mana cost. Target creature gets -X/-X until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skullmane Baku | handled | Whenever you cast a Spirit or Arcane spell, you may put a ki counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Skullsnatcher | handled | Whenever this creature deals combat damage to a player, exile up to two target cards from that player's graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Soratami Mindsweeper | handled | {2}, Return a land you control to its owner's hand: Target player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sosuke's Summons | handled | Create two 1/1 green Snake creature tokens. Whenever a nontoken Snake you control enters, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Split-Tail Miko | handled | {W}, {T}: Prevent the next 2 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -186,11 +185,12 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
 - Bile Urchin
 - Disrupting Shoal
 - Goryo's Vengeance
+- Sakiko, Mother of Summer
 
 </details>
 
@@ -229,7 +229,6 @@
 | when iwamori enters, each opponent may put a legendary creature card from their hand onto the battlefield. | 1 | Iwamori of the Open Fist | bok |
 | when yukora leaves the battlefield, sacrifice all non-ogre creatures you control. | 1 | Yukora, the Prisoner | bok |
 | whenever a creature with power N or less is put into your graveyard from the battlefield, you may return that card to the battlefield at the beginning of the ne | 1 | Shirei, Shizo's Caretaker | bok |
-| whenever a creature you control deals combat damage to a player, add that much {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Sakiko, Mother of Summer | bok |
 | whenever a creature you control enters, attach ~ to that creature. | 1 | Ronin Warclub | bok |
 | whenever a permanent is put into an opponent's graveyard, that player loses N life. | 1 | Patron of the Nezumi | bok |
 | whenever a player casts a spell, tap ~. | 1 | Ogre Recluse | bok |
@@ -239,7 +238,6 @@
 | whenever you cast a spirit or arcane spell, you may search your library for an aura card with enchant creature, reveal it, put it into your hand, then shuffle. | 1 | Tallowisp | bok |
 | whenever ~ attacks, it gains "..." until end of turn unless defending player sacrifices a creature of their choice. | 1 | Ogre Marauder | bok |
 | whenever ~ attacks, you may have it deal N damage to each creature defending player controls. | 1 | Ronin Cliffrider | bok |
-| whenever ~ deals combat damage to a player, exile up to two target cards from that player's graveyard. | 1 | Skullsnatcher | bok |
 | whenever ~ deals combat damage to a player, look at that player's hand. | 1 | Walker of Secret Ways | bok |
 | whenever ~ deals damage to a creature, tap that creature and it doesn"..."s next untap step. | 1 | Matsu-Tribe Sniper | bok |
 | whenever ~ is dealt damage, it deals that much damage to you. | 1 | Shinka Gatekeeper | bok |

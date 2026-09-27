@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 3.2% |
+| Tested | 2 | 6.5% |
 | Works (untested) | 20 | 64.5% |
-| Partial (unaudited) | 1 | 3.2% |
+| Partial (unaudited) | 0 | 0.0% |
 | Not working | 9 | 29.0% |
 
 ## Cards needing work
@@ -35,7 +35,6 @@
 | Stupor | silent | Target opponent discards a card at random, then discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grinning Totem | notice | {2}, {T}, Sacrifice this artifact: Search target opponent's library for a card and exile it. Then that player shuffles. Until the beginning of your next upkeep, | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Polymorph | notice | Destroy target creature. It can't be regenerated. Its controller reveals cards from the top of their library until they reveal a creature card. The player puts  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Pacifism | unaudited | Enchanted creature can't attack or block. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Daring Apprentice | handled | {T}, Sacrifice this creature: Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dissipate | handled | Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enfeeblement | handled | Enchanted creature gets -2/-2. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -60,9 +59,10 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
 - Cursed Totem
+- Pacifism
 
 </details>
 
@@ -73,7 +73,6 @@
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice a pegasus. | 1 | Sacred Mesa | mir |
 | change the text of target permanent by replacing all instances of one color word with another or one basic land type with another. (for example, you may change  | 1 | Mind Bend | mir |
 | destroy target creature. it can't be regenerated. its controller reveals cards from the top of their library until they reveal a creature card. the player puts  | 1 | Polymorph | mir |
-| enchanted creature can't attack or block. | 1 | Pacifism | mir |
 | lands you control are plains. | 1 | Celestial Dawn | mir |
 | target opponent discards a card at random, then discards a card. | 1 | Stupor | mir |
 | target player untaps all basic lands they control. | 1 | Early Harvest | mir |

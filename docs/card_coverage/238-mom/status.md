@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 6.6% |
-| Works (untested) | 110 | 40.4% |
+| Tested | 19 | 7.0% |
+| Works (untested) | 111 | 40.8% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 134 | 49.3% |
+| Not working | 132 | 48.5% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Elvish Vatkeeper | silent | When this creature enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Enduring Bondwarden | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Essence of Orthodoxy | silent | Whenever this creature or another Phyrexian you control enters, incubate 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Etali, Primal Conqueror // Etali, Primal Sickness | silent | When Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Expedition Lookout | silent | As long as an opponent has eight or more cards in their graveyard, this creature can attack as though it didn't have defender and it can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eyes of Gitaxias | silent | Incubate 3. (Create an Incubator token with three +1/+1 counters on it and "{2}: Transform this token." It transforms into a 0/0 Phyrexian artifact creature.) D | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fearless Skald | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -125,7 +124,6 @@
 | Traumatic Revelation | silent | Target opponent reveals their hand. You may choose a creature or battle card from it. If you do, that player discards that card. If you don't, incubate 3. (Crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unseal the Necropolis | silent | Each player mills three cards. Then you return up to two creature cards from your graveyard to your hand. (To mill three cards, a player puts the top three card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vengeant Earth | silent | Target creature or land you control becomes a 4/4 Elemental creature with haste in addition to its other types until end of turn. It must be blocked this turn i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Volcanic Spite | silent | Volcanic Spite deals 3 damage to target creature, planeswalker, or battle. You may put a card from your hand on the bottom of your library. If you do, draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Voldaren Thrillseeker | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | War-Trained Slasher | silent | Whenever this creature attacks a battle, double its power until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wrenn and Realmbreaker | silent | +1: Up to one target land you control becomes a 3/3 Elemental creature with vigilance, hexproof, and haste until your next turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -274,6 +272,7 @@
 | Trailblazing Historian | handled | {T}: Another target creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Transcendent Message | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Draw X card | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Urn of Godfire | handled | {6}, {T}, Sacrifice this artifact: Destroy target creature or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Volcanic Spite | handled | Volcanic Spite deals 3 damage to target creature, planeswalker, or battle. You may put a card from your hand on the bottom of your library. If you do, draw a ca | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wary Thespian | handled | When this creature enters or dies, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wildwood Escort | handled | When this creature enters, return target creature or battle card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yargle and Multani | handled |  |  | Y/Y/- | not_tested |
@@ -284,12 +283,13 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
 - Botanical Brawler
 - Drana and Linvala
+- Etali, Primal Conqueror // Etali, Primal Sickness
 - Faerie Mastermind
 - Flywheel Racer
 - Glistening Deluge
@@ -357,7 +357,6 @@
 | triple | 1 | City on Fire | mom |
 | up to two target creatures you control each get +N/+N until end of turn. they each deal damage equal to their power to another target creature, planeswalker, or | 1 | Tandem Takedown | mom |
 | vertex paladin's power and toughness are each equal to the number of creatures you control. | 1 | Invasion of Xerex // Vertex Paladin | mom |
-| when etali enters, each player exiles cards from the top of their library until they exile a nonland card. you may cast any number of spells from among the nonl | 1 | Etali, Primal Conqueror // Etali, Primal Sickness | mom |
 | when ~ dies, each player mills two cards. then you may exile ~. when you do, put target creature or battle card from your graveyard on top of your library. | 1 | Flitting Guerrilla | mom |
 | when ~ dies, exile the top card of your library. target opponent loses life equal to its mana value. if it's an instant or sorcery card, you may cast it without | 1 | Hidetsugu and Kairi | mom |
 | when ~ enters or dies, choose one — • draw a card, then discard a card. • shuffle up to four target cards with mana value N or greater from your graveyard into  | 1 | Oracle of Tragedy | mom |
@@ -419,7 +418,6 @@
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
 | ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |
 | ~ deals N damage to target creature, planeswalker, or battle. look at the top N cards of your library, where N is the excess damage dealt ~. you may exile one o | 1 | Nahiri's Warcrafting | mom |
-| ~ deals N damage to target creature, planeswalker, or battle. you may put a card from your hand on the bottom of your library. if you do, draw a card. | 1 | Volcanic Spite | mom |
 | ~ enters with two +N/+N counters on it for each creature that convoked it. | 1 | Ancient Imperiosaur | mom |
 | ~ gets +N/+N as long as an opponent has eight or more cards in their graveyard. | 1 | Tenured Oilcaster | mom |
 | ~ gets +N/+N for each transformed permanent you control. | 1 | Mutagen Connoisseur | mom |

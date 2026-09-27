@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 9.5% |
-| Works (untested) | 53 | 31.4% |
+| Works (untested) | 54 | 32.0% |
 | Partial (unaudited) | 6 | 3.6% |
-| Not working | 94 | 55.6% |
+| Not working | 93 | 55.0% |
 
 ## Cards needing work
 
@@ -107,7 +107,6 @@
 | Vigean Graftmage | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Vigean Hydropon | silent | Graft | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Vigean Intuition | silent | Choose a card type, then reveal the top four cards of your library. Put all cards of the chosen type revealed this way into your hand and the rest into your gra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Voidslime | silent | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wakestone Gargoyle | silent | {1}{W}: Creatures you control with defender can attack this turn as though they didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | War's Toll | silent | Whenever an opponent taps a land for mana, tap all lands that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Weight of Spires | silent | Weight of Spires deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -175,6 +174,7 @@
 | Utvara Scalper | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Verdant Eidolon | handled | Whenever you cast a multicolored spell, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vision Skeins | handled | Each player draws two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Voidslime | handled | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Walking Archive | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Whiptail Moloch | handled | When this creature enters, it deals 3 damage to target creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wit's End | handled | Target player discards their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -221,7 +221,6 @@
 | choose a nonland card name. target player reveals their hand. that player discards a card with that name. if they can't, you draw a card. | 1 | Brain Pry | dis |
 | choose a nonlegendary creature on the battlefield. target creature becomes a copy of that creature until end of turn. | 1 | Cytoshape | dis |
 | counter all other spells. draw a card for each spell countered ~. | 1 | Swift Silence | dis |
-| counter target spell, activated ability, or triggered ability. (mana abilities can't be targeted.) | 1 | Voidslime | dis |
 | destroy all auras and equipment. | 1 | Pure // Simple | dis |
 | destroy each artifact, creature, and enchantment with mana value N. | 1 | Crime // Punishment | dis |
 | discard a card at random. if you do, ~ deals damage equal to that card's mana value to each creature. you may repeat ~ any number of times. | 1 | Kindle the Carnage | dis |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 5.8% |
-| Works (untested) | 154 | 68.4% |
-| Partial (unaudited) | 9 | 4.0% |
-| Not working | 49 | 21.8% |
+| Works (untested) | 155 | 68.9% |
+| Partial (unaudited) | 10 | 4.4% |
+| Not working | 47 | 20.9% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Avalanche Tusker | silent | Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrage of Boulders | silent | Barrage of Boulders deals 1 damage to each creature you don't control. Ferocious — If you control a creature with power 4 or greater, creatures can't block this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bellowing Saddlebrute | silent | Raid — When this creature enters, you lose 4 life unless you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Butcher of the Horde | silent | Sacrifice another creature: This creature gains your choice of vigilance, lifelink, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chief of the Edge | silent | Other Warrior creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chief of the Scale | silent | Other Warrior creatures you control get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crackling Doom | silent | Crackling Doom deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -44,7 +43,6 @@
 | End Hostilities | silent | Destroy all creatures and all permanents attached to creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Force Away | silent | Return target creature to its owner's hand. Ferocious — If you control a creature with power 4 or greater, you may draw a card. If you do, discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herald of Anafenza | silent | Whenever you activate this creature's outlast ability, create a 1/1 white Warrior creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Hooded Hydra | silent | When this creature dies, create a 1/1 green Snake creature token for each +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Howl of the Horde | silent | When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. Raid — If you attacked this turn, when you n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icy Blast | silent | Tap X target creatures. Ferocious — If you control a creature with power 4 or greater, those creatures don't untap during their controllers' next untap steps. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kheru Lich Lord | silent | At the beginning of your upkeep, you may pay {2}{B}. If you do, return a creature card at random from your graveyard to the battlefield. It gains flying, trampl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,6 +77,7 @@
 | Brave the Sands | unaudited | Each creature you control can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Dragon Grip | unaudited | Ferocious — If you control a creature with power 4 or greater, you may cast this spell as though it had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ghostfire Blade | unaudited | This Equipment's equip ability costs {2} less to activate if it targets a colorless creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Hooded Hydra | unaudited | As this creature is turned face up, put five +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ivorytusk Fortress | unaudited | Untap each creature you control with a +1/+1 counter on it during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lens of Clarity | unaudited | You may look at the top card of your library and at face-down creatures you don't control any time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Surrak Dragonclaw | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -107,6 +106,7 @@
 | Bloodsoaked Champion | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blossoming Sands | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Briber's Purse | handled | This artifact enters with X gem counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Butcher of the Horde | handled | Sacrifice another creature: This creature gains your choice of vigilance, lifelink, or haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canyon Lurkers | handled | Morph | machines/casting.py | Y/Y/- | not_tested |
 | Dazzling Ramparts | handled | {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dead Drop | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Target player sacrifices two creatures of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -271,6 +271,7 @@
 | +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
 | +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |
 | all creatures able to block target creature ~ do so. ferocious — that creature gains indestructible until end of turn if you control a creature with power N or  | 1 | Roar of Challenge | ktk |
+| as ~ is turned face up, put five +N/+N counters on it. | 1 | Hooded Hydra | ktk |
 | at the beginning of your upkeep, you may pay {M}{M}. if you do, return a creature card at random from your graveyard to the battlefield. it gains flying, trampl | 1 | Kheru Lich Lord | ktk |
 | choose up to one creature. destroy the rest. | 1 | Duneblast | ktk |
 | counter target spell unless its controller pays {M}. ~ deals N damage to that spell's controller. | 1 | Mindswipe | ktk |
@@ -287,14 +288,12 @@
 | put a +N/+N counter on target creature you control. it gains protection from the color of your choice until end of turn. (it can't be blocked, targeted, dealt d | 1 | Feat of Resistance | ktk |
 | return target creature to its owner's hand. ferocious — if you control a creature with power N or greater, you may draw a card. if you do, discard a card. | 1 | Force Away | ktk |
 | reveal the top eight cards of your library. you may put a creature card from among them onto the battlefield. put the rest into your graveyard. ferocious — if y | 1 | See the Unwritten | ktk |
-| sacrifice another creature: ~ gains your choice of vigilance, lifelink, or haste until end of turn. | 1 | Butcher of the Horde | ktk |
 | tap N target creatures. ferocious — if you control a creature with power N or greater, those creatures don"..." next untap steps. | 1 | Icy Blast | ktk |
 | target creature you control fights target creature you don't control. ferocious — the creature you control gets +N/+N until end of turn before it fights if you  | 1 | Savage Punch | ktk |
 | target opponent exiles the top N cards of their library. you may cast any number of spells with mana value N or less from among them without paying their mana c | 1 | Villainous Wealth | ktk |
 | the next time a source of your choice would deal damage to you ~, prevent that damage. if damage is prevented ~, ~ deals that much damage to that source's contr | 1 | Deflecting Palm | ktk |
 | untap each creature you control with a +N/+N counter on it during each other player's untap step. | 1 | Ivorytusk Fortress | ktk |
 | when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
-| when ~ dies, create a N/N green snake creature token for each +N/+N counter on it. | 1 | Hooded Hydra | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
 | when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |
 | whenever a warrior you control deals combat damage to a player, you may pay N life. if you do, draw a card. | 1 | Raiders' Spoils | ktk |

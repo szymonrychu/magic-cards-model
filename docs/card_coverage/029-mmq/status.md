@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 6.5% |
+| Tested | 4 | 8.7% |
 | Works (untested) | 26 | 56.5% |
 | Partial (unaudited) | 4 | 8.7% |
-| Not working | 13 | 28.3% |
+| Not working | 12 | 26.1% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Bribery | silent | Search target opponent's library for a creature card and put that card onto the battlefield under your control. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cowardice | silent | Whenever a creature becomes the target of a spell or ability, return that creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Distorting Lens | silent | {T}: Target permanent becomes the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunted Wumpus | silent | When this creature enters, each other player may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Midnight Ritual | silent | Exile X target creature cards from your graveyard. For each creature card exiled this way, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Natural Affinity | silent | All lands become 2/2 creatures until end of turn. They're still lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -73,9 +72,10 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>4 cards</summary>
 
 - Cho-Manno, Revolutionary
+- Distorting Lens
 - Ivory Mask
 - Last Breath
 
@@ -98,7 +98,6 @@
 | whenever a creature becomes the target of a spell or ability, return that creature to its owner's hand. | 1 | Cowardice | mmq |
 | whenever a creature you control deals combat damage, you gain that much life. | 1 | Noble Purpose | mmq |
 | whenever ~ blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | 1 | Deathgazer | mmq |
-| {M}: target permanent becomes the color of your choice until end of turn. | 1 | Distorting Lens | mmq |
 | {M}: the next time a source of your choice of the chosen color would deal damage to you ~, prevent that damage. | 1 | Story Circle | mmq |
 | ~ can block an additional creature each combat. | 1 | Two-Headed Dragon | mmq |
 | ~ can block only creatures with flying. | 1 | Cloud Sprite | mmq |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 12.4% |
-| Works (untested) | 59 | 56.2% |
+| Works (untested) | 60 | 57.1% |
 | Partial (unaudited) | 7 | 6.7% |
-| Not working | 26 | 24.8% |
+| Not working | 25 | 23.8% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Overwhelming Stampede | silent | Until end of turn, creatures you control gain trample and get +X/+X, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phylactery Lich | silent | When you control no permanents with phylactery counters on them, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Primal Cocoon | silent | At the beginning of your upkeep, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Quag Sickness | silent | Enchanted creature gets -1/-1 for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Redirect | silent | You may choose new targets for target spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Squadron Hawk | silent | When this creature enters, you may search your library for up to three cards named Squadron Hawk, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Steel Overseer | silent | {T}: Put a +1/+1 counter on each artifact creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -99,6 +98,7 @@
 | Nether Horror | handled |  |  | Y/-/- | not_tested |
 | Nightwing Shade | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phantom Beast | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Quag Sickness | handled | Enchanted creature gets -1/-1 for each Swamp you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roc Egg | handled | When this creature dies, create a 3/3 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rotting Legion | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sacred Wolf | handled | Hexproof | machines/casting.py (target legality) | Y/-/- | not_tested |
@@ -150,7 +150,6 @@
 | at the beginning of your upkeep, put a +N/+N counter on enchanted creature. | 1 | Primal Cocoon | m11 |
 | each opponent loses N life. you gain life equal to the life lost ~. | 1 | Blood Tithe | m11 |
 | each opponent who cast a spell ~ can't attack with creatures. | 1 | Angelic Arbiter | m11 |
-| enchanted creature gets -N/-N for each swamp you control. | 1 | Quag Sickness | m11 |
 | exile all creatures you control, then reveal cards from the top of your library until you reveal that many creature cards. put all creature cards revealed ~ ont | 1 | Mass Polymorph | m11 |
 | if a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | 1 | Fire Servant | m11 |
 | if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Obstinate Baloth | m11 |

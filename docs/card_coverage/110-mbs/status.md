@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 5.6% |
-| Works (untested) | 85 | 59.9% |
+| Works (untested) | 86 | 60.6% |
 | Partial (unaudited) | 8 | 5.6% |
-| Not working | 41 | 28.9% |
+| Not working | 40 | 28.2% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Decimator Web | silent | {4}, {T}: Target opponent loses 2 life, gets a poison counter, then mills six cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Distant Memories | silent | Search your library for a card, exile it, then shuffle. Any opponent may have you put that card into your hand. If no player does, you draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flayer Husk | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Frantic Salvage | silent | Put any number of target artifact cards from your graveyard on top of your library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galvanoth | silent | At the beginning of your upkeep, you may look at the top card of your library. You may cast it without paying its mana cost if it's an instant or sorcery spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hero of Oxid Ridge | silent | Whenever this creature attacks, creatures with power 1 or less can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leonin Relic-Warder | silent | When this creature leaves the battlefield, return the exiled card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,6 +90,7 @@
 | Fangren Marauder | handled | Whenever an artifact is put into a graveyard from the battlefield, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flensermite | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Flesh-Eater Imp | handled | Sacrifice a creature: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Frantic Salvage | handled | Put any number of target artifact cards from your graveyard on top of your library. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glissa's Courier | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Glissa, the Traitor | handled | Whenever a creature an opponent controls dies, you may return target artifact card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnathosaur | handled | Sacrifice an artifact: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -196,7 +196,6 @@
 | put N -N/-N counters on each creature. shuffle ~ into its owner's library. | 1 | Black Sun's Zenith | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
 | put a -N/-N counter on target creature. when that creature dies ~, its controller gets a poison counter. | 1 | Virulent Wound | mbs |
-| put any number of target artifact cards from your graveyard on top of your library. draw a card. | 1 | Frantic Salvage | mbs |
 | put target artifact, creature, or enchantment on top of its owner's library. | 1 | Banishment Decree | mbs |
 | put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. exile it at the beginning of the next end step. i | 1 | Gruesome Encore | mbs |
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |

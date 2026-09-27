@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.2% |
-| Works (untested) | 116 | 44.8% |
-| Partial (unaudited) | 6 | 2.3% |
-| Not working | 121 | 46.7% |
+| Tested | 17 | 6.6% |
+| Works (untested) | 117 | 45.2% |
+| Partial (unaudited) | 5 | 1.9% |
+| Not working | 120 | 46.3% |
 
 ## Cards needing work
 
@@ -100,7 +100,6 @@
 | Shoot the Sheriff | silent | Destroy target non-outlaw creature. (Assassins, Mercenaries, Pirates, Rogues, and Warlocks are outlaws. Everyone else is fair game.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Slick Sequence | silent | Slick Sequence deals 2 damage to any target. If you've cast another spell this turn, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spring Splasher | silent | Whenever this creature attacks, target creature defending player controls gets -3/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Step Between Worlds | silent | Each player may shuffle their hand and graveyard into their library. Each player who does draws seven cards. Exile Step Between Worlds. Plot {4}{U}{U} (You may  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Stubborn Burrowfiend | silent | Whenever this creature becomes saddled for the first time each turn, mill two cards, then this creature gets +X/+X until end of turn, where X is the number of c | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Taii Wakeen, Perfect Shot | silent | Whenever a source you control deals noncombat damage to a creature equal to that creature's toughness, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | The Key to the Vault | silent | Whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. You may exile a nonland card from among them.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -151,7 +150,6 @@
 | Dust Animus | unaudited | If you control five or more untapped lands, this creature enters with two +1/+1 counters and a lifelink counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Freestrider Commando | unaudited | This creature enters with two +1/+1 counters on it if it wasn't cast or no mana was spent to cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Miriam, Herd Whisperer | unaudited | During your turn, Mounts and Vehicles you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Nimble Brigand | unaudited | This creature can't be blocked if you've committed a crime this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sheriff of Safe Passage | unaudited | This creature enters with a +1/+1 counter on it plus an additional +1/+1 counter on it for each other creature you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abraded Bluffs | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Akul the Unrepentant | handled | Sacrifice three other creatures: You may put a creature card from your hand onto the battlefield. Activate only as a sorcery and only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -213,6 +211,7 @@
 | Malcolm, the Eyes | handled | Whenever you cast your second spell each turn, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mirage Mesa | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Nezumi Linkbreaker | handled | When this creature dies, create a 1/1 red Mercenary creature token with "{T}: Target creature you control gets +1/+0 until end of turn. Activate only as a sorce | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Nimble Brigand | handled | This creature can't be blocked if you've committed a crime this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oasis Gardener | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Outcaster Trailblazer | handled | When this creature enters, add one mana of any color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Outlaw Medic | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -273,7 +272,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
@@ -290,6 +289,7 @@
 - Servant of the Stinger
 - Slickshot Show-Off
 - Smuggler's Surprise
+- Step Between Worlds
 - Three Steps Ahead
 
 </details>
@@ -309,7 +309,6 @@
 | during turns other than yours, spells you cast cost {M} less to cast. | 1 | Geyser Drake | otj |
 | during your turn, mounts and vehicles you control have hexproof. | 1 | Miriam, Herd Whisperer | otj |
 | during your turn, outlaws you control have first strike. | 1 | At Knifepoint | otj |
-| each player may shuffle their hand and graveyard into their library. each player who does draws seven cards. exile ~. plot {M}{M}{M} (you may pay {M}{M}{M} and  | 1 | Step Between Worlds | otj |
 | exile any number of creatures you control, then return them to the battlefield under their owner's control. then repeat ~ N more times. | 1 | Another Round | otj |
 | exile target creature. if it had mana value N or less, surveil N. (look at the top two cards of your library, then put any number of them into your graveyard an | 1 | Consuming Ashes | otj |
 | if you control five or more untapped lands, ~ enters with two +N/+N counters and a lifelink counter on it. | 1 | Dust Animus | otj |
@@ -408,7 +407,6 @@
 | {M}, {M}: put a +N/+N counter on each creature you control that entered ~. | 1 | Raucous Entertainer | otj |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Resilient Roadrunner | otj |
 | {M}{M}, sacrifice another creature: put a +N/+N counter on ~. if an outlaw was sacrificed ~, create a treasure token. | 1 | Boneyard Desecrator | otj |
-| ~ can"..."ve committed a crime ~. | 1 | Nimble Brigand | otj |
 | ~ deals N damage to any target. if you've cast another spell ~, draw a card. | 1 | Slick Sequence | otj |
 | ~ deals N damage to target attacking or blocking creature. ~ deals N damage to that creature instead if you controlled a mount as you cast ~. | 1 | Steer Clear | otj |
 | ~ deals N damage to target creature, where N is N plus the number of other spells you've cast ~. | 1 | Thunder Salvo | otj |

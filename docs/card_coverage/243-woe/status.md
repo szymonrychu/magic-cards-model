@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.0% |
-| Works (untested) | 134 | 50.4% |
-| Partial (unaudited) | 11 | 4.1% |
-| Not working | 105 | 39.5% |
+| Works (untested) | 138 | 51.9% |
+| Partial (unaudited) | 10 | 3.8% |
+| Not working | 102 | 38.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | A Tale for the Ages | silent | Enchanted creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Aquatic Alchemist // Bubble Up | silent | Put target instant or sorcery card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Archon of the Wild Rose | silent | Other creatures you control that are enchanted by Auras you control have base power and toughness 4/4 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Armory Mice | silent | Celebration — This creature gets +0/+2 as long as two or more nonland permanents entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ashiok, Wicked Manipulator | silent | +1: Look at the top two cards of your library. Exile one of them and put the other into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -42,7 +41,6 @@
 | Chancellor of Tales | silent | Whenever you cast an Adventure spell, you may copy it. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charging Hooligan | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each attacking creature. If a Rat is attacking, this creature gains trample until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charmed Clothier | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cooped Up | silent | {2}{W}: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cruel Somnophage // Can't Wake Up | silent | Cruel Somnophage's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cut In | silent | Cut In deals 4 damage to target creature. Create a Young Hero Role token attached to up to one target creature you control. (If you control another Role on it,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Devouring Sugarmaw // Have for Dinner | silent | At the beginning of your upkeep, you may sacrifice an artifact, enchantment, or token. If you don't, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -112,7 +110,6 @@
 | Welcome to Sweettooth | silent | III — Put X +1/+1 counters on target creature you control, where X is one plus the number of Foods you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Will, Scion of Peace | silent | {T}: Spells you cast this turn that are white and/or blue cost {X} less to cast, where X is the amount of life you gained this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Witch's Mark | silent | You may discard a card. If you do, draw two cards. Create a Wicked Role token attached to up to one target creature you control. (If you control another Role on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Woodland Acolyte // Mend the Wilds | silent | Put target permanent card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Yenna, Redtooth Regent | silent | {2}, {T}: Choose target enchantment you control that doesn't have the same name as another permanent you control. Create a token that's a copy of it, except it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Archon's Glory | notice | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets +2/+2 until end of turn. If this spell was bargained | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Back for Seconds | notice | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Return up to two target creature cards from your graveyard to your hand.  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -132,7 +129,6 @@
 | Twisted Fealty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Wicked Role token attached to up to one targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Water Wings | notice | Until end of turn, target creature you control has base power and toughness 4/4 and gains flying and hexproof. (It can't be the target of spells or abilities yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Agatha of the Vile Cauldron | unaudited | Activated abilities of creatures you control cost {X} less to activate, where X is Agatha's power. This effect can't reduce the mana in that cost to less than o | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Blossoming Tortoise | unaudited | Activated abilities of lands you control cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Elusive Otter // Grove's Bounty | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Eriette of the Charmed Apple | unaudited | Each creature that's enchanted by an Aura you control can't attack you or planeswalkers you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hamlet Glutton | unaudited | This spell costs {2} less to cast if it's bargained. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -142,6 +138,7 @@
 | Night of the Sweets' Revenge | unaudited | Foods you control have "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Raging Battle Mouse | unaudited | The second spell you cast each turn costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sleep-Cursed Faerie | unaudited | This creature enters tapped with three stun counters on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Aquatic Alchemist // Bubble Up | handled | Put target instant or sorcery card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ash, Party Crasher | handled | Celebration — Whenever Ash attacks, if two or more nonland permanents entered the battlefield under your control this turn, put a +1/+1 counter on Ash. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ashiok's Reaper | handled | Whenever an enchantment you control is put into a graveyard from the battlefield, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barrow Naughty | handled | This creature has lifelink as long as you control another Faerie. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -151,12 +148,14 @@
 | Besotted Knight // Betroth the Beast | handled | Create a Royal Role token attached to target creature you control. (Enchanted creature gets +1/+1 and has ward {1}.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bestial Bloodline | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bitter Chill | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Blossoming Tortoise | handled | Whenever this creature enters or attacks, mill three cards, then return a land card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boundary Lands Ranger | handled | At the beginning of combat on your turn, if you control a creature with power 4 or greater, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candy Grapple | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets -3/-3 until end of turn. If this spell was bargained | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candy Trail | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Charming Scoundrel | handled | When this creature enters, choose one — • Discard a card, then draw a card. • Create a Treasure token. • Create a Wicked Role token attached to target creature  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Collector's Vault | handled | {2}, {T}: Draw a card, then discard a card. Create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Conceited Witch // Price of Beauty | handled | Create a Wicked Role token attached to target creature you control. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Cooped Up | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cursed Courtier | handled | When this creature enters, create a Cursed Role token attached to it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diminisher Witch | handled | When this creature enters, if it was bargained, create a Cursed Role token attached to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dream Spoilers | handled | Whenever you cast a spell during an opponent's turn, up to one target creature an opponent controls gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -276,6 +275,7 @@
 | Wicked Visitor | handled | Whenever an enchantment you control is put into a graveyard from the battlefield, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wildwood Mentor | handled | Whenever a token you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Witchstalker Frenzy | handled | This spell costs {1} less to cast for each creature that attacked this turn. Witchstalker Frenzy deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Woodland Acolyte // Mend the Wilds | handled | Put target permanent card from your graveyard on top of your library. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
@@ -309,7 +309,6 @@
 | when ~ enters, create a royal role token attached to another target creature you control. | 2 | Charmed Clothier, Redtooth Genealogist | woe |
 | +N: look at the top two cards of your library. exile one of them and put the other into your hand. | 1 | Ashiok, Wicked Manipulator | woe |
 | activated abilities of creatures you control cost {M} less to activate, where N is agatha"..."t reduce the mana in that cost to less than one mana. | 1 | Agatha of the Vile Cauldron | woe |
-| activated abilities of lands you control cost {M} less to activate. | 1 | Blossoming Tortoise | woe |
 | any number of target enchanted creatures you control and up to one other target creature you control each deal damage equal to their power to target creature yo | 1 | Graceful Takedown | woe |
 | at the beginning of combat on your turn, if you control a creature with power N or greater, ~ gets +N/+N until end of turn and can attack ~ as though it didn't  | 1 | Territorial Witchstalker | woe |
 | at the beginning of your end step, put a +N/+N counter on each creature you control. untap those creatures. | 1 | Virtue of Loyalty // Ardenvale Fealty | woe |
@@ -346,8 +345,6 @@
 | other creatures you control that are enchanted by auras you control have base power and toughness N/N and have flying. | 1 | Archon of the Wild Rose | woe |
 | prevent all damage that would be dealt to you and creatures you control ~ by creatures. | 1 | Eerie Interference | woe |
 | put N +N/+N counters on target creature you control, where N is one plus the number of foods you control. | 1 | Welcome to Sweettooth | woe |
-| put target instant or sorcery card from your graveyard on top of your library. (then exile ~. you may cast the creature later from exile.) | 1 | Aquatic Alchemist // Bubble Up | woe |
-| put target permanent card from your graveyard on top of your library. (then exile ~. you may cast the creature later from exile.) | 1 | Woodland Acolyte // Mend the Wilds | woe |
 | return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
 | return the exiled card to the battlefield under its owner's control. | 1 | The Princess Takes Flight | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
@@ -401,7 +398,6 @@
 | {M}: spells you cast ~ that are black and/or red cost {M} less to cast, where N is the amount of life you lost ~. activate only as a sorcery. | 1 | Rowan, Scion of War | woe |
 | {M}: spells you cast ~ that are white and/or blue cost {M} less to cast, where N is the amount of life you gained ~. activate only as a sorcery. | 1 | Will, Scion of Peace | woe |
 | {M}{M}: choose another player. that player gains control of target treasure you control. you draw a card. | 1 | Discerning Financier | woe |
-| {M}{M}: exile enchanted creature. | 1 | Cooped Up | woe |
 | {M}{M}: until end of turn, ~ becomes a N/N blue and red elemental creature with "..." it's still a land. | 1 | Restless Spire | woe |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Verdant Outrider | woe |
 | {M}{M}: ~ gets +N/+N until end of turn for each enchantment you control. | 1 | Slumbering Keepguard | woe |

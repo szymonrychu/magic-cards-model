@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.0% |
-| Works (untested) | 125 | 54.3% |
-| Partial (unaudited) | 23 | 10.0% |
-| Not working | 66 | 28.7% |
+| Tested | 17 | 7.4% |
+| Works (untested) | 127 | 55.2% |
+| Partial (unaudited) | 21 | 9.1% |
+| Not working | 65 | 28.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ancient Animus | silent | Put a +1/+1 counter on target creature you control if it's legendary. Then it fights target creature an opponent controls. (Each deals damage equal to its power | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blackblade Reforged | silent | Equipped creature gets +1/+1 for each land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chainer's Torment | silent | III — Create an X/X black Nightmare Horror creature token, where X is half your life total, rounded up. It deals X damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Darigaaz Reincarnated | silent | At the beginning of your upkeep, if this card is exiled with an egg counter on it, remove an egg counter from it. Then if this card has no egg counters on it, r | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Bargain | silent | Look at the top three cards of your library. Put two of them into your hand and the other into your graveyard. Dark Bargain deals 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -96,7 +95,6 @@
 | Baird, Steward of Argive | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Baloth Gorger | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Curator's Ward | unaudited | Enchanted permanent has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Gaea's Protector | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grunn, the Lonely King | unaudited | If Grunn was kicked, it enters with five +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | In Bolas's Clutches | unaudited | Enchanted permanent is legendary. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Jodah, Archmage Eternal | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay the mana cost for spells you cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -105,7 +103,6 @@
 | Precognition Field | unaudited | You may cast instant and sorcery spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Raff Capashen, Ship's Mage | unaudited | You may cast historic spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rat Colony | unaudited | A deck can have any number of cards named Rat Colony. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Relic Runner | unaudited | This creature can't be blocked if you've cast a historic spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rona, Disciple of Gix | unaudited | You may cast spells from among cards exiled with Rona. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shalai, Voice of Plenty | unaudited | You, planeswalkers you control, and other creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shanna, Sisay's Legacy | unaudited | Shanna can't be the target of abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -125,6 +122,7 @@
 | Aven Sentry | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Befuddle | handled | Target creature gets -4/-0 until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Benalish Marshal | handled | Other creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blackblade Reforged | handled | Equipped creature gets +1/+1 for each land you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blessed Light | handled | Exile target creature or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blink of an Eye | handled | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Return target nonland permanent to its owner's hand. If this spell was kicked, draw a c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodtallow Candle | handled | {6}, {T}, Sacrifice this artifact: Target creature gets -5/-5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -198,6 +196,7 @@
 | Powerstone Shard | handled |  |  | Y/Y/- | not_tested |
 | Primordial Wurm | handled |  |  | Y/Y/- | not_tested |
 | Pyromantic Pilgrim | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
+| Relic Runner | handled | This creature can't be blocked if you've cast a historic spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rite of Belzenlok | handled | I, II — Create two 0/1 black Cleric creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Run Amok | handled | Target attacking creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanctum Spirit | handled | Discard a historic card: This creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -244,13 +243,14 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
 - Arvad the Cursed
 - Bloodstone Goblin
 - Damping Sphere
+- Gaea's Protector
 - Hallar, the Firefletcher
 - History of Benalia
 - Jaya Ballard
@@ -295,7 +295,6 @@
 | enchanted creature is legendary, gets +N/+N, and has flying, vigilance, and lifelink. | 1 | On Serra's Wings | dom |
 | enchanted permanent has hexproof. | 1 | Curator's Ward | dom |
 | enchanted permanent is legendary. | 1 | In Bolas's Clutches | dom |
-| equipped creature gets +N/+N for each land you control. | 1 | Blackblade Reforged | dom |
 | exile all opponents' graveyards. | 1 | Phyrexian Scriptures | dom |
 | exile target creature. put two loyalty counters on a planeswalker you control. | 1 | Settle the Score | dom |
 | historic spells you cast cost {M} less to cast. | 1 | Jhoira's Familiar | dom |
@@ -347,14 +346,12 @@
 | {M}: exchange your life total with evra's power. | 1 | Evra, Halcyon Witness | dom |
 | {M}: tap ~. it gains indestructible until end of turn. | 1 | Drudge Sentinel | dom |
 | {M}: until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | 1 | Navigator's Compass | dom |
-| ~ can"..."ve cast a historic spell ~. | 1 | Relic Runner | dom |
 | ~ deals N damage to target player and N damage to each creature that player controls. | 1 | Radiating Lightning | dom |
 | ~ deals N damage to target player or planeswalker. search your library and/or graveyard for a card named chandra, bold pyromancer, reveal it, and put it into yo | 1 | Chandra's Outburst | dom |
 | ~ gets +N/+N for each aura and equipment attached to it. | 1 | Champion of the Flame | dom |
 | ~ gets +N/+N for each basic island you control. | 1 | Tempest Djinn | dom |
 | ~ gets +N/+N for each legendary creature you control. | 1 | Benalish Honor Guard | dom |
 | ~ gets -N/-N as long as two or more creatures are blocking it. | 1 | Rampaging Cyclops | dom |
-| ~ must be blocked if able. | 1 | Gaea's Protector | dom |
 | −N: put target nonland permanent into its owner's library third from the top. | 1 | Teferi, Hero of Dominaria | dom |
 
 ## Notes

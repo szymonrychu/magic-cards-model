@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 5.6% |
-| Works (untested) | 89 | 55.3% |
+| Works (untested) | 90 | 55.9% |
 | Partial (unaudited) | 7 | 4.3% |
-| Not working | 56 | 34.8% |
+| Not working | 55 | 34.2% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Stonewise Fortifier | silent | {4}{W}: Prevent all damage that would be dealt to this creature by target creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stormchaser Chimera | silent | {2}{U}{R}: Scry 1, then reveal the top card of your library. This creature gets +X/+0 until end of turn, where X is that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Swarmborn Giant | silent | When you're dealt combat damage, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Worst Fears | silent | You control target player during that player's next turn. Exile Worst Fears. (You see all cards that player could see and make all decisions for them.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bearer of the Heavens | notice | When this creature dies, destroy all permanents at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Colossal Heroics | notice | Strive — This spell costs {1}{G} more to cast for each target beyond the first. Any number of target creatures each get +2/+2 until end of turn. Untap those cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flamespeaker's Will | notice | Whenever enchanted creature deals combat damage to a player, you may sacrifice this Aura. If you do, destroy target artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -178,6 +177,7 @@
 | War-Wing Siren | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whitewater Naiads | handled | Constellation — Whenever this creature or another enchantment you control enters, target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wildfire Cerberus | handled | {5}{R}{R}: Monstrosity 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Worst Fears | handled | You control target player during that player's next turn. Exile Worst Fears. (You see all cards that player could see and make all decisions for them.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
@@ -243,7 +243,6 @@
 | whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target artifact. | 1 | Flamespeaker's Will | jou |
 | whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target enchantment. | 1 | Mortal Obstinacy | jou |
 | whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | 1 | Godsend | jou |
-| you control target player during that player's next turn. exile ~. (you see all cards that player could see and make all decisions for them.) | 1 | Worst Fears | jou |
 | you may choose not to untap ~ during your untap step. | 1 | Deserter's Quarters | jou |
 | {M}, {M}: each player reveals the top card of their library. you may put the revealed cards into their owners"..."t, each player draws a card. | 1 | Dakra Mystic | jou |
 | {M}{M}, sacrifice ~: create a N/N green spider enchantment creature token with reach. | 1 | Renowned Weaver | jou |

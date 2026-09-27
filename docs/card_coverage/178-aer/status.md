@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 10.3% |
-| Works (untested) | 105 | 56.8% |
-| Partial (unaudited) | 11 | 5.9% |
-| Not working | 50 | 27.0% |
+| Works (untested) | 111 | 60.0% |
+| Partial (unaudited) | 7 | 3.8% |
+| Not working | 48 | 25.9% |
 
 ## Cards needing work
 
@@ -35,12 +35,10 @@
 | Ajani, Valiant Protector | silent | −11: Put X +1/+1 counters on target creature, where X is your life total. That creature gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral's Expertise | silent | Return up to three target artifacts and/or creatures to their owners' hands. You may cast a spell with mana value 4 or less from your hand without paying its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral, Chief of Compliance | silent | Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Caught in the Brights | silent | When a Vehicle you control attacks, exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Consulate Crackdown | silent | When this enchantment enters, exile all artifacts your opponents control until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Daredevil Dragster | silent | At end of combat, if this Vehicle attacked or blocked this combat, put a velocity counter on it. Then if it has two or more velocity counters on it, sacrifice i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Intimations | silent | Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decommission | silent | Destroy target artifact or enchantment. Revolt — If a permanent left the battlefield under your control this turn, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Disallow | silent | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fourth Bridge Prowler | silent | When this creature enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gonti's Machinations | silent | Pay {E}{E}, Sacrifice this enchantment: Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Greenbelt Rampager | silent | When this creature enters, pay {E}{E} . If you can't, return this creature to its owner's hand and you get {E}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -79,11 +77,7 @@
 | Audacious Infiltrator | unaudited | This creature can't be blocked by artifact creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Exquisite Archangel | unaudited | If you would lose the game, instead exile this creature and your life total becomes equal to your starting life total. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Fen Hauler | unaudited | This creature can't be blocked by artifact creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Greenwheel Liberator | unaudited | Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Heart of Kiran | unaudited | You may remove a loyalty counter from a planeswalker you control rather than pay Heart of Kiran's crew cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lifecraft Cavalry | unaudited | Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Narnam Renegade | unaudited | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Night Market Aeronaut | unaudited | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Night Market Guard | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rishkar, Peema Renegade | unaudited | Each creature you control with a counter on it has "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Unbridled Growth | unaudited | Enchanted land has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -102,6 +96,7 @@
 | Barricade Breaker | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bastion Inventor | handled | Improvise | machines/objects_as_costs.py (improvise) | Y/Y/- | not_tested |
 | Battle at the Bridge | handled | Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.) Target creature gets -X/-X  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Caught in the Brights | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cogwork Assembler | handled | {7}: Create a token that's a copy of target artifact. That token gains haste. Exile it at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Consulate Turret | handled | {T}: You get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Countless Gears Renegade | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -112,6 +107,7 @@
 | Deadeye Harpooner | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, destroy target tapped creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Defiant Salvager | handled | Sacrifice an artifact or creature: Put a +1/+1 counter on this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deft Dismissal | handled | Deft Dismissal deals 3 damage divided as you choose among one, two, or three target attacking or blocking creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Disallow | handled | Counter target spell, activated ability, or triggered ability. (Mana abilities can't be targeted.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dispersal Technician | handled | When this creature enters, you may return target artifact to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Druid of the Cowl | handled |  |  | Y/Y/Y | not_tested |
 | Efficient Construction | handled | Whenever you cast an artifact spell, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -126,6 +122,7 @@
 | Gifted Aetherborn | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Glint-Sleeve Siphoner | handled | Whenever this creature enters or attacks, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gonti's Aether Heart | handled | Whenever Gonti's Aether Heart or another artifact you control enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Greenwheel Liberator | handled | Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herald of Anguish | handled | At the beginning of your end step, each opponent discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heroic Intervention | handled | Permanents you control gain hexproof and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hidden Herbalists | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, add {G}{G}. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -144,11 +141,14 @@
 | Irontread Crusher | handled | Crew | machines/keywords.py | Y/Y/- | not_tested |
 | Lathnu Sailback | handled |  |  | Y/Y/- | not_tested |
 | Leave in the Dust | handled | Return target nonland permanent to its owner's hand. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lifecraft Cavalry | handled | Revolt — This creature enters with two +1/+1 counters on it if a permanent left the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lifecrafter's Bestiary | handled | At the beginning of your upkeep, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lifecrafter's Gift | handled | Put a +1/+1 counter on target creature, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maverick Thopterist | handled | When this creature enters, create two 1/1 colorless Thopter artifact creature tokens with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Midnight Entourage | handled | Other Aetherborn you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mobile Garrison | handled | Whenever this Vehicle attacks, untap another target artifact or creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Narnam Renegade | handled | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Night Market Aeronaut | handled | Revolt — This creature enters with a +1/+1 counter on it if a permanent left the battlefield under your control this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oath of Ajani | handled | When Oath of Ajani enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outland Boar | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pacification Array | handled | {2}, {T}: Tap target artifact or creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -224,7 +224,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Revolt | 4 | Greenwheel Liberator, Lifecraft Cavalry, Narnam Renegade, Night Market Aeronaut | aer |
 | as long as enchanted permanent is a vehicle, it's a creature in addition to its other types. | 2 | Aerial Modification, Siege Modification | aer |
 | when ~ enters, target artifact you control gains "..." for as long as you control ~. | 2 | Quicksmith Rebel, Quicksmith Spy | aer |
 | ~ can't be blocked by artifact creatures. | 2 | Audacious Infiltrator, Fen Hauler | aer |
@@ -233,7 +232,6 @@
 | at end of combat, if ~ attacked or blocked ~, put a velocity counter on it. then if it has two or more velocity counters on it, sacrifice it and draw two cards. | 1 | Daredevil Dragster | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
-| counter target spell, activated ability, or triggered ability. (mana abilities can't be targeted.) | 1 | Disallow | aer |
 | create three N/N colorless servo artifact creature tokens. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Sram's Expertise | aer |
 | creatures you control get +N/+N for each unity counter on ~. | 1 | Call for Unity | aer |
 | destroy N target artifacts and/or creatures. for each permanent destroyed ~, its controller reveals cards from the top of their library until an artifact or cre | 1 | Indomitable Creativity | aer |
@@ -253,7 +251,6 @@
 | put target artifact on the bottom of its owner's library. | 1 | Natural Obsolescence | aer |
 | return up to three target artifacts and/or creatures to their owners' hands. you may cast a spell with mana value N or less from your hand without paying its ma | 1 | Baral's Expertise | aer |
 | sacrifice ~: until your next turn, target player who was dealt combat damage by ~ ~ can't cast noncreature spells. | 1 | Hope of Ghirapur | aer |
-| when a vehicle you control attacks, exile enchanted creature. | 1 | Caught in the Brights | aer |
 | when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
 | when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
 | when ~ enters, exile all artifacts your opponents control until ~ leaves the battlefield. | 1 | Consulate Crackdown | aer |

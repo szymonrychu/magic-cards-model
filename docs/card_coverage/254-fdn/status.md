@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.9% |
-| Works (untested) | 89 | 61.8% |
-| Partial (unaudited) | 4 | 2.8% |
-| Not working | 44 | 30.6% |
+| Works (untested) | 90 | 62.5% |
+| Partial (unaudited) | 5 | 3.5% |
+| Not working | 42 | 29.2% |
 
 ## Cards needing work
 
@@ -32,8 +32,7 @@
 | Bloodthirsty Conqueror | silent | Whenever an opponent loses life, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bulk Up | silent | Double target creature's power until end of turn. Flashback {4}{R}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Chandra, Flameshaper | silent | +1: Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Crossway Troublemakers | silent | Attacking Vampires you control have deathtouch and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Drake Hatcher | silent | Whenever this creature deals combat damage to a player, put that many incubation counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Crossway Troublemakers | silent | Whenever a Vampire you control dies, you may pay 2 life. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dread Summons | silent | Each player mills X cards. For each creature card put into a graveyard this way, you create a tapped 2/2 black Zombie creature token. (To mill a card, a player  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Dropkick Bomber | silent | {R}: Until end of turn, another target Goblin you control gains flying and "When this creature deals combat damage, sacrifice it." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Electroduplicate | silent | Create a token that's a copy of target creature you control, except it has haste and "At the beginning of the end step, sacrifice this token." Flashback {2}{R}{ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -52,7 +51,6 @@
 | Niv-Mizzet, Visionary | silent | Whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Perforating Artist | silent | Raid — At the beginning of your end step, if you attacked this turn, each opponent loses 3 life unless that player sacrifices a nonland permanent of their choic | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Quick-Draw Katana | silent | During your turn, equipped creature gets +2/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Quilled Greatwurm | silent | Whenever a creature you control deals combat damage during your turn, put that many +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ravenous Amulet | silent | {4}, {T}, Sacrifice this artifact: Each opponent loses life equal to the number of soul counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Soul-Shackled Zombie | silent | When this creature enters, exile up to two target cards from a single graveyard. If at least one creature card was exiled this way, each opponent loses 2 life a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -74,6 +72,7 @@
 | Goblin Boarders | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Herald of Eternal Dawn | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Nine-Lives Familiar | unaudited | This creature enters with eight revival counters on it if you cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Quilled Greatwurm | unaudited | You may cast this card from your graveyard by removing six counters from among creatures you control in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Ambush Wolf | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Anthem of Champions | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Apothecary Stomper | handled | When this creature enters, choose one — • Put two +1/+1 counters on target creature you control. • You gain 4 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -100,6 +99,7 @@
 | Dawnwing Marshal | handled | {4}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dazzling Angel | handled | Whenever another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dragon Trainer | handled | When this creature enters, create a 4/4 red Dragon creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Drake Hatcher | handled | Whenever this creature deals combat damage to a player, put that many incubation counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dreadwing Scavenger | handled | Whenever this creature enters or attacks, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eager Trufflesnout | handled | Whenever this creature deals combat damage to a player, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elementalist Adept | handled | Prowess | machines/keywords.py | Y/Y/Y | not_tested |
@@ -189,7 +189,6 @@
 | +N: create a token that's a copy of target creature you control, except it has haste and "..." | 1 | Chandra, Flameshaper | fdn |
 | as long as your life total is greater than your starting life total, elenda gets +N/+N and has menace. elenda gets an additional +N/+N as long as your life tota | 1 | Elenda, Saint of Dusk | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
-| attacking vampires you control have deathtouch and lifelink. | 1 | Crossway Troublemakers | fdn |
 | create a token that's a copy of target creature you control, except it has haste and "..." flashback {M}{M}{M} (you may cast ~ from your graveyard for its flash | 1 | Electroduplicate | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |
 | creatures you control of the chosen type get +N/+N for each fellowship counter on ~. | 1 | Banner of Kinship | fdn |
@@ -204,9 +203,9 @@
 | when ~ dies, return another target non-bear creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Fiendish Panda | fdn |
 | when ~ enters, create a number of N/N white rabbit creature tokens equal to the number of other creatures you control named ~. | 1 | Hare Apparent | fdn |
 | when ~ enters, exile up to two target cards from a single graveyard. if at least one creature card was exiled ~, each opponent loses N life and you gain N life. | 1 | Soul-Shackled Zombie | fdn |
-| whenever a creature you control deals combat damage during your turn, put that many +N/+N counters on it. | 1 | Quilled Greatwurm | fdn |
 | whenever a nontoken, non-angel creature you control dies, return that card to the battlefield under its owner's control with a +N/+N counter on it. it has flyin | 1 | Valkyrie's Call | fdn |
 | whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | 1 | Niv-Mizzet, Visionary | fdn |
+| whenever a vampire you control dies, you may pay N life. if you do, draw a card. | 1 | Crossway Troublemakers | fdn |
 | whenever an opponent discards a card, exile it from their graveyard with a stash counter on it. | 1 | Tinybones, Bauble Burglar | fdn |
 | whenever an opponent loses life, you gain that much life. | 1 | Bloodthirsty Conqueror | fdn |
 | whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. put that card into your | 1 | Spinner of Souls | fdn |
@@ -214,8 +213,8 @@
 | whenever you put one or more +N/+N counters on ~, draw a card. ~ triggers only once each turn. | 1 | Exemplar of Light | fdn |
 | whenever ~ attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. the flashback cost is equal to that card's mana cost. | 1 | Sphinx of Forgotten Lore | fdn |
 | whenever ~ attacks, you may sacrifice another creature. if you do, draw a card and ~ can't be blocked ~. | 1 | Vampire Gourmand | fdn |
-| whenever ~ deals combat damage to a player, put that many incubation counters on it. | 1 | Drake Hatcher | fdn |
 | you can"..."t win the game. | 1 | Herald of Eternal Dawn | fdn |
+| you may cast ~ from your graveyard by removing six counters from among creatures you control in addition to paying its other costs. | 1 | Quilled Greatwurm | fdn |
 | you may pay {M} rather than pay ~ mana cost if there are thirteen or more creatures on the battlefield. each player sacrifices thirteen creatures of their choic | 1 | Blasphemous Edict | fdn |
 | {M}, {M}, sacrifice ~: each opponent loses life equal to the number of soul counters on ~. | 1 | Ravenous Amulet | fdn |
 | {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |

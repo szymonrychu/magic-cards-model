@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 29 | 10.8% |
-| Works (untested) | 130 | 48.3% |
-| Partial (unaudited) | 26 | 9.7% |
-| Not working | 84 | 31.2% |
+| Works (untested) | 134 | 49.8% |
+| Partial (unaudited) | 25 | 9.3% |
+| Not working | 81 | 30.1% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Fervent Champion | silent | Whenever this creature attacks, another target attacking Knight you control gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Folio of Fancies | silent | {2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Foreboding Fruit | silent | Target player draws two cards and loses 2 life. Adamant — If at least three black mana was spent to cast this spell, create a Food token. (It's an artifact with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Forever Young | silent | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gingerbrute | silent | {1}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gluttonous Troll | silent | When this creature enters, create a number of Food tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Happily Ever After | silent | At the beginning of your upkeep, if there are five colors among permanents you control, there are six or more card types among permanents you control and/or car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -61,7 +60,6 @@
 | Memory Theft | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrormade | silent | You may have this enchantment enter as a copy of any artifact or enchantment on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mystic Sanctuary | silent | When this land enters untapped, you may put target instant or sorcery card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oko, Thief of Crowns | silent | +1: Target artifact or creature loses all abilities and becomes a green Elk creature with base power and toughness 3/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Once Upon a Time | silent | If this spell is the first spell you've cast this game, you may cast it without paying its mana cost. Look at the top five cards of your library. You may reveal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Once and Future | silent | Return target card from your graveyard to your hand. Put up to one other target card from your graveyard on top of your library. Exile Once and Future. Adamant  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -91,7 +89,6 @@
 | Wicked Guardian | silent | When this creature enters, you may have it deal 2 damage to another creature you control. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wishclaw Talisman | silent | {1}, {T}, Remove a wish counter from this artifact: Search your library for a card, put it into your hand, then shuffle. An opponent gains control of this artif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wishful Merfolk | silent | {1}{U}: This creature loses defender and becomes a Human until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Witch's Cottage | silent | When this land enters untapped, you may put target creature card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Witch's Vengeance | silent | Creatures of the creature type of your choice get -3/-3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Workshop Elders | silent | At the beginning of combat on your turn, you may have target noncreature artifact you control become a 0/0 artifact creature. If you do, put four +1/+1 counters | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barge In | notice | Target attacking creature gets +2/+2 until end of turn. Each attacking non-Human creature gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -112,7 +109,6 @@
 | Yorvo, Lord of Garenbrig | notice | Whenever another green creature you control enters, put a +1/+1 counter on Yorvo. Then if that creature's power is greater than Yorvo's power, put another +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Archon of Absolution | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ardenvale Paladin | unaudited | Adamant — If at least three white mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Beloved Princess | unaudited | This creature can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Brazen Borrower // Petty Theft | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Embercleave | unaudited | This spell costs {1} less to cast for each attacking creature you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Embereth Paladin | unaudited | Adamant — If at least three red mana was spent to cast this spell, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -144,6 +140,7 @@
 | Bake into a Pie | handled | Destroy target creature. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barrow Witches | handled | When this creature enters, return target Knight card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beanstalk Giant // Fertile Footsteps | handled | Search your library for a basic land card, put it onto the battlefield, then shuffle. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Beloved Princess | handled | This creature can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodhaze Wolverine | handled | Whenever you draw your second card each turn, this creature gets +1/+1 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bog Naughty | handled | {2}{B}, Sacrifice a Food: Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bramblefort Fink | handled | {8}: This creature has base power and toughness 10/10 until end of turn. Activate only if you control an Oko planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -171,6 +168,7 @@
 | Fell the Pheasant | handled | Fell the Pheasant deals 5 damage to target creature with flying. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fierce Witchstalker | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fireborn Knight | handled | {R/W}{R/W}{R/W}{R/W}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Forever Young | handled | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortifying Provisions | handled | Creatures you control get +0/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frogify | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gadwick, the Wizened | handled | When Gadwick enters, draw X cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -208,6 +206,7 @@
 | Merchant of the Vale // Haggle | handled | You may discard a card. If you do, draw a card. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Merfolk Secretkeeper // Venture Deeper | handled | Target player mills four cards. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mistford River Turtle | handled | Whenever this creature attacks, another target attacking non-Human creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mystic Sanctuary | handled | This land enters tapped unless you control three or more other Islands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oakhame Adversary | handled | This spell costs {2} less to cast if an opponent controls a green permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oakhame Ranger // Bring Back | handled | Create two 1/1 white Human creature tokens. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ogre Errant | handled | Whenever this creature attacks, another target attacking Knight gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -263,6 +262,7 @@
 | Weaselback Redcap | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wicked Wolf | handled | When this creature enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wildwood Tracker | handled | Whenever this creature attacks or blocks, if you control another non-Human creature, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Witch's Cottage | handled | This land enters tapped unless you control three or more other Swamps. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Witching Well | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wolf's Quarry | handled | Create three 1/1 green Boar creature tokens with "When this token dies, create a Food token." (A Food token is an artifact with "{2}, {T}, Sacrifice this token: | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Worthy Knight | handled | Whenever you cast a Knight spell, create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -345,7 +345,6 @@
 | other creatures you control with flying get +N/+N. | 1 | Alela, Artful Provocateur | eld |
 | put a +N/+N counter on each creature you control. adamant — if at least three white mana was spent to cast ~, creatures you control gain vigilance until end of  | 1 | Silverflame Ritual | eld |
 | put a +N/+N counter on target creature you control, then it fights target creature you don't control. (each deals damage equal to its power to the other.) adama | 1 | Outmuscle | eld |
-| put any number of target creature cards from your graveyard on top of your library. draw a card. | 1 | Forever Young | eld |
 | return target card from your graveyard to your hand. put up to one other target card from your graveyard on top of your library. exile ~. adamant — if at least  | 1 | Once and Future | eld |
 | return target nonland permanent to its owner"..."s an artifact with "...") | 1 | Turn into a Pumpkin | eld |
 | return up to N target artifact and/or non-aura enchantment cards each with mana value N or less from your graveyard to the battlefield. if N is N or more, those | 1 | Dance of the Manse | eld |
@@ -360,8 +359,6 @@
 | up to three target creatures can't block ~. destroy any of them that are walls. | 1 | Blow Your House Down | eld |
 | when the twelfth hour counter is put on ~, shuffle your hand and graveyard into your library, then draw seven cards. exile ~. | 1 | Midnight Clock | eld |
 | when you cast ~ from your hand, copy it if you control an artifact, then copy it if you control an enchantment. you may choose new targets for the copies. retur | 1 | Banish into Fable | eld |
-| when ~ enters untapped, you may put target creature card from your graveyard on top of your library. | 1 | Witch's Cottage | eld |
-| when ~ enters untapped, you may put target instant or sorcery card from your graveyard on top of your library. | 1 | Mystic Sanctuary | eld |
 | when ~ enters, another target knight you control gets +N/+N and gains trample and haste until end of turn. | 1 | Burning-Yard Trainer | eld |
 | when ~ enters, choose one — • scry N. • you gain N life. • exile another target creature you own. return it to the battlefield under your control at the beginni | 1 | Charming Prince | eld |
 | when ~ enters, choose target human or artifact an opponent controls. for as long as ~ remains on the battlefield, gain control of that permanent, it loses all a | 1 | Opportunistic Dragon | eld |
@@ -401,7 +398,6 @@
 | ~ can block only creatures with flying. | 1 | Brazen Borrower // Petty Theft | eld |
 | ~ can't attack unless defending player has seven or more cards in their graveyard. | 1 | Vantress Gargoyle | eld |
 | ~ can't attack unless you control a N/N creature. | 1 | Lovestruck Beast // Heart's Desire | eld |
-| ~ can't be blocked by creatures with power N or greater. | 1 | Beloved Princess | eld |
 | ~ can't be blocked by knights or walls. | 1 | Rampart Smasher | eld |
 | ~ costs {M} less to cast for each attacking creature you control. | 1 | Embercleave | eld |
 | ~ deals N damage divided as you choose among one, two, or three targets. if at least seven red mana was spent to cast ~, instead ~ deals N damage to each of tho | 1 | Sundering Stroke | eld |

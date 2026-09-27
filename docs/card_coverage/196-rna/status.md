@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.8% |
+| Tested | 22 | 9.2% |
 | Works (untested) | 132 | 55.2% |
 | Partial (unaudited) | 11 | 4.6% |
-| Not working | 75 | 31.4% |
+| Not working | 74 | 31.0% |
 
 ## Cards needing work
 
@@ -75,7 +75,6 @@
 | Rakdos, the Showstopper | silent | When Rakdos enters, flip a coin for each creature that isn't a Demon, Devil, or Imp. Destroy each creature whose coin comes up tails. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rampage of the Clans | silent | Destroy all artifacts and enchantments. For each permanent destroyed this way, its controller creates a 3/3 green Centaur creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Revival // Revenge | silent | Double your life total. Target opponent loses half their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rix Maadi Reveler | silent | When this creature enters, discard a card, then draw a card. If this creature's spectacle cost was paid, instead discard your hand, then draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rumbling Ruin | silent | When this creature enters, count the number of +1/+1 counters on creatures you control. Creatures your opponents control with power less than or equal to that n | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scuttlegator | silent | As long as this creature has a +1/+1 counter on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seraph of the Scales | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -248,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Awaken the Erstwhile
 - Consign to the Pit
@@ -263,6 +262,7 @@
 - Prime Speaker Vannifar
 - Rafter Demon
 - Repudiate // Replicate
+- Rix Maadi Reveler
 - Sagittars' Volley
 - Sentinel's Mark
 - Shimmer of Possibility
@@ -317,7 +317,6 @@
 | when rakdos enters, flip a coin for each creature that isn't a demon, devil, or imp. destroy each creature whose coin comes up tails. | 1 | Rakdos, the Showstopper | rna |
 | when you cast ~, you gain half N life and draw half N cards. round down each time. | 1 | Hydroid Krasis | rna |
 | when ~ enters, count the number of +N/+N counters on creatures you control. creatures your opponents control with power less than or equal to that number can't  | 1 | Rumbling Ruin | rna |
-| when ~ enters, discard a card, then draw a card. if ~ spectacle cost was paid, instead discard your hand, then draw three cards. | 1 | Rix Maadi Reveler | rna |
 | when ~ enters, exile any number of other nontoken creatures you control until it leaves the battlefield. | 1 | Lumbering Battlement | rna |
 | when ~ enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that permanent un | 1 | Deputy of Detention | rna |
 | when ~ enters, it deals N damage to each opponent and N damage to each creature your opponents control. | 1 | Dagger Caster | rna |

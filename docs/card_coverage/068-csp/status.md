@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 5.6% |
-| Works (untested) | 57 | 39.9% |
+| Works (untested) | 58 | 40.6% |
 | Partial (unaudited) | 13 | 9.1% |
-| Not working | 65 | 45.5% |
+| Not working | 64 | 44.8% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Icefall | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jester's Scepter | silent | When this artifact enters, exile the top five cards of target player's library face down. You may look at those cards for as long as they remain exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jokulmorder | silent | When this creature enters, sacrifice it unless you sacrifice five lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Jötun Owl Keeper | silent | When this creature dies, create a 1/1 white Bird creature token with flying for each age counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karplusan Minotaur | silent | Whenever you win a coin flip, this creature deals 1 damage to any target. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Kjeldoran Gargoyle | silent | Whenever this creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Krovikan Mist | silent | Krovikan Mist's power and toughness are each equal to the number of Illusions on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -128,6 +127,7 @@
 | Highland Weald | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the North | handled | Search your library for a snow land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jötun Grunt | handled | Cumulative upkeep | machines/keywords.py | Y/-/- | not_tested |
+| Jötun Owl Keeper | handled | When this creature dies, create a 1/1 white Bird creature token with flying for each age counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kjeldoran Outrider | handled | {W}: This creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krovikan Scoundrel | handled |  |  | Y/-/- | not_tested |
 | Krovikan Whispers | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -210,7 +210,6 @@
 | snow permanents don"..." untap steps. | 1 | Freyalise's Radiance | csp |
 | spells you cast have ripple N. | 1 | Thrumming Stone | csp |
 | when you control no snow lands, sacrifice ~. | 1 | Ronom Serpent | csp |
-| when ~ dies, create a N/N white bird creature token with flying for each age counter on it. | 1 | Jötun Owl Keeper | csp |
 | when ~ enters, exile the top five cards of target player's library face down. you may look at those cards for as long as they remain exiled. | 1 | Jester's Scepter | csp |
 | when ~ enters, if it's on the battlefield, it deals damage equal to its power to target creature an opponent controls and that creature deals damage equal to it | 1 | Stalking Yeti | csp |
 | when ~ enters, put six +N/+N counters on enchanted creature. | 1 | Shape of the Wiitigo | csp |

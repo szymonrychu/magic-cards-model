@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 4.9% |
-| Works (untested) | 75 | 52.4% |
+| Tested | 8 | 5.6% |
+| Works (untested) | 74 | 51.7% |
 | Partial (unaudited) | 5 | 3.5% |
 | Not working | 56 | 39.2% |
 
@@ -114,7 +114,6 @@
 | Haazda Snare Squad | handled | Whenever this creature attacks, you may pay {W}. If you do, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunter of Nightveil | handled | Creatures your opponents control get -1/-0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Izzet Cluestone | handled | {U}{R}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Korozda Gorgon | handled | {2}, Remove a +1/+1 counter from a creature you control: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Warrior | handled | {5}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maw of the Obzedat | handled | Sacrifice a creature: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maze's End | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -166,10 +165,11 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Beck // Call
 - Gleam of Battle
+- Korozda Gorgon
 - Notion Thief
 - Possibility Storm
 - Trostani's Summoner

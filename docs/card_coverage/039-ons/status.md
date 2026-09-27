@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 22.4% |
-| Works (untested) | 32 | 55.2% |
+| Tested | 14 | 24.1% |
+| Works (untested) | 31 | 53.4% |
 | Partial (unaudited) | 3 | 5.2% |
 | Not working | 10 | 17.2% |
 
@@ -48,7 +48,6 @@
 | Dragon Roost | handled | {5}{R}{R}: Create a 5/5 red Dragon creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elvish Pioneer | handled | When this creature enters, you may put a basic land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Elvish Scrapper | handled | {G}, {T}, Sacrifice this creature: Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Elvish Warrior | handled |  |  | Y/-/- | not_tested |
 | Enchantress's Presence | handled | Whenever you cast an enchantment spell, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Explosive Vegetation | handled | Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Festering Goblin | handled | When this creature dies, target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -75,12 +74,13 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Annex
 - Bloodstained Mire
 - Choking Tethers
 - Demystify
+- Elvish Warrior
 - Flooded Strand
 - Krosan Tusker
 - Polluted Delta

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 12.7% |
+| Tested | 33 | 13.1% |
 | Works (untested) | 127 | 50.4% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 81 | 32.1% |
+| Not working | 80 | 31.7% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Mardu Siegebreaker | silent | Whenever this creature attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. At the beginning of your next | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Marshal of the Lost | silent | Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Molten Exhale | silent | You may cast this spell as though it had flash if you behold a Dragon as an additional cost to cast it. (To behold a Dragon, choose a Dragon you control or reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Monastery Messenger | silent | When this creature enters, put up to one target noncreature, nonland card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Narset's Rebuke | silent | Narset's Rebuke deals 5 damage to target creature. Add {U}{R}{W}. If that creature would die this turn, exile it instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Narset, Jeskai Waymaster | silent | At the beginning of your end step, you may discard your hand. If you do, draw cards equal to the number of spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | New Way Forward | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. When damage is prevented this way, New Way Forward deals that muc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -184,6 +183,7 @@
 | Mardu Devotee | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mardu Monument | handled | When this artifact enters, search your library for a basic Mountain, Plains, or Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Meticulous Artisan | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Monastery Messenger | handled | When this creature enters, put up to one target noncreature, nonland card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mox Jasper | handled |  |  | Y/Y/Y | not_tested |
 | Nightblade Brigade | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Overwhelming Surge | handled | Choose one or both — • Overwhelming Surge deals 3 damage to target creature. • Destroy target noncreature artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -244,13 +244,12 @@
 | Wingblade Disciple | handled | Flurry — Whenever you cast your second spell each turn, create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Worthy Cost | handled | As an additional cost to cast this spell, sacrifice a creature. Exile target creature or planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Yathan Roadwatcher | handled | When this creature enters, if you cast it, mill four cards. When you do, return target creature card with mana value 3 or less from your graveyard to the battle | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Yathan Tombguard | handled | Whenever a creature you control with a counter on it deals combat damage to a player, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Zurgo's Vanguard | handled | Zurgo's Vanguard's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Aegis Sculptor
 - Ainok Wayfarer
@@ -284,6 +283,7 @@
 - Voice of Victory
 - Wail of War
 - Winternight Stories
+- Yathan Tombguard
 
 </details>
 
@@ -338,7 +338,6 @@
 | when ~ enters, exile cards from the top of your library until you exile a nonland card. you may cast it without paying its mana cost if that spell"..."t, put th | 1 | Breaching Dragonstorm | tdm |
 | when ~ enters, if it's your main phase, there is an additional combat phase after ~ followed by an additional main phase. when you next attack ~, untap each cre | 1 | All-Out Assault | tdm |
 | when ~ enters, it deals N damage to any target and you gain N life. if a player is dealt damage ~, they discard a card. | 1 | Sonic Shrieker | tdm |
-| when ~ enters, put up to one target noncreature, nonland card from your graveyard on top of your library. | 1 | Monastery Messenger | tdm |
 | when ~ enters, remove all counters from up to one target creature. | 1 | Purging Stormbrood // Absorb Essence | tdm |
 | when ~ enters, return up to one other target nonland permanent you control to its owner's hand. if it was a token, draw a card. | 1 | Sunpearl Kirin | tdm |
 | when ~ enters, search your library for a black card, a green card, and a blue card. put those cards into your graveyard, then shuffle. | 1 | Lotuslight Dancers | tdm |

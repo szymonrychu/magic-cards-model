@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 10.2% |
-| Works (untested) | 147 | 53.6% |
+| Tested | 29 | 10.6% |
+| Works (untested) | 150 | 54.7% |
 | Partial (unaudited) | 5 | 1.8% |
-| Not working | 94 | 34.3% |
+| Not working | 90 | 32.8% |
 
 ## Cards needing work
 
@@ -31,8 +31,6 @@
 | Arrogant Poet | silent | Whenever this creature attacks, you may pay 2 life. If you do, it gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Augmenter Pugilist // Echoing Equation | silent | Choose target creature you control. Each other creature you control becomes a copy of it until end of turn, except those creatures aren't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baleful Mastery | silent | You may pay {1}{B} rather than pay this spell's mana cost. If the {1}{B} cost was paid, an opponent draws a card. Exile target creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Biblioplex Assistant | silent | When this creature enters, put up to one target instant or sorcery card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Blade Historian | silent | Attacking creatures you control have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blex, Vexing Pest // Search for Blex | silent | Look at the top five cards of your library. You may put any number of them into your hand and the rest into your graveyard. You lose 3 life for each card you pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood Age General | silent | {T}: Attacking Spirits get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blot Out the Sky | silent | Create X tapped 2/1 white and black Inkling creature tokens with flying. If X is 6 or more, destroy all noncreature, nonland permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +85,6 @@
 | Serpentine Curve | silent | Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is one plus the total number of instant and sorcery cards you own in exi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadrix Silverquill | silent | At the beginning of combat on your turn, you may choose two. Each mode must target a different player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shaile, Dean of Radiance // Embrose, Dean of Shadow | silent | {T}: Put a +1/+1 counter on each creature that entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Silverquill Pledgemage | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature gains your choice of flying or lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonebinder's Familiar | silent | Whenever one or more cards are put into exile during your turn, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Strict Proctor | silent | Whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {2}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Strixhaven Stadium | silent | Whenever a creature deals combat damage to you, remove a point counter from this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,7 +108,6 @@
 | Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fortifying Draught | notice | You gain 2 life. Target creature gets +X/+X until end of turn, where X is the amount of life you gained this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Infuse with Vitality | notice | Until end of turn, target creature gains deathtouch and "When this creature dies, return it to the battlefield tapped under its owner's control." You gain 2 lif | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lorehold Command | notice | Choose two — • Create a 3/2 red and white Spirit creature token. • Creatures you control get +1/+0 and gain indestructible and haste until end of turn. • Loreho | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Make Your Mark | notice | Target creature gets +1/+0 until end of turn. When that creature dies this turn, create a 3/2 red and white Spirit creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pigment Storm | notice | Pigment Storm deals 5 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -134,8 +130,10 @@
 | Basic Conjuration | handled | Look at the top six cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beaming Defiance | handled | Target creature you control gets +2/+2 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beledros Witherbloom | handled | At the beginning of each upkeep, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Biblioplex Assistant | handled | When this creature enters, put up to one target instant or sorcery card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Big Play | handled | Target creature gets +2/+2 and gains reach until end of turn. Put a +1/+1 counter on it. (A creature with reach can block creatures with flying.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Biomathematician | handled | When this creature enters, create a 0/0 green and blue Fractal creature token. Put a +1/+1 counter on each Fractal you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Blade Historian | handled | Attacking creatures you control have double strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Researcher | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bookwurm | handled | When this creature enters, you gain 3 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Callous Bloodmage | handled | When this creature enters, choose one — • Create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life." • You draw a card and y | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -236,6 +234,7 @@
 | Silverquill Apprentice | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, target creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverquill Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverquill Command | handled | Choose two — • Target creature gets +3/+3 and gains flying until end of turn. • Return target creature card with mana value 2 or less from your graveyard to the | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Silverquill Pledgemage | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature gains your choice of flying or lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverquill Silencer | handled | As this creature enters, choose a nonland card name. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Snow Day | handled | Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Solve the Equation | handled | Search your library for an instant or sorcery card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -276,7 +275,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>29 cards</summary>
 
 - Bayou Groff
 - Body of Research
@@ -296,6 +295,7 @@
 - Flamescroll Celebrant // Revel in Silence
 - Go Blank
 - Igneous Inspiration
+- Infuse with Vitality
 - Introduction to Annihilation
 - Kelpie Guide
 - Mascot Exhibition
@@ -313,7 +313,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Magecraft | 7 | Elemental Expressionist, Lorehold Apprentice, Prismari Apprentice, Prismari Pledgemage, Quandrix Apprentice | stx |
+| Magecraft | 6 | Elemental Expressionist, Lorehold Apprentice, Prismari Apprentice, Prismari Pledgemage, Quandrix Apprentice | stx |
 | Choose one | 2 | Academic Probation, Confront the Past | stx |
 | Choose two | 2 | Lorehold Command, Quandrix Command | stx |
 | +N: you may discard a card. if you do, draw a card. if a creature card was discarded ~, draw two cards instead. | 1 | Mila, Crafty Companion // Lukka, Wayward Bonder | stx |
@@ -326,7 +326,6 @@
 | at the beginning of combat on your turn, you may choose two. each mode must target a different player. | 1 | Shadrix Silverquill | stx |
 | at the beginning of your upkeep, exile the top card of each opponent's library. until end of turn, you may cast spells from among those exiled cards, and you ma | 1 | Uvilda, Dean of Perfection // Nassari, Dean of Expression | stx |
 | at the beginning of your upkeep, sacrifice a creature. | 1 | Daemogoth Woe-Eater | stx |
-| attacking creatures you control have double strike. | 1 | Blade Historian | stx |
 | choose a creature or planeswalker, then destroy all other creatures and planeswalkers. | 1 | Selfless Glyphweaver // Deadly Vanity | stx |
 | choose target creature you control. each other creature you control becomes a copy of it until end of turn, except those creatures aren't legendary. | 1 | Augmenter Pugilist // Echoing Equation | stx |
 | choose target creature. when that creature dies ~, search your library for a creature card with lesser mana value, put it onto the battlefield tapped, then shuf | 1 | Rushed Rebirth | stx |
@@ -362,11 +361,9 @@
 | target creature you control deals damage equal to its power to target creature or planeswalker you don"..."t control dies ~, you gain N life. | 1 | Devouring Tendrils | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
 | until end of turn, double target creature's power N times. | 1 | Exponential Growth | stx |
-| until end of turn, target creature gains deathtouch and "..." you gain N life. | 1 | Infuse with Vitality | stx |
 | until end of turn, target nonland permanent loses all abilities and becomes your choice of a blue frog creature with base power and toughness N/N or a blue octo | 1 | Mercurial Transformation | stx |
 | when ~ enters, double the number of +N/+N counters on target creature you control. | 1 | Tanazir Quandrix | stx |
 | when ~ enters, look at target opponent's hand. you may exile a nonland card from it. for as long as that card remains exiled, its owner may play it. a spell cas | 1 | Elite Spellbinder | stx |
-| when ~ enters, put up to one target instant or sorcery card from your graveyard on top of your library. | 1 | Biblioplex Assistant | stx |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Archway Commons | stx |
 | whenever a creature deals combat damage to you, remove a point counter from ~. | 1 | Strixhaven Stadium | stx |
 | whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {M}. | 1 | Strict Proctor | stx |

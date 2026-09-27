@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 10.1% |
-| Works (untested) | 118 | 45.7% |
-| Partial (unaudited) | 10 | 3.9% |
+| Works (untested) | 119 | 46.1% |
+| Partial (unaudited) | 9 | 3.5% |
 | Not working | 104 | 40.3% |
 
 ## Cards needing work
@@ -135,7 +135,6 @@
 | Eddymurk Crab | unaudited | This creature enters tapped if it's not your turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Frilled Sparkshooter | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Gev, Scaled Scorch | unaudited | Other creatures you control enter with an additional +1/+1 counter on them for each opponent who lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Glarb, Calamity's Augur | unaudited | You may play lands and cast spells with mana value 4 or greater from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Huskburster Swarm | unaudited | This spell costs {1} less to cast for each creature card you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Innkeeper's Talent | unaudited | If you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Sugar Coat | unaudited | Enchanted permanent is a colorless Food artifact with "{2}, {T}, Sacrifice this artifact: You gain 3 life" and loses all other card types and abilities. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -172,6 +171,7 @@
 | Fountainport | handled | {2}, {T}, Sacrifice a token: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fountainport Bell | handled | When this artifact enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Galewind Moose | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
+| Glarb, Calamity's Augur | handled | You may look at the top card of your library any time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Glidedive Duo | handled | When this creature enters, each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gossip's Talent | handled | Whenever a creature you control enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hazel's Nocturne | handled | Return up to two target creature cards from your graveyard to your hand. Each opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -392,7 +392,6 @@
 | whenever ~ enters or attacks, put a blight counter on it. then for each blight counter on it, each opponent loses N life unless that player sacrifices a nonland | 1 | Rottenmouth Viper | blb |
 | whenever ~ or another bird you control enters, exile up to one target creature you control without flying. return it to the battlefield under its owner's contro | 1 | Salvation Swan | blb |
 | whenever ~ or another rabbit you control enters, target creature you control gets +N/+N until end of turn. then draw a card if ~ the second time ~ has resolved  | 1 | Harvestrite Host | blb |
-| you may play lands and cast spells with mana value N or greater from the top of your library. | 1 | Glarb, Calamity's Augur | blb |
 | {M}, {M}: choose a color. add an amount of mana of that color equal to the number of creatures you control of the chosen type. | 1 | Three Tree City | blb |
 | {M}, {M}: draw a card. for each mana in ~ activation cost, you may tap an untapped creature you control rather than pay that mana. activate only as a sorcery. | 1 | Heirloom Epic | blb |
 | {M}, {M}: put a +N/+N counter on each frog, rabbit, raccoon, or squirrel you control that entered the battlefield ~. | 1 | Oakhollow Village | blb |

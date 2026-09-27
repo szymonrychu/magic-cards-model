@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 11.6% |
-| Works (untested) | 103 | 51.8% |
+| Works (untested) | 105 | 52.8% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 64 | 32.2% |
+| Not working | 62 | 31.2% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Assembled Alphas | silent | Whenever this creature blocks or becomes blocked by a creature, this creature deals 3 damage to that creature and 3 damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Backwoods Survivalists | silent | Delirium — This creature gets +1/+1 and has trample as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Campaign of Vengeance | silent | Whenever a creature you control attacks, defending player loses 1 life and you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Choking Restraints | silent | {3}{W}{W}, Sacrifice this Aura: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coax from the Blind Eternities | silent | You may reveal an Eldrazi card you own from outside the game or choose a face-up Eldrazi card you own in exile. Put that card into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Conduit of Storms // Conduit of Emrakul | silent | Whenever this creature attacks, add {R} at the beginning of your next main phase this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crop Sigil | silent | Delirium — {2}{G}, Sacrifice this enchantment: Return up to one target creature card and up to one target land card from your graveyard to your hand. Activate o | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -40,7 +39,6 @@
 | Docent of Perfection // Final Iteration | silent | Wizards you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Emrakul's Evangel | silent | {T}, Sacrifice this creature and any number of other non-Eldrazi creatures: Create a 3/2 colorless Eldrazi Horror creature token for each creature sacrificed th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eternal Scourge | silent | When this creature becomes the target of a spell or ability an opponent controls, exile this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Faith Unbroken | silent | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fogwalker | silent | When this creature enters, target creature an opponent controls doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fortune's Favor | silent | Target opponent looks at the top four cards of your library and separates them into a face-down pile and a face-up pile. Put one pile into your hand and the oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Galvanic Bombardment | silent | Galvanic Bombardment deals X damage to target creature, where X is 2 plus the number of cards named Galvanic Bombardment in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -116,6 +114,7 @@
 | Bruna, the Fading Light | handled | When you cast this spell, you may return target Angel or Human creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathar's Shield | handled | Equipped creature gets +0/+3 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chilling Grasp | handled | Tap up to two target creatures. Those creatures don't untap during their controller's next untap step. Madness {3}{U} (If you discard this card, discard it into | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Choking Restraints | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clear Shot | handled | Target creature you control gets +1/+1 until end of turn. It deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Collective Effort | handled | Escalate—Tap an untapped creature you control. (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Destroy target creature with power  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Contingency Plan | handled | Surveil 5. (Look at the top five cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -136,6 +135,7 @@
 | Enlightened Maniac | handled | When this creature enters, create a 3/2 colorless Eldrazi Horror creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Extricator of Sin // Extricator of Flesh | handled | When this creature enters, you may sacrifice another permanent. If you do, create a 3/2 colorless Eldrazi Horror creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Exultant Cultist | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Faith Unbroken | handled | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Faithbearer Paladin | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Falkenrath Reaver | handled |  |  | Y/Y/- | not_tested |
 | Field Creeper | handled |  |  | Y/Y/- | not_tested |
@@ -271,7 +271,6 @@
 | when ~ attacks, up to one target creature defending player controls blocks it ~ if able. | 1 | Impetuous Devils | emn |
 | when ~ becomes the target of a spell or ability an opponent controls, exile ~. | 1 | Eternal Scourge | emn |
 | when ~ enters, each other creature you control that's a wolf or a werewolf gets +N/+N until end of turn. | 1 | Spirit of the Hunt | emn |
-| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Faith Unbroken | emn |
 | when ~ enters, other humans you control get +N/+N and gain lifelink until end of turn. | 1 | Heron's Grace Champion | emn |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Fogwalker | emn |
 | when ~ enters, you may have it fight target creature you don't control. | 1 | Somberwald Stag | emn |
@@ -297,7 +296,6 @@
 | {M}, {M}: target attacking human gets +N/+N until end of turn. | 1 | Crossroads Consecrator | emn |
 | {M}: exchange target opponent's life total with ~ toughness. | 1 | Tree of Perdition | emn |
 | {M}: mill two cards. then if there is a colorless creature card in your graveyard, transform ~. | 1 | Grizzled Angler // Grisly Anglerfish | emn |
-| {M}{M}{M}, sacrifice ~: exile enchanted creature. | 1 | Choking Restraints | emn |
 | ~ can block an additional creature each combat. | 1 | Tangleclaw Werewolf // Fibrous Entangler | emn |
 | ~ can block only creatures with flying. | 1 | Tattered Haunter | emn |
 | ~ can't attack or block unless a player has no cards in hand. | 1 | Lupine Prototype | emn |

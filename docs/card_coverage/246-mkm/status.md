@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.2% |
-| Works (untested) | 104 | 38.8% |
-| Partial (unaudited) | 11 | 4.1% |
-| Not working | 123 | 45.9% |
+| Tested | 33 | 12.3% |
+| Works (untested) | 105 | 39.2% |
+| Partial (unaudited) | 9 | 3.4% |
+| Not working | 121 | 45.1% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Barbed Servitor | silent | Whenever this creature is dealt damage, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Break Out | silent | Look at the top six cards of your library. You may reveal a creature card from among them. If that card has mana value 2 or less, you may put it onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Burden of Proof | silent | Enchanted creature gets +2/+2 as long as it's a Detective you control. Otherwise, it has base power and toughness 1/1 and can't block Detectives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Buried in the Garden | silent | When this Aura enters, exile target nonland permanent you don't control until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call a Surprise Witness | silent | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Put a flying counter on it. It's a Spirit in addition to its other | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Case File Auditor | silent | When this creature enters and whenever you solve a Case, look at the top six cards of your library. You may reveal an enchantment card from among them and put i | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Case of the Burning Masks | silent | Solved | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -68,7 +67,6 @@
 | Expedited Inheritance | silent | Whenever a creature is dealt damage, its controller may exile that many cards from the top of their library. They may play those cards until the end of their ne | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Expose the Culprit | silent | Cloak | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Extract a Confession | silent | As an additional cost to cast this spell, you may collect evidence 6. (Exile cards with total mana value 6 or greater from your graveyard.) Each opponent sacrif | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ezrim, Agency Chief | silent | {1}, Sacrifice an artifact: Ezrim gains your choice of vigilance, lifelink, or hexproof until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Felonious Rage | silent | Target creature you control gets +2/+0 and gains haste until end of turn. When that creature dies this turn, create a 2/2 white and blue Detective creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Flotsam // Jetsam | silent | Each opponent mills three cards, then you may cast a spell from each opponent's graveyard without paying its mana cost. If a spell cast this way would be put in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Flourishing Bloom-Kin | silent | When this creature is turned face up, search your library for up to two Forest cards and reveal them. Put one of them onto the battlefield tapped and the other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -155,21 +153,18 @@
 | Crimestopper Sprite | unaudited | As an additional cost to cast this spell, you may collect evidence 6. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Crowd-Control Warden | unaudited | As this creature enters or is turned face up, put X +1/+1 counters on it, where X is the number of other creatures you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Delney, Streetwise Lookout | unaudited | Creatures you control with power 2 or less can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Exit Specialist | unaudited | This creature can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Forensic Gadgeteer | unaudited | Activated abilities of artifacts you control cost {1} less to activate. This effect can't reduce the mana in that cost to less than one mana. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Furtive Courier | unaudited | This creature can't be blocked as long as you've sacrificed an artifact this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Pompous Gadabout | unaudited | This creature can't be blocked by creatures that don't have a name. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Vitu-Ghazi Inspector | unaudited | As an additional cost to cast this spell, you may collect evidence 6. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Agency Coroner | handled | {2}{B}, Sacrifice another creature: Draw a card. If the sacrificed creature was suspected, draw two cards instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Alley Assailant | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Alquist Proft, Master Sleuth | handled | When Alquist Proft enters, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Auspicious Arrival | handled | Target creature gets +2/+2 until end of turn. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Axebane Ferox | handled | Collect evidence | machines/keywords.py | Y/Y/Y | not_tested |
 | Basilica Stalker | handled | Whenever this creature deals combat damage to a player, you gain 1 life and surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Benthic Criminologists | handled | Whenever this creature enters or attacks, you may sacrifice an artifact. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bite Down on Crime | handled | As an additional cost to cast this spell, you may collect evidence 6. This spell costs {2} less to cast if evidence was collected. (To collect evidence 6, exile | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Bolrac-Clan Basher | handled | Trample | machines/combat.py | Y/Y/Y | not_tested |
 | Branch of Vitu-Ghazi | handled | When this land is turned face up, add two mana of any one color. Until end of turn, you don't lose this mana as steps and phases end. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Buried in the Garden | handled | When this Aura enters, exile target nonland permanent you don't control until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candlestick | handled | Equipped creature gets +1/+1 and has "Whenever this creature attacks, surveil 2." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cerebral Confiscation | handled | Choose one — • Target opponent discards two cards. • Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cold Case Cracker | handled | When this creature dies, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -188,6 +183,8 @@
 | Due Diligence | handled | When this Aura enters, target creature you control other than enchanted creature gets +2/+2 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Escape Tunnel | handled | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Essence of Antiquity | handled | When this creature is turned face up, creatures you control gain hexproof until end of turn. Untap them. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Exit Specialist | handled | This creature can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ezrim, Agency Chief | handled | When Ezrim enters, investigate twice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fae Flight | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Faerie Snoop | handled | When this creature is turned face up, look at the top two cards of your library. Put one into your hand and the other into your graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fanatical Strength | handled | Target creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -268,15 +265,18 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>33 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
+- Alley Assailant
+- Bolrac-Clan Basher
 - Clandestine Meddler
 - Commercial District
 - Convenient Target
 - Detective's Satchel
 - Elegant Parlor
+- Forensic Gadgeteer
 - Forensic Researcher
 - Hedge Maze
 - Karlov Watchdog
@@ -313,7 +313,6 @@
 | cloak | 2 | Expose the Culprit, Vannifar, Evolved Enigma | mkm |
 | Choose one | 1 | Archdruid's Charm | mkm |
 | Choose one or both | 1 | Deadly Complication | mkm |
-| activated abilities of artifacts you control cost {M} less to activate. ~ can't reduce the mana in that cost to less than one mana. | 1 | Forensic Gadgeteer | mkm |
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) each opponent sacrifices a cr | 1 | Extract a Confession | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) search your library for a bas | 1 | Analyze the Pollen | mkm |
@@ -368,7 +367,6 @@
 | when ~ enters, cloak the top card of your library, then attach ~ to it. | 1 | Cryptic Coat | mkm |
 | when ~ enters, create a N/N white human creature token, a N/N blue merfolk creature token, and a N/N red goblin creature token. then secretly choose human, merf | 1 | A Killer Among Us | mkm |
 | when ~ enters, draw two cards. then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | 1 | Steamcore Scholar | mkm |
-| when ~ enters, exile target nonland permanent you don't control until ~ leaves the battlefield. | 1 | Buried in the Garden | mkm |
 | when ~ enters, exile up to two target cards from a single graveyard. | 1 | Griffnaut Tracker | mkm |
 | when ~ enters, for each player, destroy up to one nonbasic land that player controls. for each land destroyed ~, its controller may search their library for a b | 1 | Krenko's Buzzcrusher | mkm |
 | when ~ enters, return target equipment card from your graveyard to the battlefield attached to ~. | 1 | Magnetic Snuffler | mkm |
@@ -413,7 +411,6 @@
 | whenever ~ is dealt damage, target opponent loses that much life. | 1 | Barbed Servitor | mkm |
 | whenever ~ or another creature you control is turned face up, that creature deals damage equal to its power to each opponent. | 1 | Pyrotechnic Performer | mkm |
 | you may collect evidence N rather than pay the mana cost for spells you cast. | 1 | Conspiracy Unraveler | mkm |
-| {M}, sacrifice an artifact: ezrim gains your choice of vigilance, lifelink, or hexproof until end of turn. | 1 | Ezrim, Agency Chief | mkm |
 | {M}, {M}, collect evidence N: each opponent loses N life unless they discard a card or sacrifice a creature. | 1 | Polygraph Orb | mkm |
 | {M}, {M}: target detective you control gets +N/+N and gains vigilance until end of turn. activate only as a sorcery. | 1 | Inside Source | mkm |
 | {M}: until end of turn, you may look at face-down creatures you don't control any time. | 1 | Lumbering Laundry | mkm |
@@ -426,7 +423,6 @@
 | ~ can"..."t block.) | 1 | Caught Red-Handed | mkm |
 | ~ can"..."t have a name. | 1 | Pompous Gadabout | mkm |
 | ~ can"..."ve sacrificed an artifact ~. | 1 | Furtive Courier | mkm |
-| ~ can't be blocked by creatures with power N or greater. | 1 | Exit Specialist | mkm |
 | ~ costs {M}{M} more to cast for each target beyond the first. choose any number of target players. investigate N times, where N is the total number of creatures | 1 | Officious Interrogation | mkm |
 | ~ deals N damage to any target. put up to N land cards from your hand and/or graveyard onto the battlefield tapped. | 1 | Worldsoul's Rage | mkm |
 | ~ deals twice N damage to target creature. if excess damage was dealt to that creature ~, investigate. (create a clue token. it's an artifact with "...") | 1 | Torch the Witness | mkm |

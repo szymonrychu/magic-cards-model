@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 9.4% |
-| Works (untested) | 119 | 44.6% |
+| Works (untested) | 121 | 45.3% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 113 | 42.3% |
+| Not working | 111 | 41.6% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Blade of the Oni | silent | Equipped creature has base power and toughness 5/5, has menace, and is a black Demon in addition to its other colors and types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blossom Prancer | silent | When this creature enters, look at the top five cards of your library. You may reveal a creature or enchantment card from among them and put it into your hand.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Born to Drive | silent | As long as enchanted permanent is a creature, it gets +1/+1 for each creature and/or Vehicle you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Boseiju Reaches Skyward // Branch of Boseiju | silent | II — Put up to one target land card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bronze Cudgels | silent | {2}: Until end of turn, equipped creature gets +X/+0, where X is the number of times this ability has resolved this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bronzeplate Boar | silent | Reconfigure | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Careful Cultivation | silent | As long as enchanted permanent is a creature, it gets +1/+3 and has reach and "{T}: Add {G}{G}." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -127,7 +126,6 @@
 | Hinata, Dawn-Crowned | notice | Spells you cast cost {1} less to cast for each target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Invoke Despair | notice | Target opponent sacrifices a creature of their choice. If they can't, they lose 2 life and you draw a card. Then repeat this process for an enchantment and a pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kairi, the Swirling Sky | notice | When Kairi dies, choose one — • Return any number of target nonland permanents with total mana value 6 or less to their owners' hands. • Mill six cards, then re | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Kami of Restless Shadows | notice | When this creature enters, choose one — • Return up to one target Ninja or Rogue creature card from your graveyard to your hand. • Put target creature card from | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kami's Flare | notice | Kami's Flare deals 3 damage to target creature or planeswalker. Kami's Flare also deals 2 damage to that permanent's controller if you control a modified creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kappa Tech-Wrecker | notice | Whenever this creature deals combat damage to a player, you may remove a deathtouch counter from it. When you do, exile target artifact or enchantment that play | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitsune Ace | notice | Whenever a Vehicle you control attacks, choose one — • That Vehicle gains first strike until end of turn. • Untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -159,6 +157,7 @@
 | Bearer of Memory | handled | {5}{G}: Put a +1/+1 counter on target enchantment creature. It gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Befriending the Moths // Imperial Moth | handled | I, II — Target creature you control gets +1/+1 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blade-Blizzard Kitsune | handled | Ninjutsu | machines/keywords.py | Y/Y/- | not_tested |
+| Boseiju Reaches Skyward // Branch of Boseiju | handled | I — Search your library for up to two basic Forest cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brute Suit | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Circuit Mender | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Coiling Stalker | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on target creature you control that doesn't have a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -195,6 +194,7 @@
 | Jukai Trainee | handled | Whenever this creature blocks or becomes blocked, it gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Junji, the Midnight Sky | handled | When Junji dies, choose one — • Each opponent discards two cards and loses 2 life. • Put target non-Dragon creature card from a graveyard onto the battlefield u | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kami of Industry | handled | When this creature enters, return target artifact card with mana value 3 or less from your graveyard to the battlefield. It gains haste. Sacrifice it at the beg | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kami of Restless Shadows | handled | When this creature enters, choose one — • Return up to one target Ninja or Rogue creature card from your graveyard to your hand. • Put target creature card from | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kami of Terrible Secrets | handled | When this creature enters, if you control an artifact and an enchantment, you draw a card and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kura, the Boundless Sky | handled | When Kura dies, choose one — • Search your library for up to three land cards, reveal them, put them into your hand, then shuffle. • Create an X/X green Spirit  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kyodai, Soul of Kamigawa | handled | When Kyodai enters, another target permanent gains indestructible for as long as you control Kyodai. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -352,7 +352,6 @@
 | o-kagachi made manifest is all colors. | 1 | The Kami War // O-Kagachi Made Manifest | neo |
 | other enchantment creatures you control get +N/+N. | 1 | Weaver of Harmony | neo |
 | other ninja and rogue creatures you control get +N/+N. | 1 | Silver-Fur Master | neo |
-| put up to one target land card from your graveyard on top of your library. | 1 | Boseiju Reaches Skyward // Branch of Boseiju | neo |
 | return an artifact card from your graveyard to your hand. if you can't, draw a card. | 1 | Inventive Iteration // Living Breakthrough | neo |
 | return target creature or vehicle card from your graveyard to the battlefield. then put two +N/+N counters on that permanent if you control an artifact and an e | 1 | Okiba Salvage | neo |
 | return target permanent card from your graveyard to the battlefield, then distribute four +N/+N counters among any number of creatures and/or vehicles target pl | 1 | Invoke Justice | neo |
@@ -370,7 +369,6 @@
 | when kairi dies, choose one — • return any number of target nonland permanents with total mana value N or less to their owners' hands. • mill six cards, then re | 1 | Kairi, the Swirling Sky | neo |
 | when kotose enters, exile target card other than a basic land card from an opponent"..."s graveyard, hand, and library for any number of cards with the same nam | 1 | Kotose, the Silent Spider | neo |
 | when you next cast a creature spell ~, that creature enters with an additional +N/+N counter on it. | 1 | Kumano Faces Kakkazan // Etching of Kumano | neo |
-| when ~ enters, choose one — • return up to one target ninja or rogue creature card from your graveyard to your hand. • put target creature card from your gravey | 1 | Kami of Restless Shadows | neo |
 | when ~ enters, draw a card if a creature died ~. otherwise, each player sacrifices a creature of their choice. | 1 | Gravelighter | neo |
 | when ~ enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | 1 | Dramatist's Puppet | neo |
 | when ~ enters, it deals damage equal to twice the number of vehicles you control to target creature or planeswalker an opponent controls. | 1 | Surgehacker Mech | neo |

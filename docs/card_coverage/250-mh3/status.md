@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 60 | 22.9% |
+| Tested | 61 | 23.3% |
 | Works (untested) | 89 | 34.0% |
-| Partial (unaudited) | 18 | 6.9% |
-| Not working | 95 | 36.3% |
+| Partial (unaudited) | 19 | 7.3% |
+| Not working | 93 | 35.5% |
 
 ## Cards needing work
 
@@ -31,7 +31,6 @@
 | Ajani Fells the Godsire | silent | II — Create a 2/1 white Cat Warrior creature token, then put a vigilance counter on a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amped Raptor | silent | When this creature enters, you get {E}{E} . Then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. You may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Condor | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Archway of Innovation | silent | {U}, {T}: The next spell you cast this turn has improvise. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arna Kennerüd, Skycaptain | silent | Whenever a modified creature you control attacks, double the number of each kind of counter on it. Then for each nontoken permanent attached to it, create a tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bespoke Battlewagon | silent | Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodsoaked Insight // Sanguine Morass | silent | This spell costs {1} less to cast for each 1 life your opponents have lost this turn. Target opponent exiles the top three cards of their library. Until the end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -108,7 +107,6 @@
 | Ugin's Binding | silent | Devoid (This card has no color.) Return target nonland permanent you don't control to its owner's hand. Whenever you cast a colorless spell with mana value 7 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unfathomable Truths | silent | Devoid (This card has no color.) Draw three cards and create a 0/1 colorless Eldrazi Spawn creature token with "Sacrifice this token: Add {C}." | the engine's reading came from quoted text, not this clause's own words | Y/-/- | not_working |
 | Unstable Amulet | silent | {T}, Pay {E}{E}: Exile the top card of your library. You may play it until you exile another card with this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Utter Insignificance | silent | {2}{C}: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Volatile Stormdrake | silent | When this creature enters, exchange control of this creature and target creature an opponent controls. If you do, you get {E}{E}{E}{E}, then sacrifice that crea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wheel of Potential | silent | You get {E}{E}{E} (three energy counters), then you may pay any amount of {E}. Each player may exile their hand and draw a number of cards equal to the amount o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wumpus Aberration | silent | When you cast this spell, if {C} wasn't spent to cast it, target opponent may put a creature card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -137,6 +135,7 @@
 | Primal Prayers | unaudited | You may cast creature spells with mana value 3 or less by paying {E} rather than paying their mana costs. If you cast a spell this way, you may cast it as thoug | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Six | unaudited | During your turn, nonland permanent cards in your graveyard have retrace. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | The Necrobloom | unaudited | Land cards in your graveyard have dredge 2. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Utter Insignificance | unaudited | Enchanted creature loses all abilities and has base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Voidpouncer | unaudited | If this creature was kicked, it enters with two +1/+1 counters and a trample counter on it and with haste. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Winter Moon | unaudited | Players can't untap more than one nonbasic land during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,9 +231,10 @@
 ## Fully supported
 
 <details>
-<summary>60 cards</summary>
+<summary>61 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
+- Archway of Innovation
 - Arena of Glory
 - Basking Broodscale
 - Birthing Ritual
@@ -333,6 +333,7 @@
 | enchanted creature gets +N/+N for each +N/+N counter on ~ and has reach and trample. | 1 | Nyxborn Hydra | mh3 |
 | enchanted creature gets +N/+N for each +N/+N counter on ~. | 1 | Glyph Elemental | mh3 |
 | enchanted creature gets +N/+N for each creature and/or enchantment you control. | 1 | Strength of the Harvest // Haven of the Harvest | mh3 |
+| enchanted creature loses all abilities and has base power and toughness N/N. | 1 | Utter Insignificance | mh3 |
 | enchantment spells you cast have affinity for auras. | 1 | Pearl-Ear, Imperial Advisor | mh3 |
 | exile the top three cards of your library. you may play those cards ~. at the beginning of the next end step, if any of those cards remain exiled, put them into | 1 | Glimpse the Impossible | mh3 |
 | fabricate | 1 | Marionette Apprentice | mh3 |
@@ -400,10 +401,8 @@
 | {M}, {M}, tap two untapped creatures you control: reveal a card from your hand or the top card of your library. if you reveal a creature card ~, put it onto the | 1 | Eladamri, Korvecdal | mh3 |
 | {M}, {M}: move a counter from target permanent you control onto a second target permanent. activate only as a sorcery. | 1 | Nesting Grounds | mh3 |
 | {M}, {M}: target creature you control connives N, where N is the number of creatures that died ~. | 1 | Spymaster's Vault | mh3 |
-| {M}, {M}: the next spell you cast ~ has improvise. | 1 | Archway of Innovation | mh3 |
 | {M}: return another target permanent you control and all auras you control attached to it to their owner's hand. activate only during your turn. | 1 | Essence Reliquary | mh3 |
 | {M}{M}: each opponent loses N life and you gain N life. ~ costs {M}{M} less to activate if you've drawn three or more cards ~. activate only once each turn. | 1 | Kami of Jealous Thirst | mh3 |
-| {M}{M}: exile enchanted creature. | 1 | Utter Insignificance | mh3 |
 | ~ can block only creatures with flying. | 1 | Etherium Pteramander | mh3 |
 | ~ costs {M} less to cast for each N life your opponents have lost ~. target opponent exiles the top three cards of their library. until the end of your next tur | 1 | Bloodsoaked Insight // Sanguine Morass | mh3 |
 | ~ has flying as long as it's modified. | 1 | Obstinate Gargoyle | mh3 |

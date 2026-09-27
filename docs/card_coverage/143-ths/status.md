@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 8.1% |
-| Works (untested) | 124 | 58.8% |
-| Partial (unaudited) | 9 | 4.3% |
-| Not working | 61 | 28.9% |
+| Works (untested) | 126 | 59.7% |
+| Partial (unaudited) | 8 | 3.8% |
+| Not working | 60 | 28.4% |
 
 ## Cards needing work
 
@@ -33,9 +33,7 @@
 | Artisan of Forms | silent | Heroic — Whenever you cast a spell that targets this creature, you may have this creature become a copy of target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ashiok, Nightmare Weaver | silent | +2: Exile the top three cards of target opponent's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bident of Thassa | silent | {1}{U}, {T}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Bow of Nylea | silent | Attacking creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavern Lampad | silent | Enchanted creature gets +2/+2 and has intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chained to the Rocks | silent | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coastline Chimera | silent | {1}{W}: This creature can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Colossus of Akros | silent | As long as this creature is monstrous, it has trample and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Curse of the Swine | silent | Exile X target creatures. For each creature exiled this way, its controller creates a 2/2 green Boar creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,6 +76,7 @@
 | Viper's Kiss | silent | Enchanted creature gets -1/-1, and its activated abilities can't be activated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Xenagos, the Reveler | silent | +1: Add X mana in any combination of {R} and/or {G}, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Boon of Erebos | notice | Target creature gets +2/+0 until end of turn. Regenerate it. You lose 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Daxos of Meletis | notice | Whenever Daxos deals combat damage to a player, exile the top card of that player's library. You gain life equal to that card's mana value. Until end of turn, y | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Erebos's Emissary | notice | Discard a creature card: This creature gets +2/+2 until end of turn. If this permanent is an Aura, enchanted creature gets +2/+2 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Favored Hoplite | notice | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature and prevent all damage that would be dealt to it this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gift of Immortality | notice | When enchanted creature dies, return that card to the battlefield under its owner's control. Return this card to the battlefield attached to that creature at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -87,7 +86,6 @@
 | Rage of Purphoros | notice | Rage of Purphoros deals 4 damage to target creature. It can't be regenerated this turn. Scry 1. (Look at the top card of your library. You may put that card on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rescue from the Underworld | notice | As an additional cost to cast this spell, sacrifice a creature. Choose target creature card in your graveyard. Return that card and the sacrificed card to the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Whip of Erebos | notice | {2}{B}{B}, {T}: Return target creature card from your graveyard to the battlefield. It gains haste. Exile it at the beginning of the next end step. If it would  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Daxos of Meletis | unaudited | Daxos can't be blocked by creatures with power 3 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Erebos, God of the Dead | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Medomai the Ageless | unaudited | Medomai can't attack during extra turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nighthowler | unaudited | This creature and enchanted creature each get +X/+X, where X is the number of creature cards in all graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -113,11 +111,13 @@
 | Boon Satyr | handled | Enchanted creature gets +4/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Borderland Minotaur | handled |  |  | Y/Y/- | not_tested |
 | Boulderfall | handled | Boulderfall deals 5 damage divided as you choose among any number of targets. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Bow of Nylea | handled | Attacking creatures you control have deathtouch. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Breaching Hippocamp | handled | When this creature enters, untap another target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bronze Sable | handled |  |  | Y/Y/- | not_tested |
 | Burnished Hart | handled | {3}, Sacrifice this creature: Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Celestial Archon | handled | Enchanted creature gets +4/+4 and has flying and first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Centaur Battlemaster | handled | Heroic — Whenever you cast a spell that targets this creature, put three +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chained to the Rocks | handled | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chosen by Heliod | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chronicler of Heroes | handled | When this creature enters, draw a card if you control a creature with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Coordinated Assault | handled | Up to two target creatures each get +1/+0 and gain first strike until end of turn. (They deal combat damage before creatures without first strike.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -257,9 +257,7 @@
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
-| attacking creatures you control have deathtouch. | 1 | Bow of Nylea | ths |
 | choose target creature an opponent controls. when that creature dies ~, you gain N life. target creature you control fights that creature. (each deals damage eq | 1 | Time to Feed | ths |
-| daxos can't be blocked by creatures with power N or greater. | 1 | Daxos of Meletis | ths |
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
 | elemental creatures you control get +N/+N. | 1 | Master of Waves | ths |
@@ -290,10 +288,10 @@
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |
 | when ~ enters, create a number of N/N black harpy creature tokens with flying equal to your devotion to black. | 1 | Abhorrent Overlord | ths |
 | when ~ enters, create a number of N/N white soldier creature tokens equal to your devotion to white. | 1 | Evangel of Heliod | ths |
-| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Chained to the Rocks | ths |
 | when ~ enters, it deals damage to each opponent equal to your devotion to red. | 1 | Fanatic of Mogis | ths |
 | when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
+| whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
 | whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of attacking creatures you control. | 1 | Akroan Hoplite | ths |
 | whenever ~ is dealt damage, it deals that much damage to you. | 1 | Firedrinker Satyr | ths |
 | your opponents can't gain life. | 1 | Erebos, God of the Dead | ths |

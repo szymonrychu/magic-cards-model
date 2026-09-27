@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 8.6% |
-| Works (untested) | 126 | 45.0% |
-| Partial (unaudited) | 15 | 5.4% |
-| Not working | 115 | 41.1% |
+| Tested | 25 | 8.9% |
+| Works (untested) | 128 | 45.7% |
+| Partial (unaudited) | 13 | 4.6% |
+| Not working | 114 | 40.7% |
 
 ## Cards needing work
 
@@ -54,10 +54,8 @@
 | Elvish Branchbender | silent | {T}: Until end of turn, target Forest becomes an X/X Treefolk creature in addition to its other types, where X is the number of Elves you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Entangling Trap | silent | Whenever you clash, tap target creature an opponent controls. If you won, that creature doesn't untap during its controller's next untap step. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Faerie Tauntings | silent | Whenever you cast a spell during an opponent's turn, you may have each opponent lose 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Faerie Trickery | silent | Counter target non-Faerie spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fathom Trawl | silent | Reveal cards from the top of your library until you reveal three nonland cards. Put the nonland cards revealed this way into your hand, then put the rest of the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fistful of Force | silent | Clash | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Footbottom Feast | silent | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gilt-Leaf Ambush | silent | Create two 1/1 green Elf Warrior creature tokens. Clash with an opponent. If you win, those creatures gain deathtouch until end of turn. (Each clashing player r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glarewielder | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guile | silent | When Guile is put into a graveyard from anywhere, shuffle it into its owner's library. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -132,6 +130,7 @@
 | Wren's Run Packmaster | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Blades of Velis Vel | notice | Changeling (This card is every creature type.) Up to two target creatures each get +2/+0 and gain all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Brion Stoutarm | notice | {R}, {T}, Sacrifice another creature: Brion Stoutarm deals damage equal to the sacrificed creature's power to target player or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Faerie Trickery | notice | Counter target non-Faerie spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fodder Launch | notice | As an additional cost to cast this spell, sacrifice a Goblin. Target creature gets -5/-5 until end of turn. Fodder Launch deals 5 damage to that creature's cont | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Goatnapper | notice | When this creature enters, untap target Goat and gain control of it until end of turn. It gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Heal the Scars | notice | Regenerate target creature. You gain life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -146,9 +145,7 @@
 | Ethereal Whiskergill | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Favor of the Mighty | unaudited | Each creature with the greatest mana value has protection from each color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gaddock Teeg | unaudited | Noncreature spells with mana value 4 or greater can't be cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Goldmeadow Dodger | unaudited | This creature can't be blocked by creatures with power 4 or greater. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lairwatch Giant | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Lignify | unaudited | Enchanted creature is a Treefolk with base power and toughness 0/4 and loses all abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nettlevine Blight | unaudited | Enchanted permanent has "At the beginning of your end step, sacrifice this permanent and attach Nettlevine Blight to a creature or land you control." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Protective Bubble | unaudited | Enchanted creature can't be blocked and has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vivid Crag | unaudited | This land enters tapped with two charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -200,6 +197,7 @@
 | Flamekin Brawler | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flamekin Harbinger | handled | When this creature enters, you may search your library for an Elemental card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flamekin Spitfire | handled | {3}{R}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Footbottom Feast | handled | Put any number of target creature cards from your graveyard on top of your library. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Forced Fruition | handled | Whenever an opponent casts a spell, that player draws seven cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Galepowder Mage | handled | Whenever this creature attacks, exile another target creature. Return that card to the battlefield under its owner's control at the beginning of the next end st | the engine reads this text and performs it | Y/-/- | not_tested |
 | Garruk Wildspeaker | handled | +1: Untap two target lands. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -208,6 +206,7 @@
 | Gilt-Leaf Seer | handled | {G}, {T}: Look at the top two cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glen Elendra Pranksters | handled | Whenever you cast a spell during an opponent's turn, you may return target creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmerdust Nap | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Goldmeadow Dodger | handled | This creature can't be blocked by creatures with power 4 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldmeadow Harrier | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldmeadow Stalwart | handled | As an additional cost to cast this spell, reveal a Kithkin card from your hand or pay {3}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of Cloverdell | handled | When this creature enters, create three 1/1 white Kithkin Soldier creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -286,7 +285,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Aquitect's Will
 - Battle Mastery
@@ -300,6 +299,7 @@
 - Immaculate Magistrate
 - Jace Beleren
 - Kinsbaile Skirmisher
+- Lignify
 - Mirror Entity
 - Mosswort Bridge
 - Mulldrifter
@@ -351,7 +351,6 @@
 | each creature with mana value of the chosen quality has haste. | 1 | Ashling's Prerogative | lrw |
 | each creature with the greatest mana value has protection from each color. | 1 | Favor of the Mighty | lrw |
 | enchanted creature can't be blocked and has shroud. | 1 | Protective Bubble | lrw |
-| enchanted creature is a treefolk with base power and toughness N/N and loses all abilities. | 1 | Lignify | lrw |
 | enchanted permanent has "..." | 1 | Nettlevine Blight | lrw |
 | equipped creature gets +N/+N and is every creature type. | 1 | Runed Stalactite | lrw |
 | goblins you control and elementals you control have menace. | 1 | Caterwauling Boggart | lrw |
@@ -366,7 +365,6 @@
 | prevent all combat damage that would be dealt to attacking creatures you control. | 1 | Dolmen Gate | lrw |
 | prevent all combat damage that would be dealt ~. clash with an opponent. if you win, creatures that player controls don"..."s next untap step. (each clashing pl | 1 | Pollen Lullaby | lrw |
 | put a +N/+N counter on target creature, two +N/+N counters on another target creature, and three +N/+N counters on a third target creature. | 1 | Incremental Growth | lrw |
-| put any number of target creature cards from your graveyard on top of your library. draw a card. | 1 | Footbottom Feast | lrw |
 | regenerate target creature. you gain life equal to that creature's toughness. | 1 | Heal the Scars | lrw |
 | return target card from your graveyard to your hand. clash with an opponent. if you win, untap all forests you control. (each clashing player reveals the top ca | 1 | Woodland Guidance | lrw |
 | return target creature card from your graveyard to the battlefield with a mannequin counter on it. for as long as that creature has a mannequin counter on it, i | 1 | Makeshift Mannequin | lrw |
@@ -423,7 +421,6 @@
 | {M}{M}{M}{M}{M}: you may play target elemental card from your graveyard without paying its mana cost. | 1 | Horde of Notions | lrw |
 | ~ can block an additional creature each combat. | 1 | Lairwatch Giant | lrw |
 | ~ can't attack unless defending player controls an island. | 1 | Ethereal Whiskergill | lrw |
-| ~ can't be blocked by creatures with power N or greater. | 1 | Goldmeadow Dodger | lrw |
 | ~ deals N damage to target creature. clash with an opponent. if you win, ~ deals N damage to that creature's controller. (each clashing player reveals the top c | 1 | Lash Out | lrw |
 | ~'s power and toughness are each equal to the number of elves you control. | 1 | Jagged-Scar Archers | lrw |
 | ~'s power and toughness are each equal to the number of forests you control plus the number of treefolk you control. | 1 | Dauntless Dourbark | lrw |

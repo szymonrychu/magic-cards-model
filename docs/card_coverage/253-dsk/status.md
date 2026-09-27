@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.1% |
-| Works (untested) | 97 | 36.6% |
-| Partial (unaudited) | 18 | 6.8% |
-| Not working | 126 | 47.5% |
+| Works (untested) | 99 | 37.4% |
+| Partial (unaudited) | 17 | 6.4% |
+| Not working | 125 | 47.2% |
 
 ## Cards needing work
 
@@ -100,7 +100,6 @@
 | Roaring Furnace // Steaming Sauna | silent | When you unlock this door, this Room deals damage equal to the number of cards in your hand to target creature an opponent controls. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Say Its Name | silent | Mill three cards. Then you may return a creature or land card from your graveyard to your hand. Exile this card and two other cards named Say Its Name from your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scrabbling Skullcrab | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, target player mills two cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Sheltered by Ghosts | silent | When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skullsnap Nuisance | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, surveil 1. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Smoky Lounge // Misty Salon | silent | When you unlock this door, create an X/X blue Spirit creature token with flying, where X is the number of unlocked doors among Rooms you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Spineseeker Centipede | silent | Delirium — This creature gets +1/+2 and has vigilance as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -156,7 +155,6 @@
 | Charred Foyer // Warped Space | unaudited | Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Cynical Loner | unaudited | This creature can't be blocked by Glimmers. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dazzling Theater // Prop Room | unaudited | Creature spells you cast have convoke. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Fear of Being Hunted | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Fear of Exposure | unaudited | As an additional cost to cast this spell, tap two untapped creatures and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Found Footage | unaudited | You may look at face-down creatures your opponents control any time. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Inquisitive Glimmer | unaudited | Unlock costs you pay cost {1} less. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -198,6 +196,7 @@
 | Enter the Enigma | handled | Target creature can't be blocked this turn. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Etched Cornfield | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Exorcise | handled | Exile target artifact, enchantment, or creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Fear of Being Hunted | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Failed Tests | handled | Whenever this creature deals combat damage to a player, draw that many cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Isolation | handled | As an additional cost to cast this spell, return a permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fear of Lost Teeth | handled | When this creature dies, it deals 1 damage to any target and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -247,6 +246,7 @@
 | Savior of the Small | handled | Survival — At the beginning of your second main phase, if this creature is tapped, return target creature card with mana value 3 or less from your graveyard to  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sawblade Skinripper | handled | {2}, Sacrifice another creature or enchantment: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seized from Slumber | handled | This spell costs {3} less to cast if it targets a tapped creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Sheltered by Ghosts | handled | When this Aura enters, exile target nonland permanent an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shepherding Spirits | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Shrewd Storyteller | handled | Survival — At the beginning of your second main phase, if this creature is tapped, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shroudstomper | handled | Whenever this creature enters or attacks, each opponent loses 2 life. You gain 2 life and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -373,7 +373,6 @@
 | when ~ enters, counter target spell. its controller manifests dread. | 1 | Fear of Impostors | dsk |
 | when ~ enters, each opponent sacrifices a nontoken enchantment of their choice, then sacrifices a nontoken creature of their choice. | 1 | Vile Mutilator | dsk |
 | when ~ enters, each player discards a card. if you discarded a card ~, draw a card. | 1 | Fanatic of the Harrowing | dsk |
-| when ~ enters, exile target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Sheltered by Ghosts | dsk |
 | when ~ enters, return an enchantment card from your graveyard to your hand or unlock a locked door of a room you control. | 1 | Ghostly Dancers | dsk |
 | when ~ enters, reveal the top seven cards of your library. put all enchantment cards from among them into your hand and the rest on the bottom of your library i | 1 | Marina Vendrell | dsk |
 | when ~ enters, tap up to one target creature. if an opponent controls that creature, put a stun counter on it. | 1 | Fear of Immobility | dsk |
@@ -415,7 +414,6 @@
 | ~ enters with two -N/-N counters on it if you cast it from your hand. | 1 | Patched Plaything | dsk |
 | ~ gets +N/+N as long as there are two or more unlocked doors among rooms you control. | 1 | Rampaging Soulrager | dsk |
 | ~ has first strike during your turn. | 1 | Razorkin Needlehead | dsk |
-| ~ must be blocked if able. | 1 | Fear of Being Hunted | dsk |
 
 ## Notes
 

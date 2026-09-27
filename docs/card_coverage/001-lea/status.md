@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 21.6% |
-| Works (untested) | 58 | 50.0% |
+| Works (untested) | 60 | 51.7% |
 | Partial (unaudited) | 5 | 4.3% |
-| Not working | 28 | 24.1% |
+| Not working | 26 | 22.4% |
 
 ## Cards needing work
 
@@ -45,9 +45,7 @@
 | Jade Statue | silent | {2}: This artifact becomes a 3/6 Golem artifact creature until end of combat. Activate only during combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of Atlantis | silent | Other Merfolk get +1/+1 and have islandwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lord of the Pit | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Orcish Artillery | silent | {T}: This creature deals 2 damage to any target and 3 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pirate Ship | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Psionic Blast | silent | Psionic Blast deals 4 damage to any target and 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Regeneration | silent | {G}: Regenerate enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reverse Damage | silent | The next time a source of your choice would deal damage to you this turn, prevent that damage. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cockatrice | notice | Whenever this creature blocks or becomes blocked by a non-Wall creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -84,7 +82,9 @@
 | Merfolk of the Pearl Trident | handled |  |  | Y/-/- | not_tested |
 | Nevinyrral's Disk | handled | This artifact enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightmare | handled | Nightmare's power and toughness are each equal to the number of Swamps you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Orcish Artillery | handled | {T}: This creature deals 2 damage to any target and 3 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Prodigal Sorcerer | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Psionic Blast | handled | Psionic Blast deals 4 damage to any target and 2 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Regrowth | handled | Return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Resurrection | handled | Return target creature card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Righteousness | handled | Target blocking creature gets +7/+7 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -180,10 +180,8 @@
 | {M}: the next time a red source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: Red | lea |
 | {M}: the next time a white source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: White | lea |
 | {M}: ~ becomes a N/N golem artifact creature until end of combat. activate only during combat. | 1 | Jade Statue | lea |
-| {M}: ~ deals N damage to any target and N damage to you. | 1 | Orcish Artillery | lea |
 | {M}: ~ gets +N/+N until end of turn. if ~ has been activated four or more times ~, sacrifice ~ at the beginning of the next end step. | 1 | Dragon Whelp | lea |
 | ~ can't be blocked by walls. | 1 | Juggernaut | lea |
-| ~ deals N damage to any target and N damage to you. | 1 | Psionic Blast | lea |
 | ~ deals N damage to any target. if it"..."t be regenerated ~, and if it would die ~, exile it instead. | 1 | Disintegrate | lea |
 | ~ deals N damage to each creature with flying and each player. | 1 | Hurricane | lea |
 | ~ deals N damage to each creature without flying and each player. | 1 | Earthquake | lea |

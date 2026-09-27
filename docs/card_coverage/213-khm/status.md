@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 4.9% |
-| Works (untested) | 138 | 48.1% |
+| Tested | 15 | 5.2% |
+| Works (untested) | 139 | 48.4% |
 | Partial (unaudited) | 16 | 5.6% |
-| Not working | 119 | 41.5% |
+| Not working | 117 | 40.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aegar, the Freezing Flame | silent | Whenever a creature or planeswalker an opponent controls is dealt excess damage, if a Giant, Wizard, or spell you controlled dealt damage to it this turn, draw  | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Alrund's Epiphany | silent | Create two 1/1 blue Bird creature tokens with flying. Take an extra turn after this one. Exile Alrund's Epiphany. Foretell {4}{U}{U} (During your turn, you may  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alrund, God of the Cosmos // Hakka, Whispering Raven | silent | At the beginning of your end step, choose a card type, then reveal the top two cards of your library. Put all cards of the chosen type revealed this way into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arachnoform | silent | Enchanted creature gets +2/+2, has reach, and is every creature type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arni Brokenbrow | silent | Boast — {1}: You may have Arni's base power become 1 plus the greatest power among other creatures you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -114,7 +113,6 @@
 | The Bloodsky Massacre | silent | III — Add {R} for each Berserker you control. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Raven's Warning | silent | II — Whenever one or more creatures you control with flying deal combat damage to a player this turn, look at that player's hand and draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Three Seasons | silent | III — Choose three cards in each graveyard. Their owners shuffle those cards into their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| The Trickster-God's Heist | silent | I — You may exchange control of two target creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tibalt's Trickery | silent | Counter target spell. Choose 1, 2, or 3 at random. Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Toralf, God of Fury // Toralf's Hammer | silent | Whenever a creature or planeswalker an opponent controls is dealt excess noncombat damage, Toralf deals damage equal to the excess to any target other than that | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Tormentor's Helm | silent | Whenever equipped creature becomes blocked, it deals 1 damage to defending player. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
@@ -162,6 +160,7 @@
 | Vorinclex, Monstrous Raider | unaudited | If you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Withercrown | unaudited | Enchanted creature has base power 0 and has "At the beginning of your upkeep, you lose 1 life unless you sacrifice this creature." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Alpine Meadow | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Alrund's Epiphany | handled | Create two 1/1 blue Bird creature tokens with flying. Take an extra turn after this one. Exile Alrund's Epiphany. Foretell {4}{U}{U} (During your turn, you may  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arctic Treeline | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Armed and Armored | handled | Vehicles you control become artifact creatures until end of turn. Choose a Dwarf you control. Attach any number of Equipment you control to it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arni Slays the Troll | handled | I — Target creature you control fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -303,7 +302,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Axgard Braggart
 - Cleaving Reaper
@@ -316,6 +315,7 @@
 - Magda, Brazen Outlaw
 - Raven Wings
 - Saw It Coming
+- The Trickster-God's Heist
 - Vega, the Watcher
 - Warchanter Skald
 - Weathered Runestone
@@ -359,7 +359,6 @@
 | create N N/N black zombie berserker creature tokens, where N is the number of nontoken creatures that died ~. foretell {M} (during your turn, you may pay {M} an | 1 | Rise of the Dread Marn | khm |
 | create N N/N red dwarf berserker creature tokens, where N is the number of vehicles you control plus the number of equipment you control. for each of those toke | 1 | Reckless Crew | khm |
 | create a N/N white angel warrior creature token with flying and vigilance. if ~ was foretold, create N of those tokens instead. foretell {M}{M}{M} (during your  | 1 | Starnheim Unleashed | khm |
-| create two N/N blue bird creature tokens with flying. take an extra turn after ~. exile ~. foretell {M}{M}{M} (during your turn, you may pay {M} and exile ~ fro | 1 | Alrund's Epiphany | khm |
 | creature tokens you control that are enchanted or equipped get +N/+N. | 1 | Koll, the Forgemaster | khm |
 | creatures you control are every creature type. the same is true for creature spells you control and creature cards you own that aren't on the battlefield. | 1 | Maskwood Nexus | khm |
 | creatures you control that are enchanted or equipped have double strike. | 1 | Halvar, God of Battle // Sword of the Realms | khm |
@@ -440,7 +439,6 @@
 | whenever ~ attacks, you may sacrifice another creature. when you do, ~ deals damage equal to the sacrificed creature's power to any target. if the sacrificed cr | 1 | Surtland Flinger | khm |
 | you gain N life for each foretold card you own in exile. | 1 | Niko Defies Destiny | khm |
 | you may cast creature spells of the chosen type from the top of your library. | 1 | Realmwalker | khm |
-| you may exchange control of two target creatures. | 1 | The Trickster-God's Heist | khm |
 | you may have moritte enter as a copy of a permanent you control, except it"..."s a creature, it enters with two additional +N/+N counters on it and has changeli | 1 | Moritte of the Frost | khm |
 | you may pay {M} rather than pay the mana cost for rune spells you cast. | 1 | Runeforge Champion | khm |
 | you may pay {M}{M} and exile a creature card from your graveyard rather than pay ~ mana cost. | 1 | Stalwart Valkyrie | khm |

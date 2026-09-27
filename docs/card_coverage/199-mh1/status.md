@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 11.9% |
-| Works (untested) | 93 | 44.3% |
+| Works (untested) | 95 | 45.2% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 77 | 36.7% |
+| Not working | 75 | 35.7% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Gluttonous Slug | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Champion | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Oriflamme | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hall of Heliod's Generosity | silent | {1}{W}, {T}: Put target enchantment card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Headless Specter | silent | Hellbent — Whenever this creature deals combat damage to a player, if you have no cards in hand, that player discards a card at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hexdrinker | silent | Level up {1} ({1}: Put a level counter on this. Level up only as a sorcery.) LEVEL 3-7 4/4 Protection from instants LEVEL 8+ 6/6 Protection from everything | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Iceberg Cancrix | silent | Whenever another snow permanent you control enters, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,7 +56,6 @@
 | Marit Lage's Slumber | silent | At the beginning of your upkeep, if you control ten or more snow permanents, sacrifice Marit Lage's Slumber. If you do, create Marit Lage, a legendary 20/20 bla | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Rake | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Morophon, the Boundless | silent | Other creatures you control of the chosen type get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| On Thin Ice | silent | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Orcish Hellraiser | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Phantasmal Form | silent | Until end of turn, up to two target creatures each have base power and toughness 3/3, gain flying, and become blue Illusions in addition to their other colors a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Plague Engineer | silent | Creatures of the chosen type your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -144,6 +142,7 @@
 | Goblin War Party | handled | Choose one — • Create three 1/1 red Goblin creature tokens. • Creatures you control get +1/+1 and gain haste until end of turn. Entwine {2}{R} (Choose both if y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Good-Fortune Unicorn | handled | Whenever another creature you control enters, put a +1/+1 counter on that creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Graveshifter | handled | When this creature enters, you may return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Hall of Heliod's Generosity | handled | {1}{W}, {T}: Put target enchantment card from your graveyard on top of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Impostor of the Sixth Pride | handled | Changeling | machines/keywords.py | Y/-/- | not_tested |
 | Ingenious Infiltrator | handled | Whenever a Ninja you control deals combat damage to a player, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Irregular Cohort | handled | When this creature enters, create a 2/2 colorless Shapeshifter creature token with changeling. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -161,6 +160,7 @@
 | Munitions Expert | handled | When this creature enters, you may have it deal damage to target creature or planeswalker equal to the number of Goblins you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nature's Chant | handled | Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ninja of the New Moon | handled | Ninjutsu | machines/keywords.py | Y/-/- | not_tested |
+| On Thin Ice | handled | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Oneirophage | handled | Whenever you draw a card, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ore-Scale Guardian | handled | This spell costs {1} less to cast for each land card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pashalik Mons | handled | Whenever Pashalik Mons or another Goblin you control dies, Pashalik Mons deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -302,7 +302,6 @@
 | until end of turn, up to two target creatures each have base power and toughness N/N, gain flying, and become blue illusions in addition to their other colors a | 1 | Phantasmal Form | mh1 |
 | when a ninja you control enters, you may return ~ from your graveyard to the battlefield attached to that creature. | 1 | Smoke Shroud | mh1 |
 | when ~ enters, each opponent gains N life. | 1 | Aria of Flame | mh1 |
-| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | On Thin Ice | mh1 |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Quakefoot Cyclops | mh1 |
 | when ~ enters, you may discard a card. if you do, create a N/N black zombie creature token. | 1 | Rank Officer | mh1 |
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal that card, put it into your hand, then shuffle. | 1 | Tribute Mage | mh1 |
@@ -321,7 +320,6 @@
 | {M}: shuffle your library, then exile the top card. until end of turn, you may play that card without paying its mana cost. | 1 | Urza, Lord High Artificer | mh1 |
 | {M}: ~ can attack ~ as though it didn't have defender. | 1 | Wall of One Thousand Cuts | mh1 |
 | {M}{M}, exile ~ from your graveyard: search your library for a card named ~, reveal it, put it into your hand, then shuffle. | 1 | Trustworthy Scout | mh1 |
-| {M}{M}, {M}: put target enchantment card from your graveyard on top of your library. | 1 | Hall of Heliod's Generosity | mh1 |
 | {M}{M}: ~ gets +N/+N until end of turn, where N is the number of snow permanents you control. | 1 | Conifer Wurm | mh1 |
 | {M}{M}{M}, exile a creature card from your graveyard: create a N/N green spider creature token with reach, then each opponent loses N life for each spider you c | 1 | Rotwidow Pack | mh1 |
 | ~ costs {M} less to cast for each creature type among creatures you control. ~ can't reduce the amount of mana ~ costs by more than {M}. | 1 | Valiant Changeling | mh1 |

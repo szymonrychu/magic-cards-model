@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 10.8% |
+| Tested | 21 | 11.9% |
 | Works (untested) | 92 | 52.3% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 60 | 34.1% |
+| Not working | 58 | 33.0% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Boneclad Necromancer | silent | When this creature enters, you may exile target creature card from a graveyard. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brought Back | silent | Choose up to two target permanent cards in your graveyard that were put there from the battlefield this turn. Return them to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavalier of Thorns | silent | When this creature enters, reveal the top five cards of your library. Put a land card from among them onto the battlefield and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cerulean Drake | silent | Sacrifice this creature: Counter target spell that targets you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Flame Wave | silent | Chandra's Flame Wave deals 2 damage to target player and each creature that player controls. Search your library and/or graveyard for a card named Chandra, Flam | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Regulator | silent | Whenever you activate a loyalty ability of a Chandra planeswalker, you may pay {1}. If you do, copy that ability. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra, Acolyte of Flame | silent | −2: You may cast target instant or sorcery card with mana value 3 or less from your graveyard. If that spell would be put into your graveyard, exile it instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,7 +65,6 @@
 | Rienne, Angel of Rebirth | silent | Other multicolored creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scheming Symmetry | silent | Choose two target players. Each of them searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scorch Spitter | silent | Whenever this creature attacks, it deals 1 damage to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shifting Ceratops | silent | {G}: This creature gains your choice of reach, trample, or haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin's Guide | silent | When this creature enters, you may search your library and/or graveyard for a card named Sorin, Vampire Lord, reveal it, and put it into your hand. If you searc | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Vampire Lord | silent | −8: Until end of turn, each Vampire you control gains "{T}: Gain control of target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tale's End | silent | Counter target activated ability, triggered ability, or legendary spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -105,6 +103,7 @@
 | Captivating Gyre | handled | Return up to three target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Dawn | handled | When this creature enters, destroy up to one target nonland permanent. Its controller creates a 3/3 colorless Golem artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Night | handled | When this creature enters, you may sacrifice another creature. When you do, destroy target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cerulean Drake | handled | Sacrifice this creature: Counter target spell that targets you. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra's Embercat | handled |  |  | Y/Y/- | not_tested |
 | Chandra, Novice Pyromancer | handled | +1: Elementals you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloudkin Seer | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -162,15 +161,14 @@
 | Scholar of the Ages | handled | When this creature enters, return up to two target instant and/or sorcery cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Season of Growth | handled | Whenever a creature you control enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shared Summons | handled | Search your library for up to two creature cards with different names, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shifting Ceratops | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverback Shaman | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyknight Vanguard | handled | Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sorcerer of the Fang | handled | {5}{B}, {T}: This creature deals 2 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Spectral Sailor | handled | {3}{U}: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Starfield Mystic | handled | Enchantment spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steadfast Sentry | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thicket Crasher | handled | Other Elementals you control have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thirsting Bloodlord | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Tomebound Lich | handled | Whenever this creature enters or deals combat damage to a player, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Twinblade Paladin | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unholy Indenture | handled | When enchanted creature dies, return that card to the battlefield under your control with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire of the Dire Moon | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
@@ -187,7 +185,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Aether Gust
 - Angel of Vitality
@@ -205,6 +203,8 @@
 - Nightpack Ambusher
 - Omnath, Locus of the Roil
 - Risen Reef
+- Spectral Sailor
+- Tomebound Lich
 - Veil of Summer
 - Vivien, Arkbow Ranger
 - Wildfire Elemental
@@ -236,7 +236,6 @@
 | other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
 | return all nonland permanents to their owners' hands. if you return four or more nontoken permanents you control ~, you may put a permanent card from your hand  | 1 | Flood of Tears | m20 |
-| sacrifice ~: counter target spell that targets you. | 1 | Cerulean Drake | m20 |
 | spells your opponents cast that target ~ cost {M} more to cast. | 1 | Boreal Elemental | m20 |
 | target creature gets +N/+N until end of turn. it gets an additional +N/+N until end of turn for each card named ~ in your graveyard. | 1 | Growth Cycle | m20 |
 | when you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability ~, copy that spell or ability twice. you may choose new targets for the | 1 | Repeated Reverberation | m20 |
@@ -266,7 +265,6 @@
 | {M}, {M}: choose a card name, then reveal the top card of your library. if that card has the chosen name, sacrifice ~ and draw three cards. activate only as a s | 1 | Diviner's Lockbox | m20 |
 | {M}, {M}: look at the top three cards of your library. you may reveal a creature card of the chosen type from among them and put it into your hand. put the rest | 1 | Icon of Ancestry | m20 |
 | {M}, {M}: return target creature you control and each aura attached to it to their owners' hands. activate only during your turn. | 1 | Portal of Sanctuary | m20 |
-| {M}: ~ gains your choice of reach, trample, or haste until end of turn. | 1 | Shifting Ceratops | m20 |
 | {M}{M}: each creature you control named ~ gets +N/+N until end of turn. | 1 | Pack Mastiff | m20 |
 | {M}{M}{M}{M}{M}{M}: exile the top three cards of your library. you may play them ~ without paying their mana costs. | 1 | Golos, Tireless Pilgrim | m20 |
 | ~ can"..."s hand and graveyard. | 1 | Thought Distortion | m20 |

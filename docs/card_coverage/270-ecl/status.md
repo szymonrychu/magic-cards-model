@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.5% |
-| Works (untested) | 115 | 45.6% |
+| Tested | 20 | 7.9% |
+| Works (untested) | 116 | 46.0% |
 | Partial (unaudited) | 18 | 7.1% |
-| Not working | 100 | 39.7% |
+| Not working | 98 | 38.9% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Shinestriker | silent | Vivid — When this creature enters, draw cards equal to the number of colors among permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sourbread Auntie | silent | When this creature enters, you may blight 2. If you do, create two 1/1 black and red Goblin creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinerock Tyrant | silent | Whenever you cast an instant or sorcery spell with a single target, you may copy it. If you do, those spells gain wither. You may choose new targets for the cop | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spiral into Solitude | silent | {1}{W}, Blight 1, Sacrifice this Aura: Exile enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spry and Mighty | silent | Choose exactly two creatures you control. You draw X cards and the chosen creatures get +X/+X and gain trample until end of turn, where X is the difference betw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sygg, Wanderwine Wisdom // Sygg, Wanderbrine Shield | silent | Whenever this creature enters or transforms into Sygg, Wanderwine Wisdom, target creature gains "Whenever this creature deals combat damage to a player or plane | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tam, Mindful First-Year | silent | {T}: Target creature you control becomes all colors until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -123,7 +122,6 @@
 | Morningtide's Light | notice | Exile any number of target creatures. At the beginning of the next end step, return those cards to the battlefield tapped under their owners' control. Until you | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Omni-Changeling | notice | You may have this creature enter as a copy of any creature on the battlefield, except it has changeling. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Perfect Intimidation | notice | Choose one or both — • Target opponent exiles two cards from their hand. • Remove all counters from target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Slumbering Walker | notice | At the beginning of your end step, you may remove a counter from this creature. When you do, return target creature card with power 2 or less from your graveyar | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sygg's Command | notice | Choose two — • Create a token that's a copy of target Merfolk you control. • Creatures target player controls gain lifelink until end of turn. • Target player d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Warren Torchmaster | notice | At the beginning of combat on your turn, you may blight 1. When you do, target creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Adept Watershaper | unaudited | Other tapped creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -234,6 +232,7 @@
 | Silvergill Mentor | handled | As an additional cost to cast this spell, behold a Merfolk or pay {2}. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Silvergill Peddler | handled | Whenever this creature becomes tapped, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sizzling Changeling | handled | When this creature dies, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Spiral into Solitude | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stoic Grove-Guide | handled | {1}{B/G}, Exile this card from your graveyard: Create a 2/2 black and green Elf creature token. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stratosoarer | handled | When this creature enters, target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Summit Sentinel | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -263,7 +262,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - Appeal to Eirdu
 - Ashling's Command
@@ -278,6 +277,7 @@
 - Lasting Tarfire
 - Lys Alana Dignitary
 - Requiting Hex
+- Slumbering Walker
 - Soul Immolation
 - Soulbright Seeker
 - Stalactite Dagger
@@ -310,7 +310,6 @@
 | at the beginning of each player's draw step, that player loses N life, searches their library for a card, puts it into their hand, then shuffles. | 1 | Mornsong Aria | ecl |
 | at the beginning of your end step, if there is an elf card in your graveyard and ~ has a -N/-N counter on it, remove a -N/-N counter from ~. | 1 | Creakwood Safewright | ecl |
 | at the beginning of your end step, if you gained life ~, exile cards from the top of your library until you exile a nonland card. you may cast that card without | 1 | Bre of Clan Stoutarm | ecl |
-| at the beginning of your end step, you may remove a counter from ~. when you do, return target creature card with power N or less from your graveyard to the bat | 1 | Slumbering Walker | ecl |
 | at the beginning of your first main phase, you may blight N. if you do, create a treasure token. | 1 | Scuzzback Scrounger | ecl |
 | at the beginning of your first main phase, you may blight N. if you don't, you lose N life. | 1 | Gutsplitter Gang | ecl |
 | choose exactly two creatures you control. you draw N cards and the chosen creatures get +N/+N and gain trample until end of turn, where N is the difference betw | 1 | Spry and Mighty | ecl |
@@ -382,7 +381,6 @@
 | {M}: target creature you control becomes all colors until end of turn. | 1 | Tam, Mindful First-Year | ecl |
 | {M}: target elf you control gets +N/+N until end of turn. | 1 | Safewright Cavalry | ecl |
 | {M}: ~ becomes a kithkin scout with base power and toughness N/N. | 1 | Figure of Fable | ecl |
-| {M}{M}, blight N, sacrifice ~: exile enchanted creature. | 1 | Spiral into Solitude | ecl |
 | {M}{M}, remove a counter from ~: counter target noncreature spell. its controller draws a card. | 1 | Glen Elendra Guardian | ecl |
 | {M}{M}: you may put a creature card with total power and toughness N or less from your hand onto the battlefield. that creature gains haste. at the beginning of | 1 | Meek Attack | ecl |
 | ~ can't be countered. counter all spells your opponents control and all abilities your opponents control. create a N/N blue and black faerie creature token with | 1 | Glen Elendra's Answer | ecl |

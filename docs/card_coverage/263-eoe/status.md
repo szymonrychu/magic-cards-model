@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 9.9% |
-| Works (untested) | 122 | 48.4% |
-| Partial (unaudited) | 15 | 6.0% |
-| Not working | 90 | 35.7% |
+| Works (untested) | 125 | 49.6% |
+| Partial (unaudited) | 13 | 5.2% |
+| Not working | 89 | 35.3% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Glacier Godmaw | silent | When this creature enters, create a Lander token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gravblade Heavy | silent | As long as you control an artifact, this creature gets +1/+0 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Haliya, Guided by Light | silent | At the beginning of your end step, draw a card if you've gained 3 or more life this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Hardlight Containment | silent | When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hymn of the Faller | silent | Surveil 1, then you draw a card and lose 1 life. (To surveil 1, look at the top card of your library. You may put it into your graveyard.) Void — If a nonland p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Infinite Guideline Station | silent | When Infinite Guideline Station enters, create a tapped 2/2 colorless Robot artifact creature token for each multicolored permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kav Landseeker | silent | When this creature enters, create a Lander token. At the beginning of the end step on your next turn, sacrifice that token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -122,12 +121,10 @@
 | Frenzied Baloth | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Fungal Colossus | unaudited | This spell costs {X} less to cast, where X is the number of differently named lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Gigastorm Titan | unaudited | This spell costs {3} less to cast if you've cast another spell this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Illvoi Infiltrator | unaudited | This creature can't be blocked if you've cast two or more spells this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
+| Hardlight Containment | unaudited | Enchanted permanent has ward {1}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Loading Zone | unaudited | If one or more counters would be put on a creature, Spacecraft, or Planet you control, twice that many of each of those kinds of counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Luxknight Breacher | unaudited | This creature enters with a +1/+1 counter on it for each other creature and/or artifact you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Mm'menon, the Right Hand | unaudited | You may cast artifact spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Moonlit Meditation | unaudited | The first time you would create one or more tokens each turn, you may instead create that many tokens that are copies of enchanted permanent. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Tannuk, Steadfast Second | unaudited | Artifact cards and red creature cards in your hand have warp {2}{R}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Tapestry Warden | unaudited | Each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Seriema | unaudited | Other tapped legendary creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Uthros Psionicist | unaudited | The second spell you cast each turn costs {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -171,6 +168,7 @@
 | Hylderblade | handled | Equipped creature gets +3/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Icecave Crasher | handled | Landfall — Whenever a land you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Illvoi Galeblade | handled | {2}, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Illvoi Infiltrator | handled | This creature can't be blocked if you've cast two or more spells this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Illvoi Light Jammer | handled | When this Equipment enters, attach it to target creature you control. That creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Illvoi Operative | handled | Whenever you cast your second spell each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Insatiable Skittermaw | handled | Void — At the beginning of your end step, if a nonland permanent left the battlefield this turn or a spell was warped this turn, put a +1/+1 counter on this cre | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -191,6 +189,7 @@
 | Meltstrider's Gear | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mental Modulation | handled | This spell costs {1} less to cast during your turn. Tap target artifact or creature. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mm'menon, Uthros Exile | handled | Whenever an artifact you control enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mm'menon, the Right Hand | handled | You may look at the top card of your library any time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Molecular Modifier | handled | At the beginning of combat on your turn, target creature you control gets +1/+0 and gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Monoist Sentry | handled | Defender | machines/combat.py | Y/Y/Y | not_tested |
 | Nanoform Sentinel | handled | Whenever this creature becomes tapped, untap another target permanent. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -235,6 +234,7 @@
 | Swarm Culler | handled | Whenever this creature becomes tapped, you may sacrifice another creature or artifact. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Syr Vondam, the Lucent | handled | Whenever Syr Vondam enters or attacks, other creatures you control get +1/+0 and gain deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tannuk, Memorial Ensign | handled | Landfall — Whenever a land you control enters, Tannuk deals 1 damage to each opponent. If this is the second time this ability has resolved this turn, draw a ca | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Tannuk, Steadfast Second | handled | Other creatures you control have haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temporal Intervention | handled | Void — This spell costs {2} less to cast if a nonland permanent left the battlefield this turn or a spell was warped this turn. Target opponent reveals their ha | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thawbringer | handled | When this creature enters or dies, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Dominion Bracelet | handled | Equipped creature gets +1/+1 and has "{15}, Exile The Dominion Bracelet: You control target opponent during their next turn. This ability costs {X} less to acti | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -302,7 +302,6 @@
 | N+ \| {M}{M}, {M}, sacrifice a land: create a N/N colorless robot artifact creature token, then creatures you control get +N/+N and gain haste until end of turn | 1 | Kavaron, Memorial World | eoe |
 | N+ \| {M}{M}, {M}: create a token that"..."s legendary. activate only as a sorcery. | 1 | Adagia, Windswept Bastion | eoe |
 | N: untap target artifact or creature. if it's an artifact creature, put a +N/+N counter on it. | 1 | Tezzeret, Cruel Captain | eoe |
-| artifact cards and red creature cards in your hand have warp {M}{M}. | 1 | Tannuk, Steadfast Second | eoe |
 | artifacts you control are foods in addition to their other types and have "..." | 1 | Ragost, Deft Gastronaut | eoe |
 | as an additional cost to cast ~, choose a creature you control or a warped creature card you own in exile. ~ deals damage equal to the power of the chosen creat | 1 | Close Encounter | eoe |
 | as an additional cost to cast ~, sacrifice an artifact or creature. return target creature or spacecraft card with mana value N or less from your graveyard to t | 1 | Scrounge for Eternity | eoe |
@@ -322,6 +321,7 @@
 | destroy target nonland permanent. its controller creates a lander token. (it's an artifact with "...") | 1 | Emergency Eject | eoe |
 | during your turn, other creatures you control get +N/+N. | 1 | Memorial Team Leader | eoe |
 | each creature you control with toughness greater than its power stations permanents using its toughness rather than its power. | 1 | Tapestry Warden | eoe |
+| enchanted permanent has ward {M}. | 1 | Hardlight Containment | eoe |
 | exile all creatures and spacecraft. | 1 | Beyond the Quiet | eoe |
 | gain control of target artifact or creature until end of turn. untap that permanent. it gains haste until end of turn. if it's a spacecraft, put ten charge coun | 1 | Systems Override | eoe |
 | if one or more counters would be put on a creature, spacecraft, or planet you control, twice that many of each of those kinds of counters are put on it instead. | 1 | Loading Zone | eoe |
@@ -352,7 +352,6 @@
 | when ~ enters, enchanted creature fights up to one target creature an opponent controls. | 1 | Meltstrider's Resolve | eoe |
 | when ~ enters, exile all artifacts and creatures with mana value N or less until ~ leaves the battlefield. | 1 | Pinnacle Starcage | eoe |
 | when ~ enters, exile each opponent's graveyard. create a lander token. | 1 | Dauntless Scrapbot | eoe |
-| when ~ enters, exile target creature an opponent controls until ~ leaves the battlefield. | 1 | Hardlight Containment | eoe |
 | when ~ enters, if an opponent controls more lands than you, create a lander token. | 1 | Sunstar Expansionist | eoe |
 | when ~ enters, if you cast it, shuffle your hand and graveyard into your library, then draw seven cards. | 1 | Weftwalking | eoe |
 | when ~ enters, it deals damage equal to the number of artifacts you control to target creature an opponent controls. | 1 | Warmaker Gunship | eoe |
@@ -372,7 +371,6 @@
 | whenever ~ or another kavu you control enters, exile the top card of your library. for as long as that card remains exiled, you may play it if you control a kav | 1 | Possibility Technician | eoe |
 | you draw two cards and lose N life. void — if a nonland permanent left the battlefield ~ or a spell was warped ~, instead you draw two cards and each opponent l | 1 | Decode Transmissions | eoe |
 | you gain N life. create a lander token. (it's an artifact with "...") | 1 | Sami's Curiosity | eoe |
-| you may cast artifact spells from the top of your library. | 1 | Mm'menon, the Right Hand | eoe |
 | you may put an artifact or creature card from your hand onto the battlefield. that permanent gains haste, "..." and "..." | 1 | Terminal Velocity | eoe |
 | {M}, sacrifice another artifact: exile the top N cards of your library, where N is one plus the mana value of the sacrificed artifact. you may play those cards  | 1 | Memorial Vault | eoe |
 | {M}, sacrifice ~: it deals N damage to any target. target player draws three cards and gains N life. ~ costs {M} less to activate, where N is the number of diff | 1 | Survey Mechan | eoe |
@@ -382,7 +380,6 @@
 | {M}: until end of turn, target creature gains "..." that creature's controller may have ~ deal N damage to it. activate only as a sorcery. | 1 | Requiem Monolith | eoe |
 | {M}{M}, {M}: tap another target creature. ~ costs {M} less to activate if you control a creature with a +N/+N counter on it. | 1 | Starport Security | eoe |
 | {M}{M}: ~ gets +N/+N until end of turn. | 1 | Debris Field Crusher | eoe |
-| ~ can"..."ve cast two or more spells ~. | 1 | Illvoi Infiltrator | eoe |
 | ~ costs {M} less to cast if you've cast another spell ~. | 1 | Gigastorm Titan | eoe |
 | ~ costs {M} less to cast, where N is the number of differently named lands you control. | 1 | Fungal Colossus | eoe |
 | ~ deals N damage to any target. void — ~ deals N damage instead if a nonland permanent left the battlefield ~ or a spell was warped ~. | 1 | Plasma Bolt | eoe |

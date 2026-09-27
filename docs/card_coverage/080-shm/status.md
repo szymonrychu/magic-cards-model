@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 7.7% |
-| Works (untested) | 108 | 39.4% |
-| Partial (unaudited) | 21 | 7.7% |
-| Not working | 124 | 45.3% |
+| Works (untested) | 111 | 40.5% |
+| Partial (unaudited) | 20 | 7.3% |
+| Not working | 122 | 44.5% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Gleeful Sabotage | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Glen Elendra Liege | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grief Tyrant | silent | When this creature dies, put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Guttural Response | silent | Counter target blue instant spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heartmender | silent | At the beginning of your upkeep, remove a -1/-1 counter from each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helm of the Ghastlord | silent | As long as enchanted creature is blue, it gets +1/+1 and has "Whenever this creature deals damage to an opponent, draw a card." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hollowsage | silent | Whenever this creature becomes untapped, you may have target player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -127,7 +126,6 @@
 | Viridescent Wisps | silent | Target creature becomes green and gets +1/+0 until end of turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Swing | silent | Choose three target nonenchantment permanents. Destroy one of them at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wilt-Leaf Liege | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Windbrisk Raptor | silent | Attacking creatures you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Witherscale Wurm | silent | Whenever this creature deals damage to an opponent, remove all -1/-1 counters from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Woeleecher | silent | {W}, {T}: Remove a -1/-1 counter from target creature. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Worldpurge | silent | Return all permanents to their owners' hands. Each player chooses up to seven cards in their hand, then shuffles the rest into their library. Each player loses  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -157,7 +155,6 @@
 | Gloomwidow | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Godhead of Awe | unaudited | Other creatures have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Greater Auramancy | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Inescapable Brute | unaudited | This creature must be blocked if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Kulrath Knight | unaudited | Creatures your opponents control with counters on them can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mossbridge Troll | unaudited | If this creature would be destroyed, regenerate it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mudbrawler Raiders | unaudited | This creature can't be blocked by blue creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -200,9 +197,11 @@
 | Gravelgill Axeshark | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
 | Gravelgill Duo | handled | Whenever you cast a blue spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grim Poppet | handled | This creature enters with three -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Guttural Response | handled | Counter target blue instant spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heap Doll | handled | Sacrifice this creature: Exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Howl of the Night Pack | handled | Create a 2/2 green Wolf creature token for each Forest you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hungry Spriggan | handled | Whenever this creature attacks, it gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Inescapable Brute | handled | This creature must be blocked if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inkfathom Infiltrator | handled | This creature can't block and can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Intimidator Initiate | handled | Whenever a player casts a red spell, you may pay {1}. If you do, target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Juvenile Gloomwidow | handled | Reach | machines/combat.py | Y/-/- | not_tested |
@@ -276,6 +275,7 @@
 | Wasp Lancer | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Wildslayer Elves | handled | Wither | machines/combat.py | Y/-/- | not_tested |
 | Wilt-Leaf Cavaliers | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
+| Windbrisk Raptor | handled | Attacking creatures you control have lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wooded Bastion | handled |  |  | Y/-/- | not_tested |
 | Woodfall Primus | handled | When this creature enters, destroy target noncreature permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Zealous Guardian | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
@@ -329,11 +329,9 @@
 | at the beginning of your upkeep, put a -N/-N counter on enchanted creature. | 1 | Biting Tether | shm |
 | at the beginning of your upkeep, remove a -N/-N counter from each creature you control. | 1 | Heartmender | shm |
 | at the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | 1 | Puca's Mischief | shm |
-| attacking creatures you control have lifelink. | 1 | Windbrisk Raptor | shm |
 | black creatures you control have wither. | 1 | Corrosive Mentor | shm |
 | blue creatures you control can't be blocked. | 1 | Deepchannel Mentor | shm |
 | choose three target nonenchantment permanents. destroy one of them at random. | 1 | Wild Swing | shm |
-| counter target blue instant spell. | 1 | Guttural Response | shm |
 | counter target spell unless its controller pays {M} for each blue permanent you control. | 1 | Spell Syphon | shm |
 | counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
 | create a N/N black and red elemental creature token. target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | 1 | Din of the Fireherd | shm |
@@ -444,7 +442,6 @@
 | ~ has persist as long as you control a black creature. | 1 | Rattleblaze Scarecrow | shm |
 | ~ has vigilance as long as you control a white creature. | 1 | Watchwing Scarecrow | shm |
 | ~ has wither as long as you control a green creature. | 1 | Thornwatch Scarecrow | shm |
-| ~ must be blocked if able. | 1 | Inescapable Brute | shm |
 | ~'s power and toughness are each equal to the number of black permanents you control. | 1 | Crowd of Cinders | shm |
 | ~'s power and toughness are each equal to the number of blue permanents you control. | 1 | Faerie Swarm | shm |
 | ~'s power and toughness are each equal to the number of green permanents you control. | 1 | Drove of Elves | shm |

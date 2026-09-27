@@ -18,17 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 16.7% |
-| Works (untested) | 31 | 47.0% |
+| Works (untested) | 33 | 50.0% |
 | Partial (unaudited) | 7 | 10.6% |
-| Not working | 17 | 25.8% |
+| Not working | 15 | 22.7% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Academy Researchers | silent | When this creature enters, you may put an Aura card from your hand onto the battlefield attached to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Angelic Chorus | silent | Whenever a creature you control enters, you gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Blanchwood Armor | silent | Enchanted creature gets +1/+1 for each Forest you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Congregate | silent | Target player gains 2 life for each creature on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Corrupt | silent | Corrupt deals damage to any target equal to the number of Swamps you control. You gain life equal to the damage dealt this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fecundity | silent | Whenever a creature dies, that creature's controller may draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,9 +48,11 @@
 | Telepathy | unaudited | Your opponents play with their hands revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Urza's Armor | unaudited | If a source would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Worship | unaudited | If you control a creature, damage that would reduce your life total to less than 1 reduces it to 1 instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Angelic Chorus | handled | Whenever a creature you control enters, you gain life equal to its toughness. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angelic Page | handled | {T}: Target attacking or blocking creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Annul | handled | Counter target artifact or enchantment spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Befoul | handled | Destroy target land or nonblack creature. It can't be regenerated. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Blanchwood Armor | handled | Enchanted creature gets +1/+1 for each Forest you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Catalog | handled | Draw two cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cathodion | handled | When this creature dies, add {C}{C}{C}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chimeric Staff | handled | {X}: This artifact becomes an X/X Construct artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -109,7 +109,6 @@
 | choose a color. target player reveals their hand and discards all cards of that color. | 1 | Persecute | usg |
 | choose two target creature cards in your graveyard. sacrifice a creature. if you do, return the chosen cards to the battlefield tapped. | 1 | Victimize | usg |
 | counter target spell. untap up to four lands. | 1 | Rewind | usg |
-| enchanted creature gets +N/+N for each forest you control. | 1 | Blanchwood Armor | usg |
 | if a source would deal damage to you, prevent N of that damage. | 1 | Urza's Armor | usg |
 | if you control a creature, damage that would reduce your life total to less than N reduces it to N instead. | 1 | Worship | usg |
 | if you would draw a card, you may instead choose land or nonland and reveal cards from the top of your library until you reveal a card of the chosen kind. put t | 1 | Abundance | usg |
@@ -122,7 +121,6 @@
 | when ~ enters, target opponent gains control of it. | 1 | Sleeper Agent | usg |
 | when ~ enters, you may put an aura card from your hand onto the battlefield attached to ~. | 1 | Academy Researchers | usg |
 | whenever a creature dies, that creature's controller may draw a card. | 1 | Fecundity | usg |
-| whenever a creature you control enters, you gain life equal to its toughness. | 1 | Angelic Chorus | usg |
 | your opponents play with their hands revealed. | 1 | Telepathy | usg |
 | {M}: enchanted creature gets +N/+N until end of turn. | 1 | Shiv's Embrace | usg |
 | ~ can't attack unless a creature with greater power also attacks. | 1 | Okk | usg |
