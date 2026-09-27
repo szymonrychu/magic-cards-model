@@ -384,7 +384,7 @@ class Player(EngineModel):
     their speed to a specific value" - `None` for that "no speed" state,
     never `0` (`machines/speed.py`'s own docstring is where the distinction
     is argued). Set to 1 by CR 702.179a's state-based action
-    (`machines/speed.apply_start_your_engines`) the moment this player
+    (`machines/speed.players_starting_their_engines`) the moment this player
     controls a permanent with "Start your engines!", and increased from
     there by CR 702.179d's inherent triggered ability
     (`machines/speed.check_speed_increase_on_life_loss`). Read through

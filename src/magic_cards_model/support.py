@@ -583,11 +583,13 @@ def executed_keywords(printing: Card) -> dict[str, str]:
         found["fuse"] = "machines/casting.py (Casting.cast_fused, CR 702.102)"
 
     # Start your engines! (CR 702.179a) is a state-based action
-    # (`machines/speed.apply_start_your_engines`), not a `KeywordCastOption`
+    # (`machines/speed.players_starting_their_engines`), not a `KeywordCastOption`
     # or a combat keyword `machines/combat.Keyword` enumerates - named here
     # by hand for the same reason suspend and fuse are just above.
     if any(k.lower() == "start your engines!" for k in printing.keywords):
-        found["start your engines!"] = "machines/speed.py (apply_start_your_engines, CR 702.179a)"
+        found["start your engines!"] = (
+            "machines/speed.py (players_starting_their_engines, CR 702.179a)"
+        )
 
     # Max speed (CR 702.178a) gates an activated ability's own activation on
     # the activator's speed (`Game.why_cannot_activate`'s own `ability_word`

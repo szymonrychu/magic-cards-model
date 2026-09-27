@@ -32,11 +32,9 @@ player with no speed and one with speed 0 (which no rule or effect can ever
 actually produce - the lowest a set speed goes is 1, CR 702.179a/c) are kept
 distinct rather than collapsed into the same stored value.
 
-`apply_start_your_engines` is CR 702.179a's own state-based action, called
-from `Game._check_state_based_actions_impl` alongside `apply_daybound_
-nightbound` - both are the same shape: a static ability's effect that
-"happens immediately" any time its condition is true, checked every point
-the game already checks state-based actions.
+`players_starting_their_engines` / `start_engines` are CR 702.179a's own
+state-based action, read and performed by `Game._state_based_actions_once`
+with the rest of each CR 704.3 round, off the same layered board.
 
 The Max speed ability's own gate (CR 702.178a) is not implemented as a
 layer-6 conditional grant/removal; `Game.why_cannot_activate` refuses to
@@ -89,22 +87,28 @@ def _controls_start_your_engines(game: Game, player: Player) -> bool:
     return False
 
 
-def apply_start_your_engines(game: Game) -> None:
-    """CR 702.179a's state-based action: a player with no speed who
-    controls a "Start your engines!" permanent has their speed become 1.
+def players_starting_their_engines(game: Game) -> list[Player]:
+    """CR 702.179a's state-based action, the reading half: every player with
+    no speed who controls a "Start your engines!" permanent.
 
-    Called from `Game._check_state_based_actions_impl` every time the game
-    already checks state-based actions - the same "not itself one of CR
-    704.5's checks, but every point that looks is a point this looks too"
-    shape `apply_daybound_nightbound` already has there, for the identical
-    reason (CR 702.179a says outright that it *is* a state-based action, so
-    this is the more literal of the two).
+    Read by `Game._state_based_actions_once` inside the same `snapshot.
+    scan_pin` its CR 704.5 checks share, so every permanent's keywords come
+    off that one layered board rather than a board per permanent; the speed
+    is set afterwards by `start_engines`, with the round's other actions
+    (CR 704.3: performed simultaneously).
     """
-    for player in game.players:
-        if player.speed is not None:
-            continue
-        if _controls_start_your_engines(game, player):
-            player.speed = 1
+    return [
+        player
+        for player in game.players
+        if player.speed is None and _controls_start_your_engines(game, player)
+    ]
+
+
+def start_engines(players: list[Player]) -> None:
+    """CR 702.179a's state-based action, the acting half: each player
+    `players_starting_their_engines` found has their speed become 1."""
+    for player in players:
+        player.speed = 1
 
 
 def increase_speed(player: Player, *, by: int = 1) -> None:

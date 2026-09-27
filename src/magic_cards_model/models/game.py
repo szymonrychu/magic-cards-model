@@ -269,7 +269,11 @@ from ..machines.replacement import (
     replace_mana_production,
 )
 from ..machines.special_actions import why_cannot_turn_face_up_as
-from ..machines.speed import apply_start_your_engines, check_speed_increase_on_life_loss
+from ..machines.speed import (
+    check_speed_increase_on_life_loss,
+    players_starting_their_engines,
+    start_engines,
+)
 from ..machines.spell_grants import granted_hand_keyword_lines
 from ..machines.targeting import (
     RetargetScope,
@@ -18634,8 +18638,6 @@ class Game(EngineModel):
         # game checks state-based actions is a point it looks, so a permanent
         # that gained or lost daybound some other way is caught here too.
         apply_daybound_nightbound(self)
-        # CR 702.179a says outright that this one *is* a state-based action.
-        apply_start_your_engines(self)
         # CR 603.2c: what the resolution or payment before this check did is
         # one batch, and each round of state-based actions below is another.
         self.announce_batched_events()
@@ -19096,8 +19098,12 @@ class Game(EngineModel):
 
         # Every check below reads the battlefield and moves nothing, so they
         # share one layered board (`snapshot.scan_pin`); the moves come after.
+        # CR 702.179a says outright that start your engines! is a state-based
+        # action, so it is read off the same board as the rest of the round.
         with scan_pin(self):
             board, leaving = self._state_based_action_losers()
+            starting = players_starting_their_engines(self)
+        start_engines(starting)
         self._put_state_based_action_losers(leaving, board)
         return leaving + gone_tokens + gone_copies
 
