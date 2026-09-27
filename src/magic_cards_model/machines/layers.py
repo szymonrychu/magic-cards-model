@@ -117,6 +117,8 @@ from .combat import (
     ATTACK_WITHOUT_DEFENDER_TEXT,
     KEYWORDS_OUTSIDE_COMBAT,
     Keyword,
+    _CreatureDescriptionAlternatives,
+    _parse_creature_description,
     block_exception_keyword,
 )
 from .designations import ENDURING_STORY, split_as_long_as, split_unless
@@ -1380,6 +1382,86 @@ class CreaturesControlledByWherePowerOrToughnessAtMost(SelectorBase):
         )
 
 
+def _quality_matches_characteristics(matcher: object, chars: Characteristics) -> bool:
+    """`combat._CreatureDescriptionMatcher`/`_CreatureDescriptionAlternatives`
+    checked straight against `chars` rather than through a live `Game` - the
+    group-subject selector's own version of `.matches(game, candidate)`
+    (`machines/combat.py`), since a `Selector` computes purely off `(chars,
+    board)` (CR 613.5's computation has no live `Game` in sight yet - the
+    same reason `_graveyard_count_gated_self_static_builder`'s own condition
+    is asked through `LayerContext`, never through `Game.condition_holds`).
+    Every field read here is plain data `combat._parse_creature_description`
+    already produced; nothing here re-implements the *parsing*, only the
+    *checking* `_CreatureDescriptionMatcher.matches` does against a live
+    board - the two are kept in step by sharing the same fields, not the
+    same method, because `Characteristics` and `Game`/`CardState` are
+    different shapes of "the board right now"."""
+    if isinstance(matcher, _CreatureDescriptionAlternatives):
+        return any(_quality_matches_characteristics(alt, chars) for alt in matcher.alternatives)
+    if matcher.required_type is not None and matcher.required_type not in chars.types:
+        return False
+    if matcher.required_color is not None and matcher.required_color not in chars.colors:
+        return False
+    subtypes_lower = {subtype.lower() for subtype in chars.subtypes}
+    if matcher.required_subtype is not None and matcher.required_subtype.lower() not in (
+        subtypes_lower
+    ):
+        return False
+    if matcher.excluded_subtype is not None and matcher.excluded_subtype.lower() in subtypes_lower:
+        return False
+    if matcher.power_operator is not None:
+        if chars.power is None:
+            return False
+        if matcher.power_operator == "greater_or_equal" and chars.power < (
+            matcher.power_bound or 0
+        ):
+            return False
+        if matcher.power_operator == "less_or_equal" and chars.power > (matcher.power_bound or 0):
+            return False
+    if matcher.toughness_operator is not None:
+        if chars.toughness is None:
+            return False
+        if matcher.toughness_operator == "greater_or_equal" and chars.toughness < (
+            matcher.toughness_bound or 0
+        ):
+            return False
+        if matcher.toughness_operator == "less_or_equal" and chars.toughness > (
+            matcher.toughness_bound or 0
+        ):
+            return False
+    if matcher.required_keyword is None:
+        return True
+    return bool(keywords_in_lines(list(chars.abilities), [matcher.required_keyword.value]))
+
+
+class CreaturesControlledByQuality(SelectorBase):
+    """ ""`<quality>` creatures you control"/"Juggernauts you control"/"each
+    creature you control" - a group evasion grant's own selector
+    (`layers._group_evasion_grant_builder`), reusing `combat._parse_creature_
+    description`'s closed grammar rather than a second one: the same bare
+    subtype, colour, card type, keyword, power/toughness comparison, or
+    disjunction the *blocker's own* quality is read with (Juggernaut, Vine
+    Mare, Audacious Infiltrator, Skyscythe Engulfer, Blazing Torch, Sacred
+    Knight) now picks out the *group* instead. `quality` is the raw text, not
+    the parsed matcher - a `Selector` is data a game must decode (no
+    callables survive on a model), and re-parsing a short, fixed string on
+    every CR 613.5 computation is the same trade-off `_graveyard_count_gated_
+    self_static_builder`'s own condition already makes rather than caching
+    it."""
+
+    kind: Literal["creatures_controlled_by_quality"] = "creatures_controlled_by_quality"
+    username: str | None = None
+    quality: str = ""
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not chars.is_creature or chars.controller != self.username:
+            return False
+        matcher = _parse_creature_description(self.quality)
+        if matcher is None:
+            return False
+        return _quality_matches_characteristics(matcher, chars)
+
+
 class SelfIfPowerNegative(SelectorBase):
     """ "If Loot's power is negative, he assigns combat damage as though his
     power were positive." (Loot, the Anomaly) - `Only`'s identity test plus a
@@ -1667,6 +1749,7 @@ Selector = Annotated[
     | CreaturesControlledByWhereToughnessExceedsPower
     | EquippedCreatureIfToughnessExceedsPower
     | CreaturesControlledByWherePowerOrToughnessAtMost
+    | CreaturesControlledByQuality
     | SelfIfPowerNegative
     | AllPermanentsControlledBy
     | PermanentsControlledBy
@@ -4089,7 +4172,7 @@ _TARGETED_LOSES_ALL_ABILITIES_RE = re.compile(
 
 #: "This creature can't be blocked this turn." (Matterbending Mage's own
 #: {X}-cast trigger, Snooping Page's Repartee trigger) or the targeted
-#: "Target creature can't be blocked this turn." - CR 509.1a's restriction,
+#: "Target creature can't be blocked this turn." - CR 509.1b's restriction,
 #: granted for the stated duration rather than printed permanently the way
 #: `_CANT_BE_BLOCKED_ITEM_RE`'s indefinite "has hexproof and can't be
 #: blocked." already is. `_SUBJECT` is the shared "this creature"/"target
@@ -5477,6 +5560,44 @@ _EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
 _GROUP_POWER_OR_TOUGHNESS_UNBLOCKABLE_RE = re.compile(
     r"^creatures you control with power or toughness (?P<threshold>\d+) or less can'?t be "
     r"blocked\.?$",
+    re.IGNORECASE,
+)
+
+#: "Blue creatures you control can't be blocked." (Deepchannel Mentor - a
+#: colour); "Juggernauts you control can't be blocked by Walls." (Graaz,
+#: Unstoppable Juggernaut - a bare CR 205.3m subtype for the group itself,
+#: plus its own "by `<description>`" restriction on the blocker); "Each
+#: creature you control can't be blocked as long as defending player
+#: controls an artifact land." (Tanglewalker - no group quality at all, and
+#: a condition rather than a blocker-quality tail) - CR 509.1b's evasion
+#: ability granted to a *group* the source's controller controls, unlike
+#: `_GROUP_POWER_OR_TOUGHNESS_UNBLOCKABLE_RE`'s own single fixed shape
+#: above (left untouched: its "with power or toughness `<N>` or less" is a
+#: combined either-stat comparison `combat._parse_creature_description`
+#: does not itself express, so this general reader is tried only when that
+#: one's own fixed anchor - "you control" immediately followed by "with
+#: power or toughness" - is not what is printed).
+#:
+#: `subject` is read by the identical grammar the blocker's own quality
+#: already is (`combat._parse_creature_description` - a bare subtype, a
+#: colour, a card type, a keyword, a power/toughness comparison, or a
+#: disjunction of any two), with a leading "each " accepted and discarded
+#: since it names no quality at all (CR 613.5: "each creature you control"
+#: is every creature the controller controls, the same set `_parse_
+#: creature_description("creature")`'s own empty adjective already answers
+#: for the *blocker* side). The optional tail is either a "by
+#: `<description>`" restriction on who may block (read the identical way,
+#: and granted onto each matching creature verbatim rather than resolved
+#: here, so a shape this cannot place still fails closed - `combat.
+#: looks_like_unparsed_evasion_restriction` - on the creature it landed on)
+#: or an "if"/"as long as" condition (read through the pre-existing `Game.
+#: condition_holds`/`condition_is_readable` registry, the same as `combat.
+#: _CANT_BE_BLOCKED_IF_CONDITION_RE`'s own tail, since the granted text is
+#: that identical self-referential sentence once it lands).
+_GROUP_EVASION_GRANT_RE = re.compile(
+    r"^(?:each )?(?P<subject>.+?) you control can'?t be blocked"
+    r"(?: by (?P<restriction>.+?)|(?: (?P<connector>if|as long as) (?P<condition>.+?)))?"
+    r"\.?$",
     re.IGNORECASE,
 )
 
@@ -7115,7 +7236,7 @@ def _targeted_loses_all_abilities_builder(*, until_eot: bool = True) -> EffectBu
 
 def _cant_be_blocked_until_eot_builder() -> EffectBuilder:
     """ "[This creature/Target creature] can't be blocked this turn." - CR
-    509.1a, layer 6 (CR 613.1f), one target's incarnation at a time, expiring
+    509.1b, layer 6 (CR 613.1f), one target's incarnation at a time, expiring
     at cleanup (CR 514.2) like any other "until end of turn" grant. The
     granted text itself is the plain, undated restriction -
     `machines/combat.py`'s evasion reader already recognises it - so the only
@@ -9126,20 +9247,26 @@ _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE = re.compile(
 )
 
 #: "Equipped creature can't be blocked as long as its power is 3 or less."
-#: (Thieves' Tools) and the unconditional "Equipped creature can't be
-#: blocked." (Prowler's Helm) - CR 509.1a's restriction granted in layer 6
-#: (CR 613.1f) to whatever the Equipment or Aura is attached to, as the
-#: self-referential sentence `machines/combat.py`'s evasion reader enforces.
+#: (Thieves' Tools), the unconditional "Equipped creature can't be blocked."
+#: (Prowler's Helm), and the quality-gated "Equipped creature can't be
+#: blocked by creatures with power 4 or greater." (Hedgewitch's Mask) /
+#: "Enchanted creature can't be blocked by Spirits." (Field of Reality) -
+#: CR 509.1b's restriction granted in layer 6 (CR 613.1f) to whatever the
+#: Equipment or Aura is attached to, as the self-referential sentence
+#: `machines/combat.py`'s evasion reader enforces (its own general "by
+#: `<description>`" fallback reads the granted quality the identical way it
+#: reads a printed one).
 _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) creature can'?t be blocked"
-    r"(?P<condition> as long as its power is \d+ or less)?\.?$",
+    r"(?:(?P<condition> as long as its power is \d+ or less)"
+    r"|(?: by (?P<description>[A-Za-z][A-Za-z0-9' -]*?)))?\.?$",
     re.IGNORECASE,
 )
 
 #: Uneasy Alliance: "Enchanted creature can't attack or block." - CR 508.1c's
 #: and CR 509.1b's restrictions granted together in layer 6 (CR 613.1f), the
 #: identical family `_ATTACHED_CREATURE_CANT_BE_BLOCKED_RE` above already
-#: grants (CR 509.1a alone); read the same self-referential way once granted -
+#: grants (CR 509.1b alone); read the same self-referential way once granted -
 #: `combat._self_attack_restriction_sentence` already accepts "This creature
 #: can't attack or block." for the attack half, and this task widens
 #: `combat._self_block_restriction_sentences`/`_parse_self_block_restriction`
@@ -12448,6 +12575,74 @@ def _group_power_or_toughness_unblockable_builder(threshold: int, *, line: str) 
     return builder
 
 
+def _group_evasion_grant_builder(subject: str, tail: str, *, line: str) -> EffectBuilder:
+    """ "`<subject>` you control can't be blocked[ by `<description>`/ if/as
+    long as `<condition>`]." - Deepchannel Mentor's plain colour group,
+    Graaz's bare-subtype group with its own "by Walls" tail, and
+    Tanglewalker's "each creature" group with its own "as long as" tail -
+    granted as the self-referential "This creature can't be blocked`<tail>`."
+    line `machines/combat.py`'s own evasion reader already reads off a
+    computed ability (CR 613.5), so no change to that reader is needed - it
+    does not care which permanent's static ability put the line there, the
+    same way `_group_power_or_toughness_unblockable_builder` above already
+    proves for its own fixed shape. `tail` is the already-validated, already
+    -assembled " by ..."/" if ..."/" as long as ..." suffix (or "" for an
+    unconditional group grant), never re-parsed here."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} you control can't be blocked{tail}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=CreaturesControlledByQuality(username=source.controller, quality=subject),
+                modification=grant_ability(f"This creature can't be blocked{tail}."),
+            )
+        ]
+
+    return builder
+
+
+def _group_evasion_grant_dispatch(sentence: str, *, line: str) -> EffectBuilder | None:
+    """`_GROUP_EVASION_GRANT_RE`'s match validated and assembled into a
+    builder, or `None` when the subject's own quality, the "by
+    `<description>`" restriction, or the "if"/"as long as" condition is
+    outside what is read elsewhere - a shape this cannot place is never
+    guessed at, the same fail-closed discipline `combat._parse_creature_
+    description` and `Game.condition_is_readable` already keep for the
+    blocker's own side of this identical grammar."""
+    match = _GROUP_EVASION_GRANT_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    subject = match.group("subject").strip()
+    if _parse_creature_description(subject) is None:
+        return None
+    restriction = match.group("restriction")
+    condition = match.group("condition")
+    if restriction is not None:
+        restriction = restriction.strip()
+        if _parse_creature_description(restriction) is None:
+            return None
+        tail = f" by {restriction}"
+    elif condition is not None:
+        from ..models.game import condition_is_readable
+
+        condition = condition.strip()
+        if not condition_is_readable(condition):
+            return None
+        tail = f" {match.group('connector')} {condition}"
+    else:
+        tail = ""
+    return _group_evasion_grant_builder(subject, tail, line=line)
+
+
 def _group_quoted_ability_grant_builder(
     granted: str, match: re.Match[str], *, line: str
 ) -> EffectBuilder:
@@ -12898,7 +13093,7 @@ _COSTED_KEYWORD_ITEM_RE = re.compile(
     r"^(?P<keyword>ward) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
 )
 
-#: "can't be blocked[ by `<quality>`]" (CR 509.1a) as one item of an "and"/
+#: "can't be blocked[ by `<quality>`]" (CR 509.1b) as one item of an "and"/
 #: comma-joined keyword-and-ability list - My Precious's own "Equipped
 #: creature has hexproof and can't be blocked.", Slippery Scoundrel's "this
 #: creature has hexproof and can't be blocked." Not itself a CR 702 keyword
@@ -14222,10 +14417,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
         )
     if match := _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE.fullmatch(sentence):
+        description = match.group("description")
+        tail = f" by {description}" if description else (match.group("condition") or "")
         return _attached_creature_static_builder(
             0,
             0,
-            [f"This creature can't be blocked{match.group('condition') or ''}."],
+            [f"This creature can't be blocked{tail}."],
             subject=match.group("attachment").lower(),
             line=sentence,
         )
@@ -14638,6 +14835,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _group_power_or_toughness_unblockable_builder(
             int(match.group("threshold")), line=sentence
         )
+    if (built := _group_evasion_grant_dispatch(sentence, line=sentence)) is not None:
+        return built
     if match := _GROUP_QUOTED_ABILITY_GRANT_RE.fullmatch(sentence):
         granted = match.group("ability").strip()
         if not granted or _card_type_word(match.group("subject")) is None:

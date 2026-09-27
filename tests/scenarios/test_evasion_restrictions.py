@@ -2,36 +2,73 @@
 `test_evasion.py`'s flying/reach/menace/trample, which all have keyword names
 `machines/combat.py`'s `Keyword` enumerates.
 
-CR 509.1a: the defending player, declaring blockers, "announces which
-attacking creature or which group of attacking creatures ... it's blocking"
-for each chosen creature - a block that names a creature the attacker's own
-text rules out is not a legal declaration. Unlike flying (CR 702.9b) or menace
-(CR 702.111b), "can't be blocked [by ...]" carries no keyword of its own, so it
+CR 509.1b: "The defending player checks each creature they control to see
+whether it's affected by any restrictions (effects that say a creature can't
+block, or that it can't block unless some condition is met). If any
+restrictions are being disobeyed, the declaration of blockers is illegal. A
+restriction may be created by an evasion ability (a static ability an
+attacking creature has that restricts what can block it)." - read in full
+with `mise run rules:find 509.1` this session (`.rules/` pulled first with
+`mise run rules:pull`); earlier waves of this file cited 509.1a - the
+declare-blockers *action* itself - because `knowledge_search` only ever
+returned 509.1a's excerpt truncated before the lettered text, and the primary
+source had not yet been pulled. Unlike flying (CR 702.9b) or menace (CR
+702.111b), "can't be blocked [by ...]" carries no keyword of its own, so it
 has to be read straight off the card's own oracle text rather than off
-`Keyword`. `knowledge_search` could only return 509.1a's excerpt truncated at
-its opening clause ("The defending player chooses which creatures they
-control... For each of the chosen creatures, the defending player
-announces..."); the full lettered text past that point was not readable this
-session, so this file cites 509.1a for the general declare-blockers legality
-check the way `combat.block_refusal`'s own docstring already does for the
-base requirements, rather than a more specific sub-rule it could not confirm.
+`Keyword`.
 
-Two real shapes are read (`combat.evasion_restriction_refusal`):
+Shapes read (`combat.evasion_restriction_refusal`):
 
 - **The Mindskinner**: "The Mindskinner can't be blocked." - unconditional.
-- **Questing Beast**: "Questing Beast can't be blocked by creatures with power
-  2 or less." - qualified by the blocker's own power.
+- **Questing Beast** / **April O'Neil, Kunoichi Trainee**: "... by creatures
+  with power 2 or less" / "... or greater" - a power comparison.
+- **Ghost of Ramirez DePietro**: "... by creatures with toughness 3 or
+  greater" - the same comparison against toughness.
+- **Juggernaut**: "This creature can't be blocked by Walls." - a bare
+  creature type (CR 205.3m), no adjective in front of "creature(s)" at all.
+- **Vine Mare**: "... by black creatures." - a colour (CR 105.1).
+- **Audacious Infiltrator**: "... by artifact creatures." - a card type.
+- **Skyscythe Engulfer**: "... by creatures with flying." - a keyword the
+  blocker must have, off `Keyword`'s own closed vocabulary.
+- **Field of Reality** / **Hedgewitch's Mask**: the identical "by
+  `<description>`" grammar granted by an Aura/Equipment (`machines/layers.py`)
+  rather than printed on the attacker itself - read the same way once granted
+  (CR 613.1f), which is also this file's proof that two independent
+  restrictions on one attacker are each enforced on their own.
+- **Blazing Torch**: "... by Vampires or Zombies." - a disjunction of two
+  bare creature types, each read by the identical single-description grammar
+  and satisfied when either matches.
+- **Arctic Foxes**: "... by creatures with power 2 or greater as long as
+  defending player controls a snow land." - the quality comparison further
+  gated by an external board condition, both read independently and both
+  required.
+- **Sacred Knight**: "... by black and/or red creatures." - an adjective
+  *list* sharing one elided trailing noun phrase ("creature(s)", printed
+  once rather than once per adjective), the inclusive "and/or" (the
+  wording CR 702.9b itself prints) read the identical way the plain "or"
+  disjunction above already is.
 
-A third real shape - **April O'Neil, Kunoichi Trainee**'s "can't be blocked by
-creatures with power 3 or greater" - is read too since 271-tmt. The
-fail-closed path is exercised on a printing chosen by `gap_example`:
-`combat.looks_like_unparsed_evasion_restriction` catches the sentence and
-`block_refusal` records an `EvasionNotice` rather than silently leaving the
-block legal *or* silently refusing it - either would be a guess this parser
-has no business making.
+Every printing in `src/magic_cards_model/data/printings` carrying "can't be
+blocked by" now reads `handled` (`scripts/sweep_pool.py --card`, confirmed
+across the whole pool, not sampled). `gap_example` no longer finds a
+self-referential quality-description shape left unread at all, so the
+fail-closed path below is exercised on a printing outside that family
+entirely: **Bursting Beebles**' "can't be blocked as long as defending
+player controls two or more nonland permanents that share an artist" - an
+external condition whose own text this engine's `Card` model has no way to
+answer (`docs/architecture.md`/`CLAUDE.md`: "Print, market, and collector
+fields are deliberately absent from `Card`" - an artist is exactly such a
+field), found by the identical dynamic `gap_example` search as every earlier
+wave's example, never named directly by a test.
 
-Every CR number here was looked up with `knowledge_search(type="rules")` in
-the session that wrote this file.
+The fail-closed path is exercised on a printing chosen by `gap_example`:
+`combat.looks_like_unparsed_evasion_restriction` catches a sentence outside
+every shape above and `block_refusal` records an `EvasionNotice` rather than
+silently leaving the block legal *or* silently refusing it - either would be a
+guess this parser has no business making.
+
+Every CR number here was looked up with `knowledge_search(type="rules")` or
+`mise run rules:find` in the session that wrote this file.
 """
 
 import re
@@ -42,11 +79,13 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import (
     EvasionNotice,
     looks_like_unparsed_evasion_restriction,
+    reads_self_combat_restriction_line,
 )
+from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Card, CardState, Type, Zone
 from tests.cards import card, gap_example
 
-from .harness import Scenario
+from .harness import Scenario, mana_from
 
 
 def duel(attacker: str, *blockers: str) -> Scenario:
@@ -139,8 +178,25 @@ def test_a_higher_power_blocker_is_permitted():
 
 def _unparsed_evasion_example() -> Card:
     """A real attacker whose "can't be blocked ..." sentence this parser does
-    not read yet - chosen, never named (`gap_example`): April O'Neil,
-    Kunoichi Trainee stood here until 271-tmt read her "power 3 or greater"."""
+    not read yet - chosen, never named (`gap_example`). Past waves closed
+    this gap for whichever printing stood here before: April O'Neil, Kunoichi
+    Trainee ("power 3 or greater", 271-tmt), then every plain subtype/colour/
+    type/keyword/toughness quality, a plain "or" disjunction, a condition-
+    gated quality, and an "and/or" elided-noun adjective list (Juggernaut's
+    "Walls", Blazing Torch's "Vampires or Zombies", Arctic Foxes' condition-
+    gated power comparison, Sacred Knight's "black and/or red creatures",
+    fix-cant-be-blocked-by).
+
+    `gap_example`'s own search space is every self-referential "can't be
+    blocked ..." sentence a real creature carries (`_is_static_evasion_line`
+    below), which is now fully read for every quality-description shape - so
+    whatever stands here next is necessarily a different kind of gap
+    entirely (right now, Bursting Beebles' unreadable "share an artist"
+    condition - `models/card.py`'s own module docstring: "Print, market, and
+    collector fields are deliberately absent: no images, prices, artists,
+    ..." - not a description-grammar gap at all). Read that too and
+    something else will stand here next.
+    """
     return gap_example(
         "an unread static can't-be-blocked restriction",
         lambda printing: (
@@ -170,7 +226,7 @@ def _is_static_evasion_line(line: str) -> bool:
 def test_april_oneils_power_3_or_greater_restriction_is_enforced():
     """April O'Neil, Kunoichi Trainee: "can't be blocked by creatures with
     power 3 or greater" - Wurmcoil Engine's power 6 rules the block out
-    (CR 509.1a)."""
+    (CR 509.1b)."""
     scenario = duel("April O'Neil, Kunoichi Trainee", "Wurmcoil Engine").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
@@ -309,3 +365,524 @@ def test_dress_down_leaves_no_unparsed_evasion_notice_behind():
 
     assert scenario.game.can_block(bears, april)
     assert scenario.game.evasion_notices == []
+
+
+# -- a bare creature type: Juggernaut ----------------------------------------
+
+
+def test_juggernaut_is_refused_by_a_wall():
+    """Juggernaut: "This creature can't be blocked by Walls." - a bare CR
+    205.3m creature type with no "creature(s)" noun at all, unlike every
+    adjective-plus-noun shape above."""
+    scenario = duel("Juggernaut", "Wall of Omens").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    juggernaut = scenario.creature("Juggernaut")
+    wall = scenario.creature("Wall of Omens", "bob")
+    scenario.attack_with(juggernaut)
+
+    assert not scenario.game.can_block(wall, juggernaut)
+    with pytest.raises(ValueError, match="Walls"):
+        scenario.block(juggernaut, wall)
+    assert scenario.game.evasion_notices == []
+
+
+def test_juggernaut_is_blockable_by_a_non_wall():
+    scenario = duel("Juggernaut", "Grizzly Bears").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    juggernaut = scenario.creature("Juggernaut")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(juggernaut)
+
+    assert scenario.game.can_block(bears, juggernaut)
+    scenario.block(juggernaut, bears)
+    assert scenario.game.is_blocked(juggernaut)
+
+
+# -- a colour: Vine Mare ------------------------------------------------------
+
+
+def test_vine_mare_is_refused_by_a_black_creature():
+    """Vine Mare: "This creature can't be blocked by black creatures." (CR
+    105.1) - a card not in the deck pool before this task."""
+    scenario = duel("Vine Mare", "Carrion Feeder").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    mare = scenario.creature("Vine Mare")
+    feeder = scenario.creature("Carrion Feeder", "bob")
+    scenario.attack_with(mare)
+
+    assert not scenario.game.can_block(feeder, mare)
+    with pytest.raises(ValueError, match="black creatures"):
+        scenario.block(mare, feeder)
+
+
+def test_vine_mare_is_blockable_by_a_non_black_creature():
+    scenario = duel("Vine Mare", "Grizzly Bears").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    mare = scenario.creature("Vine Mare")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(mare)
+
+    assert scenario.game.can_block(bears, mare)
+    scenario.block(mare, bears)
+    assert scenario.game.is_blocked(mare)
+
+
+# -- a card type: Audacious Infiltrator --------------------------------------
+
+
+def test_audacious_infiltrator_is_refused_by_an_artifact_creature():
+    """Audacious Infiltrator: "This creature can't be blocked by artifact
+    creatures." - the same card-type adjective `_CREATURE_DESCRIPTION_RE`
+    already reads for the self-block half (Hinterland Drake), now proved on
+    the attacker's own evasion half too."""
+    scenario = duel("Audacious Infiltrator", "Ornithopter").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    infiltrator = scenario.creature("Audacious Infiltrator")
+    thopter = scenario.creature("Ornithopter", "bob")
+    scenario.attack_with(infiltrator)
+
+    assert not scenario.game.can_block(thopter, infiltrator)
+    with pytest.raises(ValueError, match="artifact creatures"):
+        scenario.block(infiltrator, thopter)
+
+
+def test_audacious_infiltrator_is_blockable_by_a_non_artifact_creature():
+    scenario = duel("Audacious Infiltrator", "Grizzly Bears").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    infiltrator = scenario.creature("Audacious Infiltrator")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(infiltrator)
+
+    assert scenario.game.can_block(bears, infiltrator)
+    scenario.block(infiltrator, bears)
+    assert scenario.game.is_blocked(infiltrator)
+
+
+# -- a keyword the blocker must have: Skyscythe Engulfer ---------------------
+
+
+def test_skyscythe_engulfer_is_refused_by_a_flier():
+    """Skyscythe Engulfer: "This creature can't be blocked by creatures with
+    flying." - the blocker's own keyword (CR 702), off `Keyword`'s closed
+    vocabulary, read the same way `_CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE`
+    already reads "except by creatures with `<keyword>`"."""
+    scenario = duel("Skyscythe Engulfer", "Ornithopter").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    engulfer = scenario.creature("Skyscythe Engulfer")
+    thopter = scenario.creature("Ornithopter", "bob")
+    scenario.attack_with(engulfer)
+
+    assert not scenario.game.can_block(thopter, engulfer)
+    with pytest.raises(ValueError, match="creatures with flying"):
+        scenario.block(engulfer, thopter)
+
+
+def test_skyscythe_engulfer_is_blockable_by_a_non_flier():
+    scenario = duel("Skyscythe Engulfer", "Wurmcoil Engine").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    engulfer = scenario.creature("Skyscythe Engulfer")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.attack_with(engulfer)
+
+    assert scenario.game.can_block(wurm, engulfer)
+    scenario.block(engulfer, wurm)
+    assert scenario.game.is_blocked(engulfer)
+
+
+# -- a toughness comparison: Ghost of Ramirez DePietro -----------------------
+
+
+def test_ghost_of_ramirez_depietros_toughness_restriction_is_enforced():
+    """Ghost of Ramirez DePietro: "can't be blocked by creatures with
+    toughness 3 or greater." - the mirror of Questing Beast's power
+    comparison, against the blocker's toughness instead."""
+    scenario = duel("Ghost of Ramirez DePietro", "Wall of Omens").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    ghost = scenario.creature("Ghost of Ramirez DePietro")
+    wall = scenario.creature("Wall of Omens", "bob")
+    scenario.attack_with(ghost)
+
+    assert not scenario.game.can_block(wall, ghost)
+    with pytest.raises(ValueError, match="toughness 3 or greater"):
+        scenario.block(ghost, wall)
+
+
+def test_ghost_of_ramirez_depietro_is_blockable_by_low_toughness():
+    scenario = duel("Ghost of Ramirez DePietro", "Memnite").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    ghost = scenario.creature("Ghost of Ramirez DePietro")
+    memnite = scenario.creature("Memnite", "bob")
+    scenario.attack_with(ghost)
+
+    assert scenario.game.can_block(memnite, ghost)
+    scenario.block(ghost, memnite)
+    assert scenario.game.is_blocked(ghost)
+
+
+# -- granted, not printed: Field of Reality / Hedgewitch's Mask --------------
+
+
+def test_field_of_reality_grants_the_restriction_through_an_aura():
+    """Field of Reality: "Enchanted creature can't be blocked by Spirits." -
+    the identical "by `<description>`" grammar arriving as an Aura's own
+    layer 6 grant (CR 613.1f, `layers._ATTACHED_CREATURE_CANT_BE_BLOCKED_RE`)
+    rather than printed on the attacker, proving the reader is not keyed to
+    where the sentence came from."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Field of Reality"],
+            battlefield=["Grizzly Bears", "Island", "Island", "Island"],
+        )
+        .player("bob", battlefield=["Dark Revenant", "Llanowar Elves"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    islands = scenario.untapped_sources("Island", "Island", "Island", username="alice")
+    scenario.cast_and_resolve("Field of Reality", *islands, targets=[bears])
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    revenant = scenario.creature("Dark Revenant", "bob")
+    elves = scenario.creature("Llanowar Elves", "bob")
+
+    assert not scenario.game.can_block(revenant, bears)
+    with pytest.raises(ValueError, match="Spirits"):
+        scenario.block(bears, revenant)
+    assert scenario.game.can_block(elves, bears), "Llanowar Elves is not a Spirit"
+    scenario.block(bears, elves)
+    assert scenario.game.is_blocked(bears)
+
+
+def test_hedgewitchs_mask_grants_a_power_qualified_restriction_through_an_equipment():
+    """Hedgewitch's Mask: "Equipped creature can't be blocked by creatures
+    with power 4 or greater." - the power-qualified shape granted through an
+    Equipment instead of printed."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Grizzly Bears", "Hedgewitch's Mask", "Plains", "Plains"])
+        .player("bob", battlefield=["Wurmcoil Engine", "Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    mask = scenario.find("Hedgewitch's Mask", Zone.BATTLEFIELD, "alice")
+    plains_1, plains_2 = scenario.untapped_sources("Plains", "Plains", username="alice")
+
+    activation = equip_activation(scenario.game, mask, bears, "alice")
+    payment = activation.begin_paying()
+    payment.tap_for_mana(plains_1, mana_from(plains_1))
+    payment.tap_for_mana(plains_2, mana_from(plains_2))
+    payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    memnite = scenario.creature("Memnite", "bob")
+
+    assert not scenario.game.can_block(wurm, bears)
+    with pytest.raises(ValueError, match="power 4 or greater"):
+        scenario.block(bears, wurm)
+    scenario.block(bears, memnite)
+    assert scenario.game.is_blocked(bears)
+
+
+# -- corner case: a changeling blocker already has every creature type ------
+
+
+def test_a_changeling_blocker_is_refused_the_same_as_a_printed_wall():
+    """CR 702.73a: "Changeling ... means 'This object is every creature
+    type.'" Amoeboid Changeling's own changeling keyword makes it a Wall the
+    same way a printed Wall creature is one - Juggernaut's restriction
+    reaches it exactly the same way."""
+    scenario = duel("Juggernaut", "Amoeboid Changeling").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    juggernaut = scenario.creature("Juggernaut")
+    changeling = scenario.creature("Amoeboid Changeling", "bob")
+    scenario.attack_with(juggernaut)
+
+    assert "Wall" in scenario.game.characteristics_of(changeling).subtypes
+    assert not scenario.game.can_block(changeling, juggernaut)
+    with pytest.raises(ValueError, match="Walls"):
+        scenario.block(juggernaut, changeling)
+
+
+# -- corner case: a creature that becomes a Wall mid-turn --------------------
+
+
+def test_a_creature_that_gains_every_type_mid_turn_is_refused_too():
+    """CR 613.5: the restriction reads whatever the layer system leaves the
+    blocker with *right now*, not what was true when the turn started.
+    Amoeboid Changeling's own "Target creature gains all creature types
+    until end of turn." reaching Grizzly Bears mid-turn makes it a Wall too,
+    the same way Dress Down's removal is read live for the unconditional
+    shape."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Juggernaut"])
+        .player("bob", battlefield=["Amoeboid Changeling", "Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    juggernaut = scenario.creature("Juggernaut", "alice")
+    changeling = scenario.creature("Amoeboid Changeling", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    changeling.summoning_sick = False
+
+    assert "Wall" not in scenario.game.characteristics_of(bears).subtypes
+
+    scenario.pass_priority("alice")
+    scenario.activate(changeling, index=0, targets=[bears])
+    scenario.resolve_top()
+
+    assert "Wall" in scenario.game.characteristics_of(bears).subtypes
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(juggernaut)
+
+    assert not scenario.game.can_block(bears, juggernaut)
+    with pytest.raises(ValueError, match="Walls"):
+        scenario.block(juggernaut, bears)
+
+
+# -- corner case: two independent restrictions on one attacker --------------
+
+
+def test_two_independent_restrictions_are_each_enforced_on_their_own():
+    """Juggernaut's own printed "can't be blocked by Walls." plus Hedgewitch's
+    Mask's granted "can't be blocked by creatures with power 4 or greater."
+    on the same attacker (CR 509.1b: "Different evasion abilities are
+    cumulative.", looked up this session): a Wall is refused by the first, a
+    high-power non-Wall by the second, and a low-power non-Wall is let
+    through by both.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Juggernaut", "Hedgewitch's Mask", "Plains", "Plains"])
+        .player("bob", battlefield=["Wall of Omens", "Wurmcoil Engine", "Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    juggernaut = scenario.creature("Juggernaut", "alice")
+    mask = scenario.find("Hedgewitch's Mask", Zone.BATTLEFIELD, "alice")
+    plains_1, plains_2 = scenario.untapped_sources("Plains", "Plains", username="alice")
+
+    activation = equip_activation(scenario.game, mask, juggernaut, "alice")
+    payment = activation.begin_paying()
+    payment.tap_for_mana(plains_1, mana_from(plains_1))
+    payment.tap_for_mana(plains_2, mana_from(plains_2))
+    payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(juggernaut)
+    wall = scenario.creature("Wall of Omens", "bob")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    memnite = scenario.creature("Memnite", "bob")
+
+    with pytest.raises(ValueError, match="Walls"):
+        scenario.block(juggernaut, wall)
+    with pytest.raises(ValueError, match="power 4 or greater"):
+        scenario.block(juggernaut, wurm)
+    scenario.block(juggernaut, memnite)
+    assert scenario.game.is_blocked(juggernaut)
+    assert scenario.game.evasion_notices == []
+
+
+# -- a disjunction of two qualities: Blazing Torch ---------------------------
+
+
+def test_blazing_torch_grants_a_disjunctive_restriction_through_an_equipment():
+    """Blazing Torch: "Equipped creature can't be blocked by Vampires or
+    Zombies." - a disjunction of two bare creature types (CR 205.3m), each
+    read by the identical single-description grammar and satisfied when
+    either alternative matches."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Grizzly Bears", "Blazing Torch", "Mountain"])
+        .player("bob", battlefield=["Carrion Feeder", "Falkenrath Pit Fighter", "Llanowar Elves"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    torch = scenario.find("Blazing Torch", Zone.BATTLEFIELD, "alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    activation = equip_activation(scenario.game, torch, bears, "alice")
+    payment = activation.begin_paying()
+    payment.tap_for_mana(mountain, mana_from(mountain))
+    payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    zombie = scenario.creature("Carrion Feeder", "bob")
+    vampire = scenario.creature("Falkenrath Pit Fighter", "bob")
+    elves = scenario.creature("Llanowar Elves", "bob")
+
+    assert not scenario.game.can_block(zombie, bears)
+    with pytest.raises(ValueError, match="Vampires or Zombies"):
+        scenario.block(bears, zombie)
+    assert not scenario.game.can_block(vampire, bears)
+    with pytest.raises(ValueError, match="Vampires or Zombies"):
+        scenario.block(bears, vampire)
+    scenario.block(bears, elves)
+    assert scenario.game.is_blocked(bears)
+    assert scenario.game.evasion_notices == []
+
+
+# -- a quality further gated by a board condition: Arctic Foxes -------------
+
+
+def test_arctic_foxes_condition_gated_quality_is_enforced():
+    """Arctic Foxes: "can't be blocked by creatures with power 2 or greater
+    as long as defending player controls a snow land." - both the blocker's
+    power and the board condition are read, and both are required (CR
+    509.1b; "defending player controls a snow land" is read through the
+    pre-existing `Game.condition_holds`/`condition_is_readable` registry,
+    not a new condition reader)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Arctic Foxes"])
+        .player("bob", battlefield=["Snow-Covered Forest", "Wurmcoil Engine", "Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    foxes = scenario.creature("Arctic Foxes")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    memnite = scenario.creature("Memnite", "bob")
+    scenario.attack_with(foxes)
+
+    assert not scenario.game.can_block(wurm, foxes)
+    with pytest.raises(ValueError, match="power 2 or greater"):
+        scenario.block(foxes, wurm)
+    scenario.block(foxes, memnite)
+    assert scenario.game.is_blocked(foxes)
+    assert scenario.game.evasion_notices == []
+
+
+def test_arctic_foxes_restriction_is_lifted_without_a_snow_land():
+    """The same quality comparison, with the board condition false: CR
+    509.1b's restriction never applies, so every blocker is legal and no
+    `EvasionNotice` is recorded either - the condition is read, not merely
+    assumed true."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Arctic Foxes"])
+        .player("bob", battlefield=["Forest", "Wurmcoil Engine"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    foxes = scenario.creature("Arctic Foxes")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.attack_with(foxes)
+
+    assert scenario.game.can_block(wurm, foxes)
+    scenario.block(foxes, wurm)
+    assert scenario.game.is_blocked(foxes)
+    assert scenario.game.evasion_notices == []
+
+
+# -- an elided-noun "and/or" adjective list: Sacred Knight -------------------
+
+
+def test_sacred_knight_is_refused_by_either_colour_alone():
+    """Sacred Knight: "This creature can't be blocked by black and/or red
+    creatures." - an adjective *list* sharing one trailing noun phrase
+    (`_parse_elided_noun_list`), unlike Blazing Torch's "Vampires or
+    Zombies", whose two bare subtypes need nothing reattached. A black
+    creature and a red creature are each refused on their own; "and/or"
+    ("either or both") is the same inclusive-or
+    `_CreatureDescriptionAlternatives` already gives a plain "or" list.
+
+    No second real printing of this exact "by `<adjective list>` and/or
+    `<adjective>` creatures" connective exists anywhere in Scryfall's card
+    pool (checked exhaustively this task, including granted-through-an-
+    Aura/Equipment and the self-block/compound shapes the identical parser
+    also reads) - the dated dead-end is recorded in MEMORY.md. Generality is
+    proven instead along the axis that does vary on this one card: either
+    colour alone, both at once, and neither.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Sacred Knight"])
+        .player(
+            "bob",
+            battlefield=["Carrion Feeder", "Goblin Guide", "Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    knight = scenario.creature("Sacred Knight")
+    black_blocker = scenario.creature("Carrion Feeder", "bob")
+    red_blocker = scenario.creature("Goblin Guide", "bob")
+    green_blocker = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(knight)
+
+    assert not scenario.game.can_block(black_blocker, knight)
+    with pytest.raises(ValueError, match="black and/or red creatures"):
+        scenario.block(knight, black_blocker)
+    assert not scenario.game.can_block(red_blocker, knight)
+    with pytest.raises(ValueError, match="black and/or red creatures"):
+        scenario.block(knight, red_blocker)
+    assert scenario.game.can_block(green_blocker, knight)
+    scenario.block(knight, green_blocker)
+    assert scenario.game.is_blocked(knight)
+    assert scenario.game.evasion_notices == []
+
+
+def test_elided_noun_and_or_list_is_read_off_a_self_block_restriction_too():
+    """The same widening lives in the one grammar the evasion half, the
+    self-block half, and their "can't block or be blocked by <description>"
+    compound all share (`combat._parse_creature_description`) - proven here
+    directly against `reads_self_combat_restriction_line`/`self_block_
+    restriction_refusal`'s own reader, since no real printing carries this
+    connective on the "can't block ..." (CR 509.1b) half."""
+    assert reads_self_combat_restriction_line(
+        "This creature can't block black and/or red creatures.", "Some Zombie"
+    )
+
+
+def test_a_plain_and_adjective_list_is_not_guessed_as_either_or():
+    """ "white and blue creatures" is ambiguous - it may mean a creature that
+    is both colours - unlike "and/or" (702.9b's own "flying and/or reach"
+    wording) or a plain "or". The elided-noun list reads only the
+    unambiguous connectives and leaves a plain "and" unread, so it fails
+    closed with a notice instead of a guessed inclusive-or."""
+    assert not reads_self_combat_restriction_line(
+        "This creature can't be blocked by white and blue creatures.", "Some Knight"
+    )
+    assert not reads_self_combat_restriction_line(
+        "This creature can't be blocked by artifact, black, and red creatures.", "Some Knight"
+    )
+    assert reads_self_combat_restriction_line(
+        "This creature can't be blocked by white or blue creatures.", "Some Knight"
+    )
+    assert reads_self_combat_restriction_line(
+        "This creature can't be blocked by artifact, black, and/or red creatures.", "Some Knight"
+    )

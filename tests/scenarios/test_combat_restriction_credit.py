@@ -7,8 +7,8 @@ reported each line `static_unaudited`: `_static_ability_category` had no
 reader to ask. Each credit calls the enforcing reader's own shapes:
 
 - "`<this>` can't be blocked [by tokens / by creatures with power N or less /
-  by creatures with greater power]" - `combat.evasion_restriction_refusal`
-  (CR 509.1a);
+  by creatures with greater power / by a single subtype, colour, card type
+  or keyword quality]" - `combat.evasion_restriction_refusal` (CR 509.1b);
 - "`<this>` can't block [`<description>`]" - `combat.
   self_block_restriction_refusal` (CR 509.1b);
 - "Equip abilities you activate that target this creature cost {N} less to
@@ -65,8 +65,19 @@ def test_a_restriction_on_other_creatures_is_not_credited() -> None:
     assert not reads_self_combat_restriction_line(
         "As long as you control a Swamp, this creature can't be blocked.", "Some Zombie"
     )
+    # Bursting Beebles' real condition - "share an artist" - has no reader
+    # at all: `models/card.py`'s own `Card` deliberately carries no artist
+    # field ("Print, market, and collector fields are deliberately absent:
+    # ... artists ..."), so this is not a description-grammar gap the way
+    # Sacred Knight's "and/or" elided-noun list was before fix-cant-be-
+    # blocked-by widened `_parse_creature_description` to read it (that
+    # widening covers evasion, self-block, and this compound alike, since
+    # all three share the one grammar) - it is a condition this engine could
+    # never answer, uncredited on purpose.
     assert not reads_self_combat_restriction_line(
-        "This creature can't be blocked by creatures with flying.", "Some Zombie"
+        "This creature can't be blocked as long as defending player controls two or more "
+        "nonland permanents that share an artist.",
+        "Some Zombie",
     )
     assert not reads_self_combat_restriction_line(
         "This creature can't block unless you pay {2}.", "Some Zombie"

@@ -3272,12 +3272,12 @@ class Game(EngineModel):
 
     evasion_notices: list[EvasionNotice] = Field(default_factory=list)
     """One entry per attacker whose own "can't be blocked" restriction text
-    (CR 509.1a) `combat.block_refusal` could read as an attempt at the shape
-    but not fully parse - a plain "can't be blocked" and "can't be blocked by
-    creatures with power N or less" are the only two read; anything else
-    fails closed here instead of a block silently going through unrestricted,
-    the same unreadable-is-not-the-same-as-no-effect record every other
-    notice list here keeps."""
+    (CR 509.1b) `combat.block_refusal` could read as an attempt at the shape
+    but not fully parse - see `combat.evasion_restriction_refusal`'s own
+    docstring for the shapes read; anything outside them fails closed here
+    instead of a block silently going through unrestricted, the same
+    unreadable-is-not-the-same-as-no-effect record every other notice list
+    here keeps."""
 
     keyword_line_notices: list[KeywordLineNotice] = Field(default_factory=list)
     """One entry per computed ability line (CR 613.5) that is part CR 702
@@ -4191,7 +4191,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 100
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 101
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4327,11 +4327,15 @@ class Game(EngineModel):
     #: `permanents_of_types` and `other_transformed_permanents_controlled_by`;
     #: `machines/casting.PlayPermission` gained `cost_increase`; and every
     #: battle card's previously unread clauses now resolve.
-    #: 98: `CardState` gained `solved` (CR 719.3b's Case designation, R0a-T5;
+    #: 98: new selector kind `layers.CreaturesControlledByQuality` for a
+    #: group-subject "can't be blocked" grant (CR 509.1b; Deepchannel Mentor,
+    #: Graaz, Tanglewalker) - fix-cant-be-blocked-by, renumbered from 96 then 97 at
+    #: merge.
+    #: 99: `CardState` gained `solved` (CR 719.3b's Case designation, R0a-T5;
     #: renumbered from 96 at the R0a integration).
-    #: 99: `CardState` gained `unlocked_doors` (CR 709.5c's Room designations,
+    #: 100: `CardState` gained `unlocked_doors` (CR 709.5c's Room designations,
     #: R0a-T6; renumbered from 96 at the R0a integration).
-    #: 100: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
+    #: 101: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
     #: Start your engines! speed, R0a-T8; renumbered from 96 at the R0a
     #: integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
@@ -5239,10 +5243,10 @@ class Game(EngineModel):
     turn not yet announced and raise them all again as one batch - the
     second.
 
-    Bumped 97 -> 98 (R0a-T5, renumbered from 95 -> 96 at the R0a
+    Bumped 98 -> 99 (R0a-T5, renumbered from 95 -> 96 at the R0a
     integration): `CardState` gained `solved` (CR 719.3b's Case
     designation) - a field added to a persisted model, the bump rule's first
-    bullet. A version-97 Case would decode unsolved forever and its "Solved"
+    bullet. A version-98 Case would decode unsolved forever and its "Solved"
     abilities would never be available. Refused instead.
     """
 

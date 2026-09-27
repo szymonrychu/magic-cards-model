@@ -1951,7 +1951,7 @@ def _static_ability_category(
         # (`combat.total_attack_cost`), gated on a designation or not.
         return HANDLED
     if reads_self_combat_restriction_line(text, effective_name):
-        # CR 509.1a / 509.1b: `combat.evasion_restriction_refusal` and
+        # CR 509.1b: `combat.evasion_restriction_refusal` and
         # `combat.self_block_restriction_refusal` refuse the block.
         return HANDLED
     if keyword_machine.is_equip_discount_for_this_line(text):
