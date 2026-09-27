@@ -2487,7 +2487,10 @@ def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card
         if not found and not any(subtype.lower() in printing_subtypes for subtype in subtypes):
             return None
         candidates.extend(found)
-    for card_type in required:
+    # Sorted: `required` is a set, and its iteration order follows the
+    # string hash seed, so an unsorted walk handed the behavioural sweep a
+    # different first probe from one process to the next (a flaky golden).
+    for card_type in sorted(required, key=lambda t: t.value):
         found = [c for c in _cards_by_type().get(card_type, ()) if not forbidden & set(c.types)]
         if not found and card_type not in printing.types:
             return None

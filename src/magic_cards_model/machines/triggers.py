@@ -1679,9 +1679,13 @@ def _required_becomes_tapped_subtype(condition: str) -> tuple[str, ...] | None:
     return _parse_subtype_list(match.group("subtype"))
 
 
+#: An optional card-type word may follow the subtype - Boggart Mischief's "a
+#: Goblin creature you control dies" (CR 205.3m's subtype, then CR 205.2a's
+#: card type, which `_types_match` checks separately).
 _DYING_SUBTYPE = re.compile(
     r"^(?:an?|another|one or more) (?:nontoken )?"
     r"(?P<subtype>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
+    r"(?: (?:artifact|creature|enchantment|land|planeswalker|permanent)s?)?"
     r"(?: you control| an opponent controls)?"
     r" (?:dies\b|die\b|is put into a graveyard from the battlefield\b|"
     r"are put into a graveyard from the battlefield\b)"
