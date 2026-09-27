@@ -1115,7 +1115,10 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
         # CR 310.9b: "A battle's protector can never attack it. A battle can
         # be attacked by any attacking player for whom its protector is a
         # defending player. Notably, a Siege battle can be attacked by its
-        # own controller." Who controls it is not the question.
+        # own controller." Who controls it is not the question. Any in-game
+        # protector other than the active player is treated as a defending
+        # player, which holds while every opponent is one (a two-player
+        # game, CR 506.2, or the attack multiple players option, CR 506.2a).
         protector = permanent.protector
         if protector == active:
             return (
@@ -2283,8 +2286,8 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
 def defending_player(game: "Game", defender: TargetRef) -> str | None:
     """Who is defending against an attack on `defender` (CR 508.5): the player
     themselves, the controller of a planeswalker, or the *protector* of a
-    battle - never the battle's controller (CR 310.9d), which for a Siege is
-    the one player who cannot be defending it (CR 310.12a).
+    battle (CR 310.9d), which for a Siege is never its controller (CR
+    310.12a).
 
     `CardState.protector` is kept after the battle leaves the battlefield or
     stops being a battle (CR 310.9g), which is CR 508.5's "the protector of

@@ -115,7 +115,7 @@ def test_the_protector_can_never_attack_the_battle_it_protects():
         scenario.attack_with(guide, defending=siege)
 
 
-def test_the_protector_blocks_and_the_attacking_controller_cannot():
+def test_the_protector_blocks_a_creature_attacking_the_battle():
     """CR 310.9c / 509.1a: only the protector's creatures may block a creature
     attacking the battle it protects."""
     scenario = (
@@ -228,7 +228,7 @@ def test_multiplayer_only_the_protector_may_block_for_the_battle():
 
 
 def test_a_protector_who_leaves_the_game_is_replaced():
-    """CR 704.5y / 310.11: bob concedes, so he can no longer protect carol's
+    """CR 704.5x / 310.11: bob concedes, so he can no longer protect carol's
     Siege, and carol's only remaining opponent becomes its protector."""
     scenario, siege = _three_player_siege_board()
 
@@ -278,3 +278,69 @@ def test_a_staged_siege_with_no_protector_is_given_one():
     scenario.game.check_state_based_actions()
 
     assert siege.protector == "bob"
+
+
+def test_a_copy_entering_as_a_siege_chooses_its_protector_as_it_enters():
+    """CR 310.9a: "As a battle enters the battlefield, its controller chooses a
+    player to be its protector." Clever Impersonator entering as a copy of a
+    Siege (CR 614.1c) enters as a battle, so the choice is made as it enters,
+    not left to a later state-based action (CR 704.5x)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Clever Impersonator"])
+        .player("bob", battlefield=[OTHER_SIEGE])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = scenario.find(OTHER_SIEGE, Zone.BATTLEFIELD, "bob")
+    scenario.will_choose_cards(siege, username="alice", source="Clever Impersonator")
+
+    copy = scenario.put_onto_battlefield("Clever Impersonator", "alice")
+
+    assert scenario.game.characteristics_of(copy).name == OTHER_SIEGE
+    assert copy.protector == "bob"
+
+
+def test_no_new_protector_while_the_battle_is_being_attacked():
+    """CR 704.5x applies only if "no attacking creatures are currently
+    attacking that battle": bob concedes while alice attacks the Siege he
+    protects, so it keeps no protector in the game until combat is over."""
+    scenario, siege = _three_player_siege_board()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Goblin Guide", "alice"), defending=siege)
+    scenario.pass_until_resolved()
+
+    scenario.game.concede("bob")
+    scenario.game.check_state_based_actions()
+
+    assert siege.zone is Zone.BATTLEFIELD
+    assert siege.protector == "bob"
+
+
+def test_the_defending_player_outlives_the_battle_leaving_the_battlefield():
+    """CR 508.5: the defending player is "the protector of the battle that
+    creature was attacking before it was removed from combat"."""
+    scenario = (
+        Scenario().player("alice", hand=[SIEGE], battlefield=["Goblin Guide"]).player("bob").build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = _enter_siege(scenario, SIEGE, "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Goblin Guide", "alice"), defending=siege)
+    defender = TargetRef.coerce(siege)
+
+    scenario.game.destroy(siege)
+
+    assert siege.zone is Zone.GRAVEYARD
+    assert defending_player(scenario.game, defender) == "bob"
+
+
+def test_a_siege_controller_cannot_choose_themselves_as_protector():
+    """CR 310.12a: the protector is chosen "from among its controller's
+    opponents" - alice is not one of hers."""
+    scenario = Scenario().player("alice", hand=[SIEGE]).player("bob").player("carol").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("alice", username="alice", source=SIEGE)
+
+    with pytest.raises(ValueError, match="'alice' is not among the legal choices"):
+        scenario.put_onto_battlefield(SIEGE, "alice")

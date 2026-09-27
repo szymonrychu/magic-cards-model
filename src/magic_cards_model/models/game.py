@@ -11719,11 +11719,13 @@ class Game(EngineModel):
             # CR 310.9a: "As a battle enters the battlefield, its controller
             # chooses a player to be its protector" (a Siege's from among
             # their opponents, CR 310.12a). A new object (CR 400.7) never
-            # keeps an old protector. The printed up face gates the computed
-            # read, so a non-battle entering costs no board computation.
+            # keeps an old protector. The printed up face, or an "enter as a
+            # copy" choice (CR 614.1c, a layer-1 effect the printed face does
+            # not show), gates the computed read, so any other non-battle
+            # entering costs no board computation.
             card_state.protector = (
                 combat_rules.choose_protector(self, card_state)
-                if Type.BATTLE in card_state.types
+                if (Type.BATTLE in card_state.types or event.entering_as_copy is not None)
                 and Type.BATTLE in self.characteristics_of(card_state).types
                 else None
             )

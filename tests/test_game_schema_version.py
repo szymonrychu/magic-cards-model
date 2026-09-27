@@ -1553,3 +1553,43 @@ def test_a_snapshot_written_before_ecl_t8_zone_resets_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `CardState` gained `protector` (CR 310.9).
+_SCHEMA_VERSION_BEFORE_BATTLE_PROTECTOR = 95
+
+
+def test_a_snapshot_written_before_battle_protectors_is_refused() -> None:
+    """A version-95 dump's battles carry no `protector`: decoded as current,
+    each would default to `None`, and a battle nobody attacks would then be
+    handed a protector chosen afresh by CR 704.5x - possibly a different
+    opponent than the one chosen as it entered. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BATTLE_PROTECTOR
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BATTLE_PROTECTOR
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BATTLE_PROTECTOR}",
+    ):
+        Game.model_validate(dumped)
+
+
+def test_a_battle_protector_survives_a_dump_and_reload() -> None:
+    """CR 310.9: carol's Siege keeps bob - the opponent she chose - as its
+    protector across a save and load."""
+    scenario = (
+        Scenario()
+        .player("alice")
+        .player("bob")
+        .player("carol", hand=["Invasion of Zendikar"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose("bob", username="carol", source="Invasion of Zendikar")
+    scenario.put_onto_battlefield("Invasion of Zendikar", "carol")
+
+    reloaded = Game.model_validate(scenario.game.model_dump(mode="json"))
+
+    (siege,) = [state for state in reloaded.battlefield if state.name == "Invasion of Zendikar"]
+    assert siege.protector == "bob"
