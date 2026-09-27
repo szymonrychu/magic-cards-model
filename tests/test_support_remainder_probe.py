@@ -95,20 +95,25 @@ def _clauses_with_reason(printing, prefix):
 # --- the reported examples ------------------------------------------------
 
 
-def test_pride_of_conquerors_instead_rider_is_an_unparsed_remainder():
-    """The mass pump reads "Creatures you control get +1/+1" and never reads
-    the city's-blessing "instead" sentence after it."""
+def test_pride_of_conquerors_instead_rider_is_now_read():
+    """These two were the reported examples: the mass pump used to read only
+    "Creatures you control get +1/+1" and drop the whole city's-blessing
+    "instead" sentence as an unparsed remainder (see `_mass_pump_spell_
+    effect`'s own docstring and `tests/scenarios/test_mass_pump_instead_
+    upgrade.py`, which plays both branches). `_parse_mass_pump_instead_
+    upgrade` now reads it, so this clause is `handled`, not `notice`."""
     printing = card("Pride of Conquerors")
-    rider = "If you have the city's blessing, those creatures get +2/+2 until end of turn instead."
-    assert unparsed_remainder(effect_for(printing.name, printing.oracle_text)) == rider
+    effect = effect_for(printing.name, printing.oracle_text)
+    assert unparsed_remainder(effect) is None
     (spell,) = [c for c in card_support(printing).clauses if c.kind == "spell"]
-    assert spell.outcome == "notice"
-    assert spell.reason == _REMAINDER + rider
+    assert spell.outcome == "handled"
 
 
-def test_summon_knights_of_round_chapter_five_counter_sentence_is_an_unparsed_remainder():
-    """Chapter V pumps the other creatures and never puts the indestructible
-    counters on them."""
+def test_summon_knights_of_round_chapter_five_counter_sentence_is_now_read():
+    """Chapter V used to pump the other creatures and drop the whole
+    indestructible-counter sentence (see `_mass_pump_ability_effect`'s own
+    docstring and `tests/scenarios/test_mass_pump_counter_on_each.py`, which
+    plays it end to end). `_parse_mass_pump_counter_on_each` now reads it."""
     printing = card("Summon: Knights of Round")
     (chapter_five,) = [
         a
@@ -116,11 +121,10 @@ def test_summon_knights_of_round_chapter_five_counter_sentence_is_an_unparsed_re
         if isinstance(a, TriggeredAbility) and "indestructible counter" in a.effect
     ]
     effect = trigger_effect_for(printing.name, chapter_five.event, chapter_five.effect)
-    assert unparsed_remainder(effect) == "Put an indestructible counter on each of them."
+    assert unparsed_remainder(effect) is None
     (clause,) = [c for c in card_support(printing).clauses if c.text == chapter_five.text]
-    assert clause.outcome == "notice"
-    assert clause.reason == _REMAINDER + "Put an indestructible counter on each of them."
-    assert card_support(printing).status == "notice"
+    assert clause.outcome == "handled"
+    assert card_support(printing).status == "handled"
 
 
 def test_the_marker_is_proven_on_a_third_printing():
