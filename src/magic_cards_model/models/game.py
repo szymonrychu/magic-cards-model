@@ -17199,10 +17199,6 @@ class Game(EngineModel):
         negated = _negated_card_type_named(wanted)
         if negated is not None:
             return negated not in source.types
-        color = _COLOR_WORDS.get(wanted)
-        if color is not None:
-            return color in source.colors
-        return False
         return bool(_has_color_quality(wanted, source.colors))
 
     def protection_quality_against(self, target: CardState, source: CardState) -> str | None:
@@ -17733,10 +17729,6 @@ class Game(EngineModel):
         negated = _negated_card_type_named(wanted)
         if negated is not None:
             return negated not in types
-        color = _COLOR_WORDS.get(wanted)
-        if color is not None:
-            return color in colors
-        return False
         return bool(_has_color_quality(wanted, colors))
 
     def protection_from_damage(self, event: ReplaceableEvent) -> str | None:
