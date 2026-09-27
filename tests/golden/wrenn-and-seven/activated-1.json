@@ -42,17 +42,13 @@
         "kind": "choose_cards",
         "player": "alice",
         "players": [],
-        "prompt": "choose a land card(s) to put onto the battlefield",
+        "prompt": "choose any number of cards to put onto the battlefield",
         "source": "Wrenn and Seven"
       }
     ],
-    "fields_changed": ["continuous_effects", "turn_facts", "turn_history"],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Forest@alice#4": {
-        "zone": ["hand", "battlefield"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },

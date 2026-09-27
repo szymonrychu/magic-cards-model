@@ -32,7 +32,7 @@ cancelled.
 
 import re
 from collections import Counter as _MultiSet
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Callable, Hashable, Iterable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
@@ -654,8 +654,13 @@ _SPEND_CAST_CLAUSE = re.compile(
 #: The singular "activate an ability of a Villain source" (Villainous
 #: Hideout, Cargo Ship, Ixalli's Lorekeeper) is the same restriction worded
 #: for one ability at a time (CR 106.6).
+#: The trailing "of the chosen type" is `_SPEND_CAST_CLAUSE`'s own `chosen`
+#: group on the activation side - Eclipsed Realms' "activate an ability of a
+#: source of the chosen type" (CR 106.6, the answer read off CR 614.12a's
+#: choice on the source exactly as the cast half reads it).
 _SPEND_ACTIVATE_CLAUSE = re.compile(
-    r"^activate (?:abilities|an ability)(?: of (?P<quality>.+?)(?: sources?)?)?$",
+    r"^activate (?:abilities|an ability)"
+    r"(?: of (?P<quality>.+?)(?: sources?)?(?P<chosen> of the chosen type)?)?$",
     re.IGNORECASE,
 )
 #: A rider joined onto the restriction sentence with ", and" - the
@@ -958,7 +963,10 @@ def _one_spend_clause(phrase: str, chosen_type: str | None) -> SpendClause | Non
 
     activate = _SPEND_ACTIVATE_CLAUSE.match(phrase)
     if activate is not None:
-        return _spend_clause(activate.group("quality") or "", SpendPurpose.ACTIVATE_ABILITY, None)
+        chosen = chosen_type if activate.group("chosen") else None
+        if activate.group("chosen") and chosen is None:
+            return None
+        return _spend_clause(activate.group("quality") or "", SpendPurpose.ACTIVATE_ABILITY, chosen)
     if _SPEND_CUMULATIVE_UPKEEP_CLAUSE.match(phrase):
         # CR 702.24a's cost, not a spell or an ability: no quality to read.
         return SpendClause(purpose=SpendPurpose.PAY_CUMULATIVE_UPKEEP)
@@ -1592,6 +1600,53 @@ def _unpayable_cost_message(payment: "CostPayment", sources: Iterable[CardState]
     return f"{base}: {named}"
 
 
+def _plan_life_loss(
+    context: "CostPayment | _SpendContext",
+    plan: Sequence[tuple[CardState, list[Color], ManaRestriction | None]],
+) -> int:
+    """The life `plan`'s own mana abilities take from their controller as
+    they resolve - CR 405.6c's immediate side effect, Ancient Tomb's "This
+    land deals 2 damage to you." or a "You lose 1 life." rider.
+
+    CR 601.2g activates those abilities before CR 601.2h pays the total
+    cost, so a Phyrexian symbol paid with life (CR 119.4: only with at least
+    that much life) is paid out of what is left afterwards. Each entry is
+    matched back to the ability `tap_for_mana` would activate for it - the
+    first, in printed order, carrying the same CR 106.6 restriction and able
+    to make those colours. A life-gain rider is not counted: this is only
+    ever asked to rule a plan *out*, and leaving a gain uncounted can only
+    make that answer more cautious, never let an unpayable plan through.
+    """
+    loss = 0
+    for source, colors, restriction in plan:
+        wanted_text = restriction.text if restriction is not None else None
+        matches = [
+            (index, options)
+            for scanned_source, options, scanned_restriction, _any, index in (
+                _scan_mana_candidates(context, [source])
+            )
+            if scanned_source is source
+            and (scanned_restriction.text if scanned_restriction is not None else None)
+            == wanted_text
+        ]
+        chosen = sorted(colors)
+        index = next(
+            (
+                index
+                for index, options in sorted(matches, key=lambda item: item[0])
+                if any(sorted(option) == chosen for option in options)
+            ),
+            min((index for index, _options in matches), default=None),
+        )
+        if index is None:
+            continue
+        activation = dict(tappable_mana_activations(source, context.game)).get(index)
+        rider = activation.mana.rider if activation is not None and activation.mana else None
+        if rider is not None and rider.kind in ("damage_to_controller", "lose_life"):
+            loss += rider.amount
+    return loss
+
+
 def _solve_colours(
     combo: Sequence[_Candidate],
     base_floating: dict[Color, int],
@@ -1600,9 +1655,16 @@ def _solve_colours(
     life_available: int,
     spend: ManaSpend | None = None,
     base_restricted: list[Any] | None = None,
+    life_loss: Callable[[list[tuple[CardState, list[Color], ManaRestriction | None]]], int]
+    | None = None,
 ) -> list[tuple[CardState, list[Color]]] | None:
     """The first colour assignment for this exact set of sources that pays
     `cost`, or None if none of them do.
+
+    `life_loss`, when given, is `_plan_life_loss` for this assignment: an
+    assignment whose own mana abilities' damage leaves too little life for
+    the Phyrexian symbols it pays with life (CR 601.2g-h, CR 119.4) does not
+    pay, and the next colour choice is tried instead.
 
     Only the *set* of sources is fixed by the caller; this tries every colour
     a choice source in it could make - `combo`'s options are already resolved
@@ -1627,6 +1689,16 @@ def _solve_colours(
         for (source, _options, restriction), colors in zip(combo, chosen, strict=True):
             trial.add_all(colors, snow=is_snow_source(source), restriction=restriction)
         if trial.can_pay(cost, life_available=life_available, spend=spend):
+            if life_loss is not None:
+                assignment = [
+                    (source, list(colors), restriction)
+                    for (source, _options, restriction), colors in zip(combo, chosen, strict=True)
+                ]
+                lost = life_loss(assignment)
+                if lost and not trial.can_pay(
+                    cost, life_available=max(life_available - lost, 0), spend=spend
+                ):
+                    continue
             return [
                 (source, list(colors))
                 for (source, _options, _restriction), colors in zip(combo, chosen, strict=True)
@@ -1711,6 +1783,7 @@ def _solve_auto_tap_brute_force(
                 life_available,
                 context.spend,
                 base_restricted,
+                life_loss=lambda assignment: _plan_life_loss(context, assignment),
             )
             if plan is not None:
                 chosen = {id(source): restriction for source, _o, restriction in combo}
@@ -2136,6 +2209,7 @@ def _solve_auto_tap_flow(
     caller, so the filter is applied unconditionally rather than trusted by
     convention.
     """
+    sources = list(sources)
     pool = ManaPool(
         floating=dict(base_floating),
         snow=dict(base_snow),
@@ -2173,6 +2247,23 @@ def _solve_auto_tap_flow(
             any_color=context.spend is not None and context.spend.any_color,
         )
         if plan is not None:
+            if life and life > life_available - _plan_life_loss(context, plan):
+                # CR 601.2g-h: this plan's own mana abilities deal damage
+                # (Ancient Tomb) before the Phyrexian life is paid, leaving
+                # too little of it (CR 119.4). The flow network has no notion
+                # of life at all, so a plan that avoids those sources is
+                # searched for by the exhaustive solver instead - a rare
+                # branch (life-paid Phyrexian *and* a self-damaging source
+                # in the chosen plan), so its cost is only paid here.
+                return _solve_auto_tap_brute_force(
+                    context,
+                    sources,
+                    owed=owed,
+                    base_floating=base_floating,
+                    base_snow=base_snow,
+                    base_restricted=base_restricted,
+                    life_available=life_available,
+                )
             return plan
     return None
 
@@ -2603,6 +2694,11 @@ class CardRequirement(EngineModel):
             wanted.add(lowered)
             if lowered.endswith("s"):
                 wanted.add(lowered[:-1])
+            # An irregular plural ("Elves" for `Elf`, CR 205.3m) that trimming
+            # an "s" never reaches - the subtype pool's own plural index.
+            canonical = canonical_subtype(subtype)
+            if canonical is not None:
+                wanted.add(canonical)
         return wanted
 
 

@@ -1915,8 +1915,10 @@ def _counter_kind_word(word: str) -> Counter | str:
 #: LEAVES_THE_BATTLEFIELD condition's own subject, the identical shape CR
 #: 603.6d's `_ENTERS_WITH_COUNTER_RE` already reads for an *entering*
 #: permanent, mirrored here for a *leaving* one.
+#: The kind is optional: Shadow Urchin's "a creature you control with one or
+#: more counters on it dies" names no kind (CR 122.1's counters of any kind).
 _LEAVES_WITH_COUNTER_QUALIFIER_RE = re.compile(
-    r"\bwith (?:a|an|one or more|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on it\b"
+    r"\bwith (?:a|an|one or more|\d+) (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters? on it\b"
 )
 
 
@@ -1943,8 +1945,10 @@ def _leaves_battlefield_counter_qualifier_holds(
     subject = game.find_by_id(subject_id)
     if subject is None:
         return False
-    kind = _counter_kind_word(match.group("kind"))
     counters = subject.counters if subject.zone is Zone.BATTLEFIELD else subject.last_known_counters
+    if match.group("kind") is None:
+        return any(amount > 0 for amount in counters.counts.values())
+    kind = _counter_kind_word(match.group("kind"))
     return bool(counters[kind])
 
 
@@ -2800,7 +2804,14 @@ def condition_matches(
             if not (subject is not None and getattr(subject, "token", False)):
                 return False
         power_or_toughness = _power_or_toughness_qualifier_holds(game, condition, event.subject_id)
-        return power_or_toughness is None or power_or_toughness
+        if power_or_toughness is False:
+            return False
+        # CR 603.10a: "a creature you control with one or more counters on it
+        # dies" looks back at the creature as it last existed.
+        counter_qualifier = _leaves_battlefield_counter_qualifier_holds(
+            game, condition, event.subject_id
+        )
+        return counter_qualifier is None or counter_qualifier
 
     if ability.event is TriggerEvent.TRANSFORMS:
         # CR 701.27e: "this creature transforms into `<face>`" - this object

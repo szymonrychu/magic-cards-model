@@ -55,7 +55,7 @@
         "source": "Briarbridge Patrol"
       }
     ],
-    "fields_changed": ["continuous_effects", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#1": {

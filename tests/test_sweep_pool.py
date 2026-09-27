@@ -1751,19 +1751,20 @@ def test_no_abandoned_proof_candidate_printings_pollute_the_pool():
     a reader on, an agent fetches several candidates with
     `scripts/add_card.py` and keeps only the one actually used in a scenario -
     but a candidate that loses out (Suncleanser, Decimator Beetle and
-    Cauldron Haze here, plus Tam, Mindful First-Year, which turned out not to
-    carry the needed shape at all) is still real Scryfall json sitting in
+    Cauldron Haze here) is still real Scryfall json sitting in
     `src/magic_cards_model/data/printings/`, so `sweep_pool.py`'s pool-wide
     walk (`tests.cards.pool`, a bare glob of that directory) counts its own
     unhandled clauses as new silent/notice regressions on a card no test
     exercises and no task claims. COMMON ACCEPTANCE (i): no card outside a
     task becomes silent or notice. A losing candidate search is recorded in
-    `MEMORY.md`, not kept as a live pool entry."""
+    `MEMORY.md`, not kept as a live pool entry. (Tam, Mindful First-Year was
+    one of ecl-T3's losing candidates too, but ecl-T5 proves its own chosen-
+    color/hexproof-from-its-colors readers on Tam, so it is a live, tested
+    printing and not listed here.)"""
     abandoned = {
         "Suncleanser",
         "Decimator Beetle",
         "Cauldron Haze",
-        "Tam, Mindful First-Year",
     }
     present = abandoned & set(pool())
     assert not present, f"abandoned proof-candidate printings still in the pool: {sorted(present)}"

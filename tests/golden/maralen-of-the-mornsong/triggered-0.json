@@ -1,0 +1,73 @@
+{
+  "ability": "At the beginning of each player's draw step, that player loses 3 life, searches their library for a card, puts it into their hand, then shuffles.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Maralen of the Mornsong@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Maralen of the Mornsong"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": null,
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Maralen of the Mornsong",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Forest@bob#4", "Grizzly Bears@bob#3", "Island@bob#3", "Lightning Bolt@bob#3", "Swamp@bob#3", "Opt@bob#3", "Forest@bob#5", "Grizzly Bears@bob#4", "Island@bob#4", "Lightning Bolt@bob#4", "Swamp@bob#4", "Opt@bob#4", "Forest@bob#6", "Grizzly Bears@bob#5", "Island@bob#5", "Lightning Bolt@bob#5", "Swamp@bob#5", "Opt@bob#5", "Forest@bob#7", "Grizzly Bears@bob#6", "Island@bob#6", "Lightning Bolt@bob#6", "Swamp@bob#6", "Opt@bob#6", "Forest@bob#8", "Grizzly Bears@bob#7", "Island@bob#7", "Lightning Bolt@bob#7", "Swamp@bob#7", "Opt@bob#7"],
+        "kind": "choose_cards",
+        "player": "bob",
+        "players": [],
+        "prompt": "choose up to 1 card(s) to find while searching your library",
+        "source": "Maralen of the Mornsong"
+      }
+    ],
+    "fields_changed": ["shuffles_performed"],
+    "notices": {},
+    "objects": {
+      "Forest@bob#4": {
+        "zone": ["library", "hand"]
+      }
+    },
+    "players": {
+      "bob": {
+        "life": [20, 17]
+      }
+    },
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "beginning_of_step",
+  "number": 0,
+  "recipe": {
+    "attempt": "staged",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

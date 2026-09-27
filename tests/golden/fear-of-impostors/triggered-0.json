@@ -46,7 +46,7 @@
         "source": "Fear of Impostors"
       }
     ],
-    "fields_changed": ["cast_records", "continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "spells_cast_this_turn", "turn_history"],
+    "fields_changed": ["cast_records", "continuous_effects", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "spells_cast_this_turn", "turn_counts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

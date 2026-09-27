@@ -7845,6 +7845,8 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
             source_id=source_id_of(stack_object),
         )
 
+    return effect
+
 
 #: Celestial Reunion's own shape: "Search your library for a creature card
 #: with mana value X or less, reveal it, put it into your hand, then
@@ -14075,6 +14077,34 @@ def _parse_two_counters_on_self_clause(text: str, *, for_spell: bool) -> Ability
     return effect
 
 
+#: A trigger condition whose only number is its subject's counters - Shadow
+#: Urchin's "a creature you control with one or more counters on it dies".
+_CONDITION_SUBJECT_COUNTERS_RE = re.compile(
+    r"\bwith (?:a|an|one or more) (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters? on it\b",
+    re.IGNORECASE,
+)
+
+
+def _that_many_counters_on_event_subject(game: "Game", resolving: "AbilityOnStack") -> int | None:
+    """ "that many" after a trigger condition "... with one or more
+    [`<kind>`] counters on it ..." - the number of those counters on the
+    event's subject, read as it last existed if it has left the battlefield
+    (CR 603.10a). `None` when the condition names no such counters."""
+    ability = resolving.ability
+    if not isinstance(ability, TriggeredAbility) or resolving.event is None:
+        return None
+    match = _CONDITION_SUBJECT_COUNTERS_RE.search(ability.condition)
+    if match is None or resolving.event.subject_id is None:
+        return None
+    subject = game.find_by_id(resolving.event.subject_id)
+    if not isinstance(subject, CardState):
+        return None
+    counters = subject.counters if subject.zone is Zone.BATTLEFIELD else subject.last_known_counters
+    if match.group("kind") is None:
+        return sum(counters.counts.values())
+    return counters[_counter_kind(match.group("kind"))]
+
+
 def that_many(game: "Game", stack_object: "StackObject | None" = None) -> int | None:
     """The number a "that many"/"that much" points back at - the one reader
     of the number sweep's count channel (group 0b).
@@ -14101,6 +14131,10 @@ def that_many(game: "Game", stack_object: "StackObject | None" = None) -> int | 
         return recorded
     resolving = stack_object if stack_object is not None else game.resolving
     if isinstance(resolving, AbilityOnStack) and resolving.event is not None:
+        if resolving.event.amount is None:
+            counted = _that_many_counters_on_event_subject(game, resolving)
+            if counted is not None:
+                return counted
         return resolving.event.amount
     if (
         isinstance(resolving, AbilityOnStack)

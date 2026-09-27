@@ -175,6 +175,56 @@ def test_eclipsed_realms_restricted_mana_cannot_pay_for_an_unrelated_spell():
     assert refused, "the chosen-type restriction should refuse a Bears cast"
 
 
+def test_celestial_reunion_s_optional_behold_is_an_announceable_cost():
+    """Celestial Reunion: "As an additional cost to cast this spell, you may
+    choose a creature type and behold two creatures of that type." CR
+    118.8b's optional additional cost, which `Casting.behold_chosen_type_for_
+    cost` charges - so the one enumeration a seat is told its options from
+    (`optional_additional_costs`) must name it as understood, under the
+    keyword action's own name (CR 701.4a), rather than as an unchargeable
+    sentence nobody can announce."""
+    from magic_cards_model.machines.casting import optional_additional_costs
+    from tests.cards import card
+
+    options = optional_additional_costs(card("Celestial Reunion"))
+    assert [(o.keyword, o.rule, o.repeatable, o.understood) for o in options] == [
+        ("behold", "CR 701.4a", False, True)
+    ]
+
+
+def test_eclipsed_realms_restriction_reads_both_of_its_chosen_type_clauses():
+    """Eclipsed Realms: "Spend this mana only to cast a spell of the chosen
+    type or activate an ability of a source of the chosen type." (CR 106.6).
+    Both halves must be read against the land's own CR 614.12a answer - the
+    singular "an ability of a source of the chosen type" as much as the cast
+    half - or the whole restriction reads as unread and fails closed,
+    permitting nothing at all."""
+    from magic_cards_model.machines.cost import spend_restriction
+    from magic_cards_model.models.mana import SpendPurpose
+    from tests.cards import card
+
+    scenario = Scenario().player("alice", battlefield=["Eclipsed Realms"]).build()
+    realms = scenario.find("Eclipsed Realms", Zone.BATTLEFIELD)
+    realms.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value="Goblin")
+
+    restriction = spend_restriction(card("Eclipsed Realms").oracle_text, realms)
+    assert restriction is not None and restriction.understood
+    assert [(clause.purpose, set(clause.subtypes)) for clause in restriction.clauses] == [
+        (SpendPurpose.CAST_SPELL, {"goblin"}),
+        (SpendPurpose.ACTIVATE_ABILITY, {"goblin"}),
+    ]
+
+
+def test_an_unanswered_chosen_type_activation_clause_stays_unread():
+    """No choice recorded on the source means "the chosen type" names
+    nothing yet, so the restriction must not quietly read as unrestricted."""
+    from magic_cards_model.machines.cost import spend_restriction
+    from tests.cards import card
+
+    restriction = spend_restriction(card("Eclipsed Realms").oracle_text, None)
+    assert restriction is not None and not restriction.understood
+
+
 # -- an open "choose a creature type" and its consumers (Chronicle of Victory) --
 
 

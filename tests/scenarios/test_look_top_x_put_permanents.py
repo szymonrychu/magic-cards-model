@@ -46,8 +46,7 @@ def test_ajani_is_fully_handled():
 
 def test_famished_worldsires_look_top_x_clause_is_handled():
     """Only the clause this file proves generality with - Worldsire's own
-    Devour keyword (CR 702.??) is a pre-existing, unrelated engine gap this
-    task does not own or claim to close."""
+    Devour keyword (CR 702.82c) is proven in `test_devour.py`."""
     triggered = [c for c in card_support(card(WORLDSIRE)).clauses if c.kind == "triggered"]
     assert triggered and all(c.outcome == "handled" for c in triggered), triggered
 
@@ -148,14 +147,12 @@ def test_famished_worldsire_puts_lands_tapped_and_shuffles():
         .player(
             "alice",
             hand=[WORLDSIRE],
-            # Worldsire is printed 0/0 - Devour 3 is what normally grows it
-            # (an unrelated, pre-existing engine gap: `Devour` is not a
-            # mechanic this task owns or claims to close, see
-            # `test_famished_worldsires_look_top_x_clause_is_handled`'s own
-            # docstring). Glorious Anthem's blanket "+1/+1" gives it a real,
-            # nonzero power the instant it enters, so it survives CR 704.5g's
-            # 0-toughness state-based action long enough for its own ETB
-            # trigger to see a nonzero X.
+            # Worldsire is printed 0/0 - Devour land 3 is what normally grows
+            # it (`tests/scenarios/test_devour.py`); here it devours nothing,
+            # so the X under test is Glorious Anthem's alone. The blanket
+            # "+1/+1" gives it a real, nonzero power the instant it enters,
+            # so it survives CR 704.5g's 0-toughness state-based action long
+            # enough for its own ETB trigger to see a nonzero X.
             battlefield=["Forest"] * 8 + ["Glorious Anthem"] * 2,
             library=["Mountain", "Plains", "Grizzly Bears"],
         )
@@ -167,6 +164,7 @@ def test_famished_worldsire_puts_lands_tapped_and_shuffles():
     sources = scenario.untapped_sources(*(["Forest"] * 8))
 
     scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_cards(username="alice", source=WORLDSIRE)  # devour no lands
     scenario.will_choose_cards(mountain, plains, username="alice", source=WORLDSIRE)
     scenario.cast_and_resolve(WORLDSIRE, *sources)
     scenario.game.put_triggers_on_stack()

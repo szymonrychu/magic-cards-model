@@ -4,7 +4,7 @@
     "controller": "alice",
     "modes": [],
     "on_stack": true,
-    "source": "Dragon-Kami's Egg@alice#1",
+    "source": "The Dragon-Kami Reborn@alice#1",
     "targets": [],
     "x": 0
   },
@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "The Dragon-Kami Reborn // Dragon-Kami's Egg", "A.I.M. Scientists"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "The Dragon-Kami Reborn // Dragon-Kami's Egg"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -47,12 +47,9 @@
   "kind": "dies",
   "number": 1,
   "recipe": {
-    "attempt": "other",
-    "index": 4,
+    "attempt": "itself",
+    "index": 0,
     "params": {
-      "as_token": false,
-      "owner": "alice",
-      "probe": "A.I.M. Scientists",
       "removal": "destroy"
     },
     "variant": "quiet"

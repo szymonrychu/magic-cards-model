@@ -431,3 +431,29 @@ def test_flow_solver_finds_a_plan_when_pool_already_holds_a_different_restrictio
     payment.auto_tap(sources)
     payment.pay()
     assert cavern.tapped, "auto_tap should have tapped Cavern of Souls to cover {R}"
+
+
+def test_a_mana_ability_s_own_damage_is_taken_before_phyrexian_life_is_paid():
+    """CR 601.2g-h: mana abilities are activated before the total cost is
+    paid, so Ancient Tomb's "This land deals 2 damage to you." (CR 405.6c's
+    immediate side effect) has already lowered its controller's life by the
+    time a Phyrexian `{B/P}` asks for 2 life (CR 119.4: a player can pay life
+    only if their life total is at least that much). At 2 life, Shrine of the
+    Forsaken Gods + Ancient Tomb + Doc Samson cannot pay `{2}{B}{C}{B/P}`:
+    four mana, and the 2 life the fifth symbol needs is gone once the Tomb is
+    tapped. Both solvers must say so, rather than hand `pay()` a plan it then
+    refuses - the random property test above found exactly this board."""
+    board = ["Shrine of the Forsaken Gods", "Doc Samson, Super Psychiatrist", "Ancient Tomb"]
+    brute_force, flow, _sources = _solve_both(board, ManaCost.parse("{2}{B}{C}{B/P}"), 2, None)
+    assert brute_force is None
+    assert flow is None
+
+
+def test_the_same_board_pays_once_there_is_life_to_spare_after_the_damage():
+    """The same cost and board at 4 life: the Tomb's 2 damage leaves exactly
+    the 2 life `{B/P}` asks for, so both solvers find a plan and `pay()`
+    accepts it."""
+    board = ["Shrine of the Forsaken Gods", "Doc Samson, Super Psychiatrist", "Ancient Tomb"]
+    _assert_agree(board, ManaCost.parse("{2}{B}{C}{B/P}"), 4, None)
+    brute_force, flow, _sources = _solve_both(board, ManaCost.parse("{2}{B}{C}{B/P}"), 4, None)
+    assert brute_force is not None and flow is not None

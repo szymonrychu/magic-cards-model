@@ -472,6 +472,9 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
         ("conspire", "CR 702.78a", False),
         ("collect evidence", "CR 701.59a", False),
         ("reveal", "CR 701.20a", False),
+        # Celestial Reunion's "you may choose a creature type and behold two
+        # creatures of that type" (CR 701.4a, `behold_chosen_type_for_cost`).
+        ("behold", "CR 701.4a", False),
         (None, "CR 118.8b", False),
         # Redirect Lightning's "pay 5 life or pay {2}": which half is paid is
         # CR 601.2b's announcement (`life_or_mana_additional_costs`).

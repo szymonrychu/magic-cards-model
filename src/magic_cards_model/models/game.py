@@ -8740,6 +8740,77 @@ class Game(EngineModel):
                 casting.reveal_for_cost(
                     choose(f"choose a card to reveal for {card.name}", revealable)
                 )
+        if "behold" in printed:
+            self._announce_behold_chosen_type(casting, card, caster, printed["behold"].cost)
+
+    def _announce_behold_chosen_type(
+        self, casting: Casting, card: CardState, caster: str, cost: str
+    ) -> None:
+        """Celestial Reunion's "you may choose a creature type and behold two
+        creatures of that type" on a cast made on the caster's behalf (CR
+        118.8b, CR 601.2b): a `MAY`, legal only when some creature type is
+        shared by enough creatures the caster could behold (CR 701.4a: a
+        creature card in hand or a creature permanent they control); then
+        the type (CR 607.2d) and the creatures of it."""
+        wanted = re.search(r"behold (\w+) creatures", cost, re.IGNORECASE)
+        count = parse_count(wanted.group(1), article=False) if wanted else None
+        if count is None:
+            return
+        board = self.computed_board()
+        beholdable: list[tuple[CardState, set[str]]] = []
+        for state in self.permanents_controlled_by(caster):
+            if Type.CREATURE in board.of(state).types:
+                beholdable.append((state, {sub.lower() for sub in board.of(state).subtypes}))
+        for state in self.player(caster).hand:
+            if state.id != card.id and Type.CREATURE in state.types:
+                beholdable.append((state, {sub.lower() for sub in state.subtypes}))
+        known = {kind.lower() for kind in creature_types()}
+        by_type: dict[str, list[CardState]] = {}
+        for state, subtypes in beholdable:
+            for subtype in subtypes:
+                if subtype in known:
+                    by_type.setdefault(subtype, []).append(state)
+        eligible = sorted(kind for kind, states in by_type.items() if len(states) >= count)
+        promised = self.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=caster,
+                prompt=f"{cost} as you cast {card.name}",
+                source=card.name,
+                source_id=source_id_of(card),
+                affirmative_is_legal=bool(eligible),
+            )
+        )
+        if not promised or not eligible:
+            return
+        labels = [kind.capitalize() for kind in eligible]
+        chosen_type = str(
+            self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=caster,
+                    prompt=f"choose a creature type to behold for {card.name}",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    options=tuple(labels),
+                    quality="creature type",
+                )
+            )
+        )
+        candidates = by_type[chosen_type.lower()]
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=caster,
+                prompt=f"choose {count} {chosen_type} creatures to behold for {card.name}",
+                source=card.name,
+                source_id=source_id_of(card),
+                amount=count,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        chosen = [state for state in candidates if state.id in set(answer)]
+        casting.behold_chosen_type_for_cost(chosen_type, chosen)
 
     def _announce_mandatory_costs(
         self, casting: Casting, card: CardState, caster: str, taken: set[UUID]

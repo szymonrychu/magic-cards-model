@@ -3117,6 +3117,10 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             )
         elif _OPTIONAL_REVEAL.match(phrase) is not None:
             found.append(OptionalAdditionalCost(keyword="reveal", cost=phrase, rule="CR 701.20a"))
+        elif _OPTIONAL_BEHOLD_CHOSEN_TYPE.match(phrase) is not None:
+            # Charged by `Casting.behold_chosen_type_for_cost` (the type named
+            # and the creatures beheld, CR 701.4a).
+            found.append(OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a"))
         else:
             found.append(
                 OptionalAdditionalCost(

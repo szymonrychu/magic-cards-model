@@ -81,6 +81,7 @@ from uuid import NAMESPACE_OID, uuid5
 
 import pytest
 
+from magic_cards_model.data.subtypes import canonical_subtype
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import Step, conditions
 from magic_cards_model.machines.abilities import (
@@ -3892,6 +3893,17 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a graveyard holding cards of five or more different mana values",
         precondition=r"if there are \w+ or more mana values among cards in your graveyard",
     ),
+    # ecl integration: shapes the stock boards cannot set up.
+    DriverGap(
+        kind="attacks",
+        event="a second attacking creature of the subtype the trigger targets",
+        precondition=r"another target attacking [A-Z][a-z]+ you control",
+    ),
+    DriverGap(
+        kind="enters_the_battlefield",
+        event="a creature type chosen for the source as it entered (CR 614.12a)",
+        precondition=r"of the chosen type enters",
+    ),
 )
 
 
@@ -4429,9 +4441,11 @@ def _same_name_pair(requirement: Any) -> str | None:
 
 
 def _subtype_stems(subtypes: Any) -> set[str]:
-    """Each printed subtype lowercased, as printed and without a plural "s"
-    ("Sacrifice five Treasures")."""
-    return {s.lower() for s in subtypes} | {s.lower().removesuffix("s") for s in subtypes}
+    """Each printed subtype lowercased, as printed, without a plural "s"
+    ("Sacrifice five Treasures"), and through the subtype pool's own plural
+    index for an irregular plural ("Elves" for `Elf`)."""
+    stems = {s.lower() for s in subtypes} | {s.lower().removesuffix("s") for s in subtypes}
+    return stems | {c for c in (canonical_subtype(s) for s in subtypes) if c is not None}
 
 
 def _cost_card(component: Any) -> Material | None:
@@ -4456,8 +4470,13 @@ def _cost_card(component: Any) -> Material | None:
             if requirement.types and not set(requirement.types) & set(card.types):
                 continue
             # Printed plural ("Advisors") or singular - compare stems.
-            wanted = {s.lower().rstrip("s") for s in requirement.subtypes}
-            if wanted and not wanted & {s.lower().rstrip("s") for s in card.subtypes}:
+            wanted = {s.lower().rstrip("s") for s in requirement.subtypes} | {
+                c for c in (canonical_subtype(s) for s in requirement.subtypes) if c is not None
+            }
+            have = {s.lower().rstrip("s") for s in card.subtypes} | {
+                s.lower() for s in card.subtypes
+            }
+            if wanted and not wanted & have:
                 continue
         tried += 1
         if tried > 12:

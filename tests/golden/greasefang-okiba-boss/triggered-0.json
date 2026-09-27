@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "delayed_triggers", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Adrestia@alice#1": {

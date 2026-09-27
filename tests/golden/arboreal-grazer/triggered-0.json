@@ -42,7 +42,7 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "put a land card from your hand onto the battlefield",
+        "prompt": "put a permanent card from your hand onto the battlefield",
         "source": "Arboreal Grazer"
       },
       {
@@ -51,11 +51,11 @@
         "kind": "choose_cards",
         "player": "alice",
         "players": [],
-        "prompt": "choose a land card(s) to put onto the battlefield",
+        "prompt": "choose 1 card(s) to put onto the battlefield",
         "source": "Arboreal Grazer"
       }
     ],
-    "fields_changed": ["continuous_effects", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#4": {

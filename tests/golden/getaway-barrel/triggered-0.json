@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["continuous_effects", "library_orders_kept", "reveals", "shuffles_performed", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "library_orders_kept", "reveals", "shuffles_performed", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Grizzly Bears@alice#3": {

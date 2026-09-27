@@ -5,13 +5,13 @@
     "modes": [],
     "on_stack": true,
     "source": "Ruins of Oran-Rief@alice#1",
-    "targets": ["Assembly-Worker@bob#1"],
+    "targets": ["Adaptive Automaton@bob#1"],
     "x": 0
   },
   "board": {
     "busy_turn": false,
     "entering": [
-      ["Assembly-Worker", "bob"]
+      ["Adaptive Automaton", "bob"]
     ],
     "order": ["alice", "bob"],
     "players": {
@@ -24,7 +24,7 @@
       "bob": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Assembly-Worker"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Adaptive Automaton"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
@@ -41,7 +41,7 @@
     "fields_changed": ["counters_put_this_turn"],
     "notices": {},
     "objects": {
-      "Assembly-Worker@bob#1": {
+      "Adaptive Automaton@bob#1": {
         "counters": [
           {},
           {

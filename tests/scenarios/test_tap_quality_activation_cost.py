@@ -111,3 +111,26 @@ def test_merchant_dockhands_x_cost_taps_the_chosen_untapped_artifacts():
     assert not untouched_stone.tapped, (
         "only the two chosen Mind Stones pay the cost - the third is never touched"
     )
+
+
+def test_an_irregular_plural_subtype_names_its_singular_type():
+    """High Perfect Morcant: "Tap three untapped Elves you control:
+    Proliferate." The cost names the subtype in the plural the sentence
+    needs; "Elves" is CR 205.3m's `Elf`, which trimming a final "s" never
+    reaches - so the three Elves must satisfy it."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["High Perfect Morcant", "Llanowar Elves", "Llanowar Elves"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    morcant = scenario.creature("High Perfect Morcant", "alice")
+    elves = [c for c in scenario.game.battlefield if c.name in ("Llanowar Elves",)] + [morcant]
+
+    ability = scenario.activate(morcant, index=0, tapping_for_cost=elves)
+    assert isinstance(ability, AbilityOnStack)
+    assert all(elf.tapped for elf in elves)

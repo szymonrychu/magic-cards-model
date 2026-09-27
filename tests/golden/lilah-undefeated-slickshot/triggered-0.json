@@ -16,7 +16,7 @@
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Lilah, Undefeated Slickshot"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Abandon Attachments", "Abandon Attachments"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Aggressive Biomancy", "Aggressive Biomancy"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -40,7 +40,7 @@
     "notices": {},
     "objects": {},
     "players": {},
-    "stack": ["Abandon Attachments@alice#1"]
+    "stack": ["Aggressive Biomancy@alice#1"]
   },
   "family": "triggered",
   "format": 1,
@@ -48,10 +48,10 @@
   "number": 0,
   "recipe": {
     "attempt": "cast_probe",
-    "index": 13,
+    "index": 16,
     "params": {
       "caster": "alice",
-      "probe": "Abandon Attachments"
+      "probe": "Aggressive Biomancy"
     },
     "variant": "quiet"
   }

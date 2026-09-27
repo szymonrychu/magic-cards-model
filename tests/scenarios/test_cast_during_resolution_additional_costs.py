@@ -247,3 +247,34 @@ def test_fling_with_nothing_to_sacrifice_cannot_be_cast_and_goes_to_the_bottom()
     fling = scenario.find("Fling", Zone.LIBRARY, "alice")
     assert scenario.player("alice").library[-1] is fling
     assert scenario.stack_names() == ["Violent Outburst"]
+
+
+def test_celestial_reunions_chosen_type_behold_is_offered_on_a_cast_during_resolution():
+    """CR 118.8b, CR 701.4a: "As an additional cost to cast this spell, you
+    may choose a creature type and behold two creatures of that type." -
+    offered to a cascade hit like every other optional cost: the MAY, then
+    the type (CR 607.2d), then the two creatures of it."""
+    scenario = elf_board("Celestial Reunion", battlefield=("Goblin Guide", "Goblin Guide"))
+    guides = [s for s in scenario.game.battlefield if s.name == "Goblin Guide"]
+    cast_elf(scenario)
+    scenario.will_take_the_may(True, source="Celestial Reunion")
+    scenario.will_choose("Goblin", source="Celestial Reunion")
+    scenario.will_choose_cards(*guides, source="Celestial Reunion")
+
+    scenario.resolve_top()
+
+    record = scenario.game.cast_record_of(spell(scenario, "Celestial Reunion"))
+    assert record.behold_chosen_type_paid is True
+    assert record.chosen_creature_type == "goblin"
+
+
+def test_celestial_reunions_behold_is_not_legal_without_two_creatures_of_one_type():
+    scenario = elf_board("Celestial Reunion", battlefield=("Goblin Guide",))
+    cast_elf(scenario)
+
+    scenario.resolve_top()
+
+    (may,) = asked(scenario, DecisionKind.MAY, "Celestial Reunion")
+    assert may.affirmative_is_legal is False
+    record = scenario.game.cast_record_of(spell(scenario, "Celestial Reunion"))
+    assert record.behold_chosen_type_paid is False

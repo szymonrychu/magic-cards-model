@@ -46,7 +46,7 @@
         "source": "Winter Soldier, Icy Assassin"
       }
     ],
-    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "counters_put_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Bonesplitter@alice#1": {

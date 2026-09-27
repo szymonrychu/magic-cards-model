@@ -46,7 +46,7 @@
         "source": "Matter Reshaper"
       }
     ],
-    "fields_changed": ["continuous_effects", "reveals", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "reveals", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#6": {

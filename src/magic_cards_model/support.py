@@ -625,6 +625,16 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "compleated" for k in printing.keywords):
         found["compleated"] = "machines/replacement.py (_compleated_modifier, CR 702.150a)"
 
+    # Devour (CR 702.82a/c) is spelled out by `machines/replacement.
+    # _expand_devour` into the "As this creature enters, you may sacrifice any
+    # number of ... that many +1/+1 counters" pair and read as that
+    # replacement - conditioned on the expansion actually producing a
+    # sacrifice-then-counters effect, never on the bare keyword name.
+    if any(k.lower() == "devour" for k in printing.keywords) and any(
+        effect.that_many_multiplier is not None for effect in parse_replacement_effects(printing)
+    ):
+        found["devour"] = "machines/replacement.py (_expand_devour, CR 702.82)"
+
     # Tribute (CR 702.104a) is the same "read off the keyword" entering
     # replacement as Sunburst and Compleated: `_tribute_modifier` asks the
     # chosen opponent and places the counters as theirs (CR 702.104b's "if

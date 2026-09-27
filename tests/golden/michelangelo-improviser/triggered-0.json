@@ -73,7 +73,7 @@
         "source": "Michelangelo, Improviser"
       }
     ],
-    "fields_changed": ["continuous_effects", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Forest@alice#4": {

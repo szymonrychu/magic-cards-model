@@ -916,6 +916,7 @@ def _parse_oracle_text(
         rules_text, reminder = strip_reminder_text(paragraph)
         if not rules_text:
             continue
+        rules_text = _expand_devour(rules_text)
 
         # CR 603.1: a triggered ability is "[When/Whenever/At] [condition],
         # [effect]. [Instructions (if any).]" - the trailing instructions are
@@ -946,6 +947,37 @@ def _parse_oracle_text(
                     update["linked_trigger"] = linked
                 effects.append(effect.model_copy(update=update))
     return effects
+
+
+#: CR 702.82a/c's keyword line: "Devour N" or "Devour [quality] N" (Famished
+#: Worldsire's "Devour land 3").
+_DEVOUR_KEYWORD = re.compile(r"^devour(?: (?P<quality>[a-z]+))? (?P<n>\d+)$", re.IGNORECASE)
+
+
+def _expand_devour(rules_text: str) -> str:
+    """A Devour keyword line spelled out as the two sentences CR 702.82 says
+    it means, or `rules_text` unchanged.
+
+    CR 702.82a: "'Devour N' means 'As this object enters, you may sacrifice
+    any number of creatures. This permanent enters with N +1/+1 counters on
+    it for each creature sacrificed this way.'" CR 702.82c: "'Devour
+    [quality] N' means 'As this object enters, you may sacrifice any number
+    of [quality] permanents. ...'" - the same CR 614.12a sacrifice-then-
+    counters pair Devouring Hellion prints in full, so it is read by the
+    same `_sacrifice_any_number_choice`/"`<multiplier>` that many" readers
+    rather than a second implementation of its own.
+    """
+    match = _DEVOUR_KEYWORD.match(rules_text.strip().rstrip("."))
+    if match is None:
+        return rules_text
+    quality = match.group("quality")
+    what = f"{quality.lower()}s" if quality else "creatures"
+    n = int(match.group("n"))
+    multiplier = "" if n == 1 else f"{n} times "
+    return (
+        f"As this creature enters, you may sacrifice any number of {what}. "
+        f"If you do, it enters with {multiplier}that many +1/+1 counters on it."
+    )
 
 
 #: "When you do, ..." - CR 603.12's reflexive opener. "When you don't, ..." is
