@@ -110,19 +110,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 7126,
-  "penny_rank": 4242,
+  "edhrec_rank": 7224,
+  "penny_rank": 4267,
   "preview": {
     "source": "CoolStuffInc",
     "source_uri": "https://www.coolstuffinc.com/a/abesargent-06122020-core-set-2021-glory-days-are-here-again",
     "previewed_at": "2020-06-12"
   },
   "prices": {
-    "usd": "0.41",
-    "usd_foil": "0.48",
+    "usd": "0.38",
+    "usd_foil": "0.49",
     "usd_etched": null,
-    "eur": "0.21",
-    "eur_foil": "0.32",
+    "eur": "0.26",
+    "eur_foil": "0.43",
     "tix": "0.02"
   },
   "related_uris": {

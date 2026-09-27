@@ -175,6 +175,7 @@ from ..machines.effects import (
     apply_gift_if_promised,
     devotion_to,
     effect_for,
+    effect_text_with_named_token_reminder,
     link_cards_exiled_during,
     modal_trigger_profile,
     mode_effect_body,
@@ -1671,6 +1672,30 @@ _LIFE_GAIN_PROHIBITION_RE = re.compile(
 #: permission, exactly as `_LOOKS_LIKE_ACTIVATION_PROHIBITION_RE` does.
 _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE = re.compile(r"\bcan't gain life\b", re.IGNORECASE)
 
+#: ecl-T8: a static ability that stops players drawing cards at all -
+#: Maralen of the Mornsong's "Players can't draw cards." CR 121.3: "if an
+#: effect says that a player can't draw cards and another effect offers that
+#: player the choice to draw a card, that player can't choose to do so" -
+#: read the identical "while its source is on the battlefield" way
+#: `_LIFE_GAIN_PROHIBITION_RE` reads Leyline of Punishment's own life-gain
+#: twin, off `draw_prohibited` below rather than a persisted per-player flag,
+#: since CR 604.2/611.3a bounds it to the source's own time on the
+#: battlefield rather than "for the rest of the game".
+_DRAW_PROHIBITION_RE = re.compile(r"^(?:players|each player) can'?t draw cards\.?$", re.IGNORECASE)
+
+#: Mornsong Aria's own single-sentence combination of both prohibitions:
+#: "Players can't draw cards or gain life." - read by both `draw_prohibited`
+#: and `life_gain_prohibited`, since CR 608.2a's own text names two separate
+#: "can't" effects (CR 101.2) in one sentence rather than two.
+_DRAW_OR_LIFE_GAIN_PROHIBITION_RE = re.compile(
+    r"^(?:players|each player) can'?t draw cards or gain life\.?$", re.IGNORECASE
+)
+
+#: A sentence that prohibits drawing but is not either shape above - matched
+#: only to fail closed with a notice, exactly as
+#: `_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE` does for its own twin.
+_LOOKS_LIKE_DRAW_PROHIBITION_RE = re.compile(r"\bcan't draw cards\b", re.IGNORECASE)
+
 #: Leyline of Punishment's, Sunspine Lynx's "Damage can't be prevented." and
 #: Frenzied Baloth's "Combat damage can't be prevented." - CR 615.12, read by
 #: `Game.damage_cant_be_prevented` while the permanent is on the battlefield.
@@ -1682,11 +1707,15 @@ _DAMAGE_CANT_BE_PREVENTED_RE = re.compile(
 def is_player_rules_static_line(text: str) -> bool:
     """Whether a permanent's static line is one of the rules-of-the-game
     effects `Game` reads straight off the battlefield: "Players can't gain
-    life." (`life_gain_prohibited`, CR 119.7) or "[Combat] damage can't be
+    life." (`life_gain_prohibited`, CR 119.7), "Players can't draw cards[ or
+    gain life]." (`draw_prohibited`, CR 121.3), or "[Combat] damage can't be
     prevented." (`damage_cant_be_prevented`, CR 615.12)."""
     line = text.strip()
     return bool(
-        _LIFE_GAIN_PROHIBITION_RE.match(line) or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
+        _LIFE_GAIN_PROHIBITION_RE.match(line)
+        or _DRAW_PROHIBITION_RE.match(line)
+        or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(line)
+        or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
     )
 
 
@@ -2430,6 +2459,16 @@ class PreventionShield(EngineModel):
 
     until_end_of_turn: bool = True
     """CR 514.2 ends it in the cleanup step, alongside the marked damage."""
+
+    until_next_turn_of: str | None = None
+    """CR 611.2a's "until your next turn" duration - Morningtide's Light's
+    own "Until your next turn, prevent all damage that would be dealt to
+    you." A shield with this set is created with `until_end_of_turn=False`
+    (cleanup never touches it) and is instead removed by `Game.
+    begin_turn_for` the moment this named player's own next turn begins -
+    the identical hook `machines/layers.py`'s own `Duration.
+    UNTIL_YOUR_NEXT_TURN`/`until_next_turn_of` already ends a continuous
+    effect through."""
 
     used_up: bool = False
     """CR 615.7's shield reduced to 0, or CR 615.8's instance spent.
@@ -4039,7 +4078,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 91
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 92
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4130,6 +4169,12 @@ class Game(EngineModel):
     #: CR 614.1c rider, tmt T6) and `Game` gained `next_spell_keyword_grants`
     #: ("the next noncreature spell you cast this turn has affinity for
     #: artifacts", CR 702.41a, tmt T6; renumbered from 90 at integration).
+    #: 92: `machines/delayed.ReturnSubjectToBattlefieldUnderOwner` and
+    #: `ReturnEachExiledToBattlefieldUnderOwner` both gained `tapped`
+    #: (Morningtide's Light's own "... tapped under their owners' control",
+    #: ecl T8), and `PreventionShield` gained `until_next_turn_of`
+    #: (Morningtide's Light's own "Until your next turn, prevent all damage
+    #: that would be dealt to you.", CR 611.2a, ecl T8).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6334,6 +6379,13 @@ class Game(EngineModel):
             if username in permanent.goaded_by:
                 permanent.goaded_by = [p for p in permanent.goaded_by if p != username]
         self.continuous_effects.end_for_next_turn(username)
+        # ecl-T8: Morningtide's Light's own "Until your next turn, prevent
+        # all damage that would be dealt to you." ends the same moment,
+        # CR 611.2a's own stated duration - the identical hook every other
+        # "until your next turn" store on this method already ends through.
+        self.prevention_shields = [
+            shield for shield in self.prevention_shields if shield.until_next_turn_of != username
+        ]
         # Jace, Reality Sculptor's own `-3`: a delayed trigger's own "until
         # your next turn" ends the same instant the continuous-effect and
         # casting-rule stores above do (CR 603.7b's own "stated duration").
@@ -10256,7 +10308,9 @@ class Game(EngineModel):
         """
         if not isinstance(ability.ability, TriggeredAbility):
             return None
-        effect_text = ability.ability.effect
+        effect_text = effect_text_with_named_token_reminder(
+            ability.ability.effect, ability.ability.reminder
+        )
         if (
             ability.ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
             and effect_text
@@ -14230,6 +14284,12 @@ class Game(EngineModel):
                 # one "still be partially carried out": the first draw below
                 # is unaffected, and only the one that would exceed the cap is
                 # skipped.
+                if self.draw_prohibited(player.username) is not None:
+                    # CR 121.3: an effect saying a player can't draw cards
+                    # makes this individual draw simply not happen - no
+                    # event, no card moved, the same "can't precedence"
+                    # `gain_life` already gives `cannot_gain_life` (CR 101.2).
+                    continue
                 restriction = draw_cap_restriction(self, player.username)
                 if restriction is not None:
                     already = self.cards_drawn_this_turn.get(player.username, 0)
@@ -14623,9 +14683,14 @@ class Game(EngineModel):
                 if line.kind is not AbilityKind.STATIC:
                     continue
                 text = (line.text or "").strip()
-                if not _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE.search(text):
+                if not (
+                    _LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE.search(text) or "gain life" in text.lower()
+                ):
                     continue
-                if not _LIFE_GAIN_PROHIBITION_RE.match(text):
+                if not (
+                    _LIFE_GAIN_PROHIBITION_RE.match(text)
+                    or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(text)
+                ):
                     self._record_unread_static_line(source, text)
                     continue
                 if not self._still_has_static_line(source, text):
@@ -14643,6 +14708,41 @@ class Game(EngineModel):
                     f"{username} can't gain life this turn: {effect.source_name} says so "
                     "(CR 119.7, CR 611.2c)"
                 )
+        return None
+
+    def draw_prohibited(self, username: str) -> str | None:
+        """Why this player can't draw a card right now, or None (CR 121.3).
+
+        CR 121.3: "if an effect says that a player can't draw cards ...
+        [an offered] choice can't be taken" - and, by the same CR 101.2
+        "can't" precedence `life_gain_prohibited` already reads Leyline of
+        Punishment's twin through, a turn-based draw (CR 121.1) that would
+        otherwise happen simply does not. Maralen of the Mornsong's "Players
+        can't draw cards." and Mornsong Aria's own combined "Players can't
+        draw cards or gain life." are both this same rules-of-the-game
+        prohibition (CR 611.1's third category - no characteristic changes,
+        so `machines/layers.py` is the wrong home), read fresh off the
+        battlefield every call the identical CR 604.2/611.3a way its life-gain
+        twin is: a source destroyed mid-turn stops prohibiting at once.
+        """
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if not (
+                    _LOOKS_LIKE_DRAW_PROHIBITION_RE.search(text) or "draw cards" in text.lower()
+                ):
+                    continue
+                if not (
+                    _DRAW_PROHIBITION_RE.match(text)
+                    or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(text)
+                ):
+                    self._record_unread_static_line(source, text)
+                    continue
+                if not self._still_has_static_line(source, text):
+                    continue
+                return f"{username} can't draw cards: {source.name} says so (CR 121.3, CR 611.1)"
         return None
 
     def damage_cant_be_prevented(self, event: ReplaceableEvent) -> str | None:

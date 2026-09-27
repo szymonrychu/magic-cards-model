@@ -109,8 +109,8 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 17746,
-  "penny_rank": 2324,
+  "edhrec_rank": 17744,
+  "penny_rank": 2310,
   "preview": {
     "source": "Wizards of the Coast",
     "source_uri": "",
@@ -118,7 +118,7 @@
   },
   "prices": {
     "usd": "0.43",
-    "usd_foil": "0.64",
+    "usd_foil": "0.65",
     "usd_etched": null,
     "eur": "0.86",
     "eur_foil": "1.28",
