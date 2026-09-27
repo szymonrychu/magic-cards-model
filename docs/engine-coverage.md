@@ -6457,12 +6457,18 @@ a second printing, Troyan, Gutsy Explorer (Modern/Pioneer/Standard).
 `test_blighted_creature_copy.py`, `test_enters_or_transforms_into.py`,
 `test_spend_restricted_mana_mv.py`.
 
-Not closed by this task, and named as its one dependency: Champion of the
-Weird's own "As an additional cost to cast this spell, behold a Goblin and
-exile it." is genuinely unpayable today (`machines/cost.py`'s `_PHRASE_
-BEHOLD` reads only a bare "behold a `<quality>`" phrase) - 270-ecl T4's own
-"behold-and-exile audit". `test_opponent_blights.py`'s own
-`test_casting_champion_of_the_weird_pays_behold_and_exile` is `xfail(strict=
-True)`, naming the exact `ValueError` it hits, so it starts failing loudly
-(not silently passing) the moment that lands and this branch rebases onto
-it.
+Champion of the Weird's own casting cost, "As an additional cost to cast this
+spell, behold a Goblin and exile it." (CR 118.8/601.2f's one object, two
+verbs), is closed here too: `_PHRASE_BEHOLD` now reads an optional trailing
+"and exile it" and `CostComponent.exile_after` makes `pay`/`unpay` move the
+beheld object through `Game.exile_cards` exactly like an ordinary `EXILE`
+component, whichever zone it was beheld from (hand or battlefield).
+`total_cost_for_phrase` tries a comma-free phrase whole before falling back to
+its "and"-splitting path, so "behold a Goblin and exile it" is read as one
+component rather than split into an unreadable "behold a Goblin" plus "exile
+it" - the general fix for any single-component cost whose own text contains
+an internal "and" (Champion of the Clachan's "behold a Kithkin and exile it"
+shares the shape). `test_opponent_blights.py`'s
+`test_casting_champion_of_the_weird_pays_behold_and_exile` and
+`test_casting_champion_of_the_weird_beholds_a_battlefield_goblin` prove it
+end-to-end, both hand and battlefield beholding.

@@ -9,8 +9,6 @@ Every CR number here was read with `mise run rules:find` in the session that
 wrote this file.
 """
 
-import pytest
-
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
@@ -101,25 +99,18 @@ def test_target_opponent_blights_from_an_activated_ability():
     assert their_ancients.counters[Counter.MINUS_ONE] == 2
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Champion of the Weird's own casting cost - 'As an additional cost to "
-    "cast this spell, behold a Goblin and exile it.' - is genuinely unpayable today: "
-    "machines/cost.py's `_PHRASE_BEHOLD` only reads a bare 'behold a <quality>' "
-    "phrase, and 'behold a Goblin and exile it' raises "
-    "\"Champion of the Weird's additional cost 'behold a Goblin and exile it' could "
-    'not be read, so it cannot be paid (CR 118.3, 601.2f)" straight out of '
-    "`mandatory_additional_costs` (verified this session). This is 270-ecl's own "
-    "T4 task's 'behold-and-exile audit', named as this task's one dependency in "
-    "the round notes ('merge after T4 or rebase on it before final sweep') - not "
-    "a gap in this file's own blight-effect readers. Once T4 lands, this should "
-    "legally exile the beheld Goblin, pay Blight 2 and 1 life for the activation, "
-    "and blight bob's own creature for 2, the same way "
-    "test_target_opponent_blights_from_an_activated_ability already proves the "
-    "activated ability's own effect half works on a Champion of the Weird staged "
-    "straight onto the battlefield.",
-)
 def test_casting_champion_of_the_weird_pays_behold_and_exile():
+    """Champion of the Weird's own casting cost: "As an additional cost to
+    cast this spell, behold a Goblin and exile it." CR 701.4a's behold
+    (reveal a Goblin from hand, or choose one already on the battlefield) is
+    layered with a second verb on the same object, CR 118.8/601.2f's "and
+    exile it" - `machines/cost.py`'s `_PHRASE_BEHOLD` now reads the optional
+    trailing "and exile it" clause and `pay` exiles the beheld object exactly
+    like an ordinary exile cost. This proves the casting cost end-to-end;
+    `test_target_opponent_blights_from_an_activated_ability` above already
+    proves the activated ability's own blight effect on a Champion staged
+    straight onto the battlefield.
+    """
     scenario = (
         Scenario()
         .player(
@@ -132,6 +123,35 @@ def test_casting_champion_of_the_weird_pays_behold_and_exile():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     goblin = scenario.find("Goblin Guide", Zone.HAND, "alice")
+    sources = scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp", username="alice")
+
+    casting = scenario.cast("Champion of the Weird", username="alice", beholding=[goblin])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.pass_until_resolved()
+
+    assert goblin.zone is Zone.EXILE
+    weird = scenario.creature("Champion of the Weird", "alice")
+    assert weird.zone is Zone.BATTLEFIELD
+
+
+def test_casting_champion_of_the_weird_beholds_a_battlefield_goblin():
+    """CR 701.4a's other half: the beheld Goblin can be one already on the
+    battlefield rather than one revealed from hand (CR 701.4b), and CR
+    118.8's second verb ("and exile it") then moves it from there instead."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Champion of the Weird"],
+            battlefield=["Goblin Guide", "Swamp", "Swamp", "Swamp", "Swamp"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    goblin = scenario.creature("Goblin Guide", "alice")
     sources = scenario.untapped_sources("Swamp", "Swamp", "Swamp", "Swamp", username="alice")
 
     casting = scenario.cast("Champion of the Weird", username="alice", beholding=[goblin])

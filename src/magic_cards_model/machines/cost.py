@@ -2710,6 +2710,17 @@ class CostComponent(EngineModel):
     `required`, which the reader leaves at the fewest that pays - 0 for X, 1
     for "one or more" - until `announce_count` fixes it."""
 
+    exile_after: bool = False
+    """`ComponentKind.BEHOLD` only: CR 118.8/601.2f's own two-verbs-one-object
+    shape, "behold a [quality] **and exile it**" (Champion of the Weird: "As
+    an additional cost to cast this spell, behold a Goblin and exile it.").
+    CR 701.4a's plain behold draws no zone conclusion at all (CR 701.4b: a
+    battlefield permanent chosen this way is simply noted, not moved); this
+    flag is the second verb layered on top of the same beheld object, so
+    `pay` exiles whichever object - hand card or battlefield permanent -
+    beholding it chose, through `Game.exile_cards` the same way an ordinary
+    `EXILE` component does."""
+
     source: str | None = None
     """The card whose cost this is, by name - the `Reveal.source` a paid
     `ComponentKind.REVEAL` records (CR 701.20a)."""
@@ -3215,13 +3226,21 @@ class CostComponent(EngineModel):
             # CR 701.4a's two halves: a hand card is revealed exactly like
             # `REVEAL` (nothing moves, CR 701.20b); a battlefield permanent is
             # simply chosen (CR 701.4b) and nothing happens to it at all -
-            # not tapped, not sacrificed, not exiled.
+            # not tapped, not sacrificed, not exiled - unless CR
+            # 118.8/601.2f's second verb is printed on top of the same
+            # object ("behold a Goblin **and exile it**", Champion of the
+            # Weird's own casting cost), in which case the beheld object
+            # then leaves for exile exactly like an ordinary `EXILE`
+            # component (`Game.exile_cards`), whichever zone it was beheld
+            # from.
             for card in self.cards:
                 self._remember(card)
                 if game is not None and card.zone is Zone.HAND:
                     before = len(game.reveals)
                     game.reveal(card, source=self.source)
                     self._reveals_recorded.extend(game.reveals[before:])
+            if self.exile_after and self.cards and game is not None:
+                game.exile_cards(list(self.cards))
         elif self.kind is ComponentKind.RETURN_TO_HAND:
             # CR 702.49a's own cost: the creature leaves combat as it leaves
             # the battlefield (the zone change is what ends its being an
@@ -3384,13 +3403,19 @@ class CostComponent(EngineModel):
                         game.reveals.remove(record)
             self._reveals_recorded = []
         elif self.kind is ComponentKind.BEHOLD:
-            # Neither half moved anything (CR 701.4a/b), so the rewind is the
+            # Plain behold moves nothing (CR 701.4a/b), so the rewind is the
             # same as REVEAL's: only the reveal record a hand-half payment
-            # wrote needs taking back.
+            # wrote needs taking back. `exile_after` (CR 118.8/601.2f's
+            # "... and exile it") did move the beheld object, so that half
+            # rewinds the same way `EXILE`'s own fall-through below does -
+            # putting the whole snapshot back, zone included.
             if game is not None:
                 for record in self._reveals_recorded:
                     if record in game.reveals:
                         game.reveals.remove(record)
+            if self.exile_after:
+                for card, snapshot in reversed(self._undo):
+                    self._return(game, _live(card), snapshot)
             self._reveals_recorded = []
         elif self.kind is ComponentKind.EXERT:
             # Exerting moves nothing either, and CR 701.43b lets it be exerted
@@ -3621,16 +3646,20 @@ def behold_cost(
     payer: str | None = None,
     required: int | None = None,
     description: str = "",
+    exile_after: bool = False,
 ) -> CostComponent:
     """Behold a quality as a cost (CR 701.4a, CR 118.1): reveal a card from
     the payer's hand, or choose a permanent they control on the battlefield.
-    `CostComponent._why_not_behold` is the check."""
+    `CostComponent._why_not_behold` is the check. `exile_after` is CR
+    118.8/601.2f's "behold a [quality] and exile it" (Champion of the Weird),
+    the second verb `pay` applies once the object is beheld."""
     return CostComponent(
         kind=ComponentKind.BEHOLD,
         cards=list(cards),
         required=len(cards) if required is None else required,
         payer=payer,
         description=description,
+        exile_after=exile_after,
     )
 
 
@@ -4988,8 +5017,14 @@ _PHRASE_REVEAL = re.compile(
 #: "Reveal a [quality] card from your hand or choose a [quality] permanent
 #: you control on the battlefield" - one component, `ComponentKind.BEHOLD`,
 #: since CR 701.4a is a single keyword action with two ways to satisfy it,
-#: not two separate costs the way sacrifice-or-discard would be.
-_PHRASE_BEHOLD = re.compile(r"^behold (?:a|an) (?P<quality>[\w' ]+)$", re.IGNORECASE)
+#: not two separate costs the way sacrifice-or-discard would be. The
+#: optional trailing `exile` group is CR 118.8/601.2f's own two-verbs-one-
+#: object shape, "behold a [quality] **and exile it**" (Champion of the
+#: Weird: "behold a Goblin and exile it") - a second verb applied to the
+#: same beheld object, not a second cost.
+_PHRASE_BEHOLD = re.compile(
+    r"^behold (?:a|an) (?P<quality>[\w' ]+?)(?P<exile> and exile it)?$", re.IGNORECASE
+)
 _ZONE_WORDS: dict[str, Zone] = {
     "hand": Zone.HAND,
     "graveyard": Zone.GRAVEYARD,
@@ -5419,7 +5454,12 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         behold_requirement = _requirement(behold.group("quality"))
         if behold_requirement is None:
             return None
-        component = behold_cost(payer=payer, required=1, description=text)
+        component = behold_cost(
+            payer=payer,
+            required=1,
+            description=text,
+            exile_after=behold.group("exile") is not None,
+        )
         component.requirement = behold_requirement
         return component
 
@@ -5561,6 +5601,20 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     mana = ManaCost()
     components: list[CostComponent] = []
     waterbend_generic: int | None = None
+    if "," not in phrase:
+        # `_split_cost_phrase` also splits on a bare " and " - right for a
+        # comma-joined or genuinely compound cost ("Tap two untapped
+        # creatures you control and discard a card", none printed yet, would
+        # be two components), wrong for a *single* component whose own
+        # phrase happens to contain "and" internally - "behold a Goblin and
+        # exile it" (CR 118.8/601.2f's one object, two verbs) is not "behold
+        # a Goblin" plus a bare, unreadable "exile it". Trying the whole
+        # un-split phrase first, only when there is no comma to say this is
+        # genuinely a list, catches that shape without touching any phrase
+        # that only reads at all once split.
+        whole = cost_component_for_phrase(phrase.strip().rstrip("."), payer)
+        if whole is not None:
+            return TotalCost(mana=mana, components=[whole], waterbend_generic=waterbend_generic)
     for part in _split_cost_phrase(phrase):
         if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
             # A run of braced symbols that is not all mana - CR 107.14's {E}
