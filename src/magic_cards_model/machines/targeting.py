@@ -1785,7 +1785,7 @@ class TargetingProfile(EngineModel):
                     f"{target.name} is phased out and is treated as though it does "
                     "not exist (CR 702.26b)"
                 )
-        self._check_protection(targets, game)
+        self._check_protection(targets, game, caster)
         self._check_shroud(targets, game)
         self._check_hexproof(targets, caster, game, source, source_id)
 
@@ -1914,7 +1914,7 @@ class TargetingProfile(EngineModel):
                     f"from (CR 601.2c)"
                 )
 
-    def _check_protection(self, targets: list[Any], game: Any) -> None:
+    def _check_protection(self, targets: list[Any], game: Any, caster: str | None = None) -> None:
         """CR 702.16b, at announcement (CR 601.2c) rather than only at the
         CR 608.2b recheck.
 
@@ -1933,7 +1933,10 @@ class TargetingProfile(EngineModel):
         if refusal_of is None:
             return
         for target in targets:
-            refusal = refusal_of(target, self.source_card)
+            # `source_controller`: CR 702.16k's protection from a player is
+            # decided by who controls the spell or ability, not by any
+            # quality printed on its source (Figure of Fable's Avatar).
+            refusal = refusal_of(target, self.source_card, source_controller=caster)
             if refusal is not None:
                 raise ValueError(refusal)
 

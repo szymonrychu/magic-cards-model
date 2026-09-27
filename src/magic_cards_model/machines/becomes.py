@@ -31,6 +31,7 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
 from .keyword_counters import KEYWORD_COUNTER_KEYWORDS
@@ -115,6 +116,120 @@ def counter_list_on_anaphor(text: str) -> StackEffect | None:
 
 
 # ---------------------------------------------------------------------------
+# A layer sentence about a target chosen in the sentence before it, or gated
+# on the source's own creature type.
+# ---------------------------------------------------------------------------
+
+
+def _apply_layer_text(
+    game: Game, stack_object: StackObject, text: str, targets: list[CardState]
+) -> None:
+    """Create `text`'s continuous effect (CR 611.2) for `targets`, read by the
+    same `machines/layers.py` shapes a printed layer sentence is, and
+    timestamped now (CR 613.7b)."""
+    from .effects import continuous_effects, layer_context_for
+    from .triggers import AbilityOnStack
+
+    source = stack_object.source(game) if isinstance(stack_object, AbilityOnStack) else stack_object
+    if not isinstance(source, CardState) or not targets:
+        return
+    continuous_effects(game).create(
+        source,
+        targets=targets,
+        context=layer_context_for(game, game.controller_of(stack_object)),
+        ability_text=text,
+        game=game,
+    )
+
+
+def _reads_as_layer_text(text: str) -> bool:
+    from .layers import is_genuine_resolution_layer_sentence
+
+    return is_genuine_resolution_layer_sentence(text)
+
+
+#: Glamer Gifter's "choose up to one other target creature. Until end of
+#: turn, that creature has base power and toughness 4/4 and gains all
+#: creature types." - the target is announced in a sentence of its own (CR
+#: 115.1: "choose" a target is how the targeting instruction is phrased
+#: here) and the next sentence acts on "that creature". Read by writing the
+#: target phrase back in place of the anaphor and handing the result to the
+#: layer shapes, which then apply it to whatever `resolve_card_targets` left
+#: legal (CR 608.2b).
+_CHOOSE_TARGET_THEN_THAT_RE = re.compile(
+    r"^choose (?P<target>(?:up to (?:one|two|three|\d+) )?(?:other |another )?target [^.]+?)\.\s+"
+    r"(?P<rest>.*\bthat (?:creature|permanent)\b.*)$",
+    re.IGNORECASE,
+)
+
+
+def _choose_target_then_that(text: str) -> StackEffect | None:
+    match = _CHOOSE_TARGET_THEN_THAT_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    rewritten = re.sub(
+        r"\bthat (?:creature|permanent)\b",
+        match.group("target"),
+        match.group("rest"),
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    rewritten = rewritten[0].upper() + rewritten[1:]
+    if not _reads_as_layer_text(rewritten):
+        return None
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        _apply_layer_text(game, stack_object, rewritten, game.resolve_card_targets(stack_object))
+
+    return effect
+
+
+#: Figure of Fable's, Figure of Destiny's and Warden of the First Tree's
+#: later steps: "If this creature is a Scout, it becomes a Kithkin Soldier
+#: with base power and toughness 4/5." The creature type is checked as the
+#: ability resolves, not as it is activated (the card's own ruling) - off
+#: the computed board (CR 613.5), so a Scout the first step made counts - and
+#: when it is not one, the ability does nothing. The instruction itself is
+#: the ordinary self-referential layer sentence.
+_IF_SELF_IS_A_TYPE_THEN_BECOMES_RE = re.compile(
+    r"^if (?:this creature|this permanent) is an? (?P<quality>[A-Z][\w'-]*), "
+    r"it (?P<rest>becomes .+)$",
+    re.IGNORECASE,
+)
+
+
+def _if_self_is_a_type_then_becomes(text: str) -> StackEffect | None:
+    match = _IF_SELF_IS_A_TYPE_THEN_BECOMES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    rewritten = f"This creature {match.group('rest')}"
+    if not rewritten.endswith("."):
+        rewritten += "."
+    if not _reads_as_layer_text(rewritten):
+        return None
+    quality = match.group("quality").lower()
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        from .triggers import AbilityOnStack
+
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        source = stack_object.source(game)
+        if (
+            source is None
+            or source.zone is not Zone.BATTLEFIELD
+            or stack_object.source_stamp not in (None, source.zone_change_stamp)
+        ):
+            return
+        subtypes = {kind.lower() for kind in game.characteristics_of(source).subtypes}
+        if quality not in subtypes:
+            return
+        _apply_layer_text(game, stack_object, rewritten, [source])
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
 # Entry points
 # ---------------------------------------------------------------------------
 
@@ -138,9 +253,12 @@ def _mass_lose_all_abilities_whole_spell(text: str) -> StackEffect | None:
 
 _ABILITY_READERS: tuple[Callable[[str], StackEffect | None], ...] = (
     _mass_lose_all_abilities_whole,
+    _choose_target_then_that,
+    _if_self_is_a_type_then_becomes,
 )
 _SPELL_READERS: tuple[Callable[[str], StackEffect | None], ...] = (
     _mass_lose_all_abilities_whole_spell,
+    _choose_target_then_that,
 )
 
 

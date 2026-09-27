@@ -4892,12 +4892,30 @@ _BASE_PT_SET_RE = re.compile(
 #: `_normalize_duration_first`. A group subject reaches the builder already
 #: resolved to its fixed set of creatures (CR 611.2c) by `machines/effects.py`'s
 #: mass-pump path, so the builder only ever sees `targets`.
+#:
+#: Widened (ecl T5) to Wings of Velis Vel's "Until end of turn, target
+#: creature has base power and toughness 4/4, gains all creature types, and
+#: gains flying." - a comma list, and a keyword grant (layer 6, CR 613.1f)
+#: riding on the same instruction.
 _BASE_PT_SET_AND_TYPE_RE = re.compile(
     rf"^(?:{_SUBJECT} has|creatures you control have) base power and toughness "
-    r"(?P<power>\d+)/(?P<toughness>\d+) and "
+    r"(?P<power>\d+)/(?P<toughness>\d+)(?:,? and|,) "
     r"(?:becomes? an? (?P<subtypes>[A-Za-z][A-Za-z' ]*?) in addition to (?:its|their) other types"
     r"|(?P<every>gains? all creature types))"
+    r"(?:,? and gains? (?P<keywords>[a-z][a-z ,]*?))?"
     r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "Target creature gains all creature types until end of turn." / "Target
+#: creature loses all creature types until end of turn." (Amoeboid
+#: Changeling's two tap abilities) - layer 4 (CR 613.1d). Gaining them is
+#: changeling's own "every creature type" (CR 205.3m, CR 702.73a) granted
+#: for the duration; losing them is the creature-type set emptied (CR
+#: 205.1a), applied after changeling's own CDA (CR 613.3) so even a
+#: changeling ends up with none.
+_GAINS_OR_LOSES_ALL_CREATURE_TYPES_RE = re.compile(
+    rf"^(?:{_SUBJECT}) (?P<verb>gains|loses) all creature types until end of turn\.?$",
     re.IGNORECASE,
 )
 
@@ -4987,6 +5005,19 @@ _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
     r"|each equal to (?P<each>\d+)(?: plus (?P<plus>\d+))?)"
     r"(?:(?P<with_abilities>(?:,| and) (?!gains )[a-z][a-z ,]*?))?"
     r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))?(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+#: "This creature becomes a Human Spirit Warrior with trample and lifelink."
+#: (Warden of the First Tree's second step, once its "If this creature is a
+#: Warrior, it ..." gate is read - `machines/becomes.py`) -
+#: `_BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE`'s twin with no base power and
+#: toughness: the creature types set (CR 205.1a, layer 4) and each named
+#: keyword granted (layer 6, CR 613.1f), until the end of the game when no
+#: duration is printed (CR 611.2a).
+_BECOMES_CREATURE_TYPE_WITH_ABILITIES_RE = re.compile(
+    rf"^(?:{_SUBJECT}) becomes an? (?P<subtype>[a-z'-]+(?: [a-z'-]+)*?) "
+    r"with (?!base power)(?P<abilities>[a-z][a-z ,]*?)(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
 
@@ -7237,7 +7268,12 @@ def _base_pt_set_builder(power: int, toughness: int) -> EffectBuilder:
 
 
 def _base_pt_set_and_type_builder(
-    power: int, toughness: int, subtypes: Sequence[str], *, every_creature_type: bool
+    power: int,
+    toughness: int,
+    subtypes: Sequence[str],
+    *,
+    every_creature_type: bool,
+    keywords: Sequence[str] = (),
 ) -> EffectBuilder:
     """`_BASE_PT_SET_AND_TYPE_RE`'s shape: per target, one layer 4 addition -
     each named creature type (CR 205.1b) or every creature type - and one
@@ -7267,6 +7303,10 @@ def _base_pt_set_and_type_builder(
                 )
                 for subtype in subtypes
             )
+            parts.extend(
+                (f"gains {keyword}", Layer.ABILITY, None, grant_ability(keyword))
+                for keyword in keywords
+            )
             parts.append(
                 (
                     f"has base P/T {power}/{toughness}",
@@ -7292,11 +7332,39 @@ def _base_pt_set_and_type_builder(
     return builder
 
 
+def _gains_or_loses_all_creature_types_builder(*, gains: bool) -> EffectBuilder:
+    """`_GAINS_OR_LOSES_ALL_CREATURE_TYPES_RE`'s shape: one layer 4 effect per
+    target (CR 613.1d), until end of turn, fixed to the objects resolved now
+    (CR 611.2c)."""
+    modification: Modification = AddEveryCreatureType() if gains else SetCreatureTypes()
+    what = "gains all creature types" if gains else "loses all creature types"
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {target.name} {what}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(target, target.zone_change_stamp),
+                modification=modification,
+            )
+            for target in targets
+        ]
+
+    return builder
+
+
 def _becomes_creature_type_with_base_pt_builder(
     subtypes: Sequence[str],
     colors: Sequence[Color],
-    power: int,
-    toughness: int,
+    power: int | None,
+    toughness: int | None,
     *,
     loses_abilities: bool,
     artifact_creature: bool = False,
@@ -7358,14 +7426,15 @@ def _becomes_creature_type_with_base_pt_builder(
                 (f"gains {keyword}", Layer.ABILITY, None, grant_ability(keyword))
                 for keyword in keywords
             )
-            parts.append(
-                (
-                    f"has base P/T {power}/{toughness}",
-                    Layer.POWER_TOUGHNESS,
-                    Sublayer.SET,
-                    set_power_toughness(power, toughness),
+            if power is not None and toughness is not None:
+                parts.append(
+                    (
+                        f"has base P/T {power}/{toughness}",
+                        Layer.POWER_TOUGHNESS,
+                        Sublayer.SET,
+                        set_power_toughness(power, toughness),
+                    )
                 )
-            )
             effects.extend(
                 ContinuousEffect(
                     description=f"{source.name}: {target.name} {what}",
@@ -11816,11 +11885,22 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             if read is None:
                 return None
             subtypes = read
+        granted_keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated_keywords = _split_and_validate_keywords(match.group("keywords"))
+            if validated_keywords is None:
+                return None
+            granted_keywords = validated_keywords
         return _base_pt_set_and_type_builder(
             int(match.group("power")),
             int(match.group("toughness")),
             subtypes,
             every_creature_type=match.group("every") is not None,
+            keywords=granted_keywords,
+        )
+    if match := _GAINS_OR_LOSES_ALL_CREATURE_TYPES_RE.fullmatch(sentence):
+        return _gains_or_loses_all_creature_types_builder(
+            gains=match.group("verb").lower() == "gains"
         )
     if match := _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE.fullmatch(sentence):
         extra_type = _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
@@ -11879,6 +11959,20 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             artifact_creature=artifact,
             creature_card_type=creature,
             keywords=tuple(keywords),
+            until_eot=match.group("until_eot") is not None,
+        )
+    if match := _BECOMES_CREATURE_TYPE_WITH_ABILITIES_RE.fullmatch(sentence):
+        with_subtypes = _creature_type_words(match.group("subtype"))
+        with_abilities = _with_ability_list(match.group("abilities"))
+        if with_subtypes is None or with_abilities is None:
+            return None
+        return _becomes_creature_type_with_base_pt_builder(
+            tuple(with_subtypes),
+            (),
+            None,
+            None,
+            loses_abilities=False,
+            keywords=tuple(with_abilities),
             until_eot=match.group("until_eot") is not None,
         )
     if (match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence)) and (

@@ -371,6 +371,16 @@ _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 #: match. What Mother actually grants is written onto the *target* by
 #: `machines/layers.py` as a resolved "Protection from red" line, and that line
 #: is what `Game._effective_protection_qualities` reads.
+#: CR 702.16i/702.16k's player quality: "protection from each of your
+#: opponents" (Figure of Fable's Avatar) is shorthand for protection from
+#: each opponent of the protected permanent's controller, and protection from
+#: a player is protection from every object that player controls (and every
+#: object they own that nobody else controls). Read by
+#: `Game._player_quality_protects`, which knows who "your" is.
+_EACH_OPPONENT_PROTECTION_QUALITY = re.compile(
+    r"^each (?:of your )?opponents?$|^your opponents$", re.IGNORECASE
+)
+
 _UNRESOLVED_PROTECTION_QUALITY = re.compile(
     r"^(?:a |the )?(?:color|colour|card type|quality) of your choice\b", re.IGNORECASE
 )
@@ -9311,7 +9321,10 @@ class Game(EngineModel):
             return False
         source_card = self._source_card_of(subject)
         if not isinstance(thing, AbilityOnStack):
-            if source_card is not None and self.protection_refusal(thing, source_card) is not None:
+            if (
+                source_card is not None
+                and self.protection_refusal(thing, source_card, source_controller=owner) is not None
+            ):
                 return False
             if self.shroud_refusal(thing) is not None:
                 return False
@@ -15339,7 +15352,13 @@ class Game(EngineModel):
             return None
 
         source_card = self._source_card_of(spell)
-        if source_card is not None and self.protection_refusal(thing, source_card) is not None:
+        if (
+            source_card is not None
+            and self.protection_refusal(
+                thing, source_card, source_controller=self.controller_of(spell).username
+            )
+            is not None
+        ):
             # CR 702.16b, checked again here because protection can be gained
             # after a spell was legally announced.
             return None
@@ -15723,8 +15742,27 @@ class Game(EngineModel):
         source = spell.source(self)
         return source.card if source is not None else None
 
+    def _player_quality_protects(
+        self, target: CardState, quality: str, source_controller: str | None
+    ) -> bool:
+        """Whether `quality` is CR 702.16k's player quality and names the
+        player controlling the source: "each of your opponents" is every
+        opponent of `target`'s controller (CR 702.16i), so a source an
+        opponent controls is one it has protection from, and one its own
+        controller controls never is. `False` for any other quality, and for a
+        source whose controller is not known."""
+        if source_controller is None or not _EACH_OPPONENT_PROTECTION_QUALITY.match(
+            quality.strip()
+        ):
+            return False
+        return source_controller != self.controller_of(target).username
+
     def protection_refusal(
-        self, target: "Targetable | AbilityOnStack", source: "Card"
+        self,
+        target: "Targetable | AbilityOnStack",
+        source: "Card",
+        *,
+        source_controller: str | None = None,
     ) -> str | None:
         """Why protection stops this source touching this target, or None (CR 702.16b).
 
@@ -15755,7 +15793,9 @@ class Game(EngineModel):
         if not isinstance(target, CardState):
             return None
         for quality in self._effective_protection_qualities(target):
-            if self.source_has_quality_of_card(source, quality):
+            if self._player_quality_protects(
+                target, quality, source_controller
+            ) or self.source_has_quality_of_card(source, quality):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
@@ -16169,8 +16209,11 @@ class Game(EngineModel):
         and the target's protection is `_effective_protection_qualities`', its
         printed protection plus any granted in layer 6 (CR 613.1f).
         """
+        source_controller = self.controller_of(source).username
         for quality in self._effective_protection_qualities(target):
-            if self.source_has_quality(source, quality):
+            if self._player_quality_protects(
+                target, quality, source_controller
+            ) or self.source_has_quality(source, quality):
                 return quality
         return None
 
@@ -16213,7 +16256,9 @@ class Game(EngineModel):
         source = self._source_card_of(spell)
         if source is None:
             return None
-        return self.protection_refusal(target, source)
+        return self.protection_refusal(
+            target, source, source_controller=self.controller_of(spell).username
+        )
 
     def spell_fizzles(self, spell: StackObject) -> bool:
         """Whether this spell would be removed from the stack unresolved (CR 608.2b).
@@ -16662,8 +16707,11 @@ class Game(EngineModel):
             return None
         if event.card is None:
             return self._player_protection_from_damage(event)
+        source_controller = self.controller_of(event.source).username
         for quality in self._effective_protection_qualities(event.card):
-            if self.source_has_quality(event.source, quality):
+            if self._player_quality_protects(
+                event.card, quality, source_controller
+            ) or self.source_has_quality(event.source, quality):
                 return (
                     f"{event.card.name} has protection from {quality}, so damage from "
                     f"{event.source.name} is prevented (CR 702.16e)"
