@@ -3204,6 +3204,13 @@ def condition_matches(
         return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.BECOMES_TARGET:
+        if getattr(ability, "keyword", None) == "ward":
+            from .targeting import ward_is_switched_off
+
+            if ward_is_switched_off(game, source):
+                # "Ward abilities of those creatures don't trigger." (Nowhere
+                # to Run) - CR 702.21a's trigger never happens.
+                return False
         # CR 115.1: "Some spells and abilities require their controller to
         # choose one or more targets for them ... These targets are declared as
         # part of the process of putting the spell or ability on the stack"

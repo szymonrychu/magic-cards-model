@@ -123,3 +123,8 @@ def has_full_party(game: Any, player: str) -> bool:
     """CR 700.8c: "A player has a full party if there are four creatures in
     that player's party." """
     return party_size(game, player) == len(PARTY_ROLES)
+
+
+def solve_condition_of_line(line: str) -> str | None:
+    """Placeholder until the Case reader lands below."""
+    return None

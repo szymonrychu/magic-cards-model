@@ -439,3 +439,82 @@ def granted_affinity_reductions(
         if amount:
             reductions.append(ManaCost(generic=amount))
     return reductions
+
+
+# --------------------------------------------------------------------------
+# R0a-T5: play permissions a resolving ability grants (CR 601.3, CR 118.9)
+# --------------------------------------------------------------------------
+
+#: "Choose an exiled card an opponent owns with a void counter on it. You may
+#: play it this turn without paying its mana cost." (Dauthi Voidwalker). The
+#: owner phrase and the counter name are read, not fixed; "play" reaches a
+#: land (CR 601.1a's wider verb) where "cast" does not.
+_CHOOSE_EXILED_WITH_COUNTER_RE = re.compile(
+    r"^choose an exiled card(?: (?P<owner>an opponent owns|you own))? with an? "
+    r"(?P<counter>[a-z0-9+/\-]+) counter on it\. you may (?P<verb>play|cast) "
+    r"(?:it|that card) this turn(?P<free> without paying its mana cost)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _permission_action(verb: str) -> Any:
+    from .casting import PlayAction
+
+    return PlayAction.PLAY if verb.lower() == "play" else PlayAction.CAST
+
+
+def parse_choose_exiled_with_counter_play_clause(text: str) -> Any:
+    """`_CHOOSE_EXILED_WITH_COUNTER_RE`'s effect: the controller chooses one
+    card in exile carrying the counter (and owned as printed), and gets a
+    this-turn play permission for it (CR 601.3), free where printed (CR
+    118.9). Nothing to choose is nothing done."""
+    match = _CHOOSE_EXILED_WITH_COUNTER_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    owner = (match.group("owner") or "").lower()
+    kind = match.group("counter").lower()
+    action = _permission_action(match.group("verb"))
+    free = match.group("free") is not None
+
+    def effect(game: Any, ability: Any) -> None:
+        from .decisions import Decision, DecisionKind, source_id_of
+
+        controller = ability.controller
+        candidates = [
+            state
+            for state in game.exile
+            if state.counter_count(kind) > 0
+            and (
+                not owner
+                or (owner == "an opponent owns" and state.owner != controller)
+                or (owner == "you own" and state.owner == controller)
+            )
+        ]
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=f"choose an exiled card with a {kind} counter on it",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        by_id = {state.id: state for state in candidates}
+        for chosen_id in chosen_ids or ():
+            chosen = by_id.get(chosen_id)
+            if chosen is None:
+                continue
+            game.grant_play_permission(
+                chosen,
+                controller,
+                action=action,
+                pays_mana_cost=not free,
+                source_name=ability.source_name,
+                rule="CR 118.9" if free else "CR 601.3",
+            )
+
+    return effect

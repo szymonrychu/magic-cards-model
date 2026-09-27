@@ -6196,9 +6196,17 @@ class Game(EngineModel):
         (CR 104.3c, 704.5b).
         """
         assert self.turn is not None
-        if self.turn.skips_draw():
+        if self.turn.skips_draw() or self.static_skips_draw_step():
             return []
         return self.draw_cards(self.active_player, 1)
+
+    def static_skips_draw_step(self) -> bool:
+        """Whether a permanent the active player controls says "Skip your draw
+        step." (CR 614.10) - `replacement.draw_step_skipped_by`."""
+        from ..machines.replacement import draw_step_skipped_by
+
+        assert self.turn is not None
+        return draw_step_skipped_by(self, self.turn.active_player) is not None
 
     def saga_lore_step(self) -> None:
         """CR 703.4f, 505.4, 714.3c: a lore counter on each Saga the active
@@ -16224,6 +16232,12 @@ class Game(EngineModel):
             return None
         if protected == source_controller:
             return None
+        from ..machines.targeting import ignores_hexproof
+
+        if ignores_hexproof(self, target, source_controller):
+            # CR 702.11e: "as though it didn't have hexproof" - every hexproof
+            # ability, "hexproof from" included (`machines/targeting.py`).
+            return None
         name = target.username if isinstance(target, Player) else target.name
         if plain:
             return (
@@ -25225,7 +25239,7 @@ class Game(EngineModel):
             # across an `advance()` boundary.
             self.turn.add_second_combat_damage_step()
         step = self.turn.advance()
-        if step is Step.DRAW and self.turn.skips_draw():
+        if step is Step.DRAW and (self.turn.skips_draw() or self.static_skips_draw_step()):
             # CR 103.8a skips the starting player's whole first draw step, and
             # CR 500.11: to skip a step "is to proceed past it as though it
             # didn't exist" - no beginning event, so no "at the beginning of

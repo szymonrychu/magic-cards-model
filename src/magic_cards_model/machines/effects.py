@@ -27574,6 +27574,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         put_or_else = _parse_may_put_card_from_hand_clause(effect_text, for_spell=False)
         if put_or_else is not None:
             return put_or_else
+    r0a_t5 = _r0a_t5_ability_effect(effect_text)
+    if r0a_t5 is not None:
+        return r0a_t5
     c02_t6 = _c02_t6_ability_effect(effect_text)
     if c02_t6 is not None:
         return c02_t6
@@ -65144,6 +65147,18 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
         )
 
     return effect
+
+
+def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
+    """R0a-T5's whole-text ability readers, tried ahead of the clause split
+    (each reads a multi-sentence instruction chain), one per owning module."""
+    from .spell_grants import parse_choose_exiled_with_counter_play_clause
+
+    for reader in (parse_choose_exiled_with_counter_play_clause,):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None
 
 
 def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
