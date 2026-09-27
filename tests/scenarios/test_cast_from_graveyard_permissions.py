@@ -27,6 +27,7 @@ import pytest
 from magic_cards_model.machines import Step
 from magic_cards_model.machines.legal_actions import legal_actions
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card import Color
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
@@ -287,3 +288,170 @@ def test_noctis_cannot_be_used_without_the_life_to_pay():
     with pytest.raises(ValueError):
         _cast(scenario, memnite)
     assert memnite.zone is Zone.GRAVEYARD
+
+
+# -- Esper Origins // Summon: Esper Maduin ---------------------------------------------
+#
+# "Surveil 2. You gain 2 life. If this spell was cast from a graveyard, exile
+# it, then put it onto the battlefield transformed under its owner's control
+# with a finality counter on it." plus Flashback {3}{G} (CR 702.34a). Cast
+# from a graveyard, the spell exiles itself as it resolves and CR 712.14a's
+# "transformed" puts the back face - a Saga creature - onto the battlefield;
+# CR 608.2n's graveyard step then finds no spell left. CR 714.3a puts the
+# first lore counter on the Saga as it enters, and each chapter (CR 714.2b)
+# triggers as lore counters reach it.
+
+ESPER = "Esper Origins // Summon: Esper Maduin"
+
+
+def _esper(*, hand=(), graveyard=(), library=("Island",) * 5, extra=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=list(hand),
+            graveyard=list(graveyard),
+            battlefield=["Forest"] * 4 + list(extra),
+            library=list(library),
+        )
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _flashback_esper(scenario):
+    esper = scenario.find("Esper Origins", Zone.GRAVEYARD, "alice")
+    scenario.will_choose_cards(username="alice")  # surveil 2: keep both on top
+    _cast(scenario, esper, keyword="Flashback")
+    _resolve_everything(scenario)
+    return esper
+
+
+def test_esper_origins_cast_from_hand_surveils_gains_and_goes_to_the_graveyard():
+    scenario = _esper(hand=[ESPER])
+    esper = scenario.find("Esper Origins", Zone.HAND, "alice")
+    scenario.will_choose_cards(username="alice")
+    scenario.game.cast(esper, "alice", mana_sources=scenario.game.permanents_controlled_by("alice"))
+    _resolve_everything(scenario)
+
+    assert scenario.player("alice").life == 22
+    assert esper.zone is Zone.GRAVEYARD, "not cast from a graveyard: no transform"
+    assert not esper.transformed
+
+
+def test_esper_origins_flashback_puts_the_saga_creature_onto_the_battlefield():
+    scenario = _esper(graveyard=[ESPER], library=["Grizzly Bears", "Island", "Island"])
+
+    esper = _flashback_esper(scenario)
+
+    assert scenario.player("alice").life == 22
+    assert esper.zone is Zone.BATTLEFIELD
+    assert esper.transformed
+    assert scenario.game.controller_of(esper).username == "alice"
+    assert esper.counter_count(Counter.FINALITY) == 1
+    computed = scenario.game.computed_board().of(esper)
+    assert computed.is_creature
+    assert (computed.power, computed.toughness) == (4, 4)
+    assert esper.counter_count(Counter.LORE) == 1, "CR 714.3a"
+
+
+def test_chapter_one_puts_a_revealed_permanent_card_into_hand():
+    scenario = _esper(graveyard=[ESPER], library=["Grizzly Bears", "Island", "Island"])
+
+    _flashback_esper(scenario)
+
+    hand = [state.name for state in scenario.player("alice").hand]
+    assert "Grizzly Bears" in hand
+
+
+def test_chapter_one_leaves_a_revealed_nonpermanent_card_on_top():
+    scenario = _esper(graveyard=[ESPER], library=["Lightning Bolt", "Island", "Island"])
+
+    _flashback_esper(scenario)
+
+    assert scenario.player("alice").library[0].name == "Lightning Bolt"
+    assert "Lightning Bolt" not in [state.name for state in scenario.player("alice").hand]
+
+
+def test_chapter_two_adds_two_green_mana():
+    scenario = _esper(graveyard=[ESPER])
+    esper = _flashback_esper(scenario)
+
+    scenario.game.add_counters(esper, Counter.LORE, 1)
+    _resolve_everything(scenario)
+
+    assert scenario.player("alice").mana_pool.floating.get(Color.GREEN, 0) == 2
+
+
+def test_chapter_three_pumps_other_creatures_and_the_saga_is_then_exiled_by_finality():
+    scenario = _esper(graveyard=[ESPER], extra=["Llanowar Elves"])
+    esper = _flashback_esper(scenario)
+    elves = scenario.creature("Llanowar Elves", "alice")
+
+    scenario.game.add_counters(esper, Counter.LORE, 1)
+    _resolve_everything(scenario)
+    scenario.game.add_counters(esper, Counter.LORE, 1)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    computed = scenario.game.computed_board().of(elves)
+    assert (computed.power, computed.toughness) == (3, 3)
+    assert "Trample" in computed.abilities
+    scenario.game.check_state_based_actions()
+    assert esper.zone is Zone.EXILE, "CR 714.4 sacrifice, then the finality counter"
+
+
+def test_the_cast_from_graveyard_transform_reads_any_leading_instruction_and_counter():
+    """The template, not Esper Origins' one text (no second printing carries
+    it): any readable leading instruction, and the counter rider optional."""
+    from magic_cards_model.machines.effects import effect_for
+
+    for text in (
+        "Surveil 2. You gain 2 life. If this spell was cast from a graveyard, exile it, "
+        "then put it onto the battlefield transformed under its owner's control with a "
+        "finality counter on it.",
+        "Draw a card. If this spell was cast from a graveyard, exile it, then put it onto "
+        "the battlefield transformed under its owner's control.",
+    ):
+        assert effect_for("Origins", text) is not None, text
+
+
+# Llanowar Empath (off-set proof of chapter I's reader, legal in Pioneer and
+# Modern, in no deck list): "When this creature enters, scry 2, then reveal
+# the top card of your library. If it's a creature card, put it into your
+# hand." - the same "if it's a <kind> card, put it into your hand" with no
+# else-arm (the card stays on top, CR 701.20a), behind a leading scry.
+
+
+def _empath(library):
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Llanowar Empath"], battlefield=["Forest"] * 4, library=library)
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_cards(username="alice")  # scry 2: keep both on top
+    empath = scenario.find("Llanowar Empath", Zone.HAND, "alice")
+    scenario.game.cast(
+        empath, "alice", mana_sources=scenario.game.permanents_controlled_by("alice")
+    )
+    _resolve_everything(scenario)
+    return scenario
+
+
+def test_llanowar_empath_puts_a_revealed_creature_card_into_hand():
+    scenario = _empath(["Grizzly Bears", "Island", "Island"])
+
+    assert [state.name for state in scenario.player("alice").hand] == ["Grizzly Bears"]
+
+
+def test_llanowar_empath_leaves_a_revealed_noncreature_card_on_top():
+    scenario = _empath(["Forest", "Island", "Island"])
+
+    assert scenario.player("alice").hand == []
+    assert scenario.player("alice").library[0].name == "Forest", (
+        "a land is a permanent, not a creature"
+    )

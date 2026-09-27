@@ -3006,6 +3006,16 @@ def _parse_line(raw: str, keywords: list[str], face: str) -> list[Ability]:
         ability_word = word_match.group(1)
         text = text[word_match.end() :]
         common = {**common, "ability_word": ability_word}
+        if ability_word.lower() == "to solve":
+            # CR 719.3a: "'To solve — [Condition]' means 'At the beginning of
+            # your end step, if [condition] and this Case is not solved, this
+            # Case becomes solved.'" The "not solved" half is read by
+            # `triggers.condition_matches` off this ability word.
+            condition = text.strip().rstrip(".")
+            text = (
+                f"At the beginning of your end step, if {condition[:1].lower()}"
+                f"{condition[1:]}, this Case becomes solved."
+            )
 
     triggered = _parse_triggered(text, common)
     if triggered is not None:
@@ -4016,7 +4026,10 @@ def _activated_ability_zone(
             return _EXILE_ZONE_WORDS[match.group("zone").lower()], "CR 113.6j"
         if _REVEALS_ITSELF_FROM_HAND.match(piece.text):
             return Zone.HAND, "CR 113.6j"
-    if _RETURNS_ITSELF_FROM_GRAVEYARD.search(effect):
+    # A quoted ability the effect *grants* ("... gain "You may cast this card
+    # from your graveyard"", Case of the Uneaten Feast) is not this ability
+    # moving its own object, so quoted text is not read for CR 113.6m.
+    if _RETURNS_ITSELF_FROM_GRAVEYARD.search(re.sub(r'"[^"]*"', '""', effect)):
         return Zone.GRAVEYARD, "CR 113.6m"
     if instructions and _ACTIVATE_ONLY_IF_SUSPENDED.search(instructions):
         return Zone.EXILE, "CR 702.62b"

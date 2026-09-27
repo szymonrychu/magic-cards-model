@@ -40,6 +40,7 @@ enchantment naming itself the identical way reads the same code path).
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ..models.card import Type
@@ -166,5 +167,203 @@ def parse_return_other_linked_cards_to_hand_clause(clause: str) -> AbilityEffect
         with game.returning_together():  # CR 603.2c: one event, several cards
             for card in remaining:
                 game.return_to_hand(card)
+
+    return effect
+
+
+# --------------------------------------------------------------------------
+# R0a-T5: "exile all <group> until this <type> leaves the battlefield"
+# (CR 610.3) and "Put each card exiled with this <type> into its owner's
+# graveyard, then create <token> for each card put into a graveyard this way.
+# Sacrifice this <type>." (CR 607.1)
+# --------------------------------------------------------------------------
+
+_GROUP_STAT_RE = re.compile(
+    r"^(?P<base>.+?) with (?P<stat>mana value|power|toughness) (?P<n>\d+) or "
+    r"(?P<cmp>less|greater)$",
+    re.IGNORECASE,
+)
+
+#: "artifacts and creatures", "creatures", "artifacts your opponents
+#: control" - one or two plural types joined by "and" (CR 608.2c reads "and"
+#: here as the union of the two groups), with the damage grammar's own
+#: controller qualifier.
+_TWO_TYPES_RE = re.compile(r"^(?P<a>[a-z]+s) and (?P<b>[a-z]+s)(?P<rest>(?: .+)?)$", re.IGNORECASE)
+
+_EXILE_ALL_UNTIL_LEAVES_RE = re.compile(
+    rf"^exile all (?P<group>.+?) until this (?P<type>{_LINKED_EXILE_PERMANENT_TYPE}) leaves "
+    r"the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _group_predicate(group: str) -> Callable[[Game, CardState, str], bool] | None:
+    """The mass group as a predicate on the computed board (CR 613.5), read at
+    resolution (CR 611.2c's "determined when that effect begins")."""
+    from .effects import _parse_damage_group_phrase
+
+    text = group.strip()
+    stat = _GROUP_STAT_RE.fullmatch(text)
+    base_text = stat.group("base") if stat else text
+    two = _TWO_TYPES_RE.fullmatch(base_text)
+    if two is not None:
+        rest = two.group("rest")
+        first = _parse_damage_group_phrase(f"{two.group('a')}{rest}")
+        second = _parse_damage_group_phrase(f"{two.group('b')}{rest}")
+        if first is None or second is None:
+            return None
+
+        def base(game: Game, permanent: CardState, controller: str) -> bool:
+            return first(game, permanent, controller) or second(game, permanent, controller)
+
+    else:
+        single = _parse_damage_group_phrase(base_text)
+        if single is None:
+            return None
+        base = single
+    if stat is None:
+        return base
+    which = stat.group("stat").lower()
+    bound = int(stat.group("n"))
+    at_least = stat.group("cmp").lower() == "greater"
+
+    def predicate(game: Game, permanent: CardState, controller: str) -> bool:
+        if not base(game, permanent, controller):
+            return False
+        computed = game.characteristics_of(permanent)
+        if which == "mana value":
+            value = permanent.mana_value
+        elif which == "power":
+            value = computed.numeric_power
+        else:
+            value = computed.numeric_toughness
+        return value >= bound if at_least else value <= bound
+
+    return predicate
+
+
+def parse_exile_all_until_leaves_clause(clause: str) -> AbilityEffect | None:
+    """`_EXILE_ALL_UNTIL_LEAVES_RE`'s effect: every permanent in the group is
+    exiled, linked to the source (CR 607.1, so "cards exiled with this
+    artifact" finds them), and watched for the source leaving (CR 610.3) -
+    returning each under its owner's control (CR 610.3c). CR 610.3b: if the
+    source already left before this resolves, nothing is exiled."""
+    match = _EXILE_ALL_UNTIL_LEAVES_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    predicate = _group_predicate(match.group("group"))
+    if predicate is None:
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        from ..models.card_state import ExileAnnotation, ExileMarker
+        from .effects import _watch_for_departure_and_return_exiled_card
+
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return  # CR 610.3b
+        controller = ability.controller
+        chosen = [
+            permanent
+            for permanent in list(game.battlefield)
+            if permanent is not source and predicate(game, permanent, controller)
+        ]
+        for permanent in chosen:
+            exiled = game.exile_permanent(permanent)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token does not come back
+            exiled.exile_annotation = ExileAnnotation(
+                marker=ExileMarker.LINKED,
+                owner=exiled.owner,
+                turn_exiled=game.turn.turns_taken if game.turn is not None else None,
+                linked_permanent_id=source.id,
+                linked_permanent_stamp=source.zone_change_stamp,
+            )
+            _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
+
+    return effect
+
+
+_PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE = re.compile(
+    rf"^put each card exiled with this (?P<type>{_LINKED_EXILE_PERMANENT_TYPE}) into its "
+    r"owner'?s graveyard, then create an? (?P<desc>.+?) tokens? for each card put into a "
+    r"graveyard this way\.(?: sacrifice this (?P<sac>"
+    rf"{_LINKED_EXILE_PERMANENT_TYPE})\.)?$",
+    re.IGNORECASE,
+)
+
+
+def parse_put_linked_into_graveyard_then_tokens_clause(clause: str) -> AbilityEffect | None:
+    """`_PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE`'s effect (CR 607.1's linked
+    pile, CR 701.7a's tokens counted off what actually reached a graveyard -
+    a replacement that exiled a card instead does not count - then the
+    source is sacrificed, CR 701.21a)."""
+    from .effects import _parse_generic_token_descriptor
+
+    match = _PUT_LINKED_INTO_GRAVEYARD_THEN_TOKENS_RE.fullmatch(" ".join(clause.split()))
+    if match is None:
+        return None
+    definition = _parse_generic_token_descriptor(match.group("desc").split(), None)
+    if definition is None:
+        return None
+    sacrifices = match.group("sac") is not None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        from ..models.token import create_tokens
+
+        put = 0
+        for card in _linked_cards(game, ability):
+            landed = game.put_into_graveyard(card)
+            if landed.zone is Zone.GRAVEYARD:
+                put += 1
+        if put:
+            create_tokens(game, definition, ability.controller, put)
+        if sacrifices:
+            source = ability.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD:
+                game.sacrifice(source)
+
+    return effect
+
+
+#: "The exiled card's owner manifests dread." (Unidentified Hovership's
+#: leaves-the-battlefield trigger, CR 603.6c). "The exiled card" is the pile
+#: the same object's enters trigger exiled - linked by
+#: `effects.link_cards_exiled_during` (CR 607.1, CR 607.2a) - and each player
+#: who owns one or more of those cards manifests dread once (CR 701.62a;
+#: CR 607.3's plural read). No card in the pile - "up to one" chose none, or
+#: the enters trigger has not resolved yet - is nobody manifesting. The
+#: exiled cards themselves stay where they are.
+_EXILED_CARD_OWNER_MANIFESTS_DREAD_RE = re.compile(
+    r"^the exiled (?:card's|cards') owners? (?:each )?manifests? dread\.?$", re.IGNORECASE
+)
+
+
+def parse_exiled_card_owner_manifests_dread_clause(text: str) -> AbilityEffect | None:
+    """`_EXILED_CARD_OWNER_MANIFESTS_DREAD_RE`'s effect, or `None`."""
+    match = _EXILED_CARD_OWNER_MANIFESTS_DREAD_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        from .decisions import source_id_of
+        from .effects import manifest_dread
+
+        if ability.source_id is None:
+            return
+        owners: list[str] = []
+        for exiled in game.cards_imprinted_on(ability.source_id):
+            owner = exiled.owner
+            if owner is not None and owner not in owners:
+                owners.append(owner)
+        # CR 101.4: several owners act in APNAP order, active player first.
+        seats = [player.username for player in game.players]
+        active = seats.index(game.turn.active_player) if game.turn.active_player in seats else 0
+        turn_order = seats[active:] + seats[:active]
+        for owner in sorted(
+            owners,
+            key=lambda name: turn_order.index(name) if name in turn_order else len(turn_order),
+        ):
+            manifest_dread(game, owner, ability.source_name, source_id=source_id_of(ability))
 
     return effect

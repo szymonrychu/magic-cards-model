@@ -25492,7 +25492,10 @@ def _parse_mill_then_may_put_on_top_clause(text: str) -> AbilityEffect | None:
 #: on the bottom of your library" - Ajani; "... you may put it into your
 #: graveyard" - Nylea, Keen-Eyed's `{2}{G}`): `else_may` asks, and a decline
 #: leaves the card on top of the library (CR 701.20a: revealing a card does
-#: not move it).
+#: not move it). The else-arm may be absent altogether - Summon: Esper
+#: Maduin's chapter I and Llanowar Empath's "If it's a creature card, put it
+#: into your hand." - and then a card failing the condition simply stays on
+#: top, for the same reason.
 _LOOK_TOP_CARD_KIND = (
     r"(?:permanent|land|creature|artifact|enchantment|instant|sorcery|planeswalker)"
 )
@@ -25501,10 +25504,10 @@ _LOOK_TOP_CARD_CONDITIONAL_RE = re.compile(
     rf"if it's an? (?P<kind>{_LOOK_TOP_CARD_KIND}(?: or {_LOOK_TOP_CARD_KIND})*)"
     r" card, (?P<may>you may )?put it "
     r"(?P<dest>onto the battlefield tapped|onto the battlefield|into your hand"
-    r"|into your graveyard)\. "
-    r"(?:otherwise, (?P<else_may>you may )?put (?:it|that card|the card)"
+    r"|into your graveyard)(?:\.|$)"
+    r"(?:\s*(?:otherwise, (?P<else_may>you may )?put (?:it|that card|the card)"
     r"|(?P<decline_runs_else>if you don't put the card onto the battlefield, put it)) "
-    r"(?P<other>into your hand|into your graveyard|on the bottom of your library)\.?$",
+    r"(?P<other>into your hand|into your graveyard|on the bottom of your library)\.?)?$",
     re.IGNORECASE,
 )
 
@@ -25637,6 +25640,17 @@ def _aura_host_for_entry(
     return None
 
 
+#: One instruction ahead of the look/reveal - Llanowar Empath's "scry 2, then
+#: reveal the top card of your library. If it's a creature card, put it into
+#: your hand." CR 608.2c: the instructions are followed in the order written,
+#: so the scry settles which card is on top before it is revealed.
+_LEAD_THEN_LOOK_TOP_CARD_RE = re.compile(
+    r"^(?P<lead>[^.,]+?)(?:, then |\.\s+)"
+    r"(?P<rest>(?:look at|reveal) the top card of your library\..+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     """`_LOOK_TOP_CARD_CONDITIONAL_RE`'s shape - Fecund Greenshell's own
     enters trigger, and Coiling Oracle's, Risen Reef's, and Skyward Eye
@@ -25654,6 +25668,18 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     enchant it cannot be put there, and the instruction's other arm takes it.
     """
     stripped = _strip_non_effect_preamble(text).strip()
+    led = _LEAD_THEN_LOOK_TOP_CARD_RE.fullmatch(stripped)
+    if led is not None:
+        lead = parse_mixed_effect(led.group("lead").strip())
+        rest = _parse_look_top_card_conditional_clause(led.group("rest"))
+        if lead is None or rest is None:
+            return None
+
+        def led_effect(game: "Game", ability: AbilityOnStack) -> None:
+            lead(game, ability)
+            rest(game, ability)
+
+        return led_effect
     match = _LOOK_TOP_CARD_CONDITIONAL_RE.fullmatch(stripped)
     trailing = match is None
     if match is None:
@@ -25682,7 +25708,7 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
     else_optional = not trailing and match.group("else_may") is not None
     decline_runs_else = trailing or match.group("decline_runs_else") is not None
     destination = match.group("dest").lower()
-    otherwise = match.group("other").lower()
+    otherwise = (match.group("other") or "").lower()
     noun = f"{match.group('kind').lower()} card"
 
     def move(
@@ -25736,6 +25762,8 @@ def _parse_look_top_card_conditional_clause(text: str) -> AbilityEffect | None:
                     return
             elif move(game, player, top, destination, ability):
                 return
+        if not otherwise:
+            return  # CR 701.20a: no else-arm - the card stays on top.
         if else_optional and not game.may(
             player,
             f"put {top.name} {otherwise}",
@@ -28120,6 +28148,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         put_or_else = _parse_may_put_card_from_hand_clause(effect_text, for_spell=False)
         if put_or_else is not None:
             return put_or_else
+    r0a_t5 = _r0a_t5_ability_effect(effect_text)
+    if r0a_t5 is not None:
+        return r0a_t5
     c02_t6 = _c02_t6_ability_effect(effect_text)
     if c02_t6 is not None:
         return c02_t6
@@ -32143,6 +32174,9 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     lose_then_destroy = lose_abilities_then_destroy_spell_effect(whole)
     if lose_then_destroy is not None:
         return lose_then_destroy
+    r0a_t5 = _r0a_t5_spell_effect(whole)
+    if r0a_t5 is not None:
+        return r0a_t5
     c02_t6 = _c02_t6_spell_effect(whole)
     if c02_t6 is not None:
         return c02_t6
@@ -66063,6 +66097,49 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
         )
 
     return effect
+
+
+def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
+    """R0a-T5's whole-text ability readers, tried ahead of the clause split
+    (each reads a multi-sentence instruction chain), one per owning module."""
+    from .control_change import parse_gain_control_untimed_clause
+    from .delayed import parse_self_flicker_at_next_end_step_clause
+    from .designations import parse_becomes_solved_clause
+    from .hand_reveal_exile import parse_hand_exile_until_leaves_clause
+    from .linked_exile import (
+        parse_exile_all_until_leaves_clause,
+        parse_exiled_card_owner_manifests_dread_clause,
+        parse_put_linked_into_graveyard_then_tokens_clause,
+    )
+    from .spell_grants import (
+        parse_choose_exiled_with_counter_play_clause,
+        parse_exile_at_random_from_graveyard_play_clause,
+        parse_graveyard_cards_gain_cast_clause,
+    )
+
+    for reader in (
+        parse_choose_exiled_with_counter_play_clause,
+        parse_becomes_solved_clause,
+        parse_graveyard_cards_gain_cast_clause,
+        parse_self_flicker_at_next_end_step_clause,
+        parse_exile_all_until_leaves_clause,
+        parse_put_linked_into_graveyard_then_tokens_clause,
+        parse_hand_exile_until_leaves_clause,
+        parse_gain_control_untimed_clause,
+        parse_exile_at_random_from_graveyard_play_clause,
+        parse_exiled_card_owner_manifests_dread_clause,
+    ):
+        effect = reader(effect_text)
+        if effect is not None:
+            return effect
+    return None
+
+
+def _r0a_t5_spell_effect(effect_text: str) -> Effect | None:
+    """The spell-side twin of `_r0a_t5_ability_effect`."""
+    from .graveyard_cast_transform import parse_cast_from_graveyard_transform_clause
+
+    return parse_cast_from_graveyard_transform_clause(effect_text)
 
 
 def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:

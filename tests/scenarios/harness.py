@@ -1155,7 +1155,11 @@ class PlayedScenario:
         refuses any other zone without one.
         """
         player = self.player(username)
-        land = self.find(name, from_zone, player.username)
+        # A shared zone can hold a land the player neither owns nor controls
+        # (Dauthi Voidwalker's void card) - the same reason `cast` drops the
+        # owner filter there.
+        find_username = None if from_zone in self.game.shared_zones else player.username
+        land = self.find(name, from_zone, find_username)
         return self.game.play_land(land, player.username)
 
     # -- combat -----------------------------------------------------------

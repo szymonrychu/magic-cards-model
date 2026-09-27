@@ -103,6 +103,11 @@ class Keyword(StrEnum):
     #: ("sacrifice it at end of combat", CR 603.7/511.2) is
     #: `machines/keywords.py::_decayed_ability`'s `_TRIGGER_EXPANSIONS` entry.
     DECAYED = "decayed"
+    #: CR 702.28a-b: "Shadow is an evasion ability." "A creature with shadow
+    #: can't be blocked by creatures without shadow, and a creature without
+    #: shadow can't be blocked by creatures with shadow." Read in
+    #: `block_refusal`, both directions.
+    SHADOW = "shadow"
     #: CR 702.2a-c: a static ability that changes what counts as lethal damage
     #: when this creature assigns it, and adds a state-based action (CR 704.5h).
     DEATHTOUCH = "deathtouch"
@@ -2102,6 +2107,19 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
         has_keyword(blocker, Keyword.FLYING, game) or has_keyword(blocker, Keyword.REACH, game)
     ):
         return f"{attacker.name} has flying and {blocker.name} has neither flying nor reach"
+
+    attacker_shadow = has_keyword(attacker, Keyword.SHADOW, game)
+    if attacker_shadow != has_keyword(blocker, Keyword.SHADOW, game):
+        # CR 702.28b cuts both ways: shadow blocks and is blocked only by shadow.
+        if attacker_shadow:
+            return (
+                f"{attacker.name} has shadow, so {blocker.name} - a creature without "
+                f"shadow - cannot block it (CR 702.28b)"
+            )
+        return (
+            f"{blocker.name} has shadow, so it cannot block {attacker.name} - a creature "
+            f"without shadow (CR 702.28b)"
+        )
 
     # CR 702.16f: "Attacking creatures with protection can't be blocked by
     # creatures that have the stated quality."

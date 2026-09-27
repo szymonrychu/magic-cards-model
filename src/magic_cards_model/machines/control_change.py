@@ -15,6 +15,7 @@ import re
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from ..models.card import Color
 from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState
 from ..models.zone import Zone
 from .layers import (
@@ -366,6 +367,130 @@ def _parse_gain_control_longer_if_clause(effect_text: str) -> Effect | None:
                     ),
                     game=game,
                 )
+
+    return effect
+
+
+#: "Gain control of `<target>`.[ `<It|That creature>` becomes a[n]
+#: `<creature type>` in addition to its other types.][ Put a[n] `<kind>`
+#: counter on `<it|that creature>` if you control a[n] `<quality>` permanent
+#: other than that creature[ or `<this>`].]" - Sorin, Ravenous Neonate's -6
+#: and Captivating Vampire's activated ability. No duration is printed, so
+#: CR 611.2a: "If no duration is stated, it lasts until the end of the game" -
+#: the control change (layer 2, CR 613.1b) and the type change (layer 4,
+#: CR 613.1d) both outlive the source. The counter rider is decided once, as
+#: the ability resolves, against the board after the steal.
+_GAIN_CONTROL_UNTIMED_RE = re.compile(
+    r"^gain control of (?P<phrase>target [^.]+?)\."
+    r"(?:\s*(?:it|that creature) becomes an? (?P<subtype>[A-Z][a-z-]+) in addition to its "
+    r"other types\.)?"
+    r"(?:\s*put an? (?P<kind>[a-z]+) counter on (?:it|that creature) if you control an? "
+    r"(?P<quality>[a-z]+) permanent other than (?:that creature|it)"
+    rf"(?: or (?P<self>{_SELF}))?\.)?$",
+    re.IGNORECASE,
+)
+
+#: CR 105.1's five colours, as a quality word ("a white permanent").
+_COLOR_WORDS = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+
+def _permanent_quality_matcher(word: str) -> Callable[[Characteristics], bool] | None:
+    """A colour (CR 105.1), card type or subtype as a test on computed
+    characteristics, or `None` for a word that is none of them."""
+    color = _COLOR_WORDS.get(word.lower())
+    if color is not None:
+        return lambda chars: color in chars.colors
+    return _quality_matcher(word)
+
+
+def parse_gain_control_untimed_clause(effect_text: str) -> AbilityEffect | None:
+    """`_GAIN_CONTROL_UNTIMED_RE`'s shape, or `None`."""
+    from .effects import _counter_kind, _targets_understood
+    from .layers import _singular_subtype_word, add_subtype
+
+    match = _GAIN_CONTROL_UNTIMED_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    phrase = match.group("phrase")
+    if re.search(r"\b(?:until|for as long as|as long as)\b", phrase, re.IGNORECASE):
+        return None
+    if not _targets_understood(phrase):
+        return None
+    subtype: str | None = None
+    if match.group("subtype"):
+        singular = _singular_subtype_word(match.group("subtype"))
+        if singular is None:
+            return None
+        subtype = singular.capitalize()
+    kind = None
+    has_quality = None
+    if match.group("kind"):
+        has_quality = _permanent_quality_matcher(match.group("quality"))
+        if has_quality is None:
+            return None
+        kind = _counter_kind(match.group("kind"))
+    excludes_source = match.group("self") is not None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        store = game.continuous_effects
+        timestamp = store.tick()
+        for target in targets:
+            selector = only_this_incarnation(target, target.zone_change_stamp)
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{ability.source_name}: {ability.controller} gains control of "
+                        f"{target.name}"
+                    ),
+                    layer=Layer.CONTROL,
+                    timestamp=timestamp,
+                    duration=Duration.INDEFINITE,
+                    selector=selector,
+                    modification=set_controller(ability.controller),
+                ),
+                game=game,
+            )
+            if subtype is not None:
+                store.add(
+                    ContinuousEffect(
+                        description=(
+                            f"{ability.source_name}: {target.name} becomes a {subtype} "
+                            "in addition to its other types"
+                        ),
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        duration=Duration.INDEFINITE,
+                        selector=selector,
+                        modification=add_subtype(subtype),
+                    ),
+                    game=game,
+                )
+        if kind is None or has_quality is None:
+            return
+        source = ability.source(game)
+        for target in targets:
+            excluded = {target.id}
+            if excludes_source and source is not None:
+                excluded.add(source.id)
+            if any(
+                has_quality(game.characteristics_of(permanent))
+                for permanent in game.permanents_controlled_by(ability.controller)
+                if permanent.id not in excluded
+            ):
+                game.add_counters(target, kind, putter=ability.controller)
 
     return effect
 

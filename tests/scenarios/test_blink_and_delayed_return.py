@@ -398,3 +398,162 @@ def test_eagles_counts_only_creatures_actually_returned():
     scenario.resolve_top()
     _to_next_upkeep(scenario)
     assert len(_birds(scenario)) == 1
+
+
+# -- R0a-T5: "Exile this creature. Return it ... at the beginning of the next
+# end step." - an activated self-flicker (CR 603.7a's delayed trigger) --------
+#
+# Fleeting Spirit's "Discard a card: Exile this creature. Return it to the
+# battlefield under its owner's control at the beginning of the next end
+# step." Aetherling's "{U}: ..." is the second printing (a mana cost, not a
+# discard), and Argent Sphinx's "... under your control ..." the third - the
+# return's controller is the ability's, not the owner (CR 610.3c: "unless
+# otherwise specified"). CR 603.7a: "Delayed triggered abilities are created
+# during the resolution of spells or abilities".
+
+
+def _flicker_board(creature: str, hand: list[str] | None = None) -> "Scenario":
+    from tests.scenarios.harness import Scenario
+
+    return (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[creature, "Island", "Plains"],
+            hand=hand or ["Island"],
+            library=["Island"] * 5,
+        )
+        .player("bob", library=["Island"] * 5)
+    )
+
+
+def _to_next_end_step(scenario) -> None:
+    from magic_cards_model.machines import Step
+
+    scenario.turn.advance_to(Step.POSTCOMBAT_MAIN)
+    scenario.game.sync_priority_with_step()
+    scenario.advance()  # end step: the delayed trigger
+    scenario.pass_until_resolved()
+
+
+def test_fleeting_spirit_exiles_itself_and_returns_at_the_next_end_step():
+    from magic_cards_model.machines import Step
+    from magic_cards_model.models import Zone
+
+    scenario = _flicker_board("Fleeting Spirit").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    spirit = scenario.creature("Fleeting Spirit", "alice")
+    discard = scenario.find("Island", Zone.HAND, username="alice")
+
+    scenario.activate(spirit, index=1, discarding=[discard])
+    scenario.pass_until_resolved()
+
+    assert spirit.zone is Zone.EXILE
+    assert discard.zone is Zone.GRAVEYARD
+
+    _to_next_end_step(scenario)
+
+    assert spirit.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(spirit).username == "alice"
+
+
+def test_the_returned_creature_is_a_new_object():
+    """CR 400.7: damage marked on it is gone - it came back fresh."""
+    from magic_cards_model.machines import Step
+    from magic_cards_model.models import Zone
+
+    scenario = _flicker_board("Aetherling").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    aetherling = scenario.creature("Aetherling", "alice")
+    scenario.game.deal_damage(aetherling, 2)
+    assert aetherling.damage == 2
+    (island,) = scenario.untapped_sources("Island")
+
+    scenario.activate(aetherling, island)
+    scenario.pass_until_resolved()
+    _to_next_end_step(scenario)
+
+    assert aetherling.zone is Zone.BATTLEFIELD
+    assert aetherling.damage == 0
+
+
+def test_a_card_moved_out_of_exile_before_the_end_step_does_not_return():
+    """CR 603.7c: the delayed trigger affects only that object in exile."""
+    from magic_cards_model.machines import Step
+    from magic_cards_model.models import Zone
+
+    scenario = _flicker_board("Aetherling").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    aetherling = scenario.creature("Aetherling", "alice")
+    (island,) = scenario.untapped_sources("Island")
+    scenario.activate(aetherling, island)
+    scenario.pass_until_resolved()
+    assert aetherling.zone is Zone.EXILE
+
+    scenario.game.put_into_graveyard(aetherling)
+    _to_next_end_step(scenario)
+
+    assert aetherling.zone is Zone.GRAVEYARD
+
+
+def test_aetherling_the_second_printing_flickers_for_mana():
+    from magic_cards_model.machines import Step
+    from magic_cards_model.models import Zone
+
+    scenario = _flicker_board("Aetherling").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    aetherling = scenario.creature("Aetherling", "alice")
+    (island,) = scenario.untapped_sources("Island")
+
+    scenario.activate(aetherling, island)
+    scenario.pass_until_resolved()
+    assert aetherling.zone is Zone.EXILE
+    _to_next_end_step(scenario)
+
+    assert aetherling.zone is Zone.BATTLEFIELD
+
+
+def test_argent_sphinx_returns_under_its_activators_control():
+    """ "under your control" - CR 610.3c's "unless otherwise specified"."""
+    from magic_cards_model.machines import Step
+    from magic_cards_model.models import Zone
+    from tests.scenarios.harness import Scenario
+
+    scenario = (
+        Scenario()
+        .player("alice", library=["Island"] * 5)
+        .player(
+            "bob",
+            battlefield=["Argent Sphinx", "Island", "Ornithopter", "Ornithopter", "Memnite"],
+            library=["Island"] * 5,
+        )
+        .build()
+    )
+    sphinx = scenario.creature("Argent Sphinx", "bob")
+    sphinx.controller = "alice"  # a control change already happened
+    for artifact in ("Ornithopter", "Ornithopter", "Memnite"):
+        for state in scenario.game.battlefield:
+            if state.name == artifact and state.controller == "bob":
+                state.controller = "alice"
+                break
+    island = scenario.find("Island", Zone.BATTLEFIELD, username="bob")
+    island.controller = "alice"
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.activate(sphinx, island, username="alice")
+    scenario.pass_until_resolved()
+    assert sphinx.zone is Zone.EXILE
+    _to_next_end_step(scenario)
+
+    assert sphinx.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(sphinx).username == "alice"
+
+
+def test_the_flicker_lines_are_no_longer_notices():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    for name in ("Fleeting Spirit", "Aetherling", "Argent Sphinx"):
+        support = str(card_support(card(name)))
+        assert "'notice'" not in support, name
+        assert "'silent'" not in support, name

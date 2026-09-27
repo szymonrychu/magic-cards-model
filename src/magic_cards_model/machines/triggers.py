@@ -2601,6 +2601,11 @@ def condition_matches(
     Anything else returns False. A condition this module cannot read never fires
     a trigger, which is the safe direction to be wrong in.
     """
+    ability_word = (getattr(ability, "ability_word", None) or "").lower()
+    if ability_word == "solved" and not getattr(source, "solved", False):
+        return False  # CR 702.169c: "triggers only if this Case is solved"
+    if ability_word == "to solve" and getattr(source, "solved", False):
+        return False  # CR 719.3a: "... and this Case is not solved"
     condition = ability.condition
 
     if ability.event is TriggerEvent.CAST_SPELL:
@@ -3212,6 +3217,13 @@ def condition_matches(
         return mine and event.subject_id == source.id
 
     if ability.event is TriggerEvent.BECOMES_TARGET:
+        if getattr(ability, "keyword", None) == "ward":
+            from .targeting import ward_is_switched_off
+
+            if ward_is_switched_off(game, source):
+                # "Ward abilities of those creatures don't trigger." (Nowhere
+                # to Run) - CR 702.21a's trigger never happens.
+                return False
         # CR 115.1: "Some spells and abilities require their controller to
         # choose one or more targets for them ... These targets are declared as
         # part of the process of putting the spell or ability on the stack"

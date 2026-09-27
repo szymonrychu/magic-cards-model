@@ -1593,3 +1593,21 @@ def test_a_battle_protector_survives_a_dump_and_reload() -> None:
 
     (siege,) = [state for state in reloaded.battlefield if state.name == "Invasion of Zendikar"]
     assert siege.protector == "bob"
+
+
+#: The version stamped before `CardState` gained `solved` (CR 719.3b, R0a-T5).
+_SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED = 96
+
+
+def test_a_snapshot_written_before_the_solved_designation_is_refused() -> None:
+    """A version-96 dump has no `CardState.solved`: decoded as current, a Case
+    would read unsolved forever (CR 719.3b). Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED}",
+    ):
+        Game.model_validate(dumped)

@@ -439,3 +439,207 @@ def granted_affinity_reductions(
         if amount:
             reductions.append(ManaCost(generic=amount))
     return reductions
+
+
+# --------------------------------------------------------------------------
+# R0a-T5: play permissions a resolving ability grants (CR 601.3, CR 118.9)
+# --------------------------------------------------------------------------
+
+#: "Choose an exiled card an opponent owns with a void counter on it. You may
+#: play it this turn without paying its mana cost." (Dauthi Voidwalker). The
+#: owner phrase and the counter name are read, not fixed; "play" reaches a
+#: land (CR 601.1a's wider verb) where "cast" does not.
+_CHOOSE_EXILED_WITH_COUNTER_RE = re.compile(
+    r"^choose an exiled card(?: (?P<owner>an opponent owns|you own))? with an? "
+    r"(?P<counter>[a-z0-9+/\-]+) counter on it\. you may (?P<verb>play|cast) "
+    r"(?:it|that card) this turn(?P<free> without paying its mana cost)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _permission_action(verb: str) -> Any:
+    from .casting import PlayAction
+
+    return PlayAction.PLAY if verb.lower() == "play" else PlayAction.CAST
+
+
+def parse_choose_exiled_with_counter_play_clause(text: str) -> Any:
+    """`_CHOOSE_EXILED_WITH_COUNTER_RE`'s effect: the controller chooses one
+    card in exile carrying the counter (and owned as printed), and gets a
+    this-turn play permission for it (CR 601.3), free where printed (CR
+    118.9). Nothing to choose is nothing done."""
+    match = _CHOOSE_EXILED_WITH_COUNTER_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    owner = (match.group("owner") or "").lower()
+    kind = match.group("counter").lower()
+    action = _permission_action(match.group("verb"))
+    free = match.group("free") is not None
+
+    def effect(game: Any, ability: Any) -> None:
+        from .decisions import Decision, DecisionKind, source_id_of
+
+        controller = ability.controller
+        candidates = [
+            state
+            for state in game.exile
+            if state.counter_count(kind) > 0
+            and (
+                not owner
+                or (owner == "an opponent owns" and state.owner != controller)
+                or (owner == "you own" and state.owner == controller)
+            )
+        ]
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller,
+                prompt=f"choose an exiled card with a {kind} counter on it",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        by_id = {state.id: state for state in candidates}
+        for chosen_id in chosen_ids or ():
+            chosen = by_id.get(chosen_id)
+            if chosen is None:
+                continue
+            game.grant_play_permission(
+                chosen,
+                controller,
+                action=action,
+                pays_mana_cost=not free,
+                source_name=ability.source_name,
+                rule="CR 118.9" if free else "CR 601.3",
+            )
+
+    return effect
+
+
+#: "Creature cards in your graveyard gain "You may cast this card from your
+#: graveyard" until end of turn." (Case of the Uneaten Feast) and the leading-
+#: duration order "Until end of turn, each legendary card in your graveyard
+#: gains "You may play this card from your graveyard."" (Kethis, the Hidden
+#: Hand). CR 611.2c: a resolving ability's grant affects the cards there as
+#: it resolves - a card arriving later is a new object (CR 400.7) and gains
+#: nothing. The quoted ability is an opaque payload here (CR 113.10): only
+#: the self-zone permission payload is performed; any other payload fails
+#: closed with a notice.
+_GRAVEYARD_CARDS_GAIN_QUOTED_RE = re.compile(
+    r"^(?P<lead>until end of turn, )?(?:each )?(?P<quality>[a-z][a-z ]*?) cards? in your "
+    r'graveyard gains? "(?P<payload>[^"]+)"(?P<trail> until end of turn)?\.?$',
+    re.IGNORECASE,
+)
+
+#: The one payload performed: "You may cast/play this card from your graveyard".
+_SELF_GRAVEYARD_PERMISSION_PAYLOAD_RE = re.compile(
+    r"^you may (?P<verb>cast|play) this card from your graveyard\.?$", re.IGNORECASE
+)
+
+
+def parse_graveyard_cards_gain_cast_clause(text: str) -> Any:
+    """`_GRAVEYARD_CARDS_GAIN_QUOTED_RE`'s effect: a this-turn permission
+    (CR 601.3) for every card of that quality in the controller's graveyard,
+    or a fail-closed notice for a payload this does not perform."""
+    normalized = " ".join(text.split()).replace("\u201c", '"').replace("\u201d", '"')
+    match = _GRAVEYARD_CARDS_GAIN_QUOTED_RE.fullmatch(normalized)
+    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
+        return None
+    quality = match.group("quality").strip().lower()
+    payload = _SELF_GRAVEYARD_PERMISSION_PAYLOAD_RE.fullmatch(match.group("payload").strip())
+    if payload is None:
+
+        def payload_notice_only(game: Any, ability: Any) -> None:
+            from ..models.game import UnmodeledTriggerEffectNotice
+
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=match.group("payload"),
+                )
+            )
+
+        return payload_notice_only
+    action = _permission_action(payload.group("verb"))
+
+    def effect(game: Any, ability: Any) -> None:
+        from .casting import has_quality
+
+        controller = ability.controller
+        player = game.player(controller)
+        for state in list(player.cards_in(Zone.GRAVEYARD)):
+            if not has_quality(
+                quality,
+                colors=tuple(state.colors),
+                types=tuple(state.types),
+                subtypes=tuple(state.subtypes),
+                supertypes=tuple(state.card.supertypes),
+            ):
+                continue
+            game.grant_play_permission(
+                state,
+                controller,
+                action=action,
+                source_name=ability.source_name,
+                zone=Zone.GRAVEYARD,
+                until_end_of_turn=True,
+            )
+
+    return effect
+
+
+#: "Exile a card at random from your graveyard. You may play that card this
+#: turn." (Tersa Lightshatter's attack trigger). The count and the pronoun are
+#: read, not fixed; the cards are picked at random off a generator seeded from
+#: the game's own shuffle seed, so a replay picks the same card. The
+#: permission is CR 601.3's, lasting "this turn" (CR 514.2 ends it).
+_EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE = re.compile(
+    r"^exile (?P<count>a|an|one|two|three|four|five|\d+) cards? at random from your "
+    r"graveyard\. you may (?P<verb>play|cast) (?:that card|those cards|them|it) "
+    r"this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_exile_at_random_from_graveyard_play_clause(text: str) -> Any:
+    """`_EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE`'s effect: exile that many
+    cards chosen at random from the controller's graveyard (all of them when
+    it holds fewer), each gaining a this-turn play permission from exile."""
+    from ..numbers import parse_count
+
+    match = _EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+    action = _permission_action(match.group("verb"))
+
+    def effect(game: Any, ability: Any) -> None:
+        from random import Random
+
+        controller = ability.controller
+        graveyard = list(game.player(controller).cards_in(Zone.GRAVEYARD))
+        if not graveyard:
+            return
+        rng = Random(  # noqa: S311
+            f"{game.shuffle_seed}:{game.shuffles_performed}:random-graveyard-exile:{len(graveyard)}"
+        )
+        picked = rng.sample(graveyard, min(count, len(graveyard)))
+        for exiled in game.exile_cards(picked):
+            if exiled.zone is not Zone.EXILE:
+                continue
+            game.grant_play_permission(
+                exiled,
+                controller,
+                action=action,
+                source_name=ability.source_name,
+                rule="CR 601.3",
+            )
+
+    return effect

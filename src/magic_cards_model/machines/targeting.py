@@ -95,7 +95,7 @@ are deliberately separate parsers with separate jobs.
 import re
 from collections.abc import Sequence
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 from pydantic import ConfigDict
@@ -115,6 +115,9 @@ from .converge import colors_of_mana_spent
 from .keywords import keyword_triggered_abilities
 from .layers import BASIC_LAND_TYPES, CLOSED_SUBTYPE_LISTS
 from .modes import Mode, modal_profile, mode_rules_text
+
+if TYPE_CHECKING:
+    from ..models.game import Game
 
 # --------------------------------------------------------------------------
 # The shape of one target a spell requires
@@ -5593,3 +5596,135 @@ _CONTROLLERS = {
         ControllerRestriction.PRIOR_TARGET_PLAYER
     ),
 }
+
+
+# --------------------------------------------------------------------------
+# "... can be the targets of spells and abilities as though they didn't have
+# hexproof" and "Ward abilities of those creatures don't trigger" (R0a-T5)
+# --------------------------------------------------------------------------
+
+#: CR 702.11e: "Any effect that allows a player to choose a creature with
+#: hexproof as a target as though it didn't have hexproof will allow a player
+#: to choose a creature with a 'hexproof from [quality]' ability." Nowhere to
+#: Run's "Creatures your opponents control can be the targets of spells and
+#: abilities as though they didn't have hexproof.", Glaring Spotlight's
+#: "Creatures your opponents control with hexproof can be the targets of spells
+#: and abilities you control as though they didn't have hexproof." and Kaya,
+#: Bane of the Dead's "Your opponents and permanents your opponents control
+#: with hexproof can be ..." are one template: who, optional "with hexproof",
+#: whose spells, and the "as though" tail.
+_IGNORE_HEXPROOF_RE = re.compile(
+    r"^(?P<players>your opponents and )?(?P<kind>creatures|permanents) your opponents "
+    r"control(?: with hexproof)? can be the targets of spells and abilities"
+    r"(?P<yours> you control)? as though (?:they|it) didn'?t have hexproof\.?$",
+    re.IGNORECASE,
+)
+
+#: CR 702.21a's trigger switched off: "Ward abilities of those creatures don't
+#: trigger." - "those" is the sentence before it on the same line.
+_WARD_DONT_TRIGGER_RE = re.compile(
+    r"^ward abilities of (?:those|creatures your opponents control|permanents your "
+    r"opponents control) (?P<kind>creatures|permanents)? ?don'?t trigger\.?$",
+    re.IGNORECASE,
+)
+
+
+class HexproofIgnore(NamedTuple):
+    """One read of the template above."""
+
+    kind: str  # "creatures" or "permanents"
+    players: bool
+    only_yours: bool
+    ward_off: bool
+
+
+def _sentences(line: str) -> list[str]:
+    return [part.strip() for part in re.split(r"(?<=\.)\s+", line.strip()) if part.strip()]
+
+
+def hexproof_ignore_of_line(line: str) -> HexproofIgnore | None:
+    """The hexproof-ignoring static on this line, or `None`. Every sentence of
+    the line must be read - a line with an unread sentence is not claimed."""
+    sentences = _sentences(line)
+    if not sentences:
+        return None
+    match = _IGNORE_HEXPROOF_RE.match(sentences[0])
+    if match is None:
+        return None
+    ward_off = False
+    for sentence in sentences[1:]:
+        if _WARD_DONT_TRIGGER_RE.match(sentence) is None:
+            return None
+        ward_off = True
+    return HexproofIgnore(
+        kind=match.group("kind").lower(),
+        players=match.group("players") is not None,
+        only_yours=match.group("yours") is not None,
+        ward_off=ward_off,
+    )
+
+
+def _hexproof_ignores_on_battlefield(game: "Game") -> list[tuple[str, HexproofIgnore]]:
+    """(controller, read) for every such static on the battlefield, off each
+    permanent's computed ability lines (CR 613.1f)."""
+    found: list[tuple[str, HexproofIgnore]] = []
+    for permanent in game.battlefield:
+        try:
+            lines = game.characteristics_of(permanent).abilities
+        except KeyError:
+            lines = (permanent.oracle_text or "").splitlines()
+        for line in lines:
+            read = hexproof_ignore_of_line(line)
+            if read is not None:
+                found.append((game.controller_of(permanent).username, read))
+    return found
+
+
+def _covers(game: "Game", read: HexproofIgnore, target: Any) -> bool:
+    from ..models.player import Player
+
+    if isinstance(target, Player):
+        return read.players
+    if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+        return False
+    if read.kind == "creatures":
+        return Type.CREATURE in game.characteristics_of(target).types
+    return True
+
+
+def _owner_of_target(game: "Game", target: Any) -> str:
+    from ..models.player import Player
+
+    if isinstance(target, Player):
+        return target.username
+    return game.controller_of(target).username
+
+
+def ignores_hexproof(game: "Game", target: Any, source_controller: str) -> bool:
+    """Whether a battlefield static lets `source_controller` target `target` as
+    though it didn't have hexproof (CR 702.11e covers "hexproof from" too).
+    "Your opponents" is the static's controller's; "you control", where
+    printed, is the targeting spell's or ability's controller."""
+    target_controller = _owner_of_target(game, target)
+    for controller, read in _hexproof_ignores_on_battlefield(game):
+        if target_controller == controller:
+            continue  # CR 102.2: in two-player games your opponent is the other player
+        if read.only_yours and source_controller != controller:
+            continue
+        if _covers(game, read, target):
+            return True
+    return False
+
+
+def ward_is_switched_off(game: "Game", warded: CardState) -> bool:
+    """Whether "Ward abilities of those creatures don't trigger." covers this
+    permanent - one an opponent of that static's controller controls."""
+    if warded.zone is not Zone.BATTLEFIELD:
+        return False
+    warded_controller = game.controller_of(warded).username
+    for controller, read in _hexproof_ignores_on_battlefield(game):
+        if not read.ward_off or warded_controller == controller:
+            continue
+        if _covers(game, read, warded):
+            return True
+    return False

@@ -4156,7 +4156,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 96
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 97
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4283,6 +4283,8 @@ class Game(EngineModel):
     #: 310.9d, 508.5), and CR 704.5x/704.5y run as state-based actions. Also
     #: battles' defense counters (CR 310.4b), CR 704.5v/w, the Siege defeat
     #: trigger (CR 310.12b) and `Casting.transformed` (CR 712.11a).
+    #: 97: `CardState` gained `solved` (CR 719.3b's Case designation, R0a-T5;
+    #: renumbered from 96 at the R0a integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -5187,6 +5189,12 @@ class Game(EngineModel):
     bullet. A version-76 game would decode with every graveyard arrival this
     turn not yet announced and raise them all again as one batch - the
     second.
+
+    Bumped 96 -> 97 (R0a-T5, renumbered from 95 -> 96 at the R0a
+    integration): `CardState` gained `solved` (CR 719.3b's Case
+    designation) - a field added to a persisted model, the bump rule's first
+    bullet. A version-96 Case would decode unsolved forever and its "Solved"
+    abilities would never be available. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -6223,9 +6231,17 @@ class Game(EngineModel):
         (CR 104.3c, 704.5b).
         """
         assert self.turn is not None
-        if self.turn.skips_draw():
+        if self.turn.skips_draw() or self.static_skips_draw_step():
             return []
         return self.draw_cards(self.active_player, 1)
+
+    def static_skips_draw_step(self) -> bool:
+        """Whether a permanent the active player controls says "Skip your draw
+        step." (CR 614.10) - `replacement.draw_step_skipped_by`."""
+        from ..machines.replacement import draw_step_skipped_by
+
+        assert self.turn is not None
+        return draw_step_skipped_by(self, self.turn.active_player) is not None
 
     def saga_lore_step(self) -> None:
         """CR 703.4f, 505.4, 714.3c: a lore counter on each Saga the active
@@ -7472,10 +7488,15 @@ class Game(EngineModel):
                     )
                 )
 
-        if spell.id in self.turn_ended_exiled_ids or spell.zone is Zone.EXILE:
+        if spell.id in self.turn_ended_exiled_ids or spell.zone in (
+            Zone.EXILE,
+            Zone.BATTLEFIELD,
+        ):
             # (Also a spell whose own text exiled it as it resolved - Burning
             # Wish's "Exile Burning Wish." (CR 201.5): CR 608.2n's final
-            # graveyard step finds no spell left on its way there.)
+            # graveyard step finds no spell left on its way there. Esper
+            # Origins' "exile it, then put it onto the battlefield
+            # transformed" has already moved it on to the battlefield.)
             # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
             # let it finish resolving anyway ("If an instant spell, sorcery
             # spell, or ability that can legally resolve leaves the stack once
@@ -16334,6 +16355,12 @@ class Game(EngineModel):
             return None
         if protected == source_controller:
             return None
+        from ..machines.targeting import ignores_hexproof
+
+        if ignores_hexproof(self, target, source_controller):
+            # CR 702.11e: "as though it didn't have hexproof" - every hexproof
+            # ability, "hexproof from" included (`machines/targeting.py`).
+            return None
         name = target.username if isinstance(target, Player) else target.name
         if plain:
             return (
@@ -22468,6 +22495,10 @@ class Game(EngineModel):
                 f"{activator}'s main phase, with the stack empty "
                 f"(CR 602.5d, CR 307.5)"
             )
+        if (ability.ability_word or "").lower() == "solved" and not source.solved:
+            # CR 702.169d: "Solved — [Ability text]" means "[Ability text].
+            # Activate only if this Case is solved."
+            return f"{name} is not solved, so its Solved ability cannot be activated (CR 702.169d)"
         if (ability.ability_word or "").lower() == "boast":
             # CR 702.142a: "Boast - [Cost]: [Effect]" means "[Cost]: [Effect].
             # Activate only if this creature attacked this turn and only once
@@ -25425,7 +25456,7 @@ class Game(EngineModel):
             # across an `advance()` boundary.
             self.turn.add_second_combat_damage_step()
         step = self.turn.advance()
-        if step is Step.DRAW and self.turn.skips_draw():
+        if step is Step.DRAW and (self.turn.skips_draw() or self.static_skips_draw_step()):
             # CR 103.8a skips the starting player's whole first draw step, and
             # CR 500.11: to skip a step "is to proceed past it as though it
             # didn't exist" - no beginning event, so no "at the beginning of

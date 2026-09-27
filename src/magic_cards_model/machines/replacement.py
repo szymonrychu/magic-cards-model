@@ -1598,6 +1598,40 @@ def _try_skip(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     return [_make(ReplacementKind.SKIP, sentence, event=skipped)]
 
 
+#: The step a controller's own static "Skip your <step> step." names - the
+#: `_SKIP` event, restricted to "your" (the permanent's controller) and a
+#: step the turn machine can skip. Only the draw step is read today; CR 614.10
+#: makes every other "skip your X step" the same replacement, and a new step
+#: joins by adding its word here and a check where that step begins.
+_SKIP_OWN_STEP_RE = re.compile(r"^your (?P<step>draw) step$", re.IGNORECASE)
+
+
+def skipped_own_step_of_line(line: str) -> str | None:
+    """ "Skip your draw step." -> "draw", or `None`. The static form of CR
+    614.10's skip, about the permanent's controller."""
+    text = strip_reminder_text(line)[0].strip()
+    effects = _try_skip(text, ())
+    if len(effects) != 1:
+        return None
+    match = _SKIP_OWN_STEP_RE.match((effects[0].event or "").strip())
+    return None if match is None else match.group("step").lower()
+
+
+def draw_step_skipped_by(game: "Game", username: str) -> CardState | None:
+    """The first permanent `username` controls whose static ability skips their
+    draw step (CR 614.10), read off its computed ability lines (CR 613.1f), or
+    `None`. CR 614.10a/500.11: the step is then passed as though it did not
+    exist."""
+    for permanent in game.permanents_controlled_by(username):
+        try:
+            lines = game.characteristics_of(permanent).abilities
+        except KeyError:
+            lines = (permanent.oracle_text or "").splitlines()
+        if any(skipped_own_step_of_line(line) == "draw" for line in lines):
+            return permanent
+    return None
+
+
 def _try_player_skips(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     """ "[player] skips [something]" - CR 614.1b's other wording.
 
@@ -2517,11 +2551,23 @@ def _graveyard_owner_matcher(
     return None
 
 
+#: "exile it" or "exile it with a <kind> counter on it" - the replacement
+#: half. Dauthi Voidwalker's "instead exile it with a void counter on it"
+#: leads with "instead", which the parser already strips into this field.
+_GRAVEYARD_EXILE_REPLACEMENT_RE = re.compile(
+    r"^exile it(?: with an? (?P<counter>[a-z+\-/0-9]+) counter on it)?$", re.IGNORECASE
+)
+
+
 def _compile_graveyard_exile(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
-    if (effect.replacement or "").strip().rstrip(".").lower() != "exile it":
+    replacement_match = _GRAVEYARD_EXILE_REPLACEMENT_RE.fullmatch(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
         return None
+    counter = replacement_match.group("counter")
     match = _GRAVEYARD_EVENT_RE.match((effect.event or "").strip())
     if match is None:
         return None
@@ -2538,7 +2584,20 @@ def _compile_graveyard_exile(effect: ReplacementEffect) -> CardReplacement | Non
             return False
         return owner(game, source, card)
 
-    return _graveyard_replacer(effect.text, whose)
+    if counter is None:
+        return _graveyard_replacer(effect.text, whose)
+    kind = counter.lower()
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        return _to_graveyard(event) and event.card is not None and whose(game, source, event.card)
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        # CR 614.1a + CR 122.1: exiled instead, arriving with the counter
+        # (`resolving_exile.after_resolving_exile` places it once in exile).
+        _exile_instead(game, source, event)
+        event.exile_counters[kind] = event.exile_counters.get(kind, 0) + 1
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
 # -- "if a creature [an opponent controls] would die, exile it instead" --
@@ -2752,7 +2811,65 @@ _DAMAGE_RECIPIENTS: dict[str, _DamageRecipient] = {
     "a permanent an opponent controls": _recipient_is_opponents_permanent,
     "a permanent or player": lambda game, you, event: True,
     "a player or permanent": lambda game, you, event: True,
+    "a creature an opponent controls": lambda game, you, event: (
+        event.card is not None
+        and Type.CREATURE in game.characteristics_of(event.card).types
+        and _recipient_is_opponents_permanent(game, you, event)
+    ),
 }
+
+#: "put that many <kind> counters on that creature" - the damage replaced by
+#: counters (CR 614.1a, CR 122.1). Soul-Scar Mage's -1/-1 is the printed kind;
+#: any counter name reads the same way.
+_DAMAGE_AS_COUNTERS_RE = re.compile(
+    r"^put that many (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters on that "
+    r"(?:creature|permanent)$",
+    re.IGNORECASE,
+)
+
+
+def _compile_damage_as_counters(effect: ReplacementEffect) -> CardReplacement | None:
+    """ "If a source you control would deal [noncombat] damage to <recipient>,
+    put that many <kind> counters on that creature instead." (Soul-Scar Mage).
+
+    CR 614.1a: the damage is replaced, not prevented - it is never dealt, so
+    nothing marks it and nothing that watches damage dealt sees it; the
+    counters are put on by the effect's controller (CR 122.6a) through
+    `Game.add_counters`, so a counter replacement still gets its look.
+    """
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE.fullmatch((effect.event or "").strip())
+    if event_match is None or event_match.group("quality") is not None:
+        return None
+    recipient = _DAMAGE_RECIPIENTS.get(event_match.group("recipient").strip().lower())
+    if recipient is None:
+        return None
+    replacement_match = _DAMAGE_AS_COUNTERS_RE.fullmatch(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+    noncombat = event_match.group("noncombat") is not None
+    kind = replacement_match.group("kind").lower()
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.DAMAGE or event.source is None or event.card is None:
+            return False
+        if event.amount <= 0 or (noncombat and event.combat):
+            return False
+        controller = game.controller_of(source).username
+        if game.controller_of(event.source).username != controller:
+            return False
+        return recipient(game, controller, event)
+
+    def apply(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
+        amount = event.amount
+        event.amount = 0
+        if event.card is not None and amount > 0:
+            game.add_counters(event.card, kind, amount, putter=game.controller_of(source).username)
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
 
 
 def _compile_damage_plus_amount(effect: ReplacementEffect) -> CardReplacement | None:
@@ -4295,6 +4412,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_enters_uncast_exile,
     _compile_damage_multiplier,
     _compile_damage_plus_amount,
+    _compile_damage_as_counters,
     compile_damage_plus_source_characteristic,
     compile_heal_other_damage,
     _compile_prevent_damage_and_mill,
@@ -4658,6 +4776,8 @@ _AUDITED_STATIC_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement |
     _compile_draw_plus,
     _compile_draw_doubler,
     _compile_draw_doubler_except_draw_step,
+    # R0a-T5: proven by `test_noncombat_damage_as_minus_counters.py`.
+    _compile_damage_as_counters,
 )
 
 

@@ -49,6 +49,8 @@ this wave still does not reverse, and the double-leave/`expected_stamp`
 guard that stops a second, wrong return.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -212,3 +214,237 @@ def test_a_duration_this_wave_still_cannot_reverse_stays_fail_closed():
     assert _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE.fullmatch(hypothetical) is None
     assert _parse_exile_until_leaves_battlefield_clause(hypothetical, for_spell=False) is None
     assert _parse_targeted_clause(hypothetical, for_spell=False) is None
+
+
+# -- R0a-T5: the mass form, "exile all <group> until this <type> leaves the
+# battlefield" (CR 610.3), and the linked "put each card exiled with this
+# <type> into its owner's graveyard" (CR 607.1) ------------------------------
+#
+# Pinnacle Starcage: "When this artifact enters, exile all artifacts and
+# creatures with mana value 2 or less until this artifact leaves the
+# battlefield." and "{6}{W}{W}: Put each card exiled with this artifact into
+# its owner's graveyard, then create a 2/2 colorless Robot artifact creature
+# token for each card put into a graveyard this way. Sacrifice this
+# artifact." Aligned Hedron Network (a power comparison) and Consulate
+# Crackdown (a controller qualifier, an enchantment) are the second and third
+# printings, both Modern/Pioneer legal and in no deck.
+
+
+def _starcage_board(extra_plains: int = 0):
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Pinnacle Starcage"],
+            battlefield=["Plains"] * (3 + extra_plains) + ["Memnite"],
+            library=["Plains"] * 5,
+        )
+        .player(
+            "bob",
+            battlefield=["Grizzly Bears", "Ornithopter", "Colossal Dreadmaw"],
+            library=["Plains"] * 5,
+        )
+    )
+
+
+def _cast_starcage(scenario):
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    starcage = scenario.cast_and_resolve(
+        "Pinnacle Starcage", *scenario.untapped_sources("Plains", "Plains", "Plains")
+    )
+    scenario.pass_until_resolved()  # the enters trigger
+    return starcage
+
+
+def test_starcage_exiles_every_small_artifact_and_creature_on_both_sides():
+    scenario = _starcage_board().build()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    memnite = scenario.creature("Memnite", "alice")
+    thopter = scenario.creature("Ornithopter", "bob")
+
+    starcage = _cast_starcage(scenario)
+
+    assert bears.zone is Zone.EXILE
+    assert memnite.zone is Zone.EXILE  # "all" - its controller's own too
+    assert thopter.zone is Zone.EXILE
+    assert dreadmaw.zone is Zone.BATTLEFIELD  # mana value 6
+    assert starcage.zone is Zone.BATTLEFIELD  # mana value 3, and not itself small
+
+
+def test_they_return_when_the_starcage_leaves():
+    scenario = _starcage_board().build()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    memnite = scenario.creature("Memnite", "alice")
+    starcage = _cast_starcage(scenario)
+
+    scenario.game.destroy(starcage)
+    for _ in range(3):  # one return per exiled card: Bears, Ornithopter, Memnite
+        scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(bears).username == "bob"  # CR 610.3c
+    assert memnite.zone is Zone.BATTLEFIELD
+
+
+def test_the_activated_ability_puts_them_in_graveyards_and_makes_robots():
+    scenario = _starcage_board(extra_plains=8).build()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    memnite = scenario.creature("Memnite", "alice")
+    starcage = _cast_starcage(scenario)
+
+    scenario.activate(starcage, *scenario.untapped_sources(*["Plains"] * 8))
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert bears in scenario.player("bob").graveyard
+    assert memnite in scenario.player("alice").graveyard
+    assert starcage.zone is Zone.GRAVEYARD  # "Sacrifice this artifact."
+    robots = [p for p in scenario.game.battlefield if "Robot" in p.name]
+    assert len(robots) == 3  # Bears, Ornithopter, Memnite
+    assert all(scenario.game.controller_of(robot).username == "alice" for robot in robots)
+    # Nothing comes back: the cards left exile before the Starcage left.
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_aligned_hedron_network_exiles_by_power():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Aligned Hedron Network"], battlefield=["Plains"] * 4)
+        .player("bob", battlefield=["Colossal Dreadmaw", "Grizzly Bears"])
+        .build()
+    )
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    network = scenario.cast_and_resolve(
+        "Aligned Hedron Network", *scenario.untapped_sources(*["Plains"] * 4)
+    )
+    scenario.pass_until_resolved()
+
+    assert dreadmaw.zone is Zone.EXILE
+    assert bears.zone is Zone.BATTLEFIELD
+
+    scenario.game.return_to_hand(network)
+    scenario.pass_until_resolved()
+    assert dreadmaw.zone is Zone.BATTLEFIELD
+
+
+def test_consulate_crackdown_exiles_only_opponents_artifacts():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Consulate Crackdown"], battlefield=["Plains"] * 5 + ["Memnite"])
+        .player("bob", battlefield=["Ornithopter", "Grizzly Bears"])
+        .build()
+    )
+    memnite = scenario.creature("Memnite", "alice")
+    thopter = scenario.creature("Ornithopter", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Consulate Crackdown", *scenario.untapped_sources(*["Plains"] * 5))
+    scenario.pass_until_resolved()
+
+    assert thopter.zone is Zone.EXILE
+    assert memnite.zone is Zone.BATTLEFIELD
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+def test_the_mass_exile_cards_are_credited():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    for name in ("Pinnacle Starcage", "Aligned Hedron Network", "Consulate Crackdown"):
+        support = str(card_support(card(name)))
+        assert "'silent'" not in support, name
+        assert "'notice'" not in support, name
+
+
+# -- R0a-T5: a card exiled from a hand "until this creature leaves the
+# battlefield" returns to its owner's hand (CR 610.3's previous zone) --------
+#
+# Deep-Cavern Bat: "When this creature enters, look at target opponent's hand.
+# You may exile a nonland card from it until this creature leaves the
+# battlefield." Kitesail Freebooter (Modern/Pioneer legal, in no deck) is the
+# second printing: "target opponent reveals their hand. You choose a
+# noncreature, nonland card from it. Exile that card until this creature
+# leaves the battlefield." - mandatory, and a narrower quality.
+
+
+def _bat_board(creature: str = "Deep-Cavern Bat"):
+    return (
+        Scenario()
+        .player("alice", hand=[creature], battlefield=["Swamp", "Swamp", "Island"])
+        .player("bob", hand=["Lightning Bolt", "Grizzly Bears", "Mountain"])
+    )
+
+
+def _cast_bat(scenario, creature: str = "Deep-Cavern Bat"):
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_targets("bob", source=creature)
+    sources = (
+        scenario.untapped_sources("Swamp", "Swamp")
+        if creature == "Deep-Cavern Bat"
+        else scenario.untapped_sources("Swamp", "Island")
+    )
+    bat = scenario.cast_and_resolve(creature, *sources)
+    scenario.pass_until_resolved()
+    return bat
+
+
+def test_the_bat_exiles_a_chosen_nonland_card_and_it_returns_to_hand():
+    scenario = _bat_board().build()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, username="bob")
+    scenario.will_take_the_may(True, source="Deep-Cavern Bat")
+    scenario.will_choose_cards(bolt, source="Deep-Cavern Bat")
+
+    bat = _cast_bat(scenario)
+    assert bolt.zone is Zone.EXILE
+
+    scenario.game.destroy(bat)
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.HAND
+    assert bolt in scenario.player("bob").hand
+
+
+def test_the_bat_may_decline():
+    scenario = _bat_board().build()
+    scenario.will_take_the_may(False, source="Deep-Cavern Bat")
+
+    _cast_bat(scenario)
+
+    assert len(scenario.player("bob").hand) == 3
+
+
+def test_a_land_cannot_be_chosen():
+    scenario = _bat_board().build()
+    mountain = scenario.find("Mountain", Zone.HAND, username="bob")
+    scenario.will_take_the_may(True, source="Deep-Cavern Bat")
+    scenario.will_choose_cards(mountain, source="Deep-Cavern Bat")
+
+    with pytest.raises(ValueError):
+        _cast_bat(scenario)
+
+
+def test_kitesail_freebooter_takes_a_noncreature_nonland_card():
+    scenario = _bat_board("Kitesail Freebooter").build()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, username="bob")
+    scenario.will_choose_cards(bolt, source="Kitesail Freebooter")
+
+    freebooter = _cast_bat(scenario, "Kitesail Freebooter")
+    assert bolt.zone is Zone.EXILE
+
+    scenario.game.exile_permanent(freebooter)
+    scenario.pass_until_resolved()
+    assert bolt.zone is Zone.HAND
+
+
+def test_the_hand_exile_cards_are_credited():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    for name in ("Deep-Cavern Bat", "Kitesail Freebooter"):
+        support = str(card_support(card(name)))
+        assert "'silent'" not in support, name
+        assert "'notice'" not in support, name
