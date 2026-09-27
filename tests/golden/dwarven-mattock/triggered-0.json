@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Dwarven Mattock@alice#1",
-    "targets": ["Axgard Braggart@alice#1"],
+    "targets": ["Audacious Infiltrator@alice#1"],
     "x": 0
   },
   "board": {
@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Axgard Braggart"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Audacious Infiltrator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Dwarven Mattock"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -39,12 +39,12 @@
     "fields_changed": [],
     "notices": {},
     "objects": {
-      "Axgard Braggart@alice#1": {
+      "Audacious Infiltrator@alice#1": {
         "power": [3, 5],
-        "toughness": [3, 5]
+        "toughness": [1, 3]
       },
       "Dwarven Mattock@alice#1": {
-        "attached_to": [null, "Axgard Braggart@alice#1"]
+        "attached_to": [null, "Audacious Infiltrator@alice#1"]
       }
     },
     "players": {},
