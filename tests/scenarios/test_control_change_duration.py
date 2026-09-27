@@ -484,6 +484,6 @@ def test_captivating_vampire_needs_five_untapped_vampires():
     ghasts = _alice_bloodghasts(scenario)
     ghasts[0].tapped = True
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         scenario.activate(vampire, tapping_for_cost=[vampire, *ghasts], targets=[bears])
     assert _controller(scenario, bears) == "bob"

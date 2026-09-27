@@ -65189,6 +65189,7 @@ def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
     from .hand_reveal_exile import parse_hand_exile_until_leaves_clause
     from .linked_exile import (
         parse_exile_all_until_leaves_clause,
+        parse_exiled_card_owner_manifests_dread_clause,
         parse_put_linked_into_graveyard_then_tokens_clause,
     )
     from .spell_grants import (
@@ -65207,6 +65208,7 @@ def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
         parse_hand_exile_until_leaves_clause,
         parse_gain_control_untimed_clause,
         parse_exile_at_random_from_graveyard_play_clause,
+        parse_exiled_card_owner_manifests_dread_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:

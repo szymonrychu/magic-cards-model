@@ -333,9 +333,7 @@ def test_esper_origins_cast_from_hand_surveils_gains_and_goes_to_the_graveyard()
     scenario = _esper(hand=[ESPER])
     esper = scenario.find("Esper Origins", Zone.HAND, "alice")
     scenario.will_choose_cards(username="alice")
-    scenario.game.cast(
-        esper, "alice", mana_sources=scenario.game.permanents_controlled_by("alice")
-    )
+    scenario.game.cast(esper, "alice", mana_sources=scenario.game.permanents_controlled_by("alice"))
     _resolve_everything(scenario)
 
     assert scenario.player("alice").life == 22
@@ -454,4 +452,6 @@ def test_llanowar_empath_leaves_a_revealed_noncreature_card_on_top():
     scenario = _empath(["Forest", "Island", "Island"])
 
     assert scenario.player("alice").hand == []
-    assert scenario.player("alice").library[0].name == "Forest", "a land is a permanent, not a creature"
+    assert scenario.player("alice").library[0].name == "Forest", (
+        "a land is a permanent, not a creature"
+    )

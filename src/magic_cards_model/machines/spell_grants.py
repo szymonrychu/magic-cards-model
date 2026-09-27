@@ -628,8 +628,7 @@ def parse_exile_at_random_from_graveyard_play_clause(text: str) -> Any:
         if not graveyard:
             return
         rng = Random(  # noqa: S311
-            f"{game.shuffle_seed}:{game.shuffles_performed}:random-graveyard-exile:"
-            f"{len(graveyard)}"
+            f"{game.shuffle_seed}:{game.shuffles_performed}:random-graveyard-exile:{len(graveyard)}"
         )
         picked = rng.sample(graveyard, min(count, len(graveyard)))
         for exiled in game.exile_cards(picked):

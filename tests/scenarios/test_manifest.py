@@ -149,3 +149,128 @@ def test_bashful_beastie_manifest_dreads_when_it_dies():
     manifested = [state for state in scenario.game.battlefield if state.face_down]
     assert len(manifested) == 1
     assert len(scenario.player("alice").library) == 0
+
+
+# -- Unidentified Hovership: the exiled card's owner manifests dread ------------------
+#
+# "When this Vehicle enters, exile up to one target creature with toughness 5
+# or less. When this Vehicle leaves the battlefield, the exiled card's owner
+# manifests dread." The two abilities are linked (CR 607.1): the leaves
+# trigger (CR 603.6c) reads only what the enters trigger exiled, and it is the
+# exiled card's *owner* - not the Vehicle's controller - who manifests dread
+# (CR 701.62a). The exiled card itself stays in exile.
+
+HOVERSHIP = "Unidentified Hovership"
+
+
+def _hovership_board(bob_library=("Grizzly Bears", "Forest", "Island")):
+    scenario = (
+        Scenario()
+        .player("alice", hand=[HOVERSHIP], library=["Plains"] * 5)
+        .player("bob", battlefield=["Grizzly Bears"], library=list(bob_library))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _enter_hovership(scenario, targets):
+    scenario.choose_trigger_targets(HOVERSHIP, targets)
+    return scenario.put_onto_battlefield(HOVERSHIP, "alice")
+
+
+def _face_down(scenario, username):
+    return [
+        state
+        for state in scenario.game.battlefield
+        if state.face_down and scenario.game.controller_of(state).username == username
+    ]
+
+
+def test_hovership_leaving_makes_the_exiled_cards_owner_manifest_dread():
+    scenario = _hovership_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    hovership = _enter_hovership(scenario, [bears])
+    scenario.pass_until_resolved()
+    assert bears.zone is Zone.EXILE
+
+    scenario.game.destroy(hovership)
+    scenario.pass_until_resolved()
+
+    assert len(_face_down(scenario, "bob")) == 1, "the owner manifests, under their control"
+    assert _face_down(scenario, "alice") == []
+    assert len(scenario.player("bob").library) == 1, "looked at two, one manifested"
+    assert len(scenario.player("bob").graveyard) == 1, "the other into the graveyard"
+    assert bears.zone is Zone.EXILE, "the exiled card stays exiled"
+
+
+def test_hovership_with_no_exiled_card_manifests_nothing():
+    """ "Up to one" chose none: there is no exiled card, so nobody manifests."""
+    scenario = _hovership_board()
+    hovership = _enter_hovership(scenario, [])
+    scenario.pass_until_resolved()
+
+    scenario.game.destroy(hovership)
+    scenario.pass_until_resolved()
+
+    assert _face_down(scenario, "bob") == []
+    assert _face_down(scenario, "alice") == []
+    assert len(scenario.player("bob").library) == 3
+
+
+def test_hovership_leaving_before_its_enters_trigger_resolves_manifests_nothing():
+    """The ruling: with the enters trigger still on the stack, the leaves
+    trigger finds no exiled card and does nothing; the enters trigger then
+    still exiles the target."""
+    scenario = _hovership_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    hovership = _enter_hovership(scenario, [bears])
+    scenario.game.put_triggers_on_stack()
+
+    scenario.game.return_to_hand(hovership)
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()  # the leaves trigger, above the enters trigger
+    scenario.resolve_top()
+
+    assert _face_down(scenario, "bob") == []
+    assert len(scenario.player("bob").library) == 3
+    assert bears.zone is Zone.EXILE
+
+
+def test_unwanted_remake_makes_the_destroyed_creatures_controller_manifest_dread():
+    """Unwanted Remake (the second manifest-dread printing here, not in the
+    deck pool): "Destroy target creature. Its controller manifests dread." -
+    the same CR 701.62a action performed by a player other than the one whose
+    object caused it."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Unwanted Remake"], battlefield=["Plains"] * 2, library=["Plains"])
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.cast_and_resolve(
+        "Unwanted Remake", *scenario.untapped_sources("Plains", "Plains"), targets=[bears]
+    )
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert len(_face_down(scenario, "bob")) == 1
+    assert scenario.player("bob").library == []
+
+
+def test_the_exiled_card_owner_dread_reader_reads_the_plural_too():
+    """No second printing carries the leaves-trigger sentence, so the reader
+    is proven on the template's own plural (CR 607.3)."""
+    from magic_cards_model.machines.linked_exile import (
+        parse_exiled_card_owner_manifests_dread_clause,
+    )
+
+    assert parse_exiled_card_owner_manifests_dread_clause(
+        "the exiled cards' owners each manifest dread."
+    )
+    assert (
+        parse_exiled_card_owner_manifests_dread_clause("the exiled card's owner draws a card.")
+        is None
+    )

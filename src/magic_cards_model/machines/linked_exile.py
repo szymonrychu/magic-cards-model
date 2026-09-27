@@ -324,3 +324,46 @@ def parse_put_linked_into_graveyard_then_tokens_clause(clause: str) -> AbilityEf
                 game.sacrifice(source)
 
     return effect
+
+
+#: "The exiled card's owner manifests dread." (Unidentified Hovership's
+#: leaves-the-battlefield trigger, CR 603.6c). "The exiled card" is the pile
+#: the same object's enters trigger exiled - linked by
+#: `effects.link_cards_exiled_during` (CR 607.1, CR 607.2a) - and each player
+#: who owns one or more of those cards manifests dread once (CR 701.62a;
+#: CR 607.3's plural read). No card in the pile - "up to one" chose none, or
+#: the enters trigger has not resolved yet - is nobody manifesting. The
+#: exiled cards themselves stay where they are.
+_EXILED_CARD_OWNER_MANIFESTS_DREAD_RE = re.compile(
+    r"^the exiled (?:card's|cards') owners? (?:each )?manifests? dread\.?$", re.IGNORECASE
+)
+
+
+def parse_exiled_card_owner_manifests_dread_clause(text: str) -> AbilityEffect | None:
+    """`_EXILED_CARD_OWNER_MANIFESTS_DREAD_RE`'s effect, or `None`."""
+    match = _EXILED_CARD_OWNER_MANIFESTS_DREAD_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        from .decisions import source_id_of
+        from .effects import manifest_dread
+
+        if ability.source_id is None:
+            return
+        owners: list[str] = []
+        for exiled in game.cards_imprinted_on(ability.source_id):
+            owner = exiled.owner
+            if owner is not None and owner not in owners:
+                owners.append(owner)
+        # CR 101.4: several owners act in APNAP order, active player first.
+        seats = [player.username for player in game.players]
+        active = seats.index(game.turn.active_player) if game.turn.active_player in seats else 0
+        turn_order = seats[active:] + seats[:active]
+        for owner in sorted(
+            owners,
+            key=lambda name: turn_order.index(name) if name in turn_order else len(turn_order),
+        ):
+            manifest_dread(game, owner, ability.source_name, source_id=source_id_of(ability))
+
+    return effect
