@@ -13672,15 +13672,19 @@ def _parse_tap_enchanted_then_unprepared_clause(text: str) -> AbilityEffect | No
 #: that caused it (CR 603.3) with nothing yet given a chance to resolve in
 #: between, so the new top of the stack at that moment is that same spell.
 _COPY_CAST_SPELL_RE = re.compile(
-    r"^copy it\.(?:\s*you may choose new targets for the copy\.)?$",
+    r"^copy it\.(?P<retarget>\s*you may choose new targets for the copy\.)?$",
     re.IGNORECASE,
 )
 
 
 def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
     """`_COPY_CAST_SPELL_RE`'s shape - see its own docstring."""
-    if _COPY_CAST_SPELL_RE.fullmatch(text.strip()) is None:
+    match = _COPY_CAST_SPELL_RE.fullmatch(text.strip())
+    if match is None:
         return None
+    # CR 707.10: a copy keeps the original's targets; only an effect that
+    # says so lets its controller choose new ones (CR 707.10c).
+    may_retarget = match.group("retarget") is not None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         if not game.stack:
@@ -13689,6 +13693,8 @@ def _parse_copy_cast_spell_clause(text: str) -> AbilityEffect | None:
         if not isinstance(spell, CardState):
             return
         copy = game.copy_spell(spell, ability.controller)
+        if not may_retarget:
+            return
         game.offer_new_targets_for_copy(
             copy,
             ability.controller,
@@ -54123,11 +54129,10 @@ def _parse_bare_sacrifice_of_choice_clause(part: str) -> ClauseEffect | None:
 #: narrowed to "creatures" rather than "permanents" and "Destroy" rather than
 #: "sacrifices" - the consequence verb genuinely varies, which is why it is
 #: its own captured alternative rather than folded into the shared regex.
-#: Do or Die's own trailing "They can't be regenerated." is accepted and
-#: read as reinforcing "destroy" (CR 701.16a already refuses regeneration on
-#: a permanent this instruction already destroys outright with no separate
-#: replacement effect asked about) rather than as a third, independent
-#: instruction.
+#: Do or Die's own trailing "They can't be regenerated." is CR 608.2c's
+#: rider modifying the destruction in front of it (CR 701.19c: regeneration
+#: shields are not applied), captured as `no_regen` and passed through as
+#: `Game.destroy(..., regeneration_allowed=False)`.
 _SEPARATE_INTO_TWO_PILES_RE = re.compile(
     r"^separate all (?P<quality>.+?) target player controls into two piles\.?$",
     re.IGNORECASE,
@@ -54138,7 +54143,7 @@ _THAT_PLAYER_SACRIFICES_PILE_OF_CHOICE_RE = re.compile(
 )
 _DESTROY_PILE_OF_CHOICE_RE = re.compile(
     r"^destroy all (?P<quality>.+?) in the pile of that player'?s choice\.?"
-    r"(?:\s*they can'?t be regenerated\.?)?$",
+    r"(?P<no_regen>\s*they can'?t be regenerated\.?)?$",
     re.IGNORECASE,
 )
 
@@ -54170,6 +54175,7 @@ def _parse_separate_into_two_piles_then_consequence_whole_text(
     if requirement is None:
         return None
     verb = "sacrifice" if sacrifice_match is not None else "destroy"
+    regeneration_allowed = destroy_match is None or destroy_match.group("no_regen") is None
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = (
@@ -54227,7 +54233,7 @@ def _parse_separate_into_two_piles_then_consequence_whole_text(
                 if verb == "sacrifice":
                     game.sacrifice(permanent)
                 else:
-                    game.destroy(permanent)
+                    game.destroy(permanent, regeneration_allowed=regeneration_allowed)
 
     return effect
 
