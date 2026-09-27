@@ -73,6 +73,7 @@ from magic_cards_model.machines.casting_restrictions import (
     _CANT_BE_COUNTERED_RE,
     _CONDITIONAL_CANT_BE_COUNTERED_RE,
     reads_player_rule_static_line,
+    reads_static_spells_cant_be_countered_line,
 )
 from magic_cards_model.machines.combat import (
     Keyword,
@@ -1995,6 +1996,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 113.6g: `casting_restrictions.cannot_be_countered` and
         # `.conditionally_cannot_be_countered`, read by `Game.counter` at the
         # one place this ability actually functions.
+        return HANDLED
+    if reads_static_spells_cant_be_countered_line(text):
+        # CR 604.2 / CR 101.2: `casting_restrictions.static_uncounterable_
+        # source`, read by `Game.counter` through `spell_protected_from_
+        # countering` while the permanent is on the battlefield.
         return HANDLED
     flash_condition = conditional_flash_condition(text)
     if flash_condition is not None and condition_is_readable(flash_condition):

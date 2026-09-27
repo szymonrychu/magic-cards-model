@@ -4776,8 +4776,13 @@ _GROUP_POWER_OR_TOUGHNESS_UNBLOCKABLE_RE = re.compile(
 #: and with no "you control" it reaches every player's permanents. At least
 #: one of the two qualifiers must be printed: a bare "Lands have ..." is a
 #: different, unread shape.
+#:
+#: Widened (ecl T7) to CR 611.3's "other" subject: Hexing Squelcher's "Other
+#: creatures you control have "Ward—Pay 2 life."" - the source itself is
+#: excluded (`other_creatures_controlled_by`), so it keeps only its printed
+#: ward rather than gaining a second instance from its own line.
 _GROUP_QUOTED_ABILITY_GRANT_RE = re.compile(
-    r"^(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
+    r"^(?P<other>other )?(?P<subject>planeswalkers|creatures|lands|artifacts|enchantments)"
     r"(?P<scope> you control)?(?P<named> with the chosen name)? have "
     r'"(?P<ability>.+)"\.?$',
     re.IGNORECASE | re.DOTALL,
@@ -4792,6 +4797,12 @@ def group_quoted_ability_grant_selector(match: re.Match[str], source: CardState)
     if card_type is None:
         return None
     you = match.group("scope") is not None
+    if match.group("other") is not None:
+        # "Other `<type>`s you control" - only the creature group has an
+        # excluding selector, and it is the only one printed.
+        if card_type is not Type.CREATURE or not you or match.group("named") is not None:
+            return None
+        return other_creatures_controlled_by(source.id, source.controller)
     if match.group("named") is None:
         return permanents_controlled_by(source.controller, card_type) if you else None
     chosen = source.choice
@@ -9323,7 +9334,10 @@ def quoted_ability_grants(
             selector = group_quoted_ability_grant_selector(match, source)
             if selector is None:
                 continue
+            other = match.group("other") is not None
             for permanent in permanents:
+                if other and permanent.id == source.id:
+                    continue
                 if selector(printed_characteristics(permanent), {}):
                     wanted.setdefault(permanent.id, set()).add(text)
     return grantable, wanted
