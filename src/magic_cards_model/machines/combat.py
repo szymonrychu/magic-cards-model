@@ -1725,6 +1725,10 @@ def looks_like_unparsed_evasion_restriction(
     claiming something was missed.
     """
     for sentence in _evasion_restriction_sentences(attacker, game):
+        if is_blocked_by_at_most_one_line(sentence, attacker.name):
+            # CR 509.1b's "can't be blocked by more than one creature" -
+            # read and enforced by `blocked_by_at_most_one_refusal` instead.
+            continue
         compound = _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(sentence)
         if compound is not None:
             if _parse_creature_description(compound.group("description")) is None:

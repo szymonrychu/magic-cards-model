@@ -144,3 +144,18 @@ def test_akawalli_descended_four_only_can_be_blocked_by_two_creatures():
     scenario.block(akawalli, angel, dreadmaw)
 
     assert scenario.blockers() == [angel, dreadmaw]
+
+
+def test_a_single_block_leaves_no_evasion_notice_behind():
+    """The restriction is read and enforced, so a legal single block must not
+    also record an `EvasionNotice` claiming the sentence went unread."""
+    scenario = duel("Charging Rhino", "Watchwolf").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    rhino = scenario.creature("Charging Rhino")
+    wolf = scenario.creature("Watchwolf", "bob")
+    scenario.attack_with(rhino)
+    scenario.block(rhino, wolf)
+
+    assert scenario.game.is_blocked(rhino)
+    assert scenario.game.evasion_notices == []

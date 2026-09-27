@@ -540,6 +540,8 @@ home of its own memory.
 
 - 2026-09-27: tmt integration - the independent guard reviewer rejected four goldens (Jacob Frye x2, Invasion Tactics, The Thing): T2 had widened `abilities._trigger_event`'s "deals" to "deals?" for Dark Leo & Shredder's plural self-name, which captured the batched "one or more <X> deal combat damage" (CR 603.2c) as per-creature DEALS_DAMAGE. Fixed by reading the plural "deal" only without "one or more". Same pass: T2's "you put a counter on" reader now checks the putter (`event.player`, CR 122.6a); T5's dead-last "Counter target <phrase>" reader now refuses any clause with "unless" (Syncopate's unannounced {X} was read as an unconditional counter); April O'Neil's evasion (now read by T5) stopped being the fail-closed example - `test_evasion_restrictions` picks one via `gap_example`.
 
+- 2026-09-27: tmt integration - `combat.looks_like_unparsed_evasion_restriction` flagged Charging Rhino's enforced "can't be blocked by more than one creature" (CR 509.1b, `blocked_by_at_most_one_refusal`) as unread, leaving a false EvasionNotice; it now skips that line. The fail-closed evasion tests pick a *static* unread line via `gap_example` (activated/triggered "can't be blocked this turn" lines are not restrictions until they resolve).
+
 ## Regression-guard approvals
 
 Each line: a change to pre-existing test content, flagged by `scripts/regression_guard.py`, judged by an independent reviewer.

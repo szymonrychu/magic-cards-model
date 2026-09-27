@@ -34,6 +34,8 @@ Every CR number here was looked up with `knowledge_search(type="rules")` in
 the session that wrote this file.
 """
 
+import re
+
 import pytest
 
 from magic_cards_model.machines import Step
@@ -140,13 +142,28 @@ def _unparsed_evasion_example() -> Card:
     not read yet - chosen, never named (`gap_example`): April O'Neil,
     Kunoichi Trainee stood here until 271-tmt read her "power 3 or greater"."""
     return gap_example(
-        "an unread can't-be-blocked restriction",
+        "an unread static can't-be-blocked restriction",
         lambda printing: (
             Type.CREATURE in printing.types
+            and any(
+                _is_static_evasion_line(line) for line in (printing.oracle_text or "").split("\n")
+            )
             and looks_like_unparsed_evasion_restriction(
                 CardState(card=printing, zone=Zone.BATTLEFIELD)
             )
         ),
+    )
+
+
+def _is_static_evasion_line(line: str) -> bool:
+    """A printed static "can't be blocked" line - not an activated ability's
+    effect (a cost before ":"), a trigger's (CR 603.1's "when/whenever/at"),
+    or a quoted grant, none of which restrict a block until they resolve."""
+    return (
+        "can't be blocked" in line
+        and ":" not in line
+        and '"' not in line
+        and not re.match(r"^(?:.*— )?(?:when|whenever|at)\b", line, re.IGNORECASE)
     )
 
 
