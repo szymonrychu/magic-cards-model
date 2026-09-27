@@ -493,6 +493,14 @@ class TargetRequirement(EngineModel):
     found no single numbered CR rule defining "another"/"other" this session;
     this is read off the plain-English word, the same way `must_be_tapped` is
     read off "tapped" rather than off a rule number."""
+    requires_outlaw: bool = False
+    """"target outlaw creature" - CR 700.12a's outlaw quality (Assassin,
+    Mercenary, Pirate, Rogue, Warlock creature types), the same vocabulary
+    `machines/conditions/board.py`'s own "outlaw" condition word reads."""
+    excludes_outlaw: bool = False
+    """"target non-outlaw creature" (Shoot the Sheriff) - CR 700.12a's
+    outlaw quality, negated: a permanent with none of the five outlaw
+    creature types satisfies this."""
     or_any_spell: bool = False
     """True for a noun list, two items or more, where one of them is a bare
     "spell" reached across an "or" - Aang, Swift Savior's "airbend up to one
@@ -632,6 +640,15 @@ class TargetRequirement(EngineModel):
     Fails open for a target whose controller cannot be read (a bare `UUID` or
     a `TargetRef`), like every other restriction here that needs more than the
     caller supplied."""
+
+    distinct_mana_values: bool = False
+    """"any number of target creature cards that each have a different mana
+    value X or less" (Agadeem's Awakening) - the mana-value twin of
+    `distinct_controllers`: a restriction *across* this requirement's own
+    targets, so no two of them may share a mana value (CR 202.3), enforced
+    the identical way in `TargetingProfile._why_not` while it fills this
+    requirement's own slots. Fails open for a target whose mana value cannot
+    be read."""
 
     excludes_enchanted: bool = False
     """"target creature other than enchanted creature" (Secret Invasion) - the
@@ -996,6 +1013,18 @@ class TargetRequirement(EngineModel):
                 f"{self.phrase} cannot target {with_indefinite_article(unwanted)}, "
                 f"and {target.name} is one"
             )
+        if not spell_on_stack and (self.requires_outlaw or self.excludes_outlaw):
+            from .conditions.board import OUTLAW_TYPES
+
+            is_outlaw = any(
+                word.lower() in OUTLAW_TYPES for word in self._current_subtypes(target, game)
+            )
+            if self.requires_outlaw and not is_outlaw:
+                return f"{self.phrase} needs an outlaw (CR 700.12a), and {target.name} is not one"
+            if self.excludes_outlaw and is_outlaw:
+                return (
+                    f"{self.phrase} cannot target an outlaw (CR 700.12a), and {target.name} is one"
+                )
         if self.required_colors and not (
             set(self._current_colors(target, game)) & self.required_colors
         ):
@@ -2079,12 +2108,22 @@ class TargetingProfile(EngineModel):
         shared_types: dict[int, frozenset[Type]] = {}
         filled: dict[int, int] = {}
         totals: dict[int, float] = {}
+        mana_values: dict[int, set[float]] = {}
 
         for target in targets:
             reasons: list[str] = []
             for index, slot in enumerate(slots):
                 reason = self._why_not(
-                    slot, target, caster, taken, game, source_id, controllers, shared_types, totals
+                    slot,
+                    target,
+                    caster,
+                    taken,
+                    game,
+                    source_id,
+                    controllers,
+                    shared_types,
+                    totals,
+                    mana_values,
                 )
                 if reason is None:
                     slots.pop(index)
@@ -2103,6 +2142,7 @@ class TargetingProfile(EngineModel):
                         controllers,
                         shared_types,
                         totals,
+                        mana_values,
                     )
                     if reason is None:
                         filled[id(requirement)] = filled.get(id(requirement), 0) + 1
@@ -2134,18 +2174,32 @@ class TargetingProfile(EngineModel):
         controllers: dict[int, set[str]] | None = None,
         shared_types: dict[int, frozenset[Type]] | None = None,
         totals: dict[int, float] | None = None,
+        mana_values: dict[int, set[float]] | None = None,
     ) -> str | None:
         """Why this requirement cannot take this target, CR 115.3 included.
 
         `controllers` carries the controllers already chosen for each
         requirement, which is what "controlled by different players" needs and
-        `rejects` cannot see: it judges one target at a time. Left `None` by a
-        caller that is only re-matching an announcement `check` already
-        accepted (`assign_to_owners`), where re-refusing it would be wrong.
+        `rejects` cannot see: it judges one target at a time. `mana_values` is
+        the identical bookkeeping for `distinct_mana_values` (Agadeem's
+        Awakening's "that each have a different mana value X or less"). Left
+        `None` by a caller that is only re-matching an announcement `check`
+        already accepted (`assign_to_owners`), where re-refusing it would be
+        wrong.
         """
         reason = requirement.rejects(target, caster, game, source_id)
         if reason is not None:
             return reason
+        seen_mana_value: float | None = None
+        if requirement.distinct_mana_values and mana_values is not None:
+            seen_mana_value = _computed_mana_value(target, game)
+            if seen_mana_value is not None and seen_mana_value in mana_values.get(
+                id(requirement), set()
+            ):
+                return (
+                    f"{requirement.phrase} need targets that each have a different mana value, "
+                    f"and {target} would repeat {seen_mana_value:g} (CR 601.2c)"
+                )
         controller: str | None = None
         if requirement.distinct_controllers and controllers is not None:
             found = getattr(target, "controller_or_owner", None) or getattr(
@@ -2195,6 +2249,8 @@ class TargetingProfile(EngineModel):
             shared_types[id(requirement)] = types if common is None else common & types
         if mana_value is not None and totals is not None:
             totals[id(requirement)] = totals.get(id(requirement), 0) + mana_value
+        if seen_mana_value is not None and mana_values is not None:
+            mana_values.setdefault(id(requirement), set()).add(seen_mana_value)
         return None
 
     def assign_to_owners(
@@ -3157,7 +3213,38 @@ def profile_for_text(text: str) -> TargetingProfile:
     for_each_opponent = _for_each_opponent_profile(text)
     if for_each_opponent is not None:
         return for_each_opponent
+    return_from_zone = _return_from_zone_to_destination_profile(text)
+    if return_from_zone is not None:
+        return return_from_zone
     return _parse(_REMINDER.sub("", text), spell_only=False)
+
+
+#: "Return from your graveyard to the battlefield `<target phrase>`."
+#: (Agadeem's Awakening) - CR 401's own zone-and-destination clause sits
+#: right after the verb, *before* the object noun phrase, the reverse of
+#: every other "return target `<phrase>` from your graveyard[ to the
+#: battlefield]" printing this module already scans left to right for
+#: (`_parse`'s own noun-phrase-first scan never looks behind the word
+#: "target" for a zone clause that preceded it). Read ahead of the ordinary
+#: scan and rewritten into that already-understood order - the zone clause
+#: moved after the object phrase - rather than teaching `_parse` a second
+#: word order for the one shape that prints it back to front.
+_RETURN_FROM_ZONE_TO_DESTINATION_RE = re.compile(
+    r"^return from (?P<zone>your graveyard) to (?P<destination>the battlefield) "
+    r"(?P<phrase>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _return_from_zone_to_destination_profile(
+    text: str, *, spell_only: bool = False
+) -> TargetingProfile | None:
+    """`_RETURN_FROM_ZONE_TO_DESTINATION_RE`'s shape, or `None`."""
+    match = _RETURN_FROM_ZONE_TO_DESTINATION_RE.match(text.strip())
+    if match is None:
+        return None
+    rewritten = f"{match.group('phrase')} from {match.group('zone')}"
+    return _parse(_REMINDER.sub("", rewritten), spell_only=spell_only)
 
 
 def targeting_trigger_text(card: Card) -> str | None:
@@ -3296,8 +3383,17 @@ def spell_profile_for_text(text: str, card: Card | None = None) -> TargetingProf
     the permanent is cast. Walking Ballista is the card that proves it: its
     "It deals 1 damage to any target" is an activated ability, and reading the
     card whole made the *creature spell* look like it required a target.
+
+    Agadeem's Awakening's own back-to-front zone clause (`_return_from_zone_
+    to_destination_profile`) is read here too, not only in `profile_for_text`
+    - a spell whose mana cost carries `{X}` (Agadeem's Awakening's own
+    `{X}{B}{B}{B}`) reaches this function directly rather than through
+    `profile_for_text`'s own wrapper (see `Casting.targeting`'s own `"{X}"
+    in ... mana_cost` branch), so the same rewrite has to run on this path
+    too or an X-costed printing of the shape never gets it at all.
     """
-    profile = _parse(text, spell_only=True)
+    return_from_zone = _return_from_zone_to_destination_profile(text, spell_only=True)
+    profile = return_from_zone if return_from_zone is not None else _parse(text, spell_only=True)
     if card is not None:
         profile = _with_aura_target(card, profile)
         # CR 702.16b compares a protected target against the source card's
@@ -4391,6 +4487,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     total_mana_value_at_most, rest = _extract_total_mana_value(rest)
 
+    distinct_mana_values, rest = _extract_distinct_mana_values(rest)
+
     comparison = _extract_comparison(rest)
     if comparison is _COMPARISON_UNREADABLE:
         # A comparison was clearly attempted and this parser could not finish
@@ -4629,6 +4727,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         must_be_token=adjectives.must_be_token,
         color_count=color_count,
         historic=adjectives.historic,
+        requires_outlaw=adjectives.requires_outlaw,
+        excludes_outlaw=adjectives.excludes_outlaw,
         combat_states=frozenset(adjectives.combat_states),
         excluded_combat_states=frozenset(adjectives.excluded_combat_states),
         must_be_attacking_alone=attacking_alone,
@@ -4642,6 +4742,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         comparison_count=comparison_count,
         comparison_x_definition=comparison_x_definition,
         distinct_controllers=distinct_controllers,
+        distinct_mana_values=distinct_mana_values,
         share_a_card_type=share_a_card_type,
         total_mana_value_at_most=total_mana_value_at_most,
         required_keyword=required_keyword,
@@ -4716,6 +4817,8 @@ class _Adjectives:
         self.color_count: str | None = None
         self.historic = False
         self.excludes_source = False
+        self.requires_outlaw = False
+        self.excludes_outlaw = False
         self.read = 0
 
     def take(self, raw: str, word: str) -> bool:
@@ -4747,6 +4850,10 @@ class _Adjectives:
             self.color_count = word
         elif word == "historic":
             self.historic = True
+        elif word == "outlaw":
+            self.requires_outlaw = True
+        elif word == "non-outlaw":
+            self.excludes_outlaw = True
         elif (excluded := _negated_type(word)) is not None:
             self.excluded_types.add(excluded)
         elif (excluded_super := _negated_supertype(word)) is not None:
@@ -4892,7 +4999,7 @@ def _is_adjective(word: str) -> bool:
     return (
         word in _TAPPED_ADJECTIVES
         or word in _COMBAT_ADJECTIVES
-        or word in {"token", "nontoken", "another", "other"}
+        or word in {"token", "nontoken", "another", "other", "outlaw", "non-outlaw"}
         or word in _SUPERTYPE_NOUNS
         or word in _COLOR_WORDS
         or word in {"multicolored", "monocolored", "colorless"}
@@ -5152,6 +5259,28 @@ def _extract_distinct_controllers(rest: str) -> tuple[bool, str]:
     """Read a "controlled by different players" clause out of `rest`, or leave
     it untouched when there is none - see `TargetRequirement.distinct_controllers`."""
     match = _DIFFERENT_CONTROLLERS_RE.match(rest)
+    if match is None:
+        return False, rest
+    return True, rest[match.end() :].strip()
+
+
+#: "any number of target creature cards **that each have a different mana
+#: value** X or less" (Agadeem's Awakening) - `_DIFFERENT_CONTROLLERS_RE`'s
+#: own shape, for CR 202.3's mana value instead of controllers. Consumes only
+#: the connective words, with a lookahead rather than swallowing "mana value"
+#: itself, so `_extract_comparison`'s own regex still reads the trailing
+#: "mana value X or less" exactly as it always has (tried right after this,
+#: on the shortened `rest`).
+_DIFFERENT_MANA_VALUES_RE = re.compile(
+    r"^that each have a different (?=mana value\b)", re.IGNORECASE
+)
+
+
+def _extract_distinct_mana_values(rest: str) -> tuple[bool, str]:
+    """Read a "that each have a different mana value" clause out of `rest`,
+    or leave it untouched when there is none - see `TargetRequirement.
+    distinct_mana_values`."""
+    match = _DIFFERENT_MANA_VALUES_RE.match(rest)
     if match is None:
         return False, rest
     return True, rest[match.end() :].strip()

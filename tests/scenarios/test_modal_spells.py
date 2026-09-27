@@ -986,3 +986,148 @@ def test_off_pool_inscription_of_ruin_kicked_may_choose_any_number():
     casting.pay_kicker()
     casting.choose_modes([1, 2, 3])  # all three: refused before this fix
     assert casting.chosen_mode_numbers == [1, 2, 3]
+
+
+# --------------------------------------------------------------------------
+# R0a-T7: Get Out (CR 700.2, CR 701.6a - counter; CR 401 - return) and
+# Frontline Rush (CR 111.1 - tokens; CR 107.3c - a self-defined X pump)
+# --------------------------------------------------------------------------
+
+
+def test_get_out_counters_a_creature_spell():
+    """Get Out's own first mode: "Counter target creature or enchantment
+    spell." (CR 701.6a)."""
+    scenario = (
+        Scenario()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", hand=["Get Out"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears_spell = scenario.cast_onto_stack(
+        "Grizzly Bears",
+        *scenario.untapped_sources("Forest", "Forest", username="bob"),
+        username="bob",
+    )
+    scenario.pass_priority("bob")
+
+    casting = scenario.cast("Get Out", username="alice")
+    casting.choose_modes([1])
+    casting.choose_targets([bears_spell])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Island", "Island", username="alice"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bears_spell.zone is Zone.GRAVEYARD
+    assert scenario.game.mode_notices == []
+
+
+def test_get_out_returns_two_owned_permanents_to_hand():
+    """Get Out's own second mode: "Return one or two target creatures
+    and/or enchantments you own to your hand." - one of each, both owned by
+    the caster."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Get Out"],
+            battlefield=["Island", "Island", "Grizzly Bears", "Pacifism"],
+        )
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    pacifism = scenario.find("Pacifism", Zone.BATTLEFIELD, "alice")
+    angel = scenario.creature("Serra Angel", "bob")
+    pacifism.attach_to(angel)  # CR 704.5m: an unattached Aura would be an SBA, not this test
+
+    casting = scenario.cast("Get Out")
+    casting.choose_modes([2])
+    casting.choose_targets([bears, pacifism])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Island", "Island"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.HAND
+    assert pacifism.zone is Zone.HAND
+    assert scenario.game.mode_notices == []
+
+
+def test_get_out_return_mode_refuses_an_unowned_creature():
+    """ "you own" (CR 109.5) refuses bob's own Serra Angel for the return
+    mode - only the counter mode's own target may be anyone's."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Get Out"], battlefield=["Island", "Island"])
+        .player("bob", battlefield=["Serra Angel"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    angel = scenario.creature("Serra Angel", "bob")
+
+    casting = scenario.cast("Get Out")
+    casting.choose_modes([2])
+    try:
+        casting.choose_targets([angel])
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("bob's own creature should not be a legal target for 'you own'")
+
+
+def test_frontline_rush_creates_two_goblin_tokens():
+    """Frontline Rush's own first mode: "Create two 1/1 red Goblin creature
+    tokens." (CR 111.1)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Frontline Rush"], battlefield=["Mountain", "Plains"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Frontline Rush")
+    casting.choose_modes([1])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    goblins = [
+        state for state in scenario.game.battlefield if state.token and "Goblin" in state.name
+    ]
+    assert len(goblins) == 2
+    assert all(state.power == 1 and state.toughness == 1 for state in goblins)
+    assert scenario.game.mode_notices == []
+
+
+def test_frontline_rush_pumps_by_the_number_of_creatures_controlled():
+    """Frontline Rush's own second mode: "Target creature gets +X/+X until
+    end of turn, where X is the number of creatures you control." (CR
+    107.3c: X is fixed once, at resolution) - alice controls three
+    creatures, so the target gets +3/+3."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Frontline Rush"],
+            battlefield=["Mountain", "Plains", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    casting = scenario.cast("Frontline Rush")
+    casting.choose_modes([2])
+    casting.choose_targets([bears])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *scenario.untapped_sources("Mountain", "Plains"))
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert scenario.game.power_of(bears) == 2 + 3
+    assert scenario.game.toughness_of(bears) == 2 + 3
+    assert scenario.game.mode_notices == []
