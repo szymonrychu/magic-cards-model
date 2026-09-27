@@ -32,6 +32,7 @@ from magic_cards_model.machines.effects import (
 from magic_cards_model.models.card import Type
 from magic_cards_model.support import (
     _sentences,
+    _without_sentence,
     card_support,
     ignored_rider,
     rider_sentences,
@@ -218,6 +219,7 @@ def test_every_remainder_notice_closure_carries_the_marker(site):
     readers, texts = _site_texts()
     reader = readers[site.split(".<locals>.")[0]]
     hits = 0
+    reached = set()
     for text in texts:
         try:
             effect = reader(text)
@@ -225,12 +227,38 @@ def test_every_remainder_notice_closure_carries_the_marker(site):
             continue
         if getattr(effect, "__qualname__", "") != site:
             continue
+        reached.add(text)
         marker = getattr(effect, "unparsed_remainder", None)
         if site in _ALWAYS_A_REMAINDER:
             assert marker, (site, text)
+        if site in _CONDITION_GATED:
+            assert bool(marker) is not _instead_condition_claimed(text), (site, text)
         if marker:
             hits += 1
+    if site in _CONDITION_GATED:
+        assert len(reached) >= 2, f"fewer than two pool printings reach {site}"
+        return
     assert hits, f"no pool printing reaches {site} with a remainder it cannot read"
+
+
+#: The site whose marker depends only on whether its "If <condition>, ...
+#: instead" condition is one a reader claims: every pool printing of the
+#: shape reads its condition now, so the site is proven by the marker being
+#: absent exactly when `conditions.claims` answers True.
+_CONDITION_GATED = frozenset(
+    {"_compose_layer_effect_with_remainder_for_ability.<locals>.layer_or_counter_instead"}
+)
+
+
+def _instead_condition_claimed(text: str) -> bool:
+    from magic_cards_model.machines import conditions
+    from magic_cards_model.machines.effects import _LAYER_COUNTER_INSTEAD_UPGRADE_RE
+
+    for sentence in _sentences(text):
+        match = _LAYER_COUNTER_INSTEAD_UPGRADE_RE.fullmatch(sentence.rstrip(".").strip())
+        if match is not None:
+            return conditions.claims(match.group("condition").strip())
+    raise AssertionError(f"no instead-upgrade sentence in {text!r}")
 
 
 # --- the ablation probe ---------------------------------------------------
@@ -248,24 +276,45 @@ def _ablation_hits():
     return hits
 
 
-def test_the_ablation_probe_finds_an_ignored_rider_in_the_pool():
-    """The floor was 2 (Lorehold Excavation and Hidden Blade) until this
-    session fixed Lorehold Excavation's own swallowed "Otherwise" branch
-    (`_parse_then_if_moved_this_way_clause`); Hidden Blade's separate,
-    unrelated "attach it to target creature. If that creature is an
-    Assassin, it gains deathtouch until end of turn." swallow
-    (`_attach_self_to_target_effect`'s target-description regex matching past
-    its own sentence boundary) is untouched and still real, so the floor
-    drops to 1 rather than 0 - still chosen from the pool by what the probe
-    says, never by name."""
-    hits = _ablation_hits()
-    names = {printing.name for printing, _, _ in hits}
-    assert len(names) >= 1, hits
-    for printing, _, rider in hits:
+def test_every_ablation_hit_in_the_pool_is_a_notice_naming_the_rider():
+    """Whatever the probe finds in the pool is scored `notice` with the rider
+    it found as the reason - never left `handled`."""
+    for printing, _, rider in _ablation_hits():
         assert any(
             clause.outcome == "notice" and clause.reason == _REMAINDER + rider
             for clause in card_support(printing).clauses
         ), (printing.name, rider)
+
+
+#: Real printings whose rider the engine used to drop and now reads (Hidden
+#: Blade's Assassin deathtouch, Lorehold Excavation's "Otherwise" damage,
+#: Vexing Arcanix's name branch) - the probe's own positive control.
+_ONCE_DROPPED = ("Hidden Blade", "Lorehold Excavation", "Vexing Arcanix")
+
+
+@pytest.mark.parametrize("name", _ONCE_DROPPED)
+def test_the_ablation_probe_catches_a_dispatcher_that_drops_the_rider(name):
+    """The pool has no ignored rider left, so the probe is proven on the texts
+    whose riders were the last ones dropped: asked through a dispatcher that
+    answers every text the way the real one answers it without the rider -
+    exactly what the old readers did - the probe names the rider; asked
+    through the real dispatcher it names nothing."""
+    printing = card(name)
+    checked = 0
+    for text, dispatch, effect in _dispatches(printing):
+        for rider in rider_sentences(text):
+            ablated = _without_sentence(text, rider)
+            dropped = dispatch(ablated)
+            if dropped is None or effect is None or same_closure(dropped, effect):
+                continue
+
+            def dropping(t, dispatch=dispatch, rider=rider):
+                return dispatch(_without_sentence(t, rider) if rider in t else t)
+
+            assert ignored_rider(dropping, text, dropped) == rider, (name, rider)
+            assert ignored_rider(dispatch, text, effect) is None, (name, rider)
+            checked += 1
+    assert checked, name
 
 
 def test_a_kicker_rider_that_is_read_is_not_flagged():
@@ -323,7 +372,6 @@ def test_a_rider_the_target_announcement_reads_is_not_flagged():
     unchanged proves nothing. Too Evil to Stay Dead's teamwork scenarios
     (`tests/scenarios/test_teamwork_riders.py`) play both branches."""
     from magic_cards_model.machines.targeting import profile_for_text
-    from magic_cards_model.support import _without_sentence
 
     read_by_targeting = set()
     for printing in _printings():

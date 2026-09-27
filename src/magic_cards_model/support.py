@@ -3165,8 +3165,16 @@ def ignored_rider(dispatch: Callable[[str], object], text: str, effect: object) 
     not by the resolution closure."""
     if effect is None or effect in _BARE_SENTINELS:
         return None
+    riders = rider_sentences(text)
+    if not riders:
+        return None
     builder = _builder_of(effect)
-    for sentence in rider_sentences(text):
+    if builder is not None and not _builds_same(builder, text, effect):
+        # The dispatcher handed its reader something other than `text`
+        # (a stripped preamble, a substituted X): the reader alone is no
+        # stand-in for it, so every rider goes through the whole chain.
+        builder = None
+    for sentence in riders:
         ablated = _without_sentence(text, sentence)
         if not ablated:
             continue
