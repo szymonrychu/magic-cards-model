@@ -438,6 +438,35 @@ POWERSTONE = TokenDefinition(
     rules_text="{T}: Add {C}. This mana can't be spent to cast a nonartifact spell.",
 )
 
+#: CR 111.10s: "A Map token is a colorless Map artifact token with '{1},
+#: {T}, Sacrifice this token: Target creature you control explores. Activate
+#: only as a sorcery.'" See rule 701.44, "Explore." - `mise run rules:find
+#: 111.10` and `mise run rules:find 701.44`, both read whole this session.
+#:
+#: The Scryfall "Explore" keyword tag on a card that only *creates* a Map
+#: (Spyglass Siren's own "When this creature enters, create a Map token.")
+#: names an ability that lives on the token, not on the card's own printed
+#: text - `machines/map_tokens.credits_explore_via_created_token` is what
+#: credits that keyword without gating on the card's own text carrying the
+#: word "explores" itself. Once this row exists, every reader that already
+#: dispatches off `PREDEFINED` (`_parse_token_clause`'s bare-name branch,
+#: `_parse_referent_clause`'s own "creates ... token" branch for "Its
+#: controller creates two Map tokens") reaches it with no card-specific code
+#: of its own - see `machines/effects.effect_text_with_named_token_reminder`
+#: for why a card whose own reminder text spells the ability out verbatim
+#: (Spyglass Siren, Sentinel of the Nameless City) stops reattaching that
+#: reminder once "Map" has a real row here, and instead builds the identical
+#: token off this definition the same plain way every other predefined token
+#: in this pool already does.
+MAP = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Map",),
+    rules_text=(
+        "{1}, {T}, Sacrifice this token: Target creature you control explores. "
+        "Activate only as a sorcery."
+    ),
+)
+
 #: CR 111.10k: "A Monster Role token is a colorless Aura Role enchantment token
 #: named Monster with enchant creature and 'Enchanted creature gets +1/+1 and has
 #: trample.'" The name is stated by the rule, so CR 111.4 does not derive one.
@@ -585,6 +614,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Treasure": TREASURE,
     "Food": FOOD,
     "Clue": CLUE,
+    "Map": MAP,
     "Powerstone": POWERSTONE,
     "Mutagen": MUTAGEN,
     "Heartwood": HEARTWOOD,

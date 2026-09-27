@@ -106,7 +106,7 @@ from ..numbers import (
 )
 from ..snapshot import EngineModel
 from . import combat as combat_rules
-from . import token_riders
+from . import map_tokens, token_riders
 from .abilities import (
     _ABILITY_WORD,
     KEYWORD_ABILITY_NAMES,
@@ -22031,6 +22031,18 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
 
         return token_effect
 
+    # R0a-T2: Magmatic Hellkite's own "Its controller searches their
+    # library for a basic land card, puts it onto the battlefield tapped
+    # with a stun counter on it, then shuffles." reaches the engine only
+    # through the whole-paragraph reader in `machines/map_tokens.py`
+    # (`parse_destroy_then_referent_mandatory_search_tapped_clause`,
+    # registered in `_parse_mixed_clauses` below) - never through this
+    # function, because `rest` here is one fragment of `split_effect_
+    # clauses`'s own comma-based cut, and that cut always lands inside this
+    # exact tail ("... tapped[ with a stun counter on it]" / "then
+    # shuffles"), so there is no whole "rest" for a same-shape reader
+    # registered here to ever actually see.
+
     return None
 
 
@@ -28306,6 +28318,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if search_put_battlefield_tapped_then_behold_untap is not None:
         return search_put_battlefield_tapped_then_behold_untap
+    # R0a-T2: Fabled Passage's own "... then shuffle. Then if you control
+    # <n> or more lands, untap that land." - additive, see machines/
+    # map_tokens.py.
+    search_put_battlefield_tapped_then_count_lands_untap = (
+        map_tokens.parse_search_put_battlefield_tapped_then_count_lands_untap_clause(effect_text)
+    )
+    if search_put_battlefield_tapped_then_count_lands_untap is not None:
+        return search_put_battlefield_tapped_then_count_lands_untap
     look_top_card_conditional = _parse_look_top_card_conditional_clause(effect_text)
     if look_top_card_conditional is not None:
         return look_top_card_conditional
@@ -56420,6 +56440,20 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # already reads, which `_parse_mixed_clause`'s ordinary two-clause
         # pairing (`_parse_anaphoric_clause_pair`) has no room for.
         return [destroy_amass_draw]
+    # R0a-T2: Magmatic Hellkite's own "Destroy target nonbasic land an
+    # opponent controls. Its controller searches their library for a basic
+    # land card, puts it onto the battlefield tapped with a stun counter on
+    # it, then shuffles." - additive, see machines/map_tokens.py. Read whole
+    # for the identical reason `destroy_amass_draw` above is: the second
+    # sentence's own internal comma ("... tapped with a stun counter on it,
+    # then shuffles") would otherwise be cut apart by the ordinary split,
+    # which `_parse_anaphoric_clause_pair`'s two-clause pairing has no room
+    # to rejoin.
+    destroy_referent_search = map_tokens.parse_destroy_then_referent_mandatory_search_tapped_clause(
+        text, for_spell=for_spell
+    )
+    if destroy_referent_search is not None:
+        return [destroy_referent_search]
     may_sacrifice_damage_amass = _parse_may_sacrifice_then_damage_then_amass_if_excess_clause(
         text, for_spell=for_spell
     )
