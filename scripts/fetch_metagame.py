@@ -295,16 +295,65 @@ def card_inclusion_rates(
 # ---------------------------------------------------------------------------
 
 
+#: Both separators a two-faced card's name can show up under - the engine's
+#: own `" // "` and a single `" / "` some sources (spellslinger's own
+#: rendering of a Room card, observed live: "Unholy Annex / Ritual Chamber")
+#: use instead.
+_SLASH_SEPARATORS = (" // ", " / ")
+
+
+def _split_front_face(name: str) -> str:
+    """`name` up to (not including) its first `" // "` or `" / "`
+    separator - the front face of a two-faced card's name - or `name`
+    unchanged when it carries neither separator at all."""
+    for separator in _SLASH_SEPARATORS:
+        if separator in name:
+            return name.split(separator, 1)[0].strip()
+    return name
+
+
+def _normalize_slash_separator(name: str) -> str:
+    """A single `" / "` separator normalized to the engine's own `" // "`.
+    Never touches a name that already has `" // "`, and is a no-op on a
+    name with no separator at all."""
+    if " // " in name or " / " not in name:
+        return name
+    return name.replace(" / ", " // ")
+
+
 def build_name_resolver(oracle_cards: Iterable[Mapping[str, Any]]) -> Callable[[str], str | None]:
     """A `name -> engine name | None` resolver built the same way
     `scripts/card_coverage.py` matches card names: a split/MDFC/adventure
     card's full engine name is `"A // B"`, but spellslinger's decklists
     (like this project's own tested-index lookups) carry only the front
-    face, `front_name(name)`. Any full engine name resolves to itself;
-    any front face resolves to the full `"A // B"` name it belongs to."""
+    face, `front_name(name)`. Any full engine name resolves to itself; any
+    front face resolves to the full `"A // B"` name it belongs to.
+
+    Two further, real cases seen live: a Room card whose name came back
+    with a single `" / "` separator instead of `" // "`
+    (`_normalize_slash_separator`), and a name whose front face is right
+    but whose back face is wrong or duplicated (a spellslinger data
+    oddity) - falls back to resolving by front face alone
+    (`_split_front_face`) rather than leaving either unresolved.
+
+    Ineligible rows (`card_coverage.is_eligible_printing` - tokens,
+    emblems, art_series-set-type, digital-only) or never-legal-anywhere-
+    in-scope rows (`card_coverage._in_target_formats`) are skipped
+    entirely: a real bug found live is oracle-cards also carrying a
+    `memorabilia`/`layout="art_series"` gallery object literally named
+    "Twinmaw Stormbrood // Twinmaw Stormbrood" (never legal in any format -
+    `is_eligible_printing` alone does not catch it, since its `set_type` is
+    `"memorabilia"`, not `"art_series"`) alongside the real adventure card
+    "Twinmaw Stormbrood // Charring Bite" - left unfiltered, the bogus
+    row's exact name shadowed the front-face fallback that would otherwise
+    have found the real card. Gating on legality is also exactly what
+    keeps this resolver's index matching `card_coverage.py`'s own
+    classification pool, which every Round 0 name is checked against next."""
     by_full_name: set[str] = set()
     by_front_name: dict[str, str] = {}
     for raw in oracle_cards:
+        if not card_coverage.is_eligible_printing(raw) or not card_coverage._in_target_formats(raw):
+            continue
         name = raw.get("name")
         if not name:
             continue
@@ -314,9 +363,15 @@ def build_name_resolver(oracle_cards: Iterable[Mapping[str, Any]]) -> Callable[[
             by_front_name.setdefault(front, name)
 
     def resolve(name: str) -> str | None:
-        if name in by_full_name:
-            return name
-        return by_front_name.get(name)
+        for candidate in (name, _normalize_slash_separator(name)):
+            if candidate in by_full_name:
+                return candidate
+            if candidate in by_front_name:
+                return by_front_name[candidate]
+        front = _split_front_face(name)
+        if front != name:
+            return by_front_name.get(front)
+        return None
 
     return resolve
 

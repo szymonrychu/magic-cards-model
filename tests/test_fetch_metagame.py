@@ -362,6 +362,80 @@ def test_build_name_resolver_returns_none_for_unknown_card():
     assert resolve("Not A Real Card") is None
 
 
+def test_build_name_resolver_resolves_full_mdfc_name_unchanged():
+    """A fixture-level check that the ordinary path (a full `"A // B"` name
+    already matching the engine's own spelling) still resolves to itself,
+    unaffected by the single-slash normalization and front-face fallback
+    added below."""
+    full_name = "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki"
+    resolve = fm.build_name_resolver([{"name": full_name}])
+    assert resolve(full_name) == full_name
+
+
+def test_build_name_resolver_normalizes_a_single_slash_room_name():
+    """A Room card's spellslinger name came back as a single `" / "`
+    separator ("Unholy Annex / Ritual Chamber") rather than the engine's
+    `" // "` - normalized before lookup rather than left unresolved."""
+    full_name = "Unholy Annex // Ritual Chamber"
+    resolve = fm.build_name_resolver([{"name": full_name}])
+    assert resolve("Unholy Annex / Ritual Chamber") == full_name
+
+
+def test_build_name_resolver_falls_back_to_front_face_on_a_bad_back_face():
+    """A spellslinger data oddity: the full name it gave has the right
+    front face but a wrong/duplicated back face
+    ("Twinmaw Stormbrood // Twinmaw Stormbrood" instead of the real back
+    face). The exact string never matches, so this falls back to the front
+    face (before the first separator) and resolves via the engine's own
+    front-face index, emitting the canonical engine name - not left
+    unresolved."""
+    full_name = "Twinmaw Stormbrood // Twinmaw Stormbrood, Reborn"
+    resolve = fm.build_name_resolver([{"name": full_name}])
+    assert resolve("Twinmaw Stormbrood // Twinmaw Stormbrood") == full_name
+
+
+def test_build_name_resolver_front_face_fallback_also_covers_single_slash():
+    full_name = "Some Front // Some Back"
+    resolve = fm.build_name_resolver([{"name": full_name}])
+    # Wrong back face AND a single-slash separator at once.
+    assert resolve("Some Front / Not The Real Back") == full_name
+
+
+def test_build_name_resolver_ignores_a_never_legal_memorabilia_duplicate_of_the_bad_name():
+    """Real bug found live: oracle-cards also carries a `memorabilia`
+    (`layout="art_series"`) gallery object literally named
+    "Twinmaw Stormbrood // Twinmaw Stormbrood" - never legal in any format
+    - alongside the real adventure card "Twinmaw Stormbrood // Charring
+    Bite". `is_eligible_printing` alone does not exclude it
+    (`_EXCLUDED_SET_TYPES` only checks `set_type == "art_series"`, and this
+    row's own `set_type` is `"memorabilia"`); without also gating on
+    `_in_target_formats` (never-legal), the bogus row's exact name shadowed
+    the front-face fallback and the resolver returned the fake name
+    unchanged instead of the real card."""
+    real_card = "Twinmaw Stormbrood // Charring Bite"
+    resolve = fm.build_name_resolver(
+        [
+            {
+                "name": real_card,
+                "layout": "adventure",
+                "set_type": "expansion",
+                "legalities": {"standard": "not_legal", "pioneer": "not_legal", "modern": "legal"},
+            },
+            {
+                "name": "Twinmaw Stormbrood // Twinmaw Stormbrood",
+                "layout": "art_series",
+                "set_type": "memorabilia",
+                "legalities": {
+                    "standard": "not_legal",
+                    "pioneer": "not_legal",
+                    "modern": "not_legal",
+                },
+            },
+        ]
+    )
+    assert resolve("Twinmaw Stormbrood // Twinmaw Stormbrood") == real_card
+
+
 # ---------------------------------------------------------------------------
 # Per-format fetch: unresolved reporting, deterministic snapshot shape
 # ---------------------------------------------------------------------------
