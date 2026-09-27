@@ -14,7 +14,7 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Market Gnome", "Clay-Fired Bricks // Cosmium Kiln"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Market Gnome", "Braided Net // Braided Quipu"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
@@ -48,7 +48,7 @@
         "life": [20, 21]
       }
     },
-    "stack": ["ability of Clay-Fired Bricks@alice#1: {5}{W}{W}, Exile this permanent, Exile the materials: Return this card to the battlefield transformed under its owner's control."]
+    "stack": ["ability of Braided Net@alice#1: {1}{U}, Exile this permanent, Exile the materials: Return this card to the battlefield transformed under its owner's control."]
   },
   "family": "triggered",
   "format": 1,
@@ -58,7 +58,7 @@
     "attempt": "activate_with",
     "index": 0,
     "params": {
-      "activator": "Clay-Fired Bricks // Cosmium Kiln"
+      "activator": "Braided Net // Braided Quipu"
     },
     "variant": "quiet"
   }

@@ -1,0 +1,75 @@
+{
+  "ability": "Whenever an opponent searches their library, that player sacrifices a creature of their choice and loses 10 life.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Ob Nixilis, Unshackled@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Ob Nixilis, Unshackled"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Wooded Foothills"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Ob Nixilis, Unshackled",
+  "delta": {
+    "created": {},
+    "decisions": [
+      {
+        "amount": 1,
+        "cards": ["Fleecemane Lion@bob#1", "Icehide Golem@bob#1"],
+        "kind": "choose_cards",
+        "player": "bob",
+        "players": [],
+        "prompt": "sacrifice a creature",
+        "source": "Ob Nixilis, Unshackled"
+      }
+    ],
+    "fields_changed": ["creatures_died_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "permanents_sacrificed_this_turn", "turn_history"],
+    "notices": {},
+    "objects": {
+      "Icehide Golem@bob#1": {
+        "zone": ["battlefield", "graveyard"]
+      }
+    },
+    "players": {
+      "bob": {
+        "life": [19, 9]
+      }
+    },
+    "stack": ["ability of Ob Nixilis, Unshackled@alice#1: Whenever another creature dies, put a +1/+1 counter on Ob Nixilis."]
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "searches_library",
+  "number": 0,
+  "recipe": {
+    "attempt": "search",
+    "index": 2,
+    "params": {
+      "player": "bob"
+    },
+    "variant": "quiet"
+  }
+}
