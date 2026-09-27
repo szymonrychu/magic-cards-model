@@ -1426,7 +1426,9 @@ READERS: tuple[ConditionReader, ...] = (
     # H4
     ConditionReader(
         re.compile(
-            rf"{_WHO} (?P<verbs>(?:gained|lost)(?: (?:and|or) (?:gained|lost))?) "
+            # "you've gained 5 or more life this turn" (Case of the Uneaten
+            # Feast's "To solve") is the perfect-tense spelling of the same.
+            rf"{_WHO}(?:'ve| have)? (?P<verbs>(?:gained|lost)(?: (?:and|or) (?:gained|lost))?) "
             rf"{_N_OR_MORE}life {_WHEN}"
         ),
         _life_this_turn,

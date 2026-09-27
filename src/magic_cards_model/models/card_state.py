@@ -930,6 +930,12 @@ class CardState(EngineModel):
     permanent's copiable values". CR 701.60c's menace and "This creature
     can't block" are layer 6 effects `machines/layers.py` builds off this
     field while it is set (`_suspected_abilities`)."""
+    solved: bool = False
+    """CR 719.3b's "solved" designation on a Case: "Once a permanent becomes
+    solved, it stays solved until it leaves the battlefield. The solved
+    designation is neither an ability nor part of the permanent's copiable
+    values." Set by the "To solve" trigger (CR 719.3a), read by "Solved"
+    abilities (CR 702.169b-d), cleared by `move_to` off the battlefield."""
     renowned: bool = False
     """CR 702.112b's "renowned" designation: "Once a permanent becomes
     renowned, it stays renowned until it leaves the battlefield. Renowned is
@@ -2769,6 +2775,7 @@ class CardState(EngineModel):
             self.saddled_by = ()
             self.suspected = False
             self.renowned = False
+            self.solved = False  # CR 719.3b
             if zone is Zone.GRAVEYARD:
                 self._note_put_into_graveyard_with_counters()
         if origin is Zone.STACK and zone is not Zone.STACK and not self.is_copy:

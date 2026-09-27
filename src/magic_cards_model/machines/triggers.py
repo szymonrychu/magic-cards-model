@@ -2593,6 +2593,11 @@ def condition_matches(
     Anything else returns False. A condition this module cannot read never fires
     a trigger, which is the safe direction to be wrong in.
     """
+    ability_word = (getattr(ability, "ability_word", None) or "").lower()
+    if ability_word == "solved" and not getattr(source, "solved", False):
+        return False  # CR 702.169c: "triggers only if this Case is solved"
+    if ability_word == "to solve" and getattr(source, "solved", False):
+        return False  # CR 719.3a: "... and this Case is not solved"
     condition = ability.condition
 
     if ability.event is TriggerEvent.CAST_SPELL:

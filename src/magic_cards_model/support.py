@@ -463,6 +463,13 @@ def executed_keywords(printing: Card) -> dict[str, str]:
         elif lowered in ADDITIONAL_COST_KEYWORDS:
             # Kicker: `Casting.pay_kicker` charges it (CR 702.33a, CR 118.8a).
             found[lowered] = "machines/casting.py (additional cost)"
+        elif lowered == "solved":
+            # CR 702.169b-d: "Solved — [Ability text]" gates the ability on
+            # the Case's solved designation (CR 719.3b) - the activation
+            # refusal in `Game.activation_instruction_refusal`, the trigger
+            # gate in `triggers.condition_matches`; "To solve" (CR 719.3a) is
+            # the end-step trigger `machines/abilities.py` spells out.
+            found[lowered] = "models/game.py + machines/triggers.py (solved)"
         elif lowered == "enchant":
             # CR 702.5a restricts what an Aura spell can target and what an Aura
             # can enchant. `Casting.choose_targets` refuses the announcement.
@@ -2098,8 +2105,7 @@ def _static_ability_category(printing: Card, text: str) -> str:
         return HANDLED
     if r0a_t5_static_line(printing, text):
         # R0a-T5: skip-your-draw-step (CR 614.10), hexproof/ward ignored
-        # (CR 702.11e, 702.21a), Case "To solve" (CR 719.3a) and the rest of
-        # the statics `r0a_t5_static_line` names, each proven by a scenario.
+        # (CR 702.11e, 702.21a) - each proven by a scenario.
         return HANDLED
     return STATIC_UNAUDITED
 
@@ -3719,16 +3725,11 @@ def r0a_t5_static_line(printing: Card, text: str) -> bool:
       have hexproof. [Ward abilities of those creatures don't trigger.]" -
       `machines/targeting.hexproof_ignore_of_line`, performed by
       `Game.hexproof_refusal` and the ward trigger check (CR 702.11e, 702.21a);
-    - "To solve — <condition>" - `machines/designations.solve_condition_of_line`,
-      performed by the Case's end-step solve trigger (CR 719.3a).
     """
-    from .machines.designations import solve_condition_of_line
     from .machines.replacement import skipped_own_step_of_line
     from .machines.targeting import hexproof_ignore_of_line
 
     line = text.strip()
     if skipped_own_step_of_line(line) is not None:
         return True
-    if hexproof_ignore_of_line(line) is not None:
-        return True
-    return solve_condition_of_line(line) is not None
+    return hexproof_ignore_of_line(line) is not None

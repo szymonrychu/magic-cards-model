@@ -518,3 +518,76 @@ def parse_choose_exiled_with_counter_play_clause(text: str) -> Any:
             )
 
     return effect
+
+
+#: "Creature cards in your graveyard gain "You may cast this card from your
+#: graveyard" until end of turn." (Case of the Uneaten Feast) and the leading-
+#: duration order "Until end of turn, each legendary card in your graveyard
+#: gains "You may play this card from your graveyard."" (Kethis, the Hidden
+#: Hand). CR 611.2c: a resolving ability's grant affects the cards there as
+#: it resolves - a card arriving later is a new object (CR 400.7) and gains
+#: nothing. The quoted ability is an opaque payload here (CR 113.10): only
+#: the self-zone permission payload is performed; any other payload fails
+#: closed with a notice.
+_GRAVEYARD_CARDS_GAIN_QUOTED_RE = re.compile(
+    r'^(?P<lead>until end of turn, )?(?:each )?(?P<quality>[a-z][a-z ]*?) cards? in your '
+    r'graveyard gains? "(?P<payload>[^"]+)"(?P<trail> until end of turn)?\.?$',
+    re.IGNORECASE,
+)
+
+#: The one payload performed: "You may cast/play this card from your graveyard".
+_SELF_GRAVEYARD_PERMISSION_PAYLOAD_RE = re.compile(
+    r"^you may (?P<verb>cast|play) this card from your graveyard\.?$", re.IGNORECASE
+)
+
+
+def parse_graveyard_cards_gain_cast_clause(text: str) -> Any:
+    """`_GRAVEYARD_CARDS_GAIN_QUOTED_RE`'s effect: a this-turn permission
+    (CR 601.3) for every card of that quality in the controller's graveyard,
+    or a fail-closed notice for a payload this does not perform."""
+    normalized = " ".join(text.split()).replace("\u201c", '"').replace("\u201d", '"')
+    match = _GRAVEYARD_CARDS_GAIN_QUOTED_RE.fullmatch(normalized)
+    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
+        return None
+    quality = match.group("quality").strip().lower()
+    payload = _SELF_GRAVEYARD_PERMISSION_PAYLOAD_RE.fullmatch(match.group("payload").strip())
+    if payload is None:
+
+        def payload_notice_only(game: Any, ability: Any) -> None:
+            from ..models.game import UnmodeledTriggerEffectNotice
+
+            game.unmodeled_trigger_effect_notices.append(
+                UnmodeledTriggerEffectNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=match.group("payload"),
+                )
+            )
+
+        return payload_notice_only
+    action = _permission_action(payload.group("verb"))
+
+    def effect(game: Any, ability: Any) -> None:
+        from .casting import has_quality
+
+        controller = ability.controller
+        player = game.player(controller)
+        for state in list(player.cards_in(Zone.GRAVEYARD)):
+            if not has_quality(
+                quality,
+                colors=tuple(state.colors),
+                types=tuple(state.types),
+                subtypes=tuple(state.subtypes),
+                supertypes=tuple(state.card.supertypes),
+            ):
+                continue
+            game.grant_play_permission(
+                state,
+                controller,
+                action=action,
+                source_name=ability.source_name,
+                zone=Zone.GRAVEYARD,
+                until_end_of_turn=True,
+            )
+
+    return effect

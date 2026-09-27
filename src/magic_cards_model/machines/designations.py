@@ -125,6 +125,24 @@ def has_full_party(game: Any, player: str) -> bool:
     return party_size(game, player) == len(PARTY_ROLES)
 
 
-def solve_condition_of_line(line: str) -> str | None:
-    """Placeholder until the Case reader lands below."""
-    return None
+#: CR 719.3a's own resolution, as `machines/abilities.py` spells the "To
+#: solve" trigger out: "this Case becomes solved".
+_BECOMES_SOLVED_RE = re.compile(r"^this (?:case|permanent) becomes solved\.?$", re.IGNORECASE)
+
+
+def parse_becomes_solved_clause(text: str) -> Any:
+    """ "this Case becomes solved" - the source gains CR 719.3b's solved
+    designation, if it is still the permanent the ability came from (CR
+    400.7)."""
+    if _BECOMES_SOLVED_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: Any, ability: Any) -> None:
+        source = ability.source(game)
+        if source is None or getattr(source, "zone", None) is None:
+            return
+        if source.zone.value != "battlefield":
+            return
+        source.solved = True
+
+    return effect

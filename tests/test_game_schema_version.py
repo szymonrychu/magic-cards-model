@@ -1553,3 +1553,20 @@ def test_a_snapshot_written_before_ecl_t8_zone_resets_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS}",
     ):
         Game.model_validate(dumped)
+
+
+_SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED = 95
+
+
+def test_a_snapshot_written_before_the_solved_designation_is_refused() -> None:
+    """A version-95 dump has no `CardState.solved`: decoded as current, a Case
+    would read unsolved forever (CR 719.3b). Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED}",
+    ):
+        Game.model_validate(dumped)

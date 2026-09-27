@@ -4134,7 +4134,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 95
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 96
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -5160,6 +5160,11 @@ class Game(EngineModel):
     bullet. A version-76 game would decode with every graveyard arrival this
     turn not yet announced and raise them all again as one batch - the
     second.
+
+    Bumped 95 -> 96 (R0a-T5): `CardState` gained `solved` (CR 719.3b's Case
+    designation) - a field added to a persisted model, the bump rule's first
+    bullet. A version-95 Case would decode unsolved forever and its "Solved"
+    abilities would never be available. Refused instead.
     """
 
     @model_validator(mode="before")
@@ -22282,6 +22287,10 @@ class Game(EngineModel):
                 f"{activator}'s main phase, with the stack empty "
                 f"(CR 602.5d, CR 307.5)"
             )
+        if (ability.ability_word or "").lower() == "solved" and not source.solved:
+            # CR 702.169d: "Solved — [Ability text]" means "[Ability text].
+            # Activate only if this Case is solved."
+            return f"{name} is not solved, so its Solved ability cannot be activated (CR 702.169d)"
         if (ability.ability_word or "").lower() == "boast":
             # CR 702.142a: "Boast - [Cost]: [Effect]" means "[Cost]: [Effect].
             # Activate only if this creature attacked this turn and only once
