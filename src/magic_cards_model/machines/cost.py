@@ -5107,9 +5107,13 @@ _PHRASE_PLACE_COUNTERS = re.compile(
 )
 _PHRASE_REMOVE_COUNTERS = re.compile(
     rf"^remove (?:(?P<any_number>any number of)|{_COST_COUNT}) (?P<kind>[\w+/−-]+) counters? "
+    # "from a creature you control" (Ray Fillet, Man Ray; Korozda Gorgon):
+    # a permanent the payer chooses as the cost is paid, the same empty-then-
+    # chosen shape blight's "a creature you control" uses below (CR 118.3).
+    rf"from (?:an? (?P<chosen>[\w -]+?) you control|"
     # The Astonishing Ant-Man's "from The Astonishing Ant-Man": CR 201.5's
     # self-reference by name, filled in by `Game`'s `_cost_refers_to_self`.
-    rf"from (?:{_COUNTER_SELF_SUBJECT}|(?-i:[A-Z][\w,' -]*))$",
+    rf"{_COUNTER_SELF_SUBJECT}|(?-i:[A-Z][\w,' -]*))$",
     re.IGNORECASE,
 )
 
@@ -5361,6 +5365,13 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             None, count, counter_kind=kind, payer=payer, description=text
         )
         component.variable_count = variable
+        chosen = remove_counters.group("chosen")
+        if chosen is not None:
+            # "from a creature you control": the control half is
+            # `_why_not_controlled`, the quality half this requirement.
+            component.requirement = _requirement(chosen)
+            if component.requirement is None:
+                return None
         return component
 
     blight = _PHRASE_BLIGHT.match(text)

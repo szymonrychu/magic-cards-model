@@ -22373,14 +22373,21 @@ class Game(EngineModel):
         self, component: CostComponent, payer: str, source: CardState
     ) -> None:
         """Ask `payer` which permanent a "Blight N" cost puts its counters on
-        (CR 701.68a, paid at CR 601.2h via CR 602.2b). Offered: the permanents
-        `payer` controls that meet the cost's requirement. None to offer leaves
-        the component empty, and it refuses to be paid (CR 701.68b)."""
+        (CR 701.68a), or which one a "Remove a +1/+1 counter from a creature
+        you control" cost takes them off (paid at CR 601.2h via CR 602.2b).
+        Offered: the permanents `payer` controls that meet the cost's
+        requirement - and, for a removal, carry enough of the counters
+        (CR 118.3). None to offer leaves the component empty, and it refuses
+        to be paid (CR 701.68b, CR 118.3)."""
+        removes = component.kind is ComponentKind.REMOVE_COUNTERS
         eligible = [
             state
             for state in self.permanents_controlled_by(payer)
-            if component.requirement is None
-            or component.requirement.why_not(state, self, payer) is None
+            if (
+                component.requirement is None
+                or component.requirement.why_not(state, self, payer) is None
+            )
+            and (not removes or state.can_remove_counters(component.counter_kind, component.amount))
         ]
         if not eligible:
             return
@@ -22388,7 +22395,7 @@ class Game(EngineModel):
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=payer,
-                prompt=f"choose a creature you control for {component.description!r}",
+                prompt=f"choose a permanent you control for {component.description!r}",
                 source=source.name,
                 source_id=source_id_of(source),
                 amount=1,
@@ -23469,7 +23476,7 @@ class Game(EngineModel):
         self.announced_reveal_counts.pop(key, None)
         for component in total.components:
             if (
-                component.kind is ComponentKind.PLACE_COUNTERS
+                component.kind in (ComponentKind.PLACE_COUNTERS, ComponentKind.REMOVE_COUNTERS)
                 and not component.cards
                 and component.requirement is not None
             ):

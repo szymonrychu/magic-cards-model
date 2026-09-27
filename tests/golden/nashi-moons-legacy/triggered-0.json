@@ -5,7 +5,7 @@
     "modes": [],
     "on_stack": true,
     "source": "Nashi, Moon's Legacy@alice#1",
-    "targets": ["Graf Rats@alice#1"],
+    "targets": ["Azure Beastbinder@alice#1"],
     "x": 0
   },
   "board": {
@@ -15,7 +15,7 @@
     "players": {
       "alice": {
         "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Nashi, Moon's Legacy"],
-        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Graf Rats"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel", "Azure Beastbinder"],
         "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
@@ -35,7 +35,7 @@
   "card": "Nashi, Moon's Legacy",
   "delta": {
     "created": {
-      "Graf Rats@alice+1": {
+      "Azure Beastbinder@alice+1": {
         "counters": {},
         "zone": "stack"
       }
@@ -43,11 +43,11 @@
     "decisions": [
       {
         "amount": 0,
-        "cards": ["Graf Rats@alice+1"],
+        "cards": ["Azure Beastbinder@alice+1"],
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "cast the copy of Graf Rats",
+        "prompt": "cast the copy of Azure Beastbinder",
         "source": "Nashi, Moon's Legacy"
       },
       {
@@ -56,25 +56,25 @@
         "kind": "pay_mana",
         "player": "alice",
         "players": [],
-        "prompt": "pay {1}{B} to cast Graf Rats",
-        "source": "Graf Rats"
+        "prompt": "pay {1}{U} to cast Azure Beastbinder",
+        "source": "Azure Beastbinder"
       }
     ],
     "fields_changed": ["became_tapped_count_this_turn", "cast_records", "exile_residents_seen", "spells_cast_this_turn", "turn_counts", "turn_facts"],
     "notices": {},
     "objects": {
-      "Graf Rats@alice#1": {
+      "Azure Beastbinder@alice#1": {
         "zone": ["graveyard", "exile"]
       },
-      "Swamp@alice#1": {
+      "Island@alice#1": {
         "tapped": [false, true]
       },
-      "Swamp@alice#2": {
+      "Swamp@alice#1": {
         "tapped": [false, true]
       }
     },
     "players": {},
-    "stack": ["Graf Rats@alice+1"]
+    "stack": ["Azure Beastbinder@alice+1"]
   },
   "family": "triggered",
   "format": 1,

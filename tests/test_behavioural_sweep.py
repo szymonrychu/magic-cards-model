@@ -3228,38 +3228,56 @@ def _turning_face_up(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]
     face up (CR 702.37e) - the source itself, or the pool's first morph card
     for a condition about another permanent."""
     card = case.printing
-    own = [
-        k.canonical for k in keyword_abilities(card) if k.canonical.lower() in _FACE_DOWN_KEYWORDS
+    own_abilities = [
+        k for k in keyword_abilities(card) if k.canonical.lower() in _FACE_DOWN_KEYWORDS
     ]
+    own = [k.canonical for k in own_abilities]
+    # The face-down cast's {3} may spend any stock basic, so a retry gives
+    # every coloured pip of the face-up cost a basic of its own on top of the
+    # stock board (Alley Assailant's "Disguise {4}{B}{B}").
+    face_up_lands = tuple(
+        _BASIC_OF[colour]
+        for colour in re.findall(r"\{([WUBRG])\}", (own_abilities[0].cost or "") if own else "")
+    )
     choices = ([(card.name, own[0])] if own else []) + [(_morph_card(), "Morph")]
+
+    def turn_up(name: str, keyword: str, extra: tuple[str, ...]) -> tuple[PlayedScenario, Any]:
+        if name == card.name:
+            scenario, source_id = _board(hand=(name,), battlefield=extra), None
+        else:
+            scenario, source_id = _home(case, ability, hand=(name,))
+        _cast(scenario, name, keyword=keyword)
+        scenario.game.resolve_top()
+        # A turned-face-up trigger that counters "target spell" (Kheru
+        # Spellsnatcher) needs one on the stack to aim at (CR 115.1).
+        _stack_material(scenario)
+        face_down = next(p for p in scenario.game.permanents_controlled_by(ALICE) if not p.face_up)
+        try:
+            payment = scenario.game.begin_turning_face_up(face_down, ALICE)
+            payment.auto_tap(_mana_sources(scenario, ALICE))
+            payment.pay()
+            scenario.game.turn_face_up(face_down, ALICE)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"turning face up: {error}") from error
+        scenario.game.retain_priority(ALICE)
+        return scenario, source_id
+
     for name, keyword in choices:
         if name is None:
             continue
 
         def run(name: str = name, keyword: str = keyword) -> tuple[PlayedScenario, Any]:
-            if name == card.name:
-                scenario, source_id = _board(hand=(name,)), None
-            else:
-                scenario, source_id = _home(case, ability, hand=(name,))
-            _cast(scenario, name, keyword=keyword)
-            scenario.game.resolve_top()
-            # A turned-face-up trigger that counters "target spell" (Kheru
-            # Spellsnatcher) needs one on the stack to aim at (CR 115.1).
-            _stack_material(scenario)
-            face_down = next(
-                p for p in scenario.game.permanents_controlled_by(ALICE) if not p.face_up
-            )
-            try:
-                payment = scenario.game.begin_turning_face_up(face_down, ALICE)
-                payment.auto_tap(_mana_sources(scenario, ALICE))
-                payment.pay()
-                scenario.game.turn_face_up(face_down, ALICE)
-            except (ValueError, AssertionError) as error:
-                raise _Unavailable(f"turning face up: {error}") from error
-            scenario.game.retain_priority(ALICE)
-            return scenario, source_id
+            return turn_up(name, keyword, ())
 
         yield run
+        if name == card.name and face_up_lands:
+
+            def run_with_face_up_lands(
+                name: str = name, keyword: str = keyword, extra: tuple[str, ...] = face_up_lands
+            ) -> tuple[PlayedScenario, Any]:
+                return turn_up(name, keyword, extra)
+
+            yield run_with_face_up_lands
 
 
 def _bending(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
@@ -3761,9 +3779,6 @@ TRIGGER_KIND_SKIPS: dict[str, str] = {}
 # ---------------------------------------------------------------------------
 
 KNOWN_ENGINE_GAPS: dict[str, str] = {
-    "Sunstar Chaplain #0 [activated]": (
-        "cost 'Remove a +1/+1 counter from a creature you control' cannot be built"
-    ),
     "Illuminated Folio #0 [activated]": (
         "cost 'Reveal two cards from your hand that share a color' cannot be built"
     ),
@@ -3815,6 +3830,16 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         precondition=r"^whenever (?:another|a) (?:nontoken )?creature(?: an opponent controls"
         r"| you control)? "
         r"dies, if (?:it had [^,]*counters?\b|its toughness was|it was enchanted|an aura)",
+    ),
+    DriverGap(
+        kind="deals_damage",
+        event="a creature of the controller's with a counter on it dealing combat damage",
+        precondition=r"creature you control with an? (?:\+1/\+1 )?counter on it deals combat damage",
+    ),
+    DriverGap(
+        kind="leaves_the_battlefield",
+        event="a creature of the controller's with a counter on it leaving the battlefield",
+        precondition=r"creature you control with an? (?:\+1/\+1 )?counter on it leaves",
     ),
     DriverGap(
         kind="ring_tempts_you",
@@ -4183,7 +4208,10 @@ def _prepare(scenario: PlayedScenario, source: CardState, ability: ActivatedAbil
         cost,
     ):
         named = match.group("name")
-        if named is not None and not source.name.lower().startswith(named.strip()):
+        # "from a creature you control": the source is one such permanent,
+        # so its own counters can pay (CR 118.3).
+        chosen = named is not None and re.match(r"an? .+ you control$", named.strip())
+        if named is not None and not chosen and not source.name.lower().startswith(named.strip()):
             continue  # CR 201.5: a name in its own cost is the source itself
         game.add_counters(source, match.group(1), 5)
     if ability.loyalty is not None:

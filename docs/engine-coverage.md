@@ -6375,3 +6375,16 @@ sentence`) that several unrelated future cards can now also read.
 | "Whenever another creature you control dies, you gain life equal to its toughness." - CR 603.10a's look-back read off `AbilityOnStack.event.subject_id`, the same primitive `event_subject_power` already reads for a dying creature's power | `effects._parse_gain_life_equal_to_event_subject_toughness_clause` | South Wind Avatar | Paladin of Atonement (the identical effect text off the *opposite* condition, "when this creature dies") | `test_lifegain_by_toughness.py` |
 | "Whenever `<this>` enters or attacks, you may sacrifice a `<X>` or a `<Y>`. If you do, you gain N life." - the pre-existing `_parse_conditional_sacrifice_clause` (CR 118.12), widened so `_sacrifice_restriction` reads a two-way "or" description it previously failed closed on | `effects._or_description_requirements` | West Wind Avatar | - (no second printing of "sacrifice a `<X>` or a `<Y>`" at all; proven instead across every board-state combination - a token, a land, and a creature satisfying neither - dated MEMORY.md line) | `test_optional_sacrifice_lifegain.py` |
 | "When `<this>` enters, it deals N damage to any target and M damage to you." / "`<Name>` deals N damage to any target and M damage to you." - read whole against `split_effect_clauses`'s own bare-"and" cut, with a wildcard subject so a literal CR 201.5 self-name (no "it", no condition) reads the same as an ability's own pronoun | `effects._parse_etb_damage_any_target_and_self_clause` (registered for both spell and ability whole-text dispatch) | Spicy Oatmeal Pizza | Char (the identical shape, no condition, a plain instant) | `test_etb_damage_split.py` |
+
+## 271-tmt integration: removing a counter from a chosen creature as a cost
+
+"{2}, Remove a +1/+1 counter from a creature you control: Draw a card." (Ray
+Fillet, Man Ray; also Korozda Gorgon and Sunstar Chaplain) is a cost whose
+counter comes off a permanent the payer chooses as it is paid, not off the
+ability's own source. `machines/cost._PHRASE_REMOVE_COUNTERS` reads "from
+a(n) <quality> you control" into an empty `REMOVE_COUNTERS` component with a
+requirement, `Game._choose_permanent_for_counters` (blight's own chooser)
+offers only the permanents the payer controls that meet it and carry enough
+of the counters (CR 118.3), and `legal_actions` judges its affordability the
+same way before anything is chosen.
+`tests/scenarios/test_remove_counter_from_a_creature_you_control_cost.py`.

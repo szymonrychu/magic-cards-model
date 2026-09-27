@@ -291,6 +291,14 @@ def _unfiltered_candidate_pool(
         if kind is ComponentKind.UNTAP:
             return [card for card in pool if card.tapped]
         return pool
+    if kind is ComponentKind.REMOVE_COUNTERS and component.requirement is not None:
+        # "Remove a +1/+1 counter from a creature you control": only a
+        # permanent already carrying enough of them can pay (CR 118.3).
+        return [
+            card
+            for card in game.permanents_controlled_by(payer)
+            if card.can_remove_counters(component.counter_kind, component.amount)
+        ]
     if kind is ComponentKind.RETURN_TO_HAND and component.requirement is not None:
         # A printed "Return a land you control to its owner's hand" cost -
         # not ninjutsu's unblocked attacker, which carries no requirement.
