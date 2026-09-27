@@ -155,7 +155,8 @@ def test_ant_mans_own_counter_trigger_fires_off_an_opponents_creature_too():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bears = scenario.creature("Grizzly Bears", "bob")
 
-    scenario.game.add_counters(bears, Counter.PLUS_ONE)
+    # CR 122.6a: alice is the one putting it, on bob's creature.
+    scenario.game.add_counters(bears, Counter.PLUS_ONE, putter="alice")
     scenario.pass_until_resolved()
 
     insects = [state for state in scenario.game.battlefield if "Insect" in state.subtypes]

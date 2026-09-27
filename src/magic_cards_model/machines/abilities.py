@@ -3801,10 +3801,15 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # plural verb a team-up "`<A>` & `<B>`" legendary's own self-reference
     # prints with (Dark Leo & Shredder's "Whenever Dark Leo & Shredder deal
     # combat damage to a player") - the name reads as a grammatical plural
-    # even though it is one game object (CR 201.5). Purely additive: every
-    # condition the old, singular-only pattern already matched still does.
+    # even though it is one game object (CR 201.5). "One or more <X> deal
+    # combat damage" is the other plural and a different event: CR 603.2c's
+    # one batched trigger (`machines/triggers`' `_ONE_OR_MORE_DEAL_COMBAT_
+    # DAMAGE_RE`), so the plural verb is read here only without "one or more".
     if re.search(
-        r"\bdeals? (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
+        r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
+    ) or (
+        re.search(r"\bdeal (?:combat )?damage\b", lowered)
+        and not re.search(r"\bone or more\b", lowered)
     ):
         return TriggerEvent.DEALS_DAMAGE
     # CR 701.37a: "When [this creature] becomes monstrous" (Polukranos, World

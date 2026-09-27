@@ -23,9 +23,8 @@ Two real shapes are read (`combat.evasion_restriction_refusal`):
   2 or less." - qualified by the blocker's own power.
 
 A third real shape - **April O'Neil, Kunoichi Trainee**'s "can't be blocked by
-creatures with power 3 or greater" - is deliberately *not* read: only "or
-less" is implemented, since that is the only comparison a card in the pool
-actually uses. It exercises the fail-closed path instead:
+creatures with power 3 or greater" - is read too since 271-tmt. The
+fail-closed path is exercised on a printing chosen by `gap_example`:
 `combat.looks_like_unparsed_evasion_restriction` catches the sentence and
 `block_refusal` records an `EvasionNotice` rather than silently leaving the
 block legal *or* silently refusing it - either would be a guess this parser
@@ -38,8 +37,12 @@ the session that wrote this file.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.combat import EvasionNotice
-from tests.cards import card
+from magic_cards_model.machines.combat import (
+    EvasionNotice,
+    looks_like_unparsed_evasion_restriction,
+)
+from magic_cards_model.models import Card, CardState, Type, Zone
+from tests.cards import card, gap_example
 
 from .harness import Scenario
 
@@ -132,31 +135,61 @@ def test_a_higher_power_blocker_is_permitted():
 # -- fail-closed: a comparison this parser does not read ---------------------
 
 
-def test_an_unsupported_qualifier_fails_closed_and_records_a_notice():
-    """April O'Neil's own restriction is "power 3 or greater", not "or less" -
-    `evasion_restriction_refusal` reads neither shape here, so the block goes
-    through *unrestricted* rather than the engine guessing which way the
-    comparison should have gone. Applying nothing is the fail-closed choice
-    (CLAUDE.md): silently refusing every blocker would be just as wrong a
-    guess as silently allowing everything, and only one of those leaves a
-    record behind.
-    """
+def _unparsed_evasion_example() -> Card:
+    """A real attacker whose "can't be blocked ..." sentence this parser does
+    not read yet - chosen, never named (`gap_example`): April O'Neil,
+    Kunoichi Trainee stood here until 271-tmt read her "power 3 or greater"."""
+    return gap_example(
+        "an unread can't-be-blocked restriction",
+        lambda printing: (
+            Type.CREATURE in printing.types
+            and looks_like_unparsed_evasion_restriction(
+                CardState(card=printing, zone=Zone.BATTLEFIELD)
+            )
+        ),
+    )
+
+
+def test_april_oneils_power_3_or_greater_restriction_is_enforced():
+    """April O'Neil, Kunoichi Trainee: "can't be blocked by creatures with
+    power 3 or greater" - Wurmcoil Engine's power 6 rules the block out
+    (CR 509.1a)."""
     scenario = duel("April O'Neil, Kunoichi Trainee", "Wurmcoil Engine").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
     april = scenario.creature("April O'Neil, Kunoichi Trainee")
     wurm = scenario.creature("Wurmcoil Engine", "bob")
     scenario.attack_with(april)
-    scenario.block(april, wurm)
 
-    assert scenario.game.is_blocked(april), (
+    with pytest.raises(ValueError, match="power 3 or greater"):
+        scenario.block(april, wurm)
+    assert scenario.game.evasion_notices == []
+
+
+def test_an_unsupported_qualifier_fails_closed_and_records_a_notice():
+    """A restriction `evasion_restriction_refusal` does not read goes through
+    *unrestricted* rather than the engine guessing which way it should have
+    gone. Applying nothing is the fail-closed choice (CLAUDE.md): silently
+    refusing every blocker would be just as wrong a guess as silently
+    allowing everything, and only one of those leaves a record behind.
+    """
+    example = _unparsed_evasion_example()
+    scenario = duel(example.name, "Wurmcoil Engine").build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+
+    attacker = scenario.creature(example.name)
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.attack_with(attacker)
+    scenario.block(attacker, wurm)
+
+    assert scenario.game.is_blocked(attacker), (
         "unenforced, not enforced backwards - the block is not silently refused either"
     )
     assert scenario.game.evasion_notices == [
         EvasionNotice(
-            source_id=april.id,
-            source_name="April O'Neil, Kunoichi Trainee",
-            text=card("April O'Neil, Kunoichi Trainee").oracle_text,
+            source_id=attacker.id,
+            source_name=example.name,
+            text=card(example.name).oracle_text,
         )
     ]
 
@@ -168,16 +201,17 @@ def test_the_notice_is_recorded_once_even_after_several_legality_checks():
     what keeps one unreadable card from flooding the log with one notice per
     check.
     """
-    scenario = duel("April O'Neil, Kunoichi Trainee", "Wurmcoil Engine").build()
+    example = _unparsed_evasion_example()
+    scenario = duel(example.name, "Wurmcoil Engine").build()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
-    april = scenario.creature("April O'Neil, Kunoichi Trainee")
+    attacker = scenario.creature(example.name)
     wurm = scenario.creature("Wurmcoil Engine", "bob")
-    scenario.attack_with(april)
+    scenario.attack_with(attacker)
 
-    scenario.game.can_block(wurm, april)
-    scenario.game.can_block(wurm, april)
-    scenario.block(april, wurm)
+    scenario.game.can_block(wurm, attacker)
+    scenario.game.can_block(wurm, attacker)
+    scenario.block(attacker, wurm)
 
     assert len(scenario.game.evasion_notices) == 1
 

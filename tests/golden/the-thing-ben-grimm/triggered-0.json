@@ -55,7 +55,7 @@
   },
   "family": "triggered",
   "format": 1,
-  "kind": "deals_damage",
+  "kind": "combat_damage_to_players+deals_damage",
   "number": 0,
   "recipe": {
     "attempt": "combat",

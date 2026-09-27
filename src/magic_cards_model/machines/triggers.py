@@ -4167,12 +4167,13 @@ def _unread_condition_matches(
             return False
         if match.group("article") == "another" and permanent.id == source.id:
             return False
-        # "you control": the same loose "you put" convention `_LOYALTY_
-        # COUNTERS_PUT_ON_PLANESWALKER_CONDITION` below reads - whose
-        # permanent the counter landed on, since this engine keeps no
-        # separate "who actually moved it" record for a plain counter
-        # placement. Absent (Ant-Man's own bare "a creature"), any creature
-        # at all qualifies, its controller's own included.
+        # CR 122.6a: "you put" is whoever put them - `event.player`, the
+        # putter `Game._emit_counters_put` records - so an opponent putting a
+        # counter on your creature does not count. "you control" then also
+        # asks whose permanent it landed on; absent (Ant-Man's own bare "a
+        # creature"), any creature at all qualifies.
+        if event.player != controller:
+            return False
         if (
             match.group("yours") is not None
             and game.controller_of(permanent).username != controller

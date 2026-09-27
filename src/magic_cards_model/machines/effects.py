@@ -18808,8 +18808,13 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     if counter_if_mana_value is not None:
         return counter_if_mana_value
 
-    if (phrase_match := _COUNTER_TARGET_PHRASE_RE.fullmatch(clause)) and _targets_understood(
-        phrase_match.group("phrase"), battlefield_only=False
+    if (
+        (phrase_match := _COUNTER_TARGET_PHRASE_RE.fullmatch(clause))
+        # CR 118.12a: an "unless ..." cost none of the readers above took
+        # (Syncopate's "{X}" before X is announced) is never an unconditional
+        # counter - `_targets_understood` would tolerate it as a tail.
+        and not re.search(r"\bunless\b", clause, re.IGNORECASE)
+        and _targets_understood(phrase_match.group("phrase"), battlefield_only=False)
     ):
         # Fugitive Droid: "Counter target spell that targets an artifact or
         # creature you control." Siren Stormtamer: "Counter target spell or
