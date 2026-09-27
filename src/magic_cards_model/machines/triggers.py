@@ -6323,7 +6323,12 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
                         card.name,
                         legendary=Supertype.LEGENDARY in card.supertypes,
                     ):
-                        expanded.extend(_expand_enters_or_transforms_into(dies_split))
+                        for damage_split in _expand_enters_or_deals_combat_damage(
+                            dies_split,
+                            card.name,
+                            legendary=Supertype.LEGENDARY in card.supertypes,
+                        ):
+                            expanded.extend(_expand_enters_or_transforms_into(damage_split))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -6537,6 +6542,49 @@ def _expand_enters_or_dies(
             update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
         ),
         ability.model_copy(update={"condition": f"{subject} dies", "event": TriggerEvent.DIES}),
+    ]
+
+
+#: "Whenever `<self>` enters or deals combat damage to a player, ..." -
+#: Kitsune, Dragon's Daughter's own condition, and Tomebound Lich's "this
+#: creature" form. CR 603.1b: "A triggered ability may have more than one
+#: trigger condition"; `_trigger_event` (`machines/abilities.py`) reads
+#: "enters" first and stops, so the combat-damage half was silently dropped.
+_ENTERS_OR_DEALS_COMBAT_DAMAGE_RE = re.compile(
+    r"^(?P<subject>.+?) enters or deals combat damage to a player$", re.IGNORECASE
+)
+
+
+def _expand_enters_or_deals_combat_damage(
+    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
+) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ENTERS_OR_DEALS_COMBAT_DAMAGE_RE`'s
+    shape becomes two: CR 603.6a's enters-the-battlefield ability and the
+    "deals combat damage to a player" one (`TriggerEvent.DEALS_DAMAGE`,
+    whose own condition reader already tells combat damage to a player from
+    any other damage) - the split `_expand_enters_or_dies` performs, with
+    the same genuine-self-reference requirement on the subject.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    match = _ENTERS_OR_DEALS_COMBAT_DAMAGE_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    subject = match.group("subject")
+    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
+        self_reference_names(card_name, legendary=legendary)
+    ):
+        return [ability]
+    return [
+        ability.model_copy(
+            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
+        ),
+        ability.model_copy(
+            update={
+                "condition": f"{subject} deals combat damage to a player",
+                "event": TriggerEvent.DEALS_DAMAGE,
+            }
+        ),
     ]
 
 

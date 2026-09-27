@@ -1178,6 +1178,91 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
     return effect
 
 
+#: "Until end of turn, Mondo Gecko becomes the color of your choice and gains
+#: hexproof from that color." (Mondo Gecko, its name already CR 201.5's "this
+#: permanent"); "Target permanent becomes the color of your choice until end
+#: of turn." (Distorting Lens) - the colour CR 608.2d leaves to the
+#: resolving ability's controller, set in layer 5 (CR 613.1e, CR 105.3's
+#: "the new color replaces all previous colors"), with an optional "gains
+#: hexproof from that color" rider (CR 702.11d's "hexproof from [quality]")
+#: granted in layer 6 (CR 613.1f). The duration prints either first or last,
+#: never both.
+_BECOMES_CHOSEN_COLOR_RE = re.compile(
+    r"^(?P<lead>until end of turn,\s*)?"
+    r"(?P<subject>this (?:creature|permanent)|target [^.]+?) becomes the color of your choice"
+    r"(?: and gains (?P<keyword>hexproof) from that color)?"
+    r"(?P<trail> until end of turn)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
+    """`_BECOMES_CHOSEN_COLOR_RE`'s shape, or `None`.
+
+    Built by hand through `ContinuousEffects.add` for the same reason
+    Wild Mongrel's and Mother of Runes' own chosen colours are (see
+    `_PUMP_AND_BECOMES_CHOSEN_COLOR_RE`): the colour is not in the printed
+    text. The colour and the grant share one timestamp and last until
+    cleanup (CR 514.2), each keyed to the object as it is now (CR 400.7)."""
+    match = _BECOMES_CHOSEN_COLOR_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
+        return None
+    subject = match.group("subject")
+    targeted = subject.lower().startswith("target ")
+    if targeted and not _targets_understood(subject, count_agnostic=False):
+        return None
+    keyword = match.group("keyword")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        source_name = source.name if source is not None else ability.source_name
+        if targeted:
+            chosen = [
+                target
+                for target in game.resolve_targets(ability)
+                if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+            ]
+        else:
+            chosen = [source] if source is not None and source.zone is Zone.BATTLEFIELD else []
+        if not chosen:
+            return
+        color = _choose_a_color(
+            game,
+            game.controller_of(ability),
+            source_name,
+            f"choose a color for {source_name}",
+            source_id=source_id_of(ability),
+        )
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        for permanent in chosen:
+            selector = only_this_incarnation(permanent, permanent.zone_change_stamp)
+            store.add(
+                ContinuousEffect(
+                    description=f"{source_name}: {permanent.name} becomes {color.value}",
+                    layer=Layer.COLOR,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=selector,
+                    modification=set_colors(color),
+                )
+            )
+            if keyword is not None:
+                granted = f"{keyword.capitalize()} from {_COLOR_NAME[color]}"
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source_name}: {permanent.name} gains {granted}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=selector,
+                        modification=grant_ability(granted),
+                    )
+                )
+
+    return effect
+
+
 _COLOR_NAME: dict[Color, str] = {
     Color.WHITE: "white",
     Color.BLUE: "blue",
@@ -3370,6 +3455,314 @@ def _parse_untap_and_gain_control_ability(effect_text: str) -> AbilityEffect | N
         _untap_and_apply_control_sentences(
             game, source, game.controller_of(ability), game.resolve_card_targets(ability), sentences
         )
+
+    return effect
+
+
+#: "Gain control of all artifacts your opponents control until end of turn.
+#: Untap them. They gain haste until end of turn." (Broadcast Takeover);
+#: "Gain control of all creatures with power 4 or greater until end of turn.
+#: Untap those creatures. They gain haste until end of turn." (Mob Rule's
+#: modes) - Act of Treason's three instructions over an untargeted group
+#: (CR 115.10a) rather than one target. The anaphors ("them", "those
+#: `<nouns>`", "they") all name the group the first sentence took.
+_MASS_GAIN_CONTROL_UNTAP_RE = re.compile(
+    r"^gain control of all (?P<group>[^.]+?) until end of turn\.\s*"
+    r"untap (?:them|those [a-z]+)\.\s*"
+    r"(?:they|those [a-z]+) gain (?P<keywords>[a-z][a-z, ]*?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: A power qualifier trailing the group - Mob Rule's "creatures with power 4
+#: or greater" / "creatures with power 3 or less" (CR 208.1's power, read off
+#: the computed board, CR 613.5).
+_MASS_GROUP_POWER_RE = re.compile(
+    r"^(?P<base>.+?) with power (?P<n>\d+) or (?P<cmp>greater|less)$", re.IGNORECASE
+)
+
+
+def _mass_control_group(group: str) -> "GroupPredicate | None":
+    """`_MASS_GAIN_CONTROL_UNTAP_RE`'s group as a predicate - the
+    `_parse_damage_group_phrase` grammar (controller and type qualifiers),
+    plus a trailing power comparison. `None` for anything else."""
+    power = _MASS_GROUP_POWER_RE.fullmatch(group.strip())
+    base = _parse_damage_group_phrase(power.group("base") if power else group)
+    if base is None:
+        return None
+    if power is None:
+        return base
+    bound = int(power.group("n"))
+    at_least = power.group("cmp").lower() == "greater"
+
+    def predicate(game: "Game", permanent: CardState, controller: str) -> bool:
+        if not base(game, permanent, controller):
+            return False
+        value = game.characteristics_of(permanent).numeric_power
+        return value >= bound if at_least else value <= bound
+
+    return predicate
+
+
+def _parse_mass_gain_control_untap(
+    effect_text: str,
+) -> Callable[["Game", CardState, "Player"], None] | None:
+    """`_MASS_GAIN_CONTROL_UNTAP_RE`'s shape as `(game, source, controller)`,
+    or `None`.
+
+    The group is read once, off the computed board, as the spell or ability
+    resolves (CR 611.2c: the set a control-changing continuous effect affects
+    "is determined when that continuous effect begins. After that point, the
+    set won't change"), then handed to `_untap_and_apply_control_sentences` -
+    Act of Treason's own untap (CR 701.26b), layer 2 control change
+    (CR 613.1b) and layer 6 keyword grant (CR 613.1f), each until end of turn
+    (CR 514.2), applied to that fixed set exactly as it applies them to a
+    chosen target.
+    """
+    text = " ".join(_REMINDER_OR_ACTIVATION_RULE_RE.sub(" ", effect_text).split())
+    match = _MASS_GAIN_CONTROL_UNTAP_RE.fullmatch(text)
+    if match is None:
+        return None
+    predicate = _mass_control_group(match.group("group"))
+    if predicate is None:
+        return None
+    sentences = (
+        "gain control of it until end of turn.",
+        f"target creature gains {match.group('keywords').strip()} until end of turn.",
+    )
+
+    def apply(game: "Game", source: CardState, controller: "Player") -> None:
+        group = [
+            permanent
+            for permanent in list(game.battlefield)
+            if predicate(game, permanent, controller.username)
+        ]
+        _untap_and_apply_control_sentences(game, source, controller, group, sentences)
+
+    return apply
+
+
+def _parse_mass_gain_control_untap_clause(effect_text: str) -> Effect | None:
+    """`_parse_mass_gain_control_untap` on a resolving spell (Broadcast
+    Takeover, each of Mob Rule's modes)."""
+    apply = _parse_mass_gain_control_untap(effect_text)
+    if apply is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        apply(game, spell, game.controller_of(spell))
+
+    return effect
+
+
+def _parse_mass_gain_control_untap_ability(effect_text: str) -> AbilityEffect | None:
+    """The same effect on an activated or triggered ability (a planeswalker's
+    "-9: Gain control of all creatures until end of turn. Untap them. They
+    gain haste until end of turn."), recorded against the source's last known
+    information (CR 113.7a) the way `_parse_untap_and_gain_control_ability`
+    records its own."""
+    apply = _parse_mass_gain_control_untap(effect_text)
+    if apply is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source_or_last_known(game)
+        if source is None:
+            return
+        apply(game, source, game.controller_of(ability))
+
+    return effect
+
+
+#: The rider of a return from the graveyard that makes the card a creature it
+#: may not have been - "3/3 Robot artifact creature with flying" (Brilliance
+#: Unleashed), "1/1 Spirit creature with flying in addition to its other
+#: types" (Abuelo's Awakening). Case-sensitive on the subtypes, the way Oracle
+#: capitalises a subtype.
+_RETURN_CREATURE_RIDER_RE = re.compile(
+    r"^(?P<power>\d+)/(?P<toughness>\d+) (?P<subtypes>[A-Z][a-z]+(?: [A-Z][a-z]+)*) "
+    r"(?P<types>(?:(?:artifact|enchantment) )*)creature"
+    r"(?: with (?P<keywords>[a-z][a-z ,]*?))?(?P<in_addition> in addition to its other types)?$"
+)
+
+#: Brilliance Unleashed's second mode: "Choose target artifact card in your
+#: graveyard. Return it to the battlefield if it's an artifact creature card.
+#: Otherwise, return it to the battlefield and it's a 3/3 Robot artifact
+#: creature with flying." - the rider applies only on the "otherwise" branch.
+_CHOOSE_RETURN_OTHERWISE_CREATURE_RE = re.compile(
+    r"^choose (?P<phrase>target [^.]+? card) in your graveyard\.\s*"
+    r"return it to the battlefield if it'?s an? (?P<kind>[a-z ]+?) card\.\s*"
+    r"otherwise, return it to the battlefield and it'?s an? (?P<rider>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+#: Abuelo's Awakening: "Return target artifact or non-Aura enchantment card
+#: from your graveyard to the battlefield with X additional +1/+1 counters on
+#: it. It's a 1/1 Spirit creature with flying in addition to its other
+#: types." - X already substituted (CR 107.3a).
+_RETURN_THEN_ITS_A_CREATURE_RE = re.compile(
+    r"^return (?P<phrase>target [^.]+? card) from your graveyard to the battlefield"
+    rf"(?: with (?P<counters>{COUNT}) additional \+1/\+1 counters? on it)?\.\s*"
+    r"it'?s an? (?P<rider>[^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+class _CreatureRider(NamedTuple):
+    """`_RETURN_CREATURE_RIDER_RE` read: P/T, creature types, the extra card
+    types named, keywords, and whether "in addition to its other types"."""
+
+    power: int
+    toughness: int
+    subtypes: tuple[str, ...]
+    types: tuple[Type, ...]
+    keywords: tuple[str, ...]
+    in_addition: bool
+
+
+def _read_creature_rider(text: str) -> _CreatureRider | None:
+    match = _RETURN_CREATURE_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    types: list[Type] = []
+    for word in match.group("types").split():
+        card_type = _singular_card_type(word)
+        if card_type is None:
+            return None
+        types.append(card_type)
+    keywords: list[str] = []
+    if match.group("keywords"):
+        validated = split_and_validate_keywords(match.group("keywords"))
+        if validated is None:
+            return None
+        keywords = validated
+    return _CreatureRider(
+        int(match.group("power")),
+        int(match.group("toughness")),
+        tuple(match.group("subtypes").split()),
+        tuple(types),
+        tuple(keywords),
+        match.group("in_addition") is not None,
+    )
+
+
+def _return_as_creature(
+    game: "Game",
+    stack_object: "StackObject",
+    card: CardState,
+    rider: _CreatureRider | None,
+    *,
+    counters: int = 0,
+) -> None:
+    """Put `card` onto the battlefield under the resolving object's
+    controller, then - as part of the same event (`Game.entering_together`)
+    - make it the rider's creature: layer 4 (CR 613.1d) for the types,
+    layer 6 (CR 613.1f) for the keywords, sublayer 7b (CR 613.4b) for the P/T,
+    each with no duration (CR 611.2a) and keyed to this object (CR 400.7).
+
+    CR 205.1b decides the types: "in addition to its other types" keeps
+    everything; "`<creature type>` artifact creature" keeps every prior card
+    type and subtype other than creature types (so the creature types are
+    replaced); a bare "`<creature type>` creature" is CR 205.1a's
+    replacement of the card types too."""
+    from .layers import AddSubtype, AddType, Modification, SetCreatureTypes
+
+    controller = game.controller_of(stack_object).username
+    source_name = stack_object.name
+    with game.entering_together():
+        game.put_onto_battlefield(card, controller)
+        if card.zone is not Zone.BATTLEFIELD:
+            return
+        if counters:
+            game.add_counters(card, "+1/+1", counters, putter=controller)
+        if rider is None:
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        selector = only_this_incarnation(card, card.zone_change_stamp)
+        type_changes: list[Modification] = []
+        if rider.in_addition:
+            type_changes.extend(AddType(card_type=t) for t in (*rider.types, Type.CREATURE))
+            type_changes.extend(AddSubtype(subtype=subtype) for subtype in rider.subtypes)
+        elif rider.types:
+            type_changes.extend(AddType(card_type=t) for t in (*rider.types, Type.CREATURE))
+            type_changes.append(SetCreatureTypes(subtypes=rider.subtypes))
+        else:
+            type_changes.append(
+                SetTypesAndSubtypes(types=(Type.CREATURE,), subtypes=rider.subtypes)
+            )
+        effects = [
+            ContinuousEffect(
+                description=f"{source_name}: {card.name} is a creature ({modification.kind})",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                selector=selector,
+                modification=modification,
+            )
+            for modification in type_changes
+        ]
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source_name}: {card.name} has {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in rider.keywords
+        )
+        effects.append(
+            ContinuousEffect(
+                description=f"{source_name}: {card.name} is {rider.power}/{rider.toughness}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                selector=selector,
+                modification=set_power_toughness(rider.power, rider.toughness),
+            )
+        )
+        for built in effects:
+            store.add(built, game)
+
+
+def _parse_return_as_creature_clause(text: str) -> TargetedClause | None:
+    """Brilliance Unleashed's mode (`_CHOOSE_RETURN_OTHERWISE_CREATURE_RE`)
+    or Abuelo's Awakening (`_RETURN_THEN_ITS_A_CREATURE_RE`), on a spell or
+    an ability, or `None`. CR 608.2b: a target that has left the graveyard
+    is illegal, and nothing is returned."""
+    flat = " ".join(text.strip().split())
+    otherwise = _CHOOSE_RETURN_OTHERWISE_CREATURE_RE.fullmatch(flat)
+    then = None if otherwise else _RETURN_THEN_ITS_A_CREATURE_RE.fullmatch(flat)
+    match = otherwise or then
+    if match is None:
+        return None
+    if not _targets_understood(
+        f"{match.group('phrase')} from your graveyard", battlefield_only=False
+    ):
+        return None
+    rider = _read_creature_rider(match.group("rider"))
+    if rider is None:
+        return None
+    exempt: tuple[Type, ...] = ()
+    if otherwise is not None:
+        kinds = [_singular_card_type(word) for word in otherwise.group("kind").split()]
+        if not kinds or any(kind is None for kind in kinds):
+            return None
+        exempt = tuple(kind for kind in kinds if kind is not None)
+    counters = 0
+    if then is not None and then.group("counters") is not None:
+        read = parse_count(then.group("counters"))
+        if read is None:
+            return None
+        counters = read
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if not isinstance(target, CardState) or target.zone is not Zone.GRAVEYARD:
+                continue
+            already = bool(exempt) and set(exempt) <= set(target.card.types)
+            _return_as_creature(
+                game, stack_object, target, None if already else rider, counters=counters
+            )
 
     return effect
 
@@ -19404,6 +19797,19 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     conditional_sacrifice = _parse_conditional_sacrifice_clause(text, for_spell=True)
     if conditional_sacrifice is not None:
         return conditional_sacrifice
+    # Mob Rule's modes: the whole three-sentence group steal, read before the
+    # layer composer below sees only its "gain control" sentence.
+    mass_gain_control = _parse_mass_gain_control_untap_clause(text)
+    if mass_gain_control is not None:
+        return mass_gain_control
+    mode_return_as_creature = _parse_return_as_creature_clause(text)
+    if mode_return_as_creature is not None:
+        return mode_return_as_creature
+    # Ember Island Production's modes: a token copy whose "except" list
+    # carries its own "and", which the clause splitter would cut.
+    mode_token_copies_except = _parse_create_token_copies_except_clause(text, for_spell=True)
+    if mode_token_copies_except is not None:
+        return mode_token_copies_except
     # A genuine layer sentence goes to the mode-scoped composer ahead of the
     # per-clause dispatcher: `parse_mixed_effect_for_spell` reads "Target
     # creature gets -3/-1 until end of turn." (Witherbloom Command's third
@@ -20885,8 +21291,17 @@ def _parse_prevent_damage_dealt_by_target_clause(text: str) -> TargetedClause | 
 #: two targets are one "target" instance (CR 601.2c), announced together;
 #: "that share a card type" is enforced on the announcement by
 #: `TargetRequirement.share_a_card_type` and rechecked as it resolves.
+#:
+#: Widened (271-tmt) to Kitsune, Dragon's Daughter's "you may exchange control
+#: of two other target creatures controlled by different players." and The
+#: Trickster-God's Heist's "You may exchange control of two target nonbasic,
+#: noncreature permanents that share a card type." - an optional exchange
+#: (CR 608.2d, `_optional_targeted_clause`), "other" (the source excluded)
+#: and a comma inside the target description; `machines/targeting.py` reads
+#: the restrictions themselves.
 _EXCHANGE_CONTROL_RE = re.compile(
-    r"^exchange control of (?P<phrase>two target [a-z ]+?)\.?$", re.IGNORECASE
+    r"^(?P<may>you may )?exchange control of (?P<phrase>two (?:other )?target [a-z ,]+?)\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -20897,6 +21312,23 @@ def _parse_exchange_control_clause(text: str) -> TargetedClause | None:
     match = _EXCHANGE_CONTROL_RE.fullmatch(" ".join(text.strip().split()))
     if match is None:
         return None
+    if match.group("may") is not None:
+        inner = _parse_exchange_control_clause(text.strip()[len(match.group("may")) :])
+        if inner is None:
+            return None
+        prompt = text.strip()[len(match.group("may")) :]
+
+        def optional(game: "Game", stack_object: "StackObject") -> None:
+            source = (
+                stack_object.name
+                if isinstance(stack_object, CardState)
+                else str(getattr(stack_object, "source_name", ""))
+            )
+            player = game.controller_of(stack_object)
+            if game.may(player, prompt, source=source, source_id=source_id_of(stack_object)):
+                inner(game, stack_object)
+
+        return optional
     profile = profile_for_text(match.group("phrase"))
     if (
         not profile.understood
@@ -24870,6 +25302,18 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     exile_until_leaves_then_counters = _parse_exile_targets_until_leaves_then_counters(effect_text)
     if exile_until_leaves_then_counters is not None:
         return exile_until_leaves_then_counters
+    mass_gain_control = _parse_mass_gain_control_untap_ability(effect_text)
+    if mass_gain_control is not None:
+        return mass_gain_control
+    copy_of_linked_exile = _parse_copy_of_card_exiled_with_self_clause(effect_text)
+    if copy_of_linked_exile is not None:
+        return copy_of_linked_exile
+    may_exile_return_others = _parse_may_exile_that_card_return_others_clause(effect_text)
+    if may_exile_return_others is not None:
+        return may_exile_return_others
+    ability_return_as_creature = _parse_return_as_creature_clause(effect_text)
+    if ability_return_as_creature is not None:
+        return ability_return_as_creature
     untap_and_gain_control = _parse_untap_and_gain_control_ability(effect_text)
     if untap_and_gain_control is not None:
         return untap_and_gain_control
@@ -25422,6 +25866,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     protection_from_chosen_color = _parse_protection_from_chosen_color_clause(effect_text)
     if protection_from_chosen_color is not None:
         return protection_from_chosen_color
+    becomes_chosen_color = _parse_becomes_chosen_color_clause(effect_text)
+    if becomes_chosen_color is not None:
+        return becomes_chosen_color
     put_exiled_target_onto_battlefield = _parse_put_exiled_target_onto_battlefield_clause(
         effect_text
     )
@@ -28591,6 +29038,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     )
     if tokens_then_counter_other_subtype is not None:
         return tokens_then_counter_other_subtype
+    mass_gain_control = _parse_mass_gain_control_untap_clause(whole)
+    if mass_gain_control is not None:
+        return mass_gain_control
+    return_as_creature = _parse_return_as_creature_clause(whole)
+    if return_as_creature is not None:
+        return return_as_creature
     untap_and_gain_control = _parse_untap_and_gain_control_clause(whole)
     if untap_and_gain_control is not None:
         return untap_and_gain_control
@@ -44674,6 +45127,69 @@ def _read_token_copy_except(
     return None
 
 
+#: One part of CR 707.9b's exception *list*: "it isn't legendary" / "it's not
+#: legendary", "[it's|is] a[n] [N/N ]`<Subtype>` in addition to its other
+#: types", "[it ]has `<keywords>`" (The Cloning of Shredder's "except it isn't
+#: legendary and is a Mutant in addition to its other types", Ember Island
+#: Production's "except it's not legendary and it's a 4/4 Hero in addition
+#: to its other types").
+_EXCEPT_NOT_LEGENDARY_PART_RE = re.compile(
+    r"^(?:it |they )?(?:isn['’]t|is not|aren['’]t|are not|['’]s not|['’]re not|it['’]s not|"
+    r"they['’]re not) legendary$",
+    re.IGNORECASE,
+)
+_EXCEPT_SUBTYPE_PART_RE = re.compile(
+    r"^(?:it['’]?s|is|it is) an? (?:(?P<power>\d+)/(?P<toughness>\d+) )?"
+    r"(?P<subtype>[A-Z][a-z]+) in addition to its other types$"
+)
+_EXCEPT_HAS_PART_RE = re.compile(r"^(?:it )?has (?P<keywords>[a-z][a-z ]*)$", re.IGNORECASE)
+
+
+class _CopyExceptionList(NamedTuple):
+    """`_read_copy_exception_list`'s answer, in `token_copy_of`'s terms."""
+
+    not_legendary: bool
+    added_creature_type: str | None
+    power: int | None
+    toughness: int | None
+    added_abilities: tuple[str, ...]
+
+
+def _read_copy_exception_list(except_text: str | None) -> _CopyExceptionList | None:
+    """A token copy's ", except `<list>`" when it is a *list* naming "isn't
+    legendary" or a subtype "in addition to its other types" (CR 707.9b: each
+    modified value "becomes part of the copiable values of the copy"), parts
+    joined by commas and/or "and". `None` for a tail with any other part, or
+    with neither of those two parts - the single-exception shapes
+    `_read_token_copy_except` already reads keep their own reader."""
+    if except_text is None:
+        return None
+    stripped = " ".join(except_text.strip().split()).rstrip(".")
+    parts = [part.strip() for part in re.split(r",\s*(?:and\s+)?|\s+and\s+", stripped) if part]
+    not_legendary = False
+    subtype: str | None = None
+    power: int | None = None
+    toughness: int | None = None
+    abilities: list[str] = []
+    for part in parts:
+        if _EXCEPT_NOT_LEGENDARY_PART_RE.fullmatch(part):
+            not_legendary = True
+        elif (typed := _EXCEPT_SUBTYPE_PART_RE.fullmatch(part)) is not None and subtype is None:
+            subtype = typed.group("subtype")
+            if typed.group("power") is not None:
+                power, toughness = int(typed.group("power")), int(typed.group("toughness"))
+        elif (has := _EXCEPT_HAS_PART_RE.fullmatch(part)) is not None:
+            keywords = split_and_validate_keywords(has.group("keywords"))
+            if keywords is None:
+                return None
+            abilities.append(", ".join(keywords))
+        else:
+            return None
+    if not not_legendary and subtype is None:
+        return None
+    return _CopyExceptionList(not_legendary, subtype, power, toughness, tuple(abilities))
+
+
 def _parse_create_token_copies_except_clause(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -44704,11 +45220,21 @@ def _parse_create_token_copies_except_clause(
         counters = read_counters
     colors: tuple[Color, ...] | None = None
     creature_types: tuple[str, ...] | None = None
+    not_legendary = False
     replacing = _read_token_copy_replacing_except(match.group("except"))
+    listed = _read_copy_exception_list(match.group("except"))
     if replacing is not None:
         power, toughness, colors, creature_types = replacing
         added: tuple[str, ...] = ()
         added_type: str | None = None
+    elif listed is not None:
+        added, power, toughness, added_type = (
+            listed.added_abilities,
+            listed.power,
+            listed.toughness,
+            listed.added_creature_type,
+        )
+        not_legendary = listed.not_legendary
     else:
         exception = _read_token_copy_except(match.group("except"))
         if exception is None:
@@ -44730,6 +45256,7 @@ def _parse_create_token_copies_except_clause(
                     added_creature_type=added_type,
                     colors=colors,
                     creature_types=creature_types,
+                    not_legendary=not_legendary,
                 )
                 if counters and created:
                     # "it" is each copy just made - not an extra token a
@@ -59126,10 +59653,23 @@ def _parse_exile_card_then_token_copy_clause(
     phrase = f"{match.group('phrase')} from {match.group('zone')}"
     if not _targets_understood(phrase, battlefield_only=False):
         return None
-    exception = _read_token_copy_except(match.group("except"))
-    if exception is None:
-        return None
-    added, power, toughness, added_type = exception
+    not_legendary = False
+    listed = _read_copy_exception_list(match.group("except"))
+    if listed is not None:
+        # The Cloning of Shredder's chapter I: "except it isn't legendary and
+        # is a Mutant in addition to its other types" (CR 707.9b).
+        added, power, toughness, added_type = (
+            listed.added_abilities,
+            listed.power,
+            listed.toughness,
+            listed.added_creature_type,
+        )
+        not_legendary = listed.not_legendary
+    else:
+        exception = _read_token_copy_except(match.group("except"))
+        if exception is None:
+            return None
+        added, power, toughness, added_type = exception
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object).username
@@ -59147,7 +59687,165 @@ def _parse_exile_card_then_token_copy_clause(
                 power=power,
                 toughness=toughness,
                 added_creature_type=added_type,
+                not_legendary=not_legendary,
             )
+
+    return effect
+
+
+#: "Create a token that's a copy of a card exiled with this Saga, except it
+#: isn't legendary and is a Mutant in addition to its other types." (The
+#: Cloning of Shredder's chapters II and III); "Create a token that's a copy
+#: of a card exiled with this artifact. It gains haste. Exile it at the
+#: beginning of the next end step." (Mimic Vat). CR 607.2a: "a card exiled
+#: with this `<object>`" is the pile this object's own linked exiling ability
+#: made (`Game.cards_exiled_with`, this incarnation only - CR 400.7). The
+#: optional trailing sentences are about the token just made (CR 608.2c).
+_COPY_OF_CARD_EXILED_WITH_SELF_RE = re.compile(
+    r"^create a token that['’]?s a copy of a card exiled with (?:this [a-z]+|it)"
+    r"(?:, except (?P<except>[^.]+?))?\.?"
+    r"(?P<haste>\s*it gains haste\.)?"
+    r"(?P<end_step>\s*(?:exile|sacrifice) it at the beginning of the next end step\.)?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _parse_copy_of_card_exiled_with_self_clause(text: str) -> AbilityEffect | None:
+    """`_COPY_OF_CARD_EXILED_WITH_SELF_RE`'s shape, or `None`.
+
+    With more than one card in the pile the controller chooses which one
+    (CR 608.2d); with none, nothing happens. The copy's exceptions are
+    CR 707.9b's (`_read_copy_exception_list`, then `_read_token_copy_except`).
+    "It gains haste." has no duration (CR 611.2a) and is a layer 6 grant on
+    the token (CR 613.1f); the end-step exile is CR 603.7's delayed trigger
+    (`anaphoric_delayed_trigger`)."""
+    match = _COPY_OF_CARD_EXILED_WITH_SELF_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    not_legendary = False
+    listed = _read_copy_exception_list(match.group("except"))
+    if listed is not None:
+        added, power, toughness, added_type = (
+            listed.added_abilities,
+            listed.power,
+            listed.toughness,
+            listed.added_creature_type,
+        )
+        not_legendary = listed.not_legendary
+    else:
+        exception = _read_token_copy_except(match.group("except"))
+        if exception is None:
+            return None
+        added, power, toughness, added_type = exception
+    end_step = match.group("end_step")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if ability.source_id is None:
+            return
+        pile = [
+            card
+            for card in game.cards_exiled_with(ability.source_id, ability.source_stamp)
+            if card.zone is Zone.EXILE
+        ]
+        if not pile:
+            return
+        controller = game.controller_of(ability)
+        chosen = pile[0]
+        if len(pile) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose a card exiled with it to copy",
+                    source=ability.source_name,
+                    cards=tuple(card.id for card in pile),
+                    count=1,
+                    source_id=source_id_of(ability),
+                )
+            )
+            assert isinstance(answer, tuple)
+            chosen = next(card for card in pile if card.id == answer[0])
+        created = token_copy_of(
+            game,
+            chosen,
+            controller.username,
+            added_abilities=added,
+            power=power,
+            toughness=toughness,
+            added_creature_type=added_type,
+            not_legendary=not_legendary,
+        )
+        store = continuous_effects(game)
+        for token in created:
+            if token.zone is not Zone.BATTLEFIELD:
+                continue
+            if match.group("haste"):
+                store.add(
+                    ContinuousEffect(
+                        description=f"{ability.source_name}: {token.name} gains haste",
+                        layer=Layer.ABILITY,
+                        timestamp=store.tick(),
+                        selector=only_this_incarnation(token, token.zone_change_stamp),
+                        modification=grant_ability("Haste"),
+                    ),
+                    game,
+                )
+            if end_step:
+                trigger = anaphoric_delayed_trigger(
+                    end_step.strip(),
+                    subject=token,
+                    controller=controller.username,
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    game=game,
+                )
+                if trigger is not None:
+                    game.create_delayed_trigger(trigger)
+
+    return effect
+
+
+#: Mimic Vat's imprint: "you may exile that card. If you do, return each
+#: other card exiled with this artifact to its owner's graveyard." - "that
+#: card" is the dying creature's card, now in the graveyard (CR 603.10a's
+#: look-back leaves the trigger's event naming it); the exile is linked to
+#: the source (CR 607.2a) and every *other* card of that pile goes back
+#: (CR 118.12's "if you do").
+_MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE = re.compile(
+    r"^you may exile (?:that card|it)\.\s*if you do, return each other card exiled with "
+    r"(?:this [a-z]+|it) to its owner['’]?s graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_may_exile_that_card_return_others_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE`'s shape, or `None`."""
+    if _MAY_EXILE_THAT_CARD_RETURN_OTHERS_RE.fullmatch(" ".join(text.strip().split())) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None or ability.source_id is None:
+            return
+        card = game.find_by_id(event.subject_id)
+        if not isinstance(card, CardState) or card.zone is not Zone.GRAVEYARD:
+            return
+        controller = game.controller_of(ability)
+        if not game.may(
+            controller,
+            f"exile {card.name}",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            cards=(card,),
+        ):
+            return
+        exiled = game.exile_permanent(card)
+        if exiled.zone is not Zone.EXILE:
+            return
+        exiled.exile_annotation = linked_exile_annotation(game, ability, exiled)
+        for other in game.cards_exiled_with(ability.source_id, ability.source_stamp):
+            if other.id != exiled.id:
+                game.put_into_graveyard(other)
 
     return effect
 
