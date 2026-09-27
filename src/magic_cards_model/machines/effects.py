@@ -54202,7 +54202,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
     if copy_target_spell_whole is not None:
         return [copy_target_spell_whole]
+    from .exile_until_casts import exile_until_casts_whole_text
     from .stack_sweeps import parse_mass_stack_whole_text
+
+    exile_until_casts = exile_until_casts_whole_text(text, for_spell=for_spell)
+    if exile_until_casts is not None:
+        # Read whole: "exiled this way"/"that card" point back across the
+        # period at the exile-until sentence (`machines/exile_until_casts.py`).
+        return [exile_until_casts]
 
     if not for_spell:
         from .cast_copies import parse_that_spell_gains_clause
