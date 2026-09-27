@@ -293,6 +293,11 @@ class ExtraTriggerEvent(StrEnum):
     #: controlled none), `GameEvent.amount` how many times the Ring has now
     #: tempted them. **Emitted by:** `Game.ring_tempts`, and nowhere else.
     RING_TEMPTS_YOU = "ring_tempts_you"
+    #: CR 702.154b: enlist's own linked trigger - Guardian of New Benalia's
+    #: "Whenever this creature enlists a creature, scry 2." `GameEvent.
+    #: subject_id` is the *enlisting* creature (CR 700.7's "this creature"),
+    #: not the one it taps. **Emitted by:** `machines/enlist.apply_enlist`.
+    ENLISTS = "enlists"
     #: CR 701.26a's tapping, as CR 603.2c's one event for every permanent one
     #: instruction, cost or declaration tapped together: Rewrite History's
     #: "Whenever one or more creatures you control become tapped" and Deeproot
@@ -4009,6 +4014,9 @@ def _returned_to_hand_matches(
 _CLASS_BECOMES_LEVEL_CONDITION = re.compile(r"^(?P<subject>.+?) becomes level (?P<level>\d+)$")
 #: CR 701.54d: "Whenever the Ring tempts you" / "When the Ring tempts you".
 _RING_TEMPTS_YOU_CONDITION = re.compile(r"^the ring tempts you$", re.IGNORECASE)
+#: CR 702.154b's own linked condition, self-referential only in the pool -
+#: Guardian of New Benalia's "this creature enlists a creature".
+_ENLISTS_A_CREATURE_CONDITION = re.compile(r"^(?:this creature|it) enlists? a creature$")
 #: CR 701.54e's "your Ring-bearer" as a trigger condition's subject.
 _RING_BEARER_SUBJECT = re.compile(r"^your ring-bearer (?P<rest>.+)$", re.IGNORECASE)
 #: CR 700.13: "you commit a crime" - Magda, the Hoardmaster's and Forsaken
@@ -4228,6 +4236,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.DOOR_UNLOCKED})
     if _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
+    if _ENLISTS_A_CREATURE_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.ENLISTS})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -4695,6 +4705,13 @@ def _unread_condition_matches(
             and event.subject_id == source.id
             and event.subject_name == ability.face
         )
+
+    if _ENLISTS_A_CREATURE_CONDITION.match(condition) and mine:
+        # CR 702.154b: Guardian of New Benalia's own "Whenever this creature
+        # enlists a creature, scry 2." - self-referential only (CR 700.7's
+        # "this creature" is the enlisting creature), so the event's own
+        # subject has to be this source, not any other enlist on the board.
+        return event.event is ExtraTriggerEvent.ENLISTS and event.subject_id == source.id
 
     bending_events = _bending_events_named(condition)
     if bending_events:
@@ -6714,6 +6731,24 @@ def event_subject_power(game: "Game", event: "GameEvent | None") -> int | None:
     if subject is None:
         return None
     return subject.power
+
+
+def event_subject_toughness(game: "Game", event: "GameEvent | None") -> int | None:
+    """`event_subject_power`'s own toughness twin - Goldvein Hydra's own
+    "When this creature dies, create a number of tapped Treasure tokens
+    equal to its power" reads power, but the shape ("equal to its
+    `<power|toughness>`") is the same either characteristic, so both are
+    kept here side by side rather than making a caller ask for power and
+    compute toughness some other way. Same CR 608.2h last-known-information
+    read: `CardState.toughness` already falls back to it once the subject
+    has left the battlefield.
+    """
+    if event is None or event.subject_id is None:
+        return None
+    subject = game.find_by_id(event.subject_id)
+    if subject is None:
+        return None
+    return subject.toughness
 
 
 def _fail_closed(game: "Game", ability: TriggeredAbility, source: CardState) -> bool:

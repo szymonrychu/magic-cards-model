@@ -2281,9 +2281,43 @@ class YouStillControl(ConditionBase):
             _CONTROL_CONDITIONS_BEING_ASKED.discard(self.card_id)
 
 
+class RemainsTapped(ConditionBase):
+    """ "For as long as it remains tapped" (CR 611.2b) - Braided Net's own
+    "Tap another target nonland permanent. Its activated abilities can't be
+    activated for as long as it remains tapped."
+
+    The same `zone_change_stamp` guard as `RemainsOnBattlefield` (CR 400.7: a
+    permanent that leaves and returns is a new object the duration never
+    covered), plus `CardState.tapped` itself, which - unlike a zone or a
+    control change - can turn true again for the very same incarnation: the
+    target can untap and be tapped again without ever leaving the
+    battlefield. This is `HasCounter`'s own shape, not `RemainsOnBattlefield`'s
+    (CR 611.2b: "It doesn't start and immediately stop again, and it doesn't
+    last forever" - once false the duration has ended for good): `can_restart
+    = True` tells `ContinuousEffects.active` to drop the effect the moment it
+    is first false, rather than leave it in the store where a later re-tap
+    would read `holds_in` true again.
+    """
+
+    can_restart: ClassVar[bool] = True
+
+    kind: Literal["remains_tapped"] = "remains_tapped"
+    card_id: UUID
+    stamp: UUID
+
+    def holds_in(self, game: Game) -> bool:
+        permanent = game.find_by_id(self.card_id)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if permanent.zone_change_stamp != self.stamp:
+            return False
+        return permanent.tapped
+
+
 #: Whether a "for as long as" duration is still running (CR 611.2b).
 Condition = Annotated[
-    RemainsOnBattlefield | HasCounter | YouStillControl, Field(discriminator="kind")
+    RemainsOnBattlefield | HasCounter | YouStillControl | RemainsTapped,
+    Field(discriminator="kind"),
 ]
 
 
@@ -10215,10 +10249,28 @@ def _attached_creature_static_builder(
 #: pattern-matching either printed pronoun.
 DOESNT_UNTAP_TEXT = "Doesn't untap during its controller's untap step."
 
+#: Canonical granted-ability text for "its/their activated abilities can't be
+#: activated" - Braided Net's own "Tap another target nonland permanent. Its
+#: activated abilities can't be activated for as long as it remains
+#: tapped." (`machines/control_change._parse_tap_then_lock_clause`). Distinct
+#: from `models.game._ACTIVATION_PROHIBITION_RE`'s static, printed-text-only
+#: scan (Karn, the Great Creator's "Activated abilities of artifacts your
+#: opponents control can't be activated.") - this is a one-shot resolved
+#: effect targeting one specific object, granted in layer 6 the same way
+#: `DOESNT_UNTAP_TEXT` is, and read the same way: `Game.why_cannot_activate`
+#: checks a single literal against the computed board (CR 613.5) rather than
+#: pattern-matching either printed pronoun.
+CANT_ACTIVATE_ABILITIES_TEXT = "Activated abilities of this permanent can't be activated."
+
 #: The layer-6 lines that stand for an effect on the object rather than an
 #: ability of it - kept by `LoseAllAbilities`.
 RULE_EFFECT_TEXTS: frozenset[str] = frozenset(
-    {DOESNT_UNTAP_TEXT, CANT_BECOME_UNTAPPED_TEXT, CANT_HAVE_COUNTERS_TEXT}
+    {
+        DOESNT_UNTAP_TEXT,
+        CANT_BECOME_UNTAPPED_TEXT,
+        CANT_HAVE_COUNTERS_TEXT,
+        CANT_ACTIVATE_ABILITIES_TEXT,
+    }
 )
 
 #: Canonical granted-ability text for "<Type>s entering [the battlefield]
