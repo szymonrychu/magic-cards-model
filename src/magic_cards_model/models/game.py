@@ -2,7 +2,7 @@
 
 import itertools
 import re
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -1580,6 +1580,44 @@ def _negated_card_type_named(quality: str) -> Type | None:
     if not word.startswith("non"):
         return None
     return _card_type_named(word.removeprefix("non"))
+#: CR 105.2a/105.2b: "monocolored" is exactly one of the five colors,
+#: "multicolored" two or more - each a predicate on how many colours an
+#: object has.
+_COLOR_COUNT_QUALITIES: dict[str, Callable[[int], bool]] = {
+    "monocolored": lambda count: count == 1,
+    "multicolored": lambda count: count >= 2,
+}
+
+
+def _has_color_quality(wanted: str, colors: Iterable[Color]) -> bool | None:
+    """Whether an object of `colors` has the colour quality `wanted` - a
+    colour word or a CR 105.2a/105.2b colour count - or `None` when `wanted` is
+    neither."""
+    color = _COLOR_WORDS.get(wanted)
+    if color is not None:
+        return color in colors
+    count = _COLOR_COUNT_QUALITIES.get(wanted)
+    if count is not None:
+        return count(len(set(colors)))
+    return None
+
+
+def protection_quality_readable(quality: str) -> bool:
+    """Whether the engine's protection readers (`Game.source_has_quality`,
+    `Game.source_has_quality_of_card`, `Game._player_quality_protects`) can
+    tell if a source has `quality` at all. A quality none of them reads is
+    never enforced - the support oracle scores such a Protection keyword a
+    notice rather than crediting it on presence."""
+    wanted = quality.strip().lower()
+    return (
+        _is_spell_quality(wanted)
+        or _card_type_named(wanted) is not None
+        or wanted in _COLOR_WORDS
+        or wanted in _COLOR_COUNT_QUALITIES
+        or _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip()) is not None
+    )
+
+
 def _is_spell_quality(quality: str) -> bool:
     """Whether a protection quality names CR 112.1's "spell" ("A spell is a
     card on the stack"), singular or plural - never a CR 205.2a card type,
@@ -17080,6 +17118,7 @@ class Game(EngineModel):
         if color is not None:
             return color in source.colors
         return False
+        return bool(_has_color_quality(wanted, source.colors))
 
     def protection_quality_against(self, target: CardState, source: CardState) -> str | None:
         """The quality `target` has protection from that `source` has, or None.
@@ -17563,9 +17602,10 @@ class Game(EngineModel):
         and to any sources not on the battlefield that are of that card type,
         subtype, or supertype. This is an exception to rule 109.2."
 
-        Colours, card types, CR 112.1's "spell" and CR 400.7d's "permanents
-        that were cast this turn" are read; anything else returns False
-        rather than being guessed at, and is listed in
+        Colours, CR 105.2a/105.2b's colour counts ("monocolored",
+        "multicolored"), card types, CR 112.1's "spell" and CR 400.7d's
+        "permanents that were cast this turn" are read; anything else returns
+        False rather than being guessed at, and is listed in
         `docs/engine-coverage.md`.
 
         A permanent's own types and colours are the ones asked about - CR
@@ -17612,6 +17652,7 @@ class Game(EngineModel):
         if color is not None:
             return color in colors
         return False
+        return bool(_has_color_quality(wanted, colors))
 
     def protection_from_damage(self, event: ReplaceableEvent) -> str | None:
         """Why protection prevents this damage, or None (CR 702.16e).
