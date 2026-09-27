@@ -98,6 +98,7 @@ from ..machines.cost import (
     CostPayment,
     CostStep,
     TotalCost,
+    activated_ability_group_discount_effect,
     additional_cost_phrases,
     alternative_cost_offers,
     among_colors,
@@ -20961,7 +20962,9 @@ class Game(EngineModel):
         the way that reader matches it - `controls_look_at_top_permission`,
         `land_from_top_of_library_permission`, `has_granted_improvise`,
         `_type_mv_threshold_cost_less_self_power`, `_power_up_group_discount`,
-        `_power_up_activation_limit` and `_legendary_creature_count_power`."""
+        `_power_up_activation_limit`, `_legendary_creature_count_power` and
+        `_activated_ability_group_discount` (via `activated_ability_group_
+        discount_effect`)."""
         line = cls._static_line_without_ability_word(text)
         return (
             cls._LOOK_AT_TOP_CARD_ANY_TIME_RE.fullmatch(line) is not None
@@ -20973,6 +20976,7 @@ class Game(EngineModel):
             is not None
             or cls._POWER_UP_GROUP_DISCOUNT_RE.fullmatch(text.strip()) is not None
             or text.strip() == cls._POWER_UP_EXTRA_ACTIVATION_TEXT
+            or activated_ability_group_discount_effect(text.strip()) is not None
             or _LEGENDARY_TYPE_COUNT_POWER_RE.fullmatch(
                 self_normalized_effect_text(card_name, text).strip()
             )
@@ -22750,6 +22754,7 @@ class Game(EngineModel):
         if ability.power_up:
             mana = mana.minus(self._power_up_group_discount(permanent, controller))
         mana = mana.minus(self._activation_target_cost_reduction(permanent, ability, targets))
+        mana = self._activated_ability_group_discount(permanent, controller, mana)
 
         return TotalCost(
             mana=mana, components=components, waterbend_generic=waterbend_generic
@@ -22785,6 +22790,123 @@ class Game(EngineModel):
                 if match is not None:
                     total += int(match.group("amount"))
         return ManaCost.parse(f"{{{total}}}") if total else ManaCost()
+
+    def _permanent_matches_group_quality(self, permanent: CardState, quality: str) -> bool | None:
+        """Whether `permanent` fits an "activated abilities of `<quality>` you
+        control cost `{N}` less to activate" static's own group phrase
+        (`ActivatedAbilityGroupDiscount.quality`), or `None` when `quality`
+        names nothing this can read at all - the same "unreadable, not the
+        same as no effect" answer `activation_cost_reduction_for`'s own
+        quality reader gives, which its caller turns into a `CostModifierNotice`
+        rather than a silent no-op (DDR#978).
+
+        `quality` is read word by word, the same generic way `activation_cost_
+        reduction_for` already reads a *self* discount's own "for each
+        `<quality>` you control": a CR 205.4a supertype ("legendary"), a
+        CR 205.2a card type ("creature", "artifact"), or a CR 205.3 subtype
+        (`canonical_subtype` - "Food", "Treasure", "Elf"), every word ANDed
+        together, plus CR 111.1's own "token"/"tokens" trailing word (Mutagen
+        Man's own "artifact tokens") read separately since a token is not a
+        card type or subtype at all. A permanent still off the battlefield
+        (a granted ability paid for by sacrificing its own source, `activation_
+        cost`'s own docstring) is read off its printed characteristics rather
+        than the computed board, since `computed_board` only ever covers
+        battlefield permanents.
+        """
+        words = quality.strip().split()
+        require_token = bool(words) and words[-1].lower() in ("token", "tokens")
+        if require_token:
+            words = words[:-1]
+        if not words:
+            return None
+        if require_token and not getattr(permanent, "token", False):
+            return False
+        on_battlefield = permanent.zone is Zone.BATTLEFIELD
+        chars = self.characteristics_of(permanent) if on_battlefield else None
+        types_present = set(chars.types) if chars is not None else set(permanent.types)
+        supertypes_present = (
+            set(chars.supertypes) if chars is not None else set(permanent.supertypes)
+        )
+        subtypes_present = {
+            word.lower() for word in (chars.subtypes if chars is not None else permanent.subtypes)
+        }
+        for word in words:
+            singular = word.removesuffix("s")
+            try:
+                if Supertype(singular.lower()) in supertypes_present:
+                    continue
+                return False
+            except ValueError:
+                pass
+            try:
+                if Type(singular.lower()) in types_present:
+                    continue
+                return False
+            except ValueError:
+                pass
+            subtype = canonical_subtype(word)
+            if subtype is None:
+                return None
+            if subtype not in subtypes_present:
+                return False
+        return True
+
+    def _activated_ability_group_discount(
+        self, permanent: CardState, controller: str, mana: ManaCost
+    ) -> ManaCost:
+        """`mana` reduced by every "activated abilities of `<group>` you
+        control cost `{N}` less to activate" static the controller has in
+        play (CR 601.2f via CR 602.2b) - Mutagen Man, Living Ooze's own
+        "artifact tokens", generalised the way `activated_ability_group_
+        discount_effect` reads any group phrase rather than that one.
+
+        Unlike `_power_up_group_discount`, a source's own ability is not
+        excluded from its own group discount ("other" is not part of this
+        template the way Hulk's own "other creatures" is) - the Mutagen
+        token's `{1}` sacrifice ability is discounted by Mutagen Man's static
+        exactly as any other artifact token's is, since CR 601.2f draws no
+        such line and the printed line names none either.
+
+        The floor ("This effect can't reduce the mana in that cost to less
+        than one mana" - Forensic Gadgeteer, Training Grounds, Heartstone) is
+        applied once, against `mana` as handed in (already reduced by every
+        earlier step `activation_cost` has applied): a reduction is clamped
+        so the cost this static discounts never drops below one mana, but
+        only when `mana` itself already carried at least that much - CR
+        601.2f's own "It can't be reduced to less than {0}" is the ordinary
+        floor for every other reduction, unaffected by a static that names no
+        floor of its own.
+        """
+        total = 0
+        floor_one = False
+        already_noticed = {notice.source_id for notice in self.cost_modifier_notices}
+        for other in self.battlefield:
+            if other.controller != controller:
+                continue
+            for line in self.characteristics_of(other).abilities:
+                effect = activated_ability_group_discount_effect(line.strip())
+                if effect is None:
+                    continue
+                qualifies = self._permanent_matches_group_quality(permanent, effect.quality)
+                if qualifies is None:
+                    if other.id not in already_noticed:
+                        already_noticed.add(other.id)
+                        self.cost_modifier_notices.append(
+                            CostModifierNotice(
+                                source_id=other.id, source_name=other.name, text=line.strip()
+                            )
+                        )
+                    continue
+                if not qualifies:
+                    continue
+                total += effect.amount
+                floor_one = floor_one or effect.floor_one
+        if not total:
+            return mana
+        reduced = mana.minus(ManaCost.parse(f"{{{total}}}"))
+        if floor_one and mana.converted > 0 and reduced.converted < 1:
+            reduced = mana.minus(ManaCost.parse(f"{{{max(mana.converted - 1, 0)}}}"))
+        return reduced
 
     #: "This ability costs `<N>` less to activate if it targets a `<quality>`
     #: with power `<M>` or less/greater." (Raft Security Officer) - a
