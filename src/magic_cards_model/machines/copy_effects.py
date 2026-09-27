@@ -439,11 +439,16 @@ def _become_a_copy(
     duration: Duration,
     until_next_turn_of: str | None = None,
     condition: Condition | None = None,
+    timestamp: int | None = None,
 ) -> None:
     """CR 707.4: `subject`, staying on the battlefield, becomes a copy of
     `copied` (its copiable values, CR 707.2), with CR 707.9's exceptions
     written into the one layer 1a effect (CR 707.9b: they are part of the
-    copy's copiable values) - never as separate later-layer effects."""
+    copy's copiable values) - never as separate later-layer effects.
+
+    `timestamp` is shared when one instruction makes several permanents
+    copies at once (`_parse_each_becomes_a_copy_clause`, CR 613.7b: one
+    effect, created once)."""
     name = copied.name
     power, toughness = copied.power, copied.toughness
     supertypes = list(copied.supertypes)
@@ -475,7 +480,7 @@ def _become_a_copy(
             description=f"{source_name}: {subject.name} becomes a copy of {copied.name}",
             layer=Layer.COPY,
             sublayer=CopySublayer.COPIABLE,
-            timestamp=store.tick(),
+            timestamp=store.tick() if timestamp is None else timestamp,
             duration=duration,
             until_next_turn_of=until_next_turn_of,
             condition=condition,
@@ -595,6 +600,116 @@ def _parse_becomes_a_copy_clause(
             duration=duration,
             until_next_turn_of=controller if duration is Duration.UNTIL_YOUR_NEXT_TURN else None,
         )
+
+    return effect
+
+
+#: "Each `<group>` becomes a copy of target `<quality>`[ until end of turn]."
+#: - Mirrorform's "Each nonland permanent you control becomes a copy of
+#: target non-Aura permanent." and Mirrorweave's "Each other creature becomes
+#: a copy of target nonlegendary creature until end of turn." CR 707.4: each
+#: permanent in the group stays on the battlefield and copies the target's
+#: copiable values (CR 707.2, as modified by other copy effects), in one
+#: layer 1a effect each (CR 613.1a) sharing one timestamp (CR 613.7b). The
+#: group is fixed as the spell or ability resolves (CR 611.2c). "Other" is
+#: other than the target (and the source, for a permanent's ability). With
+#: no duration the copies last until the end of the game (CR 611.2a).
+_EACH_BECOMES_A_COPY_RE = re.compile(
+    r"^each (?P<other>other )?(?P<group>(?:non(?:land|creature|token|artifact) )?"
+    r"(?:permanent|creature|artifact|enchantment|land|token))"
+    r"(?P<whose> you control| your opponents control)?"
+    r" becomes a copy of (?P<object>target [^.]+?)"
+    r"(?P<trail> until end of turn| until your next turn)?\.?$",
+    re.IGNORECASE,
+)
+
+_GROUP_TYPE_WORDS = {
+    "permanent": None,
+    "creature": Type.CREATURE,
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+    "land": Type.LAND,
+}
+
+
+def _each_group_member(characteristics: Characteristics, group: str) -> bool:
+    """Whether a permanent with these computed characteristics (CR 613.5) is
+    one of `group`'s ("nonland permanent", "creature", "nontoken creature")."""
+    words = group.lower().split()
+    noun = words[-1]
+    if noun == "token":
+        if not characteristics.is_token:
+            return False
+    else:
+        wanted = _GROUP_TYPE_WORDS[noun]
+        if wanted is not None and wanted not in characteristics.types:
+            return False
+    for word in words[:-1]:
+        excluded = word.removeprefix("non")
+        if excluded == "token":
+            if characteristics.is_token:
+                return False
+            continue
+        excluded_type = _GROUP_TYPE_WORDS.get(excluded)
+        if excluded_type is not None and excluded_type in characteristics.types:
+            return False
+    return True
+
+
+def _parse_each_becomes_a_copy_clause(
+    text: str,
+) -> Callable[[Game, StackObject], None] | None:
+    match = _EACH_BECOMES_A_COPY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    group = match.group("group")
+    other = match.group("other") is not None
+    whose = (match.group("whose") or "").strip().lower()
+    duration = _copy_duration(match.group("trail"))
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        from .triggers import AbilityOnStack as StackAbility
+
+        is_ability = isinstance(stack_object, StackAbility)
+        controller = game.controller_of(stack_object).username
+        targets = game.resolve_card_targets(stack_object)
+        if not targets:
+            return  # CR 608.2b: the only target is gone or illegal
+        copied_object = targets[0]
+        copied = _copiable_values_of(game, copied_object)
+        source_id = stack_object.source_id if is_ability else stack_object.id
+        board = game.computed_board()
+        group_members = []
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if other and permanent.id in (copied_object.id, source_id):
+                continue
+            permanent_controller = game.controller_of(permanent).username
+            if whose == "you control" and permanent_controller != controller:
+                continue
+            if whose == "your opponents control" and permanent_controller == controller:
+                continue
+            if _each_group_member(chars, group):
+                group_members.append(permanent)
+        if not group_members:
+            return
+        timestamp = game.continuous_effects.tick()
+        source_name = stack_object.source_name if is_ability else stack_object.name
+        for member in group_members:
+            _become_a_copy(
+                game,
+                subject=member,
+                copied=copied,
+                exceptions=None,
+                source_name=source_name,
+                own_name=member.name,
+                this_ability=None,
+                duration=duration,
+                until_next_turn_of=controller
+                if duration is Duration.UNTIL_YOUR_NEXT_TURN
+                else None,
+                timestamp=timestamp,
+            )
 
     return effect
 
@@ -784,6 +899,7 @@ def copy_ability_effect(effect_text: str) -> AbilityEffect | None:
     for reader in (
         _parse_if_not_a_creature_ability,
         _parse_exile_then_become_its_copy_clause,
+        _parse_each_becomes_a_copy_clause,
         _parse_becomes_a_copy_clause,
         _parse_copy_target_ability_clause,
         _parse_copy_next_within_mana_value_ability,
@@ -800,6 +916,7 @@ def copy_spell_effect(effect_text: str) -> Effect | None:
     """A copy instruction on a resolving spell, or `None`."""
     for reader in (
         _parse_if_not_a_creature_spell,
+        _parse_each_becomes_a_copy_clause,
         _parse_becomes_a_copy_clause,
         _parse_copy_next_within_mana_value_spell,
         _parse_spell_after_cast_trigger,
