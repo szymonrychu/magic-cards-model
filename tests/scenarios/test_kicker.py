@@ -427,7 +427,16 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
     # Every printing whose Scryfall keywords name one of the family is read.
     by_keyword = {
         name: {keyword.lower() for keyword in card.keywords}
-        & {"kicker", "multikicker", "replicate", "offspring", "gift", "bargain", "casualty"}
+        & {
+            "kicker",
+            "multikicker",
+            "replicate",
+            "offspring",
+            "gift",
+            "bargain",
+            "casualty",
+            "conspire",
+        }
         for name, card in pool().items()
     }
     for name, keywords in by_keyword.items():
@@ -459,6 +468,8 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
         ("bargain", "CR 702.166a", False),
         # CR 702.153a's casualty (Join the Maestros).
         ("casualty", "CR 702.153a", False),
+        # CR 702.78a's conspire (Burn Trail).
+        ("conspire", "CR 702.78a", False),
         ("collect evidence", "CR 701.59a", False),
         ("reveal", "CR 701.20a", False),
         (None, "CR 118.8b", False),

@@ -474,6 +474,15 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if adventure_face(printing) is not None:
         found["adventure"] = "machines/casting.py"
 
+    # Plot named only by a resolving-exile rider ("If you do, it becomes
+    # plotted.", Lilah, Undefeated Slickshot): CR 702.170c's "some spells
+    # and abilities cause a card in exile to become plotted" - performed by
+    # `machines/resolving_exile.apply_resolving_exile`.
+    if any(k.lower() == "plot" for k in printing.keywords) and re.search(
+        r"\bit becomes plotted\b", printing.oracle_text or "", re.IGNORECASE
+    ):
+        found["plot"] = "machines/resolving_exile.py"
+
     # Escalate is a cast cost rather than a way to cast, so it is not a
     # KeywordCastOption - `Casting.pay_escalate` charges it (CR 702.120a).
     profile = modal_profile(printing)
