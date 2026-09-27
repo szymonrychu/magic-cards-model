@@ -574,6 +574,26 @@ def executed_keywords(printing: Card) -> dict[str, str]:
     if any(k.lower() == "fuse" for k in printing.keywords):
         found["fuse"] = "machines/casting.py (Casting.cast_fused, CR 702.102)"
 
+    # Start your engines! (CR 702.179a) is a state-based action
+    # (`machines/speed.apply_start_your_engines`), not a `KeywordCastOption`
+    # or a combat keyword `machines/combat.Keyword` enumerates - named here
+    # by hand for the same reason suspend and fuse are just above.
+    if any(k.lower() == "start your engines!" for k in printing.keywords):
+        found["start your engines!"] = "machines/speed.py (apply_start_your_engines, CR 702.179a)"
+
+    # Max speed (CR 702.178a) gates an activated ability's own activation on
+    # the activator's speed (`Game.why_cannot_activate`'s own `ability_word`
+    # check) rather than a keyword-cast option or a combat keyword.
+    if any(k.lower() == "max speed" for k in printing.keywords):
+        found["max speed"] = "models/game.py (why_cannot_activate, CR 702.178a)"
+
+    # Enlist (CR 702.154a-c) is an attack-cost keyword, wired into
+    # `Game.declare_attacker`/`declare_attackers` rather than a
+    # `KeywordCastOption` or a combat keyword `machines/combat.Keyword`
+    # enumerates.
+    if any(k.lower() == "enlist" for k in printing.keywords):
+        found["enlist"] = "machines/enlist.py (apply_enlist, CR 702.154a-c)"
+
     # Monstrosity (CR 701.37a: "'Monstrosity N' means 'If this permanent
     # isn't monstrous, put N +1/+1 counters on it and it becomes
     # monstrous.'") is a keyword *action* read straight out of an activated

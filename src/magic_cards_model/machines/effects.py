@@ -267,6 +267,7 @@ from .triggers import (
     GameEvent,
     batched_attackers,
     event_subject_power,
+    event_subject_toughness,
     is_ability,
     resolution_key,
     triggered_mana_count,
@@ -5625,6 +5626,73 @@ def link_cards_exiled_during(
 
 
 #: CR 607.2a's second ability: "refers either to 'the exiled cards' or to
+#: "Exile up to `<n>` target card(s) from a/graveyards. If a/at least one
+#: creature card was exiled this way, `<rider>`." / "... For each creature
+#: card exiled this way, `<rider>`." - Graveyard Trespasser's own trigger
+#: ("exile up to one target card from a graveyard. If a creature card was
+#: exiled this way, each opponent loses 1 life and you gain 1 life.") and its
+#: night face Graveyard Glutton's count-scaled twin ("exile up to two target
+#: cards from graveyards. For each creature card exiled this way, ...").
+#: Soul-Shackled Zombie's "exile up to two target cards from a single
+#: graveyard. If at least one creature card was exiled this way, each
+#: opponent loses 2 life and you gain 2 life." is the same binary shape with
+#: a different quantifier word and a different drain amount - proof this
+#: reader is not fitted to either printed sentence.
+_EXILE_GRAVEYARD_THEN_CREATURE_RIDER_RE = re.compile(
+    r"^exile (?P<phrase>up to (?:one|two|three|four|\d+) target cards? from "
+    r"(?:a |a single |an? )?graveyards?)\.\s*"
+    r"(?P<mode>if an? creature card was exiled this way|"
+    r"if at least one creature card was exiled this way|"
+    r"for each creature card exiled this way),\s*"
+    r"(?P<rider>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_exile_graveyard_then_creature_rider_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EXILE_GRAVEYARD_THEN_CREATURE_RIDER_RE`'s shape.
+
+    "If a/at least one creature card was exiled this way" runs `rider` once
+    when at least one exiled card was a creature card (CR 608.2c: the
+    antecedent's own instruction runs first, then the conditional one);
+    "for each creature card exiled this way" runs it once *per* creature
+    card exiled - Graveyard Glutton's own drain doubling on a double hit,
+    the same "for each" multiplier every other reader here already gives a
+    per-count rider. CR 400.7/CR 700.4: whether an exiled card "is a creature
+    card" is read off the card itself before it moves (`Type.CREATURE in
+    target.types`), the same instant `exile_ability_targets` reads it.
+    """
+    match = _EXILE_GRAVEYARD_THEN_CREATURE_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+    rider_text = match.group("rider").strip()
+    rider = (
+        parse_mixed_effect_for_spell(rider_text) if for_spell else parse_mixed_effect(rider_text)
+    )
+    if rider is None:
+        return None
+    for_each = match.group("mode").strip().lower().startswith("for each")
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        creature_cards = 0
+        for target in game.resolve_card_targets(stack_object):
+            is_creature = Type.CREATURE in target.types
+            game.exile_permanent(target)
+            if is_creature:
+                creature_cards += 1
+        if creature_cards <= 0:
+            return
+        repeats = creature_cards if for_each else 1
+        for _ in range(repeats):
+            rider(game, stack_object)
+
+    return effect
+
+
 #: cards 'exiled with [this object]'".
 _LINKED_EXILE_READER_RE = re.compile(r"\bthe exiled cards?\b|\bexiled with\b", re.IGNORECASE)
 
@@ -20062,6 +20130,32 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         if counter_reader is None:
             return None
         return _damage_ability_targets_equal_to(counter_reader)
+
+    if (
+        not for_spell
+        and (match := _DAMAGE_EQUAL_TO_EXPR_TARGET_RE.fullmatch(clause))
+        # Stepping aside for the counters-on-it shape just above and the
+        # bite-family "its power"/"its loyalty" one (`_OBJECT_CHARACTERISTIC_
+        # RE`, no live object bound to "obj" the way that reader's own
+        # subject is) - matched, not merely excluded, so falling through to
+        # try `_parse_self_damage_equal_to_count_clause` and every other
+        # reader below is exactly what an unmatched `expr` should do, the
+        # same "and reader is not None" chaining `_DAMAGE_TARGET_EQUAL_TO_
+        # EXPR_RE`'s own sibling block just below already uses rather than
+        # this file's other "matched the regex, now commit or refuse" shape.
+        and _NUMBER_OF_COUNTERS_ON_IT_RE.fullmatch(match.group("expr").strip()) is None
+        and _OBJECT_CHARACTERISTIC_RE.fullmatch(match.group("expr").strip()) is None
+        and (reader := amount_expression(match.group("expr"))) is not None
+        and _targets_understood(match.group("phrase"), allow_player_targets=True)
+    ):
+        # Stadium Headliner's own "It deals damage equal to the number of
+        # creatures you control to target creature." - the ability-side twin
+        # of the spell branch's general `amount_expression` read, widened
+        # past the counters-on-it special case: any game-wide count
+        # (`count_expression`'s own "creatures you control", "Mountains you
+        # control", ...) that `amount_expression` already reads for a spell
+        # now reads for an activated or triggered ability too.
+        return damage_ability_targets_equal_to_expression(reader)
 
     if (
         (match := _DAMAGE_TARGET_EQUAL_TO_EXPR_RE.fullmatch(clause))
@@ -50843,6 +50937,81 @@ _TOKENS_EQUAL_TO_ITS_STAT_RE = re.compile(
 )
 
 
+def _parse_create_tokens_equal_to_event_subject_stat_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TOKENS_EQUAL_TO_ITS_STAT_RE`'s shape read on its own, as a whole
+    ability's effect - not only the "if you do" rider
+    `_merge_return_self_then_if_you_do_clauses` already reads it as.
+
+    Goldvein Hydra's own dies trigger ("When this creature dies, create a
+    number of tapped Treasure tokens equal to its power.", CR 603.10a's
+    look-back - Goldvein Hydra's entire power is +1/+1 counters, CR 208.1's
+    printed 0/0) and Threefold Thunderhulk's "Whenever this creature enters
+    or attacks, create a number of 1/1 colorless Gnome artifact creature
+    tokens equal to its power." (the creature is still on the battlefield,
+    so "its" reads the live, computed characteristic instead) are the same
+    shape with two different trigger events.
+
+    `event_subject_power`/`event_subject_toughness` (`machines/triggers.py`)
+    read `CardState.power`/`.toughness` off the event's own subject: live and
+    layer-computed (CR 613.5) while the subject is still a permanent, the CR
+    608.2h last-known snapshot the instant it is not - but that snapshot is
+    deliberately *counters-exclusive* (see that function's own docstring and
+    `intervening_if_holds`'s identical split): CR 122.2 has already cleared
+    `CardState.counters` by the time this trigger resolves, and what a
+    *continuous effect* contributed is all `last_known_power` keeps. A
+    departed subject's counters survive only in `last_known_counters`
+    (`Game._note_left_battlefield`), the same source every other dies-
+    trigger reader here reads for exactly this reason
+    (`hangarback_dies`'s own "counters if on the battlefield else
+    last_known_counters"). `_departed_stat_with_counters` below adds that
+    contribution back in only when the subject has actually left the
+    battlefield, so a still-alive Threefold Thunderhulk (whose counters the
+    layer engine already folds into the live `.power` this reads) is not
+    double-counted.
+
+    Ability-only: nothing in the pool prints this on a spell, and there is
+    no `AbilityOnStack.event` to read one off.
+    """
+    if for_spell:
+        return None
+    match = _TOKENS_EQUAL_TO_ITS_STAT_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    template = _parse_token_clause(f"create a {match.group('desc')} token", for_spell=False)
+    if template is None:
+        return None
+    read_stat = (
+        event_subject_power if match.group("stat").lower() == "power" else (event_subject_toughness)
+    )
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        assert isinstance(stack_object, AbilityOnStack)
+        amount = _departed_stat_with_counters(game, stack_object.event, read_stat)
+        for _ in range(max(amount or 0, 0)):
+            template(game, stack_object)
+
+    return effect
+
+
+def _departed_stat_with_counters(
+    game: "Game",
+    event: "GameEvent | None",
+    read_stat: Callable[["Game", "GameEvent | None"], int | None],
+) -> int | None:
+    """`read_stat`'s own answer, plus a departed subject's own counters
+    (CR 122.1a) - see `_parse_create_tokens_equal_to_event_subject_stat_
+    clause`'s docstring for why `read_stat` alone leaves those out."""
+    value = read_stat(game, event)
+    if value is None or event is None or event.subject_id is None:
+        return value
+    subject = game.find_by_id(event.subject_id)
+    if subject is None or subject.zone is Zone.BATTLEFIELD:
+        return value
+    return value + subject.last_known_counters.power_toughness_modifier
+
+
 def _merge_return_self_then_if_you_do_clauses(
     clauses: list[str], index: int, *, for_spell: bool
 ) -> tuple[int, TargetedClause] | None:
@@ -53431,13 +53600,13 @@ def _parse_return_dead_self_to_hand_clause(
 _DEAD_OBJECT_TO_LIBRARY_RE = re.compile(
     r"^(?:you may )?"
     r"(?:"
-    r"put (?:it|this (?:permanent|creature|card))(?: from your graveyard)? "
+    r"put (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
     r"on (?:the )?(?P<side>top|bottom) of (?:its owner'?s|your) library"
     r"|"
-    rf"put (?:it|this (?:permanent|creature|card))(?: from your graveyard)? "
+    rf"put (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
     rf"into (?:its owner'?s|your) library (?P<ordinal>{ORDINAL}) from the top"
     r"|"
-    r"shuffle (?:it|this (?:permanent|creature|card))(?: from your graveyard)? "
+    r"shuffle (?:it|this (?:permanent|creature|card|artifact))(?: from your graveyard)? "
     r"into (?:its owner'?s|your) library"
     r")\.?$",
     re.IGNORECASE,
@@ -53528,6 +53697,93 @@ def _parse_dead_object_to_library_clause(clause: str, *, for_spell: bool) -> Tar
         game.put_cards_into_library([found_state], to_bottom=to_bottom)
         if depth is not None and depth > 0:
             _reposition_in_owners_library(game, found_state, depth=depth)
+
+    return effect
+
+
+#: "Shuffle this creature and target `<description>` into their owners'
+#: libraries." - Floodpits Drowner's own `{1}{U}, {T}` ability. The self
+#: half is the same CR 201.5/CR 607.1 self-reference the dead-self family
+#: above reads ("this `<noun>`"); the "and target ..." half is any targeting
+#: phrase `_targets_understood` already reads (Serene Remembrance's own
+#: "up to three target cards from a single graveyard" proves the same "self
+#: plus target(s), each into its *own* owner's library" shape generalises
+#: past a single target and past an activated ability into a sorcery).
+#: The self half is either an ability's own normalised "this `<noun>`"/"it"
+#: (CR 700.7), or - since a spell resolving keeps its own literal printed
+#: name in this text, never normalised to "this spell"/"this sorcery" the
+#: way an ability's self-reference is - a bare run of capitalised words
+#: (Serene Remembrance's own "Shuffle Serene Remembrance and ..."), the same
+#: fallback shape other self-referential readers in this module already use
+#: for a spell's own name (see the identical alternation elsewhere in this
+#: file).
+_SHUFFLE_SELF_AND_TARGETS_INTO_OWNERS_LIBRARIES_RE = re.compile(
+    r"^shuffle (?:this (?:creature|permanent|artifact|card)|it|"
+    r"[A-Z][\w'-]*(?: [A-Z][\w'-]*)*) and "
+    r"(?P<phrase>(?:up to (?:one|two|three|four|\d+) )?target [^.]+?) "
+    r"into their owners'? libraries\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_shuffle_self_and_targets_into_owners_libraries_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SHUFFLE_SELF_AND_TARGETS_INTO_OWNERS_LIBRARIES_RE`'s shape.
+
+    CR 701.24c: "If an effect would cause a player to shuffle one or more
+    specific objects into a library, that library is shuffled even if none
+    of those objects are in the zone they're expected to be in" - so each
+    card named (self included) goes into its *own* owner's library, and
+    every distinct owner's library touched is shuffled once, grouped so two
+    cards owned by the same player are not shuffled into it twice.
+
+    The self half: for an ability, `_dead_self_found`'s id-based lookup
+    (CR 113.7a's fail-soft for an activated ability with no triggering
+    event, exactly Borborygmos and Fblthp's own untriggered `{1}{U}` above),
+    so a self already moved on by something else in response is simply not
+    found rather than moved twice; for a spell (Serene Remembrance), the
+    resolving `stack_object` itself - CR 701.24c's own "even if [it isn't]
+    in the zone it's expected to be in" covers the stack, the spell's own
+    current zone as it resolves. The target half is `game.
+    resolve_card_targets`, the ordinary CR 608.2b illegal-target recheck,
+    either way.
+    """
+    match = _SHUFFLE_SELF_AND_TARGETS_INTO_OWNERS_LIBRARIES_RE.fullmatch(
+        " ".join(text.strip().split())
+    )
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True, battlefield_only=False):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        moved: list[CardState] = []
+        self_found = (
+            stack_object
+            if for_spell and isinstance(stack_object, CardState)
+            else _dead_self_found(game, stack_object)
+            if isinstance(stack_object, AbilityOnStack)
+            else None
+        )
+        if self_found is not None and not is_token(self_found):
+            moved.append(self_found)
+        for target in game.resolve_card_targets(stack_object):
+            if not is_token(target) and target not in moved:
+                moved.append(target)
+        moved = [card for card in moved if card.owner is not None]
+        if not moved:
+            return
+        # `Game.put_cards_into_library` (not `Player.add` directly) is what
+        # actually takes each card out of wherever it is now - the
+        # battlefield included (`Game._take_out_of_every_zone`) - as well as
+        # sorting them into their own owners' libraries (CR 108.3); the
+        # position it leaves them at does not matter, since every library
+        # touched is shuffled right after (CR 701.24c).
+        game.put_cards_into_library(moved)
+        for owner_name in dict.fromkeys(card.owner for card in moved):
+            assert owner_name is not None
+            game.shuffle_library(game.player(owner_name))
 
     return effect
 
@@ -55650,6 +55906,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     dead_object_to_library = _parse_dead_object_to_library_clause(clause, for_spell=for_spell)
     if dead_object_to_library is not None:
         return dead_object_to_library
+    tokens_equal_to_event_subject_stat = _parse_create_tokens_equal_to_event_subject_stat_clause(
+        clause, for_spell=for_spell
+    )
+    if tokens_equal_to_event_subject_stat is not None:
+        return tokens_equal_to_event_subject_stat
     sacrifice_self = _parse_sacrifice_self_clause(clause, for_spell=for_spell)
     if sacrifice_self is not None:
         return sacrifice_self
@@ -56377,6 +56638,27 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     # the sentence before it created, folded into one token clause first.
     text = _fold_following_token_grant(text)
     text = _reorder_token_named_after_tail(text)
+    shuffle_self_and_targets = _parse_shuffle_self_and_targets_into_owners_libraries_clause(
+        text, for_spell=for_spell
+    )
+    if shuffle_self_and_targets is not None:
+        # Read whole, ahead of the "and" clause split: "Shuffle this creature
+        # **and** target `<X>` into their owners' libraries." (Floodpits
+        # Drowner) has one CR 608.2c instruction whose own object list uses
+        # the same bare "and" `_CLAUSE_SEPARATOR` would otherwise cut into
+        # two fragments neither reads alone.
+        return [shuffle_self_and_targets]
+    exile_graveyard_then_creature_rider = _parse_exile_graveyard_then_creature_rider_clause(
+        text, for_spell=for_spell
+    )
+    if exile_graveyard_then_creature_rider is not None:
+        # Read whole, ahead of the sentence split: "Exile up to `<n>` target
+        # card(s) from graveyards. If a/for each creature card was/exiled
+        # this way, `<rider>`." (Graveyard Trespasser) is one CR 608.2c
+        # instruction chain - the second sentence's own "this way" is
+        # anaphora back to the first, exactly like every other reflexive
+        # pair `split_effect_clauses` would otherwise cut apart.
+        return [exile_graveyard_then_creature_rider]
     destroy_amass_draw = _parse_destroy_then_amass_by_referent_then_draw_if_controlled_clause(
         text, for_spell=for_spell
     )

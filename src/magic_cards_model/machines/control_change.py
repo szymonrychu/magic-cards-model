@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState
 from ..models.zone import Zone
 from .layers import (
+    CANT_ACTIVATE_ABILITIES_TEXT,
     DOESNT_UNTAP_TEXT,
     Characteristics,
     Condition,
@@ -26,6 +27,7 @@ from .layers import (
     Layer,
     Modification,
     RemainsOnBattlefield,
+    RemainsTapped,
     YouStillControl,
     grant_ability,
     lose_all_abilities,
@@ -60,28 +62,49 @@ _SELF = (
 #: never starts if the source is already gone (or already out of its
 #: controller's hands) as the ability resolves, and the tap still happens.
 _TAP_THEN_LOCK_RE = re.compile(
-    r"^tap (?P<phrase>(?:up to (?:one|two|three|four|\d+) )?target [^.]+?)\.\s*"
+    r"^tap (?P<phrase>(?:up to (?:one|two|three|four|\d+) )?(?:another )?target [^.]+?)\.\s*"
+    r"(?:"
     r"(?:it|that creature|that permanent|those creatures|those permanents|they) "
     r"(?P<rider>loses? all abilities"
     r"|(?:doesn'?t|don'?t) untap during (?:its controller'?s|their controllers'?) untap steps?"
     r"|can'?t become untapped)"
+    r"|"
+    r"(?:its|their) (?P<activation_lock>activated abilities can'?t be activated)"
+    r")"
     rf" for as long as (?:you control (?P<controlled>{_SELF})|(?P<remains>{_SELF}) remains "
-    r"on the battlefield)\.?$",
+    r"on the battlefield|(?P<tapped>it remains tapped))\.?$",
     re.IGNORECASE,
 )
 
 
-def _lock_condition(game: Game, ability: AbilityOnStack, *, controlled: bool) -> Condition | None:
-    """The CR 611.2b condition built off the ability's source as it resolves,
-    or `None` when the duration never starts: the source is not the object
-    that put the ability on the stack any more (CR 400.7), or - for "you
-    control" - it is not controlled by the ability's controller."""
+def _lock_condition(
+    game: Game,
+    ability: AbilityOnStack,
+    target: CardState | None = None,
+    *,
+    duration_kind: str,
+) -> Condition | None:
+    """The CR 611.2b condition this rider's duration builds, or `None` when it
+    never starts.
+
+    `duration_kind` is `"controlled"` (the source's controller), `"remains"`
+    (the source staying on the battlefield) or `"tapped"` (Braided Net's own
+    "for as long as it remains tapped" - the *target*'s own tapped status,
+    not the source's, since `target` is what was just tapped, and CR 611.2b's
+    duration is read off whatever the sentence actually names). Only
+    `"tapped"` reads `target`; the other two never pass one.
+    """
+    if duration_kind == "tapped":
+        assert target is not None
+        if target.zone is not Zone.BATTLEFIELD or target.zone_change_stamp is None:
+            return None
+        return RemainsTapped(card_id=target.id, stamp=target.zone_change_stamp)
     source = ability.source(game)
     if source is None or source.zone is not Zone.BATTLEFIELD or source.zone_change_stamp is None:
         return None
     if ability.source_stamp is not None and source.zone_change_stamp != ability.source_stamp:
         return None
-    if controlled:
+    if duration_kind == "controlled":
         if source.controller != ability.controller:
             return None
         return YouStillControl(
@@ -90,7 +113,10 @@ def _lock_condition(game: Game, ability: AbilityOnStack, *, controlled: bool) ->
     return RemainsOnBattlefield(card_id=source.id, stamp=source.zone_change_stamp)
 
 
-def _rider_modification(rider: str) -> tuple[str, Modification]:
+def _rider_modification(rider: str | None, *, activation_lock: bool) -> tuple[str, Modification]:
+    if activation_lock:
+        return "activated abilities can't be activated", grant_ability(CANT_ACTIVATE_ABILITIES_TEXT)
+    assert rider is not None
     lowered = rider.lower()
     if lowered.startswith("lose"):
         return "loses all abilities", lose_all_abilities
@@ -108,8 +134,14 @@ def _parse_tap_then_lock_clause(effect_text: str) -> AbilityEffect | None:
         return None
     if not _targets_understood(match.group("phrase"), count_agnostic=True):
         return None
-    what, modification = _rider_modification(match.group("rider"))
-    controlled = match.group("controlled") is not None
+    activation_lock = match.group("activation_lock") is not None
+    what, modification = _rider_modification(match.group("rider"), activation_lock=activation_lock)
+    if match.group("tapped") is not None:
+        duration_kind = "tapped"
+    elif match.group("controlled") is not None:
+        duration_kind = "controlled"
+    else:
+        duration_kind = "remains"
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
         targets = [
@@ -119,12 +151,12 @@ def _parse_tap_then_lock_clause(effect_text: str) -> AbilityEffect | None:
         ]
         for target in targets:
             target.tap_if_untapped()
-        condition = _lock_condition(game, ability, controlled=controlled)
-        if condition is None:
-            return
         store = game.continuous_effects
         timestamp = store.tick()
         for target in targets:
+            condition = _lock_condition(game, ability, target, duration_kind=duration_kind)
+            if condition is None:
+                continue
             store.add(
                 ContinuousEffect(
                     description=f"{ability.source_name}: {target.name} {what}",
@@ -175,7 +207,8 @@ def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | 
     controlled = match.group("controlled") is not None
 
     def effect(game: Game, ability: AbilityOnStack) -> None:
-        condition = _lock_condition(game, ability, controlled=controlled)
+        duration_kind = "controlled" if controlled else "remains"
+        condition = _lock_condition(game, ability, duration_kind=duration_kind)
         targets = [
             target
             for target in game.resolve_card_targets(ability)

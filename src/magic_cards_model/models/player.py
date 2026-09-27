@@ -379,6 +379,28 @@ class Player(EngineModel):
     special action that pays `{3}` to put the companion into hand may be
     taken once. Set by `Game.bring_companion_to_hand`."""
 
+    speed: int | None = None
+    """CR 702.179b: "Players do not have speed until a rule or effect sets
+    their speed to a specific value" - `None` for that "no speed" state,
+    never `0` (`machines/speed.py`'s own docstring is where the distinction
+    is argued). Set to 1 by CR 702.179a's state-based action
+    (`machines/speed.apply_start_your_engines`) the moment this player
+    controls a permanent with "Start your engines!", and increased from
+    there by CR 702.179d's inherent triggered ability
+    (`machines/speed.check_speed_increase_on_life_loss`). Read through
+    `machines/speed.effective_speed`/`has_max_speed`, never directly, so
+    CR 702.179f's "0 for the purpose of an effect that refers to speed" is
+    never forgotten at a call site."""
+
+    speed_increased_on_turn: int | None = None
+    """Which turn (`TurnMachine.turns_taken`) CR 702.179d's inherent
+    triggered ability last increased this player's speed - the "this ability
+    triggers only once each turn" cap, compared against the current turn
+    rather than reset at any turn boundary, the same convention `life_lost_
+    tally_turn` above already uses for a per-turn count with no turn-start
+    hook of its own. `None` for a player whose speed has never increased
+    this way."""
+
     game: Any = Field(default=None, exclude=True, repr=False)
     """The game this player is in, set by `Game.model_post_init`.
 

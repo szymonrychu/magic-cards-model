@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "37d4ab2a-a06a-4768-b5e1-e1def957d7f4",
+  "oracle_id": "d8cfa20a-343e-4661-9f5a-a8265f6917a8",
+  "multiverse_ids": [
+    693602
+  ],
+  "mtgo_id": 139197,
+  "arena_id": 95642,
+  "tcgplayer_id": 625252,
+  "cardmarket_id": 819384,
+  "name": "Stadium Headliner",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/37d4ab2a-a06a-4768-b5e1-e1def957d7f4",
+  "scryfall_uri": "https://scryfall.com/card/tdm/122/stadium-headliner?utm_source=api",
+  "layout": "normal",
+  "highres_image": false,
+  "image_status": "lowres",
+  "image_updated_at": "2026-07-13T01:49:12Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.jpg?1783907352",
+    "normal": "https://cards.scryfall.io/normal/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.jpg?1783907352",
+    "large": "https://cards.scryfall.io/large/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.jpg?1783907352",
+    "png": "https://cards.scryfall.io/png/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.png?1783907352",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.jpg?1783907352",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.jpg?1783907352",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.webp?1783907352",
+    "grid": "https://cards.scryfall.io/grid/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.webp?1783907352",
+    "display": "https://cards.scryfall.io/display/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.webp?1783907352",
+    "art": "https://cards.scryfall.io/art/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.webp?1783907352",
+    "crop": "https://cards.scryfall.io/crop/front/3/7/37d4ab2a-a06a-4768-b5e1-e1def957d7f4.webp?1783907352"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Goblin Warrior",
+  "oracle_text": "Mobilize 1 (Whenever this creature attacks, create a tapped and attacking 1/1 red Warrior creature token. Sacrifice it at the beginning of the next end step.)\n{1}{R}, Sacrifice this creature: It deals damage equal to the number of creatures you control to target creature.",
+  "power": "1",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Mobilize"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7edc0515-a130-45a7-aa09-0e23bba41587",
+      "component": "token",
+      "name": "Warrior",
+      "type_line": "Token Creature \u2014 Warrior",
+      "uri": "https://api.scryfall.com/cards/7edc0515-a130-45a7-aa09-0e23bba41587"
+    },
+    {
+      "object": "related_card",
+      "id": "ef7a1ddf-bf52-4d44-92cd-8d8127472bd9",
+      "component": "combo_piece",
+      "name": "Stadium Headliner",
+      "type_line": "Creature \u2014 Goblin Warrior",
+      "uri": "https://api.scryfall.com/cards/ef7a1ddf-bf52-4d44-92cd-8d8127472bd9"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set": "tdm",
+  "set_name": "Tarkir: Dragonstorm",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/37d4ab2a-a06a-4768-b5e1-e1def957d7f4/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad8cfa20a-343e-4661-9f5a-a8265f6917a8&unique=prints",
+  "collector_number": "122",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "mardu",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Ralph Horsley",
+  "artist_ids": [
+    "a51444a8-eb4b-4615-a663-d1d418591ccb"
+  ],
+  "illustration_id": "3e2184e1-1334-44cb-a3d7-1a96a17d208e",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 4988,
+  "penny_rank": 215,
+  "preview": {
+    "source": "BIG MAGIC",
+    "source_uri": "https://www.youtube.com/watch?v=Td9mdw9XjTg",
+    "previewed_at": "2025-03-27"
+  },
+  "prices": {
+    "usd": "0.74",
+    "usd_foil": "0.88",
+    "usd_etched": null,
+    "eur": "0.71",
+    "eur_foil": "0.71",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693602&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DStadium%2BHeadliner",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DStadium%2BHeadliner",
+    "edhrec": "https://edhrec.com/route/?cc=Stadium+Headliner"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F625252%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=819384&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/139197?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

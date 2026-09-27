@@ -17,6 +17,7 @@ from ..data.creature_types import creature_types
 from ..data.subtypes import canonical_subtype
 from ..ids import install_id_allocator, new_id, reset_id_allocator
 from ..machines import combat as combat_rules
+from ..machines import enlist
 from ..machines.abilities import (
     AbilityKind,
     ActivatedAbility,
@@ -214,6 +215,7 @@ from ..machines.keywords import (
 )
 from ..machines.layers import (
     BASIC_LAND_TYPES,
+    CANT_ACTIVATE_ABILITIES_TEXT,
     DOESNT_UNTAP_TEXT,
     LEGEND_RULE_EXEMPT_TEXT,
     SPELLS_HAVE_SPLIT_SECOND_TEXT,
@@ -266,6 +268,7 @@ from ..machines.replacement import (
     replace_mana_production,
 )
 from ..machines.special_actions import why_cannot_turn_face_up_as
+from ..machines.speed import apply_start_your_engines, check_speed_increase_on_life_loss
 from ..machines.spell_grants import granted_hand_keyword_lines
 from ..machines.targeting import (
     RetargetScope,
@@ -4134,7 +4137,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 95
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 96
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -7439,10 +7442,16 @@ class Game(EngineModel):
                     )
                 )
 
-        if spell.id in self.turn_ended_exiled_ids or spell.zone is Zone.EXILE:
+        if spell.id in self.turn_ended_exiled_ids or spell.zone in (Zone.EXILE, Zone.LIBRARY):
             # (Also a spell whose own text exiled it as it resolved - Burning
             # Wish's "Exile Burning Wish." (CR 201.5): CR 608.2n's final
-            # graveyard step finds no spell left on its way there.)
+            # graveyard step finds no spell left on its way there. Serene
+            # Remembrance's own "Shuffle Serene Remembrance and up to three
+            # target cards from a single graveyard into their owners'
+            # libraries." is the identical shape one zone over - `machines/
+            # effects._parse_shuffle_self_and_targets_into_owners_libraries_
+            # clause` has already shuffled it into its owner's library by the
+            # time this runs.)
             # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
             # let it finish resolving anyway ("If an instant spell, sorcery
             # spell, or ability that can legally resolve leaves the stack once
@@ -10245,6 +10254,13 @@ class Game(EngineModel):
             self.became_tapped_count_this_turn[event.subject_id] = (
                 self.became_tapped_count_this_turn.get(event.subject_id, 0) + 1
             )
+        if event.event is TriggerEvent.LOSES_LIFE and event.player is not None:
+            # CR 702.179d's own inherent triggered ability: "Whenever one or
+            # more opponents lose life during your turn ... your speed
+            # increases by 1." Every `LOSES_LIFE` this engine ever emits
+            # passes through here, the same "every emitter, one write site"
+            # shape `became_tapped_count_this_turn` just above already uses.
+            check_speed_increase_on_life_loss(self, event.player)
         if (
             event.event
             in (
@@ -18379,6 +18395,8 @@ class Game(EngineModel):
         # game checks state-based actions is a point it looks, so a permanent
         # that gained or lost daybound some other way is caught here too.
         apply_daybound_nightbound(self)
+        # CR 702.179a says outright that this one *is* a state-based action.
+        apply_start_your_engines(self)
         # CR 603.2c: what the resolution or payment before this check did is
         # one batch, and each round of state-based actions below is another.
         self.announce_batched_events()
@@ -19247,6 +19265,8 @@ class Game(EngineModel):
         creature: CardState,
         defender: "Targetable | str",
         attack_cost_sources: "Sequence[CardState] | None" = None,
+        *,
+        enlisting: CardState | None = None,
     ) -> Attack:
         """Declare one attacker (CR 508.1). Taps it unless it has vigilance.
 
@@ -19269,8 +19289,16 @@ class Game(EngineModel):
             refusal = combat_rules.attack_refusal(self, creature, self.attack_target(defender))
             if refusal is not None:
                 raise ValueError(refusal)
+            if enlisting is not None:
+                enlist_refusal = enlist.enlist_refusal(self, creature, enlisting, set())
+                if enlist_refusal is not None:
+                    raise ValueError(enlist_refusal)
             self._pay_attack_costs([(creature, defender)], attack_cost_sources)
             attack = combat_rules.declare_attacker(self, creature, self.attack_target(defender))
+            if enlisting is not None:
+                # CR 508.1g's optional cost, chosen alongside this one
+                # attacker's own declaration.
+                enlist.apply_enlist(self, creature, enlisting)
             self._emit_attacks(creature, attack)
         return attack
 
@@ -19439,6 +19467,8 @@ class Game(EngineModel):
         self,
         attacks: list[tuple[CardState, "Targetable | str"]],
         attack_cost_sources: "Sequence[CardState] | None" = None,
+        *,
+        enlist_choices: "dict[UUID, CardState] | None" = None,
     ) -> None:
         """Declare a whole attack at once, in order (CR 508.1, 508.2b).
 
@@ -19449,6 +19479,11 @@ class Game(EngineModel):
         `attacking_alone`/`attacking_player_alone` (CR 506.5/506.6) are read
         off the finished declaration for every attacker, not a partial one -
         see `_emit_attacks`'s own docstring.
+
+        `enlist_choices` is CR 508.1g's own optional cost (CR 702.154a-c): a
+        map from an attacking creature's id to the creature it enlists,
+        keyed the same way `attack_cost_sources` names *which* mana sources
+        pay CR 508.1h's cost rather than leaving that to be solved for.
         """
         self._refuse_if_over()
         with self._id_allocator_scope():
@@ -19470,6 +19505,19 @@ class Game(EngineModel):
                 refusal = combat_rules.attack_refusal(self, creature, self.attack_target(defender))
                 if refusal is not None:
                     raise ValueError(refusal)
+            attacking_ids = {creature.id for creature, _defender in attacks}
+            if enlist_choices:
+                by_id = {creature.id: creature for creature, _defender in attacks}
+                for creature_id, enlisted in enlist_choices.items():
+                    attacker = by_id.get(creature_id)
+                    if attacker is None:
+                        raise ValueError(
+                            f"{creature_id} is not one of the creatures being declared "
+                            "as an attacker (CR 508.1g)"
+                        )
+                    enlist_refusal = enlist.enlist_refusal(self, attacker, enlisted, attacking_ids)
+                    if enlist_refusal is not None:
+                        raise ValueError(enlist_refusal)
             # CR 508.1h-j: the whole declaration's cost to attack, paid in
             # full before anyone becomes an attacking creature (CR 508.1k).
             self._pay_attack_costs(attacks, attack_cost_sources)
@@ -19480,6 +19528,11 @@ class Game(EngineModel):
                 )
                 for creature, defender in attacks
             ]
+            if enlist_choices:
+                for creature, _attack in registered:
+                    enlisted = enlist_choices.get(creature.id)
+                    if enlisted is not None:
+                        enlist.apply_enlist(self, creature, enlisted)
             for creature, attack in registered:
                 self._emit_attacks(creature, attack)
                 # A per-turn historical fact, not `machines.combat.Combat`'s
@@ -21987,6 +22040,35 @@ class Game(EngineModel):
         prohibited = self._activation_prohibition(permanent, ability)
         if prohibited is not None:
             return prohibited
+
+        if self.characteristics_of(permanent).has_ability(CANT_ACTIVATE_ABILITIES_TEXT):
+            # A one-shot resolved effect's lock (Braided Net's own "Tap
+            # another target nonland permanent. Its activated abilities
+            # can't be activated for as long as it remains tapped."),
+            # granted in layer 6 - distinct from `_activation_prohibition`'s
+            # printed-static-text scan above, which this permanent's own
+            # card may say nothing about at all (CR 602.5, CR 611.1).
+            return (
+                f"{permanent.name}'s activated abilities can't be activated: a resolved "
+                "effect locked them (CR 602.5, CR 611.1)"
+            )
+
+        if ability.ability_word is not None and ability.ability_word.lower() == "max speed":
+            # CR 702.178a: "'Max speed — [Ability]' means 'As long as your
+            # speed is 4, this object has "[Ability]."'" Perilous Snare's
+            # own Max speed ability, gated on the *activator's* speed
+            # (CR 109.5's "you" in a static ability is the controller of the
+            # object it's on) rather than a layer-6 ability grant/removal -
+            # functionally the same result CR 613.1f's version would give,
+            # since an object that does not have an ability cannot have it
+            # activated (CR 602.5).
+            from ..machines.speed import has_max_speed
+
+            if not has_max_speed(self.player(controller)):
+                return (
+                    f"{permanent.name}'s Max speed ability can't be activated: "
+                    f"{controller}'s speed is not 4 (CR 702.178a)"
+                )
 
         if ability.loyalty is not None:
             # CR 602.5 / CR 606.3: a resolved "Your opponents can't ...

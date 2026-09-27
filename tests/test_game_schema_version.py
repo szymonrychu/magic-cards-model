@@ -1553,3 +1553,29 @@ def test_a_snapshot_written_before_ecl_t8_zone_resets_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `models/player.Player` gained `speed` and
+#: `speed_increased_on_turn` (CR 702.179a-f: Speed, and Perilous Snare's
+#: "Start your engines!") - R0a T8.
+_SCHEMA_VERSION_BEFORE_SPEED = 95
+
+
+def test_a_snapshot_written_before_speed_is_refused() -> None:
+    """A version-95 dump's own players have no `speed` field at all: decoded
+    as current, `Player.speed` would default to `None` regardless of
+    whatever speed the player actually had, and `speed_increased_on_turn`
+    likewise - a mid-game snapshot would silently lose whether "Start your
+    engines!" had already fired for that player. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_SPEED
+    dumped = _a_played_game().model_dump(mode="json")
+    for player in dumped["players"]:
+        assert player["speed"] is None
+        assert player["speed_increased_on_turn"] is None
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_SPEED
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_SPEED}",
+    ):
+        Game.model_validate(dumped)

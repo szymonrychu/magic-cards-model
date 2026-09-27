@@ -2670,7 +2670,7 @@ _CONTROL_CLAUSE = re.compile(
 )
 _ZONE_CLAUSE = re.compile(
     r"\b(?:from|in)\s+"
-    r"(?:(?P<whose>your|their|an? opponent'?s?|that player'?s|a|an|any)\s+)?"
+    r"(?:(?P<whose>your|their|an? opponent'?s?|that player'?s|a single|any single|a|an|any)\s+)?"
     r"(?P<zone>graveyards|graveyard|hands|hand|libraries|library|exile)\b",
     re.IGNORECASE,
 )
