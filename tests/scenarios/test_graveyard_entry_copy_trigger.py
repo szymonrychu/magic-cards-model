@@ -31,6 +31,7 @@ chosen, and tapped.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import PlayedScenario, Scenario
 
@@ -284,6 +285,32 @@ def test_kambal_copies_each_token_an_opponent_creates_tapped_once_a_turn():
     _resolve_all(scenario)
 
     assert len(_tokens(scenario, "alice")) == 3
+
+
+def test_a_reanimated_copy_is_copied_as_what_it_copies():
+    """CR 707.2: the token takes the copiable values "as modified by other
+    copy effects" - Phantasmal Image returned from the graveyard as a copy
+    of Grizzly Bears (an Illusion in addition, CR 707.9b) is copied as that
+    Illusion Bears, not as a printed Phantasmal Image."""
+    scenario = _diviner(graveyard=("Phantasmal Image",), battlefield=["Grizzly Bears"])
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_cards(bears, username="alice", source="Phantasmal Image")
+
+    _unearth(scenario, "Phantasmal Image")
+
+    tokens = _tokens(scenario)
+    assert len(tokens) == 1
+    chars = _chars(scenario, tokens[0])
+    assert chars.name == "Grizzly Bears"
+    assert (chars.power, chars.toughness) == (2, 2)
+    assert "Illusion" in chars.subtypes
+    # The token enters as the Illusion Bears; it never gets Phantasmal
+    # Image's own "enter as a copy" choice, which only the printed card has.
+    assert [
+        question.kind
+        for question in scenario.questions_asked()
+        if question.source == "Phantasmal Image" and question.kind is DecisionKind.CHOOSE_CARDS
+    ] == [DecisionKind.CHOOSE_CARDS]
 
 
 @pytest.mark.parametrize("name", [DIVINER, KAMBAL])

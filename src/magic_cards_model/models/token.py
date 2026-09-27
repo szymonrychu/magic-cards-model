@@ -712,10 +712,10 @@ def create_tokens(
         # so the definition actually built from has to be read back off the
         # event rather than the original parameter. Mirrormind Crown's "that
         # many tokens that are copies of equipped creature" replaces it with a
-        # copy instead: the original's printed card is its copiable values
-        # (CR 707.2).
+        # copy instead, of the equipped creature's copiable values (CR 707.2,
+        # `copiable_card_of`).
         card = (
-            creation.copy_of.card
+            copiable_card_of(game, creation.copy_of)
             if creation.copy_of is not None
             else (creation.definition or definition).to_card()
         )
@@ -836,6 +836,77 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     body = "\n".join([*([printed.oracle_text] if printed.oracle_text else []), *lines])
     new_card_id = uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{printed.id}:{body}")
     return printed.model_copy(update={"id": new_card_id, "oracle_text": body})
+
+
+def copiable_card_of(game: "Game", original: CardState) -> Card:
+    """`original`'s copiable values as one `Card` (CR 707.2).
+
+    CR 707.2: the copiable values are "the values derived from the text
+    printed on the object ... as modified by other copy effects". A permanent
+    no copy effect touches answers with its own `Card` unchanged, so a plain
+    copy pays nothing for this. One that layer 1 has made a copy of something
+    else (Clone, Omni-Changeling, Mirrorform) answers with a `Card` built from
+    `machines/layers.copiable_characteristics` - name, mana value, type line,
+    colour, ability lines and P/T as the copy effects left them, the CR 707.9
+    exceptions of those effects included - so a token copy of it enters as
+    what it copies and never gets the printed card's own "enter as a copy"
+    choice. Off the battlefield the engine keeps no copy effect on the
+    object, so the printed card is the answer.
+
+    **Not modelled**: the mana cost itself - `BecomeACopy` carries only the
+    mana value, so the synthesized card keeps that (`cmc`) and no cost.
+    """
+    if original.zone is not Zone.BATTLEFIELD:
+        return original.card
+    from ..machines.layers import copiable_characteristics, printed_characteristics
+
+    printed = printed_characteristics(original, {})
+    copied = copiable_characteristics(original, game.continuous_effects.active(game))
+    fields = (
+        "name",
+        "mana_value",
+        "supertypes",
+        "types",
+        "subtypes",
+        "colors",
+        "abilities",
+        "power",
+        "toughness",
+    )
+    if all(getattr(printed, field) == getattr(copied, field) for field in fields):
+        return original.card
+    left = " ".join(
+        [*(supertype.value.title() for supertype in copied.supertypes)]
+        + [kind.value.title() for kind in copied.types]
+    )
+    type_line = f"{left} \u2014 {' '.join(copied.subtypes)}" if copied.subtypes else left
+    oracle_text = "\n".join(copied.abilities)
+    body = "|".join(
+        [
+            copied.name,
+            str(copied.mana_value),
+            type_line,
+            "".join(color.value for color in copied.colors),
+            oracle_text,
+            f"{copied.power}/{copied.toughness}",
+        ]
+    )
+    return original.card.model_copy(
+        update={
+            "id": uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:copiable:{body}"),
+            "name": copied.name,
+            "cmc": copied.mana_value,
+            "mana_cost": None,
+            "type_line": type_line,
+            "oracle_text": oracle_text or None,
+            "colors": list(copied.colors),
+            "keywords": [],
+            "power": None if copied.power is None else str(copied.power),
+            "toughness": None if copied.toughness is None else str(copied.toughness),
+            "layout": Layout.NORMAL,
+            "card_faces": None,
+        }
+    )
 
 
 def _type_line_without_legendary(type_line: str) -> str:
@@ -1010,7 +1081,9 @@ def token_copy_of(
             not_legendary = False
             colors = creature_types = None
 
-        copiable = copiable_card_with_added_abilities(original.card, added_abilities)
+        copiable = copiable_card_with_added_abilities(
+            copiable_card_of(game, original), added_abilities
+        )
         if (
             power is not None
             or toughness is not None

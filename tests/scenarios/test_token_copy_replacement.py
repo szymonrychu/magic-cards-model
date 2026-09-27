@@ -30,6 +30,7 @@ enchanted permanent." (an Aura, no "as long as" gate, "enchanted permanent").
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario, mana_from
@@ -220,6 +221,79 @@ def test_equipping_with_the_equip_ability_works_too():
     _procession(scenario)
 
     assert {_chars(scenario, t).name for t in _tokens(scenario)} == {"Grizzly Bears"}
+
+
+def _copy_holder(copier: str, *, holder: str = CROWN, lands=("Island",) * 5, hand=()):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=[copier, PROCESSION, *hand],
+            battlefield=[holder, *lands, "Plains", "Plains", "Plains"],
+            library=["Plains"] * 5,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Plains"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.will_choose_cards(bears, username="alice", source=copier)
+    copy = scenario.cast_and_resolve(copier, *scenario.untapped_sources(*["Island"] * 5))
+    return scenario, copy
+
+
+def _copy_choices(scenario: Scenario, source: str) -> int:
+    return sum(
+        1
+        for question in scenario.questions_asked()
+        if question.source == source and question.kind is DecisionKind.CHOOSE_CARDS
+    )
+
+
+def test_equipped_to_a_copy_the_tokens_copy_what_it_copies():
+    """CR 707.2: the copiable values are "as modified by other copy effects".
+    The card's own ruling: equipped to a creature copying something else,
+    the tokens copy what that creature copies. Omni-Changeling copying
+    Grizzly Bears "except it has changeling" makes 2/2 changeling Bears,
+    never 0/0 Omni-Changelings that die."""
+    scenario, omni = _copy_holder("Omni-Changeling")
+    scenario.find(CROWN, Zone.BATTLEFIELD, "alice").attach_to(omni)
+
+    _procession(scenario)
+    scenario.state_based_actions()
+
+    tokens = _tokens(scenario)
+    assert len(tokens) == 3
+    for token in tokens:
+        chars = _chars(scenario, token)
+        assert chars.name == "Grizzly Bears"
+        assert (chars.power, chars.toughness) == (2, 2)
+        assert "Changeling" in chars.abilities
+        assert "Goblin" in chars.subtypes
+    # The tokens enter as Bears; they never get Omni-Changeling's own
+    # "enter as a copy" choice, which only the printed card has.
+    assert _copy_choices(scenario, "Omni-Changeling") == 1
+
+
+def test_moonlit_meditation_on_a_clone_copies_what_the_clone_copies():
+    """The same CR 707.2 reading on the second printing, through Clone."""
+    scenario, clone = _copy_holder(
+        "Clone", holder="Island", lands=("Island",) * 7, hand=(MEDITATION,)
+    )
+    scenario.cast_and_resolve(
+        MEDITATION, *scenario.untapped_sources("Island", "Island", "Island"), targets=[clone]
+    )
+    scenario.will_take_the_may(True, source=MEDITATION)
+
+    scenario.cast_and_resolve(PROCESSION, *scenario.untapped_sources("Plains", "Plains", "Plains"))
+
+    tokens = _tokens(scenario)
+    assert len(tokens) == 3
+    assert {(_chars(scenario, t).name, _chars(scenario, t).power) for t in tokens} == {
+        ("Grizzly Bears", 2)
+    }
+    assert _copy_choices(scenario, "Clone") == 1
 
 
 # --------------------------------------------------------------------------
