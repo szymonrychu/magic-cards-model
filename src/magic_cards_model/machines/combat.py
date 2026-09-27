@@ -1375,16 +1375,21 @@ _CANT_BE_BLOCKED_BY_POWER_OR_GREATER_RE = re.compile(
 )
 
 #: Fugitive Droid: "This creature can't be blocked if an artifact entered
-#: the battlefield under your control this turn." - CR 509.1b's restriction
-#: with an arbitrary printed condition rather than a power comparison of its
-#: own. The condition itself is read the same generic way every other
-#: condition-gated reader in the pool already asks `Game.condition_holds` -
-#: `machines/conditions/history._counted_entered` already claims "an
-#: artifact entered the battlefield under your control this turn" for an
-#: intervening "if"/"as long as"/modal condition, so this is not a new
-#: condition reader, only a new *place* that hands a tail to the existing one.
+#: the battlefield under your control this turn."; Tanglewalker's own group
+#: grant, once read onto a creature by `layers._group_evasion_grant_builder`:
+#: "This creature can't be blocked as long as defending player controls an
+#: artifact land." - CR 509.1b's restriction with an arbitrary printed
+#: condition rather than a power comparison of its own, "if" and "as long as"
+#: accepted the same way `_CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE` already
+#: takes both for its own power comparison. The condition itself is read the
+#: same generic way every other condition-gated reader in the pool already
+#: asks `Game.condition_holds` - `machines/conditions/history._counted_entered`
+#: already claims "an artifact entered the battlefield under your control
+#: this turn" for an intervening "if"/"as long as"/modal condition, so this is
+#: not a new condition reader, only a new *place* that hands a tail to the
+#: existing one.
 _CANT_BE_BLOCKED_IF_CONDITION_RE = re.compile(
-    r"can't be blocked if (?P<condition>.+?)\.?$", re.IGNORECASE
+    r"can't be blocked (?:if|as long as) (?P<condition>.+?)\.?$", re.IGNORECASE
 )
 
 #: "can't be blocked by creatures with greater power" - a comparison against
