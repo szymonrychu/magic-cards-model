@@ -686,6 +686,7 @@ def create_tokens(
             definition=definition,
         )
         apply_replacements(game, creation)
+        _note_token_creation(game, controller)
         count = creation.amount
         # CR 111.2 makes the creator the owner; a replacement may still move
         # who controls them (Crafty Cutpurse's "is created under your control
@@ -709,8 +710,15 @@ def create_tokens(
         # the event itself (CR 614.6: the modified event is what happens)
         # rather than appending to `extra` the way an additive effect does,
         # so the definition actually built from has to be read back off the
-        # event rather than the original parameter.
-        card = (creation.definition or definition).to_card()
+        # event rather than the original parameter. Mirrormind Crown's "that
+        # many tokens that are copies of equipped creature" replaces it with a
+        # copy instead: the original's printed card is its copiable values
+        # (CR 707.2).
+        card = (
+            creation.copy_of.card
+            if creation.copy_of is not None
+            else (creation.definition or definition).to_card()
+        )
         created: list[TokenState] = []
         for _ in range(count):
             token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=owner)
@@ -763,6 +771,18 @@ def create_predefined_tokens(
     if definition is None:
         raise ValueError(f"{name} is not a predefined token this engine knows (CR 111.10)")
     return create_tokens(game, definition, controller, count, **options)
+
+
+#: The per-turn count (`Game.note_turn_count`) of CR 701.7b token-creation
+#: events each player has had, noted once their replacement effects are done -
+#: what "the first time you would create one or more tokens each turn"
+#: (Mirrormind Crown, `machines/replacement._compile_first_time_token_copies`)
+#: asks about.
+TOKEN_CREATION_FACT = "token creation"
+
+
+def _note_token_creation(game: "Game", creator: str) -> None:
+    game.note_turn_count(TOKEN_CREATION_FACT, creator)
 
 
 def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> Card:
@@ -961,10 +981,20 @@ def token_copy_of(
             card=original,
         )
         apply_replacements(game, creation)
+        _note_token_creation(game, controller)
         count = creation.amount
         owner = controller  # CR 111.2 - see `create_tokens`
         controller = creation.creating_controller or controller
         extra_definitions = list(creation.extra)
+        if creation.copy_of is not None and creation.copy_of is not original:
+            # Mirrormind Crown replaced *what* the tokens copy (CR 614.1a): plain
+            # copies of the new original, none of this call's own exceptions.
+            original = creation.copy_of
+            added_abilities = ()
+            power = toughness = None
+            added_creature_type = None
+            not_legendary = False
+            colors = creature_types = None
 
         copiable = copiable_card_with_added_abilities(original.card, added_abilities)
         if (
