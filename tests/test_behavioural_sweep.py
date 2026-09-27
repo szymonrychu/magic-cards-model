@@ -2920,6 +2920,15 @@ def _turns(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         def fought() -> tuple[PlayedScenario, Any]:
             scenario, source_id = _home(case, ability, step=Step.PRECOMBAT_MAIN, busy=False)
             game = scenario.game
+            source = game.find_by_id(source_id)
+            if (
+                source is not None
+                and source.zone is Zone.BATTLEFIELD
+                and crew_number(source.card) is not None
+            ):
+                # "if this Vehicle attacked or blocked this combat" (Daredevil
+                # Dragster): a Vehicle attacks only once crewed (CR 702.122a).
+                _crew(scenario, source)
             scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
             game.sync_priority_with_step()
             attackers = [
