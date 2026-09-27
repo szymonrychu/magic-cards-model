@@ -36,6 +36,7 @@ from uuid import uuid4
 from pydantic import ConfigDict
 
 from magic_cards_model import __version__
+from magic_cards_model.data.creature_types import creature_types
 from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import keywords as keyword_machine
 from magic_cards_model.machines.abilities import (
@@ -74,6 +75,7 @@ from magic_cards_model.machines.casting_restrictions import (
     _CONDITIONAL_CANT_BE_COUNTERED_RE,
     reads_player_rule_static_line,
 )
+from magic_cards_model.machines.chosen_type import RESTRICTED_TRIBAL_TYPES
 from magic_cards_model.machines.combat import (
     Keyword,
     is_attack_cost_line,
@@ -198,7 +200,7 @@ from magic_cards_model.models.card import (
     Type,
     types_of,
 )
-from magic_cards_model.models.card_state import Counters, TargetRef
+from magic_cards_model.models.card_state import Choice, ChoiceKind, Counters, TargetRef
 from magic_cards_model.models.game import (
     condition_is_readable,
     conditional_additional_land_plays_of_line,
@@ -2281,6 +2283,49 @@ def _cards_by_subtype() -> dict[str, tuple[Card, ...]]:
     return {subtype: tuple(cards) for subtype, cards in index.items()}
 
 
+#: "Whenever a permanent you control of the chosen type enters, ..." (Dawn-
+#: Blessed Pennant) - CR 614.12a's own recorded choice (`ChoiceKind.
+#: CREATURE_TYPE`) read back as an entry condition's subject, never a
+#: literal capitalised subtype word, so `_ENTERING_SUBTYPE`
+#: (`machines/triggers.py`) never matches it and `_probe_cards` found no real
+#: permanent to test the condition against at all.
+_CONDITION_CHOSEN_TYPE_RE = re.compile(r"of the chosen type\b", re.IGNORECASE)
+
+#: The same enumerated-list shape `chosen_type.matches_restricted_creature_
+#: type_choice` reads off a single replacement clause, searched instead of
+#: fullmatched so it can be asked of a printing's whole, multi-line oracle
+#: text.
+_RESTRICTED_TRIBAL_CHOICE_TEXT_RE = re.compile(
+    r"choose elemental, elf, faerie, giant, goblin, kithkin, merfolk, or treefolk",
+    re.IGNORECASE,
+)
+
+
+def _chosen_type_domain(printing: Card) -> tuple[str, ...]:
+    """Which creature types `printing`'s own CR 614.12a "as [this] enters,
+    choose ..." replacement effect can pick from: the restricted eight
+    (`RESTRICTED_TRIBAL_TYPES`) when its oracle text prints that exact
+    enumerated list (Dawn-Blessed Pennant, Eclipsed Realms), every CR 205.3m
+    type (`creature_types()`) otherwise - used only to find a real pool
+    permanent of *some* legal answer to test a same-card "of the chosen
+    type" condition against, never to decide what the card itself may
+    choose in a real game (that stays `machines/replacement.py`'s job)."""
+    if _RESTRICTED_TRIBAL_CHOICE_TEXT_RE.search(printing.oracle_text or "") is not None:
+        return RESTRICTED_TRIBAL_TYPES
+    return tuple(creature_types())
+
+
+def _chosen_type_probe(printing: Card) -> str | None:
+    """A creature type from `printing`'s own chosen-type domain that the
+    fixture pool actually has real permanents of (`_cards_by_subtype`), or
+    `None` when nothing in the pool carries any of them - the sweep abstains
+    rather than invent a permanent to make the condition pass."""
+    for creature_type in _chosen_type_domain(printing):
+        if _cards_by_subtype().get(creature_type):
+            return creature_type
+    return None
+
+
 @cache
 def _cards_by_type() -> dict[Type, tuple[Card, ...]]:
     """The same idea as `_cards_by_subtype`, keyed by card type."""
@@ -2495,6 +2540,23 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     probes = _probe_cards(printing, ability.condition, entering=entering)
     if probes is None:
         return None
+    chosen_type: str | None = None
+    if entering and _CONDITION_CHOSEN_TYPE_RE.search(ability.condition) is not None:
+        # "a permanent you control of the chosen type enters" (Dawn-Blessed
+        # Pennant, CR 614.12a's choice read back, `machines/triggers.py`'s
+        # own `"of the chosen type" in lowered` filter) - no literal subtype
+        # word for `_probe_cards` to have found, so it answered `[printing]`
+        # alone, and `printing` itself (an Artifact) never carries any
+        # creature subtype. A real permanent of some type this printing's
+        # own choice could legally name is added here instead, and the
+        # source's own `CardState.choice` is set to match it below - the
+        # one way a card genuinely reaches this trigger in a real game.
+        chosen_type = _chosen_type_probe(printing)
+        if chosen_type is None:
+            # No pool permanent carries any type this printing could choose
+            # - abstain rather than guess at reachability.
+            return None
+        probes = [*probes, *_cards_by_subtype()[chosen_type]]
     token_requirement = _intended_token_requirement(ability.condition)
     token_choices = [token_requirement] if token_requirement is not None else [False, True]
     tapped_choices = _entering_tapped_choices(ability.condition) if entering else [False]
@@ -2526,6 +2588,14 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
         )
         for tapped in tapped_choices
     ]
+    if chosen_type is not None:
+        # CR 614.12a: the choice is recorded on the object that asked for
+        # it, before it enters - this printing's own "as [this] enters,
+        # choose ..." replacement effect (`machines/replacement.py`) is what
+        # would set this in a real game; mirrored here so the synthetic
+        # source reads back the same "the chosen type" its own trigger asks.
+        for source in source_variants:
+            source.choice = Choice(kind=ChoiceKind.CREATURE_TYPE, value=chosen_type)
     for source in source_variants:
         source.bind_to_game(game)
         game.battlefield.append(source)

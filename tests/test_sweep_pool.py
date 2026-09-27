@@ -669,6 +669,25 @@ def test_blade_of_the_bloodchief_no_longer_reports_an_unmatchable_condition():
     assert classify_card(card("Blade of the Bloodchief"))[0] != UNMATCHABLE_CONDITION
 
 
+def test_dawn_blessed_pennant_chosen_type_entry_trigger_is_reachable():
+    """Dawn-Blessed Pennant's own "Whenever a permanent you control of the
+    chosen type enters, you gain 1 life." names CR 614.12a's own choice
+    (`ChoiceKind.CREATURE_TYPE`) back rather than a literal, capitalised
+    subtype word - the shape `_ENTERING_SUBTYPE` (`machines/triggers.py`)
+    reads for a plain "a Mountain you control enters" never matches "of the
+    chosen type", so `_probe_cards` found no real permanent to test the
+    condition against and no synthetic source ever had `CardState.choice`
+    set to compare it with - the trigger read as `UNMATCHABLE_CONDITION`
+    even though a real Elemental/Elf/Faerie/Giant/Goblin/Kithkin/Merfolk/
+    Treefolk entering after the chosen-type replacement effect resolves
+    fires it every game.
+    """
+    by_source = {c.source: c.category for c in classify_clauses(card("Dawn-Blessed Pennant"))}
+    assert by_source["triggered"] != UNMATCHABLE_CONDITION
+    assert by_source["triggered"] == HANDLED
+    assert classify_card(card("Dawn-Blessed Pennant"))[0] == HANDLED
+
+
 def test_miirym_reports_handled_now_its_copy_effect_is_read():
     """Miirym's *condition* fires correctly since the nontoken fix, and its
     "create a token that's a copy of it, except the token isn't legendary"
