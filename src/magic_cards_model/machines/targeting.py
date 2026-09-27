@@ -2421,7 +2421,7 @@ _CONTROL_CLAUSE = re.compile(
 )
 _ZONE_CLAUSE = re.compile(
     r"\b(?:from|in)\s+"
-    r"(?:(?P<whose>your|their|an? opponent'?s?|a|an|any)\s+)?"
+    r"(?:(?P<whose>your|their|an? opponent'?s?|that player'?s|a|an|any)\s+)?"
     r"(?P<zone>graveyards|graveyard|hands|hand|libraries|library|exile)\b",
     re.IGNORECASE,
 )
@@ -4162,6 +4162,18 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 # distinction, read the same way `_CONDITION_CONTROLS_N`'s
                 # own "an opponent controls" already is.
                 controller = ControllerRestriction.OPPONENT
+            elif whose is not None and whose.lower().startswith("that player"):
+                # "from that player's graveyard" (Shark Shredder, Killer
+                # Clone's own combat-damage trigger) - CR 400.7/108.4a's owner
+                # fallback for a card with no controller reads the same
+                # `controller_or_owner` this restriction already tests, so
+                # the only new thing needed is binding "that player" itself,
+                # the identical `ControllerRestriction.EVENT_PLAYER`
+                # "... that player controls" already uses for a permanent -
+                # see `TargetingProfile.for_event_player` and
+                # `models.game._that_player_of`, extended alongside this to
+                # recognise the phrase in a zone clause too.
+                controller = ControllerRestriction.EVENT_PLAYER
             # "... other than a basic land card" (Surgical Extraction) - a
             # compound-noun exclusion on the bare "target card" itself, past
             # the zone clause. Read here rather than by `_Adjectives`, which
