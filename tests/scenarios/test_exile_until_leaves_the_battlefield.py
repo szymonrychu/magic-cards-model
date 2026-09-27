@@ -212,3 +212,147 @@ def test_a_duration_this_wave_still_cannot_reverse_stays_fail_closed():
     assert _EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE.fullmatch(hypothetical) is None
     assert _parse_exile_until_leaves_battlefield_clause(hypothetical, for_spell=False) is None
     assert _parse_targeted_clause(hypothetical, for_spell=False) is None
+
+
+# -- R0a-T5: the mass form, "exile all <group> until this <type> leaves the
+# battlefield" (CR 610.3), and the linked "put each card exiled with this
+# <type> into its owner's graveyard" (CR 607.1) ------------------------------
+#
+# Pinnacle Starcage: "When this artifact enters, exile all artifacts and
+# creatures with mana value 2 or less until this artifact leaves the
+# battlefield." and "{6}{W}{W}: Put each card exiled with this artifact into
+# its owner's graveyard, then create a 2/2 colorless Robot artifact creature
+# token for each card put into a graveyard this way. Sacrifice this
+# artifact." Aligned Hedron Network (a power comparison) and Consulate
+# Crackdown (a controller qualifier, an enchantment) are the second and third
+# printings, both Modern/Pioneer legal and in no deck.
+
+
+def _starcage_board(extra_plains: int = 0):
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Pinnacle Starcage"],
+            battlefield=["Plains"] * (3 + extra_plains) + ["Memnite"],
+            library=["Plains"] * 5,
+        )
+        .player(
+            "bob",
+            battlefield=["Grizzly Bears", "Ornithopter", "Colossal Dreadmaw"],
+            library=["Plains"] * 5,
+        )
+    )
+
+
+def _cast_starcage(scenario):
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    starcage = scenario.cast_and_resolve(
+        "Pinnacle Starcage", *scenario.untapped_sources("Plains", "Plains", "Plains")
+    )
+    scenario.pass_until_resolved()  # the enters trigger
+    return starcage
+
+
+def test_starcage_exiles_every_small_artifact_and_creature_on_both_sides():
+    scenario = _starcage_board().build()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    memnite = scenario.creature("Memnite", "alice")
+    thopter = scenario.creature("Ornithopter", "bob")
+
+    starcage = _cast_starcage(scenario)
+
+    assert bears.zone is Zone.EXILE
+    assert memnite.zone is Zone.EXILE  # "all" - its controller's own too
+    assert thopter.zone is Zone.EXILE
+    assert dreadmaw.zone is Zone.BATTLEFIELD  # mana value 6
+    assert starcage.zone is Zone.BATTLEFIELD  # mana value 3, and not itself small
+
+
+def test_they_return_when_the_starcage_leaves():
+    scenario = _starcage_board().build()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    memnite = scenario.creature("Memnite", "alice")
+    starcage = _cast_starcage(scenario)
+
+    scenario.game.destroy(starcage)
+    for _ in range(3):  # one return per exiled card: Bears, Ornithopter, Memnite
+        scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(bears).username == "bob"  # CR 610.3c
+    assert memnite.zone is Zone.BATTLEFIELD
+
+
+def test_the_activated_ability_puts_them_in_graveyards_and_makes_robots():
+    scenario = _starcage_board(extra_plains=8).build()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    memnite = scenario.creature("Memnite", "alice")
+    starcage = _cast_starcage(scenario)
+
+    scenario.activate(starcage, *scenario.untapped_sources(*["Plains"] * 8))
+    scenario.pass_until_resolved()
+    scenario.pass_until_resolved()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert bears in scenario.player("bob").graveyard
+    assert memnite in scenario.player("alice").graveyard
+    assert starcage.zone is Zone.GRAVEYARD  # "Sacrifice this artifact."
+    robots = [p for p in scenario.game.battlefield if "Robot" in p.name]
+    assert len(robots) == 3  # Bears, Ornithopter, Memnite
+    assert all(scenario.game.controller_of(robot).username == "alice" for robot in robots)
+    # Nothing comes back: the cards left exile before the Starcage left.
+    assert bears.zone is Zone.GRAVEYARD
+
+
+def test_aligned_hedron_network_exiles_by_power():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Aligned Hedron Network"], battlefield=["Plains"] * 4)
+        .player("bob", battlefield=["Colossal Dreadmaw", "Grizzly Bears"])
+        .build()
+    )
+    dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    network = scenario.cast_and_resolve(
+        "Aligned Hedron Network", *scenario.untapped_sources(*["Plains"] * 4)
+    )
+    scenario.pass_until_resolved()
+
+    assert dreadmaw.zone is Zone.EXILE
+    assert bears.zone is Zone.BATTLEFIELD
+
+    scenario.game.return_to_hand(network)
+    scenario.pass_until_resolved()
+    assert dreadmaw.zone is Zone.BATTLEFIELD
+
+
+def test_consulate_crackdown_exiles_only_opponents_artifacts():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Consulate Crackdown"], battlefield=["Plains"] * 5 + ["Memnite"])
+        .player("bob", battlefield=["Ornithopter", "Grizzly Bears"])
+        .build()
+    )
+    memnite = scenario.creature("Memnite", "alice")
+    thopter = scenario.creature("Ornithopter", "bob")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Consulate Crackdown", *scenario.untapped_sources(*["Plains"] * 5))
+    scenario.pass_until_resolved()
+
+    assert thopter.zone is Zone.EXILE
+    assert memnite.zone is Zone.BATTLEFIELD
+    assert bears.zone is Zone.BATTLEFIELD
+
+
+def test_the_mass_exile_cards_are_credited():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    for name in ("Pinnacle Starcage", "Aligned Hedron Network", "Consulate Crackdown"):
+        support = str(card_support(card(name)))
+        assert "'silent'" not in support, name
+        assert "'notice'" not in support, name
