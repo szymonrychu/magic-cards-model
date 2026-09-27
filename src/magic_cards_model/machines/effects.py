@@ -1344,7 +1344,8 @@ _COLOR_NAME: dict[Color, str] = {
 #: all (Caretaker's Talent's own "one or more tokens" is an *entry*
 #: condition, not a count expression).
 _COUNT_YOU_CONTROL_RE = re.compile(
-    r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped) )?(?:(?P<nontoken>nontoken) )?"
+    r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped|attacking) )?"
+    r"(?:(?P<nontoken>nontoken) )?"
     r"(?P<qualifier>[a-z]+) (?P<whose>you control|your opponents control)$",
     re.IGNORECASE,
 )
@@ -1592,8 +1593,18 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # CR 110.5: status (tapped/untapped) is a permanent's physical state,
         # not a characteristic the computed board's layers touch, so it is
         # read straight off `CardState.tapped` rather than through `board.of`.
+        # CR 508.1k: "attacking" (Kinscaer Sentry's own "the number of
+        # attacking creatures you control") is combat state, read the
+        # identical way off `Game.combat.attacker_ids` rather than tapped
+        # status - a creature can be attacking and untapped at once (a
+        # vigilance attacker), so this is never folded into the tapped check.
         status = match.group("status")
-        wants_tapped = None if status is None else status.lower() == "tapped"
+        wants_tapped = (
+            None
+            if status is None or status.lower() == "attacking"
+            else (status.lower() == "tapped")
+        )
+        wants_attacking = status is not None and status.lower() == "attacking"
         # "your opponents control" (Smaug, Wicked Worm's own "the number of
         # artifacts your opponents control") is the identical count, over the
         # complement of the controller's own permanents rather than their
@@ -1626,6 +1637,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                     if _belongs_to_group(board.of(permanent).controller, controller)
                     and any(word.lower() == subtype for word in board.of(permanent).subtypes)
                     and (wants_tapped is None or permanent.tapped == wants_tapped)
+                    and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                     and (not wants_nontoken or not is_token(permanent))
                 )
 
@@ -1639,6 +1651,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                 if _belongs_to_group(board.of(permanent).controller, controller)
                 and card_type in board.of(permanent).types
                 and (wants_tapped is None or permanent.tapped == wants_tapped)
+                and (not wants_attacking or permanent.id in game.combat.attacker_ids)
                 and (not wants_nontoken or not is_token(permanent))
             )
 
@@ -14694,6 +14707,46 @@ _UNTAP_ALL_GROUP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "When this creature enters, untap each other Merfolk you control." (Deepway
+#: Navigator) - the subtype-filtered twin of `_UNTAP_ALL_GROUP_RE`'s own
+#: closed card-type list, generalised over any CR 205.3 creature type
+#: `canonical_subtype` recognises rather than a hand-picked word. "Each" and
+#: "other" are printed together on every proof this wave found - the source
+#: is the entering Merfolk itself, so "other" is what keeps it from untapping
+#: its own tapped-on-entry self.
+_UNTAP_EACH_OTHER_SUBTYPE_RE = re.compile(
+    r"^untap each (?P<other>other )?(?P<subtype>[A-Z][a-zA-Z-]*) you control\.?$"
+)
+
+
+def _parse_untap_each_subtype_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_UNTAP_EACH_OTHER_SUBTYPE_RE`'s shape - see the banner above."""
+    match = _UNTAP_EACH_OTHER_SUBTYPE_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    subtype = canonical_subtype(match.group("subtype"))
+    if subtype is None:
+        return None
+    excludes_source = match.group("other") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object).username
+        board = game.computed_board()
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        source_id = source.id if source is not None else None
+        for permanent in list(game.battlefield):
+            if excludes_source and permanent.id == source_id:
+                continue
+            if board.of(permanent).controller != controller:
+                continue
+            if not any(word.lower() == subtype for word in board.of(permanent).subtypes):
+                continue
+            permanent.untap()
+
+    return effect
+
 
 def _parse_untap_all_group_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """`_UNTAP_ALL_GROUP_RE`'s shape; see the banner above."""
@@ -26269,6 +26322,83 @@ def _parse_self_pump_for_each_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Whenever a creature you control attacks alone, it gets +X/+X until end
+#: of turn, where X is the number of Kithkin you control." (Thoughtweft
+#: Imbuer, CR 506.5) - the dynamic-X twin of `_SELF_ATTACK_PUMP_FOR_EACH_RE`
+#: just above: that reader's own fixed-per-unit "for each" phrasing and this
+#: one's "+X/+X, where X is ..." are the same magnitude spelled two different
+#: ways, but the *subject* differs. `_attack_trigger_pump_subject` resolves
+#: "it" to the *ability's own source* (CR 700.7's plain self-reference,
+#: right for "Whenever this creature attacks, it gets ..."); Thoughtweft
+#: Imbuer's own trigger condition never names itself at all - "a creature you
+#: control attacks alone" fires off *any* attacker, so "it" is CR 603.2's
+#: anaphora onto the triggering event's own subject, which is `_referent_of_
+#: it`'s job, not that helper's.
+#:
+#: Power and toughness are each read independently as either "x" or a literal
+#: number, so Akroan Hoplite's own "it gets +X/+0 until end of turn, where X
+#: is the number of attacking creatures you control" (off-set proof: a
+#: literal "+0" toughness alongside the dynamic power, and `count_expression`'s
+#: own widened "attacking creatures you control" status read) is the same
+#: shape as Thoughtweft Imbuer's "+X/+X", just with one side pinned.
+_IT_GETS_DYNAMIC_X_PUMP_RE = re.compile(
+    r"^it gets (?P<power_sign>[+-])(?P<power>x|\d+)/(?P<toughness_sign>[+-])(?P<toughness>x|\d+) "
+    r"(?P<duration>until end of turn|until your next turn), where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_it_dynamic_x_pump_clause(text: str) -> AbilityEffect | None:
+    """`_IT_GETS_DYNAMIC_X_PUMP_RE`'s shape; see the banner above."""
+    match = _IT_GETS_DYNAMIC_X_PUMP_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    power_is_x = match.group("power").lower() == "x"
+    toughness_is_x = match.group("toughness").lower() == "x"
+    if not power_is_x and not toughness_is_x:
+        # Neither side is dynamic at all - not this reader's shape, whatever
+        # else it might be.
+        return None
+    counted = count_expression(match.group("expr"))
+    if counted is None:
+        return None
+    power_sign = -1 if match.group("power_sign") == "-" else 1
+    toughness_sign = -1 if match.group("toughness_sign") == "-" else 1
+    fixed_power = None if power_is_x else int(match.group("power"))
+    fixed_toughness = None if toughness_is_x else int(match.group("toughness"))
+    until_next_turn = match.group("duration").strip().lower() == "until your next turn"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        referent = _referent_of_it(game, ability)
+        if referent is None:
+            return
+        controller = game.controller_of(ability).username
+        count = counted(game, controller)
+        power = power_sign * count if fixed_power is None else power_sign * fixed_power
+        toughness = (
+            toughness_sign * count if fixed_toughness is None else toughness_sign * fixed_toughness
+        )
+        store = continuous_effects(game)
+        duration = Duration.UNTIL_YOUR_NEXT_TURN if until_next_turn else Duration.UNTIL_END_OF_TURN
+        store.add(
+            ContinuousEffect(
+                description=(
+                    f"{ability.source_name}: {referent.name} gets {power:+d}/{toughness:+d}"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=duration,
+                until_next_turn_of=(controller if until_next_turn else None),
+                source_id=ability.source_id,
+                selector=only_this_incarnation(referent, referent.zone_change_stamp),
+                modification=modify_power_toughness(power, toughness),
+            )
+        )
+
+    return effect
+
+
 #: "Target creature you control that's attacking alone gets `<P>`/`<T>`
 #: until end of turn. You gain `<N>` life." - Crowd of True Believers' own
 #: `{T}:` ability. `machines/targeting.py`'s own `TargetRequirement.must_be_
@@ -26879,6 +27009,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if target_attacking_alone_pump_gain_life is not None:
         return target_attacking_alone_pump_gain_life
+    it_dynamic_x_pump = _parse_it_dynamic_x_pump_clause(effect_text)
+    if it_dynamic_x_pump is not None:
+        return it_dynamic_x_pump
     self_gains_quoted_ability_until_eot = _parse_self_gains_quoted_ability_until_eot_clause(
         effect_text
     )
@@ -27045,6 +27178,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     may_tap_untapped_if_you_do = _parse_may_tap_untapped_if_you_do_clause(effect_text)
     if may_tap_untapped_if_you_do is not None:
         return may_tap_untapped_if_you_do
+    tap_another_untapped_when_you_do = _parse_tap_another_untapped_subtype_when_you_do_clause(
+        effect_text
+    )
+    if tap_another_untapped_when_you_do is not None:
+        return tap_another_untapped_when_you_do
     reflexive_sacrifice_or_discard = _parse_reflexive_sacrifice_or_discard_clause(effect_text)
     if reflexive_sacrifice_or_discard is not None:
         return reflexive_sacrifice_or_discard
@@ -27175,6 +27313,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_from_hand_attacking = _parse_put_creature_from_hand_attacking_then_return(effect_text)
     if put_from_hand_attacking is not None:
         return put_from_hand_attacking
+    put_mv_x_from_hand_attacking = _parse_put_creature_mv_x_from_hand_attacking(effect_text)
+    if put_mv_x_from_hand_attacking is not None:
+        return put_mv_x_from_hand_attacking
     exchange_life = _parse_exchange_life_totals_then_draw(effect_text)
     if exchange_life is not None:
         return exchange_life
@@ -37008,6 +37149,102 @@ def _parse_reflexive_may_discard_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Whenever this creature attacks, you may tap another untapped Merfolk you
+#: control. When you do, return target creature card with mana value 3 or
+#: less from your graveyard to the battlefield." (Meanders Guide) - CR
+#: 603.12's reflexive shape again, with a *chosen* permanent as the optional
+#: action rather than a self-referential counter removal or a hand discard:
+#: which untapped creature of the printed subtype to tap is itself a choice
+#: (CR 601.2c has no bearing here - tapping a permanent as a cost or action
+#: is never a target), asked the same `DecisionKind.CHOOSE_CARDS` way every
+#: other "choose one of several permanents" reader in this file already is.
+_TAP_ANOTHER_UNTAPPED_SUBTYPE_WHEN_YOU_DO_RE = re.compile(
+    r"^(?P<may>you may )?tap another untapped (?P<subtype>[A-Z][a-zA-Z-]*) you control\.\s*"
+    r"when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_tap_another_untapped_subtype_when_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_TAP_ANOTHER_UNTAPPED_SUBTYPE_WHEN_YOU_DO_RE`'s shape; see the banner
+    above. A shape neither this reads nor `reflexive_consequence_effect`
+    reads fails closed at parse time, the same guard every reflexive reader
+    in this file already applies (a reflexive trigger that then resolves to
+    nothing would be silence with extra steps)."""
+    match = _TAP_ANOTHER_UNTAPPED_SUBTYPE_WHEN_YOU_DO_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    subtype = canonical_subtype(match.group("subtype"))
+    if subtype is None:
+        return None
+    consequence_text = match.group("consequence").strip()
+    consequence_text = consequence_text[:1].upper() + consequence_text[1:]
+    if not consequence_text.endswith("."):
+        consequence_text += "."
+    if reflexive_consequence_effect(consequence_text) is None:
+        return None
+    optional = match.group("may") is not None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(ability)
+        source_name = ability.source_name
+        board = game.computed_board()
+        candidates = [
+            permanent
+            for permanent in game.battlefield
+            if permanent.id != source.id
+            and not permanent.tapped
+            and board.of(permanent).controller == controller.username
+            and any(word.lower() == subtype for word in board.of(permanent).subtypes)
+        ]
+        if not candidates:
+            return
+        if optional:
+            decision = Decision(
+                kind=DecisionKind.MAY,
+                player=controller.username,
+                prompt=f"tap another untapped {subtype} you control",
+                source=source_name,
+                affirmative_is_legal=True,
+                source_id=source_id_of(ability),
+            )
+            if not game.ask(decision):
+                return
+        chosen = candidates[0]
+        if len(candidates) > 1:
+            pick = Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"choose an untapped {subtype} you control to tap",
+                source=source_name,
+                amount=1,
+                cards=tuple(permanent.id for permanent in candidates),
+                source_id=source_id_of(ability),
+            )
+            chosen_ids = game.ask(pick)
+            by_id = {permanent.id: permanent for permanent in candidates}
+            if chosen_ids:
+                chosen = by_id[chosen_ids[0]]
+        chosen.tap()
+        # CR 603.12: created only after the action actually happened, not
+        # before it, and not offered its own target until it reaches the
+        # stack (`Game.put_triggers_on_stack`).
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=controller.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # "Exile target card from a graveyard. When a creature card is exiled this
 # way, <consequence>." (CR 603.12) - Agatha's Soul Cauldron's `{T}` ability.
@@ -39601,6 +39838,57 @@ def _parse_self_fights_target_clause(clause: str, *, for_spell: bool) -> Targete
     return effect
 
 
+#: "Enchanted creature fights up to one target creature an opponent
+#: controls." (Pitiless Fists, CR 701.14a) - `_SELF_FIGHTS_TARGET_RE`'s
+#: Aura-attachment twin: CR 303.4b's "enchanted" names whatever the Aura
+#: (`source.attached_to`) is attached to, never the Aura itself (which is
+#: never a creature able to fight in the first place, CR 701.14b).
+_ENCHANTED_CREATURE_FIGHTS_TARGET_RE = re.compile(
+    r"^enchanted creature fights "
+    r"(?P<phrase>(?:up to \S+ )?(?:other )?target .+|another target .+)$",
+    re.IGNORECASE,
+)
+
+
+def _parse_enchanted_creature_fights_target_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_ENCHANTED_CREATURE_FIGHTS_TARGET_RE`'s shape; see the banner above."""
+    if for_spell:
+        return None
+    match = _ENCHANTED_CREATURE_FIGHTS_TARGET_RE.fullmatch(clause.strip().rstrip(".").strip())
+    if match is None:
+        return None
+    phrase = match.group("phrase").strip()
+    if not _targets_understood(phrase, count_agnostic=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source = (
+            stack_object if isinstance(stack_object, CardState) else stack_object.source(game)  # type: ignore[union-attr]
+        )
+        if source is None or source.attached_to is None:
+            return
+        enchanted = game.find_by_id(source.attached_to)
+        if enchanted is None or enchanted.zone is not Zone.BATTLEFIELD:
+            return
+        targets = [
+            target
+            for target in game.resolve_targets(stack_object)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return  # CR 115.6: "up to one" chose none.
+        opponent = targets[0]
+        if not game.characteristics_of(enchanted).is_creature:
+            return  # CR 701.14b
+        if not game.characteristics_of(opponent).is_creature:
+            return  # CR 701.14b
+        _fight(game, enchanted, opponent)
+
+    return effect
+
+
 _TARGET_FIGHTS_TARGET_RE = re.compile(
     r"^(?P<first>(?:another )?target .+?) fights (?P<second>(?:up to \S+ )?target .+)$",
     re.IGNORECASE,
@@ -41214,6 +41502,84 @@ def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEff
         )
         if trigger is not None:
             game.create_delayed_trigger(trigger)
+
+    return effect
+
+
+#: Kinscaer Sentry's attack trigger: "you may put a creature card with mana
+#: value X or less from your hand onto the battlefield tapped and attacking,
+#: where X is the number of attacking creatures you control." - the dynamic-X
+#: mana-value-capped twin of `_PUT_CREATURE_FROM_HAND_ATTACKING_RE` just
+#: above: the same CR 508.4 placement-into-combat primitive
+#: (`models.token._put_onto_the_battlefield_attacking`), gated on a mana
+#: value ceiling this reader alone needs, X fixed once (CR 608.2c: an
+#: instruction's own count is determined as it is performed, not re-read
+#: mid-resolution even though putting the chosen creature onto the
+#: battlefield changes how many creatures are attacking) via `count_
+#: expression`'s own "the number of attacking creatures you control" reader.
+_PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE = re.compile(
+    r"^you may put an? (?P<group>[a-z]+) card with mana value x or less from your hand onto "
+    r"the battlefield tapped and attacking, where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_creature_mv_x_from_hand_attacking(text: str) -> AbilityEffect | None:
+    """`_PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE`'s shape; see the banner
+    above."""
+    match = _PUT_CREATURE_MV_X_FROM_HAND_ATTACKING_RE.fullmatch(
+        " ".join(_strip_non_effect_preamble(text).split())
+    )
+    if match is None:
+        return None
+    matches_group = _parse_card_group_qualifier(match.group("group"))
+    if matches_group is None:
+        return None
+    counted = count_expression(match.group("expr"))
+    if counted is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..models.token import _put_onto_the_battlefield_attacking
+
+        controller = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        limit = counted(game, controller.username)
+        candidates = [
+            state for state in controller.hand if matches_group(state) and state.mana_value <= limit
+        ]
+        if not candidates:
+            return
+        if not game.may(
+            controller,
+            "put a creature card from your hand onto the battlefield tapped and attacking",
+            source=source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_CARDS,
+            player=controller.username,
+            prompt=(
+                f"choose a creature card with mana value {limit} or less to put onto the "
+                "battlefield attacking"
+            ),
+            source=source_name,
+            amount=1,
+            cards=tuple(state.id for state in reversed(candidates)),
+            source_id=source_id_of(ability),
+        )
+        chosen_ids = game.ask(decision)
+        if not chosen_ids:
+            return
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id[chosen_ids[0]]
+        permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
+        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+            return
+        defender = _defender_of_controllers_attack(game, controller.username)
+        if defender is not None:
+            _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
 
     return effect
 
@@ -54282,6 +54648,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     self_fights_target = _parse_self_fights_target_clause(clause, for_spell=for_spell)
     if self_fights_target is not None:
         return self_fights_target
+    enchanted_fights_target = _parse_enchanted_creature_fights_target_clause(
+        clause, for_spell=for_spell
+    )
+    if enchanted_fights_target is not None:
+        return enchanted_fights_target
     target_fights_target = _parse_target_fights_target_clause(clause, for_spell=for_spell)
     if target_fights_target is not None:
         return target_fights_target
@@ -54307,6 +54678,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     untap_all_group = _parse_untap_all_group_clause(clause, for_spell=for_spell)
     if untap_all_group is not None:
         return untap_all_group
+    untap_each_subtype = _parse_untap_each_subtype_clause(clause, for_spell=for_spell)
+    if untap_each_subtype is not None:
+        return untap_each_subtype
     goad = _parse_goad_clause(clause, for_spell=for_spell)
     if goad is not None:
         return goad

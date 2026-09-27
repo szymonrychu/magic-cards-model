@@ -11622,6 +11622,13 @@ class Game(EngineModel):
                 # turn that stays true once it has left again.
                 for fact in entered_type_facts(event.subject_types, event.subject_subtypes):
                     self.record_turn_fact(fact, card_state.controller)
+                    # The counting twin - Kinbinding's own "Creatures you
+                    # control get +X/+X, where X is the number of creatures
+                    # that entered the battlefield under your control this
+                    # turn." and Bristlebane Outrider's "another creature
+                    # entered ... this turn" both ask "how many"/"which one",
+                    # not the plain "did you" `turn_facts` answers.
+                    self.note_turn_count(fact, card_state.controller)
             origin = self._entry_origins.pop(card_state.id, None)
             if origin is not None:
                 event = event.model_copy(update={"origin_zone": origin})
@@ -18257,6 +18264,24 @@ class Game(EngineModel):
             # CR 508.1k: "Attacking tokens you control have flying" reads who
             # is attacking, which is combat state, not a characteristic.
             attacking=frozenset(self.combat.attacker_ids),
+            # CR 110.5: "Other tapped creatures you control have
+            # indestructible." (Adept Watershaper) reads tapped status,
+            # which is a permanent's physical state, not a characteristic.
+            tapped_ids=frozenset(
+                permanent.id for permanent in self.battlefield if permanent.tapped
+            ),
+            # `Game.turn_counts`, carried the same way `turn_facts` already
+            # is - Kinbinding's own "the number of creatures that entered the
+            # battlefield under your control this turn."
+            turn_counts={fact: dict(players) for fact, players in self.turn_counts.items()},
+            # Bristlebane Outrider's own "another creature entered ... this
+            # turn" - see `LayerContext.entered_this_turn_ids`'s own docstring
+            # for why this needs the object identity, not just the count.
+            entered_this_turn_ids=frozenset(
+                permanent.id
+                for permanent in self.battlefield
+                if self.turn is not None and permanent.turn_entered == self.turn.turn_number
+            ),
         )
         # The effects a board is built from are rebuilt on every computation and
         # discarded with it, so they must not draw on `_allocate_id`: how often a
@@ -19211,6 +19236,12 @@ class Game(EngineModel):
                 chars = self.characteristics_of(creature)
                 for fact in attacked_with_type_facts(chars.types, chars.subtypes):
                     self.record_turn_fact(fact, self.active_player.username)
+                    # The counting twin of the fact just above - Deepway
+                    # Navigator's own "As long as you attacked with three or
+                    # more Merfolk this turn, Merfolk you control get
+                    # +1/+0.", which asks "how many", not "did you"
+                    # (`turn_facts`' own docstring).
+                    self.note_turn_count(fact, self.active_player.username)
             if attacks:
                 # CR 508.1: declaring attackers is how a player attacks -
                 # "you attacked this turn" (Kaito Shizuki) asks this.

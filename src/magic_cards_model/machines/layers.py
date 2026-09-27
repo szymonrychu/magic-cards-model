@@ -736,12 +736,42 @@ class CountCountersOnIt(CountBase):
         return chars.counters.get(self.counter, 0)
 
 
+class CountControlledAndGraveyardCards(CountBase):
+    """ "the number of `<X>` you control and each `<X>` card in your
+    graveyard" - Moon-Vigil Adherents' own double count. A live board scan
+    (this `Count`'s own `__call__`, re-read every CR 613.5 computation) added
+    to a graveyard snapshot taken once as the effect was built: the
+    graveyard is not part of the layer engine's `board` any more than it is
+    for `_self_pump_per_graveyard_card_builder`'s single-sided sibling, whose
+    own docstring already explains why that half has to be baked in rather
+    than looked up here. Exactly one of `card_type`/`subtype` is set."""
+
+    kind: Literal["controlled_and_graveyard_cards"] = "controlled_and_graveyard_cards"
+    username: str | None = None
+    card_type: Type | None = None
+    subtype: str | None = None
+    graveyard_count: int = 0
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        board_count = sum(
+            1
+            for other in board.values()
+            if other.controller == self.username
+            and (self.card_type is None or self.card_type in other.types)
+            and (
+                self.subtype is None or any(word.lower() == self.subtype for word in other.subtypes)
+            )
+        )
+        return board_count + self.graveyard_count
+
+
 #: How many of something an effect counts, judged against one object and the
 #: board as it stands in that sublayer (CR 613.5).
 Count = Annotated[
     FixedCount
     | CountPermanentsControlledByItsController
     | CountCountersOnIt
+    | CountControlledAndGraveyardCards
     | CountOtherCreaturesLikeThatOne
     | CountOtherCreaturesNamed
     | CountOtherCreaturesWithKeyword
@@ -1204,6 +1234,39 @@ class CreaturesControlledByWhereToughnessExceedsPower(SelectorBase):
         )
 
 
+class EquippedCreatureIfToughnessExceedsPower(SelectorBase):
+    """ "As long as equipped creature's toughness is greater than its power,
+    it assigns combat damage equal to its toughness rather than its power."
+    (Bark of Doran) - the Equipment's own singular twin of `CreaturesControlled
+    ByWhereToughnessExceedsPower` just above: CR 301.5a's "equipped creature"
+    is whichever one permanent this specific Equipment (`equipment_id`) is
+    attached to right now, read straight off the *board*'s own `attached_to`
+    link rather than a controller-wide scan, so an Equipment that is
+    unattached, or a creature whose toughness stops exceeding its power,
+    drops out of the grant on the very next CR 613.5 computation exactly the
+    way that sibling already does. `machines/combat.py`'s `_assignment_power_
+    of` needs no change either: both selectors grant the identical ability
+    text, and that function already reads it off the computed board.
+    """
+
+    kind: Literal["equipped_creature_if_toughness_exceeds_power"] = (
+        "equipped_creature_if_toughness_exceeds_power"
+    )
+    equipment_id: UUID
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        equipment = board.get(self.equipment_id)
+        if equipment is None or equipment.attached_to is None:
+            return False
+        if chars.card_id != equipment.attached_to:
+            return False
+        return (
+            chars.power is not None
+            and chars.toughness is not None
+            and chars.toughness > chars.power
+        )
+
+
 class CreaturesControlledByWherePowerOrToughnessAtMost(SelectorBase):
     """ "Creatures you control with power or toughness 1 or less can't be
     blocked." (Tetsuko Umezawa, Fugitive) - the group grant's own condition,
@@ -1426,6 +1489,35 @@ class AttackingGroupControlledBy(SelectorBase):
         return any(subtype.lower() in wanted for subtype in chars.subtypes)
 
 
+class TappedCreaturesControlledBy(SelectorBase):
+    """ "Other tapped creatures you control have indestructible." (Adept
+    Watershaper, `machines/attacking_statics.py`) - CR 110.5's tapped/
+    untapped status is a permanent's physical state, not a characteristic the
+    layer engine's `Characteristics` carries (the same reasoning `count_
+    expression`'s own `_COUNT_YOU_CONTROL_RE` status filter already gives),
+    so - exactly like `AttackingGroupControlledBy`'s own attacking-status
+    snapshot - the tapped ids are read off `LayerContext.tapped_ids` when the
+    effect is built, and the builder is rebuilt on every CR 613.5 computation:
+    a creature stops being selected the instant it untaps.
+
+    `excludes_self` is Adept Watershaper's own "other": the source itself,
+    even if it is also tapped, is left out of its own grant.
+    """
+
+    kind: Literal["tapped_creatures_controlled_by"] = "tapped_creatures_controlled_by"
+    username: str | None = None
+    tapped_ids: tuple[UUID, ...] = ()
+    excludes_self: bool = False
+    source_id: UUID | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not (chars.is_creature and chars.controller == self.username):
+            return False
+        if chars.card_id not in self.tapped_ids:
+            return False
+        return not (self.excludes_self and chars.card_id == self.source_id)
+
+
 class WithChangeling(SelectorBase):
     """Every object that has changeling as layer 4 finds it (CR 702.73a).
 
@@ -1466,6 +1558,7 @@ Selector = Annotated[
     | SelfIfControlsAnyOf
     | SelfIfControlsCounted
     | CreaturesControlledByWhereToughnessExceedsPower
+    | EquippedCreatureIfToughnessExceedsPower
     | CreaturesControlledByWherePowerOrToughnessAtMost
     | SelfIfPowerNegative
     | AllPermanentsControlledBy
@@ -1477,6 +1570,7 @@ Selector = Annotated[
     | PermanentsControlledByWithCounters
     | AttackingTokensControlledBy
     | AttackingGroupControlledBy
+    | TappedCreaturesControlledBy
     | WithChangeling,
     Field(discriminator="kind"),
 ]
@@ -3727,6 +3821,37 @@ _PUMP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "target [attacking/blocking] `<Subtype>` [you control|an opponent controls]
+#: gets +N/+N [and gains `<keywords>`] until end of turn." / "another target
+#: `<Subtype>` ... gets ..." - old Lorwyn-block templating drops the bare
+#: "creature" noun `_SUBJECT_NOUN` requires when a printed creature type (CR
+#: 205.3m) already says it: Boggart Prankster's "Whenever you attack, target
+#: attacking Goblin you control gets +1/+0 until end of turn." and Vinebred
+#: Brawler's "Whenever this creature attacks, another target Elf you control
+#: gets +2/+1 until end of turn." Tributary Vaulter's "Whenever this creature
+#: becomes tapped, another target Merfolk you control gets +2/+0 until end of
+#: turn." and Safewright Cavalry's activated "{5}: Target Elf you control gets
+#: +2/+2 until end of turn." are the identical shape off a different trigger/
+#: activation. A sibling of `_PUMP_RE` rather than a widening of `_SUBJECT`
+#: itself: `_SUBJECT` is interpolated into over a dozen other regexes in this
+#: module, and widening its shared `_SUBJECT_NOUN` risks a different sentence
+#: shape coincidentally matching a noun it was never printed with; this
+#: pattern instead validates its captured word against `canonical_subtype`
+#: before `_parse_layer_sentence` accepts it (case-sensitive: Oracle text only
+#: ever capitalises a creature type), and never touches `_SUBJECT` at all.
+#: Legality of the subtype/combat-state/controller restriction is entirely
+#: `machines/targeting.py`'s own business, checked when the ability announces
+#: its target (CR 601.2c/602.2b) - this reader only has to recognise the
+#: resolution-time shape well enough to hand the already-legal target to the
+#: same `_pump_and_keyword_builder` "target creature" already uses.
+_SUBTYPE_TARGET_PUMP_RE = re.compile(
+    r"^(?:(?i:another) )?(?i:target) (?:(?i:attacking|blocking) )?"
+    r"(?P<subtype>[A-Z][a-zA-Z-]*)(?: (?:you control|an opponent controls))? (?i:gets?) "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: (?i:and gains?) (?P<keywords>[a-z][a-z ,]*?))? "
+    r"(?i:(?P<duration>until end of turn|until your next turn))\.?$"
+)
+
 #: "[Subject] gets +N/+N and gains [<keyword>[, <keyword>],[ and]] "<ability>"
 #: until end of turn." - Tower Above's "Until end of turn, target creature gets
 #: +4/+4 and gains trample, wither, and "When this creature attacks, target
@@ -3853,6 +3978,120 @@ _SELF_PUMP_PER_GRAVEYARD_CARD_BATCH_RE = re.compile(
     r"for every (?P<batch>[a-z]+) cards? in your graveyard\.?$",
     re.IGNORECASE,
 )
+
+#: "This creature gets +1/+1 for each creature you control and each creature
+#: card in your graveyard." (Moon-Vigil Adherents) - the double-count sibling
+#: of `_SELF_PUMP_PER_GRAVEYARD_CARD_RE`: a board count (CR 613.5, live) and a
+#: graveyard count (CR 601.2c... no - a plain zone read), added together. The
+#: backreference to the *same* captured qualifier word on both sides is
+#: deliberate: real Oracle text never counts one thing on the battlefield and
+#: a differently-worded thing in the graveyard for a single pump, so a
+#: sentence naming two different qualifiers is correctly left unmatched
+#: rather than guessed at.
+_SELF_PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE = re.compile(
+    r"^this (?:creature|permanent|token) gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for each (?P<qualifier>[a-z]+) you control and each (?P=qualifier) "
+    r"cards? in your graveyard\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_per_controlled_and_graveyard_builder(
+    power: int, toughness: int, qualifier: str, *, line: str
+) -> EffectBuilder | None:
+    """`_SELF_PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE`'s shape - see its own
+    banner. `None` when `qualifier` names neither a CR 205.2a card type nor a
+    CR 205.3 subtype `subtype_vocabulary` knows, so the caller fails closed
+    rather than building a `Count` that would select nothing."""
+    card_type = _card_type_word(qualifier)
+    subtype = None if card_type is not None else _singular_subtype_word(qualifier)
+    if card_type is None and subtype is None:
+        return None
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        graveyard_count = sum(
+            1
+            for state in context.graveyard_of(source.controller)
+            if (
+                card_type in state.types
+                if card_type is not None
+                else any(word.lower() == subtype for word in state.subtypes)
+            )
+        )
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {power:+d}/{toughness:+d} for each {qualifier} you "
+                    "control and each in graveyard"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=ModifyPowerToughnessPer(
+                    count=CountControlledAndGraveyardCards(
+                        username=source.controller,
+                        card_type=card_type,
+                        subtype=subtype,
+                        graveyard_count=graveyard_count,
+                    ),
+                    power=power,
+                    toughness=toughness,
+                ),
+            )
+        ]
+
+    return builder
+
+
+#: "Creatures you control get +X/+X, where X is the number of creatures that
+#: entered the battlefield under your control this turn." (Kinbinding) - a
+#: group pump whose magnitude is `LayerContext.turn_count`'s own running
+#: total, fixed at build time (CR 611.3a: recomputed on every CR 613.5
+#: computation, so the bonus tracks the turn's own count rather than
+#: freezing it) the identical way every other turn-count-gated static in this
+#: module already is.
+_CREATURES_ENTERED_THIS_TURN_GROUP_PUMP_RE = re.compile(
+    r"^creatures you control get \+x/\+x, where x is the number of creatures that entered "
+    r"the battlefield under your control this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _creatures_entered_this_turn_group_pump_builder(*, line: str) -> EffectBuilder:
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        count = context.turn_count("entered_type:creature", source.controller)
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: creatures you control get +{count}/+{count} "
+                    "(entered this turn)"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=CreaturesControlledBy(username=source.controller),
+                modification=ModifyPowerToughnessPer(
+                    count=FixedCount(value=count), power=1, toughness=1
+                ),
+            )
+        ]
+
+    return builder
 
 
 #: Master's Councillors: "This creature gets +2/+0 for each graveyard with
@@ -4528,6 +4767,52 @@ def _become_a_copy_builder(
     return builder
 
 
+#: "All creatures have haste." (Mass Hysteria; Lavaleaper) - CR 613.1f's
+#: keyword grant to *every* creature on the battlefield, both players' alike,
+#: not only the controller's own: the one shape in this module's whole anthem
+#: family whose printed subject names no "you control"/"your opponents
+#: control" at all, so it is its own regex rather than another qualifier on
+#: `_QUALIFIED_CREATURE_SUBJECT` (whose `_SUBJECT_QUALIFIERS` are all about
+#: *narrowing* one controller's creatures, never about dropping the
+#: controller clause altogether). `every_creature` (`EveryCreature`) is the
+#: identical no-controller-filter selector `_other_creatures_are_type_
+#: builder` already uses for "Other creatures are `<type>`s" - the same
+#: reading, minus that one's own "other" exclusion, since haste applies to
+#: the source creature that grants it too, if it is one.
+_ALL_CREATURES_KEYWORD_GRANT_RE = re.compile(
+    r"^all creatures (?:have|has) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBuilder:
+    """`_ALL_CREATURES_KEYWORD_GRANT_RE`'s shape - one permanent (CR 611.3,
+    indefinite duration) layer 6 grant per keyword, over every creature on
+    the battlefield."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: all creatures have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=every_creature,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
+
+
 #: `keywords` reads one *or more* keyword names, comma/"and"-joined the same
 #: way `_INDEFINITE_KEYWORD_GRANT_RE`'s own list does (Fateshaper Aspirant's
 #: "It gains vigilance and indestructible until end of turn.") - each is
@@ -4844,6 +5129,16 @@ _LEADING_GRAVEYARD_COUNT_GATED_SELF_STATIC_RE = re.compile(
 _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
     r"^each creature you control with toughness greater than its power assigns combat "
     r"damage equal to its toughness rather than its power\.?$",
+    re.IGNORECASE,
+)
+
+#: "As long as equipped creature's toughness is greater than its power, it
+#: assigns combat damage equal to its toughness rather than its power." (Bark
+#: of Doran) - the Equipment's own singular twin, over `Equipped
+#: CreatureIfToughnessExceedsPower` instead of the whole-team selector above.
+_EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE = re.compile(
+    r"^as long as equipped creature'?s toughness is greater than its power, it assigns "
+    r"combat damage equal to its toughness rather than its power\.?$",
     re.IGNORECASE,
 )
 
@@ -8948,6 +9243,134 @@ _SELF_MONSTROUS_GATED_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "This creature has hexproof as long as it's untapped." (Illusion Spinners)
+#: - CR 110.5's tapped/untapped status, read straight off `CardState.tapped`
+#: the same way `_SELF_MONSTROUS_GATED_RE`'s sibling above reads `source.
+#: monstrous` directly (neither is a characteristic `LayerContext` snapshots
+#: ahead of time): subject-first order, unlike every "as long as `<condition>`,
+#: this creature has ..." shape elsewhere in this module, since that is how
+#: this template is actually printed.
+_SELF_KEYWORD_WHILE_TAP_STATUS_RE = re.compile(
+    r"^this (?:creature|permanent) (?:has|have) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) as long as it'?s "
+    r"(?P<status>untapped|tapped)\.?$",
+    re.IGNORECASE,
+)
+
+#: "As long as you attacked with three or more Merfolk this turn, Merfolk you
+#: control get +1/+0." (Deepway Navigator) - a group pump gated on
+#: `Game.declare_attackers`' own per-turn, per-subtype attack count
+#: (`models.game.attacked_with_type_facts`'s counting twin, `LayerContext.
+#: turn_count`), the identical count-not-just-boolean reasoning `_CONDITION_
+#: ATTACKED_WITH...`-style conditions elsewhere in this codebase already
+#: apply to "did you" facts. The backreference to the same captured subtype
+#: word on both sides is deliberate the same way `_SELF_PUMP_PER_CONTROLLED_
+#: AND_GRAVEYARD_RE`'s is: real Oracle text never gates a group's own pump on
+#: a *different* subtype's attack count.
+_ATTACKED_WITH_N_TYPE_GROUP_PUMP_RE = re.compile(
+    rf"^(?i:as long as you attacked with) (?P<count>{COUNT}) (?i:or more) "
+    r"(?P<subtype>[A-Z][a-z]*) (?i:this turn,) (?P=subtype) (?i:you control get) "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$"
+)
+
+
+def _attacked_with_n_type_group_pump_builder(
+    threshold: int, subtype: str, power: int, toughness: int, *, line: str
+) -> EffectBuilder:
+    fact = f"attacked_with_subtype:{subtype.lower()}"
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if context.turn_count(fact, source.controller) < threshold:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subtype}s you control get {power:+d}/{toughness:+d} "
+                    f"(attacked with {threshold}+ {subtype}s this turn)"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=CreaturesControlledByWithSubtype(
+                    username=source.controller, subtypes=(subtype.lower(),)
+                ),
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
+
+#: "As long as another creature entered the battlefield under your control
+#: this turn, this creature gets +2/+0." (Bristlebane Outrider) - "another"
+#: is CR 611.3a's per-object exclusion: the plain "did a creature enter"
+#: `_TURN_FACT_CONDITION_PHRASES` dict answers is not enough on its own,
+#: because it stays true even on the one turn Bristlebane Outrider itself is
+#: the *only* creature that entered - see `LayerContext.entered_this_turn_
+#: ids`'s own docstring for the exact test this builds.
+_ANOTHER_CREATURE_ENTERED_THIS_TURN_SELF_PUMP_RE = re.compile(
+    r"^as long as another creature entered the battlefield under your control "
+    r"this turn, this (?:creature|permanent) gets "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _self_pump_while_untapped_condition(status: str) -> Callable[[CardState, LayerContext], bool]:
+    wants_tapped = status.lower() == "tapped"
+    return lambda source, _context: source.tapped == wants_tapped
+
+
+def _another_creature_entered_this_turn_holds(source: CardState, context: LayerContext) -> bool:
+    total = context.turn_count("entered_type:creature", source.controller)
+    if total >= 2:
+        return True
+    return total >= 1 and source.id not in context.entered_this_turn_ids
+
+
+def _self_pump_gated_by_context_builder(
+    condition: Callable[[CardState, LayerContext], bool],
+    power: int,
+    toughness: int,
+    *,
+    line: str,
+    description: str,
+) -> EffectBuilder:
+    """The sublayer 7c (CR 613.4c) twin of `_context_gated_self_static_
+    builder`: a self pump gated by something `LayerContext` carries rather
+    than the board itself, rebuilt (and switched off) on every CR 613.5
+    computation the identical way that keyword-only sibling already is."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        if not condition(source, context):
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {power:+d}/{toughness:+d} {description}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modify_power_toughness(power, toughness),
+            )
+        ]
+
+    return builder
+
 
 #: "Ruric Thar has hexproof as long as they haven't dealt combat damage yet."
 #: - the card's own name is already rewritten to "this permanent" by
@@ -11217,6 +11640,36 @@ def _group_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
     return builder
 
 
+def _equipped_assigns_damage_as_toughness_builder(*, line: str) -> EffectBuilder:
+    """Bark of Doran's own singular twin of `_group_assigns_damage_as_
+    toughness_builder`, granted only to whichever one creature this specific
+    Equipment is attached to (CR 301.5a), conditioned live the identical way
+    (`EquippedCreatureIfToughnessExceedsPower`)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: equipped creature with toughness greater than power "
+                    "assigns damage equal to toughness"
+                ),
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=EquippedCreatureIfToughnessExceedsPower(equipment_id=source.id),
+                modification=grant_ability(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT),
+            )
+        ]
+
+    return builder
+
+
 def _group_power_or_toughness_unblockable_builder(threshold: int, *, line: str) -> EffectBuilder:
     """Tetsuko Umezawa, Fugitive: "Creatures you control with power or
     toughness 1 or less can't be blocked." - granted as the self-referential
@@ -11962,6 +12415,19 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     attacking_group = parse_attacking_group_keyword_grant(sentence)
     if attacking_group is not None:
         return attacking_group
+    # `machines/attacking_statics.py`: "Other tapped creatures you control
+    # have `<keywords>`." - the tapped-status twin of the attacking-status
+    # grant just above, imported lazily for the identical reason.
+    from .attacking_statics import parse_tapped_group_keyword_grant
+
+    tapped_group = parse_tapped_group_keyword_grant(sentence)
+    if tapped_group is not None:
+        return tapped_group
+    if match := _ALL_CREATURES_KEYWORD_GRANT_RE.fullmatch(sentence):
+        all_creatures_keywords = _split_and_validate_keywords(match.group("keywords"))
+        if all_creatures_keywords is None:
+            return None
+        return _all_creatures_keyword_grant_builder(all_creatures_keywords, line=sentence)
     if (gated := split_as_long_as(sentence)) is not None:
         return _parse_designation_gated_sentence(sentence, *gated)
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):
@@ -12004,6 +12470,25 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             return _pump_and_keyword_per_target_power_builder(power_sign, toughness_sign, granted)
         power, toughness = int(power_raw), int(toughness_raw)
         return _pump_and_keyword_builder(power, toughness, granted, until_next_turn=until_next_turn)
+    if match := _SUBTYPE_TARGET_PUMP_RE.fullmatch(sentence):
+        if canonical_subtype(match.group("subtype")) is None:
+            # Not a real creature type (CR 205.3m) - a differently-shaped
+            # sentence that merely happens to share this skeleton, left for
+            # whatever reader actually owns it rather than mis-built here.
+            return None
+        subtype_keywords: list[str] = []
+        if match.group("keywords") is not None:
+            subtype_validated = _split_and_validate_keywords(match.group("keywords"))
+            if subtype_validated is None:
+                return None
+            subtype_keywords = subtype_validated
+        subtype_until_next_turn = match.group("duration").strip().lower() == "until your next turn"
+        return _pump_and_keyword_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            subtype_keywords,
+            until_next_turn=subtype_until_next_turn,
+        )
     if match := _PUMP_AND_QUOTED_GRANT_RE.fullmatch(sentence):
         granted_keywords: list[str] = []
         if match.group("keywords") is not None:
@@ -12045,6 +12530,15 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_pump_per_graveyard_card_batch_builder(
             int(match.group("power")), int(match.group("toughness")), batch_size
         )
+    if match := _SELF_PUMP_PER_CONTROLLED_AND_GRAVEYARD_RE.fullmatch(sentence):
+        return _self_pump_per_controlled_and_graveyard_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            match.group("qualifier").lower(),
+            line=sentence,
+        )
+    if _CREATURES_ENTERED_THIS_TURN_GROUP_PUMP_RE.fullmatch(sentence):
+        return _creatures_entered_this_turn_group_pump_builder(line=sentence)
     if match := _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE.fullmatch(sentence):
         # A card type (the Urza's Saga Construct's "artifact") or a subtype
         # (Outcaster Greenblade's "Desert").
@@ -13287,8 +13781,43 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while monstrous",
         )
+    if match := _SELF_KEYWORD_WHILE_TAP_STATUS_RE.fullmatch(sentence):
+        tap_keywords = _split_and_validate_keywords(match.group("keywords"))
+        if tap_keywords is None:
+            return None
+        status = match.group("status").lower()
+        return _context_gated_self_static_builder(
+            _self_pump_while_untapped_condition(status),
+            tap_keywords,
+            line=sentence,
+            description=f"while {status}",
+        )
+    if match := _ATTACKED_WITH_N_TYPE_GROUP_PUMP_RE.fullmatch(sentence):
+        subtype = match.group("subtype")
+        if canonical_subtype(subtype) is None:
+            return None
+        threshold = parse_count(match.group("count"), article=False)
+        if not threshold:
+            return None
+        return _attacked_with_n_type_group_pump_builder(
+            threshold,
+            subtype,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            line=sentence,
+        )
+    if match := _ANOTHER_CREATURE_ENTERED_THIS_TURN_SELF_PUMP_RE.fullmatch(sentence):
+        return _self_pump_gated_by_context_builder(
+            _another_creature_entered_this_turn_holds,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            line=sentence,
+            description="while another creature entered under your control this turn",
+        )
     if _GROUP_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
         return _group_assigns_damage_as_toughness_builder(line=sentence)
+    if _EQUIPPED_ASSIGNS_DAMAGE_AS_TOUGHNESS_RE.fullmatch(sentence):
+        return _equipped_assigns_damage_as_toughness_builder(line=sentence)
     if _SELF_ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_RE.fullmatch(sentence):
         return _self_assigns_damage_as_though_positive_builder(line=sentence)
     if match := _GROUP_POWER_OR_TOUGHNESS_UNBLOCKABLE_RE.fullmatch(sentence):
@@ -13868,6 +14397,41 @@ class LayerContext(EngineModel):
     #: characteristic, so "attacking tokens you control have first strike"
     #: (`AttackingTokensControlledBy`) reads it from here.
     attacking: frozenset[UUID] = frozenset()
+
+    #: Every tapped permanent on the battlefield right now (CR 110.5), by id -
+    #: `TappedCreaturesControlledBy`'s own reader (Adept Watershaper's "Other
+    #: tapped creatures you control have indestructible."), the identical
+    #: physical-state-not-characteristic reasoning `attacking` is carried for.
+    tapped_ids: frozenset[UUID] = frozenset()
+
+    #: A per-turn, per-player *count* ledger - `Game.turn_counts`, carried the
+    #: same way `turn_facts` already is, for a static ability that counts
+    #: "how many" rather than asking "did you": Kinbinding's "Creatures you
+    #: control get +X/+X, where X is the number of creatures that entered the
+    #: battlefield under your control this turn."
+    turn_counts: Mapping[str, Mapping[str, int]] = Field(default_factory=dict)
+
+    def turn_count(self, fact: str, player: str | None) -> int:
+        """How many times `fact` has happened for `player` this turn, or 0
+        for a player or fact this context knows nothing about - the same
+        empty-is-zero default `hand_size_of` already uses."""
+        if player is None:
+            return 0
+        return self.turn_counts.get(fact, {}).get(player, 0)
+
+    #: The ids of every creature currently on the battlefield whose own
+    #: `CardState.turn_entered` is this turn (`Game._compute_board`'s own
+    #: read of `CardState.turn_entered` against `Game.turn.turn_number`) -
+    #: Bristlebane Outrider's own "As long as **another** creature entered
+    #: the battlefield under your control this turn, this creature gets
+    #: +2/+0.": the plain per-player `turn_facts`/`turn_counts` ledgers can
+    #: only say *whether* or *how many* creatures entered, never whether the
+    #: asking object was itself one of them, and "another" is exactly that
+    #: per-object exclusion. A creature that already left again this turn is
+    #: not in this set (it is not "currently on the battlefield" any more),
+    #: which is the correct reading too - it still counts toward `turn_
+    #: counts`'s own running total, just not toward this identity check.
+    entered_this_turn_ids: frozenset[UUID] = frozenset()
 
     def designation_holds(self, condition: str, player: str | None) -> bool:
         """Whether `player` has the designation `condition` names
