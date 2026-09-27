@@ -7,8 +7,8 @@ reported each line `static_unaudited`: `_static_ability_category` had no
 reader to ask. Each credit calls the enforcing reader's own shapes:
 
 - "`<this>` can't be blocked [by tokens / by creatures with power N or less /
-  by creatures with greater power]" - `combat.evasion_restriction_refusal`
-  (CR 509.1a);
+  by creatures with greater power / by a single subtype, colour, card type
+  or keyword quality]" - `combat.evasion_restriction_refusal` (CR 509.1b);
 - "`<this>` can't block [`<description>`]" - `combat.
   self_block_restriction_refusal` (CR 509.1b);
 - "Equip abilities you activate that target this creature cost {N} less to
@@ -65,8 +65,14 @@ def test_a_restriction_on_other_creatures_is_not_credited() -> None:
     assert not reads_self_combat_restriction_line(
         "As long as you control a Swamp, this creature can't be blocked.", "Some Zombie"
     )
+    # "Vampires or Zombies" - a disjunction of two qualities (Blazing Torch's
+    # real template, granted rather than self-printed) - is still outside
+    # `_parse_creature_description`'s closed grammar even after this task
+    # widened it to a single subtype/colour/type/keyword quality (Juggernaut,
+    # Vine Mare, Audacious Infiltrator, Skyscythe Engulfer): a bare "or" is
+    # not one of the shapes read, so the line stays uncredited on purpose.
     assert not reads_self_combat_restriction_line(
-        "This creature can't be blocked by creatures with flying.", "Some Zombie"
+        "This creature can't be blocked by Vampires or Zombies.", "Some Zombie"
     )
     assert not reads_self_combat_restriction_line(
         "This creature can't block unless you pay {2}.", "Some Zombie"

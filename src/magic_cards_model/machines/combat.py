@@ -51,7 +51,7 @@ from pydantic import ConfigDict, Field
 from magic_cards_model.phrases import with_indefinite_article
 
 from ..data.subtypes import canonical_subtype
-from ..models.card import Type
+from ..models.card import Color, Type
 from ..models.card_state import CardState, Counter, TargetRef
 from ..models.mana import ManaCost
 from ..models.token import is_token
@@ -1184,7 +1184,7 @@ def declare_attacker(game: "Game", creature: CardState, defender: TargetRef) -> 
 
 class EvasionNotice(EngineModel):
     """One permanent whose own "can't be blocked" *or* "can't block" text
-    could not be fully read into a block refusal (CR 509.1a-b).
+    could not be fully read into a block refusal (CR 509.1b).
 
     Unlike flying (CR 702.9b), reach (CR 702.17b), or landwalk (CR 702.14c),
     neither restriction carries a keyword name of its own - each is read
@@ -1200,8 +1200,9 @@ class EvasionNotice(EngineModel):
     effect" record `LayerNotice`, `TargetingNotice`, `InterveningIfNotice`,
     `ModeNotice`, and `AnaphoricClauseNotice` already keep for their own gaps.
     One list serves both directions because they are the same rule's two
-    mirror-image halves (CR 509.1a's "can't be blocked" and CR 509.1b's
-    "can't block"), read by the same fail-closed discipline.
+    mirror-image halves - CR 509.1b's "can't be blocked" (an evasion ability
+    on the attacker) and its "can't block" (a restriction on the blocker
+    itself) - read by the same fail-closed discipline.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -1244,8 +1245,8 @@ def _self_reference_names(name: str) -> tuple[str, ...]:
 
 def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = None) -> list[str]:
     """Self-referential "can't be blocked" sentences the attacker has *now*
-    (CR 509.1a): the subject must be one of `_self_reference_alternatives`
-    (CR 509.1a's restriction is on the attacker itself; nothing in the pool
+    (CR 509.1b): the subject must be one of `_self_reference_alternatives`
+    (CR 509.1b's restriction is on the attacker itself; nothing in the pool
     grants "can't be blocked" to *another* creature the way Akroma's Memorial
     grants protection, so that shape is not read here - see
     `docs/engine-coverage.md`).
@@ -1346,7 +1347,7 @@ _CANT_BE_BLOCKED_RE = re.compile(r"can't be blocked\.?$", re.IGNORECASE)
 
 #: Stature, Size Shifter: "Stature can't be blocked if her power is 1 or
 #: less."; Thieves' Tools' grant, "This creature can't be blocked as long as
-#: its power is 3 or less." - the plain restriction (CR 509.1a) that applies
+#: its power is 3 or less." - the plain restriction (CR 509.1b) that applies
 #: only while the attacker's own power, as the layer system leaves it (CR
 #: 613.5), is at or under the printed number.
 _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE = re.compile(
@@ -1356,8 +1357,10 @@ _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE = re.compile(
 )
 
 #: Questing Beast: "Questing Beast can't be blocked by creatures with power 2
-#: or less." - the one qualified shape read; other qualifiers (a colour, a
-#: keyword) are not in the pool and are not attempted.
+#: or less." - the one power-qualified shape given its own dedicated reader;
+#: a colour (Vine Mare) or keyword (Skyscythe Engulfer) qualifier is read by
+#: the general `_CANT_BE_BLOCKED_BY_DESCRIPTION_RE` fallback instead of a
+#: shape of its own.
 _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE = re.compile(
     r"can't be blocked by creatures with power (?P<power>\d+) or less\.?$", re.IGNORECASE
 )
@@ -1372,7 +1375,7 @@ _CANT_BE_BLOCKED_BY_POWER_OR_GREATER_RE = re.compile(
 )
 
 #: Fugitive Droid: "This creature can't be blocked if an artifact entered
-#: the battlefield under your control this turn." - CR 509.1a's restriction
+#: the battlefield under your control this turn." - CR 509.1b's restriction
 #: with an arbitrary printed condition rather than a power comparison of its
 #: own. The condition itself is read the same generic way every other
 #: condition-gated reader in the pool already asks `Game.condition_holds` -
@@ -1386,7 +1389,7 @@ _CANT_BE_BLOCKED_IF_CONDITION_RE = re.compile(
 
 #: "can't be blocked by creatures with greater power" - a comparison against
 #: the attacker's own power rather than a printed number. The Ring grants it
-#: to its controller's Ring-bearer (CR 701.54c); CR 509.1a is the block it
+#: to its controller's Ring-bearer (CR 701.54c); CR 509.1b is the block it
 #: refuses.
 _CANT_BE_BLOCKED_BY_GREATER_POWER_RE = re.compile(
     r"can't be blocked by creatures with greater power\.?$", re.IGNORECASE
@@ -1412,8 +1415,8 @@ _CANT_BLOCK_OR_BE_BLOCKED_BY_RE = re.compile(
 #: Avenger's own granted rider ("target creature with haste can't be blocked
 #: this turn except by creatures with haste"; `machines/effects.py`'s
 #: `_TARGET_CANT_BE_BLOCKED_RE` grants exactly this text, verbatim, once the
-#: keyword names a real `Keyword` member). CR 509.1a's restriction with CR
-#: 509.1b's own "unless" shape folded onto it: the attacker still can't be
+#: keyword names a real `Keyword` member). CR 509.1b's restriction with its
+#: own "unless" shape folded onto it: the attacker still can't be
 #: blocked, except by a creature that itself has the named keyword right now
 #: (CR 613.5 - a blocker that gains the keyword mid-combat qualifies; one
 #: that loses it does not).
@@ -1438,26 +1441,59 @@ def block_exception_keyword(name: str) -> "Keyword | None":
 #: A bare card-type adjective inside a creature description - Hinterland
 #: Drake's "artifact creatures". Only the types the pool actually needs are
 #: read; an adjective this does not recognise, and is not a "non-<subtype>"
-#: exclusion either, leaves the whole description unparsed rather than
+#: exclusion, a colour (`_CREATURE_DESCRIPTION_COLOR_WORDS`) or a real
+#: subtype either, leaves the whole description unparsed rather than
 #: guessed at.
 _CREATURE_DESCRIPTION_TYPE_WORDS: dict[str, "Type"] = {
     "artifact": Type.ARTIFACT,
     "enchantment": Type.ENCHANTMENT,
 }
 
-#: One creature description inside a "can't block <description>" or "can't
-#: block or be blocked by <description>" sentence (CR 509.1a-b): an optional
-#: leading adjective - a recognised card-type word, a bare creature subtype
-#: ("Spirit"), or a "non-<subtype>" exclusion (Realm of Koh's token's own
-#: "non-Spirit") - followed by "creature(s)", with an optional trailing power
-#: comparison (Zurgo Bellstriker's "with power 2 or greater" - the same "N or
+#: The five colour words a creature description can lead with - Vine Mare's
+#: "can't be blocked by black creatures" (CR 105.1), White Scarab's granted
+#: "Enchanted creature can't be blocked by white creatures." Kept as its own
+#: small copy the way `casting.py`'s and `layers.py`'s own `_COLOR_WORDS`
+#: already are: `combat.py` cannot import either module at module scope
+#: (`layers.py` imports `combat.py`, so the reverse import would cycle).
+_CREATURE_DESCRIPTION_COLOR_WORDS: dict[str, "Color"] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
+#: One creature description inside a "can't block <description>", "can't be
+#: blocked by <description>" or "can't block or be blocked by <description>"
+#: sentence (CR 509.1b): an optional leading adjective - a recognised card-type
+#: word, a colour (Vine Mare), a bare creature subtype ("Spirit"), or a
+#: "non-<subtype>" exclusion (Realm of Koh's token's own "non-Spirit") -
+#: followed by "creature(s)", with an optional trailing qualifier: a power or
+#: toughness comparison (Zurgo Bellstriker's "with power 2 or greater",
+#: Ghost of Ramirez DePietro's "with toughness 3 or greater" - the same "N or
 #: less"/"N or greater" shape `_POWER_COMPARISON_RE` already reads for CR
-#: 508.1c's group attack restriction).
+#: 508.1c's group attack restriction) or a keyword the blocker must have
+#: (Skyscythe Engulfer's "with flying" - CR 702's closed `Keyword` vocabulary,
+#: the same one `_CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE`'s "except by creatures
+#: with `<keyword>`" already reads).
 _CREATURE_DESCRIPTION_RE = re.compile(
     r"^(?:(?P<adjective>[a-z][a-z'-]*)\s+)?creatures?"
-    r"(?:\s+with\s+power\s+(?P<power_number>\d+)\s+or\s+(?P<power_direction>less|greater))?\.?$",
+    r"(?:\s+with\s+(?:"
+    r"power\s+(?P<power_number>\d+)\s+or\s+(?P<power_direction>less|greater)"
+    r"|toughness\s+(?P<toughness_number>\d+)\s+or\s+(?P<toughness_direction>less|greater)"
+    r"|(?P<keyword>[a-z][a-z ]*?)"
+    r"))?\.?$",
     re.IGNORECASE,
 )
+
+#: A bare plural (or singular) creature-type noun with no "creature(s)" word
+#: at all - Juggernaut's "can't be blocked by Walls." (CR 205.3m: "Wall" is a
+#: creature type in its own right, not an adjective in front of the count
+#: noun "creatures" the way "artifact creatures"/"Spirit creatures" are).
+#: `canonical_subtype` is what tells a real, pluralised creature type
+#: ("Walls" -> "wall") from an ordinary English word this must not guess a
+#: meaning for.
+_BARE_SUBTYPE_DESCRIPTION_RE = re.compile(r"^[A-Za-z][A-Za-z'-]*$")
 
 
 @dataclass(frozen=True)
@@ -1469,14 +1505,20 @@ class _CreatureDescriptionMatcher:
     required_type: "Type | None" = None
     required_subtype: str | None = None
     excluded_subtype: str | None = None
+    required_color: "Color | None" = None
+    required_keyword: "Keyword | None" = None
     power_operator: str | None = None
     power_bound: int | None = None
+    toughness_operator: str | None = None
+    toughness_bound: int | None = None
 
     def matches(self, game: "Game", candidate: CardState) -> bool:
         characteristics = game.characteristics_of(candidate)
         if characteristics is None:
             return False
         if self.required_type is not None and self.required_type not in characteristics.types:
+            return False
+        if self.required_color is not None and self.required_color not in characteristics.colors:
             return False
         subtypes_lower = {subtype.lower() for subtype in characteristics.subtypes}
         if (
@@ -1494,19 +1536,43 @@ class _CreatureDescriptionMatcher:
                 return False
             if self.power_operator == "less_or_equal" and power > (self.power_bound or 0):
                 return False
+        if self.toughness_operator is not None:
+            toughness = game.toughness_of(candidate)
+            if toughness is None:
+                return False
+            if self.toughness_operator == "greater_or_equal" and toughness < (
+                self.toughness_bound or 0
+            ):
+                return False
+            if self.toughness_operator == "less_or_equal" and toughness > (
+                self.toughness_bound or 0
+            ):
+                return False
+        if self.required_keyword is not None:
+            return has_keyword(candidate, self.required_keyword, game)
         return True
 
 
 def _parse_creature_description(description: str) -> "_CreatureDescriptionMatcher | None":
     """Read a creature description - "artifact creatures", "non-Spirit
-    creatures", "creatures with power 2 or greater" - into a matcher, or
+    creatures", "creatures with power 2 or greater", "creatures with flying",
+    "black creatures", or a bare creature type ("Walls") - into a matcher, or
     None when it is not this closed grammar. That None is the fail-closed
-    signal for whichever "can't block ..." sentence it came from: a
-    description this cannot judge is never silently treated as "matches
-    nothing"."""
-    match = _CREATURE_DESCRIPTION_RE.fullmatch(description.strip())
+    signal for whichever "can't be blocked ..."/"can't block ..." sentence it
+    came from: a description this cannot judge is never silently treated as
+    "matches nothing"."""
+    text = description.strip()
+    match = _CREATURE_DESCRIPTION_RE.fullmatch(text)
     if match is None:
-        return None
+        # No "creature(s)" noun at all - Juggernaut's bare "Walls" (CR
+        # 205.3m). Read only when the whole description canonicalises to a
+        # real creature type; an ordinary English word (Duskwatch Hunter's
+        # "tokens", which is CR 111.1 token-ness rather than a subtype) is
+        # left to its own reader instead of being guessed at here.
+        if _BARE_SUBTYPE_DESCRIPTION_RE.fullmatch(text) is None:
+            return None
+        subtype = canonical_subtype(text)
+        return None if subtype is None else _CreatureDescriptionMatcher(required_subtype=subtype)
     power_operator: str | None = None
     power_bound: int | None = None
     if match.group("power_number") is not None:
@@ -1516,37 +1582,90 @@ def _parse_creature_description(description: str) -> "_CreatureDescriptionMatche
             if match.group("power_direction").lower() == "greater"
             else "less_or_equal"
         )
+    toughness_operator: str | None = None
+    toughness_bound: int | None = None
+    if match.group("toughness_number") is not None:
+        toughness_bound = int(match.group("toughness_number"))
+        toughness_operator = (
+            "greater_or_equal"
+            if match.group("toughness_direction").lower() == "greater"
+            else "less_or_equal"
+        )
+    required_keyword: Keyword | None = None
+    if match.group("keyword") is not None:
+        required_keyword = block_exception_keyword(match.group("keyword"))
+        if required_keyword is None:
+            # Not one of `Keyword`'s closed vocabulary - fail closed rather
+            # than silently matching every creature or none.
+            return None
+    bounds = {
+        "power_operator": power_operator,
+        "power_bound": power_bound,
+        "toughness_operator": toughness_operator,
+        "toughness_bound": toughness_bound,
+        "required_keyword": required_keyword,
+    }
     adjective = (match.group("adjective") or "").strip()
     if not adjective:
-        return _CreatureDescriptionMatcher(power_operator=power_operator, power_bound=power_bound)
+        return _CreatureDescriptionMatcher(**bounds)
     lowered = adjective.lower()
     if lowered.startswith("non-"):
         excluded = adjective[len("non-") :].strip()
         if not excluded:
             return None
-        return _CreatureDescriptionMatcher(
-            excluded_subtype=excluded, power_operator=power_operator, power_bound=power_bound
-        )
+        canonical_excluded = canonical_subtype(excluded)
+        if canonical_excluded is None:
+            return None
+        return _CreatureDescriptionMatcher(excluded_subtype=canonical_excluded, **bounds)
     type_word = _CREATURE_DESCRIPTION_TYPE_WORDS.get(lowered)
     if type_word is not None:
-        return _CreatureDescriptionMatcher(
-            required_type=type_word, power_operator=power_operator, power_bound=power_bound
-        )
-    return _CreatureDescriptionMatcher(
-        required_subtype=adjective, power_operator=power_operator, power_bound=power_bound
-    )
+        return _CreatureDescriptionMatcher(required_type=type_word, **bounds)
+    color = _CREATURE_DESCRIPTION_COLOR_WORDS.get(lowered)
+    if color is not None:
+        return _CreatureDescriptionMatcher(required_color=color, **bounds)
+    canonical = canonical_subtype(adjective)
+    if canonical is None:
+        return None
+    return _CreatureDescriptionMatcher(required_subtype=canonical, **bounds)
+
+
+#: Juggernaut: "This creature can't be blocked by Walls." (a bare creature
+#: type, CR 205.3m); Vine Mare: "... by black creatures." (a colour, CR
+#: 105.1); Audacious Infiltrator: "... by artifact creatures." (a card type,
+#: CR 509.1b's own reminder text: "an evasion ability ... restricts what can
+#: block it"); Skyscythe Engulfer: "... by creatures with flying." (a
+#: keyword, CR 702). One general "by `<description>`" shape, read the same
+#: way `_CANT_BLOCK_OR_BE_BLOCKED_BY_RE`'s compound already reads its own
+#: evasion half - `_parse_creature_description` is the single grammar behind
+#: both. Tried only after every narrower "by ..." shape above (tokens, a bare
+#: power comparison, "greater power") has already had its turn, so this is a
+#: fallback for the *quality* comparisons those do not cover, never a second
+#: reading of the ones they do; a description outside the closed grammar
+#: (Blazing Torch's "Vampires or Zombies", Arctic Foxes' condition-gated
+#: power comparison) is left for `looks_like_unparsed_evasion_restriction`'s
+#: fail-closed notice.
+_CANT_BE_BLOCKED_BY_DESCRIPTION_RE = re.compile(
+    r"can't be blocked by (?P<description>.+?)\.?$", re.IGNORECASE
+)
 
 
 def evasion_restriction_refusal(
     game: "Game", attacker: CardState, blocker: CardState
 ) -> str | None:
     """Why the attacker's own "can't be blocked" text refuses this blocker, or
-    None (CR 509.1a).
+    None (CR 509.1b: "A restriction may be created by an evasion ability (a
+    static ability an attacking creature has that restricts what can block
+    it)." - looked up this session; earlier waves of this reader cited
+    509.1a, the declare-blockers *action* rather than the restriction that
+    can make one particular declaration illegal, because the fuller lettered
+    text was not readable in the session that first wrote it).
 
     Read straight off the attacker's own oracle text rather than off
     `Keyword`: unlike flying or menace, this restriction has no keyword name of
     its own, so nothing in this module's vocabulary can name it. The plain
-    shape, the power-qualified shape, and the "can't block or be blocked by
+    shape, the power/toughness-qualified shapes, the general "by
+    `<description>`" shape (a subtype, card type, colour, or keyword quality -
+    `_parse_creature_description`), and the "can't block or be blocked by
     <description>" compound's evasion half are read; a sentence that looks
     like an attempt at another shape is caught by
     `looks_like_unparsed_evasion_restriction` instead of silently doing
@@ -1559,7 +1678,7 @@ def evasion_restriction_refusal(
             matcher = _parse_creature_description(description)
             if matcher is not None and matcher.matches(game, blocker):
                 return (
-                    f'{attacker.name} can\'t be blocked by {description}: "{sentence}" (CR 509.1a)'
+                    f'{attacker.name} can\'t be blocked by {description}: "{sentence}" (CR 509.1b)'
                 )
             continue
         if match := _CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE.search(sentence):
@@ -1575,7 +1694,7 @@ def evasion_restriction_refusal(
                 continue
             return (
                 f"{attacker.name} can't be blocked except by creatures with "
-                f"{keyword_name}, and {blocker.name} doesn't have {keyword_name} (CR 509.1a)"
+                f"{keyword_name}, and {blocker.name} doesn't have {keyword_name} (CR 509.1b)"
             )
         if _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence):
             attacker_power = game.power_of(attacker)
@@ -1588,7 +1707,7 @@ def evasion_restriction_refusal(
                 return (
                     f"{attacker.name} can't be blocked by creatures with greater power, and "
                     f"{blocker.name} has power {blocker_power} to its {attacker_power} "
-                    "(CR 509.1a)"
+                    "(CR 509.1b)"
                 )
             continue
         if match := _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE.search(sentence):
@@ -1597,7 +1716,7 @@ def evasion_restriction_refusal(
             if attacker_power is not None and attacker_power <= ceiling:
                 return (
                     f"{attacker.name} can't be blocked while its power is {ceiling} or less, "
-                    f"and its power is {attacker_power} (CR 509.1a)"
+                    f"and its power is {attacker_power} (CR 509.1b)"
                 )
             continue
         if match := _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence):
@@ -1607,7 +1726,7 @@ def evasion_restriction_refusal(
                 return (
                     f"{attacker.name} can't be blocked by creatures with power "
                     f"{threshold} or less, and {blocker.name} has power {blocker_power} "
-                    "(CR 509.1a)"
+                    "(CR 509.1b)"
                 )
             continue
         if match := _CANT_BE_BLOCKED_BY_POWER_OR_GREATER_RE.search(sentence):
@@ -1617,7 +1736,7 @@ def evasion_restriction_refusal(
                 return (
                     f"{attacker.name} can't be blocked by creatures with power "
                     f"{threshold} or greater, and {blocker.name} has power {blocker_power} "
-                    "(CR 509.1a)"
+                    "(CR 509.1b)"
                 )
             continue
         if match := _CANT_BE_BLOCKED_IF_CONDITION_RE.search(sentence):
@@ -1626,16 +1745,23 @@ def evasion_restriction_refusal(
                 game.controller_of(attacker).username or "", condition, attacker
             )
             if held:
-                return f'{attacker.name} can\'t be blocked: "{sentence}" (CR 509.1a)'
+                return f'{attacker.name} can\'t be blocked: "{sentence}" (CR 509.1b)'
             continue
         if _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence):
             if is_token(blocker):
                 return (
                     f"{attacker.name} can't be blocked by tokens, and {blocker.name} "
-                    "is one (CR 509.1a, CR 111.1)"
+                    "is one (CR 509.1b, CR 111.1)"
+                )
+        elif match := _CANT_BE_BLOCKED_BY_DESCRIPTION_RE.search(sentence):
+            description = match.group("description")
+            matcher = _parse_creature_description(description)
+            if matcher is not None and matcher.matches(game, blocker):
+                return (
+                    f'{attacker.name} can\'t be blocked by {description}: "{sentence}" (CR 509.1b)'
                 )
         elif _CANT_BE_BLOCKED_RE.search(sentence):
-            return f"{attacker.name} can't be blocked (CR 509.1a)"
+            return f"{attacker.name} can't be blocked (CR 509.1b)"
     return None
 
 
@@ -1803,6 +1929,15 @@ def _reads_evasion_sentence(sentence: str) -> bool:
         )
     ):
         return True
+    # The general "by `<description>`" shape (Juggernaut's "Walls", Vine
+    # Mare's "black creatures", Skyscythe Engulfer's "creatures with
+    # flying") - tried after every narrower "by ..." shape in the tuple
+    # above (which already claimed "by tokens" and "by creatures with
+    # greater power"), so this only ever answers for the quality
+    # comparisons those do not cover.
+    description_match = _CANT_BE_BLOCKED_BY_DESCRIPTION_RE.search(sentence)
+    if description_match is not None:
+        return _parse_creature_description(description_match.group("description")) is not None
     # Fugitive Droid's shape is tried last: it is the most general ("if
     # `<anything>`"), so a sentence one of the more specific shapes above
     # already reads (the power-comparison "if"/"as long as" shapes) is never
@@ -1815,8 +1950,8 @@ def _reads_evasion_sentence(sentence: str) -> bool:
 
 def reads_self_combat_restriction_line(line: str, name: str) -> bool:
     """Whether every sentence of one printed static line of a creature named
-    `name` is its own "can't be blocked ..." (CR 509.1a) or "can't block ..."
-    (CR 509.1b) restriction that `evasion_restriction_refusal` and
+    `name` is its own "can't be blocked ..." or "can't block ..." (both CR
+    509.1b) restriction that `evasion_restriction_refusal` and
     `self_block_restriction_refusal` enforce in full - `support.py`'s credit
     for it.
 
@@ -2067,7 +2202,7 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     Covers the base requirements, who the attacker is attacking (CR 802.4a),
     and the evasion/restriction abilities that need nothing but the attacker
     and the blocker to decide: flying (CR 702.9b), reach (CR 702.17b), the
-    attacker's own "can't be blocked" text (CR 509.1a), and the blocker's own
+    attacker's own "can't be blocked" text (CR 509.1b), and the blocker's own
     "can't block" text (CR 509.1b). "Can't block alone" (Craven Hulk) is the
     one shape that needs the whole finished declaration, so it is read by
     `declaration_refusal`/`self_block_alone_refusal` instead.

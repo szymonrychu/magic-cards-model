@@ -8902,20 +8902,26 @@ _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE = re.compile(
 )
 
 #: "Equipped creature can't be blocked as long as its power is 3 or less."
-#: (Thieves' Tools) and the unconditional "Equipped creature can't be
-#: blocked." (Prowler's Helm) - CR 509.1a's restriction granted in layer 6
-#: (CR 613.1f) to whatever the Equipment or Aura is attached to, as the
-#: self-referential sentence `machines/combat.py`'s evasion reader enforces.
+#: (Thieves' Tools), the unconditional "Equipped creature can't be blocked."
+#: (Prowler's Helm), and the quality-gated "Equipped creature can't be
+#: blocked by creatures with power 4 or greater." (Hedgewitch's Mask) /
+#: "Enchanted creature can't be blocked by Spirits." (Field of Reality) -
+#: CR 509.1b's restriction granted in layer 6 (CR 613.1f) to whatever the
+#: Equipment or Aura is attached to, as the self-referential sentence
+#: `machines/combat.py`'s evasion reader enforces (its own general "by
+#: `<description>`" fallback reads the granted quality the identical way it
+#: reads a printed one).
 _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE = re.compile(
     r"^(?P<attachment>equipped|enchanted) creature can'?t be blocked"
-    r"(?P<condition> as long as its power is \d+ or less)?\.?$",
+    r"(?:(?P<condition> as long as its power is \d+ or less)"
+    r"|(?: by (?P<description>[A-Za-z][A-Za-z0-9' -]*?)))?\.?$",
     re.IGNORECASE,
 )
 
 #: Uneasy Alliance: "Enchanted creature can't attack or block." - CR 508.1c's
 #: and CR 509.1b's restrictions granted together in layer 6 (CR 613.1f), the
 #: identical family `_ATTACHED_CREATURE_CANT_BE_BLOCKED_RE` above already
-#: grants (CR 509.1a alone); read the same self-referential way once granted -
+#: grants (CR 509.1b alone); read the same self-referential way once granted -
 #: `combat._self_attack_restriction_sentence` already accepts "This creature
 #: can't attack or block." for the attack half, and this task widens
 #: `combat._self_block_restriction_sentences`/`_parse_self_block_restriction`
@@ -13939,10 +13945,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
         )
     if match := _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE.fullmatch(sentence):
+        description = match.group("description")
+        tail = f" by {description}" if description else (match.group("condition") or "")
         return _attached_creature_static_builder(
             0,
             0,
-            [f"This creature can't be blocked{match.group('condition') or ''}."],
+            [f"This creature can't be blocked{tail}."],
             subject=match.group("attachment").lower(),
             line=sentence,
         )

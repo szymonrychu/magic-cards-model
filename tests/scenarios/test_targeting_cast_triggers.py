@@ -58,8 +58,8 @@
   read too - `_TARGET_CANT_BE_BLOCKED_RE` grants the exception verbatim
   once the keyword names a real `combat.Keyword` member, and `machines/
   combat.py`'s `evasion_restriction_refusal` reads a "can't be blocked
-  except by creatures with `<keyword>`" sentence (CR 509.1a with CR 509.1b's
-  own "unless" folded on), refusing a blocker without the keyword and
+  except by creatures with `<keyword>`" sentence (CR 509.1b's restriction
+  with its own "unless" shape folded on), refusing a blocker without the keyword and
   letting one with it through. Proven end to end, real cast through real
   combat declaration, in `test_speed_grants_the_haste_exception_and_
   combat_enforces_it` below.
@@ -89,8 +89,10 @@ session that wrote this file:
 - **CR 613.1f** - layer 6, ability-adding and -removing effects.
 - **CR 208.1** - power and toughness, including a pronoun's self-reference
   to the object the ability is on.
-- **CR 509.1a** - an unblockable grant; CR 509.1b - blocking restrictions
-  and their own printed exceptions.
+- **CR 509.1a** - the declare-blockers action itself; **CR 509.1b** - both
+  an unblockable grant and a blocking restriction's own printed exceptions
+  (an evasion ability is a CR 509.1b restriction, looked up in full this
+  task via `mise run rules:find 509.1`).
 """
 
 import pytest
@@ -395,7 +397,7 @@ def test_speed_grants_the_haste_exception_and_combat_enforces_it():
     reason = scenario.game.why_cannot_block(bears, speed)
     assert reason is not None
     assert "haste" in reason
-    assert "CR 509.1a" in reason
+    assert "CR 509.1b" in reason
     with pytest.raises(ValueError, match="haste"):
         scenario.block(speed, bears)
 
