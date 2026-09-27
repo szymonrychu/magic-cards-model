@@ -5808,7 +5808,7 @@ class Casting(EngineModel):
         if self.conspire_paid >= self.conspire_count():
             raise ValueError(f"{self.spell.name} has no unpaid conspire ability (CR 702.78a)")
         if len(creatures) != 2 or creatures[0] is creatures[1]:
-            raise ValueError(f"conspire taps exactly two creatures (CR 702.78a)")
+            raise ValueError("conspire taps exactly two creatures (CR 702.78a)")
         spell_colors = set(self.spell.colors)
         for creature in creatures:
             if creature.zone is not Zone.BATTLEFIELD:
