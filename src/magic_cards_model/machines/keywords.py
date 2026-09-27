@@ -198,6 +198,10 @@ def executes(keyword: str) -> bool:
         # pay_casualty`, the trigger `casualty_triggered_abilities`/
         # `_casualty_effect` here, one per casualty cost paid (CR 702.153b).
         "casualty",
+        # CR 702.78a: the additional cost is `machines/casting.Casting.
+        # pay_conspire`, the trigger `conspire_triggered_abilities`/
+        # `_conspire_effect` here, one per conspire cost paid.
+        "conspire",
         "persist",
         "dredge",
         "mobilize",
@@ -652,6 +656,38 @@ def casualty_triggered_abilities(paid: int) -> list[TriggeredAbility]:
         raw="Casualty", text="Casualty", face="", keyword="Casualty", canonical="Casualty"
     )
     return [_casualty_ability(line) for _ in range(max(paid, 0))]
+
+
+def _conspire_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.78a's second ability: "When you cast this spell, if its
+    conspire cost was paid, copy it. If the spell has any targets, you may
+    choose new targets for the copy."
+
+    Like casualty, one per conspire cost actually paid
+    (`conspire_triggered_abilities`), read off the spell's `CastRecord`.
+    """
+    return _expansion(
+        ability,
+        keyword="conspire",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        intervening_if="its conspire cost was paid",
+        effect="copy it. If the spell has any targets, you may choose new targets for the copy",
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
+def conspire_triggered_abilities(paid: int) -> list[TriggeredAbility]:
+    """CR 702.78a: one conspire trigger for each conspire cost paid."""
+    line = KeywordAbility(
+        raw="Conspire", text="Conspire", face="", keyword="Conspire", canonical="Conspire"
+    )
+    return [_conspire_ability(line) for _ in range(max(paid, 0))]
+
+
+def printed_conspire_count(card: Card) -> int:
+    """How many "Conspire" keyword lines `card` prints (CR 702.78a)."""
+    return sum(1 for ability in keyword_abilities(card) if ability.canonical.lower() == "conspire")
 
 
 def printed_casualty_numbers(card: Card) -> list[int]:
@@ -1547,6 +1583,17 @@ _GRANTED_COUNTED_KEYWORD_LINE_RE = re.compile(
 )
 
 
+#: A granted keyword whose cost is a sentence rather than mana, joined by
+#: CR 702.21a's em dash - "Ward—Pay 2 life." as Hexing Squelcher's
+#: "Other creatures you control have "Ward—Pay 2 life."" and Winter, Cursed
+#: Rider's "Artifacts you control have "Ward—Pay 2 life."" grant it, the
+#: same line a printed non-mana ward is. The cost is read by the same
+#: `total_cost_for_phrase` a printed one goes through (`_keyword_cost`).
+_GRANTED_DASH_COST_KEYWORD_LINE_RE = re.compile(
+    r"^(?P<keyword>[A-Za-z][A-Za-z'-]*)\s*—\s*(?P<cost>[^{—][^—]*?)\.?$"
+)
+
+
 def writes_triggered_ability(keyword: str) -> bool:
     """Whether this module writes `keyword` out as a triggered ability (CR
     702.1) - asked by `machines/layers.py` before it grants one to an object,
@@ -1574,6 +1621,20 @@ def granted_keyword_ability(text: str) -> KeywordAbility | None:
             keyword=keyword,
             canonical=keyword,
             count=None if count.upper() == "X" else int(count),
+        )
+    dashed = _GRANTED_DASH_COST_KEYWORD_LINE_RE.match(text.strip())
+    if dashed is not None:
+        keyword = dashed.group("keyword")
+        if keyword.lower() not in _TRIGGER_EXPANSIONS:
+            return None
+        return KeywordAbility(
+            raw=text,
+            text=text.strip(),
+            face="",
+            keyword=keyword,
+            canonical=keyword,
+            cost=dashed.group("cost").strip(),
+            cost_is_mana=False,
         )
     match = _GRANTED_KEYWORD_LINE_RE.match(text.strip())
     if match is None:
@@ -6139,6 +6200,9 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "storm": _storm_effect,
     "replicate": _replicate_effect,
     "casualty": _casualty_effect,
+    # CR 702.78a's copy is casualty's own: "copy it. If the spell has any
+    # targets, you may choose new targets for the copy."
+    "conspire": _casualty_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
     "miracle": _miracle_effect,

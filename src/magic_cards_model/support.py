@@ -63,9 +63,11 @@ from magic_cards_model.machines.casting import (
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
     reads_granted_zone_keyword_line,
+    reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
     reads_or_pay_additional_cost_line,
     reads_play_cards_exiled_with_line,
+    reads_printed_self_zone_cast_line,
     reads_printed_zone_permission_line,
     reads_static_zone_cast_permission_line,
     reads_using_keyword_permission_line,
@@ -74,6 +76,7 @@ from magic_cards_model.machines.casting_restrictions import (
     _CANT_BE_COUNTERED_RE,
     _CONDITIONAL_CANT_BE_COUNTERED_RE,
     reads_player_rule_static_line,
+    reads_static_spells_cant_be_countered_line,
 )
 from magic_cards_model.machines.chosen_type import RESTRICTED_TRIBAL_TYPES
 from magic_cards_model.machines.combat import (
@@ -472,6 +475,15 @@ def executed_keywords(printing: Card) -> dict[str, str]:
 
     if adventure_face(printing) is not None:
         found["adventure"] = "machines/casting.py"
+
+    # Plot named only by a resolving-exile rider ("If you do, it becomes
+    # plotted.", Lilah, Undefeated Slickshot): CR 702.170c's "some spells
+    # and abilities cause a card in exile to become plotted" - performed by
+    # `machines/resolving_exile.apply_resolving_exile`.
+    if any(k.lower() == "plot" for k in printing.keywords) and re.search(
+        r"\bit becomes plotted\b", printing.oracle_text or "", re.IGNORECASE
+    ):
+        found["plot"] = "machines/resolving_exile.py"
 
     # Escalate is a cast cost rather than a way to cast, so it is not a
     # KeywordCastOption - `Casting.pay_escalate` charges it (CR 702.120a).
@@ -1951,6 +1963,15 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # the keyword where the card lies and `_rezoned_by_using` opens that
         # zone to it (Ninja Teen's level 3; Iroh, Grand Lotus's flashback).
         return HANDLED
+    if reads_linked_exile_static_cast_line(printing, text) or reads_printed_self_zone_cast_line(
+        text
+    ):
+        # CR 601.3 / CR 607.2a: `casting._linked_exile_static_cast_option`
+        # casts out of the permanent's own pile (Maralen, Fae Ascendant;
+        # Dawnhand Dissident; Rona, Disciple of Gix), and `casting._printed_
+        # self_zone_cast_with_additional_cost` the card itself from its zone
+        # for an additional cost (Quilled Greatwurm).
+        return HANDLED
     if reads_play_cards_exiled_with_line(printing, text):
         # CR 601.3 / CR 607.2a: `casting.linked_exile_play_source` opens the
         # linked pile to casts (`granted_cast_options`) and to the land drop
@@ -2006,6 +2027,11 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 113.6g: `casting_restrictions.cannot_be_countered` and
         # `.conditionally_cannot_be_countered`, read by `Game.counter` at the
         # one place this ability actually functions.
+        return HANDLED
+    if reads_static_spells_cant_be_countered_line(text):
+        # CR 604.2 / CR 101.2: `casting_restrictions.static_uncounterable_
+        # source`, read by `Game.counter` through `spell_protected_from_
+        # countering` while the permanent is on the battlefield.
         return HANDLED
     flash_condition = conditional_flash_condition(text)
     if flash_condition is not None and condition_is_readable(flash_condition):

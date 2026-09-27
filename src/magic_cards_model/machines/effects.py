@@ -21554,6 +21554,10 @@ def _referent_gain_life(
     player.gain_life(max(power, 0))
 
 
+#: "manifests dread" as the referent player's own verb (CR 701.62a).
+_REFERENT_MANIFEST_DREAD_RE = re.compile(r"^manifests dread\.?$", re.IGNORECASE)
+
+
 def _parse_referent_clause(rest: str) -> ReferentClause | None:
     """ "<rest>" is the tail of "its controller"/"that player" with the
     subject already stripped off by `_ANAPHORIC_SUBJECT_RE` - read as a life
@@ -21603,6 +21607,16 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
             game.draw_cards(player, amount)
 
         return draw_effect
+
+    if _REFERENT_MANIFEST_DREAD_RE.fullmatch(rest):
+        # CR 701.62a, performed by the referent player (Fear of Impostors'
+        # "Its controller manifests dread.").
+        def manifest_dread_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
+            manifest_dread(game, player.username, source, source_id=source_id)
+
+        return manifest_dread_effect
 
     if match := _REFERENT_SEARCH_RE.fullmatch(rest):
         run = _search_and_place_for(match, optional=True)
@@ -27217,6 +27231,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     may_pay_mana_if_you_do = _parse_may_pay_mana_if_you_do_clause(effect_text)
     if may_pay_mana_if_you_do is not None:
         return may_pay_mana_if_you_do
+    may_pay_life_if_you_do = _parse_may_pay_life_if_you_do_clause(effect_text)
+    if may_pay_life_if_you_do is not None:
+        return may_pay_life_if_you_do
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
@@ -34996,9 +35013,14 @@ def _parse_counter_then_referent_pair(
     say so (Strix Serenade 2024-06-07, Swan Song 2013-09-15, Punish Ignorance
     2008-10-01). A target already gone from the stack is CR 608.2b's illegal
     target: no counter and no second sentence.
+
+    Widened (ecl T7) to an *ability* with the same pair - Glen Elendra
+    Guardian's "{1}{U}, Remove a counter from this creature: Counter target
+    noncreature spell. Its controller draws a card." and Fear of Impostors'
+    enters trigger "counter target spell. Its controller manifests dread." -
+    the same CR 701.6a verb and CR 400.7 anaphora, named by the ability's
+    source rather than by a spell's own name.
     """
-    if not for_spell:
-        return None
     if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
         return None
     subject_match = _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip())
@@ -35008,7 +35030,8 @@ def _parse_counter_then_referent_pair(
     if second_clause is None:
         return None
 
-    def effect(game: "Game", spell: CardState) -> None:
+    def effect(game: "Game", spell: "StackObject") -> None:
+        name = spell.name if for_spell else spell.source_name  # type: ignore[union-attr]
         for reference in spell.targets:
             if not reference.is_card:
                 continue
@@ -35017,7 +35040,7 @@ def _parse_counter_then_referent_pair(
                 continue
             referent = game.controller_of(target)
             game.counter(target)
-            second_clause(game, referent, None, spell.name, source_id_of(spell))
+            second_clause(game, referent, None, name, source_id_of(spell))
 
     return effect
 
@@ -38116,6 +38139,43 @@ def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
         if not paid:
             return
         consequence(game, ability)
+
+    return effect
+
+
+#: "you may pay `<N>` life. If you do, `<consequence>`." - Voracious
+#: Tome-Skimmer's "Whenever you cast a spell during an opponent's turn, you
+#: may pay 1 life. If you do, draw a card." and Crossway Troublemakers'
+#: "Whenever a Vampire you control dies, you may pay 2 life. If you do, draw
+#: a card." - the life twin of `_MAY_PAY_MANA_IF_YOU_DO_RE` (CR 118.12's
+#: "if you do", CR 119.4: a player can pay life only if their life total is
+#: at least that amount).
+_MAY_PAY_LIFE_IF_YOU_DO_RE = re.compile(
+    rf"^you may pay (?P<life>{COUNT}) life\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_pay_life_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_LIFE_IF_YOU_DO_RE`'s shape; the consequence is
+    `pay_consequence_effect`'s, shared with the mana and energy twins."""
+    match = _MAY_PAY_LIFE_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    life = parse_count(match.group("life"))
+    if life is None:
+        return None
+    consequence = pay_consequence_effect(match.group("consequence").strip())
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        paid = game.may_pay_life(
+            player, life, source=ability.source_name, source_id=source_id_of(ability)
+        )
+        if paid:
+            consequence(game, ability)
 
     return effect
 
@@ -54543,6 +54603,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     this_turn_spell_grant = _parse_this_turn_spell_grant_clause(clause, for_spell=for_spell)
     if this_turn_spell_grant is not None:
         return this_turn_spell_grant
+    exile_other_tops = _parse_exile_top_of_other_libraries_clause(clause)
+    if exile_other_tops is not None:
+        return exile_other_tops
     each_player_exiles = _parse_each_player_exiles_until_clause(clause, for_spell=for_spell)
     if each_player_exiles is not None:
         return each_player_exiles
@@ -55708,6 +55771,36 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
     if copy_target_spell_whole is not None:
         return [copy_target_spell_whole]
+    from .dies_this_turn import parse_then_when_that_creature_dies_this_turn
+    from .exile_until_casts import exile_until_casts_whole_text
+    from .stack_sweeps import parse_mass_stack_whole_text
+
+    dies_this_turn = parse_then_when_that_creature_dies_this_turn(text, for_spell=for_spell)
+    if dies_this_turn is not None:
+        # Read whole: "that creature" and "its power" point back across the
+        # period at the first sentence's target (`machines/dies_this_turn.py`).
+        return [dies_this_turn]
+    exile_until_casts = exile_until_casts_whole_text(text, for_spell=for_spell)
+    if exile_until_casts is not None:
+        # Read whole: "exiled this way"/"that card" point back across the
+        # period at the exile-until sentence (`machines/exile_until_casts.py`).
+        return [exile_until_casts]
+
+    if not for_spell:
+        from .cast_copies import parse_that_spell_gains_clause
+
+        # Read whole: "gains deathtouch and lifelink" carries the "and" the
+        # clause splitter would cut (`machines/cast_copies.py`).
+        that_spell_gains = parse_that_spell_gains_clause(text)
+        if that_spell_gains is not None:
+            return [that_spell_gains]
+    mass_stack = parse_mass_stack_whole_text(text, for_spell=for_spell)
+    if mass_stack is not None:
+        # Read whole: "counter all spells ... and all abilities ..." and
+        # "exile all other spells and counter all abilities" carry an "and"
+        # the clause splitter would cut, and "countered this way" points back
+        # across the period (`machines/stack_sweeps.py`).
+        return [mass_stack]
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
@@ -57102,8 +57195,10 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
 #: copy that spell" instead of "copy the next spell ... when you cast it" -
 #: a different sentence for the identical CR 603.7 mechanism, not a
 #: different one.
+#: Widened (ecl T7) to "copy it" - Rimefire Torque's and Najal, the Storm
+#: Runner's own wording of the identical instruction.
 _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE = re.compile(
-    r"^when you next cast an instant or sorcery spell this turn, copy that spell\."
+    r"^when you next cast an instant or sorcery spell this turn, copy (?:that spell|it)\."
     r"(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
     re.IGNORECASE,
 )
@@ -63909,6 +64004,24 @@ def _parse_exile_top_of_other_libraries_antecedent(
     return exile_tops, not targeted or count_word is not None
 
 
+def _parse_exile_top_of_other_libraries_clause(clause: str) -> TargetedClause | None:
+    """`_EXILE_TOP_OF_OTHER_LIBRARIES_RE` standing alone - Maralen, Fae
+    Ascendant's "exile the top two cards of target opponent's library." and
+    Ashiok, Nightmare Weaver's "+2: Exile the top three cards of target
+    opponent's library." (CR 406.2). Whatever the cards are for is the
+    object's other, linked ability's business (CR 607.2a,
+    `link_cards_exiled_during`)."""
+    antecedent = _parse_exile_top_of_other_libraries_antecedent(clause.strip().rstrip("."))
+    if antecedent is None:
+        return None
+    exile_tops, _ = antecedent
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        exile_tops(game, stack_object)
+
+    return effect
+
+
 #: Exile the top `<n>` cards of a library face down, then a play permission
 #: that lasts "for as long as they remain exiled" - Flameshape's "Look at the
 #: top two cards of your library and exile them face down. For as long as
@@ -64306,8 +64419,11 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     (each reads an instruction chain `_prepare_effect_clauses` would cut
     apart): the animation gate above, then `machines/copy_effects.py`'s and
     `machines/control_change.py`'s own readers."""
+    from .cast_copies import cast_copy_ability_effect
     from .control_change import control_change_ability_effect
     from .copy_effects import copy_ability_effect
+    from .hand_reveal_exile import parse_reveal_some_then_choose_one
+    from .resolving_exile import resolving_exile_ability_effect
 
     for reader in (
         _parse_if_self_isnt_a_creature_clause,
@@ -64315,6 +64431,9 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
         _parse_target_fights_other_target_clause,
         _parse_return_with_rider_clause,
         copy_ability_effect,
+        cast_copy_ability_effect,
+        resolving_exile_ability_effect,
+        parse_reveal_some_then_choose_one,
         control_change_ability_effect,
     ):
         effect = reader(effect_text)

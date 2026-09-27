@@ -343,6 +343,8 @@ def spell_protected_from_countering(game: Any, spell: Any) -> bool:
     controller = getattr(spell, "controller", None)
     if controller is None:
         return False
+    if static_uncounterable_source(game, spell) is not None:
+        return True
     spell_id = getattr(spell, "id", None)
     for effect in getattr(game, "casting_rule_effects", []):
         if effect.kind != CastingRuleKind.SPELLS_CANT_BE_COUNTERED_GRANT:
@@ -353,6 +355,72 @@ def spell_protected_from_countering(game: Any, spell: Any) -> bool:
             continue
         return True
     return False
+
+
+#: A permanent's own static "`<Quality>` spells you control can't be
+#: countered." - Hexing Squelcher's and Chimil, the Inner Sun's bare "Spells
+#: you control ...", Rhythm of the Wild's "Creature spells ...", Destiny
+#: Spinner's "Creature and enchantment spells ...", Sphinx of the Final
+#: Word's "Instant and sorcery spells ...". Unlike Veil of Summer's resolving
+#: "... this turn" (a recorded CR 611.2c effect), this is CR 604.2's static:
+#: active exactly while its permanent is on the battlefield, so it is read
+#: live off the board and never recorded.
+_STATIC_SPELLS_CANT_BE_COUNTERED_RE = re.compile(
+    r"^(?P<what>(?:[\w'-]+ )*?)spells you control can'?t be countered\.?$",
+    re.IGNORECASE,
+)
+
+
+def _static_uncounterable_quality(line: str) -> str | None:
+    """The quality phrase of a static "`<Quality>` spells you control can't
+    be countered." line (`""` for any spell), or None when the line is not
+    that shape or names a quality `next_spell.spell_has_quality` cannot read.
+    CR 205.1's "and" in a type list names one spell that is either type."""
+    from .next_spell import spell_quality_is_readable
+
+    match = _STATIC_SPELLS_CANT_BE_COUNTERED_RE.fullmatch(line.strip())
+    if match is None:
+        return None
+    quality = re.sub(r"\s+and\s+", " or ", match.group("what").strip().lower())
+    if quality.startswith("other") or quality.endswith("this turn"):
+        return None
+    if quality and not spell_quality_is_readable(quality):
+        return None
+    return quality
+
+
+def reads_static_spells_cant_be_countered_line(text: str) -> bool:
+    """Whether one static line is a "`<Quality>` spells you control can't be
+    countered." this module enforces - `support.py`'s credit for it."""
+    return _static_uncounterable_quality(text) is not None
+
+
+def static_uncounterable_source(game: Any, spell: Any) -> Any:
+    """The permanent whose static "`<Quality>` spells you control can't be
+    countered." covers `spell` right now, or None.
+
+    CR 604.2: the effect is active as long as the permanent with the ability
+    is on the battlefield and has it, so this scans the permanents `spell`'s
+    controller controls fresh, reading each one's *computed* ability lines
+    (CR 613.1f: a layer-6 loss removes the protection, a gain adds it). CR
+    101.2 gives the "can't" precedence over the counterspell's instruction.
+    """
+    from .next_spell import spell_has_quality
+
+    controller = getattr(spell, "controller", None)
+    if controller is None or getattr(spell, "card", None) is None:
+        return None
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(controller):
+        for line in board.of(permanent).abilities:
+            if "countered" not in line:
+                continue
+            quality = _static_uncounterable_quality(line)
+            if quality is None:
+                continue
+            if not quality or spell_has_quality(spell, quality):
+                return permanent
+    return None
 
 
 def blanket_cant_cast_restriction(

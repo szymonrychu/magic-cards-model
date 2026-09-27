@@ -1495,6 +1495,11 @@ def _targets_only_single_creature_other_than_re(
 #: condition - Frontline Heroism's own count-and-controller reading of its
 #: target (CR 115.3) stays exactly as it was; this is the general shape for
 #: every other restriction a "spell that targets ..." condition can name.
+#: "during an opponent's turn" on a cast trigger (Voracious Tome-Skimmer).
+_DURING_AN_OPPONENTS_TURN_RE = re.compile(r"\s*during an opponent'?s turn", re.IGNORECASE)
+#: "... spell with a single target" on a cast trigger (Spinerock Tyrant),
+#: CR 115.9a.
+_WITH_A_SINGLE_TARGET_RE = re.compile(r"\s*with a single target\b", re.IGNORECASE)
 _SPELL_THAT_TARGETS_RE = re.compile(r"\bthat targets (?P<target>.+)$", re.IGNORECASE)
 
 #: Geometer's Arthropod's and Matterbending Mage's own "a spell with {X} in
@@ -1755,7 +1760,19 @@ def _required_tapped_subtype(condition: str) -> str | None:
     return match.group("subtype") if match else None
 
 
-def _required_entering_subtype(condition: str) -> str | None:
+#: "another Elf or Faerie you control enters" (Maralen, Fae Ascendant's other
+#: half once `_self_or_other_enters_match` has split the self off) - the
+#: single-subtype `_ENTERING_SUBTYPE` widened to a comma/or list of singular
+#: subtypes, read by `_parse_subtype_list` the way The Great Goblin's own
+#: dying list is; any one of them is enough (CR 205.3m).
+_ENTERING_SUBTYPE_LIST = re.compile(
+    r"^(?:an?|one or more|another) (?:nontoken )?"
+    r"(?P<subtypes>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*,?\s+or\s+[A-Z][A-Za-z]*) "
+    r"(?:you control |an opponent controls )?enters?\b"
+)
+
+
+def _required_entering_subtype(condition: str) -> str | tuple[str, ...] | None:
     """The subtype an ENTERS_THE_BATTLEFIELD condition demands, or `None`.
 
     Split from `_required_subtype` because that one reads only the "other ...
@@ -1773,6 +1790,9 @@ def _required_entering_subtype(condition: str) -> str | None:
     entering. `BASIC_LAND_TYPES` (CR 305.6) is what tells "Plains" apart
     from an ordinary pluralizable subtype rather than a hardcoded name.
     """
+    listed = _ENTERING_SUBTYPE_LIST.match(condition.strip())
+    if listed is not None:
+        return _parse_subtype_list(listed.group("subtypes"))
     match = _ENTERING_SUBTYPE.match(condition.strip())
     if match is None:
         return None
@@ -2398,6 +2418,11 @@ def _self_or_other_enters_match(
     return None
 
 
+#: "this creature or a Dragon you control dies" (Dragon-Kami's Egg) - the
+#: self half plus an "a[n] `<subject>`" half that is not "another": the
+#: source itself, and any other object the second half describes.
+_SELF_OR_A_SUBJECT_RE = re.compile(r"\bor an? (?!other\b)[a-z]")
+
 _LEGENDARY_WORD = re.compile(r"\blegendary\b")
 
 
@@ -2744,7 +2769,12 @@ def condition_matches(
         # no self-name (`_self_referential`), and only a condition that
         # *does* self-reference needs "another"/"other" to say "besides me
         # too" rather than "instead of me" (CR 603.10a).
-        if mine and "another" not in lowered and "other" not in lowered:
+        if (
+            mine
+            and "another" not in lowered
+            and "other" not in lowered
+            and _SELF_OR_A_SUBJECT_RE.search(lowered) is None
+        ):
             return False
         subtype = _required_subtype(condition)
         if not (
@@ -2978,6 +3008,26 @@ def condition_matches(
             if target_clause is None
             else _SPELL_THAT_TARGETS_RE.sub("", without_frontline_clause)
         )
+        if _DURING_AN_OPPONENTS_TURN_RE.search(caster_condition) is not None:
+            # Voracious Tome-Skimmer's and Brineborn Cutthroat's "Whenever you
+            # cast a spell during an opponent's turn" (CR 102.1: the active
+            # player is the player whose turn it is) - a window on the turn,
+            # not a caster: stripped before the "an opponent" caster check
+            # below, which would otherwise read it as "an opponent casts".
+            turn = getattr(game, "turn", None)
+            if turn is None or turn.active_player == controller:
+                return False
+            caster_condition = _DURING_AN_OPPONENTS_TURN_RE.sub("", caster_condition)
+        if _WITH_A_SINGLE_TARGET_RE.search(caster_condition) is not None:
+            # Spinerock Tyrant's "an instant or sorcery spell with a single
+            # target" - CR 115.9a counts every time an object or player was
+            # chosen as a target of the spell as it was put on the stack, the
+            # same count `machines/targeting.py`'s own "target spell with a
+            # single target" requirement makes (`required_target_count`).
+            spell = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+            if not isinstance(spell, CardState) or len(spell.targets) != 1:
+                return False
+            caster_condition = _WITH_A_SINGLE_TARGET_RE.sub("", caster_condition)
         mana_cost_symbol_match = _CAST_SPELL_MANA_COST_SYMBOL_RE.search(caster_condition)
         if mana_cost_symbol_match is not None:
             # "a spell with {X} in its mana cost" (CR 107.3, CR 202.1): the
@@ -4845,6 +4895,8 @@ _REPLICATE_CLAUSE = re.compile(r"^a replicate cost was paid for it$")
 #: CR 702.153a's own intervening *if*, written out by
 #: `machines/keywords._casualty_ability` - "a casualty cost was paid for it".
 _CASUALTY_CLAUSE = re.compile(r"^a casualty cost was paid for it$")
+#: `machines/keywords._conspire_ability` - "its conspire cost was paid".
+_CONSPIRE_CLAUSE = re.compile(r"^its conspire cost was paid$")
 
 #: CR 601.2h's "no mana was spent to cast it" (Vexing Bauble) and "[mana
 #: symbols] was spent to cast it" (Wistfulness's "{G}{G}", Drowner of Truth's
@@ -5458,6 +5510,12 @@ def intervening_if_answer(
         if record is None:
             return _fail_closed(game, ability, source)
         return record.casualty_paid > 0
+
+    if _CONSPIRE_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.conspire_paid > 0
 
     if _NO_MANA_SPENT_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)

@@ -1,0 +1,182 @@
+"""'`<instruction naming target creature>`. When that creature dies this
+turn, `<consequence>`.' (ECL).
+
+End-Blaze Epiphany: "End-Blaze Epiphany deals X damage to target creature.
+When that creature dies this turn, exile a number of cards from the top of
+your library equal to its power, then choose a card exiled this way. Until
+the end of your next turn, you may play that card." and Burn Away: "Burn Away
+deals 6 damage to target creature. When that creature dies this turn, exile
+its controller's graveyard."
+
+The second sentence creates a CR 603.7 delayed triggered ability as the
+first resolves, watching the creature the first one targeted (CR 603.7c:
+that object), for the rest of the turn (CR 603.7b's stated duration). It
+triggers on that creature's death (CR 700.4), and - a leaves-the-battlefield
+ability looking back in time (CR 603.10a) - "its power" and "its controller"
+are the creature as it last existed on the battlefield (CR 608.2h).
+"""
+
+import re
+from typing import TYPE_CHECKING, Any
+
+from ..models.card_state import CardState
+from ..numbers import parse_count
+from .decisions import Decision, DecisionKind, source_id_of
+
+if TYPE_CHECKING:
+    from ..models.game import Game
+
+_THEN_WHEN_THAT_CREATURE_DIES_RE = re.compile(
+    r"^(?P<first>[^.]*\btarget creature\b[^.]*\.)\s*when that creature dies this turn, "
+    r"(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+_EXILE_TOP_THEN_CHOOSE_ONE_TO_PLAY_RE = re.compile(
+    r"^exile (?:a number of cards from the top of your library equal to (?P<its_power>its power)"
+    r"|the top (?P<n>\w+) cards of your library), then choose a card exiled this way\.\s*"
+    r"until the end of your next turn, you may play that card\.?$",
+    re.IGNORECASE,
+)
+_EXILE_ITS_CONTROLLERS_GRAVEYARD_RE = re.compile(
+    r"^exile its controller'?s graveyard\.?$", re.IGNORECASE
+)
+
+
+def _dead_creature(game: "Game", ability: Any) -> CardState | None:
+    event = getattr(ability, "event", None)
+    if event is None or event.subject_id is None:
+        return None
+    found = game.find_by_id(event.subject_id)
+    return found if isinstance(found, CardState) else None
+
+
+def _last_known_power(card: CardState) -> int:
+    """CR 603.10a / CR 608.2h: the power it had as it left the battlefield -
+    the shared `conditions.objects._last_known_power_toughness` read (a
+    continuous effect's snapshot, or the printing plus the counters it left
+    with, CR 122.1a)."""
+    from .conditions.objects import _last_known_power_toughness
+
+    power, _toughness = _last_known_power_toughness(card)
+    return max(power or 0, 0)
+
+
+def dies_consequence_effect(text: str) -> Any:
+    """The consequence as an ability effect, or None."""
+    from .casting import PlayAction
+
+    cleaned = " ".join(text.split())
+    if match := _EXILE_TOP_THEN_CHOOSE_ONE_TO_PLAY_RE.fullmatch(cleaned):
+        fixed = None if match.group("its_power") else parse_count(match.group("n") or "")
+        if fixed is None and not match.group("its_power"):
+            return None
+
+        def exile_and_play(game: "Game", ability: Any) -> None:
+            controller = game.controller_of(ability)
+            if fixed is None:
+                dead = _dead_creature(game, ability)
+                count = 0 if dead is None else _last_known_power(dead)
+            else:
+                count = fixed
+            exiled = [
+                game.exile_permanent(card) for card in list(controller.library[: max(count, 0)])
+            ]
+            if not exiled:
+                return
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="choose a card exiled this way to play until the end of your next turn",
+                    source=ability.source_name,
+                    amount=1,
+                    exact=True,
+                    cards=tuple(card.id for card in exiled),
+                    source_id=source_id_of(ability),
+                )
+            )
+            chosen = next(card for card in exiled if card.id == chosen_ids[0])
+            game.grant_play_permission(
+                chosen,
+                controller.username,
+                action=PlayAction.PLAY,
+                source_name=ability.source_name,
+                rule="CR 601.3, CR 611.2a",
+                until_end_of_turn=False,
+                expires_end_of_next_turn=True,
+            )
+
+        return exile_and_play
+    if _EXILE_ITS_CONTROLLERS_GRAVEYARD_RE.fullmatch(cleaned):
+
+        def exile_graveyard(game: "Game", ability: Any) -> None:
+            event = getattr(ability, "event", None)
+            username = getattr(event, "subject_controller", None)
+            if username is None:
+                return
+            for card in list(game.player(username).graveyard):
+                game.exile_permanent(card)
+
+        return exile_graveyard
+    from .effects import parse_mixed_effect
+
+    return parse_mixed_effect(cleaned)
+
+
+def parse_then_when_that_creature_dies_this_turn(text: str, *, for_spell: bool) -> Any:
+    """The whole two-sentence chain, or None."""
+    from ..machines.abilities import TriggerEvent
+    from .delayed import DelayedTrigger, ThatCreatureDiesConsequence
+    from .effects import _parse_mixed_clauses
+
+    match = _THEN_WHEN_THAT_CREATURE_DIES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if re.search(r"\bX\b", match.group("first")):
+        # CR 107.3a: an X the caster announced is read by `effects.effect_for`
+        # substituting it into the text first - declining here is what lets
+        # that second, substituted reading happen.
+        return None
+    consequence = match.group("consequence").strip()
+    if dies_consequence_effect(consequence) is None:
+        return None
+    first = _parse_mixed_clauses(match.group("first"), for_spell=for_spell)
+    if first is None:
+        return None
+
+    def effect(game: "Game", stack_object: Any) -> None:
+        targets = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        for clause in first:
+            clause(game, stack_object)
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        for creature in targets:
+            game.create_delayed_trigger(
+                DelayedTrigger(
+                    text=consequence,
+                    event=TriggerEvent.DIES,
+                    controller=controller,
+                    source_id=source_id_of_object(stack_object),
+                    source_name=source_name,
+                    subject_id=creature.id,
+                    remaining=1,
+                    expires_end_of_turn=True,
+                    effect=ThatCreatureDiesConsequence(),
+                )
+            )
+
+    return effect
+
+
+def source_id_of_object(stack_object: Any) -> Any:
+    """The creating object's id (CR 603.7d/e): the spell itself, or the
+    ability's source."""
+    if isinstance(stack_object, CardState):
+        return stack_object.id
+    return getattr(stack_object, "source_id", None)

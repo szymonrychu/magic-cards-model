@@ -91,10 +91,10 @@ def test_each_printed_grant_reads_as_its_keyword_line():
 
 
 def test_a_keyword_no_machine_here_executes_is_not_read_as_a_grant():
-    """Convoke, conspire and an affinity whose "[text]" nothing counts are
-    left to whatever reads them - never credited on a guess."""
+    """Convoke and an affinity whose "[text]" nothing counts are left to
+    whatever reads them - never credited on a guess. (Conspire is read since
+    ecl T7: `tests/scenarios/test_conspire_grant.py`.)"""
     assert not reads_spell_keyword_grant_line("Creature spells you cast have convoke.")
-    assert not reads_spell_keyword_grant_line("Each noncreature spell you cast has conspire.")
     assert not reads_spell_keyword_grant_line(
         "Enchantment spells you cast have affinity for Auras."
     )

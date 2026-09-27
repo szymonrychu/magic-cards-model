@@ -22,7 +22,7 @@ trigger expansions in `machines/keywords.py` (storm CR 702.40a, cascade CR
 keyword gets a second, parallel implementation here.
 
 **Only keywords some machine executes are read.** A line granting a keyword
-this module does not list (convoke, delve, ripple, conspire, ...) is not a
+this module does not list (convoke, delve, ripple, ...) is not a
 grant it reads at all, so `reads_spell_keyword_grant_line` answers False and
 the line keeps whatever verdict it had rather than being credited on a guess.
 
@@ -60,6 +60,7 @@ SPELL_GRANT_KEYWORDS: dict[str, str] = {
     "cascade": "CR 702.85a",
     "casualty": "CR 702.153a",
     "affinity": "CR 702.41a",
+    "conspire": "CR 702.78a",
 }
 
 #: The keywords a card-in-hand grant is read for.
@@ -70,7 +71,7 @@ HAND_GRANT_KEYWORDS: dict[str, str] = {
 #: The keyword phrase itself, as printed after "have"/"has": a bare keyword,
 #: "casualty N", "affinity for <text>", or "miracle <mana cost>".
 _KEYWORD_PHRASE_RE = re.compile(
-    r"^(?:(?P<bare>storm|cascade|improvise)"
+    r"^(?:(?P<bare>storm|cascade|improvise|conspire)"
     r"|(?P<casualty>casualty) (?P<n>\d+)"
     r"|(?P<affinity>affinity) for (?P<what>[a-z]+)"
     r"|(?P<miracle>miracle) (?P<cost>(?:\{[^{}]+\})+))$",
@@ -344,13 +345,18 @@ def granted_triggered_abilities_for(game: Any, source: CardState) -> list[Any]:
     from `granted_spell_keyword_lines`/`granted_hand_keyword_lines` - storm,
     cascade and miracle written out by the same expansions a printed keyword
     goes through (`machines/keywords.granted_keyword_triggered_abilities`)."""
-    from .keywords import casualty_triggered_abilities, granted_keyword_triggered_abilities
+    from .keywords import (
+        casualty_triggered_abilities,
+        conspire_triggered_abilities,
+        granted_keyword_triggered_abilities,
+    )
 
     if source.zone is Zone.STACK:
         lines = granted_lines_of_stack_spell(game, source)
         record = game.cast_record_of(source)
         paid = 0 if record is None or record.is_copy else record.casualty_paid
-        casualty = casualty_triggered_abilities(paid)
+        conspired = 0 if record is None or record.is_copy else record.conspire_paid
+        casualty = casualty_triggered_abilities(paid) + conspire_triggered_abilities(conspired)
     elif source.zone is Zone.HAND:
         lines = granted_hand_keyword_lines(game, source)
         casualty = []
@@ -381,6 +387,25 @@ def casualty_numbers(game: Any, spell: CardState, caster: str, origin_zone: Zone
         if match is not None:
             numbers.append(int(match.group("n")))
     return numbers
+
+
+def conspire_count(game: Any, spell: CardState, caster: str, origin_zone: Zone) -> int:
+    """How many conspire instances `spell` has as `caster` casts it from
+    `origin_zone` (CR 702.78a): printed, then one per grant ("Each
+    noncreature spell you cast has conspire.")."""
+    from .keywords import printed_conspire_count
+
+    count = printed_conspire_count(spell.card)
+    if game is None:
+        return count
+    first_spell = not game.spells_cast_this_turn.get(caster)
+    return count + sum(
+        1
+        for line in granted_spell_keyword_lines(
+            game, spell, caster, origin_zone, first_spell=first_spell
+        )
+        if line == "Conspire"
+    )
 
 
 #: "Affinity for <text>" as `granted_spell_keyword_lines` writes it.

@@ -2201,6 +2201,12 @@ class CastRecord(EngineModel):
     (`machines/spell_grants.granted_triggered_abilities_for`), each gated by
     `machines/triggers.intervening_if_holds`'s "a casualty cost was paid for
     it" clause."""
+    conspire_paid: int = 0
+    """How many of the spell's conspire costs were paid (CR 702.78a), copied
+    from `Casting.conspire_paid` - one conspire trigger per payment
+    (`machines/spell_grants.granted_triggered_abilities_for`), each gated by
+    `machines/triggers.intervening_if_holds`'s "its conspire cost was paid"
+    clause."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), copied
     from `Casting.offspring_paid`. Bool rather than a count: CR 702.175b's
@@ -4089,7 +4095,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 93
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 94
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4196,7 +4202,14 @@ class Game(EngineModel):
     #: enters event for several permanents, a pending or stacked trigger's
     #: event); token creation raises its enters events together and counts
     #: each creation event per turn ("token creation", Mirrormind Crown's
-    #: "the first time", ecl T5); renumbered from 92 at integration).
+    #: "the first time", ecl T5; renumbered from 92 at integration).
+    #: 94: `CastRecord` gained `conspire_paid` (CR 702.78a), `CostComponent`
+    #: gained `from_among` ("remove N counters from among creatures you
+    #: control"), `PlayPermission` gained `while_controlling` (CR 611.2b's
+    #: "for as long as you control this creature") and `machines/delayed`
+    #: gained the `that_creature_dies_consequence` effect kind ("When that
+    #: creature dies this turn, ...") - ecl T7 (renumbered from 92 at
+    #: integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6638,6 +6651,7 @@ class Game(EngineModel):
         kicked: int = 0,
         replicated: int = 0,
         casualty_paid: int = 0,
+        conspire_paid: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
         cast_using_teamwork: bool = False,
@@ -6712,6 +6726,7 @@ class Game(EngineModel):
             kicked=kicked,
             replicated=replicated,
             casualty_paid=casualty_paid,
+            conspire_paid=conspire_paid,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
             cast_using_teamwork=cast_using_teamwork,
@@ -8455,6 +8470,7 @@ class Game(EngineModel):
             ):
                 casting.pay_offspring()
         self._announce_casualty(casting, card, caster, taken)
+        self._announce_conspire(casting, card, caster, taken)
         if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
@@ -8562,6 +8578,44 @@ class Game(EngineModel):
             chosen = next(state for state in fodder if state.id == answer[0])
             taken.add(chosen.id)
             casting.pay_casualty(chosen)
+
+    def _announce_conspire(
+        self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
+    ) -> None:
+        """CR 702.78a's optional tap of two creatures, one `MAY` per conspire
+        instance the spell has - printed or granted - legal only while two
+        untapped creatures sharing a colour with it are left, then which two
+        (`CHOOSE_CARDS`)."""
+        for _ in range(casting.conspire_count()):
+            fodder = [state for state in casting.conspire_candidates() if state.id not in taken]
+            if not self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=(
+                        f"pay conspire (tap two untapped creatures you control that share a "
+                        f"color with it) as you cast {card.name} (CR 702.78a)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=len(fodder) >= 2,
+                )
+            ):
+                return
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=f"choose two creatures to tap for {card.name}'s conspire",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    amount=2,
+                    cards=tuple(state.id for state in fodder),
+                )
+            )
+            chosen = [state for state in fodder if state.id in answer]
+            taken.update(state.id for state in chosen)
+            casting.pay_conspire(chosen)
 
     def _announce_bargain_evidence_and_reveal(
         self, casting: Casting, card: CardState, caster: str, printed: dict
@@ -8950,6 +9004,7 @@ class Game(EngineModel):
                 kicked=original_record.kicked,
                 replicated=original_record.replicated,
                 casualty_paid=original_record.casualty_paid,
+                conspire_paid=original_record.conspire_paid,
                 offspring_paid=original_record.offspring_paid,
                 blight_paid=original_record.blight_paid,
                 gift_promised=original_record.gift_promised,
@@ -16610,6 +16665,8 @@ class Game(EngineModel):
                 # Repriser's "an opponent has been dealt noncombat damage
                 # this turn" and Command the Stage's "... last turn".
                 self.record_turn_fact("dealt_noncombat_damage", damaged_player.username)
+            if source is not None and not event.combat and event.amount > 0:
+                self._noncombat_deathtouch_and_lifelink(source, target, event.amount)
             return event.amount
 
         # -- prevention effects with a duration (CR 615) --------------------------
@@ -16826,6 +16883,28 @@ class Game(EngineModel):
                     f"{event.source.name} is prevented (CR 702.16e)"
                 )
         return None
+
+    def _noncombat_deathtouch_and_lifelink(
+        self, source: "CardState", target: Targetable, dealt: int
+    ) -> None:
+        """CR 702.2b and CR 702.15b for damage that is not combat damage -
+        `machines/combat._deal_combat_damage` applies both to combat damage
+        itself. CR 702.2b destroys "a creature with toughness greater than 0
+        that's been dealt damage by a source with deathtouch", and CR 702.15b
+        has "damage dealt by a source with lifelink" gain "that source's
+        controller ... that much life" - whatever deals it: a spell that gained the keywords
+        (Judith, Carnage Connoisseur's "That spell gains deathtouch and
+        lifelink.") or a permanent dealing noncombat damage. Read by last
+        known information for a source that has left (`source_had_keyword`).
+        """
+        from ..machines.combat import Keyword, source_had_keyword
+
+        if isinstance(target, CardState) and source_had_keyword(source, Keyword.DEATHTOUCH, self):
+            target.dealt_deathtouch_damage = True
+        if source_had_keyword(source, Keyword.LIFELINK, self):
+            controller = source.controller or source.owner
+            if controller is not None:
+                self.gain_life(controller, dealt)
 
     def deal_damage_to_player(self, player: Player | str, amount: int) -> int:
         """Damage dealt to a player causes that much life loss (CR 119.2, 120.3a).
@@ -17345,6 +17424,13 @@ class Game(EngineModel):
                         linked_permanent_id=event.exile_link.id,
                         linked_permanent_stamp=event.exile_link.zone_change_stamp,
                     )
+                if event.exile_counters or event.exile_rider:
+                    # CR 122.1 / CR 603.7: a resolving-exile replacement's
+                    # counter and "If you do" rider (`machines/resolving_
+                    # exile.py`).
+                    from ..machines.resolving_exile import after_resolving_exile
+
+                    after_resolving_exile(self, card_state, event)
             elif event.destination is Zone.LIBRARY:
                 # Green Sun's Zenith's own "Shuffle [this] into its owner's
                 # library" (`machines/replacement.py`'s `_stack_replacements`
@@ -19916,6 +20002,7 @@ class Game(EngineModel):
         until_next_end_step_of: str | None = None,
         pays_life_for_mana_value: bool = False,
         choice_group: UUID | None = None,
+        while_controlling: str | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -19993,6 +20080,7 @@ class Game(EngineModel):
                 until_next_end_step_of=until_next_end_step_of,
                 pays_life_for_mana_value=pays_life_for_mana_value,
                 choice_group=choice_group,
+                while_controlling=while_controlling,
             )
             self.play_permissions.append(permission)
             return permission
@@ -20291,6 +20379,7 @@ class Game(EngineModel):
         collect_evidence: bool = False,
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
+        conspire: Sequence[Sequence[CardState]] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -20409,6 +20498,10 @@ class Game(EngineModel):
             # before CR 601.2c's targets.
             for creature in casualty or ():
                 casting.pay_casualty(creature)
+            # CR 702.78a: each conspire instance's two creatures, announced
+            # with the rest of CR 601.2b's additional costs.
+            for pair in conspire or ():
+                casting.pay_conspire(list(pair))
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():
@@ -23899,6 +23992,15 @@ class Game(EngineModel):
         key = self._activation_handoff_key(permanent, index)
         self.announced_reveal_counts.pop(key, None)
         for component in total.components:
+            if component.from_among and not component.cards:
+                # "Remove N counters from among creatures you control"
+                # (Hopeful Initiate): the permanents that give them, taken in
+                # battlefield order until the total is met (`cost.fill_from_
+                # among`'s documented default).
+                from ..machines.cost import fill_from_among
+
+                fill_from_among(component, self, controller, None)
+                continue
             if (
                 component.kind in (ComponentKind.PLACE_COUNTERS, ComponentKind.REMOVE_COUNTERS)
                 and not component.cards

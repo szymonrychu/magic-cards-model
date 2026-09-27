@@ -36,10 +36,13 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["damage_dealt_this_turn", "turn_facts"],
+    "fields_changed": ["damage_dealt_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts"],
     "notices": {},
     "objects": {},
     "players": {
+      "alice": {
+        "life": [20, 22]
+      },
       "bob": {
         "life": [20, 18]
       }

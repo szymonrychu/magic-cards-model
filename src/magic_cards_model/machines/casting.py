@@ -80,12 +80,13 @@ from .keywords import (
     enchant_restrictions,
     face_down_characteristics,
     printed_casualty_numbers,
+    printed_conspire_count,
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
 from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .objects_as_costs import power_of
-from .spell_grants import casualty_numbers, granted_affinity_reductions
+from .spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
 from .targeting import (
     TargetingProfile,
     kicked_instead_target_text,
@@ -948,6 +949,56 @@ def _printed_zone_permissions(
     return extra
 
 
+#: "You may cast this card from your graveyard by removing six counters from
+#: among creatures you control in addition to paying its other costs."
+#: (Quilled Greatwurm) - the card's own CR 601.3 permission to be cast from
+#: a zone (CR 604.6's "functions from" that zone), at its own mana cost plus
+#: an additional cost (CR 601.2f), at its own timing.
+_PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE = re.compile(
+    r"^you may cast this card from your (?P<zone>graveyard|exile) by (?P<extra>.+?) in addition "
+    r"to paying its other costs\.?$",
+    re.IGNORECASE,
+)
+
+
+def _printed_self_zone_cast_additional_cost(text: str) -> tuple[Zone, TotalCost] | None:
+    match = _PRINTED_SELF_ZONE_CAST_WITH_ADDITIONAL_COST_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    extra = re.sub(r"^removing\b", "Remove", match.group("extra").strip(), flags=re.IGNORECASE)
+    extra = re.sub(r"^paying\b", "Pay", extra, flags=re.IGNORECASE)
+    cost = total_cost_for_phrase(extra)
+    if cost is None:
+        return None
+    zone = Zone.GRAVEYARD if match.group("zone").lower() == "graveyard" else Zone.EXILE
+    return zone, cost
+
+
+def reads_printed_self_zone_cast_line(text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    return _printed_self_zone_cast_additional_cost(text) is not None
+
+
+def _printed_self_zone_cast_with_additional_cost(card: Card) -> list[KeywordCastOption]:
+    found: list[KeywordCastOption] = []
+    for line in (card.oracle_text or "").splitlines():
+        read = _printed_self_zone_cast_additional_cost(line)
+        if read is None:
+            continue
+        zone, cost = read
+        found.append(
+            KeywordCastOption(
+                keyword=CAST_PERMISSION,
+                rule="CR 601.3, CR 601.2f",
+                zone=zone,
+                pays_mana_cost=True,
+                timing=CastTiming.OWN,
+                additional_cost=cost,
+            )
+        )
+    return found
+
+
 def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
     """Every way this card's own text lets it be cast, in printed order (CR 601.3).
 
@@ -966,6 +1017,7 @@ def keyword_cast_options(card: Card) -> list[KeywordCastOption]:
         if option.keyword.lower() == "warp":
             options.append(_warp_from_exile(ability))
     options.extend(_printed_zone_permissions(card, options))
+    options.extend(_printed_self_zone_cast_with_additional_cost(card))
 
     if adventure_face(card) is not None:
         # CR 715.3d: "Instead of putting a spell that was cast as an Adventure
@@ -1323,6 +1375,10 @@ def granted_cast_options(
             if option is None:
                 option = _static_zone_cast_option(
                     text, game, spell, caster, origin_zone, library_top
+                )
+            if option is None:
+                option = _linked_exile_static_cast_option(
+                    text, game, spell, caster, origin_zone, permanent
                 )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
@@ -1796,6 +1852,185 @@ def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardSta
     return None
 
 
+#: A permanent's standing permission to cast from its own linked pile (CR
+#: 601.3, CR 607.2a), read after the object's own name is normalised to
+#: "this `<noun>`" (CR 201.5):
+#:
+#: - "Once each turn, you may cast a spell with mana value less than or equal
+#:   to the number of Elves and Faeries you control from among cards exiled
+#:   with Maralen this turn without paying its mana cost." (Maralen, Fae
+#:   Ascendant - CR 118.9, and a once-each-turn limit on the permanent);
+#: - "During your turn, you may cast creature spells from among cards you own
+#:   exiled with this creature by removing three counters from among
+#:   creatures you control in addition to paying their other costs." (Dawnhand
+#:   Dissident - CR 601.2f's additional cost);
+#: - "You may cast spells from among cards exiled with Rona." (Rona, Disciple
+#:   of Gix) and Hedonist's Trove's "... You can't cast more than one spell
+#:   this way each turn."
+_LINKED_EXILE_STATIC_CAST_RE = re.compile(
+    r"^(?P<once>once each turn, )?(?P<during>during your turn, )?you may cast "
+    r"(?:an? )?(?:(?P<quality>[\w' ,-]+?) )?spells?"
+    r"(?: with mana value (?:(?P<mv_n>\d+) or less|less than or equal to (?P<mv_expr>.+?)))?"
+    r" from among cards (?P<own>you own )?exiled with this \w+(?P<this_turn> this turn)?"
+    r"(?P<free> without paying (?:its|their) mana costs?)?"
+    r"(?: by (?P<extra>.+?) in addition to paying (?:its|their) other costs)?"
+    r"\.(?P<limit>\s*you can'?t cast more than one spell this way each turn\.)?$",
+    re.IGNORECASE,
+)
+#: "the number of Elves and Faeries you control" - a count of the permanents
+#: carrying any of the listed subtypes (CR 205.3m), each counted once.
+_NUMBER_OF_SUBTYPES_YOU_CONTROL_RE = re.compile(
+    r"^the number of (?P<first>[A-Za-z]+)(?:,? (?:and|or) (?P<second>[A-Za-z]+))? you control$",
+    re.IGNORECASE,
+)
+
+
+class LinkedExileStaticCast(EngineModel):
+    """One `_LINKED_EXILE_STATIC_CAST_RE` line, read."""
+
+    model_config = ConfigDict(frozen=True)
+
+    once_each_turn: bool = False
+    during_your_turn: bool = False
+    quality: str = ""
+    max_mana_value: int | None = None
+    max_mana_value_expression: str | None = None
+    you_own: bool = False
+    this_turn: bool = False
+    free: bool = False
+    additional_cost: str | None = None
+
+
+def _count_listed_subtypes(expression: str) -> Callable[[Any, str], int] | None:
+    """`_NUMBER_OF_SUBTYPES_YOU_CONTROL_RE`'s count, or the general
+    `effects.count_expression` for anything else it reads."""
+    from .effects import _singular_subtype_for_count_expression, count_expression
+
+    match = _NUMBER_OF_SUBTYPES_YOU_CONTROL_RE.fullmatch(expression.strip())
+    if match is not None and match.group("second") is not None:
+        words = [match.group("first"), match.group("second")]
+        subtypes = [_singular_subtype_for_count_expression(word) for word in words]
+        if all(subtype is not None for subtype in subtypes):
+            wanted = {subtype for subtype in subtypes if subtype is not None}
+
+            def count(game: Any, controller: str) -> int:
+                board = game.computed_board()
+                return sum(
+                    1
+                    for permanent in game.permanents_controlled_by(controller)
+                    if wanted & {word.lower() for word in board.of(permanent).subtypes}
+                )
+
+            return count
+    return count_expression(expression)
+
+
+@lru_cache(maxsize=2048)
+def linked_exile_static_cast(
+    permanent_name: str, text: str, legendary: bool
+) -> LinkedExileStaticCast | None:
+    """Read one static line as `_LINKED_EXILE_STATIC_CAST_RE`, or None -
+    failing closed on a quality, a bound or an additional cost this cannot
+    read."""
+    from .abilities import self_normalized_effect_text
+    from .next_spell import spell_quality_is_readable
+
+    normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
+    match = _LINKED_EXILE_STATIC_CAST_RE.fullmatch(" ".join(normalized.split()))
+    if match is None:
+        return None
+    quality = _normalized_spell_quality(match.group("quality"))
+    if quality and not spell_quality_is_readable(quality):
+        return None
+    expression = match.group("mv_expr")
+    if expression is not None and _count_listed_subtypes(expression) is None:
+        return None
+    extra = match.group("extra")
+    if extra is not None:
+        extra = re.sub(r"^removing\b", "Remove", extra.strip(), flags=re.IGNORECASE)
+        extra = re.sub(r"^paying\b", "Pay", extra, flags=re.IGNORECASE)
+        if total_cost_for_phrase(extra) is None:
+            return None
+    return LinkedExileStaticCast(
+        once_each_turn=match.group("once") is not None or match.group("limit") is not None,
+        during_your_turn=match.group("during") is not None,
+        quality=quality,
+        max_mana_value=int(match.group("mv_n")) if match.group("mv_n") else None,
+        max_mana_value_expression=expression,
+        you_own=match.group("own") is not None,
+        this_turn=match.group("this_turn") is not None,
+        free=match.group("free") is not None,
+        additional_cost=extra,
+    )
+
+
+def reads_linked_exile_static_cast_line(card: Card, text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    from ..models.card import Supertype
+
+    return (
+        linked_exile_static_cast(card.name, text, Supertype.LEGENDARY in card.supertypes)
+        is not None
+    )
+
+
+def _linked_exile_static_cast_option(
+    text: str, game: Any, spell: CardState, caster: str, origin_zone: Zone, permanent: CardState
+) -> KeywordCastOption | None:
+    """`linked_exile_static_cast`'s grant for `spell`, or None: `spell` is
+    face up in exile, exiled with `permanent` (that incarnation, CR 400.7,
+    CR 607.2a) - "this turn" when the line says so - owned by the caster when
+    it says "cards you own", of the quality named, within the mana value
+    bound (CR 202.3, read now), and the once-each-turn use of `permanent`
+    not yet spent."""
+    from ..models.card import Supertype
+    from .next_spell import spell_has_quality
+
+    if origin_zone is not Zone.EXILE:
+        return None
+    read = linked_exile_static_cast(
+        permanent.name, text, Supertype.LEGENDARY in permanent.card.supertypes
+    )
+    if read is None or game is None:
+        return None
+    probe = spell if spell.zone is Zone.EXILE else None
+    annotation = probe.exile_annotation if probe is not None else None
+    if probe is None or annotation is None or not probe.face_up:
+        return None
+    if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
+        return None
+    turn = getattr(game, "turn", None)
+    if read.this_turn and (turn is None or annotation.turn_exiled != turn.turns_taken):
+        return None
+    if read.during_your_turn and (turn is None or turn.active_player != caster):
+        return None
+    if read.you_own and (spell.owner or caster) != caster:
+        return None
+    if read.quality and not spell_has_quality(spell, read.quality):
+        return None
+    if read.max_mana_value is not None and spell.mana_value > read.max_mana_value:
+        return None
+    if read.max_mana_value_expression is not None:
+        counter = _count_listed_subtypes(read.max_mana_value_expression)
+        if counter is None or spell.mana_value > counter(game, caster):
+            return None
+    key = None
+    if read.once_each_turn:
+        key = once_per_turn_key(permanent)
+        if key in getattr(game, "once_per_turn_cast_permissions_used", {}):
+            return None
+    additional = total_cost_for_phrase(read.additional_cost) if read.additional_cost else None
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 607.2a",
+        zone=Zone.EXILE,
+        pays_mana_cost=not read.free,
+        timing=CastTiming.OWN,
+        once_per_turn_key=key,
+        additional_cost=additional,
+    )
+
+
 def _linked_exile_play_option(
     game: Any, spell: CardState, caster: str, origin_zone: Zone
 ) -> KeywordCastOption | None:
@@ -2234,6 +2469,13 @@ class PlayPermission(EngineModel):
     first card played or cast under any of them ends the rest
     (`Game.spend_play_permission_choice`). `None` for a grant that covers
     each card on its own ("those cards")."""
+    while_controlling: str | None = None
+    """"For as long as you control this creature" (Taster of Wares) - the
+    permanent as that object (`once_per_turn_key`'s `"<id>:<stamp>"`, CR
+    400.7) that `player` has to control for the permission to be usable
+    (CR 611.2b); once it leaves, or changes control, the card is no longer
+    castable this way. `None` for every other grant. Carries
+    `until_end_of_turn=False`: it is not a one-turn grant."""
     bottom_if_unused: bool = False
     """Always `False` now, kept because consumers read it. Cascade used to set
     it for a hit left in exile under a permission; cascade now casts the hit
@@ -2326,6 +2568,13 @@ class PlayPermission(EngineModel):
                 f"{self.source_name}'s permission to {self.action.value} {card.name} lasted "
                 f"until end of turn and that turn is over (CR 514.2)"
             )
+        if self.while_controlling is not None and not _controls_that_object(
+            game, player, self.while_controlling
+        ):
+            return (
+                f"{self.source_name}'s permission to {self.action.value} {card.name} lasts only "
+                f"for as long as {player} controls {self.source_name} (CR 611.2b)"
+            )
         if self.condition is not None:
             held = (
                 None if game is None else game.condition_holds(player, self.condition, source=card)
@@ -2351,6 +2600,18 @@ class PlayPermission(EngineModel):
                 f"permission to play it as a land (CR 601.1a, CR 701.18b)"
             )
         return None
+
+
+def _controls_that_object(game: Any, player: str, key: str) -> bool:
+    """Whether `player` controls, on the battlefield, the object `key`
+    (`once_per_turn_key`'s `"<id>:<stamp>"`) names - that incarnation of it
+    (CR 400.7)."""
+    if game is None:
+        return False
+    for permanent in game.permanents_controlled_by(player):
+        if once_per_turn_key(permanent) == key:
+            return True
+    return False
 
 
 def play_permissions_on(game: Any, card: CardState) -> list[PlayPermission]:
@@ -2669,6 +2930,7 @@ ADDITIONAL_COST_KEYWORDS = frozenset(
         "teamwork",
         "bargain",
         "casualty",
+        "conspire",
     }
 )
 
@@ -2795,6 +3057,16 @@ def casualty_cost_option(number: int) -> OptionalAdditionalCost:
     )
 
 
+#: CR 702.78a's cost, spelled out.
+CONSPIRE_COST = "Tap two untapped creatures you control that each share a color with it"
+
+
+def conspire_cost_option() -> OptionalAdditionalCost:
+    """One conspire instance as an optional additional cost (CR 702.78a,
+    CR 118.8b) - `Casting.pay_conspire` pays it."""
+    return OptionalAdditionalCost(keyword="conspire", cost=CONSPIRE_COST, rule="CR 702.78a")
+
+
 def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     """Every optional additional cost `card` prints for CR 601.2b's
     announcement, keyword lines and "you may ..." sentences alike.
@@ -2832,6 +3104,7 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
         )
     found.extend(casualty_cost_option(number) for number in printed_casualty_numbers(card))
+    found.extend(conspire_cost_option() for _ in range(printed_conspire_count(card)))
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
             continue
@@ -2874,10 +3147,13 @@ def granted_optional_additional_costs(
     if game is None:
         return []
     printed = len(printed_casualty_numbers(card.card))
+    granted_conspire = conspire_count(game, card, caster, card.zone) - printed_conspire_count(
+        card.card
+    )
     return [
         casualty_cost_option(number)
         for number in casualty_numbers(game, card, caster, card.zone)[printed:]
-    ]
+    ] + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
 
 
 def has_flash(card: Card) -> bool:
@@ -3910,6 +4186,9 @@ class Casting(EngineModel):
     casualty_paid: int = 0
     """How many of this spell's casualty instances were paid (CR 702.153a,
     CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
+    conspire_paid: int = 0
+    """How many of this spell's conspire instances were paid (CR 702.78a),
+    set by `pay_conspire`."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), set by
     `pay_offspring`. A flag rather than `kicked`'s count: offspring has no
@@ -4942,7 +5221,15 @@ class Casting(EngineModel):
         if option.additional_cost is not None:
             # CR 601.2f: "by paying 3 life in addition to paying their other
             # costs" - an additional cost the permission itself charges.
-            self.add_additional_cost(option.additional_cost.model_copy(deep=True))
+            # "by removing three counters from among creatures you control"
+            # takes its permanents from `choosing` (CR 601.2b), or by
+            # `cost.fill_from_among`'s default when none are named.
+            from .cost import fill_from_among
+
+            extra = option.additional_cost.model_copy(deep=True)
+            for component in extra.components:
+                fill_from_among(component, self.game, self.caster, list(choosing or []) or None)
+            self.add_additional_cost(extra)
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana
             # cost, so there is no alternative cost to announce (CR 702.185b).
@@ -5793,6 +6080,75 @@ class Casting(EngineModel):
         )
         self.add_additional_cost(TotalCost(components=[component]))
         self.casualty_paid += 1
+        return self.step
+
+    def conspire_count(self) -> int:
+        """How many conspire instances this spell has as it is cast (CR
+        702.78a): printed, then granted ("Each noncreature spell you cast
+        has conspire.", `machines/spell_grants.py`)."""
+        return conspire_count(self.game, self.spell, self.caster, self.origin_zone)
+
+    def conspire_candidates(self) -> list[CardState]:
+        """The untapped creatures the caster controls that share a colour
+        with this spell - what CR 702.78a's cost may tap."""
+        if self.game is None:
+            return []
+        spell_colors = set(self.spell.colors)
+        board = self.game.computed_board()
+        return [
+            state
+            for state in self.game.permanents_controlled_by(self.caster)
+            if board.of(state).is_creature
+            and not state.tapped
+            and spell_colors & set(board.of(state).colors)
+        ]
+
+    def pay_conspire(self, creatures: list[CardState]) -> CastingStep:
+        """CR 702.78a: "As an additional cost to cast this spell, you may tap
+        two untapped creatures you control that each share a color with it."
+
+        The two are chosen now (CR 601.2b) and tapped with the rest of the
+        total cost at CR 601.2h. Each instance is paid with its own two
+        creatures; a creature already paying another cost of this spell
+        cannot pay this one too.
+        """
+        from .cost import tap_cost
+
+        if self.conspire_paid >= self.conspire_count():
+            raise ValueError(f"{self.spell.name} has no unpaid conspire ability (CR 702.78a)")
+        if len(creatures) != 2 or creatures[0] is creatures[1]:
+            raise ValueError("conspire taps exactly two creatures (CR 702.78a)")
+        spell_colors = set(self.spell.colors)
+        for creature in creatures:
+            if creature.zone is not Zone.BATTLEFIELD:
+                raise ValueError(f"{creature.name} is not a permanent (CR 702.78a)")
+            controller = (
+                self.game.controller_of(creature).username
+                if self.game is not None
+                else creature.controller
+            )
+            if controller != self.caster:
+                raise ValueError(f"{self.caster} does not control {creature.name} (CR 702.78a)")
+            chars = self.game.characteristics_of(creature) if self.game is not None else creature
+            if not chars.is_creature:
+                raise ValueError(f"{creature.name} is not a creature (CR 702.78a)")
+            if creature.tapped:
+                raise ValueError(
+                    f"{creature.name} is tapped, and conspire taps untapped creatures (CR 118.3)"
+                )
+            if not spell_colors & set(chars.colors):
+                raise ValueError(
+                    f"{creature.name} does not share a color with {self.spell.name} (CR 702.78a)"
+                )
+            if any(
+                component.cards and creature in component.cards
+                for extra in self.additional_costs
+                for component in extra.components
+            ):
+                raise ValueError(f"{creature.name} is already paying another cost of this spell")
+        component = tap_cost(*creatures, payer=self.caster, description=CONSPIRE_COST)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.conspire_paid += 1
         return self.step
 
     def _optional_sentence(self, pattern: re.Pattern[str], what: str, rule: str) -> str:
@@ -7218,6 +7574,7 @@ class Casting(EngineModel):
                 kicked=self.kicked,
                 replicated=self.replicated,
                 casualty_paid=self.casualty_paid,
+                conspire_paid=self.conspire_paid,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
                 cast_using_teamwork=self.teamwork_paid,
