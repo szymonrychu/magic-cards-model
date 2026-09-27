@@ -7452,10 +7452,15 @@ class Game(EngineModel):
                     )
                 )
 
-        if spell.id in self.turn_ended_exiled_ids or spell.zone is Zone.EXILE:
+        if spell.id in self.turn_ended_exiled_ids or spell.zone in (
+            Zone.EXILE,
+            Zone.BATTLEFIELD,
+        ):
             # (Also a spell whose own text exiled it as it resolved - Burning
             # Wish's "Exile Burning Wish." (CR 201.5): CR 608.2n's final
-            # graveyard step finds no spell left on its way there.)
+            # graveyard step finds no spell left on its way there. Esper
+            # Origins' "exile it, then put it onto the battlefield
+            # transformed" has already moved it on to the battlefield.)
             # CR 724.1b exiled this spell while it was resolving, and CR 608.2m
             # let it finish resolving anyway ("If an instant spell, sorcery
             # spell, or ability that can legally resolve leaves the stack once
