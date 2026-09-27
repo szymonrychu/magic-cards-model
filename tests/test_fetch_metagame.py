@@ -489,6 +489,66 @@ def test_fetch_format_reports_unresolved_names_without_dropping_them_silently():
     assert result["solo archetype"].deck_count_reported == 1
 
 
+def test_fetch_format_combines_rate_across_spelling_variants_before_thresholding():
+    """Real bug: names were resolved AFTER computing each raw spelling's
+    own inclusion rate, so a card that shows up as a full "A // B" name in
+    some decks and front-face-only in others (both real, seen live from
+    different sources) was counted as two separate partial rates instead
+    of one combined rate over the deck union. Here each spelling alone
+    appears in only 1 of 10 decks (rate 0.1, below min_rate) - the old code
+    drops the card entirely; resolving before counting must combine both
+    into 2 of 10 (rate 0.2), which clears the threshold."""
+    full_name = "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki"
+    front_name_only = "Fable of the Mirror-Breaker"
+    archetypes = [
+        {"canonical_name": "izzet prowess", "id": "id-1", "deck_count": 10, "format": "modern"}
+    ]
+    days = fm.window_days(date(2026, 9, 22), days=30)
+    decks_page = [
+        {
+            "pilot": "p1",
+            "tournament_date": "2026-09-22T00:00:00Z",
+            "mainboard": [f"1 {front_name_only}"],
+        },
+        {"pilot": "p2", "tournament_date": "2026-09-22T00:00:00Z", "mainboard": [f"1 {full_name}"]},
+    ] + [
+        {"pilot": f"empty{i}", "tournament_date": "2026-09-22T00:00:00Z", "mainboard": []}
+        for i in range(8)
+    ]
+    responses: dict[Any, Any] = {
+        _key("statistics_archetypes", format="modern", limit=5000): archetypes
+    }
+    for day in days:
+        responses[
+            _key(
+                "statistics_decks",
+                format="modern",
+                archetype_name="izzet prowess",
+                date_from=day,
+                date_to=day,
+                limit=5000,
+                include_cards="names_only",
+            )
+        ] = decks_page if day == "2026-09-22" else []
+    transport = FakeTransport(responses)
+    client = fm.SpellslingerClient(transport)
+
+    resolve_name = fm.build_name_resolver([{"name": full_name}])
+    unresolved: set[str] = set()
+    result = fm.fetch_format(
+        client,
+        format="modern",
+        as_of=date(2026, 9, 22),
+        min_decks=1,
+        min_rate=0.2,
+        resolve_name=resolve_name,
+        unresolved=unresolved,
+    )
+    assert result["izzet prowess"].cards == {full_name: 0.2}
+    assert unresolved == set()
+    assert result["izzet prowess"].decks_enumerated == 10
+
+
 # ---------------------------------------------------------------------------
 # Output: deterministic, sorted, stable rounding
 # ---------------------------------------------------------------------------

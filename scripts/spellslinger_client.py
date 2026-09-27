@@ -25,6 +25,20 @@ _PROTOCOL_VERSION = "2025-03-26"
 _HEADERS = {"Content-Type": "application/json", "Accept": "application/json, text/event-stream"}
 
 
+class MCPCallError(RuntimeError):
+    """A `tools/call` did not come back with a usable result: a JSON-RPC
+    `error`, a tool result flagged `isError`, a response with neither
+    `result` nor `error` at all, or a body that was empty or not valid
+    JSON. Raised rather than `call` returning `""` or `None` - a caller
+    that only checks "was the list empty" (`response_items`, for one) must
+    never mistake a broken call for zero real results."""
+
+    def __init__(self, tool: str, arguments: Mapping[str, Any], reason: str) -> None:
+        super().__init__(f"{tool}({dict(arguments)!r}): {reason}")
+        self.tool = tool
+        self.arguments = dict(arguments)
+
+
 class Transport(Protocol):
     """What `SpellslingerClient` needs from whatever actually sends a
     `tools/call` request - real HTTP in production
@@ -93,12 +107,29 @@ class MCPTransport:
             }
         )
         assert response is not None  # only the `notify` post can return None
-        result = response.get("result", response)
+
+        if "error" in response:
+            error = response["error"]
+            message = error.get("message", error) if isinstance(error, dict) else error
+            raise MCPCallError(tool, arguments, f"JSON-RPC error: {message}")
+
+        result = response.get("result")
+        if result is None:
+            raise MCPCallError(
+                tool, arguments, f"response had neither 'result' nor 'error': {response!r}"
+            )
+
         text = "".join(chunk.get("text", "") for chunk in result.get("content", []))
+        if result.get("isError"):
+            raise MCPCallError(tool, arguments, f"tool reported isError: {text or result!r}")
+        if not text.strip():
+            raise MCPCallError(tool, arguments, "empty response body")
         try:
             return json.loads(text)
-        except json.JSONDecodeError:
-            return text
+        except json.JSONDecodeError as exc:
+            raise MCPCallError(
+                tool, arguments, f"could not parse response body as JSON: {text[:200]!r}"
+            ) from exc
 
 
 class SpellslingerClient:

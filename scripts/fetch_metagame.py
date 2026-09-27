@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from scripts import card_coverage  # noqa: E402
 from scripts.spellslinger_client import (  # noqa: E402
     DEFAULT_URL,
+    MCPCallError,
     MCPTransport,
     SpellslingerClient,
     Transport,
@@ -47,6 +48,7 @@ from scripts.spellslinger_client import (  # noqa: E402
 
 __all__ = [
     "DEFAULT_URL",
+    "MCPCallError",
     "MCPTransport",
     "SpellslingerClient",
     "Transport",
@@ -272,6 +274,32 @@ def _card_name(line: str) -> str:
     return match.group(1) if match else line.strip()
 
 
+def resolve_deck_mainboard(
+    mainboard: list[str], resolve_name: Callable[[str], str | None]
+) -> list[str]:
+    """`mainboard` (raw "N Name" lines) rewritten so every card is named by
+    its canonical engine name where one resolves, deduplicated per deck -
+    the same physical card must never be counted twice because it showed
+    up under two different raw spellings in the same deck (front-face-only
+    from one source, the full "A // B" name from another - both real,
+    seen live). A name that does not resolve is kept under its own raw
+    spelling rather than dropped, so it still counts towards something and
+    `fetch_format`'s own resolve-and-report step downstream still sees it.
+
+    This must run *before* `card_inclusion_rates`, not after: resolving
+    only the names that already cleared a per-spelling rate threshold
+    cannot recover a card whose rate was split across two spellings and
+    never cleared the threshold under either one alone - each deck has to
+    be canonicalized first so every deck contributes to one shared count.
+    Rewritten as synthetic "1 <name>" lines since `card_inclusion_rates`
+    only cares about presence per deck, never copy count."""
+    names: set[str] = set()
+    for line in mainboard:
+        raw_name = _card_name(line)
+        names.add(resolve_name(raw_name) or raw_name)
+    return [f"1 {name}" for name in names]
+
+
 def card_inclusion_rates(
     decks: Mapping[tuple[str, str], list[str]], *, min_rate: float
 ) -> dict[str, float]:
@@ -419,7 +447,10 @@ def fetch_format(
         decks = enumerate_archetype_decks(
             client, format=format, merge=merge, days=days, whole_format_by_day=whole_format_by_day
         )
-        raw_rates = card_inclusion_rates(decks, min_rate=min_rate)
+        resolved_decks = {
+            key: resolve_deck_mainboard(mainboard, resolve_name) for key, mainboard in decks.items()
+        }
+        raw_rates = card_inclusion_rates(resolved_decks, min_rate=min_rate)
         resolved_cards: dict[str, float] = {}
         for name, rate in raw_rates.items():
             resolved = resolve_name(name)
