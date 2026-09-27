@@ -10724,6 +10724,10 @@ _HALF_OF_OWN_LIBRARY_RE = re.compile(
 _NO_MAXIMUM_HAND_SIZE_REST_OF_GAME_RE = re.compile(
     r"^you have no maximum hand size for the rest of the game$", re.IGNORECASE
 )
+#: CR 725.1 - "you become the monarch." Nothing to read but the plain
+#: sentence: CR 725 puts no cost or condition inside it, so it is only ever
+#: this exact shape (Grave Venerations, Palace Sentinels).
+_BECOME_THE_MONARCH_RE = re.compile(r"^you become the monarch$", re.IGNORECASE)
 #: CR 701.25a / CR 701.22a. "Surveil X, where X is `<expr>`" (Cerebral
 #: Download) reads `<expr>` through `count_expression`, the same reader
 #: `amount_expression`'s own terms already call.
@@ -11882,6 +11886,12 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
         return lambda game, player, source, source_id: (
             player.remove_maximum_hand_size_for_rest_of_game()
         )
+
+    if _BECOME_THE_MONARCH_RE.fullmatch(clause):
+        # CR 725.1 - Grave Venerations' "you become the monarch.", Palace
+        # Sentinels' identical clause off a creature ETB rather than an
+        # enchantment's.
+        return lambda game, player, source, source_id: game.become_monarch(player.username)
 
     if match := _DRAW_RE.fullmatch(clause):
         amount = parse_count(match.group("n")) if match.group("n") else 1
@@ -52541,6 +52551,35 @@ def _parse_target_player_draws_clause(clause: str, *, for_spell: bool) -> Target
     return effect
 
 
+#: CR 725.1 - "Target player becomes the monarch." (Denethor, Stone Seer) /
+#: "target opponent becomes the monarch." (M'Baku, Jabari Chieftain, not in
+#: this pool) - the same "target player"/"target opponent" phrase pair
+#: `_TARGET_PLAYER_DRAWS_RE`'s own neighbours already read, one CR 725.1 verb
+#: in place of theirs.
+_TARGET_PLAYER_BECOMES_MONARCH_RE = re.compile(
+    r"^(?P<phrase>target player|target opponent) becomes the monarch$", re.IGNORECASE
+)
+
+
+def _parse_target_player_becomes_monarch_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_BECOMES_MONARCH_RE`'s shape, or `None` if this is not
+    it."""
+    match = _TARGET_PLAYER_BECOMES_MONARCH_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), allow_player_targets=True):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        for target in game.resolve_targets(stack_object):
+            if isinstance(target, Player):
+                game.become_monarch(target.username)
+
+    return effect
+
+
 #: "Two target players each draw a card." (Gleaming Splendor) - CR 115.6's
 #: own exact-count target profile ("two target players", not "up to two"),
 #: each drawing independently: CR 121.1's ordinary draw, repeated once per
@@ -58803,6 +58842,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     target_player_draws = _parse_target_player_draws_clause(clause, for_spell=for_spell)
     if target_player_draws is not None:
         return target_player_draws
+    target_player_becomes_monarch = _parse_target_player_becomes_monarch_clause(
+        clause, for_spell=for_spell
+    )
+    if target_player_becomes_monarch is not None:
+        return target_player_becomes_monarch
     n_target_players_each_draw = _parse_n_target_players_each_draw_clause(
         clause, for_spell=for_spell
     )

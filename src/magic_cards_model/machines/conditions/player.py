@@ -360,6 +360,19 @@ def _poisoned(context: "ConditionContext", match: re.Match[str]) -> bool:
     )
 
 
+def _is_the_monarch(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "if you're the monarch" (Grave Venerations), "you aren't the
+    monarch" - CR 725.1's designation, `Game.monarch` holding at most one
+    username rather than a per-player flag (see that field's own docstring),
+    so this reads it against `subject` instead of a per-player stat."""
+    negated = match.group("negated") is not None
+    return _for(
+        context,
+        match.group("subject"),
+        lambda username: (context.game.monarch == username) != negated,
+    )
+
+
 def _player_has_poison(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "<subject> has <count> poison counters" (CR 122.1f)."""
     test = _quantity_test(match.group("quantity"))
@@ -747,6 +760,13 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(rf"(?P<subject>{_SUBJECT}) (?:is|are) (?P<negated>not )?poisoned"),
         _poisoned,
+    ),
+    ConditionReader(
+        re.compile(
+            rf"(?P<subject>{_SUBJECT})(?:'re|'s|\s+is|\s+are)(?P<negated>n't|\s+not)?"
+            r" the monarch"
+        ),
+        _is_the_monarch,
     ),
     ConditionReader(
         re.compile(

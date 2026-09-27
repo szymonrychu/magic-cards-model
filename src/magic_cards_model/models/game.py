@@ -239,6 +239,8 @@ from ..machines.layers import (
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
+from ..machines.monarch import inherent_triggers_for as monarch_inherent_triggers_for
+from ..machines.monarch import monarch_effect_for
 from ..machines.next_spell import (
     NextSpellFreeCastGrant,
     NextSpellKeywordGrant,
@@ -4108,6 +4110,24 @@ class Game(EngineModel):
     {coin_flips_performed}:coin"`, so a scenario asserting on the result
     stays reproducible and the second flip of a game differs from the first."""
 
+    monarch: str | None = None
+    """CR 725.1: "The monarch is a designation a player can have. There is no
+    monarch in a game until an effect instructs a player to become the
+    monarch." - `None` for exactly that state.
+
+    A single nullable username, not a per-`Player` flag like `has_citys_
+    blessing`: CR 725.3 - "Only one player can be the monarch at a time. As a
+    player becomes the monarch, the current monarch ceases to be the
+    monarch." - so the designation is a fact about the game, not about each
+    player, and a plain reassignment is the whole of CR 725.3 with no
+    invariant a setter has to maintain by hand. `Game.become_monarch` is the
+    one way this is ever set to a real username; `machines/monarch.py`'s two
+    inherent triggered abilities (CR 725.2) and `Game._player_left` (CR 725.4)
+    are its only other writers, and every condition reader ("you're the
+    monarch") and clause parser ("you become the monarch", "target player
+    becomes the monarch") reads or writes it through those, never this field
+    directly."""
+
     schema_version: int
     """The engine schema version this `Game` was built or decoded at - T9 of
     the stateless-library plan.
@@ -4345,6 +4365,12 @@ class Game(EngineModel):
     #: ability-side twin of `CastRecord`'s identical two fields) - Paragon of
     #: Modernity's and Jetmir's Fixer's own "If `<mana condition>`, put a
     #: +1/+1 counter on it instead" (ec7-instead).
+    #: 97: `Game` gained `monarch` (CR 725, the monarch designation), and
+    #: `machines/abilities.TriggeredAbility` gained `monarch_inherent`, the
+    #: tag `machines/monarch.py`'s two synthetic, sourceless CR 725.2
+    #: abilities carry so `Game._effect_of` can find their effect without a
+    #: card name to key off of (ec7-monarch;
+    #: renumbered from 96 at integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -10039,6 +10065,13 @@ class Game(EngineModel):
         keyword = keyword_effect_for(ability)
         if keyword is not None:
             return keyword
+        # CR 725.2's own two abilities have no source and are printed on no
+        # card - asked here, ahead of the card-name registries, for the same
+        # reason a keyword ability is: neither could ever be keyed under a
+        # card name.
+        monarch = monarch_effect_for(ability)
+        if monarch is not None:
+            return monarch
         if isinstance(ability.ability, TriggeredAbility):
             # `event` may be None, and that is not "no effect": CR 603.8's
             # state triggers ("Some triggered abilities trigger when a game
@@ -10550,6 +10583,12 @@ class Game(EngineModel):
             # CR 603.3 puts it on the stack the next time a player would receive
             # priority, alongside these.
             triggered = triggered + self.delayed_triggers.fire(event, self)
+            # CR 725.2: the monarch's own two inherent triggered abilities are
+            # not printed on any card either - "these triggered abilities have
+            # no source" - so they watch every event directly the same way a
+            # delayed trigger does, rather than through anything on the
+            # battlefield or in a graveyard `sources` above could have offered.
+            triggered = triggered + monarch_inherent_triggers_for(self, event)
             # CR 603.8: a state trigger watches a game state, not an event, so it
             # is swept for after every event rather than matched against one. This
             # is what lets a countered state trigger fire again immediately - the
@@ -15074,6 +15113,19 @@ class Game(EngineModel):
         """Whether this is the active player's draw-step draw (CR 504.1, 703.4d)."""
         assert self.turn is not None
         return self.turn.step is Step.DRAW and self.turn.active_player == player.username
+
+    def become_monarch(self, player: Player | str) -> None:
+        """`player` becomes the monarch (CR 725.1).
+
+        CR 725.3: "As a player becomes the monarch, the current monarch
+        ceases to be the monarch" - a plain reassignment already is this,
+        since `monarch` holds at most one username. Idempotent when `player`
+        already is the monarch, which is not a rules question this method
+        needs an opinion on - CR 725 never distinguishes becoming the monarch
+        from staying it.
+        """
+        username = player.username if isinstance(player, Player) else player
+        self.monarch = username
 
     def gain_life(self, player: Player | str, amount: int) -> int:
         """A player gains life, replacement effects included (CR 119.3).
@@ -19661,6 +19713,43 @@ class Game(EngineModel):
         self.turn.leave(username)
         if self.priority is not None:
             self.priority.leave(username)
+        self._reassign_monarch_after_departure(username)
+
+    def _reassign_monarch_after_departure(self, username: str) -> None:
+        """CR 725.4: `username`, who held the monarch, has just left the game.
+
+        "If the monarch leaves the game, the active player becomes the
+        monarch at the same time as that player leaves the game. If the
+        active player is leaving the game or if there is no active player,
+        the next player in turn order who can become the monarch becomes the
+        monarch. If no player still in the game can become the monarch, the
+        game continues with no monarch."
+
+        One loop reads both sentences at once: `order` is the fixed seating
+        (CR 103.8), starting at the active player's own seat, so offset 0
+        checks the active player first (the rule's first sentence) and each
+        later offset walks forward in turn order (the second sentence) - the
+        active player is skipped automatically the moment they are not
+        `is_in_game` (already true here: `_player_left` is called only after
+        `losers`/conceded bookkeeping already dropped `username`, and this
+        runs for whichever player just left, active or not). No player found
+        at all (`order` empty, or nobody left `is_in_game`) leaves `monarch`
+        `None` - the rule's own last sentence.
+        """
+        if self.monarch != username:
+            return
+        order = self.turn.players if self.turn is not None else []
+        if not order:
+            self.monarch = None
+            return
+        active = self.turn.active_player
+        start = order.index(active) if active in order else 0
+        for offset in range(len(order)):
+            candidate = order[(start + offset) % len(order)]
+            if self.is_in_game(candidate):
+                self.monarch = candidate
+                return
+        self.monarch = None
 
     def _check_for_a_winner(self) -> None:
         """The last player left in a two-or-more player game wins (CR 104.2a).
