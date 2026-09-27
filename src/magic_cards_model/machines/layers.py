@@ -5527,9 +5527,18 @@ _BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 #: game"). The words are CR 205.3m creature
 #: types, checked against the real list rather than accepted blind; a card
 #: type in this slot is `_BECOMES_TYPE_IN_ADDITION_RE`'s own sentence instead.
+#:
+#: "his"/"her"/"their" alongside "its" - Sarkhan, Dragon Ascendant's own
+#: "Sarkhan becomes a Dragon in addition to his other types and gains
+#: flying." (normalised to "this permanent ... his other types" by
+#: `self_normalized_effect_text`, which rewrites only the literal printed
+#: name, never the pronoun after it): CR 205.1b's "in addition to its other
+#: types" is the same addition whichever possessive a legendary creature's
+#: own printed gender happens to use, so this reads any of them rather than
+#: only the neuter one every other card in the pool used before.
 _BECOMES_SUBTYPE_IN_ADDITION_RE = re.compile(
     rf"^{_SUBJECT} becomes an? (?P<subtypes>[A-Za-z][A-Za-z' ]*?) in addition to "
-    r"its other types(?: and gains (?P<keywords>[a-z][a-z ,]*?))?"
+    r"(?:its|his|her|their) other types(?: and gains (?P<keywords>[a-z][a-z ,]*?))?"
     r"(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )

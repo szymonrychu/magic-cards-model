@@ -2401,6 +2401,10 @@ class CastRecord(EngineModel):
     <quality> card from your hand" additional cost (CR 118.8b) - Orator of
     Ojutai's "if you revealed a Dragon card", copied from `Casting.
     revealed_for_cost`."""
+    beheld_for_cost: bool = False
+    """Whether a plain "you may behold a <quality>" additional cost (CR
+    118.8b, CR 701.4a) was paid - Dispelling Exhale's "if a Dragon was
+    beheld" (CR 701.4b), copied from `Casting.beheld_for_cost`."""
     controlled_subtypes_as_cast: tuple[str, ...] = ()
     """Every subtype among the permanents the caster controlled as the spell
     became cast (CR 601.2i), lowercased - "or controlled a Dragon as you cast
@@ -6745,6 +6749,7 @@ class Game(EngineModel):
         bargained: bool = False,
         evidence_collected: bool = False,
         revealed_for_cost: bool = False,
+        beheld_for_cost: bool = False,
         creature_mana_spent: int = 0,
         snow_mana_spent: dict[Color, int] | None = None,
         controlled_subtypes_as_cast: Sequence[str] = (),
@@ -6829,6 +6834,7 @@ class Game(EngineModel):
             bargained=bargained,
             evidence_collected=evidence_collected,
             revealed_for_cost=revealed_for_cost,
+            beheld_for_cost=beheld_for_cost,
             controlled_subtypes_as_cast=() if is_copy else tuple(controlled_subtypes_as_cast),
             creature_mana_spent=0 if is_copy else creature_mana_spent,
             snow_mana_spent={} if is_copy else dict(snow_mana_spent or {}),
@@ -9214,6 +9220,7 @@ class Game(EngineModel):
                 bargained=original_record.bargained,
                 evidence_collected=original_record.evidence_collected,
                 revealed_for_cost=original_record.revealed_for_cost,
+                beheld_for_cost=original_record.beheld_for_cost,
             )
             return copy
 

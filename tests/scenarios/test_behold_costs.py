@@ -276,3 +276,288 @@ def test_champions_of_the_shoal_taps_and_stuns_on_enter():
     scenario.game.put_triggers_on_stack()
     scenario.pass_until_resolved()
     assert hand_merfolk.zone is Zone.HAND
+
+
+# --------------------------------------------------------------------------
+# Dispelling Exhale: a plain, unrestricted "you may behold a Dragon"
+# additional cost (CR 118.8b, CR 701.4a) - no chosen type
+# (`_OPTIONAL_BEHOLD_CHOSEN_TYPE`'s own Celestial Reunion shape) and no
+# linked exile (the five Champions' own "and exile it" tail above): the
+# beheld object stays exactly where it was. `Casting.behold_for_cost` is
+# the new method; `cast_record._beheld_for_cost` is what the linked "if a
+# Dragon was beheld" (CR 701.4b) reads back - through the pre-existing,
+# general `_parse_condition_instead_clause` (CR 608.2c's own "if
+# <condition>, <alternative> instead"), which already wins this exact
+# two-sentence shape at `_spell_effect_or_notice`'s own top level before a
+# per-clause pair reader is ever tried; see MEMORY.md's dated line.
+# --------------------------------------------------------------------------
+
+
+def test_dispelling_exhale_counters_for_two_with_no_dragon_beheld():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Dispelling Exhale"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    casting = scenario.cast("Dispelling Exhale", username="alice")
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(False, username="bob")
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD, "CR 701.6a: countered, bob declined to pay {2}"
+
+
+def test_dispelling_exhale_counters_for_four_with_a_dragon_revealed():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"] * 5)
+        .player(
+            "alice",
+            hand=["Dispelling Exhale", "Archive Dragon"],
+            battlefield=["Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain, *_) = scenario.untapped_sources(*(["Mountain"] * 5), username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    dragon = scenario.find("Archive Dragon", Zone.HAND, "alice")
+    casting = scenario.cast("Dispelling Exhale", username="alice")
+    casting.behold_for_cost(dragon)
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(True, username="bob")
+
+    scenario.resolve_top()
+
+    assert dragon.zone is Zone.HAND, "revealed for the cost, not exiled"
+    assert bolt.zone is Zone.STACK, "bob paid the upgraded {4}"
+
+
+def test_dispelling_exhale_forces_the_upgraded_payment_when_a_dragon_was_beheld():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player(
+            "alice",
+            hand=["Dispelling Exhale", "Archive Dragon"],
+            battlefield=["Island", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    dragon = scenario.find("Archive Dragon", Zone.HAND, "alice")
+    casting = scenario.cast("Dispelling Exhale", username="alice")
+    casting.behold_for_cost(dragon)
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(False, username="bob")
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD, "bob declined the steeper {4} payment too"
+
+
+# --------------------------------------------------------------------------
+# Dazzling Denial: "Counter target spell unless its controller pays {2}. If
+# you control a Bird, counter that spell unless its controller pays {4}
+# instead." - the same amount-upgrade "if <condition>, <alternative>
+# instead" grammar as Dispelling Exhale, resolved by the identical
+# pre-existing `_parse_condition_instead_clause` (CR 608.2c), proven
+# off-pool on a second, differently-conditioned printing (CR 701.4b's "if a
+# Dragon was beheld" swapped for a plain "if you control a `<quality>`"
+# board condition already read generally by `Game.condition_holds`). Legal
+# in Modern, Pioneer and Standard; not in the deck pool.
+# --------------------------------------------------------------------------
+
+
+def test_dazzling_denial_counters_for_two_with_no_bird_controlled():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player("alice", hand=["Dazzling Denial"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    casting = scenario.cast("Dazzling Denial", username="alice")
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(False, username="bob")
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD, "no Bird controlled: bob declined the base {2}"
+    # The amount actually offered, not just the decline outcome, is the
+    # proof: with no Bird controlled the base {2} must be what was asked,
+    # never the escalated {4} - see the "with a Bird" test below, which
+    # would collide with this one on outcome alone if the condition were
+    # ignored (both currently decline and land in the graveyard either way).
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Dazzling Denial"]
+    assert decision.amount == 2, "no Bird controlled: the base amount, not the escalated {4}"
+
+
+def test_dazzling_denial_forces_the_upgraded_payment_while_a_bird_is_controlled():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Lightning Bolt"], battlefield=["Mountain"])
+        .player(
+            "alice",
+            hand=["Dazzling Denial"],
+            battlefield=["Island", "Island", "Birds of Paradise"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (bob_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    bolt = scenario.cast_onto_stack(
+        "Lightning Bolt", bob_mountain, username="bob", targets=["alice"]
+    )
+    scenario.pass_priority("bob")
+
+    islands = scenario.untapped_sources("Island", "Island", username="alice")
+    casting = scenario.cast("Dazzling Denial", username="alice")
+    casting.choose_targets([bolt])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *islands)
+    scenario.put_on_stack(casting)
+    scenario.will_pay_the_mana_cost(False, username="bob")
+
+    scenario.resolve_top()
+
+    assert bolt.zone is Zone.GRAVEYARD, "controlling a Bird: bob declined the upgraded {4} too"
+    # Same proof as above, the other way round: the amount actually offered
+    # while a Bird is controlled must be the escalated {4}, which is what
+    # the "if you control a Bird" clause exists to change - not the base
+    # {2}, which is all an implementation ignoring that clause would ever
+    # offer.
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Dazzling Denial"]
+    assert decision.amount == 4, "controlling a Bird: the escalated amount, not the base {2}"
+
+
+# --------------------------------------------------------------------------
+# Sarkhan, Dragon Ascendant: an ETB "you may behold a Dragon. If you do,
+# create a Treasure token." (the new general
+# `_parse_optional_behold_then_if_you_do_clause`) and a second triggered
+# ability that puts a +1/+1 counter on itself and becomes a Dragon with
+# flying until end of turn whenever a Dragon it controls enters - the
+# possessive-pronoun widening of `machines.layers._BECOMES_SUBTYPE_IN_
+# ADDITION_RE` ("his other types" alongside "its").
+# --------------------------------------------------------------------------
+
+
+def test_sarkhan_etb_behold_creates_a_treasure():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Sarkhan, Dragon Ascendant", "Archive Dragon"],
+            battlefield=["Mountain", "Mountain"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    dragon = scenario.find("Archive Dragon", Zone.HAND, "alice")
+    mountains = scenario.untapped_sources("Mountain", "Mountain")
+    scenario.will_choose_cards(dragon, source="Sarkhan, Dragon Ascendant")
+
+    scenario.cast_and_resolve("Sarkhan, Dragon Ascendant", *mountains)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    alice = scenario.player("alice")
+    assert dragon.zone is Zone.HAND, "revealed for the ETB action, not exiled"
+    assert any(state.name == "Treasure Token" for state in scenario.game.battlefield), (
+        "the Treasure token was created"
+    )
+    assert len(alice.hand) == 1 and alice.hand[0].name == "Archive Dragon"
+
+
+def test_sarkhan_etb_behold_declined_makes_no_treasure():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Sarkhan, Dragon Ascendant"], battlefield=["Mountain", "Mountain"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mountains = scenario.untapped_sources("Mountain", "Mountain")
+
+    scenario.cast_and_resolve("Sarkhan, Dragon Ascendant", *mountains)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert not any(state.name == "Treasure Token" for state in scenario.game.battlefield)
+
+
+def test_sarkhan_gains_a_counter_and_becomes_a_flying_dragon_when_a_dragon_enters():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Sarkhan, Dragon Ascendant", "Slumbering Dragon"],
+            battlefield=["Mountain"] * 3,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sarkhan_mountains = scenario.untapped_sources("Mountain", "Mountain")
+    scenario.cast_and_resolve("Sarkhan, Dragon Ascendant", *sarkhan_mountains)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()  # declines the ETB behold (no Dragon yet)
+    sarkhan = scenario.creature("Sarkhan, Dragon Ascendant", "alice")
+    assert sarkhan.counters.counts.get("+1/+1", 0) == 0
+
+    (dragon_mountain,) = scenario.untapped_sources("Mountain")
+    scenario.cast_and_resolve("Slumbering Dragon", dragon_mountain)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert sarkhan.counters.counts.get("+1/+1", 0) == 1
+    chars = scenario.game.characteristics_of(sarkhan)
+    assert "Dragon" in {word for word in chars.subtypes}, "gained Dragon in addition to his types"
+    assert "Human" in {word for word in chars.subtypes}, "his other types are kept, not replaced"
+    from magic_cards_model.machines.combat import Keyword, has_keyword
+
+    assert has_keyword(sarkhan, Keyword.FLYING, scenario.game)
