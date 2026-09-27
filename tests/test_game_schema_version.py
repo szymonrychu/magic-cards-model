@@ -1456,3 +1456,26 @@ def test_a_snapshot_written_before_cast_permission_riders_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before ecl T7's persisted additions: `CastRecord.
+#: conspire_paid` (CR 702.78a), `CostComponent.from_among`, `PlayPermission.
+#: while_controlling` (CR 611.2b) and the `that_creature_dies_consequence`
+#: delayed effect kind.
+_SCHEMA_VERSION_BEFORE_CONSPIRE_AND_WHILE_CONTROLLING = 91
+
+
+def test_a_snapshot_written_before_conspire_and_while_controlling_is_refused() -> None:
+    """A version-91 dump has no `conspire_paid` on its cast records and no
+    `while_controlling` on its play permissions: decoded as current, a
+    conspired spell would read as never conspired (no copy) and a Taster of
+    Wares permission would read as unconditional. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CONSPIRE_AND_WHILE_CONTROLLING
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CONSPIRE_AND_WHILE_CONTROLLING
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CONSPIRE_AND_WHILE_CONTROLLING}",
+    ):
+        Game.model_validate(dumped)
