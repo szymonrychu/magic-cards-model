@@ -36,14 +36,18 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
+    "fields_changed": ["creatures_died_this_turn", "damage_dealt_this_turn", "graveyard_arrivals_announced", "graveyard_arrivals_this_turn", "life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn", "turn_history"],
     "notices": {},
     "objects": {
       "Memnite@alice#1": {
         "zone": ["battlefield", "graveyard"]
       }
     },
-    "players": {},
+    "players": {
+      "alice": {
+        "life": [20, 22]
+      }
+    },
     "stack": ["ability of Archangel of Wrath@alice#1: When this creature enters, if it was kicked, it deals 2 damage to any target."]
   },
   "family": "triggered",

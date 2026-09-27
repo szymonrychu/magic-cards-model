@@ -3877,6 +3877,11 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="the source made blue",
         precondition=r"activate only if this creature is blue",
     ),
+    DriverGap(
+        kind="beginning_of_step",
+        event="a graveyard holding cards of five or more different mana values",
+        precondition=r"if there are \w+ or more mana values among cards in your graveyard",
+    ),
 )
 
 
