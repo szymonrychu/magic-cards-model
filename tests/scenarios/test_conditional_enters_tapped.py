@@ -316,3 +316,159 @@ def test_an_opponents_mountains_do_not_count_toward_dwarven_mine():
     scenario = _subtype_land_board("Dwarven Mine", ["Mountain"], bob_battlefield=["Mountain"] * 3)
 
     assert scenario.play_land("Dwarven Mine").tapped
+
+
+# --------------------------------------------------------------------------
+# "if it's not your turn" / "unless it's your turn" (CR 614.1d, CR 102.1)
+# --------------------------------------------------------------------------
+#
+# Eddymurk Crab's own trailing "if <condition>" (no comma, no "unless") is a
+# third `_ENTERS_TAPPED` polarity alongside the leading "If <cond>," and
+# trailing "unless <cond>" forms above: it taps when the condition *holds*,
+# the identical polarity the leading form already has. Horned Loch-Whale
+# prints the same fact the other way round, "unless it's your turn" -
+# `_ENTERS_TAPPED`'s pre-existing trailing-"unless" branch, negated the same
+# way every other "unless" condition in this file already is.
+
+
+def _next_turn(scenario) -> None:
+    """Run the rest of this turn out and begin the next one's precombat
+    main phase - `test_activation_timing_instructions.py`'s own "next turn's
+    upkeep" helper, carried one step further so a land can still be played
+    (CR 305.1) once there."""
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()  # the new turn's untap step
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+
+def test_eddymurk_crab_enters_tapped_on_an_opponents_turn():
+    """Eddymurk Crab: "This creature enters tapped if it's not your turn."
+    Its own printed Flash is what makes casting it on bob's turn legal at
+    all (CR 702.8a)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Eddymurk Crab"], battlefield=["Island"] * 7)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _next_turn(scenario)  # bob's turn is now active
+    scenario.pass_priority()  # bob passes; alice may act with Flash (CR 702.8a)
+
+    crab = scenario.cast_and_resolve("Eddymurk Crab", username="alice", auto=True)
+
+    assert crab.tapped
+
+
+def test_eddymurk_crab_enters_untapped_on_its_casters_own_turn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Eddymurk Crab"], battlefield=["Island"] * 7)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    crab = scenario.cast_and_resolve("Eddymurk Crab", auto=True)
+
+    assert not crab.tapped
+
+
+def test_horned_loch_whale_enters_tapped_on_an_opponents_turn():
+    """The same fact, the other printed polarity: "This creature enters
+    tapped unless it's your turn." """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Horned Loch-Whale"], battlefield=["Island"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _next_turn(scenario)
+    scenario.pass_priority()  # bob passes; alice may act with Flash (CR 702.8a)
+
+    whale = scenario.cast_and_resolve("Horned Loch-Whale", username="alice", auto=True)
+
+    assert whale.tapped
+
+
+def test_horned_loch_whale_enters_untapped_on_its_casters_own_turn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Horned Loch-Whale"], battlefield=["Island"] * 6)
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    whale = scenario.cast_and_resolve("Horned Loch-Whale", auto=True)
+
+    assert not whale.tapped
+
+
+# --------------------------------------------------------------------------
+# "unless it's your first, second, or third turn of the game" (CR 500.7)
+# --------------------------------------------------------------------------
+#
+# Starting Town counts its own controller's turns (`TurnMachine.turns_taken_
+# by`/`own_turns_taken`), not the game's absolute turn number - so alice's
+# fourth own turn is the game's seventh (three of hers, three of bob's,
+# alternating), not its fourth.
+
+
+def _played_on_alices_nth_own_turn(n: int):
+    """A fresh two-player game, played manually to alice's `n`th own turn
+    (1-indexed), with Starting Town still in her hand to play there."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Starting Town"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    for _ in range(n - 1):
+        _next_turn(scenario)  # bob's turn
+        _next_turn(scenario)  # alice's next own turn
+    return scenario
+
+
+def test_starting_town_enters_untapped_on_the_first_turn_of_the_game():
+    scenario = _played_on_alices_nth_own_turn(1)
+
+    assert not scenario.play_land("Starting Town").tapped
+
+
+def test_starting_town_enters_untapped_on_the_third_turn():
+    scenario = _played_on_alices_nth_own_turn(3)
+
+    assert not scenario.play_land("Starting Town").tapped
+
+
+def test_starting_town_enters_tapped_on_the_fourth_turn():
+    scenario = _played_on_alices_nth_own_turn(4)
+
+    assert scenario.play_land("Starting Town").tapped
+
+
+def test_starting_town_counts_the_controllers_own_turns_not_the_opponents():
+    """Five turns into the game (alice, bob, alice, bob, bob's second) is
+    alice's own *second* turn, not her fifth - `own_turns_taken` is per
+    player, and this is what `_your_turn_ordinal_or_earlier` reads."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Starting Town"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _next_turn(scenario)  # bob's first
+    _next_turn(scenario)  # alice's second
+    _next_turn(scenario)  # bob's second
+
+    assert scenario.game.turn.own_turns_taken("alice") == 2

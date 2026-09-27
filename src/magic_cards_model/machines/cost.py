@@ -4508,6 +4508,21 @@ class CostModifierEffect(EngineModel):
     to compute layers against, so this is the printed value plus its own
     counters, the same "right now" every other `TYPE_DECREASE` amount reads."""
 
+    excludes_subtype: str | None = None
+    """`TYPE_DECREASE`/`first_each_turn` only: Momo, Friendly Flier's own
+    "The first **non-Lemur** creature spell ... costs {1} less to cast." - a
+    negative subtype filter alongside `applies_to_types`, asked of the spell
+    itself (CR 205.3, `CardState.subtypes`) rather than the source. Lowercased
+    the same way `applies_to_subtype` is."""
+
+    requires_keyword: str | None = None
+    """`TYPE_DECREASE`/`first_each_turn` only: Momo's own "... creature spell
+    **with flying** you cast ..." - the spell itself must carry the named
+    combat keyword (`combat.has_keyword`, which reads a spell's own printed
+    keywords off the stack the same way `requires_toughness_greater_than_
+    power` reads its printed power/toughness, since a spell has no
+    battlefield to compute layers against yet)."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -4647,16 +4662,27 @@ _CREATURE_SPELL_TOUGHNESS_OVER_POWER_COST_DECREASE_RE = re.compile(
 #: turn costs {2} less to cast." (Conduit of Ruin's shape), "The first
 #: instant or sorcery spell you cast each turn costs {U} (or {1}) less to cast
 #: for each land you control with a flood counter on it." (Eluge, the
-#: Shoreless Sea), and Radagast of Rhosgobel's own "The first creature spell
+#: Shoreless Sea), Radagast of Rhosgobel's own "The first creature spell
 #: you cast each turn costs {2} less to cast and can be cast as though it had
-#: flash." - a `TYPE_DECREASE` limited to the caster's first spell of the
-#: named types this turn, generic or one colored symbol per unit, with an
-#: optional "for each" count and an optional trailing flash grant
-#: (`grants_flash`, read by `Game.has_first_spell_flash_grant`).
+#: flash.", and Momo, Friendly Flier's own "The first **non-Lemur** creature
+#: spell **with flying** you cast **during each of your turns** costs {1}
+#: less to cast." - a `TYPE_DECREASE` limited to the caster's first spell of
+#: the named types this turn, generic or one colored symbol per unit, with an
+#: optional leading subtype exclusion (`excludes_subtype`, read against the
+#: spell's own `CardState.subtypes` the identical way `_SUBTYPE_COST_
+#: DECREASE`'s positive form already is), an optional trailing keyword
+#: requirement (`requires_keyword`, `combat.has_keyword`), an optional "for
+#: each" count, an optional trailing flash grant (`grants_flash`, read by
+#: `Game.has_first_spell_flash_grant`), and the turn window spelled either
+#: "each turn" or "during each of your turns" - the same CR 500.7 turn Momo's
+#: own wording names explicitly rather than leaving implicit.
 _FIRST_SPELL_EACH_TURN_COST_DECREASE = re.compile(
-    r"^The first (?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker)"
-    r"(?: or (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker))?) spell you cast "
-    r"each turn costs \{(?P<symbol>\d+|[WUBRG])\}(?: \(or \{1\}\))? less to cast"
+    r"^The first (?:non-(?P<excludes_subtype>[A-Za-z]+) )?"
+    r"(?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker)"
+    r"(?: or (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker))?) spell"
+    r"(?: with (?P<keyword>[a-z]+))? you cast "
+    r"(?:each turn|during each of your turns) costs \{(?P<symbol>\d+|[WUBRG])\}"
+    r"(?: \(or \{1\}\))? less to cast"
     r"(?: for each (?P<each>[^.]+))?"
     r"(?P<flash> and can be cast as though it had flash)?\.$",
     re.IGNORECASE,
@@ -4835,7 +4861,13 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
         words = [word.strip().lower() for word in match.group("types").split(" or ")]
         types = tuple(_TYPE_WORDS[word] for word in words if word in _TYPE_WORDS)
         each = match.group("each")
-        if types and (each is None or _for_each_count_is_readable(each)):
+        excludes_word = match.group("excludes_subtype")
+        excludes_subtype = canonical_subtype(excludes_word) if excludes_word else None
+        if (
+            types
+            and (each is None or _for_each_count_is_readable(each))
+            and (excludes_word is None or excludes_subtype is not None)
+        ):
             symbol = match.group("symbol")
             colored = None if symbol.isdigit() else _SYMBOL_COLORS[symbol.upper()]
             return CostModifierEffect(
@@ -4846,6 +4878,8 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 colored=colored,
                 per_each=each.strip() if each is not None else None,
                 grants_flash=match.group("flash") is not None,
+                excludes_subtype=excludes_subtype,
+                requires_keyword=(match.group("keyword") or "").lower() or None,
             )
     match = _TYPE_COST_DECREASE_EQUIPPED_POWER_RE.search(text)
     if match is not None:

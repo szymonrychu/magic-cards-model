@@ -529,9 +529,17 @@ _PLAYER_SKIPS = re.compile(r"^(?P<who>[^,]{1,40}?) skips (?P<skipped>.+?)\.?$", 
 # when the condition *holds*, a trailing "unless <cond>" taps when it does
 # *not* - and `_enters_tapped_condition` below reads that polarity back off the
 # retained "unless" word.
+#
+# `trailing_if` is the third polarity, added for Eddymurk Crab's own "This
+# creature enters tapped if it's not your turn." - a trailing "if <cond>"
+# with no leading comma, unlike the leading `condition` group's "If <cond>,"
+# form. Its polarity is the *same* as the leading form (taps when the
+# condition holds, CR 614.1d), never negated the way a trailing "unless"
+# is - `_try_enters_tapped` folds it into `condition` on equal footing with
+# the leading group for exactly that reason.
 _ENTERS_TAPPED = re.compile(
     rf"^(?:If (?P<condition>[^,]+),\s*)?(?P<subject>[^,]+?) {_ENTERS} tapped"
-    r"(?:\s+(?P<unless>unless .+?))?\.?$",
+    r"(?:\s+(?:(?P<unless>unless .+?)|if (?P<trailing_if>.+?)))?\.?$",
     re.IGNORECASE,
 )
 # CR 722.3a's bare form: "This creature enters prepared." Every printing in
@@ -817,6 +825,18 @@ _AS_ENTERS = re.compile(
 _AS_TURNED_FACE_UP = re.compile(
     r"^As (?P<subject>.+?) is turned face up,\s*(?P<effect>.+?)\.?$", re.IGNORECASE
 )
+#: Multiversal Passage's own "As this land enters, choose a basic land type.
+#: Then you may pay 2 life. If you don't, it enters tapped." - CR 614.12a's
+#: payment offer spread over a sentence of its own rather than fused into
+#: the leading "As [this] enters, ..." clause the way a shockland's "As this
+#: land enters, you may pay 2 life." always has been, because that clause is
+#: already spent on the type choice here. "Then" is the only connective
+#: printed for this shape in the pool; the payment itself (`_optional_
+#: enters_payment`) and the pairing with the following "If you don't, it
+#: enters tapped." (`_self_enters_modifiers`) are unchanged, since both work
+#: off `ReplacementKind.AS_ENTERS`/`.replacement`/`.optional` alone and never
+#: look at how the choice was introduced.
+_THEN_OPTIONAL_PAYMENT_RE = re.compile(r"^Then (?P<effect>you may .+?)\.?$", re.IGNORECASE)
 
 # CR 615.
 _PREVENT_NEXT = re.compile(
@@ -1093,6 +1113,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_player_skips,
         _try_instead_of,
         _try_rather_than,
+        _try_then_optional_payment,
     ):
         found = parser(sentence, names)
         if found:
@@ -1323,6 +1344,32 @@ def _try_as_enters(sentence: str, names: tuple[str, ...]) -> list[ReplacementEff
     return found
 
 
+def _try_then_optional_payment(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
+    """`_THEN_OPTIONAL_PAYMENT_RE`'s shape - Multiversal Passage's own "Then
+    you may pay 2 life." continuing an earlier "As this land enters, ..."
+    clause that was already spent on a different CR 614.12a choice.
+
+    `subject` is left `None` (nothing names one in "Then you may ...") and
+    `self_replacement` is `True` unconditionally: this connective only ever
+    continues the permanent's own entering paragraph in the pool, the same
+    way `_ENTERS_TAPPED`'s trailing "If you don't" back-reference is never
+    read as anything but part of the choice that precedes it.
+    """
+    match = _THEN_OPTIONAL_PAYMENT_RE.match(sentence)
+    if not match:
+        return []
+    effect = match.group("effect").strip()
+    return [
+        _make(
+            ReplacementKind.AS_ENTERS,
+            sentence,
+            replacement=effect,
+            optional=True,
+            self_replacement=True,
+        )
+    ]
+
+
 def _try_enters_as_copy(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffect]:
     if " as a copy of " not in sentence.lower():
         return []
@@ -1360,7 +1407,7 @@ def _try_enters_tapped(sentence: str, names: tuple[str, ...]) -> list[Replacemen
     if not match:
         return []
     subject = match.group("subject").strip()
-    condition = match.group("condition") or match.group("unless")
+    condition = match.group("condition") or match.group("unless") or match.group("trailing_if")
     return [
         _make(
             ReplacementKind.ENTERS_TAPPED,
@@ -5001,6 +5048,15 @@ _YOU_CONTROL_CARD_TYPE_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Ba Sing Se's own "This land enters tapped unless you control a basic
+#: land." CR 205.4c: "basic" is a supertype, not one of CR 305.6's five land
+#: *types* - `_YOU_CONTROL_SUBTYPES_RE` above needs a capitalised proper noun
+#: ("a Mountain") and would never match this lower-case supertype word, and
+#: `_YOU_CONTROL_CARD_TYPE_RE` names only CR 300.1's card types, "land"
+#: included but with no supertype qualifier - so this is its own reader
+#: rather than a tweak to either.
+_YOU_CONTROL_A_BASIC_LAND_RE = re.compile(r"^you control an? basic land$", re.IGNORECASE)
+
 #: "you control two or more other lands", "you control two or fewer other lands",
 #: the battle lands' "you control two or more basic lands" (CR 205.4c), and
 #: "you control three or more other Mountains" (Dwarven Mine). A land subtype
@@ -5060,6 +5116,35 @@ def _controls_a_card_type(card_type: Type) -> EntersCondition:
         board = game.computed_board()
         return any(
             card_type in board.of(permanent).types
+            for permanent in game.battlefield
+            if permanent.controller == controller
+        )
+
+    return holds
+
+
+def _controls_a_basic_land() -> EntersCondition:
+    """Ba Sing Se's own "unless you control a basic land" (CR 205.4c's
+    supertype, not one of CR 305.6's five land types) - `_controls_a_
+    subtype`'s and `_controls_a_card_type`'s twin over the "basic" supertype
+    instead. `board.of(permanent).is_basic` is the identical CR 613.5
+    computed-board read `_controls_other_lands`'s own "basic" qualifier
+    already uses for the battle lands' "you control two or more basic
+    lands" - a nonbasic land a Blood Moon-style effect already turned into a
+    plain Mountain (CR 305.7 strips the "basic" supertype question not at
+    all - the supertype is untouched by a type-setting effect, see CR 305.7's
+    own "doesn't add or remove any ... supertypes") does not count, and a
+    creature land some other effect made a land-and-something-else still
+    does, since `is_basic` asks only about the supertype.
+    """
+
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None:
+            return False
+        board = game.computed_board()
+        return any(
+            Type.LAND in board.of(permanent).types and board.of(permanent).is_basic
             for permanent in game.battlefield
             if permanent.controller == controller
         )
@@ -5146,6 +5231,82 @@ def _x_is(count: int, at_most: bool) -> EntersCondition:
             # decide the tapped state with. Fail closed, as above.
             return False
         return record.x_value <= count if at_most else record.x_value >= count
+
+    return holds
+
+
+#: Eddymurk Crab's own "This creature enters tapped if it's not your turn." -
+#: CR 102.1's active player, read the identical way `Game.alternative_cost_
+#: options` already reads Force of Negation's/Force of Vigor's own "if it's
+#: not your turn" CR 118.9 gate (`self.turn.active_player != caster`), just
+#: for the entering permanent's own controller instead of a caster.
+_NOT_YOUR_TURN_RE = re.compile(r"^it'?s not your turn$", re.IGNORECASE)
+#: Horned Loch-Whale's own "This creature enters tapped **unless** it's your
+#: turn." - the same CR 102.1 fact stated the other way round: `_ENTERS_
+#: TAPPED`'s "unless" branch strips the word "unless" before this is ever
+#: asked, so the bare condition here is the *positive* "it's your turn",
+#: negated by that branch's own polarity (`_enters_tapped_condition`) into
+#: exactly `_not_your_turn`'s own answer - the two printings differ only in
+#: which polarity they spell out.
+_YOUR_TURN_RE = re.compile(r"^it'?s your turn$", re.IGNORECASE)
+
+#: Starting Town's own "unless it's your first, second, or third turn of the
+#: game." - CR 500.7's own per-player turn count (`TurnMachine.turns_taken_by`,
+#: read through `Game.turn.own_turns_taken`), the identical running total
+#: Steam Vents' shockland siblings never needed because none of them counted
+#: a *player's own* turns rather than the board. The ordinal list is CR
+#: 103.8's first turn onward, spelled out the way English numbers them
+#: rather than as digits - only the ordinals actually printed in the pool
+#: (through "tenth") are read; a card that printed a numeral instead ("your
+#: 1st turn") would need its own reader, and none does yet.
+_ORDINAL_WORDS: dict[str, int] = {
+    word: number
+    for number, word in enumerate(
+        (
+            "first",
+            "second",
+            "third",
+            "fourth",
+            "fifth",
+            "sixth",
+            "seventh",
+            "eighth",
+            "ninth",
+            "tenth",
+        ),
+        start=1,
+    )
+}
+_ORDINAL_WORD_RE = "|".join(_ORDINAL_WORDS)
+_YOUR_TURN_ORDINAL_RE = re.compile(
+    rf"^it'?s your (?P<ordinals>(?:{_ORDINAL_WORD_RE})"
+    rf"(?:,\s*(?:{_ORDINAL_WORD_RE}))*"
+    rf"(?:,?\s*or\s+(?:{_ORDINAL_WORD_RE}))?) turns? of the game$",
+    re.IGNORECASE,
+)
+
+
+def _is_your_turn(game: "Game", entering: CardState) -> bool:
+    controller = entering.controller
+    return (
+        controller is not None and game.turn is not None and game.turn.active_player == controller
+    )
+
+
+def _not_your_turn(game: "Game", entering: CardState) -> bool:
+    return not _is_your_turn(game, entering)
+
+
+def _your_turn_ordinal_or_earlier(highest: int) -> EntersCondition:
+    """ "it's your first, second, or third turn of the game" (Starting Town)
+    - true through the controller's own `highest`th turn (CR 500.7's
+    per-player count, extra turns included), false from then on."""
+
+    def holds(game: "Game", entering: CardState) -> bool:
+        controller = entering.controller
+        if controller is None or game.turn is None:
+            return False
+        return game.turn.own_turns_taken(controller) <= highest
 
     return holds
 
@@ -5245,6 +5406,22 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
             subtype_plural=match.group("subtype"),
         )
 
+    if _YOU_CONTROL_A_BASIC_LAND_RE.match(condition) is not None:
+        return _controls_a_basic_land()
+
+    if _NOT_YOUR_TURN_RE.match(condition) is not None:
+        return _not_your_turn
+
+    if _YOUR_TURN_RE.match(condition) is not None:
+        return _is_your_turn
+
+    match = _YOUR_TURN_ORDINAL_RE.match(condition)
+    if match is not None:
+        words = re.findall(rf"{_ORDINAL_WORD_RE}", match.group("ordinals"), re.IGNORECASE)
+        if not words:
+            return None
+        return _your_turn_ordinal_or_earlier(max(_ORDINAL_WORDS[word.lower()] for word in words))
+
     match = _A_PLAYER_HAS_LIFE_RE.match(condition)
     if match is not None:
         return _a_player_has_life(
@@ -5320,6 +5497,11 @@ _CHOOSE_A_CREATURE_TYPE_RE = re.compile(r"^choose a creature type\.?$", re.IGNOR
 #: "choose odd or even" (Gollum, Riddle Master) - a fourth CR 614.12a choice
 #: shape, verified against the pool printing.
 _CHOOSE_ODD_OR_EVEN_RE = re.compile(r"^choose odd or even\.?$", re.IGNORECASE)
+#: Multiversal Passage's own "As this land enters, choose a basic land
+#: type." - a fifth CR 614.12a choice shape, CR 305.6's five names the only
+#: legal answers (`_quality_options` below), read back by "This land is the
+#: chosen type." (`machines/layers.py`'s own `chosen_basic_land_type_of`).
+_CHOOSE_A_BASIC_LAND_TYPE_RE = re.compile(r"^choose a basic land type\.?$", re.IGNORECASE)
 
 #: The five colors' letter codes (CR 105.1), the closed universe
 #: `Game.ask` checks a color choice against. Card names and creature types
@@ -5330,7 +5512,7 @@ _COLOR_OPTIONS = tuple(
 
 
 def _classify_choice(replacement_text: str) -> ChoiceKind | None:
-    """Which of the four "as [this] enters, choose ..." shapes this is, if any."""
+    """Which of the five "as [this] enters, choose ..." shapes this is, if any."""
     text = replacement_text.strip()
     if _CHOOSE_A_COLOR_RE.match(text):
         return ChoiceKind.COLOR
@@ -5340,6 +5522,8 @@ def _classify_choice(replacement_text: str) -> ChoiceKind | None:
         return ChoiceKind.CREATURE_TYPE
     if _CHOOSE_ODD_OR_EVEN_RE.match(text):
         return ChoiceKind.ODD_OR_EVEN
+    if _CHOOSE_A_BASIC_LAND_TYPE_RE.match(text):
+        return ChoiceKind.BASIC_LAND_TYPE
     return None
 
 
@@ -5504,8 +5688,9 @@ def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
     A color is one of CR 105.1's five. A creature type is one of CR 205.3m's
     list, read from the rules text (`data/creature_types.py`) - a land type
     such as "Island" is not one, and neither is an empty string. "Odd or
-    even" (Gollum, Riddle Master) is exactly those two words. A card name
-    has no list to offer, so it stays open.
+    even" (Gollum, Riddle Master) is exactly those two words. A basic land
+    type is one of CR 305.6's five. A card name has no list to offer, so it
+    stays open.
     """
     if kind is ChoiceKind.COLOR:
         return _COLOR_OPTIONS
@@ -5513,6 +5698,10 @@ def _quality_options(kind: ChoiceKind) -> tuple[str, ...]:
         return creature_types()
     if kind is ChoiceKind.ODD_OR_EVEN:
         return ("odd", "even")
+    if kind is ChoiceKind.BASIC_LAND_TYPE:
+        from .layers import BASIC_LAND_TYPES
+
+        return tuple(BASIC_LAND_TYPES)
     return ()
 
 

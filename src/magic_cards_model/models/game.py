@@ -666,6 +666,16 @@ def reads_self_cost_reduction_line(text: str) -> bool:
     for that particular condition (Morbid's own "a creature died this turn"
     among them), the same fail-closed posture `cost_modifier_effect`'s own
     "as long as" tail already takes in `machines/cost.py`.
+
+    Sunderflock's own "This spell costs {X} less to cast, where X is the
+    greatest mana value among Elementals you control." (and Hearth
+    Elemental's "... where X is the number of cards in your graveyard that
+    are instant cards, sorcery cards, and/or have an Adventure.") are
+    `_COSTS_LESS_X_WHERE_X_IS_RE`'s own general fallback, not in
+    `_SELF_COST_REDUCTION_SHAPES` for the identical reason: `expr` is open
+    text, credited only once `machines/effects.amount_expression` - the exact
+    reader `Game.cost_reduction_for` itself calls for this shape - actually
+    returns something for it, never on the strength of the regex match alone.
     """
     line = _ABILITY_WORD_PREFIX_RE.sub("", text.strip(), count=1)
     for shape in _SELF_COST_REDUCTION_SHAPES:
@@ -674,6 +684,13 @@ def reads_self_cost_reduction_line(text: str) -> bool:
             pattern = f"this spell {pattern}"
         if re.fullmatch(rf"{pattern}\.?", line, re.IGNORECASE):
             return True
+    generic_where_x = re.fullmatch(
+        rf"{_COSTS_LESS_X_WHERE_X_IS_RE.pattern}\.?", line, re.IGNORECASE
+    )
+    if generic_where_x is not None:
+        from ..machines.effects import amount_expression
+
+        return amount_expression(generic_where_x.group("expr")) is not None
     condition_match = _COSTS_LESS_IF_CONDITION_RE.fullmatch(line)
     return condition_match is not None and condition_is_readable(condition_match.group("condition"))
 
@@ -21735,6 +21752,33 @@ class Game(EngineModel):
 
         return increases, decreases, floor
 
+    def _type_decrease_candidate_matches(
+        self, effect: CostModifierEffect, candidate: CardState
+    ) -> bool:
+        """Whether `candidate` is one of `effect.applies_to_types`, with its
+        optional subtype exclusion and keyword requirement also holding.
+
+        `_counted_type_decrease` asks this of the spell being costed, and
+        `first_each_turn` below asks it again of every *earlier* spell this
+        turn - the identical filter both times, which is what makes Momo,
+        Friendly Flier's own "The first **non-Lemur** creature spell **with
+        flying**" correct: an earlier plain creature spell with no flying
+        does not carry the qualifier either, so it does not make *this*
+        flying creature spell any less the first one, exactly the way
+        `spells_cast_this_turn` already excludes the spell being costed
+        itself (CR 601.2f runs before CR 601.2i records it)."""
+        if effect.applies_to_types and not any(
+            card_type in candidate.types for card_type in effect.applies_to_types
+        ):
+            return False
+        if effect.excludes_subtype is not None and effect.excludes_subtype in {
+            subtype.lower() for subtype in candidate.subtypes
+        }:
+            return False
+        return effect.requires_keyword is None or has_keyword(
+            candidate, effect.requires_keyword, self
+        )
+
     def _counted_type_decrease(
         self,
         effect: CostModifierEffect,
@@ -21746,17 +21790,25 @@ class Game(EngineModel):
         off (CR 601.2f), or `None` when it takes nothing off this spell.
 
         "The first `<types>` spell you cast each turn" (`first_each_turn`) is
-        the caster's first spell of those types this turn: the spell being
-        cast is not in `spells_cast_this_turn` yet (CR 601.2f comes before
-        CR 601.2i records it), so any earlier one there means this is not the
-        first. A "for each" count (`per_each`) is read now, for the
-        permanent's controller, and multiplies the decrease. A colored
-        decrease (`colored`, "{U} (or {1})") is that many of the color; CR
-        118.7b-c already turn what the cost has no {U} for into generic when
-        `ManaCost.minus` applies it.
+        the caster's first *qualifying* spell this turn (`_type_decrease_
+        candidate_matches`, types plus the optional subtype exclusion and
+        keyword requirement): the spell being cast is not in `spells_cast_
+        this_turn` yet (CR 601.2f comes before CR 601.2i records it), so any
+        earlier qualifying one there means this is not the first. A "for
+        each" count (`per_each`) is read now, for the permanent's controller,
+        and multiplies the decrease. A colored decrease (`colored`, "{U} (or
+        {1})") is that many of the color; CR 118.7b-c already turn what the
+        cost has no {U} for into generic when `ManaCost.minus` applies it.
         """
+        if not self._type_decrease_candidate_matches(effect, spell):
+            # The subtype exclusion or keyword requirement Momo's own shape
+            # adds - the caller has already confirmed `applies_to_types`
+            # alone, which is why this asks only for the two extra filters
+            # in practice, but asking the shared predicate keeps both call
+            # sites answering the identical question.
+            return None
         if effect.first_each_turn and any(
-            any(card_type in earlier.types for card_type in effect.applies_to_types or ())
+            self._type_decrease_candidate_matches(effect, earlier)
             for earlier in self.spells_cast_this_turn.get(caster, [])
         ):
             return None

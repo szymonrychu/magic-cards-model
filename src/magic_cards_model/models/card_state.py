@@ -517,6 +517,11 @@ class ChoiceKind(StrEnum):
     (Zero is even.)" - a fourth "as [this] enters, choose ..." shape,
     `Choice.value` "odd" or "even". The parenthetical is the card's own
     reminder text, not a separate numbered rule."""
+    BASIC_LAND_TYPE = "basic_land_type"
+    """Multiversal Passage's own "As this land enters, choose a basic land
+    type." - CR 305.6's five (`Choice.value` one of "Plains"/"Island"/
+    "Swamp"/"Mountain"/"Forest"), read back by "This land is the chosen
+    type." (`machines/layers.py`'s own CR 305.7 type-setting reader)."""
 
 
 class Choice(EngineModel):
