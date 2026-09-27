@@ -2268,6 +2268,13 @@ def self_reference_pattern(name: str) -> str:
     )
 
 
+@functools.lru_cache(maxsize=4096)
+def self_reference_re(name: str) -> re.Pattern[str]:
+    """`self_reference_pattern(name)`, compiled once per name (case-sensitive,
+    so a caller may skip it outright when `name` is not a substring)."""
+    return re.compile(self_reference_pattern(name))
+
+
 #: Epithet-boundary words CR 201.5c's shortened names split on: "`<Name>` the
 #: `<Epithet>`" (Liliana the Repentant) and "`<Name>` of `<Epithet>`" (Kiora of
 #: Fire and Ashes, Koth of the Homestead) both call themselves by their first
@@ -2383,7 +2390,8 @@ def self_normalized_effect_text(card_name: str, effect_text: str, *, legendary: 
     """
     normalized = effect_text
     for name in self_reference_names(card_name, legendary=legendary):
-        normalized = re.sub(self_reference_pattern(name), "this permanent", normalized)
+        if name in normalized:
+            normalized = self_reference_re(name).sub("this permanent", normalized)
     return normalized
 
 

@@ -53,6 +53,7 @@ there. `docs/engine-coverage.md` lists which abilities execute and which only
 travel.
 """
 
+import functools
 import re
 from collections.abc import Callable, Iterable, Sequence
 from enum import StrEnum
@@ -4938,6 +4939,8 @@ EFFECTS: dict[str, Effect] = {
 #: here by the resolving card's own name, not a name table, keeps this generic
 #: for any future card of the same shape.
 def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
+    if "shuffle " not in text.lower():
+        return text
     pattern = re.compile(
         rf"(?:^|(?<=[.\s]))Shuffle {re.escape(card_name)} into its owner's library\.?\s*",
         re.IGNORECASE,
@@ -4959,6 +4962,8 @@ def _strip_self_shuffle_clause(card_name: str, text: str) -> str:
 #: `_spell_effect_or_notice` as though it were one of the spell's own
 #: instructions (CR 608.2c has no verb "is" among its resolution steps).
 def _strip_self_is_all_colors_sentence(card_name: str, text: str) -> str:
+    if " is all colors" not in text.lower():
+        return text
     names = {card_name, card_name.split("//")[0].strip()}
     pattern = re.compile(
         r"^(?:" + "|".join(re.escape(name) for name in sorted(names, key=len, reverse=True)) + r") "
@@ -12570,8 +12575,12 @@ def _strip_ability_word_labels(text: str) -> str:
     return "\n".join(stripped)
 
 
+@functools.lru_cache(maxsize=16384)
 def _strip_non_effect_preamble(text: str) -> str:
-    """Sentences that describe the spell but are not part of resolving it."""
+    """Sentences that describe the spell but are not part of resolving it.
+
+    Memoised: a pure function of `text` (every step is a regex over it), and
+    the reader chain asks it of the same effect text hundreds of times."""
     text = _ADDITIONAL_COST_LINE_RE.sub("", text)
     text = _X_CAP_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)

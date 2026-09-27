@@ -39,6 +39,7 @@ creatures blocking it, so the order blockers were declared in is the order
 damage walks through here - `declare_blockers` takes them in that order.
 """
 
+import functools
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -1818,6 +1819,13 @@ def _reads_evasion_sentence(sentence: str) -> bool:
     )
 
 
+@functools.lru_cache(maxsize=4096)
+def _own_combat_restriction_re(name: str) -> re.Pattern[str]:
+    """`name`'s own "<self> can't (be blocked|block)" subject regex, compiled once."""
+    subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
+    return re.compile(rf"^(?:{subjects}) can't (?:be blocked|block)\b", re.IGNORECASE)
+
+
 def reads_self_combat_restriction_line(line: str, name: str) -> bool:
     """Whether every sentence of one printed static line of a creature named
     `name` is its own "can't be blocked ..." (CR 509.1a) or "can't block ..."
@@ -1830,8 +1838,9 @@ def reads_self_combat_restriction_line(line: str, name: str) -> bool:
     ("this creature and other Zombies") or a condition in front of it is left
     to the reader that answers for those.
     """
-    subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
-    own = re.compile(rf"^(?:{subjects}) can't (?:be blocked|block)\b", re.IGNORECASE)
+    if "can" not in line.lower():
+        return False
+    own = _own_combat_restriction_re(name)
     sentences = [strip_ability_word(sentence) for sentence in layer_readable_sentences(line)]
     if not sentences:
         return False

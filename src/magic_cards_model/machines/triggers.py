@@ -79,6 +79,7 @@ from .abilities import (
     self_normalized_effect_text,
     self_reference_names,
     self_reference_pattern,
+    self_reference_re,
 )
 from .designations import designation_holds, split_as_long_as
 from .turn import Step
@@ -1392,7 +1393,7 @@ def _self_referential(condition: str, source_name: str, *, legendary: bool = Tru
     # word - folding the whole search case-insensitive would blind that
     # lookahead to the difference.
     return any(
-        re.search(self_reference_pattern(name), condition) is not None
+        name in condition and self_reference_re(name).search(condition) is not None
         for name in self_reference_names(source_name, legendary=legendary)
     )
 
@@ -2521,15 +2522,22 @@ _TOKEN_WORD = re.compile(r"\btokens?\b")
 #: Hero's own "Whenever Mabel or another creature you control enters" -
 #: CR 201.5c's short name before the comma, not "this planeswalker").
 _SELF_OR_OTHER_ENTERS_TAIL = r" or (?P<other>(?:an?|another) .+ enters?)$"
+_SELF_OR_OTHER_ENTERS_GENERIC_RE = re.compile(
+    rf"^this [a-z]+{_SELF_OR_OTHER_ENTERS_TAIL}", re.IGNORECASE
+)
 
 
 def _self_or_other_enters_match(
     condition: str, source_name: str, *, legendary: bool = True
 ) -> re.Match[str] | None:
-    generic = re.match(rf"^this [a-z]+{_SELF_OR_OTHER_ENTERS_TAIL}", condition, re.IGNORECASE)
+    if " or " not in condition.lower():
+        return None
+    generic = _SELF_OR_OTHER_ENTERS_GENERIC_RE.match(condition)
     if generic is not None:
         return generic
     for name in self_reference_names(source_name, legendary=legendary):
+        if name not in condition:
+            continue
         named = re.match(rf"^{self_reference_pattern(name)}{_SELF_OR_OTHER_ENTERS_TAIL}", condition)
         if named is not None:
             return named
