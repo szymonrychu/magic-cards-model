@@ -1790,3 +1790,58 @@ def test_a_snapshot_written_before_nontoken_deaths_under_control_is_refused() ->
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL}",
     ):
         Game.model_validate(dumped)
+
+
+def _a_game_with_a_pending_cast_trigger() -> Game:
+    """Hydroid Krasis cast for X=2, its own cast trigger still pending on the
+    stack above it (CR 603.3) - the one live shape whose dump actually
+    carries a `GameEvent.subject_stamp` (EC7-rv-rules)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hydroid Krasis"],
+            battlefield=["Forest", "Forest", "Forest", "Island"],
+            library=["Mountain"] * 5,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Hydroid Krasis", "alice")
+    payment = casting.determine_cost(x_value=2)
+    scenario.pay_with(payment, *scenario.untapped_sources("Forest", "Forest", "Forest", "Island"))
+    scenario.put_on_stack(casting)
+    return scenario.game
+
+
+#: The version stamped before `GameEvent` gained `subject_stamp` (EC7-rv-rules:
+#: a cast trigger's own X - Hydroid Krasis, Genesis Hydra, Old Stickfingers,
+#: Geometer's Arthropod - lost the moment its own spell left the stack).
+_SCHEMA_VERSION_BEFORE_CAST_TRIGGER_SUBJECT_STAMP = 100
+
+
+def test_a_snapshot_written_before_cast_trigger_subject_stamp_is_refused() -> None:
+    """A version-100 dump's own cast-triggered `AbilityOnStack.event` carries
+    no `subject_stamp`: decoded as current it would default to `None`, and a
+    cast trigger resolving after its own spell was countered in response
+    would read no cast X at all (`Game.cast_record_of` keyed by the spell's
+    *current*, post-counter `zone_change_stamp` finds nothing) instead of
+    the Oracle-ruled cast X - the exact regression `_cast_trigger_x_value`
+    and `_cast_trigger_mana_spent_x_value` fix by reading `Game.cast_record_
+    as_last_known(event.subject_stamp)` instead. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CAST_TRIGGER_SUBJECT_STAMP
+    game = _a_game_with_a_pending_cast_trigger()
+    dumped = game.model_dump(mode="json")
+    (trigger,) = [
+        item
+        for item in dumped["shared_zones"]["stack"]
+        if item.get("state_class") == "AbilityOnStack" and item.get("event") is not None
+    ]
+    assert trigger["event"]["subject_stamp"] is not None
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CAST_TRIGGER_SUBJECT_STAMP
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CAST_TRIGGER_SUBJECT_STAMP}",
+    ):
+        Game.model_validate(dumped)
