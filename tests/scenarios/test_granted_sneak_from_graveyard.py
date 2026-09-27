@@ -250,3 +250,52 @@ def test_legal_actions_offer_the_graveyard_sneak():
         getattr(action, "card_id", None) == giant.id and getattr(action, "keyword", None) == "Sneak"
         for action in legal_actions(scenario.game, "alice")
     )
+
+
+def test_either_sneak_may_be_chosen_when_the_card_has_two():
+    """Ninja Teen's ruling: a creature card with several sneak abilities may
+    use any of them. Leonardo prints Sneak {2}{W}{W}; Ninja Teen grants Sneak
+    {3}{B}. With only Swamps, the granted one - named by its source - is the
+    one alice can pay."""
+    scenario = _in_declare_blockers(["Leonardo, Sewer Samurai"])
+    leonardo = scenario.find("Leonardo, Sewer Samurai", Zone.GRAVEYARD, "alice")
+    scenario.game.cast(
+        leonardo,
+        "alice",
+        alternative_cost="Ninja Teen",
+        choosing=[scenario.creature("Grizzly Bears", "alice")],
+        mana_sources=scenario.game.permanents_controlled_by("alice"),
+    )
+    _resolve_stack(scenario)
+    assert scenario.find("Leonardo, Sewer Samurai", Zone.BATTLEFIELD, "alice").tapped
+
+
+def test_the_printed_sneak_may_be_chosen_over_the_granted_one():
+    """The other way round: with Plains to pay {2}{W}{W}, Leonardo's own
+    printed sneak - named by the card itself - is the one used."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Ninja Teen", "Grizzly Bears", "Plains", "Plains", "Plains", "Plains"],
+            graveyard=["Leonardo, Sewer Samurai"],
+            library=["Swamp"] * 6,
+        )
+        .player("bob", library=["Island"] * 6)
+        .build()
+    )
+    scenario.find("Ninja Teen", Zone.BATTLEFIELD, "alice").class_level = 3
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature("Grizzly Bears", "alice"))
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    scenario.no_blocks()
+    leonardo = scenario.find("Leonardo, Sewer Samurai", Zone.GRAVEYARD, "alice")
+    scenario.game.cast(
+        leonardo,
+        "alice",
+        alternative_cost="Leonardo, Sewer Samurai",
+        choosing=[scenario.creature("Grizzly Bears", "alice")],
+        mana_sources=scenario.game.permanents_controlled_by("alice"),
+    )
+    _resolve_stack(scenario)
+    assert scenario.find("Leonardo, Sewer Samurai", Zone.BATTLEFIELD, "alice").tapped

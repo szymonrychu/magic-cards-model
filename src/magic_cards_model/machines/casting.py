@@ -4822,7 +4822,12 @@ class Casting(EngineModel):
         """
         return self._refusing(lambda: self._use_keyword(keyword, choosing))
 
-    def _use_keyword(self, keyword: str, choosing: list[CardState] | None) -> CastingStep:
+    def _use_keyword(
+        self,
+        keyword: str,
+        choosing: list[CardState] | None,
+        prefer: TotalCost | None = None,
+    ) -> CastingStep:
         printed_options = keyword_cast_options(self.spell.card)
         marker_options = marker_cast_options(self._as_announced)
         granted_options = [granted.option for granted in self.granted_cast_options]
@@ -4850,8 +4855,17 @@ class Casting(EngineModel):
             raise ValueError(next(reason for reason in reasons if reason is not None))
 
         # A once-each-turn grant is spent by using it, so an unlimited grant
-        # for the same cast is the one to claim when both apply.
-        option = min(usable, key=lambda candidate: candidate.once_per_turn_key is not None)
+        # for the same cast is the one to claim when both apply. `prefer` is
+        # the cost of the one instance the caster named (`use_alternative_
+        # cost` by index or source): a card with two sneak abilities, one
+        # printed and one granted, may use either (Ninja Teen's ruling).
+        option = min(
+            usable,
+            key=lambda candidate: (
+                prefer is not None and candidate.cost != prefer,
+                candidate.once_per_turn_key is not None,
+            ),
+        )
         self._enter_modes()
         self.keyword_used = option.keyword
         self.keyword_normal_face_only = option.normal_face_only
@@ -5446,7 +5460,8 @@ class Casting(EngineModel):
             raise ValueError(option.unavailable)
 
         if option.source is AlternativeCostSource.KEYWORD and option.keyword is not None:
-            return self.use_keyword(option.keyword, choosing=choosing)
+            keyword = option.keyword
+            return self._refusing(lambda: self._use_keyword(keyword, choosing, prefer=option.cost))
         if option.source is AlternativeCostSource.PERMISSION:
             return self.use_permission()
 
