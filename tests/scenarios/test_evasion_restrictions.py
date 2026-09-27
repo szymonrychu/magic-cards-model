@@ -42,14 +42,23 @@ Shapes read (`combat.evasion_restriction_refusal`):
   defending player controls a snow land." - the quality comparison further
   gated by an external board condition, both read independently and both
   required.
+- **Sacred Knight**: "... by black and/or red creatures." - an adjective
+  *list* sharing one elided trailing noun phrase ("creature(s)", printed
+  once rather than once per adjective), CR 700.2's inclusive "and/or" read
+  the identical way the plain "or" disjunction above already is.
 
 Every printing in `src/magic_cards_model/data/printings` carrying "can't be
-blocked by" now reads `handled` (`scripts/sweep_pool.py --card`) except
-**Sacred Knight**'s "black and/or red creatures" - an elided-noun list ("black
-[creatures] and/or red creatures") joined by "and/or" rather than a bare
-"or", which is a different connective this task did not widen to; it is
-`gap_example`'s own dynamically-chosen stand-in for the fail-closed path
-below, never named directly by a test.
+blocked by" now reads `handled` (`scripts/sweep_pool.py --card`, confirmed
+across the whole pool, not sampled). `gap_example` no longer finds a
+self-referential quality-description shape left unread at all, so the
+fail-closed path below is exercised on a printing outside that family
+entirely: **Bursting Beebles**' "can't be blocked as long as defending
+player controls two or more nonland permanents that share an artist" - an
+external condition whose own text this engine's `Card` model has no way to
+answer (`docs/architecture.md`/`CLAUDE.md`: "Print, market, and collector
+fields are deliberately absent from `Card`" - an artist is exactly such a
+field), found by the identical dynamic `gap_example` search as every earlier
+wave's example, never named directly by a test.
 
 The fail-closed path is exercised on a printing chosen by `gap_example`:
 `combat.looks_like_unparsed_evasion_restriction` catches a sentence outside
@@ -69,6 +78,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.combat import (
     EvasionNotice,
     looks_like_unparsed_evasion_restriction,
+    reads_self_combat_restriction_line,
 )
 from magic_cards_model.machines.keywords import equip_activation
 from magic_cards_model.models import Card, CardState, Type, Zone
@@ -170,12 +180,21 @@ def _unparsed_evasion_example() -> Card:
     not read yet - chosen, never named (`gap_example`). Past waves closed
     this gap for whichever printing stood here before: April O'Neil, Kunoichi
     Trainee ("power 3 or greater", 271-tmt), then every plain subtype/colour/
-    type/keyword/toughness quality plus a disjunction and a condition-gated
-    quality (Juggernaut's "Walls", Blazing Torch's "Vampires or Zombies",
-    Arctic Foxes' condition-gated power comparison, fix-cant-be-blocked-by).
-    Sacred Knight's "black and/or red creatures" - an "and/or" elided-noun
-    list, a different connective from the plain "or" disjunction above -
-    stands here now; read it too and something else will stand here next.
+    type/keyword/toughness quality, a plain "or" disjunction, a condition-
+    gated quality, and an "and/or" elided-noun adjective list (Juggernaut's
+    "Walls", Blazing Torch's "Vampires or Zombies", Arctic Foxes' condition-
+    gated power comparison, Sacred Knight's "black and/or red creatures",
+    fix-cant-be-blocked-by).
+
+    `gap_example`'s own search space is every self-referential "can't be
+    blocked ..." sentence a real creature carries (`_is_static_evasion_line`
+    below), which is now fully read for every quality-description shape - so
+    whatever stands here next is necessarily a different kind of gap
+    entirely (right now, Bursting Beebles' unreadable "share an artist"
+    condition - `models/card.py`'s own module docstring: "Print, market, and
+    collector fields are deliberately absent: no images, prices, artists,
+    ..." - not a description-grammar gap at all). Read that too and
+    something else will stand here next.
     """
     return gap_example(
         "an unread static can't-be-blocked restriction",
@@ -785,3 +804,64 @@ def test_arctic_foxes_restriction_is_lifted_without_a_snow_land():
     scenario.block(foxes, wurm)
     assert scenario.game.is_blocked(foxes)
     assert scenario.game.evasion_notices == []
+
+
+# -- an elided-noun "and/or" adjective list: Sacred Knight -------------------
+
+
+def test_sacred_knight_is_refused_by_either_colour_alone():
+    """Sacred Knight: "This creature can't be blocked by black and/or red
+    creatures." - an adjective *list* sharing one trailing noun phrase
+    (`_parse_elided_noun_list`), unlike Blazing Torch's "Vampires or
+    Zombies", whose two bare subtypes need nothing reattached. A black
+    creature and a red creature are each refused on their own; CR 700.2's
+    "either or both" is the same inclusive-or `_CreatureDescriptionAlternatives`
+    already gives a plain "or" list.
+
+    No second real printing of this exact "by `<adjective list>` and/or
+    `<adjective>` creatures" connective exists anywhere in Scryfall's card
+    pool (checked exhaustively this task, including granted-through-an-
+    Aura/Equipment and the self-block/compound shapes the identical parser
+    also reads) - the dated dead-end is recorded in MEMORY.md. Generality is
+    proven instead along the axis that does vary on this one card: either
+    colour alone, both at once, and neither.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Sacred Knight"])
+        .player(
+            "bob",
+            battlefield=["Carrion Feeder", "Goblin Guide", "Grizzly Bears"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    knight = scenario.creature("Sacred Knight")
+    black_blocker = scenario.creature("Carrion Feeder", "bob")
+    red_blocker = scenario.creature("Goblin Guide", "bob")
+    green_blocker = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(knight)
+
+    assert not scenario.game.can_block(black_blocker, knight)
+    with pytest.raises(ValueError, match="black and/or red creatures"):
+        scenario.block(knight, black_blocker)
+    assert not scenario.game.can_block(red_blocker, knight)
+    with pytest.raises(ValueError, match="black and/or red creatures"):
+        scenario.block(knight, red_blocker)
+    assert scenario.game.can_block(green_blocker, knight)
+    scenario.block(knight, green_blocker)
+    assert scenario.game.is_blocked(knight)
+    assert scenario.game.evasion_notices == []
+
+
+def test_elided_noun_and_or_list_is_read_off_a_self_block_restriction_too():
+    """The same widening lives in the one grammar the evasion half, the
+    self-block half, and their "can't block or be blocked by <description>"
+    compound all share (`combat._parse_creature_description`) - proven here
+    directly against `reads_self_combat_restriction_line`/`self_block_
+    restriction_refusal`'s own reader, since no real printing carries this
+    connective on the "can't block ..." (CR 509.1b) half."""
+    assert reads_self_combat_restriction_line(
+        "This creature can't block black and/or red creatures.", "Some Zombie"
+    )

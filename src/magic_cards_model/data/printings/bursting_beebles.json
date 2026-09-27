@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "1d7262a7-f48c-411b-8a0e-c5bd8f646145",
+  "oracle_id": "0575ee9a-1940-4b38-b269-5b806b2b6173",
+  "multiverse_ids": [
+    74289
+  ],
+  "tcgplayer_id": 37833,
+  "cardmarket_id": 14791,
+  "name": "Bursting Beebles",
+  "lang": "en",
+  "released_at": "2004-11-19",
+  "uri": "https://api.scryfall.com/cards/1d7262a7-f48c-411b-8a0e-c5bd8f646145",
+  "scryfall_uri": "https://scryfall.com/card/unh/28/bursting-beebles?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T12:04:18Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.jpg?1783944258",
+    "normal": "https://cards.scryfall.io/normal/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.jpg?1783944258",
+    "large": "https://cards.scryfall.io/large/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.jpg?1783944258",
+    "png": "https://cards.scryfall.io/png/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.png?1783944258",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.jpg?1783944258",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.jpg?1783944258",
+    "thumb": "https://cards.scryfall.io/thumb/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.webp?1783944258",
+    "grid": "https://cards.scryfall.io/grid/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.webp?1783944258",
+    "display": "https://cards.scryfall.io/display/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.webp?1783944258",
+    "art": "https://cards.scryfall.io/art/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.webp?1783944258",
+    "crop": "https://cards.scryfall.io/crop/front/1/d/1d7262a7-f48c-411b-8a0e-c5bd8f646145.webp?1783944258"
+  },
+  "mana_cost": "{2}{U}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Beeble",
+  "oracle_text": "This creature can't be blocked as long as defending player controls two or more nonland permanents that share an artist.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "not_legal",
+    "pauper": "not_legal",
+    "vintage": "not_legal",
+    "penny": "not_legal",
+    "commander": "not_legal",
+    "oathbreaker": "not_legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "not_legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4c8bc76a-05a5-43db-aaf0-34deb347b871",
+  "set": "unh",
+  "set_name": "Unhinged",
+  "set_type": "funny",
+  "set_uri": "https://api.scryfall.com/sets/4c8bc76a-05a5-43db-aaf0-34deb347b871",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aunh&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/unh?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/1d7262a7-f48c-411b-8a0e-c5bd8f646145/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0575ee9a-1940-4b38-b269-5b806b2b6173&unique=prints",
+  "collector_number": "28",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Like thousands of others, the beebles quit Magic for several years following the release of the *Mercadian Masques* set.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "David \u201cBeeblemania\u201d Martin",
+  "artist_ids": [
+    "996ad764-4ae0-4952-8bb5-5a75c9d68275"
+  ],
+  "illustration_id": "85984743-6a1c-4696-a397-6fffa36b042e",
+  "border_color": "silver",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "prices": {
+    "usd": "0.15",
+    "usd_foil": "2.68",
+    "usd_etched": null,
+    "eur": "0.14",
+    "eur_foil": "1.25",
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=74289&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBursting%2BBeebles",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBursting%2BBeebles",
+    "edhrec": "https://edhrec.com/route/?cc=Bursting+Beebles"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F37833%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=14791&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Bursting+Beebles&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

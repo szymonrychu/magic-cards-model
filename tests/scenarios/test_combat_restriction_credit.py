@@ -65,16 +65,19 @@ def test_a_restriction_on_other_creatures_is_not_credited() -> None:
     assert not reads_self_combat_restriction_line(
         "As long as you control a Swamp, this creature can't be blocked.", "Some Zombie"
     )
-    # "black and/or red creatures" (Sacred Knight's real template) - an
-    # elided-noun list joined by "and/or" rather than a bare "or" - is still
-    # outside `_parse_creature_description`'s closed grammar even after
-    # fix-cant-be-blocked-by widened it to a single subtype/colour/type/
-    # keyword/toughness quality plus a plain "or" disjunction (Blazing
-    # Torch's "Vampires or Zombies", now read): "and/or" is a different
-    # connective, and the elided noun on every alternative but the last is a
-    # different grammar again, so the line stays uncredited on purpose.
+    # Bursting Beebles' real condition - "share an artist" - has no reader
+    # at all: `models/card.py`'s own `Card` deliberately carries no artist
+    # field ("Print, market, and collector fields are deliberately absent:
+    # ... artists ..."), so this is not a description-grammar gap the way
+    # Sacred Knight's "and/or" elided-noun list was before fix-cant-be-
+    # blocked-by widened `_parse_creature_description` to read it (that
+    # widening covers evasion, self-block, and this compound alike, since
+    # all three share the one grammar) - it is a condition this engine could
+    # never answer, uncredited on purpose.
     assert not reads_self_combat_restriction_line(
-        "This creature can't be blocked by black and/or red creatures.", "Some Zombie"
+        "This creature can't be blocked as long as defending player controls two or more "
+        "nonland permanents that share an artist.",
+        "Some Zombie",
     )
     assert not reads_self_combat_restriction_line(
         "This creature can't block unless you pay {2}.", "Some Zombie"

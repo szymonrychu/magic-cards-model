@@ -1567,26 +1567,78 @@ class _CreatureDescriptionAlternatives:
         return any(alternative.matches(game, candidate) for alternative in self.alternatives)
 
 
+#: Sacred Knight: "This creature can't be blocked by black and/or red
+#: creatures." - an adjective *list* sharing one trailing noun phrase printed
+#: once at the end ("creature(s)[ with ...]"), rather than once per adjective
+#: the way "Vampires or Zombies" prints two complete, self-sufficient bare
+#: subtypes with nothing elided. CR 700.2's "and/or" reminder text ("either
+#: or both") is the same inclusive-or `_CreatureDescriptionAlternatives`
+#: already gives a bare "or" list; a plain "or"/"and" joining the adjectives
+#: (Sky Hussar's "white and/or blue", read the identical way once the noun is
+#: reattached) is accepted alongside "and/or" and a Oxford-comma list of three
+#: or more, since nothing about the elision is specific to which conjunction
+#: joins the last two words.
+_ELIDED_NOUN_LIST_RE = re.compile(
+    r"^(?P<items>[a-z][a-z'-]*(?:(?:,\s*|\s+and/or\s+|\s+or\s+|\s+and\s+)[a-z][a-z'-]*)+)"
+    r"\s+(?P<rest>creatures?.*)$",
+    re.IGNORECASE,
+)
+
+_ELIDED_NOUN_LIST_ITEM_SEP_RE = re.compile(r",\s*|\s+and/or\s+|\s+or\s+|\s+and\s+", re.IGNORECASE)
+
+
+def _parse_elided_noun_list(description: str) -> "tuple[_CreatureDescriptionMatcher, ...] | None":
+    """Read "black and/or red creatures" into one matcher per adjective, each
+    reconstructed as "`<adjective>` `<the shared trailing noun phrase>`" and
+    read by the ordinary single-description grammar - so a colour, card type,
+    or subtype adjective in the list is read exactly the way it would be read
+    alone (Sacred Knight's own two colours; nothing in the pool needs a third
+    item or a mixed adjective kind, but the grammar does not special-case the
+    count or the kind). `None` when the shape does not match, or when any
+    item - reconstructed with the shared tail - does not itself parse."""
+    match = _ELIDED_NOUN_LIST_RE.fullmatch(description.strip())
+    if match is None:
+        return None
+    items = [item.strip() for item in _ELIDED_NOUN_LIST_ITEM_SEP_RE.split(match.group("items"))]
+    items = [item for item in items if item]
+    if len(items) < 2:
+        return None
+    rest = match.group("rest")
+    matchers: list[_CreatureDescriptionMatcher] = []
+    for item in items:
+        matcher = _parse_single_creature_description(f"{item} {rest}")
+        if matcher is None:
+            return None
+        matchers.append(matcher)
+    return tuple(matchers)
+
+
 def _parse_creature_description(
     description: str,
 ) -> "_CreatureDescriptionMatcher | _CreatureDescriptionAlternatives | None":
     """`_parse_single_creature_description`, widened to a disjunction of two
-    or more descriptions joined by "or" (Blazing Torch's "Vampires or
-    Zombies") when the whole text is not itself one description.
+    or more descriptions - either each a complete, self-sufficient
+    description joined by "or" (Blazing Torch's "Vampires or Zombies"), or an
+    adjective list sharing one elided trailing noun phrase (Sacred Knight's
+    "black and/or red creatures", `_parse_elided_noun_list`) - when the whole
+    text is not itself one description.
 
     The whole-text reading is tried first and, when it succeeds, returned
     as-is: "creatures with power 2 or less" is one description whose own
     grammar happens to contain the word "or" (Questing Beast), not two
     descriptions "creatures with power 2" and "less" - splitting blind on
     every "or" before trying the whole text would misread it. Only a text
-    the whole-text grammar cannot place is then tried as a disjunction, each
-    side read by the identical single-description grammar; if any side does
-    not parse, the whole thing fails closed rather than matching on the
+    the whole-text grammar cannot place is then tried as an elided-noun list,
+    then as a plain disjunction of complete sides; if either shape's sides do
+    not all parse, the whole thing fails closed rather than matching on the
     sides that do.
     """
     whole = _parse_single_creature_description(description)
     if whole is not None:
         return whole
+    elided = _parse_elided_noun_list(description)
+    if elided is not None:
+        return _CreatureDescriptionAlternatives(alternatives=elided)
     parts = [part.strip() for part in re.split(r"\s+or\s+", description.strip(), flags=re.I)]
     parts = [part for part in parts if part]
     if len(parts) < 2:
