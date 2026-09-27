@@ -8,9 +8,9 @@ Two probes, both read by `magic_cards_model.support`:
   it could not read carries `effect.unparsed_remainder = <text>`
   (`support.unparsed_remainder` finds it anywhere in the closure graph);
 - **the ablation probe**: for a handled clause with more than one sentence,
-  each trailing rider sentence ("If ...", "Otherwise ...", or one containing
-  "instead"/"unless") is removed and the clause re-dispatched - the same
-  closure back means the rider was never read (`support.ignored_rider`).
+  each trailing sentence of its resolution text (`support.probe_sentences`)
+  is removed and the clause re-dispatched - the same closure back means the
+  sentence was never read (`support.ignored_rider`).
 
 Pride of Conquerors' city's-blessing "instead" and Summon: Knights of Round's
 chapter V are the two reported examples; every other printing here is chosen
@@ -26,16 +26,21 @@ from magic_cards_model.machines.abilities import (
 )
 from magic_cards_model.machines.effects import (
     activated_effect_for,
+    activation_resolution_text,
     effect_for,
+    spell_resolution_text,
     trigger_effect_for,
 )
+from magic_cards_model.machines.targeting import profile_for_text
 from magic_cards_model.models.card import Type
 from magic_cards_model.support import (
+    _CLOSURE_WALK_LIMIT,
+    _only_chooses_targets,
     _sentences,
-    _without_sentence,
+    _without_span,
     card_support,
     ignored_rider,
-    rider_sentences,
+    probe_sentences,
     same_closure,
     unparsed_remainder,
 )
@@ -55,14 +60,20 @@ def _printings():
 
 
 def _dispatches(printing):
-    """(clause text, dispatch, effect) for the spell text and every
+    """(clause text, dispatch, effect, reads) for the spell text and every
     triggered/activated ability of `printing`, dispatched the way
-    `support.classify_clauses` dispatches them (no X)."""
+    `support.classify_clauses` dispatches them (no X); `reads` is the text
+    the dispatcher resolves, as `classify_clauses` hands it to the probe."""
     found = []
     if _is_spell(printing) and printing.oracle_text:
         text = printing.oracle_text
         found.append(
-            (text, lambda t, n=printing.name: effect_for(n, t), effect_for(printing.name, text))
+            (
+                text,
+                lambda t, n=printing.name: effect_for(n, t),
+                effect_for(printing.name, text),
+                spell_resolution_text(printing.name, text),
+            )
         )
     index = 0
     for ability in parse_abilities(printing):
@@ -75,13 +86,20 @@ def _dispatches(printing):
             def dispatch(t, n=printing.name, i=i):
                 return activated_effect_for(n, i, t)
 
-            found.append((ability.effect, dispatch, dispatch(ability.effect)))
+            found.append(
+                (
+                    ability.effect,
+                    dispatch,
+                    dispatch(ability.effect),
+                    activation_resolution_text(ability.effect),
+                )
+            )
         elif isinstance(ability, TriggeredAbility) and ability.event is not None:
 
             def dispatch(t, n=printing.name, e=ability.event):
                 return trigger_effect_for(n, e, t)
 
-            found.append((ability.effect, dispatch, dispatch(ability.effect)))
+            found.append((ability.effect, dispatch, dispatch(ability.effect), None))
     return found
 
 
@@ -135,7 +153,7 @@ def test_the_marker_is_proven_on_a_third_printing():
         printing.name
         for printing in _printings()
         if printing.name not in reported
-        and any(unparsed_remainder(effect) for _, _, effect in _dispatches(printing))
+        and any(unparsed_remainder(effect) for _, _, effect, _ in _dispatches(printing))
         and _clauses_with_reason(printing, _REMAINDER)
     ]
     assert others, "no third printing carries an unparsed remainder"
@@ -267,18 +285,18 @@ def _instead_condition_claimed(text: str) -> bool:
 def _ablation_hits():
     hits = []
     for printing in _printings():
-        for text, dispatch, effect in _dispatches(printing):
+        for text, dispatch, effect, reads in _dispatches(printing):
             if effect is None or unparsed_remainder(effect):
                 continue
-            rider = ignored_rider(dispatch, text, effect)
+            rider = ignored_rider(dispatch, text, effect, reads)
             if rider is not None:
                 hits.append((printing, text, rider))
     return hits
 
 
 def test_every_ablation_hit_in_the_pool_is_a_notice_naming_the_rider():
-    """Whatever the probe finds in the pool is scored `notice` with the rider
-    it found as the reason - never left `handled`."""
+    """Whatever the probe finds in the pool is scored `notice` with the
+    sentence it found as the reason - never left `handled`."""
     for printing, _, rider in _ablation_hits():
         assert any(
             clause.outcome == "notice" and clause.reason == _REMAINDER + rider
@@ -286,35 +304,58 @@ def test_every_ablation_hit_in_the_pool_is_a_notice_naming_the_rider():
         ), (printing.name, rider)
 
 
-#: Real printings whose rider the engine used to drop and now reads (Hidden
-#: Blade's Assassin deathtouch, Lorehold Excavation's "Otherwise" damage,
-#: Vexing Arcanix's name branch) - the probe's own positive control.
-_ONCE_DROPPED = ("Hidden Blade", "Lorehold Excavation", "Vexing Arcanix")
+def test_no_pool_clause_ignores_a_sentence_of_its_own_resolution_text():
+    """Every sentence the probe ever found unread in the pool was a real gap
+    and is read now: Do or Die's "They can't be regenerated." (CR 701.19c,
+    `tests/scenarios/test_fra_s8b_separate_into_two_piles.py`), the copy
+    trigger's "You may choose new targets for the copy." (CR 707.10c), and
+    the Approach cycle's deck-construction line, which is not resolution
+    text at all (`spell_resolution_text`)."""
+    assert [(p.name, rider) for p, _, rider in _ablation_hits()] == []
 
 
-@pytest.mark.parametrize("name", _ONCE_DROPPED)
-def test_the_ablation_probe_catches_a_dispatcher_that_drops_the_rider(name):
-    """The pool has no ignored rider left, so the probe is proven on the texts
-    whose riders were the last ones dropped: asked through a dispatcher that
-    answers every text the way the real one answers it without the rider -
-    exactly what the old readers did - the probe names the rider; asked
-    through the real dispatcher it names nothing."""
+#: The Approach cycle's printed text, handed whole to the reader that reads
+#: its "you may exile ... If you do, ..." shape: that reader's regex takes
+#: everything after "If you do," as its consequence, so on the raw printing
+#: it also swallows the deck-construction line below - and answers anyway.
+_SWALLOWING_READER_PRINTINGS = ("Dragon's Approach", "Sphinx's Approach")
+
+
+@pytest.mark.parametrize("name", _SWALLOWING_READER_PRINTINGS)
+def test_the_ablation_probe_catches_a_real_reader_that_swallows_a_sentence(name):
+    """The probe's positive control, on a real reader and real printed text:
+    `_parse_may_exile_self_and_named_copies_if_you_do_clause` handed the
+    Approach cycle's whole oracle text builds the same closure with or
+    without its "A deck can have any number of cards named ..." line, so the
+    probe names that line. Through the real dispatcher it names nothing -
+    `spell_resolution_text` never hands the reader that line at all."""
+    from magic_cards_model.machines.effects import (
+        _parse_may_exile_self_and_named_copies_if_you_do_clause as reader,
+    )
+
     printing = card(name)
-    checked = 0
-    for text, dispatch, effect in _dispatches(printing):
-        for rider in rider_sentences(text):
-            ablated = _without_sentence(text, rider)
-            dropped = dispatch(ablated)
-            if dropped is None or effect is None or same_closure(dropped, effect):
-                continue
+    text = printing.oracle_text
+    (deck_line,) = [s for s in _sentences(text) if s.startswith("A deck can have")]
+    effect = reader(text)
+    assert effect is not None
+    assert ignored_rider(reader, text, effect) == deck_line
+    real = effect_for(printing.name, text)
+    reads = spell_resolution_text(printing.name, text)
+    assert deck_line not in reads
+    assert ignored_rider(lambda t: effect_for(printing.name, t), text, real, reads) is None
 
-            def dropping(t, dispatch=dispatch, rider=rider):
-                return dispatch(_without_sentence(t, rider) if rider in t else t)
 
-            assert ignored_rider(dropping, text, dropped) == rider, (name, rider)
-            assert ignored_rider(dispatch, text, effect) is None, (name, rider)
-            checked += 1
-    assert checked, name
+def test_the_copy_trigger_reads_its_new_targets_permission():
+    """CR 707.10/707.10c: a copy keeps the original's targets unless the
+    effect says its controller may choose new ones - the permission
+    sentence is part of what the closure does, not decoration."""
+    codie = card("Codie, Ravenous Codex")
+    (trigger,) = [a for a in parse_abilities(codie) if isinstance(a, TriggeredAbility)]
+    (first, permission) = _sentences(trigger.effect)
+    with_permission = trigger_effect_for(codie.name, trigger.event, trigger.effect)
+    without = trigger_effect_for(codie.name, trigger.event, first)
+    assert with_permission is not None and without is not None
+    assert not same_closure(with_permission, without), permission
 
 
 def test_a_kicker_rider_that_is_read_is_not_flagged():
@@ -331,29 +372,68 @@ def test_a_kicker_rider_that_is_read_is_not_flagged():
         spells = [c for c in card_support(printing).clauses if c.kind == "spell"]
         if spells and all(c.outcome == "handled" for c in spells):
             readers.append(printing.name)
-            assert ignored_rider(lambda t, n=printing.name: effect_for(n, t), text, effect) is None
+            assert (
+                ignored_rider(
+                    lambda t, n=printing.name: effect_for(n, t),
+                    text,
+                    effect,
+                    spell_resolution_text(printing.name, text),
+                )
+                is None
+            )
     assert len(readers) >= 2, readers
 
 
-def test_rider_sentences_are_the_trailing_if_otherwise_instead_unless_sentences():
+def _probed(text, reads=None):
+    return [text[begin:stop] for begin, stop in probe_sentences(text, reads)]
+
+
+def test_the_probe_removes_every_trailing_sentence_not_only_riders():
+    """A reader whose regex swallows a plain trailing sentence is as blind
+    as one that drops an "If ..." rider, so every sentence after the first
+    is probed - not only if/otherwise/instead/unless ones."""
     text = (
         "Destroy target creature. It can't be regenerated. If that creature was a "
         'token, draw a card. Otherwise, you gain 2 life. It deals 2 damage "unless" '
         "you pay {1} instead."
     )
-    assert rider_sentences(text) == [
+    assert _probed(text) == [
+        "It can't be regenerated.",
         "If that creature was a token, draw a card.",
         "Otherwise, you gain 2 life.",
         'It deals 2 damage "unless" you pay {1} instead.',
     ]
-    assert rider_sentences("If you control a Forest, draw a card.") == []
-    assert (
-        rider_sentences(
-            "Ascend (If you control ten or more permanents, you get the city's blessing.)\n"
-            "Creatures you control get +1/+1 until end of turn."
-        )
-        == []
-    )
+    assert _probed("If you control a Forest, draw a card.") == []
+
+
+def test_the_probe_skips_what_the_resolution_readers_are_never_handed():
+    """A keyword line, reminder text, a separate ability printed on the
+    spell: read by casting, a keyword machine or their own clause - removing
+    one can never show a difference in the resolution closure."""
+    for name in ("Faithless Looting", "Mage's Guile", "Command the Stage", "Raft Security Officer"):
+        printing = card(name)
+        for text, _, _, reads in _dispatches(printing):
+            probed = _probed(text, reads)
+            assert not any(
+                word in sentence
+                for sentence in probed
+                for word in ("Flashback", "Cycling", "At the beginning", "This ability costs")
+            ), (name, probed)
+
+
+def test_a_stripped_cast_trigger_prefix_is_excluded_by_offset():
+    """Dash Hopes' leading "When you cast this spell, ..." paragraph is a
+    separate ability (CR 601.2i) - its sentences are never probed on the
+    spell. Excluded by where they sit, not by their words: the same words
+    printed again in the resolution text are probed there."""
+    printing = card("Dash Hopes")
+    text = printing.oracle_text
+    reads = spell_resolution_text(printing.name, text)
+    prefix, _, resolution = text.partition("\n")
+    (repeated,) = [s for s in _sentences(prefix) if s.startswith("If")]
+    assert _probed(text, reads) == _sentences(resolution)
+    doubled = f"{text} {repeated}"
+    assert _probed(doubled) == [*_sentences(resolution), repeated]
 
 
 def test_same_closure_compares_recursively_by_value():
@@ -364,29 +444,31 @@ def test_same_closure_compares_recursively_by_value():
     assert not same_closure(first, other)
 
 
-def test_a_rider_the_target_announcement_reads_is_not_flagged():
-    """No false positive: a rider that only changes what the spell or ability
-    may target (CR 601.2c - "If this spell was cast using teamwork, instead
-    choose target creature card in your graveyard") is read when targets are
-    announced, not by the resolution closure, so the closure coming back
-    unchanged proves nothing. Too Evil to Stay Dead's teamwork scenarios
-    (`tests/scenarios/test_teamwork_riders.py`) play both branches."""
-    from magic_cards_model.machines.targeting import profile_for_text
-
-    read_by_targeting = set()
+def test_only_a_bare_target_choice_is_exempt_from_the_closure_test():
+    """A rider that only chooses targets ("If this spell was cast using
+    teamwork, instead choose target creature card in your graveyard") is
+    read when targets are announced (CR 601.2c), so the resolution closure
+    coming back unchanged proves nothing about it. A sentence that names a
+    target *and* does something with it - Wasteland Strangler's "If you do,
+    target creature gets -3/-3 until end of turn." - is an instruction the
+    closure must perform, and is judged by the closure like any other."""
+    exempt, judged = set(), set()
     for printing in _printings():
-        for text, _dispatch, effect in _dispatches(printing):
-            if effect is None or unparsed_remainder(effect):
+        for text, _, effect, reads in _dispatches(printing):
+            if effect is None:
                 continue
-            for rider in rider_sentences(text):
-                ablated = _without_sentence(text, rider)
+            for begin, stop in probe_sentences(text, reads):
+                ablated = _without_span(text, begin, stop)
                 if profile_for_text(ablated) == profile_for_text(text):
                     continue
-                read_by_targeting.add(printing.name)
-                assert not any(
-                    clause.reason == _REMAINDER + rider for clause in card_support(printing).clauses
-                ), (printing.name, rider)
-    assert "Too Evil to Stay Dead" in read_by_targeting
+                sentence = text[begin:stop]
+                if _only_chooses_targets(sentence, text, ablated):
+                    exempt.add(printing.name)
+                    assert "choose" in sentence.lower(), sentence
+                else:
+                    judged.add(printing.name)
+    assert "Too Evil to Stay Dead" in exempt
+    assert {"Wasteland Strangler", "Murk Strider", "Eldrazi Obligator"} <= judged
     (spell,) = [c for c in card_support(card("Too Evil to Stay Dead")).clauses if c.kind == "spell"]
     assert spell.outcome == "handled"
 
@@ -395,12 +477,12 @@ def test_a_closure_that_ignores_its_text_is_not_judged_by_ablation():
     """A dispatcher that answers the same closure for any text at all - a
     card's own row, read whole by hand (Delver of Secrets' upkeep reveal,
     Tishana's Tidebinder's counter-and-lose-abilities, each played through
-    by its scenarios) - cannot show a rider unread by giving the same answer
-    without it."""
+    by its scenarios) - cannot show a sentence unread by giving the same
+    answer without it."""
     checked = set()
     for printing in _printings():
-        for text, dispatch, effect in _dispatches(printing):
-            if effect is None or not rider_sentences(text):
+        for text, dispatch, effect, reads in _dispatches(printing):
+            if effect is None or not probe_sentences(text, reads):
                 continue
             try:
                 blind = dispatch("")
@@ -408,6 +490,100 @@ def test_a_closure_that_ignores_its_text_is_not_judged_by_ablation():
                 continue
             if blind is None or not same_closure(blind, effect):
                 continue
-            assert ignored_rider(dispatch, text, effect) is None, printing.name
+            assert ignored_rider(dispatch, text, effect, reads) is None, printing.name
             checked.add(printing.name.split(" // ")[0])
     assert {"Delver of Secrets", "Tishana's Tidebinder"} <= checked, checked
+
+
+def test_every_probed_pool_clause_is_comparable_to_itself():
+    """The ablation probe is only as good as `same_closure`: a closure that
+    never compares equal to a second build of the very same text would read
+    every sentence as consumed, and the probe would be blind there (it fails
+    closed instead - `UnprobeableClosure`). Two builds from the same text
+    carry equal-but-distinct values (a fresh `re.Match`, a plain
+    parsed-description object, a callable pydantic modification) - all of
+    them compare by value."""
+    checked = 0
+    blind = []
+    for printing in _printings():
+        for text, dispatch, effect, reads in _dispatches(printing):
+            if effect is None or not probe_sentences(text, reads):
+                continue
+            checked += 1
+            if not same_closure(effect, dispatch(text)):
+                blind.append((printing.name, text))
+    assert checked > 300, checked
+    assert blind == []
+
+
+def test_same_closure_tells_apart_two_lambdas_of_one_function():
+    """Two closures sharing a `__qualname__` (two lambdas written in one
+    function) are different code, never the same effect."""
+
+    def build(which):
+        if which:
+            return lambda: 1
+        return lambda: 2
+
+    assert build(True).__qualname__ == build(False).__qualname__
+    assert not same_closure(build(True), build(False))
+    assert same_closure(build(True), build(True))
+
+
+def test_a_closure_graph_too_large_to_walk_fails_closed():
+    """`unparsed_remainder` stops after `_CLOSURE_WALK_LIMIT` values; a graph
+    it could not finish walking may hold a remainder past the limit, so it
+    answers with a reason rather than a clean bill."""
+    text = "Lightning Bolt deals 3 damage to any target."
+    many = [effect_for("Lightning Bolt", text) for _ in range(_CLOSURE_WALK_LIMIT)]
+    assert unparsed_remainder(many[0]) is None
+    reason = unparsed_remainder(many)
+    assert reason is not None and "walk limit" in reason
+
+
+def test_every_mode_is_judged_by_the_ablation_probe_too():
+    """A mode is a clause of its own (CR 700.2a): its reader is asked the
+    same closure questions - comparable to itself, no sentence ignored - for
+    a modal spell's modes and a modal trigger's modes alike."""
+    from magic_cards_model.machines.effects import (
+        _parse_mode_with_shared_verb_fallback,
+        modal_trigger_profile,
+        mode_effect_body,
+        parse_mode_effect,
+    )
+    from magic_cards_model.machines.modes import modal_profile
+    from magic_cards_model.support import _first_reading
+
+    probed = 0
+    for printing in _printings():
+        modal = modal_profile(printing)
+        if modal is not None and modal.understood:
+            for mode in modal.modes:
+
+                def read(t, mode=mode, modal=modal):
+                    moved = mode.model_copy(update={"text": t})
+                    effect = parse_mode_effect(moved, 0)
+                    return effect or _parse_mode_with_shared_verb_fallback(moved, modal.instruction)
+
+                effect = read(mode.text)
+                if effect is None or not probe_sentences(mode.text):
+                    continue
+                probed += 1
+                assert same_closure(effect, read(mode.text)), (printing.name, mode.text)
+                assert ignored_rider(read, mode.text, effect) is None, (printing.name, mode.text)
+        for ability in parse_abilities(printing):
+            if not isinstance(ability, TriggeredAbility):
+                continue
+            profile = modal_trigger_profile(ability.effect)
+            if profile is None:
+                continue
+            for mode in profile.modes:
+                body = mode_effect_body(mode)
+                effect = _first_reading(body, card_name=printing.name)
+                if effect is None or not probe_sentences(body):
+                    continue
+                probed += 1
+                read = lambda t, n=printing.name: _first_reading(t, card_name=n)  # noqa: E731
+                assert same_closure(effect, read(body)), (printing.name, body)
+                assert ignored_rider(read, body, effect) is None, (printing.name, body)
+    assert probed >= 10, probed

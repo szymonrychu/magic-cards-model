@@ -5507,13 +5507,7 @@ def effect_for(
         return explicit
     if effect_text is None:
         return None
-    effect_text = _strip_self_is_all_colors_sentence(card_name, effect_text)
-    effect_text = _strip_self_shuffle_clause(card_name, effect_text)
-    effect_text = _strip_trailing_flashback_line(effect_text)
-    effect_text = _strip_leading_standalone_cast_trigger(effect_text)
-    effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
-    effect_text = _strip_trailing_standalone_activated_ability(effect_text)
-    effect_text = _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
+    effect_text = spell_resolution_text(card_name, effect_text)
     if is_modal_text(effect_text):
         return resolve_modal_spell
     effect = _spell_effect_or_notice(effect_text)
@@ -5539,6 +5533,36 @@ def effect_for(
     if rest is None or _is_notice_only(rest):
         return effect
     return _then_exile_self(rest, time_counters=time_counters)
+
+
+#: A deck-construction line - "A deck can have any number of cards named
+#: `<name>`." (the Approach cycle, Persistent Petitioners) or "... up to
+#: `<n>` cards named ..." - which CR 100.2a's four-copy rule defers to and
+#: `models/deck.py` reads. It says nothing about resolving the spell.
+_DECK_CONSTRUCTION_LINE_RE = re.compile(
+    r"^A deck can have (?:any number of|up to \w+) cards named [^\n]*\.[ \t]*(?:\n|$)",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def spell_resolution_text(card_name: str, effect_text: str) -> str:
+    """A spell's printed text less every paragraph and sentence `effect_for`
+    knows is not part of its own resolution: the self-shuffle a replacement
+    effect performs (`machines/replacement.py`), a trailing flashback line, a
+    leading cast trigger (CR 601.2i) and a trailing triggered or activated
+    ability (each its own object, CR 113.6k/113.6j), and a cast-timing
+    restriction (read at casting), and a deck-construction line
+    (`_DECK_CONSTRUCTION_LINE_RE`). What is left is what the resolution
+    readers are handed - and what the support oracle's ablation probe
+    removes sentences from."""
+    effect_text = _strip_self_is_all_colors_sentence(card_name, effect_text)
+    effect_text = _strip_self_shuffle_clause(card_name, effect_text)
+    effect_text = _strip_trailing_flashback_line(effect_text)
+    effect_text = _strip_leading_standalone_cast_trigger(effect_text)
+    effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
+    effect_text = _strip_trailing_standalone_activated_ability(effect_text)
+    effect_text = _DECK_CONSTRUCTION_LINE_RE.sub("", effect_text)
+    return _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
 
 
 def _is_notice_only(effect: object) -> bool:
@@ -63660,6 +63684,17 @@ def _dispatch_by_printed_text(
 _self_normalized_effect_text = self_normalized_effect_text
 
 
+def activation_resolution_text(effect_text: str) -> str:
+    """An activated ability's effect text less the trailing sentences read at
+    activation rather than at resolution: a timing restriction (CR 602.5d)
+    and a target-gated cost reduction (CR 601.2f via CR 602.2b, applied by
+    `Game._activation_target_cost_reduction`). What is left is what the
+    resolution readers are handed - and what the support oracle's ablation
+    probe removes sentences from."""
+    effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
+    return _TRAILING_ACTIVATION_TARGET_COST_REDUCTION_RE.sub("", effect_text).strip()
+
+
 def activated_effect_for(
     card_name: str,
     index: int,
@@ -63702,8 +63737,7 @@ def activated_effect_for(
         return explicit
     if effect_text is None:
         return None
-    effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
-    effect_text = _TRAILING_ACTIVATION_TARGET_COST_REDUCTION_RE.sub("", effect_text).strip()
+    effect_text = activation_resolution_text(effect_text)
     effect_text = _self_normalized_effect_text(card_name, effect_text, legendary=legendary)
     if x_value is not None:
         substituted = _ability_effect_or_notice(substitute_x(effect_text, x_value))
