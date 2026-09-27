@@ -2087,6 +2087,35 @@ def test_build_round0_rows_merges_deck_file_front_face_with_metagame_full_name(t
     assert unresolved == []
 
 
+def test_build_round0_rows_resolves_deck_file_unspaced_slash_split_name(tmp_path: Path):
+    """Deck files spell a split card with a bare `"A/B"` (MTGO export
+    style, `Wear/Tear`); it must resolve to the engine's `"A // B"` name
+    rather than land in `unresolved`."""
+    decks_dir = tmp_path / "decks"
+    decks_dir.mkdir()
+    (decks_dir / "some.txt").write_text("1 Wear/Tear\n")
+    full_name = "Wear // Tear"
+    classifications = {
+        full_name: cc.ClassificationResult(
+            name=full_name,
+            status="silent",
+            clause_kind="",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+    }
+    rows, unresolved = cc.build_round0_rows(
+        metagame={"formats": {}},
+        decks_dirs=[decks_dir],
+        classifications_by_name=classifications,
+        tested_by_name={full_name: False},
+    )
+    assert unresolved == []
+    assert [r.name for r in rows] == [full_name]
+    assert rows[0].from_deck_file
+
+
 def test_build_round0_rows_reports_unresolved_cards_without_dropping():
     metagame = {"formats": {"modern": {"a": {"cards": {"Totally Unknown Card": 0.5}}}}}
     rows, unresolved = cc.build_round0_rows(

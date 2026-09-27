@@ -1127,6 +1127,11 @@ def _resolve_round0_name(
 ) -> str:
     if name in classifications_by_name:
         return name
+    if "/" in name and " // " not in name:
+        # Deck-file split spelling "Wear/Tear" -> engine "Wear // Tear".
+        joined = " // ".join(part.strip() for part in name.split("/"))
+        if joined in classifications_by_name:
+            return joined
     return front_index.get(name, name)
 
 
