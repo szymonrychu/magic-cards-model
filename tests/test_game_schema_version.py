@@ -1438,11 +1438,11 @@ def test_a_snapshot_written_before_skipped_turns_is_refused() -> None:
 #: cast permission's CR 614.1c "enters with a counter" rider) and `Game`
 #: gained `next_spell_keyword_grants` ("the next noncreature spell you cast
 #: this turn has affinity for artifacts", CR 702.41a) - tmt T6.
-_SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS = 89
+_SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS = 90
 
 
 def test_a_snapshot_written_before_cast_permission_riders_is_refused() -> None:
-    """A version-89 dump has no next-spell keyword grants and cast records
+    """A version-90 dump has no next-spell keyword grants and cast records
     with no rider: decoded as current, a Leonardo-cast creature on the stack
     would enter without its finality counter. Refused instead."""
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS

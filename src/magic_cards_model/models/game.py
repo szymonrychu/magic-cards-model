@@ -4034,7 +4034,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 90
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 91
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4116,10 +4116,10 @@ class Game(EngineModel):
     #: 89: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5), and
     #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5), carrying
     #: its `CastRecord` as JSON.
-    #: 90: `CastRecord` gained `enters_with_counters` (a cast permission's
+    #: 91: `CastRecord` gained `enters_with_counters` (a cast permission's
     #: CR 614.1c rider, tmt T6) and `Game` gained `next_spell_keyword_grants`
     #: ("the next noncreature spell you cast this turn has affinity for
-    #: artifacts", CR 702.41a, tmt T6).
+    #: artifacts", CR 702.41a, tmt T6; renumbered from 90 at integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
