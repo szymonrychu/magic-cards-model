@@ -1,0 +1,137 @@
+{
+  "object": "card",
+  "id": "329888c6-25d9-4eb9-9308-f979c3859669",
+  "oracle_id": "1d85eec2-80db-466c-bd48-d2a12866e8bd",
+  "multiverse_ids": [
+    676100
+  ],
+  "mtgo_id": 131079,
+  "tcgplayer_id": 579047,
+  "cardmarket_id": 788966,
+  "name": "Old Stickfingers",
+  "lang": "en",
+  "released_at": "2024-09-27",
+  "uri": "https://api.scryfall.com/cards/329888c6-25d9-4eb9-9308-f979c3859669",
+  "scryfall_uri": "https://scryfall.com/card/dsc/227/old-stickfingers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:26:31Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.jpg?1783909591",
+    "normal": "https://cards.scryfall.io/normal/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.jpg?1783909591",
+    "large": "https://cards.scryfall.io/large/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.jpg?1783909591",
+    "png": "https://cards.scryfall.io/png/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.png?1783909591",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.jpg?1783909591",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.jpg?1783909591",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.webp?1783909591",
+    "grid": "https://cards.scryfall.io/grid/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.webp?1783909591",
+    "display": "https://cards.scryfall.io/display/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.webp?1783909591",
+    "art": "https://cards.scryfall.io/art/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.webp?1783909591",
+    "crop": "https://cards.scryfall.io/crop/front/3/2/329888c6-25d9-4eb9-9308-f979c3859669.webp?1783909591"
+  },
+  "mana_cost": "{X}{B}{G}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Horror",
+  "oracle_text": "When you cast this spell, reveal cards from the top of your library until you reveal X creature cards. Put all creature cards revealed this way into your graveyard, then put the rest on the bottom of your library in a random order.\nOld Stickfingers's power and toughness are each equal to the number of creature cards in your graveyard.",
+  "power": "*",
+  "toughness": "*",
+  "colors": [
+    "B",
+    "G"
+  ],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "banned",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "restricted",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "4c822528-83c3-42c7-8708-dd1d37166819",
+  "set": "dsc",
+  "set_name": "Duskmourn: House of Horror Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/4c822528-83c3-42c7-8708-dd1d37166819",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adsc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dsc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/329888c6-25d9-4eb9-9308-f979c3859669/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A1d85eec2-80db-466c-bd48-d2a12866e8bd&unique=prints",
+  "collector_number": "227",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jehan Choo",
+  "artist_ids": [
+    "515df9fe-9c29-4e75-9e49-6ce5be4ec8c8"
+  ],
+  "illustration_id": "35fb8b5f-faa2-4103-956f-0dcf907252c7",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 4049,
+  "penny_rank": 6721,
+  "prices": {
+    "usd": "0.34",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.27",
+    "eur_foil": null,
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=676100&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOld%2BStickfingers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOld%2BStickfingers",
+    "edhrec": "https://edhrec.com/route/?cc=Old+Stickfingers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F579047%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=788966&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/131079?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

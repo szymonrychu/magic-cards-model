@@ -1758,8 +1758,21 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         return count_differently_named
 
     if match := _GREATEST_CHARACTERISTIC_AMONG_RE.fullmatch(stripped):
+        # ecl-T1's Pummeler for Hire ("the greatest power among Giants you
+        # control") and Sunderflock ("the greatest mana value among
+        # Elementals you control") name a creature *subtype*, not one of CR
+        # 205.2a's card types - `_singular_card_type` misses both, so a
+        # subtype the same vocabulary `count_expression`'s own "the number of
+        # `<qualifier>` you control" already reads (`_singular_subtype_for_
+        # count_expression`) is tried second, never guessed at when neither
+        # matches.
         card_type = _singular_card_type(match.group("qualifier"))
-        if card_type is None:
+        subtype = (
+            None
+            if card_type is not None
+            else _singular_subtype_for_count_expression(match.group("qualifier"))
+        )
+        if card_type is None and subtype is None:
             return None
         wants_power = match.group("characteristic").lower() == "power"
         wants_mana_value = match.group("characteristic").lower() == "mana value"
@@ -1769,7 +1782,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             values: list[int] = []
             for permanent in game.battlefield:
                 chars = board.of(permanent)
-                if chars.controller != controller or card_type not in chars.types:
+                if chars.controller != controller:
+                    continue
+                if card_type is not None and card_type not in chars.types:
+                    continue
+                if subtype is not None and not any(
+                    word.lower() == subtype for word in chars.subtypes
+                ):
                     continue
                 if wants_mana_value:
                     values.append(int(permanent.mana_value))  # CR 202.3
@@ -1806,6 +1825,19 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return len(values)
 
         return different_among
+
+    # "the number of colors among `<qualifier>` you control" - Vivid's own
+    # amount (CR 207.2c: an ability word has no rules meaning; the count is
+    # CR 105.1's colors among a group of permanents, CR 105.2c excluding
+    # colorless). `machines/vivid.py` is the one reader every Vivid card's
+    # "where X is ..." shares, reused unchanged by the CDA (`layers.
+    # _COLOR_COUNT_CDA_RE`) and the self cost reduction (`Game.cost_
+    # reduction_for`) that print the identical phrase in a different position.
+    from .vivid import colors_among_count_expression
+
+    colors_among = colors_among_count_expression(stripped)
+    if colors_among is not None:
+        return colors_among
 
     return None
 
@@ -1989,6 +2021,31 @@ def _amount_term(term: str) -> AmountReader | None:
         return read_object_counters
     if lowered == "x":
         return lambda _game, _controller, _object, x: x
+    if lowered == "the difference between its power and toughness":
+        # Doran, Besieged by Time's own X: "it gets +X/+X until end of turn,
+        # where X is the difference between its power and toughness." Every
+        # printed "the difference between `<A>` and `<B>`" this engine has
+        # seen (Spry and Mighty's own "the difference between the chosen
+        # creatures' powers" is the other one, read separately since its two
+        # terms are two different objects rather than one object's own two
+        # characteristics) is a non-negative magnitude - the greater minus
+        # the lesser, never a signed subtraction - so a creature with more
+        # toughness than power gets exactly the pump a creature with more
+        # power than toughness does. `obj` is the object the amount is
+        # evaluated for (CR 608.2h): here, the attacking or blocking creature
+        # itself (`_parse_event_subject_variable_pump_clause`'s own "it"),
+        # read off the computed board (CR 613.5) the same way every other
+        # object-characteristic term in this function does.
+        def read_power_toughness_difference(
+            game: "Game", _controller: str, obj: CardState | None, _x: int
+        ) -> int:
+            if obj is None:
+                return 0
+            power = game.power_of(obj) or 0
+            toughness = game.toughness_of(obj) or 0
+            return abs(power - toughness)
+
+        return read_power_toughness_difference
     if _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE.fullmatch(text):
         # Converge (CR 207.2c), the enters-with position: Magmablood/
         # Rancorous/Wildgrowth Archaic's own "This creature enters with a
@@ -6212,8 +6269,18 @@ _SEARCH_AND_PUT_RE = re.compile(
     + _HAVING_PATTERN
     + r"))?"
     # Harvest Season's own X-defining tail, read the same way `_SCRY_RE`/
-    # `_SURVEIL_RE` already read theirs, through `count_expression`.
-    + where_x_pattern()
+    # `_SURVEIL_RE` already read theirs, through `count_expression`. Not
+    # `where_x_pattern()` itself: its capture is greedy, and Prismatic
+    # Undercurrents' own rejoined "..., where X is `<expr>`, reveal those
+    # cards, put them into your hand, then shuffle" gives a greedy `[^.]+`
+    # nothing to stop at before the mandatory ", put ..." near the very end,
+    # so it swallowed the optional "reveal" clause right along with the
+    # expression - `count_expression` then failed on the run-together text
+    # and the whole search fell back to a notice. A non-greedy capture finds
+    # the expression's true end at the first point the rest of this pattern
+    # can still match, which is exactly the boundary CR 608.2c's own
+    # instruction actually falls on, whether or not a "reveal" clause follows.
+    + r"(?:,\s*where\s+[xX]\s+is\s+(?P<where_x>[^.]+?))?"
     +
     # CR 701.23e: a printed reveal is a real reveal. "reveal it"/"them"
     # (Expedition Map, Primeval Titan) and "reveal that card"/"those cards"
@@ -11058,7 +11125,19 @@ _SELF_COST_REDUCTION_LINE_RE = re.compile(
 #: reduction are both about *paying*, not resolving) - only this line's
 #: effect on an unrelated resolution sentence is fixed here.
 _PER_COUNT_COST_REDUCTION_LINE_RE = re.compile(
-    r"^This spell costs \{\d+\} less to cast for each [^.]+\.\s*", re.IGNORECASE | re.MULTILINE
+    # An optional leading ability word (CR 207.2c: no rules meaning of its
+    # own) - Rime Chill's and Wildvine Pummeler's own "Vivid — This spell
+    # costs {1} less to cast for each color among permanents you control.",
+    # stripped the same way `_SELF_COST_REDUCTION_LINE_RE` already tolerates
+    # one for its own "if"/"as long as" shape. `\{[xX]|\d+\}` (rather than
+    # only digits) also reads Sunderflock's own "costs {X} less to cast,
+    # where X is the greatest mana value among Elementals you control." -
+    # CR 601.2f's own X reduction, priced by `Game.cost_reduction_for`, never
+    # here (this only stops the sentence poisoning `_parse_mixed_clauses`'s
+    # per-clause fallback, the same as every other row in this preamble list).
+    r"^(?:[A-Za-z' ]+ — )?This spell costs \{(?:[xX]|\d+)\} less to cast"
+    r"(?:,? where [xX] is [^.]+| for each [^.]+)\.\s*",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 #: A third self-discount template, tied to a phase or step rather than a
@@ -11440,6 +11519,22 @@ _BARE_PUT_ON_TOP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Prismatic Undercurrents' own shape: "Search your library for up to X basic
+#: land cards, where X is `<expr>`. Reveal those cards, put them into your
+#: hand, then shuffle." - CR 608.2c's own instruction printed as two
+#: sentences instead of `_SEARCH_AND_PUT_RE`'s usual one comma-joined run
+#: (Changeling Wayfinder's "..., reveal it, put it into your hand, then
+#: shuffle." all in the same sentence as the search). Rejoined here into that
+#: same comma-joined shape, the same reattachment `_BARE_SHUFFLE_RE`/`_BARE_
+#: PUT_ON_TOP_RE` already do for a "then"-split tail, so `_SEARCH_AND_PUT_RE`
+#: reads it unchanged either way.
+_REVEAL_PUT_SEARCH_CONTINUATION_RE = re.compile(
+    r"^reveal (?:it|them|that card|those cards), put (?:it|them|that card|those cards) "
+    r"(?:into your hand|into your graveyard|onto the battlefield(?: tapped)?)"
+    r"(?:, then shuffle)?$",
+    re.IGNORECASE,
+)
+
 
 def _rejoin_search_clauses(clauses: list[str]) -> list[str]:
     """Reattach a split-off "shuffle" (or "shuffle and put ... on top") to
@@ -11468,6 +11563,14 @@ def _rejoin_search_clauses(clauses: list[str]) -> list[str]:
             and re.search(r"shuffle$", merged[-1].strip(), re.IGNORECASE)
         ):
             merged[-1] = f"{merged[-1]} and {clause.strip()}"
+        elif (
+            merged
+            and _REVEAL_PUT_SEARCH_CONTINUATION_RE.fullmatch(clause.strip())
+            and _MENTIONS_SEARCH_RE.search(merged[-1])
+        ):
+            # Prismatic Undercurrents' own shape - see `_REVEAL_PUT_SEARCH_
+            # CONTINUATION_RE`'s own docstring.
+            merged[-1] = f"{merged[-1]}, {clause.strip()[0].lower()}{clause.strip()[1:]}"
         else:
             merged.append(clause)
     return merged
@@ -17479,6 +17582,234 @@ def _merge_reveal_until_kind_then_put_clauses(
     return 3, effect
 
 
+def _reveal_until_n_of_kind(
+    game: "Game",
+    controller: Player,
+    predicate: Callable[[CardState], bool],
+    count: int,
+    *,
+    source: str,
+) -> tuple[list[CardState], list[CardState]]:
+    """Reveal cards from the top of `controller`'s library (CR 701.15a) until
+    `count` of them satisfy `predicate`, or the library runs out - the
+    "reveal ... until you reveal X `<kind>` cards" shape `_REVEAL_UNTIL_KIND_
+    RE` already reads for a fixed "a `<kind>` card" (one), generalised to a
+    resolution-time count (Aurora Awakener's and Sanar's own X).
+
+    Returns `(matches, remainder)`: the up-to-`count` cards satisfying
+    `predicate`, in the order revealed, and every other card revealed along
+    the way, in the order revealed. `count <= 0` reveals nothing at all - CR
+    107.1b already floors an `amount_expression` result at zero, and CR
+    608.2c gives "until you reveal zero `<kind>` cards" no cards to look for.
+    """
+    revealed: list[CardState] = []
+    matches: list[CardState] = []
+    if count > 0:
+        for state in list(controller.library):
+            game.reveal(state, source=source)
+            revealed.append(state)
+            if predicate(state):
+                matches.append(state)
+                if len(matches) >= count:
+                    break
+    remainder = [state for state in revealed if state not in matches]
+    return matches, remainder
+
+
+def _shuffle_remainder_to_bottom(
+    game: "Game", controller: Player, remainder: list["CardState"]
+) -> None:
+    """ "[Put] the rest on the bottom of your library in a random order" -
+    `_PUT_REVEALED_CARD_REST_RANDOM_RE`'s own instruction, shared by every
+    reveal-until reader in this family: the same reproducible-seed
+    convention `_merge_reveal_until_kind_then_put_clauses` already uses."""
+    still_in_library = [state for state in remainder if state.zone is Zone.LIBRARY]
+    if not still_in_library:
+        return
+    rng = Random(f"{game.shuffle_seed}:{game.shuffles_performed}:reveal-until-n")  # noqa: S311
+    rng.shuffle(still_in_library)
+    game.shuffles_performed += 1
+    for state in still_in_library:
+        controller.move(state, Zone.LIBRARY)
+
+
+#: Aurora Awakener: "reveal cards from the top of your library until you
+#: reveal X `<kind>` cards, where X is `<expr>`. Put any number of those
+#: `<kind>` cards onto the battlefield, then put the rest of the revealed
+#: cards on the bottom of your library in a random order." The variable-X
+#: sibling of `_REVEAL_UNTIL_KIND_RE`'s own fixed "a `<kind>` card", with CR
+#: 608.2d's own "any number" choice among the X found (`_LOOK_TOP_N_PUT_
+#: KIND_BATTLEFIELD_RE`'s identical `DecisionKind.CHOOSE_CARDS` shape)
+#: standing in for that reader's own single mandatory placement.
+_REVEAL_UNTIL_X_KIND_PUT_ANY_ONTO_BATTLEFIELD_RE = re.compile(
+    r"^reveal cards from the top of your library until you reveal x "
+    r"(?P<kind>[a-z]+) cards, where x is (?P<expr>.+?)\.\s*"
+    r"put any number of those (?P=kind) cards onto the battlefield, then put "
+    r"the rest of the revealed cards on the bottom of your library in a "
+    r"random order\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reveal_until_x_kind_put_any_onto_battlefield_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_REVEAL_UNTIL_X_KIND_PUT_ANY_ONTO_BATTLEFIELD_RE`'s shape, or `None`."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _REVEAL_UNTIL_X_KIND_PUT_ANY_ONTO_BATTLEFIELD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    kind_word = match.group("kind").lower()
+    predicate = _SELECT_FROM_TOP_KINDS.get(kind_word)
+    if predicate is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        source = ability.source(game)
+        amount = reader(game, ability.controller, source, ability.x_value)
+        matches, remainder = _reveal_until_n_of_kind(
+            game, controller, predicate, amount, source=ability.source_name
+        )
+        if matches:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"put any number of the revealed {kind_word} cards onto the battlefield",
+                    source=ability.source_name,
+                    source_id=ability.source_id,
+                    amount=len(matches),
+                    exact=False,
+                    cards=tuple(state.id for state in matches),
+                    card_labels=tuple(state.name for state in matches),
+                )
+            )
+            by_id = {state.id: state for state in matches}
+            kept_ids = set()
+            for card_id in chosen_ids:
+                state = by_id.get(card_id)
+                if state is not None:
+                    game.put_onto_battlefield(state, controller.username)
+                    kept_ids.add(card_id)
+            remainder += [state for state in matches if state.id not in kept_ids]
+        _shuffle_remainder_to_bottom(game, controller, remainder)
+
+    return effect
+
+
+#: Sanar, Innovative First-Year: "Vivid — At the beginning of your first main
+#: phase, reveal cards from the top of your library until you reveal X
+#: nonland cards, where X is `<expr>`. For each of those colors, you may
+#: exile a card of that color from among the revealed cards. Then shuffle.
+#: You may cast the exiled cards this turn." CR 505.1a's own name for the
+#: precombat main phase. "For each of those colors" (CR 105.1) is every
+#: distinct color among the X nonland cards found (CR 105.2c: a colorless
+#: card contributes no color, so it can never be exiled this way and is
+#: never a color this loop offers), one optional exile per color, each a
+#: separate CR 608.2d choice among only the revealed cards of that color -
+#: two revealed cards can share a color, and only one of them can answer
+#: for it, the reason this is "for each color" and not "for each card".
+#: "Then shuffle" (CR 701.24a's real shuffle) puts whatever the reveal did
+#: not exile - every revealed card not chosen - back into the library, mixed;
+#: nothing here is put on the bottom in any order, unlike Aurora Awakener's
+#: own tail. The exiled cards get CR 400.11a's own "may be cast this turn"
+#: permission, read the identical way `machines/casting.py` already grants
+#: it for every other "exile ... you may cast [it/them] this turn" shape -
+#: linked here rather than duplicated, through `link_exile_for_casting`.
+_REVEAL_UNTIL_X_NONLAND_EXILE_PER_COLOR_RE = re.compile(
+    r"^reveal cards from the top of your library until you reveal x "
+    r"nonland cards, where x is (?P<expr>.+?)\.\s*"
+    r"for each of those colou?rs, you may exile a card of that colou?r from "
+    r"among the revealed cards\.\s*then shuffle\.\s*"
+    r"you may cast the exiled cards this turn\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+_NONLAND_PREDICATE: Callable[[CardState], bool] = lambda state: Type.LAND not in state.types  # noqa: E731
+
+
+def _parse_reveal_until_x_nonland_exile_per_color_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_REVEAL_UNTIL_X_NONLAND_EXILE_PER_COLOR_RE`'s shape, or `None`."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    match = _REVEAL_UNTIL_X_NONLAND_EXILE_PER_COLOR_RE.fullmatch(whole)
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        source = ability.source(game)
+        amount = reader(game, ability.controller, source, ability.x_value)
+        matches, _remainder = _reveal_until_n_of_kind(
+            game, controller, _NONLAND_PREDICATE, amount, source=ability.source_name
+        )
+        colors_found: list[Color] = sorted(
+            {
+                color
+                for state in matches
+                for color in state.card.colors
+                if color is not Color.COLORLESS
+            },
+            key=lambda color: color.value,
+        )
+        exiled: list[CardState] = []
+        available = list(matches)
+        for color in colors_found:
+            candidates = [state for state in available if color in state.card.colors]
+            if not candidates:
+                continue
+            chosen_id = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"exile a revealed {color.value} card",
+                    source=ability.source_name,
+                    source_id=ability.source_id,
+                    amount=1,
+                    exact=False,
+                    cards=tuple(state.id for state in candidates),
+                    card_labels=tuple(state.name for state in candidates),
+                )
+            )
+            assert isinstance(chosen_id, tuple)
+            if not chosen_id:
+                continue
+            by_id = {state.id: state for state in candidates}
+            state = by_id.get(chosen_id[0])
+            if state is None or state.zone is not Zone.LIBRARY:
+                continue
+            # CR 400.1's one shared exile zone (`game.exile_cards`, not a
+            # bare `move`), the identical mover `_exile_cast_spell_or_none`'s
+            # own dig-and-imprint loop already uses.
+            game.exile_cards([state])
+            exiled.append(state)
+            available = [each for each in available if each.id != state.id]
+        game.shuffle_library(controller.username)
+        for state in exiled:
+            # CR 601.3: "you may cast the exiled cards this turn" - the same
+            # primitive Ragavan's own "you may cast that card" grants.
+            game.grant_play_permission(
+                state,
+                controller.username,
+                action=PlayAction.CAST,
+                source_name=ability.source_name,
+                zone=Zone.EXILE,
+                until_end_of_turn=True,
+            )
+
+    return effect
+
+    return effect
+
+
 #: Part in Friendship's own trigger: "reveal cards from the top of your
 #: library until you reveal a creature card. If its mana value is less than
 #: or equal to the number of lands you control, put it onto the battlefield.
@@ -21513,6 +21844,135 @@ def _parse_event_subject_pump_clause(effect_text: str) -> AbilityEffect | None:
             layer_context_for(game, game.controller_of(ability)),
         ):
             effects.add(built, game)
+
+    return effect
+
+
+#: "It gets +X/+X until end of turn, where X is `<expr>`." - Doran, Besieged
+#: by Time's own attack-or-block trigger, the *variable*-magnitude sibling of
+#: `_EVENT_SUBJECT_PUMP_RE`'s fixed "+N/+N": `parsed_layer_effects` (the
+#: fixed shape's own builder) reads a literal number, never CR 107.3's X, so
+#: this reads the magnitude itself, through `amount_expression`, evaluated
+#: against the event's own subject - the attacking or blocking creature CR
+#: 608.2h locks the amount in for, once, as the ability resolves - rather
+#: than against the ability's source the way every other `amount_expression`
+#: call in this file (whose `obj` is always the resolving spell or ability's
+#: own object) already is.
+_EVENT_SUBJECT_VARIABLE_PUMP_RE = re.compile(
+    r"^(?:that (?P<noun>creature|permanent)|the blocking creature|it) gets \+x/\+x "
+    r"until end of turn, where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_event_subject_variable_pump_clause(effect_text: str) -> AbilityEffect | None:
+    """`_EVENT_SUBJECT_VARIABLE_PUMP_RE`'s shape, or `None`.
+
+    Refused when the text mentions "target" anywhere, the same guard `_parse_
+    event_subject_pump_clause` keeps: that shape is the ordinary target-
+    resolution path, already correct.
+    """
+    stripped = effect_text.strip()
+    if "target" in stripped.lower():
+        return None
+    match = _EVENT_SUBJECT_VARIABLE_PUMP_RE.match(stripped)
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        subject = game.find_by_id(event.subject_id)
+        if subject is None or subject.zone is not Zone.BATTLEFIELD:
+            return
+        amount = reader(game, ability.controller, subject, ability.x_value)
+        if amount <= 0:
+            return
+        source = ability.source(game)
+        source_name = source.name if source is not None else ability.source_name
+        store = continuous_effects(game)
+        store.add(
+            ContinuousEffect(
+                description=f"{source_name}: {subject.name} gets {amount:+d}/{amount:+d}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=store.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=_only(subject.id),
+                modification=modify_power_toughness(amount, amount),
+            )
+        )
+
+    return effect
+
+
+#: Gloom Ripper: "target creature you control gets +X/+0 until end of turn
+#: and up to one target creature an opponent controls gets -0/-X until end of
+#: turn, where X is `<expr>`." Two *different* target descriptions sharing one
+#: "and", the identical CR 608.2c single-instruction shape `_EXILE_SEVERAL_
+#: UP_TO_ONE_TARGETS_THEN_RETURN_RE` already reads for its own two-target
+#: exile - only here the two targets get two different effects, not the same
+#: one, and one of the two is mandatory rather than "up to one" on both
+#: sides. `expr` is read the ordinary way, through `amount_expression`.
+_TARGET_PLUS_X_MINUS_X_RE = re.compile(
+    r"^target creature you control gets \+x/\+0 until end of turn and "
+    r"up to one target creature an opponent controls gets -0/-x until end of turn,"
+    r" where x is (?P<expr>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_plus_x_minus_x_clause(effect_text: str) -> AbilityEffect | None:
+    """`_TARGET_PLUS_X_MINUS_X_RE`'s shape, or `None`.
+
+    Which resolved target is which is read off each target's own live
+    controller (CR 613.5), not off `resolve_targets`' position - an earlier
+    target can be skipped as illegal (CR 608.2b) without shifting a later
+    one out of place, and "you control" versus "an opponent controls" are
+    mutually exclusive by construction, so a target's own controller always
+    settles it correctly regardless of order.
+    """
+    match = _TARGET_PLUS_X_MINUS_X_RE.fullmatch(" ".join(effect_text.strip().split()))
+    if match is None:
+        return None
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = ability.controller
+        source = ability.source(game)
+        amount = reader(game, controller, source, ability.x_value)
+        if amount <= 0:
+            return
+        board = game.computed_board()
+        store = continuous_effects(game)
+        for target in game.resolve_targets(ability):
+            if not isinstance(target, CardState) or target.zone is not Zone.BATTLEFIELD:
+                continue
+            target_controller = board.of(target).controller
+            if target_controller == controller:
+                power, toughness = amount, 0
+            elif target_controller is not None:
+                power, toughness = 0, -amount
+            else:
+                continue
+            description = f"{ability.source_name}: {target.name} gets {power:+d}/{toughness:+d}"
+            store.add(
+                ContinuousEffect(
+                    description=description,
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(target.id),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
 
     return effect
 
@@ -26634,6 +27094,22 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     event_subject_pump = _parse_event_subject_pump_clause(effect_text)
     if event_subject_pump is not None:
         return event_subject_pump
+    event_subject_variable_pump = _parse_event_subject_variable_pump_clause(effect_text)
+    if event_subject_variable_pump is not None:
+        return event_subject_variable_pump
+    target_plus_x_minus_x = _parse_target_plus_x_minus_x_clause(effect_text)
+    if target_plus_x_minus_x is not None:
+        return target_plus_x_minus_x
+    reveal_until_x_kind_put_any = _parse_reveal_until_x_kind_put_any_onto_battlefield_clause(
+        effect_text
+    )
+    if reveal_until_x_kind_put_any is not None:
+        return reveal_until_x_kind_put_any
+    reveal_until_x_nonland_exile_per_color = _parse_reveal_until_x_nonland_exile_per_color_clause(
+        effect_text
+    )
+    if reveal_until_x_nonland_exile_per_color is not None:
+        return reveal_until_x_nonland_exile_per_color
     # TMT T7 (see that section, near the bottom of this file, for why each of
     # these is read whole rather than through the ordinary clause split).
     exile_several_then_return = _parse_exile_several_up_to_one_targets_then_return_clause(
@@ -54114,6 +54590,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             # names the trigger's own event, not a subject any per-clause
             # parser below could resolve on its own.
             return [create_then_threshold_half_life]  # type: ignore[list-item]
+    choose_two_draw_pump_trample = _parse_choose_exactly_two_draw_pump_trample_clause(
+        text, for_spell=for_spell
+    )
+    if choose_two_draw_pump_trample is not None:
+        # Read whole, ahead of the comma/clause split: "the chosen creatures"
+        # in the second sentence is CR 608.2d anaphora back to the first
+        # sentence's own choice, which no per-clause parser below has any
+        # room to carry across a period.
+        return [choose_two_draw_pump_trample]  # type: ignore[list-item]
     token_list = _parse_token_list_clause(text, for_spell=for_spell)
     if token_list is not None:
         return [token_list]
@@ -56984,6 +57469,109 @@ def _reveal_and_bring_into_hand(
     """
     game.reveal(card, source=source)
     controller.bring_into_the_game(card, Zone.HAND)
+
+
+#: "Choose exactly two creatures you control. You draw X cards and the
+#: chosen creatures get +X/+X and gain trample until end of turn, where X is
+#: the difference between the chosen creatures' powers." - Spry and Mighty's
+#: own whole effect. CR 608.2d's choice is not targeting (CR 601.2c) - the two
+#: creatures are picked as the ability resolves, so one already tapped,
+#: already gone, or that changed control since the spell was cast is still a
+#: legal pick - which is why this is its own `Decision` (`DecisionKind.
+#: CHOOSE_CARDS`, the identical "choose exactly two" shape `_parse_reveal_
+#: two_outside_opponent_chooses_clause` already uses for a different pool of
+#: candidates) rather than read through `_targets_understood`'s targeting
+#: machinery at all. "The difference between" the two powers (not "its power
+#: and toughness", `Doran`'s own shape reusing `amount_expression`'s "the
+#: difference between its power and toughness" term) is read off two
+#: *different* objects, so this computes it directly rather than through that
+#: single-object term - the greater power minus the lesser, never signed,
+#: read once as the ability resolves (CR 608.2h) and locked in for the pump,
+#: the draw, and the trample grant alike, even when it comes out to zero
+#: (trample and the pump both still apply; a draw of zero cards is simply
+#: nothing to draw).
+_CHOOSE_EXACTLY_TWO_DRAW_PUMP_TRAMPLE_RE = re.compile(
+    r"^choose exactly two creatures you control\.\s*"
+    r"you draw x cards and the chosen creatures get \+x/\+x and gain trample "
+    r"until end of turn, where x is the difference between the chosen "
+    r"creatures'? powers\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_choose_exactly_two_draw_pump_trample_clause(
+    effect_text: str, *, for_spell: bool
+) -> Effect | None:
+    """`_CHOOSE_EXACTLY_TWO_DRAW_PUMP_TRAMPLE_RE`'s shape, or `None`. Never an
+    ability's own shape - nothing in the pool prints this off a permanent."""
+    if not for_spell:
+        return None
+    whole = " ".join(_strip_non_effect_preamble(effect_text).split())
+    if _CHOOSE_EXACTLY_TWO_DRAW_PUMP_TRAMPLE_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        board = game.computed_board()
+        candidates = [
+            state
+            for state in game.permanents_controlled_by(controller.username)
+            if board.of(state).is_creature
+        ]
+        if len(candidates) < 2:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt="choose exactly two creatures you control",
+                source=spell.name,
+                source_id=source_id_of(spell),
+                amount=2,
+                exact=True,
+                cards=tuple(state.id for state in candidates),
+                card_labels=tuple(state.name for state in candidates),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        if len(chosen_ids) < 2:
+            return
+        by_id = {state.id: state for state in candidates}
+        chosen = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+        if len(chosen) < 2:
+            return
+        # CR 608.2h: read once, right now - the board as it stands when this
+        # ability resolves, not re-read for the pump or the draw below.
+        powers = [board.of(state).numeric_power for state in chosen]
+        amount = abs(powers[0] - powers[1])
+        if amount > 0:
+            game.draw_cards(controller, amount)
+        store = continuous_effects(game)
+        for state in chosen:
+            if amount > 0:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{spell.name}: {state.name} gets {amount:+d}/{amount:+d}",
+                        layer=Layer.POWER_TOUGHNESS,
+                        sublayer=Sublayer.MODIFY,
+                        timestamp=store.tick(),
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=_only(state.id),
+                        modification=modify_power_toughness(amount, amount),
+                    )
+                )
+            store.add(
+                ContinuousEffect(
+                    description=f"{spell.name}: {state.name} gains trample until end of turn",
+                    layer=Layer.ABILITY,
+                    timestamp=store.tick(),
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(state.id),
+                    modification=grant_ability("trample"),
+                )
+            )
+
+    return effect
 
 
 #: "You may reveal exactly two cards you own with different names from

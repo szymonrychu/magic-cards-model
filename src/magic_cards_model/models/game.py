@@ -554,6 +554,20 @@ _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Sunderflock's own shape: "This spell costs {X} less to cast, where X is
+#: the greatest mana value among Elementals you control." A general fallback
+#: for whatever `_COSTS_LESS_X_WHERE_X_IS_GREATEST_STAT_RE`'s and `_COSTS_
+#: LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE`'s own narrower shapes miss
+#: - a subtype qualifier, a mana-value stat, or any other expression
+#: `machines/effects.amount_expression` already reads for a resolution-time
+#: amount - evaluated here with the identical text `cost_reduction_for`
+#: already has in hand, so both readers stay in exact agreement about what
+#: "the greatest `<stat>` among `<qualifier>` you control" means.
+_COSTS_LESS_X_WHERE_X_IS_RE = re.compile(
+    r"this spell costs \{x\} less to cast,? where x is (?P<expr>[^.\n]+)",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's per-turn-history reduction: "This spell costs {2} less to cast
 #: for each card you've cycled or discarded this turn." (Hollow One, text
 #: confirmed with `resolve_cards` this session). Unlike Emrakul's row above,
@@ -20560,6 +20574,16 @@ class Game(EngineModel):
         owner = caster or spell.controller or self.active_player.username
         amount = 0
 
+        # Vivid's own self reduction (CR 207.2c: an ability word, no rules
+        # meaning) - Rime Chill's and Wildvine Pummeler's "This spell costs
+        # {1} less to cast for each color among permanents you control."
+        # `machines/vivid.py` is the one reader every position this amount is
+        # printed in shares (the resolution-time amount and Squawkroaster's
+        # CDA read it too).
+        from ..machines.vivid import costs_less_per_color_among_reduction
+
+        amount += costs_less_per_color_among_reduction(text, self, owner)
+
         match = _COSTS_LESS_PER_CARD_TYPE.search(text)
         if match is not None:
             types = {card_type for card in self.player(owner).graveyard for card_type in card.types}
@@ -20640,6 +20664,24 @@ class Game(EngineModel):
                 if self.characteristics_of(state).is_creature
                 and (keyword is None or has_keyword(state, keyword, self))
             )
+        elif greatest_stat is None and (
+            generic_where_x := _COSTS_LESS_X_WHERE_X_IS_RE.search(text)
+        ):
+            # Sunderflock's own shape: "This spell costs {X} less to cast,
+            # where X is the greatest mana value among Elementals you
+            # control." Neither of the two specific readers above names a
+            # subtype qualifier or a mana-value stat, so this general
+            # fallback reads `amount_expression`'s own wider vocabulary
+            # instead - the same reader `count_expression`'s "the number of
+            # `<qualifier>` you control" family already shares with every
+            # other resolution-time amount (`machines/effects.py`), evaluated
+            # here with no object and no ability X of its own: CR 601.2f's
+            # self reduction has neither.
+            from ..machines.effects import amount_expression
+
+            reader = amount_expression(generic_where_x.group("expr"))
+            if reader is not None:
+                amount += reader(self, owner, spell, 0)
 
         generic = ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
         return generic.plus(colored_reduction) if colored_reduction.symbols else generic
@@ -21125,6 +21167,13 @@ class Game(EngineModel):
             any(card_type in earlier.types for card_type in effect.applies_to_types or ())
             for earlier in self.spells_cast_this_turn.get(caster, [])
         ):
+            return None
+        if effect.requires_toughness_greater_than_power and not (
+            (spell.toughness or 0) > (spell.power or 0)
+        ):
+            # Doran, Besieged by Time: the spell's own toughness/power (CR
+            # 208.1), read right now (CR 611.3a) - a spell with no numeric
+            # value for either (CR 208.5) compares as 0.
             return None
         units = effect.amount
         if effect.per_equipped_power:

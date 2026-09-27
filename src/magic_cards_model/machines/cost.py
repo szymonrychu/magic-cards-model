@@ -4211,6 +4211,17 @@ class CostModifierEffect(EngineModel):
     twin of the reduction `_counted_type_decrease` already computes for the
     same permanent."""
 
+    requires_toughness_greater_than_power: bool = False
+    """`TYPE_DECREASE` only: Doran, Besieged by Time's own "Each creature
+    spell you cast with toughness greater than its power costs {1} less to
+    cast." - an extra filter on the spell itself (CR 208.1), asked alongside
+    `applies_to_types` rather than replacing it, since the spell still has to
+    be a creature spell first. Read off the spell's own power/toughness as it
+    is right now (`CardState.power`/`toughness`, CR 208.5's 0 default for one
+    that cannot be determined) - a spell on the stack has no board of its own
+    to compute layers against, so this is the printed value plus its own
+    counters, the same "right now" every other `TYPE_DECREASE` amount reads."""
+
 
 _QUALIFIER_EXCLUDES: dict[str, Type] = {
     "Noncreature": Type.CREATURE,
@@ -4313,6 +4324,19 @@ _TYPE_COST_DECREASE_EQUIPPED_POWER_RE = re.compile(
     r"\b(?P<types>(?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land)"
     r"(?: and (?:Creature|Instant|Sorcery|Artifact|Enchantment|Planeswalker|Land))?) "
     r"spells you cast cost \{X\} less to cast, where X is equipped creature'?s power\.?$",
+    re.IGNORECASE,
+)
+
+#: Doran, Besieged by Time: "Each creature spell you cast with toughness
+#: greater than its power costs {1} less to cast." - a `TYPE_DECREASE` on
+#: creature spells, further filtered by the spell's own P/T comparison
+#: (`CostModifierEffect.requires_toughness_greater_than_power`) rather than by
+#: a card-type/subtype/keyword. "Each" is CR 601.2f's plain "spells you cast",
+#: not a per-instance multiplier - Doran taxes every qualifying spell the
+#: flat amount, it never scales with how many are cast.
+_CREATURE_SPELL_TOUGHNESS_OVER_POWER_COST_DECREASE_RE = re.compile(
+    r"^each creature spell you cast with toughness greater than its power "
+    r"costs \{(?P<amount>\d+)\} less to cast\.?$",
     re.IGNORECASE,
 )
 
@@ -4524,6 +4548,14 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
                 applies_to_types=types,
                 per_equipped_power=True,
             )
+    match = _CREATURE_SPELL_TOUGHNESS_OVER_POWER_COST_DECREASE_RE.fullmatch(text.strip())
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.TYPE_DECREASE,
+            amount=int(match.group("amount")),
+            applies_to_types=(Type.CREATURE,),
+            requires_toughness_greater_than_power=True,
+        )
     match = _TYPE_COST_DECREASE.search(text)
     if match is not None:
         words = [word.strip().lower() for word in match.group("types").split(" and ")]

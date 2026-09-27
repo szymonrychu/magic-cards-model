@@ -6554,6 +6554,21 @@ _ATTACKS_OR_BLOCKS_RE = re.compile(r"^this (?P<kind>[a-z]+) attacks or blocks$",
 #: path by mistake.
 _SELF_ATTACKS_OR_BLOCKS_RE = re.compile(r"^attack(?:s)? or block(?:s)?$", re.IGNORECASE)
 
+#: Doran, Besieged by Time: "Whenever a creature you control attacks or
+#: blocks, ..." - `_ATTACKS_OR_BLOCKS_RE`'s identical compound-event gap
+#: (`_trigger_event` stops at the first event word it recognises), but on
+#: CR 508.1/509.1's *group* form rather than a self-reference: "a"/"another"
+#: `<quality>` (a card type, "creature", or left bare) "you control" attacks
+#: or blocks, not only the source itself. `condition_matches`'s own BLOCKS
+#: branch already reads a non-self "`<quality>` you control blocks" the
+#: identical way Tetsuko Umezawa, Pursuer's own "a creature an opponent
+#: controls ... blocks" is read - this only has to stop `_trigger_event` from
+#: ever seeing the compound and silently keeping "attacks" alone.
+_GROUP_ATTACKS_OR_BLOCKS_RE = re.compile(
+    r"^(?P<subject>a|another) (?P<quality>[a-z]+) you control attacks or blocks$",
+    re.IGNORECASE,
+)
+
 
 def _expand_attacks_or_blocks(
     ability: TriggeredAbility, card_name: str | None = None, *, legendary: bool = True
@@ -6581,16 +6596,34 @@ def _expand_attacks_or_blocks(
             if stripped != condition and _SELF_ATTACKS_OR_BLOCKS_RE.fullmatch(stripped):
                 match = True  # sentinel: matched via self-reference, not `_ATTACKS_OR_BLOCKS_RE`
                 break
-    if match is None:
-        return [ability]
-    return [
-        ability.model_copy(
-            update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
-        ),
-        ability.model_copy(
-            update={"condition": f"this {kind} blocks", "event": TriggerEvent.BLOCKS}
-        ),
-    ]
+    if match is not None:
+        return [
+            ability.model_copy(
+                update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
+            ),
+            ability.model_copy(
+                update={"condition": f"this {kind} blocks", "event": TriggerEvent.BLOCKS}
+            ),
+        ]
+    group_match = _GROUP_ATTACKS_OR_BLOCKS_RE.fullmatch(condition)
+    if group_match is not None:
+        subject = group_match.group("subject")
+        quality = group_match.group("quality")
+        return [
+            ability.model_copy(
+                update={
+                    "condition": f"{subject} {quality} you control attacks",
+                    "event": TriggerEvent.ATTACKS,
+                }
+            ),
+            ability.model_copy(
+                update={
+                    "condition": f"{subject} {quality} you control blocks",
+                    "event": TriggerEvent.BLOCKS,
+                }
+            ),
+        ]
+    return [ability]
 
 
 #: "Whenever this creature enters or attacks, ..." - Primeval Titan's own

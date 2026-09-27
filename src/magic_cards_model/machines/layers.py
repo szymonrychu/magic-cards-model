@@ -8772,6 +8772,22 @@ _QUALIFIER_COUNT_CDA_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "`<Name>`'s power is equal to the number of colors among permanents you
+#: control." (ecl-T1's Squawkroaster, ability word Vivid - CR 207.2c gives it
+#: no rules meaning of its own, so its own name already rewritten to "this
+#: creature" by `self_normalized_effect_text` before this is tried) - CR
+#: 105.1's colors among a group of the controller's own permanents, rather
+#: than `_QUALIFIER_COUNT_CDA_RE`'s own count of the permanents themselves.
+#: `_colors_among_count_factory` (built for `_SELF_PUMP_PER_COLOR_AMONG_RE`'s
+#: sublayer 7c pump, Sisay/Earthen Ally) is the identical qualifier reader,
+#: reused here for sublayer 7a's CDA instead.
+_COLOR_COUNT_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s (?P<stats>power and toughness are each|power is) "
+    r"equal to the number of colou?rs among (?P<other>other )?"
+    r"(?P<qualifier>[a-z]+(?: [a-z]+)?) you control\.?$",
+    re.IGNORECASE,
+)
+
 
 def _qualifier_count_cda_builder(
     line: str, qualifier: str, count: ControlledCountFactory, *, power_only: bool = False
@@ -12257,6 +12273,17 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _creature_subtype_count_cda_builder(tuple(subtypes), line=sentence)
     if _HAND_SIZE_POWER_CDA_RE.fullmatch(sentence):
         return _hand_size_power_cda_builder(sentence)
+    if match := _COLOR_COUNT_CDA_RE.fullmatch(sentence):
+        count = _colors_among_count_factory(
+            match.group("qualifier"), excludes_self=match.group("other") is not None
+        )
+        if count is not None:
+            return _qualifier_count_cda_builder(
+                sentence,
+                f"colors among {match.group('qualifier')}",
+                count,
+                power_only=match.group("stats").lower() == "power is",
+            )
     if match := _ATTACHED_CREATURE_PUMP_AND_QUOTED_RE.fullmatch(sentence):
         keywords = []
         if match.group("keywords") is not None:
