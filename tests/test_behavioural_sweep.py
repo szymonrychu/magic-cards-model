@@ -4240,6 +4240,27 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
     ),
+    # Fab D: a target restriction or object filter reading "was dealt
+    # combat damage ... this turn" (`machines/conditions/history.
+    # dealt_damage_clause_test`) - `_action_history`'s own staging only
+    # injects a `DamageDealt` record for an *intervening-if*/"Activate
+    # only if" clause (`getattr(ability, "intervening_if", None)`), never
+    # for a target phrase the trigger/activation announces before it goes
+    # on the stack, so the driver's every attempt refuses the target
+    # outright and never reaches resolution to execute at all. Proven end
+    # to end with a real board and real combat instead, in
+    # `tests/scenarios/test_gain_control_indefinitely.py` (Admiral Beckett
+    # Brass) and `tests/scenarios/test_hope_of_ghirapur.py`.
+    DriverGap(
+        kind="beginning_of_step",
+        event="a target whose controller was dealt combat damage this turn",
+        precondition=r"controlled by a player who was dealt combat damage by",
+    ),
+    DriverGap(
+        kind="activated",
+        event="a target player who was dealt combat damage this turn",
+        precondition=r"target player who was dealt combat damage by",
+    ),
 )
 
 

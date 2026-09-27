@@ -71,6 +71,7 @@ from ..data.subtypes import canonical_subtype
 from ..ids import new_id
 from ..models.card import Card, Type
 from ..models.card_state import TargetKind
+from ..models.player import Player
 from ..models.zone import Zone
 from ..numbers import count_pattern, parse_count
 from ..snapshot import EngineModel
@@ -221,6 +222,11 @@ class CastingRuleEffect(EngineModel):
     names a specific player, who may be the caster's own opponent, teammate,
     or (if somehow legally targeted) the caster - the restriction follows the
     target, not a fixed relationship to whoever cast the spell."""
+    noncreature_only: bool = False
+    """`TARGETED_CANT_CAST` only: Hope of Ghirapur's own "... can't cast
+    noncreature spells" rather than Orim's Chant's unrestricted "can't cast
+    spells" - narrows the bar the same way `NONCREATURE_RESTRICTION` already
+    does for the blanket "your opponents" shape."""
     excluded_source_id: UUID | None = None
     """Set only for `CastingRuleKind.SPELLS_CANT_BE_COUNTERED_GRANT`:
     Determined's own "Other spells you control can't be countered this
@@ -275,20 +281,35 @@ def create_sorcery_speed_flash_grant(ability: AbilityOnStack) -> CastingRuleEffe
 
 
 def create_targeted_cant_cast_restriction(
-    controller: str, restricted_player: str, source_name: str
+    controller: str,
+    restricted_player: str,
+    source_name: str,
+    *,
+    duration: Duration = Duration.UNTIL_END_OF_TURN,
+    until_next_turn_of: str | None = None,
+    noncreature_only: bool = False,
 ) -> CastingRuleEffect:
     """Orim's Chant's "Target player can't cast spells this turn." as a
     recorded effect - `controller` is the caster of Orim's Chant (recorded
     for parity with the other two rows, but unused by the reader below,
     which cares only about `restricted_player`), and `restricted_player` is
     the target itself.
+
+    `duration`/`until_next_turn_of`/`noncreature_only` default to Orim's
+    Chant's own shape; Hope of Ghirapur's "Until your next turn, target
+    player ... can't cast noncreature spells" passes all three - CR 611.2a's
+    stated duration, and CR 205.2a's "noncreature" narrowing the same way
+    `NONCREATURE_RESTRICTION` already narrows the blanket "your opponents"
+    shape.
     """
     return CastingRuleEffect(
         kind=CastingRuleKind.TARGETED_CANT_CAST,
         controller=controller,
         source_name=source_name,
-        duration=Duration.UNTIL_END_OF_TURN,
+        duration=duration,
+        until_next_turn_of=until_next_turn_of,
         restricted_player=restricted_player,
+        noncreature_only=noncreature_only,
     )
 
 
@@ -471,6 +492,11 @@ def blanket_cant_cast_restriction(
     """
     for effect in getattr(game, "casting_rule_effects", []):
         if effect.kind == CastingRuleKind.TARGETED_CANT_CAST and effect.restricted_player == caster:
+            # Hope of Ghirapur's own "can't cast noncreature spells" - unlike
+            # Orim's Chant's unrestricted bar, this one lets a creature spell
+            # through (CR 205.2a).
+            if effect.noncreature_only and spell_types is not None and Type.CREATURE in spell_types:
+                continue
             return effect
         if effect.kind == CastingRuleKind.PLAYERS_CANT_CAST:
             # Bilbo's Gambit's own "players can't cast spells this turn" -
@@ -822,6 +848,23 @@ _SORCERY_FLASH_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Hope of Ghirapur's own activated-ability effect, after CR 201.5's self-
+#: reference is rewritten to "this permanent" (`self_normalized_effect_text`,
+#: run ahead of every clause reader that reaches here): "Until your next
+#: turn, target player who was dealt combat damage by this permanent this
+#: turn can't cast noncreature spells." CR 611.2a's "until your next turn"
+#: duration, the same shape `_SORCERY_FLASH_GRANT_RE` already reads, over one
+#: *targeted* player rather than "your opponents" - `phrase` is read whole by
+#: `machines/targeting.py`'s own "target player who ..." restriction
+#: (`TargetRequirement.dealt_damage_clause`), never narrowed to a fixed
+#: quality here, so a future card naming a different source or quality
+#: reads too.
+_TARGETED_NONCREATURE_CANT_CAST_UNTIL_NEXT_TURN_RE = re.compile(
+    r"^until your next turn, (?P<phrase>target player [^.]+?) can'?t cast "
+    r"noncreature spells\.?$",
+    re.IGNORECASE,
+)
+
 #: Ral, Monsoon Mage's exact printed "+1" effect (verified against the pool
 #: printing): the same "Until your next turn" duration as Teferi's own +1
 #: above, an instant/sorcery cost discount in place of a flash grant.
@@ -944,6 +987,30 @@ def parse_casting_rule_clause(clause: str, *, for_spell: bool) -> Callable[[Any,
             game.casting_rule_effects.append(create_sorcery_speed_flash_grant(ability))
 
         return grant
+
+    targeted_noncreature_match = _TARGETED_NONCREATURE_CANT_CAST_UNTIL_NEXT_TURN_RE.match(stripped)
+    if targeted_noncreature_match is not None:
+        from .effects import _targets_understood
+
+        phrase = targeted_noncreature_match.group("phrase")
+        if not _targets_understood(phrase, allow_player_targets=True):
+            return None
+
+        def restrict_targeted_noncreature(game: Any, ability: AbilityOnStack) -> None:
+            for target in game.resolve_targets(ability):
+                if isinstance(target, Player):
+                    game.casting_rule_effects.append(
+                        create_targeted_cant_cast_restriction(
+                            ability.controller,
+                            target.username,
+                            ability.source_name,
+                            duration=Duration.UNTIL_YOUR_NEXT_TURN,
+                            until_next_turn_of=ability.controller,
+                            noncreature_only=True,
+                        )
+                    )
+
+        return restrict_targeted_noncreature
 
     cost_reduction_match = _INSTANT_SORCERY_COST_REDUCTION_GRANT_RE.match(stripped)
     if cost_reduction_match is not None:

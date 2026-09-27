@@ -442,6 +442,23 @@ class TargetRequirement(EngineModel):
     crewed it), which `machines/conditions/history._record_crew`/`_bind_
     crew` already populate for every crew activation in the pool, so nothing
     new has to be tracked on `Game` for this either."""
+    dealt_damage_clause: str | None = None
+    """"target player who was dealt combat damage by `<this permanent>`
+    this turn" (Hope of Ghirapur) - CR 115.1's target restriction on a
+    *player* target itself, read as the identical per-turn "dealt combat
+    damage" history (CR 120.2a) `machines/conditions/history.py`'s turn-
+    history condition reader already reads for "you"/"an opponent", through
+    that module's `dealt_damage_clause_test` - the tail text only, so it is
+    re-read fresh at check time (a `CardState` self-reference cannot be
+    resolved until a `game` exists to look one up in) rather than compiled
+    once and carried as a callable on this otherwise-persisted-free but
+    still-`EngineModel` requirement."""
+    controller_dealt_damage_clause: str | None = None
+    """"target nonland permanent controlled by a player who was dealt
+    combat damage by three or more Pirates this turn" (Admiral Beckett
+    Brass) - the identical clause as `dealt_damage_clause` just above,
+    judged against the *target's controller* (CR 108.4a's owner fallback)
+    rather than the target itself."""
     required_subtypes: SortedFrozenSet[str] = frozenset()
     """A bare CR 205.3m creature-type list used as the target noun itself -
     "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
@@ -835,13 +852,13 @@ class TargetRequirement(EngineModel):
             return self._rejects_card(target, caster, game, source_id)
         if isinstance(target, TargetRef):
             if target.is_player:
-                return self._rejects_player(str(target.username), caster)
+                return self._rejects_player(str(target.username), caster, game, source_id)
             return None if self._allows_objects else f"{self.phrase} cannot target a card"
         if isinstance(target, UUID):
             return None if self._allows_objects else f"{self.phrase} cannot target a card"
         username = target if isinstance(target, str) else getattr(target, "username", None)
         if username is not None:
-            return self._rejects_player(str(username), caster)
+            return self._rejects_player(str(username), caster, game, source_id)
         return f"{target!r} is not something a spell can target"
 
     @property
@@ -1099,7 +1116,40 @@ class TargetRequirement(EngineModel):
         must_target = self._rejects_must_target(target, game, caster)
         if must_target is not None:
             return must_target
+        controller_dealt_damage = self._rejects_controller_dealt_damage(target, game, source_id)
+        if controller_dealt_damage is not None:
+            return controller_dealt_damage
         return self._rejects_controller(target, caster)
+
+    def _rejects_controller_dealt_damage(
+        self, target: CardState, game: Any, source_id: UUID | None
+    ) -> str | None:
+        """ "target nonland permanent controlled by a player who was dealt
+        combat damage by three or more Pirates this turn" (Admiral Beckett
+        Brass) - CR 115.1's target restriction read against the target's own
+        controller (CR 108.4a's owner fallback), off `Game.damage_dealt_
+        this_turn` through `machines/conditions/history.dealt_damage_
+        clause_test` - the identical tail `dealt_damage_clause` reads for a
+        player target itself. No game to read the history off fails open,
+        the same as every other restriction this parser cannot evaluate
+        without one."""
+        if self.controller_dealt_damage_clause is None or game is None:
+            return None
+        from .conditions.history import dealt_damage_clause_test
+
+        test = dealt_damage_clause_test(self.controller_dealt_damage_clause)
+        if test is None:
+            return None
+        controller = getattr(target, "controller_or_owner", target.controller)
+        if controller is None:
+            return None
+        source = game.find_by_id(source_id) if source_id is not None else None
+        if test(game, controller, source):
+            return None
+        return (
+            f"{self.phrase} needs a permanent controlled by a player who was dealt "
+            f"combat damage this turn, and {controller} was not"
+        )
 
     def _rejects_must_target(self, target: Any, game: Any, caster: str) -> str | None:
         """ "target spell that targets `<description>`" (Fugitive Droid's "an
@@ -1632,11 +1682,24 @@ class TargetRequirement(EngineModel):
             f"and {target.name} is not"
         )
 
-    def _rejects_player(self, username: str, caster: str) -> str | None:
+    def _rejects_player(
+        self, username: str, caster: str, game: Any = None, source_id: UUID | None = None
+    ) -> str | None:
         if not self.allows_players:
             return f"{self.phrase} cannot target the player {username}"
         if self.opponent_only and username == caster:
             return f"{self.phrase} cannot target {caster}, who is not an opponent"
+        if self.dealt_damage_clause is not None and game is not None:
+            from .conditions.history import dealt_damage_clause_test
+
+            test = dealt_damage_clause_test(self.dealt_damage_clause)
+            if test is not None:
+                source = game.find_by_id(source_id) if source_id is not None else None
+                if not test(game, username, source):
+                    return (
+                        f"{self.phrase} needs a player who was dealt combat damage "
+                        f"this turn, and {username} was not"
+                    )
         return None
 
 
@@ -2727,6 +2790,34 @@ _CONTROL_CLAUSE = re.compile(
     r"that\s+player\s+controls|defending\s+player\s+controls)\b",
     re.IGNORECASE,
 )
+
+#: "controlled by a player who was dealt combat damage by three or more
+#: Pirates this turn" (Admiral Beckett Brass) - CR 115.1's target
+#: restriction on the target's own controller, the passive-voice cousin of
+#: `_CONTROL_CLAUSE`'s active "you control"/"an opponent controls" shapes:
+#: those name the controller by their relationship to the caster, this
+#: names them by a per-turn historical fact instead, so it is read
+#: separately rather than folded into `_CONTROLLERS`. `tail` is
+#: `machines/conditions/history.dealt_damage_clause_test`'s own shape - a
+#: prefix `.match`, not a `.fullmatch`, and bounded to the first "this turn"
+#: (non-greedy), the same reason `_CONTROL_CLAUSE` is a prefix match: the
+#: `suffix` `_parse`'s scan hands `_read_phrase` runs to the end of the
+#: whole ability text, not just this sentence, so Hope of Ghirapur's own
+#: "target player who was dealt combat damage by this permanent this turn
+#: can't cast noncreature spells" has real words *after* "this turn" that
+#: belong to the outer instruction, never to this restriction, and a
+#: `.fullmatch` swallowing them would refuse the whole phrase as unread.
+_CONTROLLED_BY_PLAYER_WHO_RE = re.compile(
+    r"^controlled by an? player who (?P<tail>was dealt .+? this turn)\b", re.IGNORECASE
+)
+
+#: "who was dealt combat damage by Hope of Ghirapur this turn" - the same
+#: tail as `_CONTROLLED_BY_PLAYER_WHO_RE`, but modifying a "target player"
+#: noun directly rather than a permanent's controller (Hope of Ghirapur's
+#: own "target player who ..."). Tried only when the noun list already read
+#: "player"/"opponent" (`allows_players`), so an unrelated "target ... who
+#: ..." shape this parser does not otherwise know is never mistaken for it.
+_PLAYER_WHO_RE = re.compile(r"^who (?P<tail>was dealt .+? this turn)\b", re.IGNORECASE)
 _ZONE_CLAUSE = re.compile(
     r"\b(?:from|in)\s+"
     r"(?:(?P<whose>your|their|an? opponent'?s?|that player'?s|a single|any single|a|an|any)\s+)?"
@@ -4497,6 +4588,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     rest = " ".join(words[noun_end:])
     controller = ControllerRestriction.ANY
     owned_by_caster = False
+    dealt_damage_clause: str | None = None
+    controller_dealt_damage_clause: str | None = None
 
     # Read out of the way before the comparison scan sees it: this clause looks
     # exactly like a mana-value bound and is not one (see
@@ -4629,6 +4722,23 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 owned_by_caster = True
             else:
                 controller = _CONTROLLERS[control_words]
+        else:
+            from .conditions.history import dealt_damage_clause_test
+
+            controlled_by_match = _CONTROLLED_BY_PLAYER_WHO_RE.match(rest)
+            player_who_match = _PLAYER_WHO_RE.match(rest) if allows_players else None
+            if controlled_by_match is not None:
+                tail = controlled_by_match.group("tail")
+                if dealt_damage_clause_test(tail) is None:
+                    return None
+                controller_dealt_damage_clause = tail
+                rest = rest[controlled_by_match.end() :].strip()
+            elif player_who_match is not None:
+                tail = player_who_match.group("tail")
+                if dealt_damage_clause_test(tail) is None:
+                    return None
+                dealt_damage_clause = tail
+                rest = rest[player_who_match.end() :].strip()
 
     if strict and not _nothing_left_unread(
         rest, bare_card=bare_card, comparison_read=comparison_attribute is not None
@@ -4757,6 +4867,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         must_have_attacked_this_turn=attacked_this_turn,
         must_have_entered_this_turn=entered_this_turn,
         must_have_crewed_source_this_turn=crewed_source_this_turn,
+        dealt_damage_clause=dealt_damage_clause,
+        controller_dealt_damage_clause=controller_dealt_damage_clause,
         alternatives=compound_alternatives,
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,

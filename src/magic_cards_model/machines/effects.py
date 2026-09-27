@@ -30287,7 +30287,12 @@ def _parse_x_energy_pay_destroy_by_mana_value(text: str) -> Effect | None:
         if paid <= 0:
             return
 
-        def matches(game: "Game", permanent: CardState, source: CardState | None) -> bool:
+        def matches(
+            game: "Game",
+            permanent: CardState,
+            source: CardState | None,
+            x_value: int | None = None,
+        ) -> bool:
             chars = game.characteristics_of(permanent)
             return type_matches(chars) and chars.mana_value <= paid
 
@@ -30325,14 +30330,28 @@ _MASS_WITHOUT_COUNTER_RE = re.compile(
 )
 
 #: "<qualifier> with mana value equal to <rhs>" / "<qualifier> with mana
-#: value N or less"/"...or greater" - CR 202.3's number, compared against a
-#: printed constant or a count read off the clause's own source.
+#: value N or less"/"...or greater" / "<qualifier> with mana value X" - CR
+#: 202.3's number, compared against a printed constant, a count read off the
+#: clause's own source, or (Steel Hellkite's own "with mana value X") CR
+#: 107.3a's variable as the activating ability's own paid X.
 _MASS_MANA_VALUE_RE = re.compile(
     r"^(?P<inner>.+?) with mana value (?:"
     r"equal to (?P<eq>.+)"
     r"|(?P<n>\d+) or (?P<dir>less|greater)"
+    r"|(?P<bare_x>x)"
     r")$",
     re.IGNORECASE,
+)
+
+#: "<qualifier> whose controller was dealt combat damage by this creature
+#: this turn" (Steel Hellkite) - the identical "dealt combat damage" tail
+#: `machines/targeting.py`'s own "target player who ..." / "controlled by a
+#: player who ..." readers use, here modifying a mass-destruction subject's
+#: own controller instead of a target's. Stripped ahead of every other
+#: mass-destroy qualifier (`_MASS_MANA_VALUE_RE` included) since it is the
+#: outermost clause in the printed sentence.
+_MASS_CONTROLLER_DEALT_DAMAGE_RE = re.compile(
+    r"^(?P<qualifier>.+?) whose controller (?P<tail>was dealt .+? this turn)$", re.IGNORECASE
 )
 
 #: "<qualifier> with power N or greater" / "... toughness N or less" - CR
@@ -30504,9 +30523,12 @@ def _parse_mass_mv_rhs(text: str) -> Callable[["Game", CardState | None], int | 
 
 def _parse_mass_mv_comparison(
     match: re.Match[str],
-) -> Callable[["Game", Characteristics, CardState | None], bool] | None:
+) -> Callable[["Game", Characteristics, CardState | None, int | None], bool] | None:
     """`_MASS_MANA_VALUE_RE`'s comparison half, as a predicate over
-    (game, candidate's characteristics, this clause's own source).
+    (game, candidate's characteristics, this clause's own source, the
+    activating ability's own paid X - CR 107.3a, Steel Hellkite's "mana
+    value X" - or `None` for a spell/constant/counter comparison that never
+    reads one).
     """
     eq_rhs = match.group("eq")
     if eq_rhs is not None:
@@ -30514,11 +30536,28 @@ def _parse_mass_mv_comparison(
         if rhs is None:
             return None
 
-        def equals(game: "Game", chars: Characteristics, source: CardState | None) -> bool:
+        def equals(
+            game: "Game",
+            chars: Characteristics,
+            source: CardState | None,
+            x_value: int | None = None,
+        ) -> bool:
             threshold = rhs(game, source)
             return threshold is not None and chars.mana_value == threshold
 
         return equals
+
+    if match.group("bare_x") is not None:
+
+        def equals_x(
+            game: "Game",
+            chars: Characteristics,
+            source: CardState | None,
+            x_value: int | None = None,
+        ) -> bool:
+            return x_value is not None and chars.mana_value == x_value
+
+        return equals_x
 
     n_text = match.group("n")
     direction = match.group("dir")
@@ -30527,12 +30566,19 @@ def _parse_mass_mv_comparison(
     bound = int(n_text)
     if direction.lower() == "less":
 
-        def at_most(game: "Game", chars: Characteristics, source: CardState | None) -> bool:
+        def at_most(
+            game: "Game",
+            chars: Characteristics,
+            source: CardState | None,
+            x_value: int | None = None,
+        ) -> bool:
             return chars.mana_value <= bound
 
         return at_most
 
-    def at_least(game: "Game", chars: Characteristics, source: CardState | None) -> bool:
+    def at_least(
+        game: "Game", chars: Characteristics, source: CardState | None, x_value: int | None = None
+    ) -> bool:
         return chars.mana_value >= bound
 
     return at_least
@@ -30540,13 +30586,24 @@ def _parse_mass_mv_comparison(
 
 def _parse_mass_destroy_predicate(
     rest: str,
-) -> Callable[["Game", CardState, CardState | None], bool] | None:
+) -> Callable[["Game", CardState, CardState | None, int | None], bool] | None:
     """The whole description behind `_DESTROY_EACH_RE`'s `rest` group - a
-    type qualifier, an optional absence-of-counter restriction, and an
-    optional mana-value comparison, ANDed together - as a predicate over
-    (game, candidate permanent, this clause's own source).
+    type qualifier, an optional absence-of-counter restriction, an optional
+    mana-value comparison, and an optional "whose controller was dealt
+    combat damage ... this turn" restriction (Steel Hellkite), ANDed
+    together - as a predicate over (game, candidate permanent, this
+    clause's own source, the activating ability's own paid X if any).
     """
     text = rest.strip()
+    controller_dealt_damage_test = None
+    controller_match = _MASS_CONTROLLER_DEALT_DAMAGE_RE.fullmatch(text)
+    if controller_match is not None:
+        from .conditions.history import dealt_damage_clause_test
+
+        controller_dealt_damage_test = dealt_damage_clause_test(controller_match.group("tail"))
+        if controller_dealt_damage_test is None:
+            return None
+        text = controller_match.group("qualifier").strip()
     entered_this_turn = False
     entered_match = _MASS_ENTERED_THIS_TURN_RE.fullmatch(text)
     if entered_match is not None:
@@ -30588,7 +30645,12 @@ def _parse_mass_destroy_predicate(
     if type_matches is None:
         return None
 
-    def predicate(game: "Game", permanent: CardState, source: CardState | None) -> bool:
+    def predicate(
+        game: "Game",
+        permanent: CardState,
+        source: CardState | None,
+        x_value: int | None = None,
+    ) -> bool:
         if token_wanted is not None and is_token(permanent) is not token_wanted:
             return False
         chars = game.characteristics_of(permanent)
@@ -30602,7 +30664,12 @@ def _parse_mass_destroy_predicate(
             turn = game.turn
             if turn is None or permanent.turn_entered != turn.turn_number:
                 return False
-        return mv_comparison is None or mv_comparison(game, chars, source)
+        if mv_comparison is not None and not mv_comparison(game, chars, source, x_value):
+            return False
+        return controller_dealt_damage_test is None or (
+            chars.controller is not None
+            and controller_dealt_damage_test(game, chars.controller, source)
+        )
 
     return predicate
 
@@ -30626,8 +30693,9 @@ def _mass_stat_comparison(
 
 def _destroy_matching(
     game: "Game",
-    predicate: Callable[["Game", CardState, CardState | None], bool],
+    predicate: Callable[["Game", CardState, CardState | None, int | None], bool],
     source: CardState | None,
+    x_value: int | None = None,
 ) -> int:
     """Destroy every permanent on the battlefield right now that `predicate`
     holds for, and answer how many actually left.
@@ -30642,10 +30710,12 @@ def _destroy_matching(
     rechecks a target - a permanent an earlier step in this loop already
     removed cannot be destroyed again. `Game.destroy` itself is what enforces
     CR 702.12b's indestructible, so an indestructible candidate is identified
-    here but does not count toward the returned total.
+    here but does not count toward the returned total. `x_value` is CR
+    107.3a's X as an activating ability paid it (Steel Hellkite's own "mana
+    value X"); `None` for a spell or an ability whose cost carries none.
     """
     destroyed = 0
-    for permanent in [p for p in list(game.battlefield) if predicate(game, p, source)]:
+    for permanent in [p for p in list(game.battlefield) if predicate(game, p, source, x_value)]:
         if permanent.zone is Zone.BATTLEFIELD:
             game.destroy(permanent)
             if permanent.zone is not Zone.BATTLEFIELD:
@@ -30669,7 +30739,8 @@ def _parse_destroy_each_clause(sentence: str) -> TargetedClause | None:
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
-        _destroy_matching(game, predicate, source)
+        x_value = getattr(stack_object, "x_value", None)
+        _destroy_matching(game, predicate, source, x_value)
 
     return effect
 
@@ -30738,7 +30809,9 @@ def _parse_choose_odd_or_even_then_destroy_clause(
         assert isinstance(answer, str)
         wants_even = answer.lower() == "even"
 
-        def predicate(game: "Game", permanent: CardState, src: CardState | None) -> bool:
+        def predicate(
+            game: "Game", permanent: CardState, src: CardState | None, x_value: int | None = None
+        ) -> bool:
             if src is not None and permanent.id == src.id:
                 return False  # CR 109.2: "other" excludes the ability's own source.
             chars = game.characteristics_of(permanent)

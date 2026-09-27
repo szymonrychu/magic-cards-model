@@ -99,6 +99,96 @@ def test_keiga_dying_steals_a_creature():
     assert _controller(scenario, bears) == "alice"
 
 
+def _beckett_board(pirates: list[str]):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            battlefield=["Admiral Beckett Brass", *pirates],
+            library=["Island"] * 6,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Forest"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    attackers = [scenario.creature(name, "alice") for name in pirates]
+    scenario.attack_with(*attackers)
+    scenario.no_blocks()
+    scenario.combat_damage()
+    return scenario, bears
+
+
+def test_admiral_beckett_brass_needs_three_or_more_pirates_before_attacking():
+    """Admiral Beckett Brass: "... gain control of target nonland permanent
+    controlled by a player who was dealt combat damage by three or more
+    Pirates this turn." - the target restriction fails before anything has
+    dealt combat damage this turn."""
+    scenario = _beckett_board([])[0]
+    bears = scenario.creature("Grizzly Bears", "bob")
+    refusal = scenario.game.why_cannot_target_with_trigger("Admiral Beckett Brass", [bears])
+    assert refusal is not None
+
+
+def test_admiral_beckett_brass_needs_three_pirates_not_two():
+    """Two Pirates dealing combat damage is not "three or more Pirates" -
+    the count is of qualifying *sources* (CR 510.2's simultaneous combat
+    damage), not the total amount dealt."""
+    scenario, bears = _beckett_board(["Swab Goblin", "Marauding Mako"])
+    refusal = scenario.game.why_cannot_target_with_trigger("Admiral Beckett Brass", [bears])
+    assert refusal is not None
+
+
+def test_admiral_beckett_brass_reads_the_target_restriction_after_three_pirates():
+    """Three (or more) Pirates dealing combat damage to bob this turn makes
+    every one of bob's nonland permanents a legal target - checked directly
+    against the ability's own targeting restriction, before the trigger
+    ever fires."""
+    scenario, bears = _beckett_board(["Swab Goblin", "Marauding Mako", "Siren Stormtamer"])
+    assert scenario.game.why_cannot_target_with_trigger("Admiral Beckett Brass", [bears]) is None
+
+
+def test_admiral_beckett_brass_steals_after_three_pirates_deal_combat_damage():
+    """The full trigger resolves: alice gains control of bob's permanent for
+    the rest of the game (CR 611.2a's default duration - no "until" is
+    stated)."""
+    scenario, bears = _beckett_board(["Swab Goblin", "Marauding Mako", "Siren Stormtamer"])
+    scenario.choose_trigger_targets("Admiral Beckett Brass", [bears])
+
+    scenario.turn.advance_to(Step.POSTCOMBAT_MAIN)
+    scenario.game.sync_priority_with_step()
+    scenario.advance()  # the end step begins (CR 513.1)
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    assert _controller(scenario, bears) == "alice"
+
+
+def test_admiral_beckett_brass_reads_a_non_pirate_quality_too():
+    """Generality proof: the reader is "N or more <quality>", not "N or more
+    Pirates" hardcoded - the same clause read against a Human quality
+    instead, through the shared turn-history reader directly (`machines/
+    conditions/history.dealt_damage_clause_test`), on this same real board."""
+    from magic_cards_model.machines.conditions.history import dealt_damage_clause_test
+
+    scenario, _bears = _beckett_board(["Swab Goblin", "Marauding Mako", "Siren Stormtamer"])
+    # None of the three attackers is a Human - only Beckett itself is, and it
+    # did not attack - so "two or more Humans" must not be satisfied even
+    # though three Pirates did connect.
+    test = dealt_damage_clause_test("was dealt combat damage by two or more humans this turn")
+    assert test is not None
+    assert test(scenario.game, "bob") is False
+
+    test_goblins = dealt_damage_clause_test(
+        "was dealt combat damage by two or more goblins this turn"
+    )
+    assert test_goblins is not None
+    # Only Swab Goblin is a Goblin among the three attackers - one source,
+    # short of "two or more".
+    assert test_goblins(scenario.game, "bob") is False
+
+
 @pytest.mark.parametrize(
     "text",
     [
@@ -109,10 +199,6 @@ def test_keiga_dying_steals_a_creature():
         "Gain control of target creature of an opponent's choice they control.",
         "gain control of target creature until end of turn.",
         "gain control of target spell.",
-        # Admiral Beckett Brass: the "this turn" damage history is a target
-        # restriction nothing reads, so the steal fails closed.
-        "gain control of target nonland permanent controlled by a player who was dealt "
-        "combat damage by three or more Pirates this turn.",
     ],
 )
 def test_a_rider_duration_or_non_target_is_not_read_as_untimed_control(text):

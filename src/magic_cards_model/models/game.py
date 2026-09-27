@@ -16066,6 +16066,22 @@ class Game(EngineModel):
                 and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
             )
+            # CR 201.5's self-reference, normalized to "this permanent" the
+            # same way `_activation_target_text` already normalizes it for
+            # the initial announcement (Hope of Ghirapur's own "by Hope of
+            # Ghirapur") - `find_by_id` for a still-live source's real
+            # supertypes, `legendary=True` (the function's own documented
+            # default) once the source is gone and there is nothing left to
+            # check.
+            ability_source = self.find_by_id(spell.source_id) if spell.source_id else None
+            ability_legendary = (
+                Supertype.LEGENDARY in ability_source.card.supertypes
+                if ability_source is not None
+                else True
+            )
+            ability_text = self_normalized_effect_text(
+                spell.source_name, ability_text, legendary=ability_legendary
+            )
             profile = (
                 profile_for_text(ability_text)
                 .for_event_player(_that_player_of(spell))
@@ -24650,7 +24666,7 @@ class Game(EngineModel):
                 self.add_counters(permanent, Counter.PLUS_ONE, 1, putter=controller)
             return permanent
 
-    def _activation_target_text(self, ability: Any, x_value: int) -> str:
+    def _activation_target_text(self, ability: Any, x_value: int, permanent: CardState) -> str:
         """The ability's own text its targets are announced against.
 
         `x_value` is substituted in first when the printed cost carries an
@@ -24663,6 +24679,14 @@ class Game(EngineModel):
         symbol is written "-X", not "{X}", so Tamiyo, Compleated Sage's "-X:
         Exile target nonland permanent card with mana value X from your
         graveyard" is marked by `LoyaltyCost.variable` instead.
+
+        CR 201.5's self-reference is rewritten to "this permanent" too
+        (`self_normalized_effect_text`, `machines/effects.activated_effect_
+        for`'s own normalization the *effect* half already gets) - Hope of
+        Ghirapur's own "target player who was dealt combat damage by Hope
+        of Ghirapur this turn" is unreadable by `machines/targeting.py`
+        with its own literal printed name still in the target phrase, the
+        identical reason `x_value` is substituted first.
         """
         has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
         text = (
@@ -24670,6 +24694,8 @@ class Game(EngineModel):
             if (cost_announces_x(ability.cost) or has_variable_loyalty)
             else ability.text
         )
+        legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        text = self_normalized_effect_text(permanent.name, text, legendary=legendary)
         # Raft Security Officer's own trailing "This ability costs {1} less
         # to activate if it targets a creature with power 3 or less." reads
         # like a second targeting sentence to `machines/targeting.profile_
@@ -24724,6 +24750,7 @@ class Game(EngineModel):
         x_value: int,
         targets: list[TargetRef],
         division: list[int],
+        permanent: CardState,
     ) -> list[int]:
         """Refuse an illegal CR 601.2d division of an activated ability's
         effect, or return the shares as announced.
@@ -24734,7 +24761,7 @@ class Game(EngineModel):
         `Casting.announce_division`. An ability whose text divides nothing
         has no division to announce.
         """
-        profile = profile_for_text(self._activation_target_text(ability, x_value))
+        profile = profile_for_text(self._activation_target_text(ability, x_value, permanent))
         if profile.division is None:
             raise ValueError(f"{ability.text} does not divide anything to announce (CR 601.2d)")
         shares = [int(share) for share in division]
@@ -24841,13 +24868,16 @@ class Game(EngineModel):
         ability = self.activated_abilities(permanent)[index]
         announced_x = x_value or self.announced_reveal_counts.get(key, 0)
         announced = self._announce_activation_targets(
-            permanent, controller, self._activation_target_text(ability, announced_x), targets
+            permanent,
+            controller,
+            self._activation_target_text(ability, announced_x, permanent),
+            targets,
         )
         if division is not None:
             # CR 601.2d via CR 602.2b: the division is announced right after
             # the targets, and refused now, before anything is paid.
             self._check_activation_division(
-                ability, announced_x, list(announced or []), list(division)
+                ability, announced_x, list(announced or []), list(division), permanent
             )
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
@@ -25056,7 +25086,10 @@ class Game(EngineModel):
                 # A caller that never went through `begin_activating` announces
                 # here instead, against the ability's own text.
                 announced_targets = self._announce_activation_targets(
-                    permanent, controller, self._activation_target_text(ability, x_value), targets
+                    permanent,
+                    controller,
+                    self._activation_target_text(ability, x_value, permanent),
+                    targets,
                 )
                 if announced_targets is not None:
                     targets = list(announced_targets)
@@ -25066,6 +25099,7 @@ class Game(EngineModel):
                     x_value,
                     [TargetRef.coerce(t) for t in targets or []],
                     list(division),
+                    permanent,
                 )
                 if division is not None
                 else None
