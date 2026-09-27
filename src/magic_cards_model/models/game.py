@@ -16734,10 +16734,10 @@ class Game(EngineModel):
     ) -> None:
         """CR 702.2b and CR 702.15b for damage that is not combat damage -
         `machines/combat._deal_combat_damage` applies both to combat damage
-        itself. "Any nonzero amount of damage dealt to a creature by a source
-        with deathtouch is considered to be lethal damage", and "damage dealt
-        by a source with lifelink causes that source's controller to gain
-        that much life" - whatever deals it: a spell that gained the keywords
+        itself. CR 702.2b destroys "a creature with toughness greater than 0
+        that's been dealt damage by a source with deathtouch", and CR 702.15b
+        has "damage dealt by a source with lifelink" gain "that source's
+        controller ... that much life" - whatever deals it: a spell that gained the keywords
         (Judith, Carnage Connoisseur's "That spell gains deathtouch and
         lifelink.") or a permanent dealing noncombat damage. Read by last
         known information for a source that has left (`source_had_keyword`).

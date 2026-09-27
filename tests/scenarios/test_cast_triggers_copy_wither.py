@@ -18,13 +18,13 @@ next-cast delayed copy (ECL).
 - **Rimefire Torque** - "{T}, Remove three charge counters from this
   artifact: When you next cast an instant or sorcery spell this turn, copy
   it. You may choose new targets for the copy." CR 603.7: a delayed
-  triggered ability, triggering only once (CR 603.7c's "next"). Proof
+  triggered ability, triggering only once (CR 603.7b's "next time"). Proof
   printing: Summon: G.F. Cerberus's chapter II, the same sentence on a Saga
   chapter.
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file: CR 115.9a, CR 707.10, CR 707.10c, CR 702.80a, CR 119.4,
-CR 603.7, CR 603.7c, CR 702.2b, CR 702.15b.
+CR 603.7, CR 603.7b, CR 702.2b, CR 702.15b.
 """
 
 from magic_cards_model.machines import Step
@@ -348,7 +348,7 @@ def test_torque_copies_the_next_instant_and_the_copy_may_be_retargeted():
 
 
 def test_only_the_next_spell_is_copied():
-    """CR 603.7c: "next" - the delayed ability triggers once."""
+    """CR 603.7b: "the next time" - the delayed ability triggers once."""
     scenario, torque = _torque_board()
     scenario.activate(torque, username="alice")
     scenario.resolve_top()
