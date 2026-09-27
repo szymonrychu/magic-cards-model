@@ -1,0 +1,15 @@
+{
+  "archetype_id": "b535c0d2-d346-458f-8c83-ec4ca6f20580",
+  "finish": 2,
+  "id": "3677f30b-f064-42bf-b500-3cb5a624af68",
+  "main_json": [
+    {"count": 4, "name": "Basking Broodscale"},
+    {"count": 4, "name": "Kozilek's Command"},
+    {"count": 1, "name": "Cavern of Souls"}
+  ],
+  "pilot": "chiyou",
+  "side_json": [],
+  "source_deck_id": "892275",
+  "source_url": "https://www.mtgtop8.com/event?e=91145&d=892275&f=mo",
+  "tournament_id": "65cf85af-14cd-4ded-9f76-a381d821d015"
+}

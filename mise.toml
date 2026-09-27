@@ -124,3 +124,10 @@ run = "scripts/cr.sh"
 [tasks."regression:guard"]
 description = "Protected-test report (+ --ratchet for the card-status ratchet): mise run regression:guard -- --repo <path> --base <sha> [--ratchet]"
 run = "uv run python scripts/regression_guard.py"
+
+# -------------------------------------------------------------- metagame --
+# Round 0 of the card-coverage campaign: a 30-day competitive-metagame
+# snapshot from spellslinger, written to docs/card_coverage/metagame.json.
+[tasks."metagame:fetch"]
+description = "Fetch the 30-day competitive metagame snapshot from spellslinger into docs/card_coverage/metagame.json"
+run = "uv run python scripts/fetch_metagame.py"

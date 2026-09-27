@@ -1,0 +1,24 @@
+[
+  {
+    "archetype_id": "b535c0d2-d346-458f-8c83-ec4ca6f20580",
+    "archetype_name": "broodscale bloodchief",
+    "finish": 2,
+    "id": "3677f30b-f064-42bf-b500-3cb5a624af68",
+    "pilot": "chiyou",
+    "source_deck_id": "892275",
+    "source_url": "https://www.mtgtop8.com/event?e=91145&d=892275&f=mo",
+    "tournament_date": "2026-09-22T00:00:00Z",
+    "tournament_id": "65cf85af-14cd-4ded-9f76-a381d821d015"
+  },
+  {
+    "archetype_id": "f190404c-78f3-4a61-8fab-a25d730ab9b1",
+    "archetype_name": "esper blink",
+    "finish": 1,
+    "id": "unrelated-deck-id",
+    "pilot": "someoneelse",
+    "source_deck_id": "892276",
+    "source_url": "https://www.mtgtop8.com/event?e=91145&d=892276&f=mo",
+    "tournament_date": "2026-09-22T00:00:00Z",
+    "tournament_id": "65cf85af-14cd-4ded-9f76-a381d821d015"
+  }
+]

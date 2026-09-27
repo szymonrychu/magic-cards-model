@@ -1,0 +1,36 @@
+[
+  {
+    "archetype_id": "71762286-6941-4b81-94cc-c1df4b742066",
+    "archetype_name": "broodscale bloodchief",
+    "id": "eaee3f88-d5dd-4eda-8b18-a4c8ef73d81a",
+    "mainboard": [
+      "4 Basking Broodscale",
+      "4 Emrakul, the Promised End",
+      "4 Urza's Saga",
+      "4 Kozilek's Command",
+      "1 Cavern of Souls"
+    ],
+    "pilot": "danro",
+    "sideboard": [
+      "2 Grafdigger's Cage"
+    ],
+    "source_deck_id": "videre-58673807",
+    "tournament_date": "2026-09-22T00:00:00Z",
+    "tournament_id": "29f5610b-a9fd-46e8-9cb7-3789c5e613ce"
+  },
+  {
+    "archetype_id": "71762286-6941-4b81-94cc-c1df4b742066",
+    "archetype_name": "broodscale bloodchief",
+    "id": "ae21edde-10ca-4c68-af3b-579b59cc6f12",
+    "mainboard": [
+      "4 Basking Broodscale",
+      "4 Kozilek's Command",
+      "1 Cavern of Souls"
+    ],
+    "pilot": "someoneelse",
+    "sideboard": [],
+    "source_deck_id": "videre-58673808",
+    "tournament_date": "2026-09-22T00:00:00Z",
+    "tournament_id": "29f5610b-a9fd-46e8-9cb7-3789c5e613ce"
+  }
+]
