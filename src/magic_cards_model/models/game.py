@@ -7410,6 +7410,7 @@ class Game(EngineModel):
         source_name: str,
         callback: DelayedEffectSpec,
         subject_id: UUID | None = None,
+        event: GameEvent | None = None,
     ) -> AbilityOnStack:
         """Create a reflexive triggered ability (CR 603.12) and queue it for
         the stack.
@@ -7428,6 +7429,21 @@ class Game(EngineModel):
         `ReflexiveAttachSubjectToTargetConsequence` reads back off this field
         rather than re-deriving it from printed text.
 
+        `event` (optional, additive) carries the *creating* ability's own
+        triggering event onto the reflexive `AbilityOnStack` - never onto the
+        `DelayedTrigger` itself, which stays `event=None` exactly as CR
+        603.12's docstring on `DelayedTrigger.event` already explains (there
+        is nothing left to watch for). Leatherhead, Swamp Stalker's own
+        "destroy target artifact or enchantment **that player** controls"
+        needs this: `_that_player_of`/`TargetingProfile.for_event_player`
+        (CR 603.3d's own target announcement, just below) read "that player"
+        off `AbilityOnStack.event.player`, and a reflexive ability's own
+        `DelayedTrigger.event` is never populated (there is no event left to
+        wait for) - so without this, "that player" would come back unbound
+        for a reflexive consequence that names one, wrongly letting *any*
+        player's permanent be chosen. `None` (the default) is every existing
+        caller's behaviour, unchanged.
+
         Appending straight to `pending_triggers` - the same queue `emit`
         fills for every ordinary trigger - is what makes `put_triggers_on_
         stack` pick this up the next time a player would receive priority
@@ -7443,6 +7459,13 @@ class Game(EngineModel):
                 source_name=source_name,
                 callback=callback,
             )
+            if event is not None:
+                # `model_copy` keeps `ability.id` unchanged, so `Delayed
+                # Triggers.pending`'s existing `{ability.id: trigger}` entry
+                # (set by `create_reflexive` above) still resolves this
+                # ability to its trigger at resolution time - nothing else
+                # to update.
+                ability = ability.model_copy(update={"event": event})
             self.pending_triggers.append(ability)
             return ability
 

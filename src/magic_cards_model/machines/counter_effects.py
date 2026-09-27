@@ -1514,6 +1514,20 @@ def _deals_damage_then_may_exile_graveyard_extra_damage(text: str, *, for_spell:
     return effect
 
 
+def _counter_payoffs_resolution_text(text: str, *, for_spell: bool):  # noqa: ANN202
+    """`machines/counter_payoffs.parse_resolution_text`, tried as one more
+    entry in `_WHOLE_TEXT_READERS` below - CR 120.3's "that many" damage
+    counters, CR 122.1's counters-on-self X, CR 603.12's reflexive
+    remove-a-counter, the crewed-this-turn target-and-double pair, and the
+    pay-life-for-counters optional cost, none of which are this module's own
+    to add a card-name row for. Deferred to a function (rather than a bare
+    tuple entry naming the imported callable) only so this module's own
+    import list stays untouched by a sibling task's additions to that one."""
+    from . import counter_payoffs
+
+    return counter_payoffs.parse_resolution_text(text, for_spell=for_spell)
+
+
 _WHOLE_TEXT_READERS = (
     lambda text, *, for_spell: _each_kind_another_counter(text),
     _create_that_many_tokens,
@@ -1531,6 +1545,7 @@ _WHOLE_TEXT_READERS = (
     _put_counter_then_double_on_that,
     _choose_any_number_then_double_each,
     _deals_damage_then_may_exile_graveyard_extra_damage,
+    _counter_payoffs_resolution_text,
 )
 
 

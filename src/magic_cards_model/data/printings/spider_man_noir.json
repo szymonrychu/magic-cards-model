@@ -1,0 +1,145 @@
+{
+  "object": "card",
+  "id": "bc64366c-2691-48cd-bb4b-a4b088c6f16b",
+  "oracle_id": "2efd6494-c5e1-41de-bc6e-8490ff046cd1",
+  "multiverse_ids": [],
+  "resource_id": "BEC55D5C12AD621B251DB39C7559BFA3E710FCEB41EFF44B4ACD1C78A8AC9545",
+  "mtgo_id": 153373,
+  "arena_id": 97884,
+  "tcgplayer_id": 646167,
+  "cardmarket_id": 839549,
+  "name": "Spider-Man Noir",
+  "lang": "en",
+  "released_at": "2025-09-26",
+  "uri": "https://api.scryfall.com/cards/bc64366c-2691-48cd-bb4b-a4b088c6f16b",
+  "scryfall_uri": "https://scryfall.com/card/spm/67/spider-man-noir?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:15:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.jpg?1783905339",
+    "normal": "https://cards.scryfall.io/normal/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.jpg?1783905339",
+    "large": "https://cards.scryfall.io/large/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.jpg?1783905339",
+    "png": "https://cards.scryfall.io/png/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.png?1783905339",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.jpg?1783905339",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.jpg?1783905339",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.webp?1783905339",
+    "grid": "https://cards.scryfall.io/grid/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.webp?1783905339",
+    "display": "https://cards.scryfall.io/display/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.webp?1783905339",
+    "art": "https://cards.scryfall.io/art/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.webp?1783905339",
+    "crop": "https://cards.scryfall.io/crop/front/b/c/bc64366c-2691-48cd-bb4b-a4b088c6f16b.webp?1783905339"
+  },
+  "mana_cost": "{4}{B}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Spider Human Hero",
+  "oracle_text": "Menace\nWhenever a creature you control attacks alone, put a +1/+1 counter on it. Then surveil X, where X is the number of counters on it. (Look at the top X cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+  "power": "4",
+  "toughness": "4",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Surveil",
+    "Menace"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set": "spm",
+  "set_name": "Marvel's Spider-Man",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a1c7b891-9e96-434c-9994-be58b62b27f1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aspm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/spm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/bc64366c-2691-48cd-bb4b-a4b088c6f16b/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2efd6494-c5e1-41de-bc6e-8490ff046cd1&unique=prints",
+  "collector_number": "67",
+  "digital": false,
+  "rarity": "uncommon",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Xabi Gaztelua",
+  "artist_ids": [
+    "35b87e24-bfe0-43f4-83c3-2fa9574d6026"
+  ],
+  "illustration_id": "be10133e-4a9e-4f01-b5c5-db64149f5165",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 8919,
+  "preview": {
+    "source": "IGN",
+    "source_uri": "https://www.ign.com/articles/spider-man-magic-the-gathering-card-reveal-spoiler-spider-verse",
+    "previewed_at": "2025-07-23"
+  },
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.31",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.23",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSpider-Man%2BNoir",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSpider-Man%2BNoir",
+    "edhrec": "https://edhrec.com/route/?cc=Spider-Man+Noir"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F646167%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=839549&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/153373?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

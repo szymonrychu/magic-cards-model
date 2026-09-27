@@ -2409,6 +2409,41 @@ def _is_first_own_draw_step_draw(game: "Game", player: str | None) -> bool:
     return game.cards_drawn_in_own_draw_step.get(player, 0) == 1
 
 
+#: A trigger condition's own trailing "with a[n] [<kind>] counter on it"
+#: qualifier on its subject (CR 122.1) - Venus, Torn Between Worlds' own
+#: second ability, "Whenever a creature you control with a counter on it
+#: deals combat damage to a player, ...". Read the identical way
+#: `machines/targeting._WITH_COUNTER_RE` already reads the same clause for a
+#: *target* restriction, but here for a trigger's own subject instead: a bare
+#: "a counter" (no kind word before "counter") asks CR 122.1's presence
+#: question only ("does it have any counter on it at all"), while a named
+#: kind ("a +1/+1 counter on it") narrows to that one kind - Venus and Yathan
+#: Tombguard both print only the bare form, so only that half is proven by a
+#: scenario; the named-kind half stays read but unproven pending a printing.
+_SUBJECT_HAS_COUNTER_RE = re.compile(
+    r"\bwith an? (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+)\s+)?counters? on (?:it|them)\b",
+    re.IGNORECASE,
+)
+
+
+def _subject_has_required_counter(condition: str, game: "Game", subject_id: object) -> bool:
+    """Whether `subject_id` satisfies a trailing `_SUBJECT_HAS_COUNTER_RE`
+    qualifier in `condition` - `True` when the condition carries no such
+    qualifier at all, so every other event's condition (none of which read
+    this helper) is unaffected."""
+    match = _SUBJECT_HAS_COUNTER_RE.search(condition)
+    if match is None:
+        return True
+    subject = game.find_by_id(subject_id) if subject_id is not None else None
+    counters = getattr(subject, "counters", None)
+    if counters is None:
+        return False
+    kind = match.group("kind")
+    if kind is None:
+        return bool(counters)
+    return kind.lower() in counters
+
+
 def condition_matches(
     game: "Game",
     ability: TriggeredAbility,
@@ -3178,6 +3213,8 @@ def condition_matches(
             _controller_clause_holds(condition, controller, event.subject_controller)
             and _types_match(event.subject_types, condition)
         ):
+            return False
+        if not _subject_has_required_counter(condition, game, event.subject_id):
             return False
         if "combat damage" in lowered and not event.combat:
             return False
