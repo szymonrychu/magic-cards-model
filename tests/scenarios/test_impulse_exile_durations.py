@@ -400,3 +400,130 @@ def test_haste_magic_trailing_duration_reads_the_same_way():
     assert scenario.game.play_permission_for(forest, "alice", PlayAction.PLAY) is not None
     scenario.start_at(Step.END_STEP)
     assert scenario.game.play_permission_for(forest, "alice", PlayAction.PLAY) is None
+
+
+# --------------------------------------------------------------------------
+# "Exile a card at random from your graveyard. You may play that card this
+# turn." - Tersa Lightshatter's attack trigger, behind CR 603.4's
+# intervening "if there are seven or more cards in your graveyard" (checked
+# as it triggers and again as it resolves). The card is chosen at random from
+# the graveyard (not from the library's top), and the permission is the same
+# CR 601.3 "this turn" permission as the rest of this file: gone at cleanup
+# (CR 514.2).
+# --------------------------------------------------------------------------
+
+TERSA = "Tersa Lightshatter"
+
+
+def _tersa_board(graveyard: list[str]) -> Scenario:
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[TERSA, "Mountain", "Mountain"],
+            graveyard=graveyard,
+            library=["Mountain"] * 5,
+        )
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    return scenario
+
+
+def _tersa_attacks(scenario: Scenario) -> list:
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    before = {state.id for state in scenario.game.exile}
+    scenario.attack_with(scenario.creature(TERSA, "alice"))
+    scenario.pass_until_resolved()
+    return _exiled_since(scenario, before)
+
+
+def test_tersa_with_seven_cards_exiles_one_at_random_and_permits_playing_it():
+    scenario = _tersa_board(["Lightning Bolt"] * 7)
+
+    exiled = _tersa_attacks(scenario)
+
+    assert [state.name for state in exiled] == ["Lightning Bolt"]
+    assert len(scenario.player("alice").graveyard) == 6
+    permission = scenario.game.play_permission_for(exiled[0], "alice", PlayAction.PLAY)
+    assert permission is not None
+    assert permission.pays_mana_cost is True
+    assert permission.source_name == TERSA
+
+
+def test_tersa_with_six_cards_does_not_trigger():
+    scenario = _tersa_board(["Lightning Bolt"] * 6)
+
+    exiled = _tersa_attacks(scenario)
+
+    assert exiled == []
+    assert len(scenario.player("alice").graveyard) == 6
+
+
+def test_tersa_rechecks_the_graveyard_as_the_trigger_resolves():
+    """CR 603.4: the condition is checked again on resolution."""
+    scenario = _tersa_board(["Lightning Bolt"] * 7)
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(scenario.creature(TERSA, "alice"))
+    assert not scenario.game.stack_is_empty
+    graveyard = list(scenario.player("alice").graveyard)
+    scenario.game.exile_cards(graveyard[:1])
+    before = {state.id for state in scenario.game.exile}
+
+    scenario.pass_until_resolved()
+
+    assert _exiled_since(scenario, before) == []
+    assert len(scenario.player("alice").graveyard) == 6
+
+
+def test_tersa_exiled_land_is_played_with_the_land_drop_after_combat():
+    scenario = _tersa_board(["Forest"] * 7)
+    (forest,) = _tersa_attacks(scenario)
+
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.play_land("Forest", from_zone=Zone.EXILE)
+
+    assert forest.zone is Zone.BATTLEFIELD
+
+
+def test_tersa_permission_ends_at_cleanup():
+    scenario = _tersa_board(["Lightning Bolt"] * 7)
+    (bolt,) = _tersa_attacks(scenario)
+
+    scenario.start_at(Step.CLEANUP)
+    scenario.turn_based_actions()
+
+    assert bolt.zone is Zone.EXILE
+    assert scenario.game.play_permission_for(bolt, "alice", PlayAction.PLAY) is None
+
+
+def test_the_random_pick_is_one_of_the_graveyard_cards_and_replays_deterministically():
+    graveyard = ["Lightning Bolt", "Forest", "Island", "Mountain", "Swamp", "Plains", "Shock"]
+    first = [state.name for state in _tersa_attacks(_tersa_board(graveyard))]
+    second = [state.name for state in _tersa_attacks(_tersa_board(graveyard))]
+
+    assert len(first) == 1 and first[0] in graveyard
+    assert first == second, "seeded off the game's shuffle seed, not OS entropy"
+
+
+def test_the_random_graveyard_impulse_reads_any_count_and_pronoun():
+    """The template, not Tersa's one sentence: a count other than "a card"
+    and the plural "those cards" read the same (no second printing exists,
+    so the reader is proven on the template's own variants)."""
+    from magic_cards_model.machines.spell_grants import (
+        parse_exile_at_random_from_graveyard_play_clause,
+    )
+
+    for text in (
+        "exile a card at random from your graveyard. You may play that card this turn.",
+        "exile two cards at random from your graveyard. You may play those cards this turn.",
+        "exile a card at random from your graveyard. You may cast that card this turn.",
+    ):
+        assert parse_exile_at_random_from_graveyard_play_clause(text) is not None, text
+    assert (
+        parse_exile_at_random_from_graveyard_play_clause(
+            "exile a card at random from your graveyard. You may play that card until "
+            "your next end step."
+        )
+        is None
+    )

@@ -65162,6 +65162,7 @@ def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
     )
     from .spell_grants import (
         parse_choose_exiled_with_counter_play_clause,
+        parse_exile_at_random_from_graveyard_play_clause,
         parse_graveyard_cards_gain_cast_clause,
     )
 
@@ -65174,6 +65175,7 @@ def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
         parse_put_linked_into_graveyard_then_tokens_clause,
         parse_hand_exile_until_leaves_clause,
         parse_gain_control_untimed_clause,
+        parse_exile_at_random_from_graveyard_play_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:

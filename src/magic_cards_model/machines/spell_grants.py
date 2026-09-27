@@ -591,3 +591,56 @@ def parse_graveyard_cards_gain_cast_clause(text: str) -> Any:
             )
 
     return effect
+
+
+#: "Exile a card at random from your graveyard. You may play that card this
+#: turn." (Tersa Lightshatter's attack trigger). The count and the pronoun are
+#: read, not fixed; the cards are picked at random off a generator seeded from
+#: the game's own shuffle seed, so a replay picks the same card. The
+#: permission is CR 601.3's, lasting "this turn" (CR 514.2 ends it).
+_EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE = re.compile(
+    r"^exile (?P<count>a|an|one|two|three|four|five|\d+) cards? at random from your "
+    r"graveyard\. you may (?P<verb>play|cast) (?:that card|those cards|them|it) "
+    r"this turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_exile_at_random_from_graveyard_play_clause(text: str) -> Any:
+    """`_EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE`'s effect: exile that many
+    cards chosen at random from the controller's graveyard (all of them when
+    it holds fewer), each gaining a this-turn play permission from exile."""
+    from ..numbers import parse_count
+
+    match = _EXILE_AT_RANDOM_FROM_GRAVEYARD_PLAY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+    action = _permission_action(match.group("verb"))
+
+    def effect(game: Any, ability: Any) -> None:
+        from random import Random
+
+        controller = ability.controller
+        graveyard = list(game.player(controller).cards_in(Zone.GRAVEYARD))
+        if not graveyard:
+            return
+        rng = Random(  # noqa: S311
+            f"{game.shuffle_seed}:{game.shuffles_performed}:random-graveyard-exile:"
+            f"{len(graveyard)}"
+        )
+        picked = rng.sample(graveyard, min(count, len(graveyard)))
+        for exiled in game.exile_cards(picked):
+            if exiled.zone is not Zone.EXILE:
+                continue
+            game.grant_play_permission(
+                exiled,
+                controller,
+                action=action,
+                source_name=ability.source_name,
+                rule="CR 601.3",
+            )
+
+    return effect
