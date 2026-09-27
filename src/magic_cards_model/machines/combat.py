@@ -234,6 +234,13 @@ def has_keyword(state: CardState, keyword: Keyword | str, game: "Game | None" = 
     computed = _computed_keywords(state, game, wanted)
     if computed is not None:
         return wanted in computed
+    if state.zone is Zone.STACK and any(
+        line.strip().rstrip(".").lower() == wanted for line in state.granted_ability_texts
+    ):
+        # A keyword a spell on the stack gained (CR 113.10) - Spinerock
+        # Tyrant's "those spells gain wither", Judith, Carnage Connoisseur's
+        # "That spell gains deathtouch and lifelink" (`machines/cast_copies`).
+        return True
     # `state.keywords`, not `state.card.keywords`: a face-down permanent has no
     # text at all (CR 702.37c, CR 708.2), so it has none of the printing's
     # keywords however plainly the card says them.

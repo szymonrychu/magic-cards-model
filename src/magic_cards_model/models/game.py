@@ -16465,6 +16465,8 @@ class Game(EngineModel):
                 # Repriser's "an opponent has been dealt noncombat damage
                 # this turn" and Command the Stage's "... last turn".
                 self.record_turn_fact("dealt_noncombat_damage", damaged_player.username)
+            if source is not None and not event.combat and event.amount > 0:
+                self._noncombat_deathtouch_and_lifelink(source, target, event.amount)
             return event.amount
 
         # -- prevention effects with a duration (CR 615) --------------------------
@@ -16678,6 +16680,28 @@ class Game(EngineModel):
                     f"{event.source.name} is prevented (CR 702.16e)"
                 )
         return None
+
+    def _noncombat_deathtouch_and_lifelink(
+        self, source: "CardState", target: Targetable, dealt: int
+    ) -> None:
+        """CR 702.2b and CR 702.15b for damage that is not combat damage -
+        `machines/combat._deal_combat_damage` applies both to combat damage
+        itself. "Any nonzero amount of damage dealt to a creature by a source
+        with deathtouch is considered to be lethal damage", and "damage dealt
+        by a source with lifelink causes that source's controller to gain
+        that much life" - whatever deals it: a spell that gained the keywords
+        (Judith, Carnage Connoisseur's "That spell gains deathtouch and
+        lifelink.") or a permanent dealing noncombat damage. Read by last
+        known information for a source that has left (`source_had_keyword`).
+        """
+        from ..machines.combat import Keyword, source_had_keyword
+
+        if isinstance(target, CardState) and source_had_keyword(source, Keyword.DEATHTOUCH, self):
+            target.dealt_deathtouch_damage = True
+        if source_had_keyword(source, Keyword.LIFELINK, self):
+            controller = source.controller or source.owner
+            if controller is not None:
+                self.gain_life(controller, dealt)
 
     def deal_damage_to_player(self, player: Player | str, amount: int) -> int:
         """Damage dealt to a player causes that much life loss (CR 119.2, 120.3a).

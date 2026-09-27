@@ -1482,6 +1482,11 @@ def _targets_only_single_creature_other_than_re(
 #: condition - Frontline Heroism's own count-and-controller reading of its
 #: target (CR 115.3) stays exactly as it was; this is the general shape for
 #: every other restriction a "spell that targets ..." condition can name.
+#: "during an opponent's turn" on a cast trigger (Voracious Tome-Skimmer).
+_DURING_AN_OPPONENTS_TURN_RE = re.compile(r"\s*during an opponent'?s turn", re.IGNORECASE)
+#: "... spell with a single target" on a cast trigger (Spinerock Tyrant),
+#: CR 115.9a.
+_WITH_A_SINGLE_TARGET_RE = re.compile(r"\s*with a single target\b", re.IGNORECASE)
 _SPELL_THAT_TARGETS_RE = re.compile(r"\bthat targets (?P<target>.+)$", re.IGNORECASE)
 
 #: Geometer's Arthropod's and Matterbending Mage's own "a spell with {X} in
@@ -2948,6 +2953,26 @@ def condition_matches(
             if target_clause is None
             else _SPELL_THAT_TARGETS_RE.sub("", without_frontline_clause)
         )
+        if _DURING_AN_OPPONENTS_TURN_RE.search(caster_condition) is not None:
+            # Voracious Tome-Skimmer's and Brineborn Cutthroat's "Whenever you
+            # cast a spell during an opponent's turn" (CR 102.1: the active
+            # player is the player whose turn it is) - a window on the turn,
+            # not a caster: stripped before the "an opponent" caster check
+            # below, which would otherwise read it as "an opponent casts".
+            turn = getattr(game, "turn", None)
+            if turn is None or turn.active_player == controller:
+                return False
+            caster_condition = _DURING_AN_OPPONENTS_TURN_RE.sub("", caster_condition)
+        if _WITH_A_SINGLE_TARGET_RE.search(caster_condition) is not None:
+            # Spinerock Tyrant's "an instant or sorcery spell with a single
+            # target" - CR 115.9a counts every time an object or player was
+            # chosen as a target of the spell as it was put on the stack, the
+            # same count `machines/targeting.py`'s own "target spell with a
+            # single target" requirement makes (`required_target_count`).
+            spell = game.find_by_id(event.subject_id) if event.subject_id is not None else None
+            if not isinstance(spell, CardState) or len(spell.targets) != 1:
+                return False
+            caster_condition = _WITH_A_SINGLE_TARGET_RE.sub("", caster_condition)
         mana_cost_symbol_match = _CAST_SPELL_MANA_COST_SYMBOL_RE.search(caster_condition)
         if mana_cost_symbol_match is not None:
             # "a spell with {X} in its mana cost" (CR 107.3, CR 202.1): the

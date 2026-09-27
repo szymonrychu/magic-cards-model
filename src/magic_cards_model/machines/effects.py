@@ -26162,6 +26162,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     may_pay_mana_if_you_do = _parse_may_pay_mana_if_you_do_clause(effect_text)
     if may_pay_mana_if_you_do is not None:
         return may_pay_mana_if_you_do
+    may_pay_life_if_you_do = _parse_may_pay_life_if_you_do_clause(effect_text)
+    if may_pay_life_if_you_do is not None:
+        return may_pay_life_if_you_do
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
@@ -36852,6 +36855,43 @@ def _parse_may_pay_mana_if_you_do_clause(text: str) -> AbilityEffect | None:
         if not paid:
             return
         consequence(game, ability)
+
+    return effect
+
+
+#: "you may pay `<N>` life. If you do, `<consequence>`." - Voracious
+#: Tome-Skimmer's "Whenever you cast a spell during an opponent's turn, you
+#: may pay 1 life. If you do, draw a card." and Crossway Troublemakers'
+#: "Whenever a Vampire you control dies, you may pay 2 life. If you do, draw
+#: a card." - the life twin of `_MAY_PAY_MANA_IF_YOU_DO_RE` (CR 118.12's
+#: "if you do", CR 119.4: a player can pay life only if their life total is
+#: at least that amount).
+_MAY_PAY_LIFE_IF_YOU_DO_RE = re.compile(
+    rf"^you may pay (?P<life>{COUNT}) life\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_pay_life_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_PAY_LIFE_IF_YOU_DO_RE`'s shape; the consequence is
+    `pay_consequence_effect`'s, shared with the mana and energy twins."""
+    match = _MAY_PAY_LIFE_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    life = parse_count(match.group("life"))
+    if life is None:
+        return None
+    consequence = pay_consequence_effect(match.group("consequence").strip())
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        paid = game.may_pay_life(
+            player, life, source=ability.source_name, source_id=source_id_of(ability)
+        )
+        if paid:
+            consequence(game, ability)
 
     return effect
 
@@ -54164,6 +54204,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         return [copy_target_spell_whole]
     from .stack_sweeps import parse_mass_stack_whole_text
 
+    if not for_spell:
+        from .cast_copies import parse_that_spell_gains_clause
+
+        # Read whole: "gains deathtouch and lifelink" carries the "and" the
+        # clause splitter would cut (`machines/cast_copies.py`).
+        that_spell_gains = parse_that_spell_gains_clause(text)
+        if that_spell_gains is not None:
+            return [that_spell_gains]
     mass_stack = parse_mass_stack_whole_text(text, for_spell=for_spell)
     if mass_stack is not None:
         # Read whole: "counter all spells ... and all abilities ..." and
@@ -55557,8 +55605,10 @@ def _parse_copy_next_spell_you_cast_clause(text: str) -> AbilityEffect | None:
 #: copy that spell" instead of "copy the next spell ... when you cast it" -
 #: a different sentence for the identical CR 603.7 mechanism, not a
 #: different one.
+#: Widened (ecl T7) to "copy it" - Rimefire Torque's and Najal, the Storm
+#: Runner's own wording of the identical instruction.
 _COPY_NEXT_INSTANT_OR_SORCERY_YOU_CAST_RE = re.compile(
-    r"^when you next cast an instant or sorcery spell this turn, copy that spell\."
+    r"^when you next cast an instant or sorcery spell this turn, copy (?:that spell|it)\."
     r"(?P<new_targets>\s*you may choose new targets for the copy\.?)?$",
     re.IGNORECASE,
 )
@@ -62658,6 +62708,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     (each reads an instruction chain `_prepare_effect_clauses` would cut
     apart): the animation gate above, then `machines/copy_effects.py`'s and
     `machines/control_change.py`'s own readers."""
+    from .cast_copies import cast_copy_ability_effect
     from .control_change import control_change_ability_effect
     from .copy_effects import copy_ability_effect
 
@@ -62667,6 +62718,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
         _parse_target_fights_other_target_clause,
         _parse_return_with_rider_clause,
         copy_ability_effect,
+        cast_copy_ability_effect,
         control_change_ability_effect,
     ):
         effect = reader(effect_text)
