@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 7.4% |
+| Tested | 21 | 7.8% |
 | Works (untested) | 153 | 56.9% |
-| Partial (unaudited) | 10 | 3.7% |
+| Partial (unaudited) | 9 | 3.3% |
 | Not working | 86 | 32.0% |
 
 ## Cards needing work
@@ -77,7 +77,7 @@
 | Second Sunrise | silent | Each player returns to the battlefield all artifact, creature, enchantment, and land cards in their graveyard that were put there from the battlefield this turn | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skyhunter Cub | silent | As long as this creature is equipped, it gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Foundry | silent | {X}, {T}: Create a token that's a copy of the exiled card. X is the mana value of that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spellweaver Helix | silent | Imprint — When this artifact enters, you may exile two target sorcery cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Spellweaver Helix | silent | Whenever a player casts a card, if it has the same name as one of the cards exiled with this artifact, you may copy the other. If you do, you may cast the copy  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spoils of the Vault | silent | Choose a card name. Reveal cards from the top of your library until you reveal a card with that name, then put that card into your hand. Exile all other cards r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sun Droplet | silent | Whenever you're dealt damage, put that many charge counters on this artifact. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Sword of Kaldra | silent | Whenever equipped creature deals damage to a creature, exile that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,7 +117,6 @@
 | Krark's Thumb | unaudited | If you would flip a coin, instead flip two coins and ignore one. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leonin Abunas | unaudited | Artifacts you control have hexproof. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Myr Prototype | unaudited | This creature can't attack or block unless you pay {1} for each +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Neurok Spy | unaudited | This creature can't be blocked as long as defending player controls an artifact. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Platinum Angel | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Relic Bane | unaudited | Enchanted artifact has "At the beginning of your upkeep, you lose 2 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shared Fate | unaudited | If a player would draw a card, that player exiles the top card of one of their opponents' libraries face down instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -158,7 +157,6 @@
 | Goblin War Wagon | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gold Myr | handled |  |  | Y/-/- | not_tested |
 | Granite Shard | handled | {3}, {T} or {R}, {T}: This artifact deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Great Furnace | handled |  |  | Y/-/- | not_tested |
 | Groffskithur | handled | Whenever this creature becomes blocked, you may return target card named Groffskithur from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartwood Shard | handled | {3}, {T} or {G}, {T}: Target creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hematite Golem | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -195,6 +193,7 @@
 | Needlebug | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Neurok Familiar | handled | When this creature enters, reveal the top card of your library. If it's an artifact card, put it into your hand. Otherwise, put it into your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Neurok Hoversail | handled | Equipped creature has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Neurok Spy | handled | This creature can't be blocked as long as defending player controls an artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nightmare Lash | handled | Equipped creature gets +1/+1 for each Swamp you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Lasher | handled | This creature gets +1/+0 for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nim Replica | handled | {2}{B}, Sacrifice this creature: Target creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -279,7 +278,7 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -289,6 +288,7 @@
 - Frogmite
 - Glimmervoid
 - Goblin Charbelcher
+- Great Furnace
 - Isochron Scepter
 - Lightning Coils
 - Lightning Greaves
@@ -310,8 +310,8 @@
 |---|---|---|---|
 | Choose one | 5 | Blinding Beam, Grab the Reins, Incite War, Journey of Discovery, Wail of the Nim | mrd |
 | whenever ~ attacks or blocks, remove a +N/+N counter from it at end of combat. | 4 | Clockwork Beetle, Clockwork Condor, Clockwork Dragon, Clockwork Vorrac | mrd |
-| Imprint | 2 | Spellweaver Helix, Thought Prison | mrd |
 | fear | 2 | Dross Prowler, Woebearer | mrd |
+| Imprint | 1 | Thought Prison | mrd |
 | all creatures able to block target creature ~ do so. | 1 | Bloodscent | mrd |
 | artifacts you control have hexproof. | 1 | Leonin Abunas | mrd |
 | as an additional cost to cast ~, sacrifice an artifact. put N +N/+N counters on target creature, where N is the sacrificed artifact's mana value. | 1 | Forge Armor | mrd |
@@ -359,6 +359,7 @@
 | when ~ enters, you may pay {M}. if you do, search your library for an equipment card with mana value N or less, put that card onto the battlefield, then shuffle | 1 | Taj-Nar Swordsmith | mrd |
 | whenever a creature dealt damage by equipped creature ~ dies, return that card to the battlefield under your control. attach ~ to that creature. | 1 | Scythe of the Wretched | mrd |
 | whenever a permanent becomes untapped, that permanent's controller mills a card. | 1 | Mesmeric Orb | mrd |
+| whenever a player casts a card, if it has the same name as one of the cards exiled with ~, you may copy the other. if you do, you may cast the copy without payi | 1 | Spellweaver Helix | mrd |
 | whenever a spell or ability causes a player to shuffle their library, ~ deals N damage to that player. | 1 | Psychogenic Probe | mrd |
 | whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose N life. | 1 | Disciple of the Vault | mrd |
 | whenever an artifact, creature, or enchantment enters, its controller chooses target permanent another player controls that shares a card type with it. exchange | 1 | Confusion in the Ranks | mrd |
@@ -391,7 +392,6 @@
 | {M}{M}, {M}: put target creature on the bottom of its owner"..."s controller reveals cards from the top of their library until they reveal a creature card. the  | 1 | Proteus Staff | mrd |
 | {M}{M}: return ~ from your graveyard to the battlefield, then sacrifice a creature. activate only during your upkeep. | 1 | Nim Devourer | mrd |
 | ~ can't attack or block unless you pay {M} for each +N/+N counter on it. | 1 | Myr Prototype | mrd |
-| ~ can't be blocked as long as defending player controls an artifact. | 1 | Neurok Spy | mrd |
 | ~ deals N damage to target creature. if it's an artifact creature, ~ deals N damage to it instead. | 1 | Electrostatic Bolt | mrd |
 | ~ gets +N/+N for each untapped permanent your opponents control. | 1 | Copperhoof Vorrac | mrd |
 | ~ has protection from each of the exiled card's card types. | 1 | Mirror Golem | mrd |

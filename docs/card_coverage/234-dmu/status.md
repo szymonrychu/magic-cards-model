@@ -17,39 +17,28 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.8% |
-| Works (untested) | 107 | 43.9% |
-| Partial (unaudited) | 19 | 7.8% |
-| Not working | 99 | 40.6% |
+| Tested | 21 | 8.6% |
+| Works (untested) | 119 | 48.8% |
+| Partial (unaudited) | 18 | 7.4% |
+| Not working | 86 | 35.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Academy Loremaster | silent | At the beginning of each player's draw step, that player may draw an additional card. If they do, spells they cast this turn cost {2} more to cast. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Argivian Cavalier | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Artillery Blast | silent | Domain — Artillery Blast deals X damage to target tapped creature, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Balduvian Berserker | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Barkweave Crusher | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Benalish Faithbonder | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Blight Pile | silent | {2}{B}, {T}: Each opponent loses X life, where X is the number of creatures with defender you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bortuk Bonerattle | silent | Domain — When Bortuk Bonerattle enters, if you cast it, choose target creature card in your graveyard. Return that card to the battlefield if its mana value is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Braids's Frightful Return | silent | III — Target opponent may sacrifice a nonland, nontoken permanent of their choice. If they don't, they lose 2 life and you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Briar Hydra | silent | Domain — Whenever this creature deals combat damage to a player, put X +1/+1 counters on target creature you control, where X is the number of basic land types  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaotic Transformation | silent | Exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. For each  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cleaving Skyrider | silent | When this creature enters, if it was kicked, it deals X damage to any target, where X is the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Coalition Skyknight | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Coalition Warbrute | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Combat Research | silent | As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coral Colony | silent | {1}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Garna, Bloodfist of Keld | silent | Whenever another creature you control dies, draw a card if it was attacking. Otherwise, Garna deals 1 damage to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Guardian of New Benalia | silent | Whenever this creature enlists a creature, scry 2. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Hero's Heirloom | silent | As long as equipped creature is legendary, it has trample and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hexbane Tortoise | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Inscribed Tablet | silent | {1}, {T}, Sacrifice this artifact: Reveal the top five cards of your library. Put a land card from among them into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jaya, Fiery Negotiator | silent | −2: Choose target creature an opponent controls. Whenever you attack this turn, Jaya deals damage equal to the number of attacking creatures to that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jhoira, Ageless Innovator | silent | {T}: Put two ingenuity counters on Jhoira, then you may put an artifact card with mana value X or less from your hand onto the battlefield, where X is the numbe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,7 +46,6 @@
 | Karn, Living Legacy | silent | −1: Pay any amount of mana. Look at that many cards from the top of your library, then put one of those cards into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Keldon Flamesage | silent | Whenever this creature attacks, look at the top X cards of your library, where X is this creature's power. You may exile an instant or sorcery card with mana va | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | King Darien XLVIII | silent | {3}{G}{W}: Put a +1/+1 counter on King Darien and create a 1/1 white Soldier creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Linebreaker Baloth | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Llanowar Loamspeaker | silent | {T}: Target land you control becomes a 3/3 Elemental creature with haste until end of turn. It's still a land. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Love Song of Night and Day | silent | Read Ahead | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Meria's Outrider | silent | Domain — When this creature enters, it deals damage to each opponent equal to the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -102,7 +90,6 @@
 | Vodalian Mindsinger | silent | When this creature enters, gain control of target creature with power less than this creature's power for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Walking Bulwark | silent | {2}: Until end of turn, target creature with defender gains haste, can attack as though it didn't have defender, and assigns combat damage equal to its toughnes | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wingmantle Chaplain | silent | When this creature enters, create a 1/1 white Bird creature token with flying for each creature with defender you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Yavimaya Steelcrusher | silent | Enlist | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Yotia Declares War | silent | III — Up to one target artifact you control becomes an artifact creature with base power and toughness 4/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zar Ojanen, Scion of Efrava | silent | Domain — Whenever Zar Ojanen becomes tapped, put a +1/+1 counter on each creature you control with toughness less than the number of basic land types among land | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zur, Eternal Schemer | silent | Enchantment creatures you control have deathtouch, lifelink, and hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -133,7 +120,6 @@
 | Defiler of Instinct | unaudited | As an additional cost to cast red permanent spells, you may pay 2 life. Those spells cost {R} less to cast if you paid life this way. This effect reduces only t | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Defiler of Vigor | unaudited | As an additional cost to cast green permanent spells, you may pay 2 life. Those spells cost {G} less to cast if you paid life this way. This effect reduces only | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Haughty Djinn | unaudited | Haughty Djinn's power is equal to the number of instant and sorcery cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Haunting Figment | unaudited | This creature can't be blocked as long as you've cast an instant or sorcery spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Karn's Sylex | unaudited | Players can't pay life to cast spells or to activate abilities that aren't mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Knight of Dusk's Shadow | unaudited | Your opponents can't gain life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rona, Sheoldred's Faithful | unaudited | You may cast this card from your graveyard by discarding two cards in addition to paying its other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -148,18 +134,25 @@
 | Aether Channeler | handled | When this creature enters, choose one — • Create a 1/1 white Bird creature token with flying. • Return another target nonland permanent to its owner's hand. • D | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argivian Phalanx | handled | Affinity | models/game.py (Game.cost_reduction_for, CR 702.41a) | Y/Y/- | not_tested |
 | Aron, Benalia's Ruin | handled | {W}{B}, {T}, Sacrifice another creature: Put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Artillery Blast | handled | Domain — Artillery Blast deals X damage to target tapped creature, where X is 1 plus the number of basic land types among lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Automatic Librarian | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Balduvian Atrocity | handled | When this creature enters, if it was kicked, return target creature card with mana value 3 or less from your graveyard to the battlefield. It gains haste. Sacri | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Balduvian Berserker | handled | When this creature dies, it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Balmor, Battlemage Captain | handled | Whenever you cast an instant or sorcery spell, creatures you control get +1/+0 and gain trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Barkweave Crusher | handled | Enlist | machines/enlist.py (apply_enlist, CR 702.154a-c) | Y/Y/- | not_tested |
 | Battle-Rage Blessing | handled | Target creature gains deathtouch and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battlefly Swarm | handled | {B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battlewing Mystic | handled | When this creature enters, if it was kicked, discard your hand, then draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Benalish Faithbonder | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Benalish Sleeper | handled | When this creature enters, if it was kicked, each player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bite Down | handled | Target creature you control deals damage equal to its power to target creature or planeswalker you don't control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bog Badger | handled | When this creature enters, if it was kicked, creatures you control gain menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Briar Hydra | handled | Domain — Whenever this creature deals combat damage to a player, put X +1/+1 counters on target creature you control, where X is the number of basic land types  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charismatic Vanguard | handled | {4}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citizen's Arrest | handled | When this enchantment enters, exile target creature or planeswalker an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clockwork Drawbridge | handled | {2}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Coalition Skyknight | handled | Enlist | machines/enlist.py (apply_enlist, CR 702.154a-c) | Y/Y/- | not_tested |
+| Coalition Warbrute | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Contaminated Aquifer | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crystal Grotto | handled | When this land enters, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deathbloom Gardener | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
@@ -176,13 +169,16 @@
 | Flowstone Kavu | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frostfist Strider | handled | When this creature enters, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Furious Bellow | handled | Target creature gets +3/+0 and gains first strike until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Garna, Bloodfist of Keld | handled | Whenever another creature you control dies, draw a card if it was attacking. Otherwise, Garna deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Geothermal Bog | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ghitu Amplifier | handled | When this creature enters, if it was kicked, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gibbering Barricade | handled | {2}{B}, Sacrifice a creature: You gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Picker | handled | {R}, {T}, Discard a card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunted Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Haunting Figment | handled | This creature can't be blocked as long as you've cast an instant or sorcery spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herd Migration | handled | Domain — Create a 3/3 green Beast creature token for each basic land type among lands you control. {1}{G}, Discard this card: Search your library for a basic la | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heroic Charge | handled | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Creatures you control get +2/+1 until end of turn. If this spell was kicked, those crea | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hexbane Tortoise | handled | Ward | machines/keywords.py | Y/Y/- | not_tested |
 | Hurler Cyclops | handled | {1}, Sacrifice another creature: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hurloon Battle Hymn | handled | Kicker {W} (You may pay an additional {W} as you cast this spell.) Hurloon Battle Hymn deals 4 damage to target creature or planeswalker. If this spell was kick | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Idyllic Beachfront | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -193,6 +189,7 @@
 | Juniper Order Rootweaver | handled | When this creature enters, if it was kicked, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knight of Dawn's Light | handled | If you would gain life, you gain that much life plus 1 instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leaf-Crowned Visionary | handled | Other Elves you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Linebreaker Baloth | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Llanowar Stalker | handled | Whenever another creature you control enters, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Magnigoth Sentry | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Meria, Scholar of Antiquity | handled | Tap two untapped nontoken artifacts you control: Exile the top card of your library. You may play it this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,19 +248,22 @@
 | Writhing Necromass | handled | This spell costs {1} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yavimaya Iconoclast | handled | When this creature enters, if it was kicked, it gets +1/+1 and gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yavimaya Sojourner | handled | Domain — This spell costs {1} less to cast for each basic land type among lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Yavimaya Steelcrusher | handled | {1}, Sacrifice this creature: Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>21 cards</summary>
 
 - Ajani, Sleeper Agent
 - Archangel of Wrath
+- Argivian Cavalier
 - Baird, Argivian Recruiter
 - Colossal Growth
 - Cosmic Epiphany
 - Cult Conscript
 - Extinguish the Light
+- Guardian of New Benalia
 - Ivy, Gleeful Spellthief
 - Lagomos, Hand of Hatred
 - Leyline Binding
@@ -283,8 +283,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Domain | 14 | Artillery Blast, Bortuk Bonerattle, Briar Hydra, Drag to the Bottom, Llanowar Greenwidow | dmu |
-| enlist | 9 | Argivian Cavalier, Balduvian Berserker, Barkweave Crusher, Benalish Faithbonder, Coalition Skyknight | dmu |
+| Domain | 12 | Bortuk Bonerattle, Drag to the Bottom, Llanowar Greenwidow, Meria's Outrider, Nael, Avizoa Aeronaut | dmu |
 | read ahead | 4 | Love Song of Night and Day, The Cruelty of Gix, The Elder Dragon War, The Weatherseed Treaty | dmu |
 | if ~ was kicked, it enters with two +N/+N counters on it. | 2 | Shalai's Acolyte, Viashino Branchrider | dmu |
 | Choose one | 1 | Twinferno | dmu |
@@ -341,7 +340,6 @@
 | when ~ enters, you gain N life for each time it was kicked. | 1 | Stronghold Arena | dmu |
 | when ~ enters, you may search your library for an instant or sorcery card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Micromancer | dmu |
 | whenever a creature you control dies, put a phyresis counter on ~. then draw a card if it has seven or more phyresis counters on it. if it doesn't, scry N. | 1 | Weatherlight Compleated | dmu |
-| whenever another creature you control dies, draw a card if it was attacking. otherwise, garna deals N damage to each opponent. | 1 | Garna, Bloodfist of Keld | dmu |
 | whenever another legendary creature you control dies, create a token that"..."s not legendary and it's a N/N black zombie in addition to its other colors and ty | 1 | Ratadrabik of Urborg | dmu |
 | whenever najal attacks, you may pay {M}. if you do, when you next cast an instant or sorcery spell ~, copy it. you may choose new targets for the copy. | 1 | Najal, the Storm Runner | dmu |
 | whenever rulik mons attacks, look at the top card of your library. if it"..."t put a card onto the battlefield ~, create a N/N red goblin creature token. | 1 | Rulik Mons, Warren Chief | dmu |
@@ -353,7 +351,6 @@
 | whenever ~ attacks, look at the top N cards of your library, where N is ~ power. you may exile an instant or sorcery card with mana value N or less from among t | 1 | Keldon Flamesage | dmu |
 | whenever ~ attacks, target creature defending player controls with power less than ~ power can't block ~. | 1 | Radha's Firebrand | dmu |
 | whenever ~ attacks, you may sacrifice another creature. if you do, ~ gains double strike until end of turn. | 1 | Ragefire Hellkite | dmu |
-| whenever ~ enlists a creature, scry N. | 1 | Guardian of New Benalia | dmu |
 | whenever ~ enters or attacks, you may put a land card from a graveyard onto the battlefield tapped under your control. | 1 | Soul of Windgrace | dmu |
 | whenever ~ or another goblin you control dies, exile the top card of your library. if it's a goblin creature card, you may cast that card until the end of your  | 1 | Rundvelt Hordemaster | dmu |
 | you may cast an instant or sorcery spell with mana value N or N from your hand without paying its mana cost. | 1 | Founding the Third Path | dmu |
@@ -370,7 +367,6 @@
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Coral Colony | dmu |
 | {M}{M}: if ~ is a cleric, put a deathtouch counter on it and it becomes a phyrexian human cleric with base power and toughness N/N. | 1 | Evolved Sleeper | dmu |
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
-| ~ can"..."ve cast an instant or sorcery spell ~. | 1 | Haunting Figment | dmu |
 | ~ is the chosen type in addition to its other types. | 1 | Thran Portal | dmu |
 | ~'s power and toughness are each equal to the greatest mana value among cards in your graveyard. | 1 | Monstrous War-Leech | dmu |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Haughty Djinn | dmu |

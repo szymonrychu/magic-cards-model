@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 6 | 2.6% |
-| Works (untested) | 118 | 50.9% |
-| Partial (unaudited) | 9 | 3.9% |
-| Not working | 99 | 42.7% |
+| Tested | 14 | 6.0% |
+| Works (untested) | 114 | 49.1% |
+| Partial (unaudited) | 8 | 3.4% |
+| Not working | 96 | 41.4% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Balustrade Spy | silent | When this creature enters, target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bane Alley Broker | silent | {T}: Draw a card, then exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bioshift | silent | Move any number of +1/+1 counters from target creature onto another target creature with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Biovisionary | silent | At the beginning of the end step, if you control four or more creatures named Biovisionary, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Call of the Nightwing | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Cartel Aristocrat | silent | Sacrifice another creature: This creature gains protection from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clinging Anemones | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -86,7 +85,6 @@
 | Realmwright | silent | Lands you control are the chosen type in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rubblebelt Raiders | silent | Whenever this creature attacks, put a +1/+1 counter on it for each attacking creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sepulchral Primordial | silent | When this creature enters, for each opponent, you may put up to one target creature card from that player's graveyard onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Serene Remembrance | silent | Shuffle Serene Remembrance and up to three target cards from a single graveyard into their owners' libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadow Alley Denizen | silent | Whenever another black creature you control enters, target creature gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadow Slice | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shambleshark | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -95,7 +93,6 @@
 | Simic Fluxmage | silent | Evolve | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Simic Manipulator | silent | {T}, Remove one or more +1/+1 counters from this creature: Gain control of target creature with power less than or equal to the number of +1/+1 counters removed | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skarrg Guildmage | silent | {1}{R}{G}: Target land you control becomes a 4/4 Elemental creature until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Skyblinder Staff | silent | Equipped creature gets +1/+0 and can't be blocked by creatures with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skygames | silent | Enchanted land has "{T}: Target creature gains flying until end of turn. Activate only as a sorcery." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slate Street Ruffian | silent | Whenever this creature becomes blocked, defending player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smog Elemental | silent | Creatures with flying your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -129,7 +126,6 @@
 | Death's Approach | unaudited | Enchanted creature gets -X/-X, where X is the number of creature cards in its controller's graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Deathcult Rogue | unaudited | This creature can't be blocked except by Rogues. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Debtor's Pulpit | unaudited | Enchanted land has "{T}: Tap target creature." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Glaring Spotlight | unaudited | Creatures your opponents control with hexproof can be the targets of spells and abilities you control as though they didn't have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | One Thousand Lashes | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Spire Tracer | unaudited | This creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tin Street Market | unaudited | Enchanted land has "{T}, Discard a card: Draw a card." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -146,7 +142,6 @@
 | Borborygmos Enraged | handled | Whenever Borborygmos Enraged deals combat damage to a player, reveal the top three cards of your library. Put all land cards revealed this way into your hand an | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Boros Charm | handled | Choose one — • Boros Charm deals 4 damage to target player or planeswalker. • Permanents you control gain indestructible until end of turn. • Target creature ga | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boros Elite | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Boros Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boros Keyrune | handled | {R}{W}: This artifact becomes a 1/1 red and white Soldier artifact creature with double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burning-Tree Emissary | handled | When this creature enters, add {R}{G}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burst of Strength | handled | Put a +1/+1 counter on target creature and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -158,7 +153,6 @@
 | Crypt Ghast | handled | Whenever you tap a Swamp for mana, add an additional {B}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Skyjek | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deathpact Angel | handled | When this creature dies, create a 1/1 white and black Cleric creature token. It has "{3}{W}{B}{B}, {T}, Sacrifice this token: Return a card named Deathpact Ange | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Dimir Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dinrova Horror | handled | When this creature enters, return target permanent to its owner's hand, then that player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disciple of the Old Ways | handled | {R}: This creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drakewing Krasis | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -178,7 +172,6 @@
 | Greenside Watcher | handled | {T}: Untap target Gate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gridlock | handled | Tap X target nonland permanents. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ground Assault | handled | Ground Assault deals damage to target creature equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Gruul Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gruul Keyrune | handled | {R}{G}: This artifact becomes a 3/2 red and green Beast artifact creature with trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guildscorn Ward | handled | Enchanted creature has protection from multicolored. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gutter Skulk | handled |  |  | Y/Y/- | not_tested |
@@ -209,7 +202,6 @@
 | Nimbus Swimmer | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ogre Slumlord | handled | Whenever another nontoken creature dies, you may create a 1/1 black Rat creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ordruun Veteran | handled | Battalion — Whenever this creature and at least two other creatures attack, this creature gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Orzhov Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Orzhov Keyrune | handled | {W}{B}: This artifact becomes a 1/4 white and black Thrull artifact creature with lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pit Fight | handled | Target creature you control fights another target creature. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Primal Visitation | handled | Enchanted creature gets +3/+3 and has haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -228,10 +220,10 @@
 | Scorchwalker | handled | Bloodrush — {1}{R}{R}, Discard this card: Target attacking creature gets +5/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shattering Blow | handled | Exile target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Charm | handled | Choose one — • Target creature gets +3/+3 until end of turn. • Permanents you control gain hexproof until end of turn. • Return target creature to its owner's h | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Simic Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Simic Keyrune | handled | {G}{U}: This artifact becomes a 2/3 green and blue Crab artifact creature with hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skarrg Goliath | handled | Bloodrush — {5}{G}{G}, Discard this card: Target attacking creature gets +9/+9 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skinbrand Goblin | handled | Bloodrush — {R}, Discard this card: Target attacking creature gets +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Skyblinder Staff | handled | Equipped creature gets +1/+0 and can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slaughterhorn | handled | Bloodrush — {G}, Discard this card: Target attacking creature gets +3/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spark Trooper | handled | At the beginning of the end step, sacrifice this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunhome Guildmage | handled | {1}{R}{W}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -256,12 +248,20 @@
 ## Fully supported
 
 <details>
-<summary>6 cards</summary>
+<summary>14 cards</summary>
 
 - Aerial Maneuver
+- Biovisionary
+- Boros Guildgate
 - Boros Reckoner
+- Dimir Guildgate
+- Glaring Spotlight
+- Gruul Guildgate
 - Hold the Gates
 - Luminate Primordial
+- Orzhov Guildgate
+- Serene Remembrance
+- Simic Guildgate
 - Skullcrack
 - Syndic of Tithes
 
@@ -278,7 +278,6 @@
 | +N: look at the top card of your library. if it's a creature card, you may reveal it and put it into your hand. | 1 | Domri Rade | gtc |
 | +N: put a loyalty counter on gideon for each creature target opponent controls. | 1 | Gideon, Champion of Justice | gtc |
 | at the beginning of each combat, choose first strike, vigilance, or lifelink. creatures you control gain that ability until end of turn. | 1 | Angelic Skirmisher | gtc |
-| at the beginning of the end step, if you control four or more creatures named ~, you win the game. | 1 | Biovisionary | gtc |
 | at the beginning of your end step, you may exile obzedat. if you do, return it to the battlefield under its owner's control at the beginning of your next upkeep | 1 | Obzedat, Ghost Council | gtc |
 | at the beginning of your upkeep, each player reveals the top card of their library, loses life equal to that card's mana value, then puts it into their hand. | 1 | Duskmantle Seer | gtc |
 | at the beginning of your upkeep, put a +N/+N counter on enchanted creature. | 1 | Forced Adaptation | gtc |
@@ -291,7 +290,6 @@
 | creatures blocking or blocked by ~ have lifelink. | 1 | Alms Beast | gtc |
 | creatures with flying your opponents control get -N/-N. | 1 | Smog Elemental | gtc |
 | creatures you control have haste and attack each combat if able. | 1 | Hellraiser Goblin | gtc |
-| creatures your opponents control with hexproof can be the targets of spells and abilities you control as though they didn't have hexproof. | 1 | Glaring Spotlight | gtc |
 | destroy target creature. it can"..."s controller creates a N/N green frog lizard creature token. | 1 | Rapid Hybridization | gtc |
 | destroy target nonartifact creature. its controller mills cards equal to that creature's power. | 1 | Grisly Spectacle | gtc |
 | discard two cards: ~ controller sacrifices it, then draws two cards. only your opponents may activate ~. | 1 | Soul Ransom | gtc |
@@ -302,7 +300,6 @@
 | enchanted creature can"..."t be activated. | 1 | One Thousand Lashes | gtc |
 | enchanted creature can't be blocked as long as you control a gate. | 1 | Way of the Thief | gtc |
 | enchanted creature gets -N/-N, where N is the number of creature cards in its controller's graveyard. | 1 | Death's Approach | gtc |
-| equipped creature gets +N/+N and can't be blocked by creatures with flying. | 1 | Skyblinder Staff | gtc |
 | lands you control are the chosen type in addition to their other types. | 1 | Realmwright | gtc |
 | move any number of +N/+N counters from target creature onto another target creature with the same controller. | 1 | Bioshift | gtc |
 | prevent all combat damage that would be dealt to ~ by creatures blocking it. | 1 | Armored Transport | gtc |
@@ -315,7 +312,6 @@
 | sacrifice ~: counter target spell with {M} in its mana cost unless its controller pays {M}. | 1 | Frontline Medic | gtc |
 | search your library for three creature cards and reveal them. if you reveal three cards with different names, choose one of them at random and put that card int | 1 | Signal the Clans | gtc |
 | shuffle your library, then reveal the top card. if it"..."s a land card, you may put it onto the battlefield and return ~ to its owner's hand. | 1 | Unexpected Results | gtc |
-| shuffle ~ and up to three target cards from a single graveyard into their owners' libraries. | 1 | Serene Remembrance | gtc |
 | target creature an opponent controls blocks ~ if able. untap that creature. other creatures that player controls can't block ~. | 1 | Mark for Death | gtc |
 | target creature that dealt damage ~ gets -N/-N until end of turn. | 1 | Executioner's Swing | gtc |
 | target land becomes a N/N elemental creature with flying until end of turn. it's still a land. | 1 | Hydroform | gtc |

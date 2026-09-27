@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 101 | 37.7% |
-| Partial (unaudited) | 30 | 11.2% |
+| Works (untested) | 103 | 38.4% |
+| Partial (unaudited) | 28 | 10.4% |
 | Not working | 114 | 42.5% |
 
 ## Cards needing work
@@ -27,6 +27,7 @@
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aether Web | silent | Enchanted creature gets +1/+1, has reach, and can block creatures with shadow as though they didn't have shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Aetherflame Wall | silent | This creature can block creatures with shadow as though they didn't have shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angel's Grace | silent | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) You can't lose the game this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Barbed Shocker | silent | Whenever this creature deals damage to a player, that player discards all the cards in their hand, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Basalt Gargoyle | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -74,7 +75,6 @@
 | Knight of the Holy Nimbus | silent | {2}: This creature can't be regenerated this turn. Only your opponents may activate this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liege of the Pit | silent | At the beginning of your upkeep, sacrifice a creature other than this creature. If you can't, this creature deals 7 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lim-Dûl the Necromancer | silent | Whenever a creature an opponent controls dies, you may pay {1}{B}. If you do, return that card to the battlefield under your control. If it's a creature, it's a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Looter il-Kor | silent | Shadow | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Magus of the Scroll | silent | {3}, {T}: Choose a card name, then reveal a card at random from your hand. If that card has the chosen name, this creature deals 2 damage to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mangara of Corondor | silent | {T}: Exile Mangara and target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Might Sliver | silent | All Sliver creatures get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -99,6 +99,7 @@
 | Sarpadian Empires, Vol. VII | silent | {3}, {T}: Create a 1/1 creature token of the chosen color and type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scion of the Ur-Dragon | silent | {2}: Search your library for a Dragon permanent card and put it into your graveyard. If you do, Scion of the Ur-Dragon becomes a copy of that card until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sedge Sliver | silent | All Sliver creatures have "This creature gets +1/+1 as long as you control a Swamp." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Shadow Sliver | silent | All Sliver creatures have shadow. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slipstream Serpent | silent | When you control no Islands, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Smallpox | silent | Each player loses 1 life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Force | silent | Whenever this creature attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,7 +118,6 @@
 | Temporal Eddy | silent | Put target creature or land on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thelon of Havenwood | silent | Each Fungus creature gets +1/+1 for each spore counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thick-Skinned Goblin | silent | {R}: This creature gains protection from red until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Trespasser il-Vec | silent | Discard a card: This creature gains shadow until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Truth or Tale | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put a card from the chosen pile into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Two-Headed Sliver | silent | All Sliver creatures have menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Urborg Syphon-Mage | silent | {2}{B}, {T}, Discard a card: Each other player loses 2 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -140,7 +140,6 @@
 | Traitor's Clutch | notice | Target creature gets +1/+0, becomes black, and gains shadow until end of turn. (It can block or be blocked by only creatures with shadow.) Flashback {1}{B} (You | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Trickbind | notice | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Counter target activated or tr | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Word of Seizing | notice | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Untap target permanent and gai | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Aetherflame Wall | unaudited | This creature can block creatures with shadow as though they didn't have shadow. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Amrou Seekers | unaudited | This creature can't be blocked except by artifact creatures and/or white creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Basal Sliver | unaudited | All Slivers have "Sacrifice this permanent: Add {B}{B}." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cavalry Master | unaudited | Other creatures you control with flanking have flanking. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -161,12 +160,11 @@
 | Quilled Sliver | unaudited | All Slivers have "{T}: This permanent deals 1 damage to target attacking or blocking creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Screeching Sliver | unaudited | All Slivers have "{T}: Target player mills a card." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Serra Avenger | unaudited | You can't cast Serra Avenger during your first, second, or third turns of the game. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Shadow Sliver | unaudited | All Sliver creatures have shadow. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sidewinder Sliver | unaudited | All Sliver creatures have flanking. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stormcloud Djinn | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Teferi, Mage of Zhalfir | unaudited | Creature cards you own that aren't on the battlefield have flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Telekinetic Sliver | unaudited | All Slivers have "{T}: Tap target permanent." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Temporal Isolation | unaudited | Enchanted creature has shadow. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Temporal Isolation | unaudited | Prevent all damage that would be dealt by enchanted creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vampiric Sliver | unaudited | All Sliver creatures have "Whenever a creature dealt damage by this creature this turn dies, put a +1/+1 counter on this creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Vesuvan Shapeshifter | unaudited | As this creature enters or is turned face up, you may choose another creature on the battlefield. If you do, until this creature is turned face down, it becomes | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Weathered Bodyguards | unaudited | As long as this creature is untapped, all combat damage that would be dealt to you by unblocked creatures is dealt to this creature instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -221,6 +219,7 @@
 | Keldon Halberdier | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Kher Keep | handled | {1}{R}, {T}: Create a 0/1 red Kobold creature token named Kobolds of Kher Keep. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Axe | handled | As an additional cost to cast this spell, discard a card or pay {5}. Lightning Axe deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Looter il-Kor | handled | Whenever this creature deals damage to an opponent, draw a card, then discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Candelabra | handled | {X}, {T}: Untap X target lands. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Disk | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Mirror | handled | {T}, Sacrifice this creature: Exchange life totals with target opponent. Activate only during your upkeep. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -260,6 +259,7 @@
 | Thunder Totem | handled | {1}{W}{W}: This artifact becomes a 2/2 white Spirit artifact creature with flying and first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tivadar of Thorn | handled | When Tivadar enters, destroy target Goblin. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tolarian Sentinel | handled | {U}, {T}, Discard a card: Return target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Trespasser il-Vec | handled | Discard a card: This creature gains shadow until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Triskelavus | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unyaro Bees | handled | {G}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Venser's Sliver | handled |  |  | Y/-/- | not_tested |
@@ -336,13 +336,11 @@
 | creatures you control are slivers in addition to their other creature types. | 1 | Hivestone | tsp |
 | damage that would reduce your life total to less than N reduces it to N instead. | 1 | Fortune Thief | tsp |
 | destroy target creature. its controller loses life equal to its power plus its toughness. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M | 1 | Phthisis | tsp |
-| discard a card: ~ gains shadow until end of turn. | 1 | Trespasser il-Vec | tsp |
 | each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |
 | each player loses N life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | 1 | Smallpox | tsp |
 | enchanted creature gets +N/+N, has reach, and can block creatures with shadow as though they didn't have shadow. | 1 | Aether Web | tsp |
 | enchanted creature has flying and "..." | 1 | Fallen Ideal | tsp |
 | enchanted creature has protection from the chosen color. ~ doesn't remove ~. | 1 | Pentarch Ward | tsp |
-| enchanted creature has shadow. | 1 | Temporal Isolation | tsp |
 | fear | 1 | Corpulent Corpse | tsp |
 | if a spell would deal damage to a permanent or player, prevent N damage that spell would deal to that permanent or player. | 1 | Plated Pegasus | tsp |
 | if damage would be dealt to dralnu, sacrifice that many permanents instead. | 1 | Dralnu, Lich Lord | tsp |
@@ -351,13 +349,13 @@
 | other creatures you control with flying get +N/+N. | 1 | Sprite Noble | tsp |
 | other white creatures get +N/+N. | 1 | Celestial Crusader | tsp |
 | prevent all damage that creatures would deal to players ~. | 1 | Chameleon Blur | tsp |
+| prevent all damage that would be dealt by enchanted creature. | 1 | Temporal Isolation | tsp |
 | put target creature or land on top of its owner's library. | 1 | Temporal Eddy | tsp |
 | put target face-up exiled card into its owner's graveyard. | 1 | Pull from Eternity | tsp |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put a card from the chosen pile into your ha | 1 | Truth or Tale | tsp |
 | sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Drakeling | tsp |
 | sacrifice ~: it deals N damage to target creature with flying. that creature loses flying until end of turn. | 1 | Goblin Skycutter | tsp |
 | sacrifice ~: when target creature is put into your graveyard ~, return that card to the battlefield. | 1 | Saffi Eriksdotter | tsp |
-| shadow | 1 | Looter il-Kor | tsp |
 | spells you cast cost {M} less to cast for each card with the same name as that spell in your graveyard. | 1 | Locket of Yesterdays | tsp |
 | split second (as long as ~ is on the stack, players can"..."t mana abilities.) counter target activated or triggered ability. if a permanent"..."t be activated  | 1 | Trickbind | tsp |
 | split second (as long as ~ is on the stack, players can"..."t mana abilities.) untap target permanent and gain control of it until end of turn. it gains haste u | 1 | Word of Seizing | tsp |

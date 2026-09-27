@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 9.5% |
-| Works (untested) | 54 | 32.0% |
-| Partial (unaudited) | 6 | 3.6% |
-| Not working | 93 | 55.0% |
+| Tested | 17 | 10.1% |
+| Works (untested) | 56 | 33.1% |
+| Partial (unaudited) | 4 | 2.4% |
+| Not working | 92 | 54.4% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Stormscale Anarch | silent | {2}{R}, Discard a card at random: This creature deals 2 damage to any target. If the discarded card was multicolored, this creature deals 4 damage instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Street Savvy | silent | Enchanted creature gets +0/+2 and can block creatures with landwalk abilities as though they didn't have those abilities. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swift Silence | silent | Counter all other spells. Draw a card for each spell countered this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Transguild Courier | silent | Transguild Courier is all colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trial // Error | silent | Return all creatures blocking or blocked by target creature to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Twinstrike | silent | Twinstrike deals 2 damage to each of two target creatures. Hellbent — Destroy those creatures instead if you have no cards in hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Unliving Psychopath | silent | {B}, {T}: Destroy target creature with power less than this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -119,9 +118,7 @@
 | Ignorant Bliss | notice | Exile all cards from your hand face down. At the beginning of the next end step, return those cards to your hand, then draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Infernal Tutor | notice | Reveal a card from your hand. Search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. Hellbent — If you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Nephilim | notice | Target creature gets +2/+2 until end of turn for each of its colors. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gnat Alley Creeper | unaudited | This creature can't be blocked by creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Leafdrake Roost | unaudited | Enchanted land has "{G}{U}, {T}: Create a 2/2 green and blue Drake creature token with flying." | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Psychic Possession | unaudited | Skip your draw step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Rain of Gore | unaudited | If a spell or ability would cause its controller to gain life, that player loses that much life instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shielding Plax | unaudited | Enchanted creature can't be the target of spells or abilities your opponents control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Taste for Mayhem | unaudited | Hellbent — Enchanted creature gets an additional +2/+0 as long as you have no cards in hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -137,6 +134,7 @@
 | Enemy of the Guildpact | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Enigma Eidolon | handled | {U}, Sacrifice this creature: Target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Entropic Eidolon | handled | {B}, Sacrifice this creature: Target player loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gnat Alley Creeper | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of the Guildpact | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Haazda Exonerator | handled | {T}, Sacrifice this creature: Destroy target Aura. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lyzolda, the Blood Witch | handled | {2}, Sacrifice a creature: Lyzolda deals 2 damage to any target if the sacrificed creature was red. Draw a card if the sacrificed creature was black. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -170,6 +168,7 @@
 | Stoic Ephemera | handled | When this creature blocks, sacrifice it at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stomp and Howl | handled | Destroy target artifact and target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidespout Tyrant | handled | Whenever you cast a spell, return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Transguild Courier | handled | Transguild Courier is all colors. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trygon Predator | handled | Whenever this creature deals combat damage to a player, you may destroy target artifact or enchantment that player controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Utvara Scalper | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Verdant Eidolon | handled | Whenever you cast a multicolored spell, you may return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -183,7 +182,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Azorius Aethermage
 - Azorius Guildmage
@@ -195,6 +194,7 @@
 - Grand Arbiter Augustin IV
 - Hallowed Fountain
 - Pride of the Clouds
+- Psychic Possession
 - Psychotic Fury
 - Ragamuffyn
 - Simic Growth Chamber
@@ -245,7 +245,6 @@
 | reveal a card from your hand. search your library for a card with the same name as that card, reveal it, put it into your hand, then shuffle. hellbent — if you  | 1 | Infernal Tutor | dis |
 | reveal the top four cards of your library. you may put a creature card from among them onto the battlefield. it gains "..." then put the rest of the cards revea | 1 | Aethermage's Touch | dis |
 | shuffle up to four cards you own from outside the game into your library. | 1 | Research // Development | dis |
-| skip your draw step. | 1 | Psychic Possession | dis |
 | target creature can block any number of creatures ~. | 1 | Valor Made Real | dis |
 | target creature gets +N/+N until end of turn for each of its colors. | 1 | Might of the Nephilim | dis |
 | the next N damage that would be dealt to target creature ~ is dealt to another target creature instead. draw a card. | 1 | Carom | dis |
@@ -284,13 +283,11 @@
 | {M}{M}: move a +N/+N counter from target creature onto another target creature with the same controller. | 1 | Simic Guildmage | dis |
 | {M}{M}: until end of turn, target creature with a +N/+N counter on it gains "..." | 1 | Simic Basilisk | dis |
 | {M}{M}{M}, {M}: prevent all damage a source of your choice would deal ~. | 1 | Prahv, Spires of Order | dis |
-| ~ can't be blocked by creatures with flying. | 1 | Gnat Alley Creeper | dis |
 | ~ deals N damage to any target. if a creature dealt damage ~ would die ~, exile it instead. hellbent — if you have no cards in hand, ~ can"..."t be prevented. | 1 | Demonfire | dis |
 | ~ deals N damage to each of two target creatures. hellbent — destroy those creatures instead if you have no cards in hand. | 1 | Twinstrike | dis |
 | ~ deals damage to target creature equal to the number of nonbasic lands that creature's controller controls. | 1 | Weight of Spires | dis |
 | ~ gets -N/-N for each card in your hand. | 1 | Dread Slag | dis |
 | ~ has all activated abilities of each other creature with a +N/+N counter on it. | 1 | Experiment Kraj | dis |
-| ~ is all colors. | 1 | Transguild Courier | dis |
 
 ## Notes
 

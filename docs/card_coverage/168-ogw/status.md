@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 9.1% |
-| Works (untested) | 109 | 61.9% |
+| Works (untested) | 110 | 62.5% |
 | Partial (unaudited) | 4 | 2.3% |
-| Not working | 47 | 26.7% |
+| Not working | 46 | 26.1% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Unity of Purpose | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Untap each creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vile Redeemer | silent | When you cast this spell, you may pay {C}. If you do, create a 1/1 colorless Eldrazi Scion creature token for each nontoken creature that died under your contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Visions of Brutality | silent | Whenever enchanted creature deals damage, its controller loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wandering Fumarole | silent | {2}{U}{R}: Until end of turn, this land becomes a 1/4 blue and red Elemental creature with "{0}: Switch this creature's power and toughness until end of turn."  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ayli, Eternal Pilgrim | notice | {1}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Baloth Pup | notice | This creature has trample as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Eldrazi Aggressor | notice | This creature has haste as long as you control another colorless creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -182,6 +181,7 @@
 | Vines of the Recluse | handled | Target creature gets +1/+2 and gains reach until end of turn. Untap it. (A creature with reach can block creatures with flying.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Grafter | handled | When this creature enters, another target creature you control gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Shatter | handled | Devoid (This card has no color.) Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Wandering Fumarole | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warden of Geometries | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Witness the End | handled | Devoid (This card has no color.) Target opponent exiles two cards from their hand and loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zada's Commando | handled | Cohort — {T}, Tap an untapped Ally you control: This creature deals 1 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,7 +254,6 @@
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |
 | {M}{M}{M}: support N. | 1 | Joraga Auxiliary | ogw |
-| {M}{M}{M}: until end of turn, ~ becomes a N/N blue and red elemental creature with "..." it's still a land. | 1 | Wandering Fumarole | ogw |
 | {M}{M}{M}{M}{M}: ally creatures you control get +N/+N until end of turn, where N is the number of colors among those creatures. | 1 | General Tazri | ogw |
 | ~ deals N damage to each of up to two target creatures. those creatures can't block ~. | 1 | Sparkmage's Gambit | ogw |
 | ~ gets +N/+N for each land you control named wastes. | 1 | Walker of the Wastes | ogw |

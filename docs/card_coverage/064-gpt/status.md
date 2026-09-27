@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 6.7% |
-| Works (untested) | 77 | 51.7% |
+| Works (untested) | 80 | 53.7% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 55 | 36.9% |
+| Not working | 52 | 34.9% |
 
 ## Cards needing work
 
@@ -74,12 +74,9 @@
 | Sword of the Paruns | silent | As long as equipped creature is tapped, tapped creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vedalken Plotter | silent | When this creature enters, exchange control of target land you control and target land an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vertigo Spawn | silent | Whenever this creature blocks a creature, tap that creature. That creature doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Witch-Maw Nephilim | silent | Whenever this creature attacks, it gains trample until end of turn if its power is 10 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aetherplasm | notice | Whenever this creature blocks a creature, you may return this creature to its owner's hand. If you do, you may put a creature card from your hand onto the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cerebral Vortex | notice | Target player draws two cards, then Cerebral Vortex deals damage to that player equal to the number of cards they've drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ghost Council of Orzhova | notice | {1}, Sacrifice a creature: Exile Ghost Council of Orzhova. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ghostway | notice | Exile each creature you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Killer Instinct | notice | At the beginning of your upkeep, reveal the top card of your library. If it's a creature card, put it onto the battlefield. That creature gains haste until end  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thunderheads | notice | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost.) Create a 3/3 blue Weird creature token with defender and flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Battering Wurm | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Djinn Illuminatus | unaudited | Each instant and sorcery spell you cast has replicate. The replicate cost is equal to its mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -106,6 +103,7 @@
 | Gatherer of Graces | handled | This creature gets +1/+1 for each Aura attached to it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gelectrode | handled | {T}: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghor-Clan Bloodscale | handled | {3}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ghost Council of Orzhova | handled | When Ghost Council of Orzhova enters, target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghost Warden | handled | {T}: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Giant Solifuge | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
 | Glint-Eye Nephilim | handled | Whenever this creature deals combat damage to a player, draw that many cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -120,6 +118,7 @@
 | Izzet Boilerworks | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Izzet Chronarch | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Izzet Signet | handled |  |  | Y/-/- | not_tested |
+| Killer Instinct | handled | At the beginning of your upkeep, reveal the top card of your library. If it's a creature card, put it onto the battlefield. That creature gains haste until end  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leap of Flame | handled | Replicate {U}{R} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Target creature gets  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leyline of Lightning | handled | If this card is in your opening hand, you may begin the game with it on the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lionheart Maverick | handled | {4}{W}: This creature gets +1/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -161,6 +160,7 @@
 | Wee Dragonauts | handled | Whenever you cast an instant or sorcery spell, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wild Cantor | handled |  |  | Y/-/- | not_tested |
 | Wildsize | handled | Target creature gets +2/+2 and gains trample until end of turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Witch-Maw Nephilim | handled | Whenever you cast a spell, you may put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Withstand | handled | Prevent the next 3 damage that would be dealt to any target this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wreak Havoc | handled | This spell can't be countered. Destroy target artifact or land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wurmweaver Coil | handled | Enchanted creature gets +6/+6. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -194,7 +194,6 @@
 | all nonland permanents are legendary. | 1 | Leyline of Singularity | gpt |
 | as long as equipped creature is tapped, tapped creatures you control get +N/+N. | 1 | Sword of the Paruns | gpt |
 | at the beginning of your upkeep, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Agent of Masks | gpt |
-| at the beginning of your upkeep, reveal the top card of your library. if it's a creature card, put it onto the battlefield. that creature gains haste until end  | 1 | Killer Instinct | gpt |
 | choose a card name. until your next turn, spells with the chosen name can"..."t be played. draw a card. | 1 | Conjurer's Ban | gpt |
 | create N N/N white pegasus creature tokens with flying, where N is your life total. | 1 | Storm Herd | gpt |
 | creature spells can't be countered. | 1 | Leyline of Lifeforce | gpt |
@@ -225,14 +224,12 @@
 | whenever another creature enters, its controller loses N life. | 1 | Poisonbelly Ogre | gpt |
 | whenever ~ attacks, each other attacking creature gains fear until end of turn. | 1 | Smogsteed Rider | gpt |
 | whenever ~ attacks, exile the top card of your library. if it"..."s power and y is its toughness. | 1 | Bioplasm | gpt |
-| whenever ~ attacks, it gains trample until end of turn if its power is N or greater. | 1 | Witch-Maw Nephilim | gpt |
 | whenever ~ blocks a creature, tap that creature. that creature doesn"..."s next untap step. | 1 | Vertigo Spawn | gpt |
 | whenever ~ blocks a creature, you may return ~ to its owner's hand. if you do, you may put a creature card from your hand onto the battlefield blocking that cre | 1 | Aetherplasm | gpt |
 | whenever ~ deals damage, you gain that much life. | 1 | Mourning Thrull | gpt |
 | whenever ~ is dealt combat damage, you gain that much life and attacking player loses that much life. | 1 | Souls of the Faultless | gpt |
 | you gain N life for each player. haunt (when ~ card is put into a graveyard after resolving, exile it haunting target creature.) when the creature ~ haunts dies | 1 | Benediction of Moons | gpt |
 | you may have creatures you control assign their combat damage ~ as though they weren't blocked. | 1 | Predatory Focus | gpt |
-| {M}, sacrifice a creature: exile ~. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Ghost Council of Orzhova | gpt |
 | {M}, {M}: attacking creatures get +N/+N until end of turn, where N is ~ power. | 1 | Rabble-Rouser | gpt |
 | {M}, {M}: each creature with mana value N can't attack or block ~. | 1 | Droning Bureaucrats | gpt |
 | {M}: ~ deals damage equal to its power divided as you choose among any number of target creatures. each of those creatures deals damage equal to its power to ~. | 1 | Living Inferno | gpt |

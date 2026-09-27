@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 8.9% |
-| Works (untested) | 147 | 59.8% |
+| Works (untested) | 149 | 60.6% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 70 | 28.5% |
+| Not working | 68 | 27.6% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Consulate Surveillance | silent | Pay {E}{E}: Prevent all damage that would be dealt to you this turn by a source of your choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cultivator of Blades | silent | Whenever this creature attacks, you may have other attacking creatures get +X/+X until end of turn, where X is this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deadlock Trap | silent | {T}, Pay {E}: Tap target creature or planeswalker. Its activated abilities can't be activated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Demon of Dark Schemes | silent | When this creature enters, all other creatures get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Depala, Pilot Exemplar | silent | Each Vehicle you control gets +1/+1 as long as it's a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dhund Operative | silent | As long as you control an artifact, this creature gets +1/+0 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Die Young | silent | Choose target creature. You get {E}{E} (two energy counters), then you may pay any amount of {E}. The creature gets -1/-1 until end of turn for each {E} paid th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,7 +87,6 @@
 | Veteran Motorist | silent | Whenever this creature crews a Vehicle, that Vehicle gets +1/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Visionary Augmenter | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Weaponcraft Enthusiast | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Welding Sparks | silent | Welding Sparks deals X damage to target creature, where X is 3 plus the number of artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Built to Last | notice | Target creature gets +2/+2 until end of turn. If it's an artifact creature, it gains indestructible until end of turn. (Damage and effects that say "destroy" do | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Built to Smash | notice | Target attacking creature gets +3/+3 until end of turn. If it's an artifact creature, it gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Insidious Will | notice | Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -133,6 +131,7 @@
 | Cowl Prowler | handled |  |  | Y/Y/- | not_tested |
 | Curio Vendor | handled |  |  | Y/Y/- | not_tested |
 | Decoction Module | handled | Whenever a creature you control enters, you get {E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Demon of Dark Schemes | handled | When this creature enters, all other creatures get -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disappearing Act | handled | As an additional cost to cast this spell, return a permanent you control to its owner's hand. Counter target spell. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dukhara Peafowl | handled | {U}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dukhara Scavenger | handled | When this creature enters, you may put target artifact or creature card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -242,6 +241,7 @@
 | Wayward Giant | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Weldfast Monitor | handled | {R}: This creature gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Weldfast Wingsmith | handled | Whenever an artifact you control enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Welding Sparks | handled | Welding Sparks deals X damage to target creature, where X is 3 plus the number of artifacts you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whirler Virtuoso | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whirlermaker | handled | {4}, {T}: Create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wild Wanderer | handled | When this creature enters, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -319,7 +319,6 @@
 | target attacking creature gets +N/+N until end of turn. if it's an artifact creature, it gains trample until end of turn. | 1 | Built to Smash | kld |
 | target creature gets +N/+N until end of turn. if it"..."t destroy it.) | 1 | Built to Last | kld |
 | when gonti enters, look at the top four cards of target opponent's library, exile one of them face down, then put the rest on the bottom of that library in a ra | 1 | Gonti, Lord of Luxury | kld |
-| when ~ enters, all other creatures get -N/-N until end of turn. | 1 | Demon of Dark Schemes | kld |
 | when ~ enters, each player chooses an artifact, a creature, an enchantment, and a planeswalker from among the nonland permanents they control, then sacrifices t | 1 | Cataclysmic Gearhulk | kld |
 | when ~ enters, each player may scry N. | 1 | Eager Construct | kld |
 | when ~ enters, it becomes an artifact creature until end of turn. | 1 | Fleetwheel Cruiser | kld |
@@ -345,7 +344,6 @@
 | ~ can't attack alone. | 1 | Trusty Companion | kld |
 | ~ can't be blocked by creatures with power N or less. | 1 | Demolition Stomper | kld |
 | ~ costs {M} less to cast, where N is the total mana value of noncreature artifacts you control. | 1 | Metalwork Colossus | kld |
-| ~ deals N damage to target creature, where N is N plus the number of artifacts you control. | 1 | Welding Sparks | kld |
 | ~ deals N damage to target creature. you may search your library and/or graveyard for a card named chandra, pyrogenius, reveal it, and put it into your hand. if | 1 | Liberating Combustion | kld |
 | ~ deals damage to any target equal to the number of cards in your hand. discard all the cards in your hand, then draw that many cards. | 1 | Fateful Showdown | kld |
 | −N: create a token that"..."s an artifact in addition to its other types. that token gains haste. exile it at the beginning of the next end step. | 1 | Saheeli Rai | kld |

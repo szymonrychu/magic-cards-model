@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.5% |
-| Works (untested) | 107 | 42.5% |
-| Partial (unaudited) | 10 | 4.0% |
-| Not working | 111 | 44.0% |
+| Tested | 27 | 10.7% |
+| Works (untested) | 106 | 42.1% |
+| Partial (unaudited) | 9 | 3.6% |
+| Not working | 110 | 43.7% |
 
 ## Cards needing work
 
@@ -111,7 +111,6 @@
 | Zealot's Conviction | silent | Corrupted — As long as an opponent has three or more poison counters, enchanted creature gets an additional +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zenith Chronicler | silent | Whenever a player casts their first multicolored spell each turn, each other player draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zopandrel, Hunger Dominus | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ambulatory Edifice | notice | When this creature enters, you may pay 2 life. When you do, target creature gets -1/-1 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Anoint with Affliction | notice | Exile target creature if it has mana value 3 or less. Corrupted — Exile that creature instead if its controller has three or more poison counters. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Armored Scrapgorger | notice | This creature gets +3/+0 as long as it has three or more oil counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aspirant's Ascent | notice | Until end of turn, target creature gets +1/+3 and gains flying and toxic 1. (Players dealt combat damage by that creature also get a poison counter.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -143,7 +142,6 @@
 | Graaz, Unstoppable Juggernaut | unaudited | Juggernauts you control attack each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Phyrexian Vindicator | unaudited | If damage would be dealt to this creature, prevent that damage. When damage is prevented this way, this creature deals that much damage to any other target. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Planar Disruption | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Skyscythe Engulfer | unaudited | This creature can't be blocked by creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tekuthal, Inquiry Dominus | unaudited | If you would proliferate, proliferate twice instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The Eternal Wanderer | unaudited | No more than one creature can attack The Eternal Wanderer each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Thrun, Breaker of Silence | unaudited | Thrun can't be the target of nongreen spells your opponents control or abilities from nongreen sources your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -162,7 +160,6 @@
 | Cacophony Scamp | handled | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cankerbloom | handled | {1}, Sacrifice this creature: Choose one — • Destroy target artifact. • Destroy target enchantment. • Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cephalopod Sentry | handled | Cephalopod Sentry's power is equal to the number of artifacts you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Charforger | handled | When this creature enters, create a 1/1 red Phyrexian Goblin creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chimney Rabble | handled | When this creature enters, create a 1/1 red Phyrexian Goblin creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chittering Skitterling | handled | Corrupted — Sacrifice an artifact or creature: Draw a card. Activate only if an opponent has three or more poison counters and only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chrome Prowler | handled | When this creature enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,11 +255,13 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>27 cards</summary>
 
+- Ambulatory Edifice
 - Atraxa, Grand Unifier
 - Bilious Skulldweller
 - Blazing Crescendo
+- Charforger
 - Churning Reservoir
 - Cruel Grimnarch
 - Elesh Norn, Mother of Machines
@@ -274,6 +273,7 @@
 - Nissa, Ascended Animist
 - Prosthetic Injector
 - Sheoldred's Edict
+- Skyscythe Engulfer
 - Solphim, Mayhem Dominus
 - Soulless Jailer
 - Swooping Lookout
@@ -354,7 +354,6 @@
 | when ~ enters, look at the top four cards of your library. you may reveal a land card from among them and put it into your hand. put the rest on the bottom of y | 1 | Contagious Vorrac | one |
 | when ~ enters, scry N. then each opponent may scry N. | 1 | Myr Custodian | one |
 | when ~ enters, up to one target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Unctus's Retrofitter | one |
-| when ~ enters, you may pay N life. when you do, target creature gets -N/-N until end of turn. | 1 | Ambulatory Edifice | one |
 | when ~ enters, you may return another permanent you control to its owner"..."t block." | 1 | Indoctrination Attendant | one |
 | when ~ enters, you may tap it. if you do, proliferate. | 1 | Gitaxian Anatomist | one |
 | whenever a creature an opponent controls dies, its controller loses N life. | 1 | Archfiend of the Dross | one |
@@ -388,7 +387,6 @@
 | {M}: ~ becomes a N/N phyrexian construct artifact creature, loses all abilities, and gains indestructible and toxic N. activate only if there are nine or more l | 1 | Monument to Perfection | one |
 | {M}{M}: each other creature you control with toxic gains toxic N until end of turn. activate only once each turn. | 1 | Plague Nurse | one |
 | {M}{M}{M}, {M}: return target creature card from your graveyard to the battlefield. it gains "..." activate only as a sorcery. | 1 | Geth, Thane of Contracts | one |
-| ~ can't be blocked by creatures with flying. | 1 | Skyscythe Engulfer | one |
 | ~ costs {M} less to cast for each permanent you control with oil counters on it. | 1 | Cinderslash Ravager | one |
 | ~ costs {M} more to cast if it targets a creature. exile target nonland permanent. | 1 | Vanish into Eternity | one |
 | ~ deals N damage to each creature your opponents control. creatures your opponents control can't block ~. | 1 | Hazardous Blast | one |

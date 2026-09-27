@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.0% |
-| Works (untested) | 95 | 41.7% |
+| Tested | 17 | 7.5% |
+| Works (untested) | 94 | 41.2% |
 | Partial (unaudited) | 22 | 9.6% |
 | Not working | 95 | 41.7% |
 
@@ -185,7 +185,6 @@
 | Inspired Ultimatum | handled | Target player gains 5 life, Inspired Ultimatum deals 5 damage to any target, then you draw five cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ketria Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Ketria Triome | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Kinnan, Bonder Prodigy | handled | Whenever you tap a nonland permanent for mana, add one mana of any type that permanent produced. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kogla, the Titan Ape | handled | When Kogla enters, it fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lava Serpent | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
 | Light of Hope | handled | Choose one — • You gain 4 life. • Destroy target enchantment. • Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -242,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Blade Banish
 - Blitz Leech
@@ -255,6 +254,7 @@
 - Indatha Triome
 - Kaheera, the Orphanguard
 - Keruga, the Macrosage
+- Kinnan, Bonder Prodigy
 - Offspring's Revenge
 - Raugrin Triome
 - Startling Development

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 9.5% |
-| Works (untested) | 118 | 43.1% |
-| Partial (unaudited) | 18 | 6.6% |
-| Not working | 112 | 40.9% |
+| Tested | 27 | 9.9% |
+| Works (untested) | 124 | 45.3% |
+| Partial (unaudited) | 12 | 4.4% |
+| Not working | 111 | 40.5% |
 
 ## Cards needing work
 
@@ -93,7 +93,6 @@
 | Puca's Mischief | silent | At the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Puresight Merrow | silent | {W/U}, {Q}: Look at the top card of your library. You may exile that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raking Canopy | silent | Whenever a creature with flying attacks you, this enchantment deals 4 damage to it. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
-| Reaper King | silent | Other Scarecrow creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Repel Intruders | silent | Create two 1/1 white Kithkin Soldier creature tokens if {W} was spent to cast this spell. Counter up to one target creature spell if {U} was spent to cast this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhys the Redeemed | silent | {4}{G/W}{G/W}, {T}: For each creature token you control, create a token that's a copy of that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | River's Grasp | silent | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -138,27 +137,22 @@
 | Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wingrattle Scarecrow | notice | This creature has flying as long as you control a blue creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Barrenton Cragtreads | unaudited | This creature can't be blocked by red creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bloodshed Fever | unaudited | Enchanted creature attacks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Deepchannel Mentor | unaudited | Blue creatures you control can't be blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Everlasting Torment | unaudited | All damage is dealt as though its source had wither. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gloomwidow | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Godhead of Awe | unaudited | Other creatures have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Greater Auramancy | unaudited | Other enchantments you control have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Kulrath Knight | unaudited | Creatures your opponents control with counters on them can't attack or block. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mossbridge Troll | unaudited | If this creature would be destroyed, regenerate it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Mudbrawler Raiders | unaudited | This creature can't be blocked by blue creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Raven's Run Dragoon | unaudited | This creature can't be blocked by black creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Resplendent Mentor | unaudited | White creatures you control have "{T}: You gain 1 life." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Runed Halo | unaudited | You have protection from the chosen card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sootwalkers | unaudited | This creature can't be blocked by white creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Swans of Bryn Argoll | unaudited | If a source would deal damage to this creature, prevent that damage. The source's controller draws cards equal to the damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Wanderbrine Rootcutters | unaudited | This creature can't be blocked by green creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wheel of Sun and Moon | unaudited | If a card would be put into enchanted player's graveyard from anywhere, instead that card is revealed and put on the bottom of that player's library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Whimwader | unaudited | This creature can't attack unless defending player controls a blue permanent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashenmoor Gouger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barkshell Blessing | handled | Target creature gets +2/+2 until end of turn. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When  | the engine reads this text and performs it | Y/-/- | not_tested |
+| Barrenton Cragtreads | handled | This creature can't be blocked by red creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrenton Medic | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blight Sickle | handled | Equipped creature gets +1/+0 and has wither. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blistering Dieflyn | handled | {B/R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,6 +209,7 @@
 | Mistveil Plains | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonring Island | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Morselhoarder | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mudbrawler Raiders | handled | This creature can't be blocked by blue creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Murderous Redcap | handled | When this creature enters, it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Niveous Wisps | handled | Target creature becomes white until end of turn. Tap that creature. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nurturer Initiate | handled | Whenever a player casts a green spell, you may pay {1}. If you do, target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -234,6 +229,8 @@
 | Put Away | handled | Counter target spell. You may shuffle up to one target card from your graveyard into your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyre Charger | handled | {R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rage Reflection | handled | Creatures you control have double strike. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Raven's Run Dragoon | handled | This creature can't be blocked by black creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Reaper King | handled | Other Scarecrow creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reknit | handled | Regenerate target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Revelsong Horn | handled | {1}, {T}, Tap an untapped creature you control: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | River Kelpie | handled | Whenever this creature or another permanent enters from a graveyard, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -256,6 +253,7 @@
 | Smolder Initiate | handled | Whenever a player casts a black spell, you may pay {1}. If you do, target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Somnomancer | handled | When this creature enters, you may tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sootstoke Kindler | handled | {T}: Target black or red creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sootwalkers | handled | This creature can't be blocked by white creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spawnwrithe | handled | Whenever this creature deals combat damage to a player, create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spiteflame Witch | handled | {B}{R}: Each player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spiteful Visions | handled | At the beginning of each player's draw step, that player draws an additional card. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -267,6 +265,7 @@
 | Torpor Dust | handled | Enchanted creature gets -3/-0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trip Noose | handled | {2}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Turn to Mist | handled | Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Wanderbrine Rootcutters | handled | This creature can't be blocked by green creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wasp Lancer | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Wildslayer Elves | handled | Wither | machines/combat.py | Y/-/- | not_tested |
 | Wilt-Leaf Cavaliers | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
@@ -278,7 +277,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
@@ -286,6 +285,7 @@
 - Boon Reflection
 - Burn Trail
 - Dawnglow Infusion
+- Deepchannel Mentor
 - Devoted Druid
 - Faerie Macabre
 - Hollowborn Barghest
@@ -329,7 +329,6 @@
 | at the beginning of your upkeep, remove a -N/-N counter from each creature you control. | 1 | Heartmender | shm |
 | at the beginning of your upkeep, you may exchange control of target nonland permanent you control and target nonland permanent an opponent controls with equal o | 1 | Puca's Mischief | shm |
 | black creatures you control have wither. | 1 | Corrosive Mentor | shm |
-| blue creatures you control can't be blocked. | 1 | Deepchannel Mentor | shm |
 | choose three target nonenchantment permanents. destroy one of them at random. | 1 | Wild Swing | shm |
 | counter target spell unless its controller pays {M} for each blue permanent you control. | 1 | Spell Syphon | shm |
 | counter target spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. then that player shuff | 1 | Counterbore | shm |
@@ -357,7 +356,6 @@
 | other enchantments you control have shroud. | 1 | Greater Auramancy | shm |
 | other green creatures you control get +N/+N. | 1 | Wilt-Leaf Liege | shm |
 | other red creatures you control get +N/+N. | 1 | Boartusk Liege | shm |
-| other scarecrow creatures you control get +N/+N. | 1 | Reaper King | shm |
 | other white creatures you control get +N/+N. | 1 | Thistledown Liege | shm |
 | prevent all damage target attacking or blocking creature would deal ~. if that creature is black or red, destroy it. | 1 | Inquisitor's Snare | shm |
 | protection from blue, from black, and from red | 1 | Oversoul of Dusk | shm |
@@ -420,11 +418,6 @@
 | {M}{M}{M}: each unblocked creature has base power and toughness N/N until end of turn. | 1 | Inkfathom Witch | shm |
 | ~ can block only creatures with flying. | 1 | Gloomwidow | shm |
 | ~ can't attack unless defending player controls a blue permanent. | 1 | Whimwader | shm |
-| ~ can't be blocked by black creatures. | 1 | Raven's Run Dragoon | shm |
-| ~ can't be blocked by blue creatures. | 1 | Mudbrawler Raiders | shm |
-| ~ can't be blocked by green creatures. | 1 | Wanderbrine Rootcutters | shm |
-| ~ can't be blocked by red creatures. | 1 | Barrenton Cragtreads | shm |
-| ~ can't be blocked by white creatures. | 1 | Sootwalkers | shm |
 | ~ deals N damage divided as you choose among any number of targets, where N is the number of mountains you control as you cast ~. | 1 | Jaws of Stone | shm |
 | ~ deals N damage to each creature without flying if {M} was spent to cast ~ and N damage to each creature with flying if {M} was spent to cast ~. (do both if {M | 1 | Firespout | shm |
 | ~ gets +N/+N as long as a library has twenty or fewer cards in it. | 1 | Isleback Spawn | shm |

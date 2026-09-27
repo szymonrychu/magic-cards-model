@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 9.2% |
-| Works (untested) | 134 | 56.1% |
+| Tested | 23 | 9.6% |
+| Works (untested) | 136 | 56.9% |
 | Partial (unaudited) | 10 | 4.2% |
-| Not working | 73 | 30.5% |
+| Not working | 70 | 29.3% |
 
 ## Cards needing work
 
@@ -77,10 +77,8 @@
 | Scuttlegator | silent | As long as this creature has a +1/+1 counter on it, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seraph of the Scales | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Silhana Wayfinder | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature or land card from among them and put it on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Simic Ascendancy | silent | At the beginning of your upkeep, if this enchantment has twenty or more growth counters on it, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sky Tether | silent | Enchanted creature has defender and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smothering Tithe | silent | Whenever an opponent draws a card, that player may pay {2}. If the player doesn't, you create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sphinx of the Guildpact | silent | Sphinx of the Guildpact is all colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spire Mangler | silent | When this creature enters, target creature you control with flying gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spirit of the Spires | silent | Other creatures you control with flying get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Syndicate Messenger | silent | Afterlife | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -92,7 +90,6 @@
 | Bloodmist Infiltrator | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Code of Constraint | notice | Target creature gets -4/-0 until end of turn. Draw a card. Addendum — If you cast this spell during your main phase, tap that creature and it doesn't untap duri | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Deputy of Detention | notice | When this creature enters, exile target nonland permanent an opponent controls and all other nonland permanents that player controls with the same name as that  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ethereal Absolution | notice | {2}{W}{B}: Exile target card from an opponent's graveyard. If it was a creature card, you create a 1/1 white and black Spirit creature token with flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror March | notice | Whenever a nontoken creature you control enters, flip a coin until you lose a flip. For each flip you won, create a token that's a copy of that creature. Those  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Gates | notice | Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rhythm of the Wild | notice | Nontoken creatures you control have riot. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -152,6 +149,7 @@
 | End-Raze Forerunners | handled | When this creature enters, other creatures you control get +2/+2 and gain vigilance and trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enraged Ceratok | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Essence Capture | handled | Counter target creature spell. Put a +1/+1 counter on up to one target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ethereal Absolution | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expose to Daylight | handled | Destroy target artifact or enchantment. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Faerie Duelist | handled | When this creature enters, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feral Maaka | handled |  |  | Y/Y/- | not_tested |
@@ -210,6 +208,7 @@
 | Senate Griffin | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Senate Guildmage | handled | {W}, {T}: You gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sharktocrab | handled | {2}{G}{U}: Adapt 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Simic Ascendancy | handled | {1}{G}{U}: Put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Simic Locket | handled | {G/U}{G/U}{G/U}{G/U}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skatewing Spy | handled | {5}{U}: Adapt 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skitter Eel | handled | {2}{U}: Adapt 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -247,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Awaken the Erstwhile
 - Consign to the Pit
@@ -268,6 +267,7 @@
 - Shimmer of Possibility
 - Skarrgan Hellkite
 - Skewer the Critics
+- Sphinx of the Guildpact
 - Verity Circle
 - Zegana, Utopian Speaker
 - Zhur-Taa Goblin
@@ -286,7 +286,6 @@
 | as long as you control a dovin planeswalker, ~ gets +N/+N and has vigilance. | 1 | Dovin's Automaton | rna |
 | as long as you control two or more gates, ~ has vigilance and trample. | 1 | Gatebreaker Ram | rna |
 | as long as ~ has a +N/+N counter on it, it can attack as though it didn't have defender. | 1 | Scuttlegator | rna |
-| at the beginning of your upkeep, if ~ has twenty or more growth counters on it, you win the game. | 1 | Simic Ascendancy | rna |
 | at the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. until your next turn, ~ base power becomes twice th | 1 | Amplifire | rna |
 | carnage deals N damage to target opponent. that player discards two cards. | 1 | Carnival // Carnage | rna |
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
@@ -344,12 +343,10 @@
 | {M}{M}, {M}: ~, each creature you control enters with an additional +N/+N counter on it. | 1 | Combine Guildmage | rna |
 | {M}{M}: adapt N. ~ costs {M} less to activate for each instant and sorcery card in your graveyard. | 1 | Pteramander | rna |
 | {M}{M}: exchange control of ~ and target nonland permanent. activate only as a sorcery. | 1 | Eyes Everywhere | rna |
-| {M}{M}{M}: exile target card from an opponent's graveyard. if it was a creature card, you create a N/N white and black spirit creature token with flying. | 1 | Ethereal Absolution | rna |
 | ~ can't be blocked by creature tokens. | 1 | Rubblebelt Runner | rna |
 | ~ deals N damage to any target. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Electrodominance | rna |
 | ~ deals N damage to target creature an opponent controls. then ~ deals N damage to each other creature that player controls if you control a creature with power | 1 | Flames of the Raze-Boar | rna |
 | ~ enters under the control of an opponent of your choice. | 1 | Captive Audience | rna |
-| ~ is all colors. | 1 | Sphinx of the Guildpact | rna |
 | −N: tap all permanents target opponent controls. that player skips their next untap step. | 1 | Dovin, Architect of Law | rna |
 
 ## Notes

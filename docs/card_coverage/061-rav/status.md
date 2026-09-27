@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 8.1% |
-| Works (untested) | 116 | 47.0% |
+| Works (untested) | 118 | 47.8% |
 | Partial (unaudited) | 17 | 6.9% |
-| Not working | 94 | 38.1% |
+| Not working | 92 | 37.2% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Grozoth | silent | When this creature enters, you may search your library for any number of cards that have mana value 9, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Halcyon Glaze | silent | Whenever you cast a creature spell, this enchantment becomes a 4/4 Illusion creature with flying in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hammerfist Giant | silent | {T}: This creature deals 4 damage to each creature without flying and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hour of Reckoning | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Destroy all | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Incite Hysteria | silent | Radiance — Until end of turn, target creature and each other creature that shares a color with it gain "This creature can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Induce Paranoia | silent | Counter target spell. If {B} was spent to cast this spell, that spell's controller mills X cards, where X is the spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loxodon Hierarch | silent | {G}{W}, Sacrifice this creature: Regenerate each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -81,7 +80,6 @@
 | Savra, Queen of the Golgari | silent | Whenever you sacrifice a black creature, you may pay 2 life. If you do, each other player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Screeching Griffin | silent | {R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shadow of Doubt | silent | ({U/B} can be paid with either {U} or {B}.) Players can't search libraries this turn. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Shred Memory | silent | Exile up to four target cards from a single graveyard. Transmute {1}{B}{B} ({1}{B}{B}, Discard this card: Search your library for a card with the same mana valu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sins of the Past | silent | Until end of turn, you may cast target instant or sorcery card from your graveyard without paying its mana cost. If that spell would be put into your graveyard, | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spawnbroker | silent | When this creature enters, you may exchange control of target creature you control and target creature with power less than or equal to that creature's power an | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spectral Searchlight | silent | {T}: Choose a player. That player adds one mana of any color they choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -199,6 +197,7 @@
 | Greater Forgeling | handled | {1}{R}: This creature gets +3/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of Vitu-Ghazi | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Hex | handled | Destroy six target creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hour of Reckoning | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Destroy all | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunted Dragon | handled | When this creature enters, target opponent creates three 2/2 white Knight creature tokens with first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunted Lammasu | handled | When this creature enters, target opponent creates a 4/4 black Horror creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hunted Phantasm | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -232,6 +231,7 @@
 | Sell-Sword Brute | handled | When this creature dies, it deals 2 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sewerdreg | handled | Sacrifice this creature: Exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shambling Shell | handled | Sacrifice this creature: Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Shred Memory | handled | Exile up to four target cards from a single graveyard. Transmute {1}{B}{B} ({1}{B}{B}, Discard this card: Search your library for a card with the same mana valu | the engine reads this text and performs it | Y/-/- | not_tested |
 | Siege Wurm | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Skyknight Legionnaire | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Sparkmage Apprentice | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -304,7 +304,6 @@
 | at the beginning of your upkeep, return enchanted creature and all auras attached to that creature to their owners' hands. | 1 | Mark of Eviction | rav |
 | cast ~ only before attackers are declared. you choose which creatures attack ~. you choose which creatures block ~ and how those creatures block. | 1 | Master Warcraft | rav |
 | choose a card name. target player reveals cards from the top of their library until a card with that name is revealed. if it is, that player puts the rest of th | 1 | Tunnel Vision | rav |
-| convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) destroy all nontoken creature | 1 | Hour of Reckoning | rav |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) prevent all damage that would | 1 | Chant of Vitu-Ghazi | rav |
 | counter target spell unless its controller discards their hand. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana val | 1 | Perplex | rav |
 | counter target spell. if that spell is countered ~, put it into its owner"..."s graveyard. draw a card. | 1 | Remand | rav |
@@ -317,7 +316,6 @@
 | each player shuffles all permanents they own into their library, then reveals that many cards from the top of their library. each player puts all artifact, crea | 1 | Warp World | rav |
 | each player shuffles their graveyard into their library. | 1 | Mnemonic Nexus | rav |
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Faith's Fetters | rav |
-| exile up to four target cards from a single graveyard. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the same mana value as ~,  | 1 | Shred Memory | rav |
 | if a source would deal damage to a permanent or player, it deals half that damage, rounded down, to that permanent or player instead. | 1 | Ghosts of the Innocent | rav |
 | if damage would be dealt to ~, put that many +N/+N counters on it instead. | 1 | Phytohydra | rav |
 | if szadek would deal combat damage to a player, instead put that many +N/+N counters on szadek and that player mills that many cards. | 1 | Szadek, Lord of Secrets | rav |

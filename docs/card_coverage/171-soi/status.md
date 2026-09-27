@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.1% |
-| Works (untested) | 163 | 62.5% |
+| Tested | 17 | 6.5% |
+| Works (untested) | 168 | 64.4% |
 | Partial (unaudited) | 11 | 4.2% |
-| Not working | 71 | 27.2% |
+| Not working | 65 | 24.9% |
 
 ## Cards needing work
 
@@ -40,15 +40,12 @@
 | Equestrian Skill | silent | As long as enchanted creature is a Human, it has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erdwal Illuminator | silent | Whenever you investigate for the first time each turn, investigate an additional time. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ever After | silent | Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and typ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Farbog Revenant | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Flameblade Angel | silent | Whenever a source an opponent controls deals damage to you or a permanent you control, you may have this creature deal 1 damage to that source's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forgotten Creation | silent | At the beginning of your upkeep, you may discard all the cards in your hand. If you do, draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fork in the Road | silent | Search your library for up to two basic land cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | From Under the Floorboards | silent | Madness {X}{B}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Create three tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Furtive Homunculus | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Geier Reach Bandit // Vildin-Pack Alpha | silent | Whenever a Werewolf you control enters, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gone Missing | silent | Put target permanent on top of its owner's library. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hanweir Militia Captain // Westvale Cult Leader | silent | Westvale Cult Leader's power and toughness are each equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness the Storm | silent | Whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvest Hand // Scrounged Scythe | silent | As long as equipped creature is a Human, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hope Against Hope | silent | As long as enchanted creature is a Human, it has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,11 +64,9 @@
 | Neglected Heirloom // Ashmouth Blade | silent | When equipped creature transforms, transform this Equipment. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Not Forgotten | silent | Put target card from a graveyard on your choice of the top or bottom of its owner's library. Create a 1/1 white Spirit creature token with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Olivia, Mobilized for War | silent | Whenever another creature you control enters, you may discard a card. If you do, put a +1/+1 counter on that creature, it gains haste until end of turn, and it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pale Rider of Trostad | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Paranoid Parish-Blade | silent | Delirium — This creature gets +1/+0 and has first strike as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pick the Brain | silent | Target opponent reveals their hand. You choose a nonland card from it and exile that card. Delirium — If there are four or more card types among cards in your g | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pieces of the Puzzle | silent | Reveal the top five cards of your library. Put up to two instant and/or sorcery cards from among them into your hand and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rancid Rats | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Sage of Ancient Lore // Werewolf of Ancient Hunger | silent | Sage of Ancient Lore's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scourge Wolf | silent | Delirium — This creature has double strike as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seasons Past | silent | Return any number of cards with different mana values from your graveyard to your hand. Put Seasons Past on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -82,7 +77,6 @@
 | Startled Awake // Persistent Nightmare | silent | {3}{U}{U}: Put this card from your graveyard onto the battlefield transformed. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Gitrog Monster | silent | At the beginning of your upkeep, sacrifice The Gitrog Monster unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | To the Slaughter | silent | Target player sacrifices a creature or planeswalker of their choice. Delirium — If there are four or more card types among cards in your graveyard, instead that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Uninvited Geist // Unimpeded Trespasser | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vessel of Nascency | silent | {1}{G}, Sacrifice this enchantment: Reveal the top four cards of your library. You may put an artifact, creature, enchantment, land, or planeswalker card from a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Welcome to the Fold | silent | Madness {X}{U}{U} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Gain control of ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wolf of Devil's Breach | silent | Whenever this creature attacks, you may pay {1}{R} and discard a card. If you do, this creature deals damage to target creature or planeswalker equal to the dis | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -149,12 +143,14 @@
 | Ethereal Guidance | handled | Creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Explosive Apparatus | handled | {3}, {T}, Sacrifice this artifact: It deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expose Evil | handled | Tap up to two target creatures. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Farbog Revenant | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Fevered Visions | handled | At the beginning of each player's end step, that player draws a card. If the player is your opponent and has four or more cards in hand, this enchantment deals  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleeting Memories | handled | When this enchantment enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foreboding Ruins | handled | As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsaken Sanctuary | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fortified Village | handled | As this land enters, you may reveal a Forest or Plains card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foul Orchard | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Furtive Homunculus | handled | Skulk | machines/keywords.py | Y/Y/- | not_tested |
 | Game Trail | handled | As this land enters, you may reveal a Mountain or Forest card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gatstaf Arsonists // Gatstaf Ravagers | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Geistblast | handled | Geistblast deals 2 damage to any target. {2}{U}, Exile this card from your graveyard: Copy target instant or sorcery spell you control. You may choose new targe | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -164,6 +160,7 @@
 | Gisa's Bidding | handled | Create two 2/2 black Zombie creature tokens. Madness {2}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put i | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Graf Mole | handled | Whenever you sacrifice a Clue, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grotesque Mutation | handled | Target creature gets +3/+1 and gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hanweir Militia Captain // Westvale Cult Leader | handled | At the beginning of your upkeep, if you control four or more creatures, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunted Cloak | handled | Equipped creature has vigilance, trample, and haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Heir of Falkenrath // Heir to the Night | handled | Discard a card: Transform this creature. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hermit of the Natterknolls // Lone Wolf of the Natterknolls | handled | Whenever an opponent casts a spell during your turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -204,10 +201,12 @@
 | Ongoing Investigation | handled | Whenever one or more creatures you control deal combat damage to a player, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Open the Armory | handled | Search your library for an Aura or Equipment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pack Guardian | handled | When this creature enters, you may discard a land card. If you do, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pale Rider of Trostad | handled | When this creature enters, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pious Evangel // Wayward Disciple | handled | Whenever this creature or another creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Press for Answers | handled | Tap target creature. It doesn't untap during its controller's next untap step. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this tok | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyre Hound | handled | Whenever you cast an instant or sorcery spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quilled Wolf | handled | {5}{G}: This creature gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rancid Rats | handled | Skulk | machines/keywords.py | Y/Y/- | not_tested |
 | Ravenous Bloodseeker | handled | Discard a card: This creature gets +2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reaper of Flight Moonsilver | handled | Delirium — Sacrifice another creature: This creature gets +2/+1 until end of turn. Activate only if there are four or more card types among cards in your gravey | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reduce to Ashes | handled | Reduce to Ashes deals 5 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -248,7 +247,6 @@
 | Thalia's Lieutenant | handled | When this creature enters, put a +1/+1 counter on each other Human you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thornhide Wolves | handled |  |  | Y/Y/- | not_tested |
 | Thraben Gargoyle // Stonewing Antagonizer | handled | {6}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Thraben Inspector | handled | When this creature enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tireless Tracker | handled | Landfall — Whenever a land you control enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Town Gossipmonger // Incited Rabble | handled | {T}, Tap an untapped creature you control: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trail of Evidence | handled | Whenever you cast an instant or sorcery spell, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,6 +256,7 @@
 | Ulvenwald Hydra | handled | Ulvenwald Hydra's power and toughness are each equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Mysteries | handled | Whenever a nontoken creature you control dies, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Uncaged Fury | handled | Target creature gets +1/+1 and gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Uninvited Geist // Unimpeded Trespasser | handled | When this creature deals combat damage to a player, transform it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire Noble | handled |  |  | Y/Y/- | not_tested |
 | Vessel of Ephemera | handled | {2}{W}, Sacrifice this enchantment: Create two 1/1 white Spirit creature tokens with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vessel of Malignity | handled | {1}{B}, Sacrifice this enchantment: Target opponent exiles two cards from their hand. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -275,7 +274,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Always Watching
 - Archangel Avacyn // Avacyn, the Purifier
@@ -293,6 +292,7 @@
 - Prized Amalgam
 - Rabid Bite
 - Slayer's Plate
+- Thraben Inspector
 
 </details>
 
@@ -301,7 +301,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Delirium | 8 | Deathcap Cultivator, Hound of the Farbogs, Inquisitor's Ox, Kessig Dire Swine, Moldgraf Scavenger | soi |
-| skulk | 5 | Farbog Revenant, Furtive Homunculus, Pale Rider of Trostad, Rancid Rats, Uninvited Geist // Unimpeded Trespasser | soi |
 | +N: reveal the top card of your library and put that card into your hand. each opponent loses life equal to its mana value. | 1 | Sorin, Grim Nemesis | soi |
 | as long as enchanted creature is a human, it has first strike. | 1 | Hope Against Hope | soi |
 | as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
@@ -342,7 +341,6 @@
 | target creature deals damage to itself equal to its power. | 1 | Inner Struggle | soi |
 | target opponent reveals their hand. you choose a nonland card from it and exile that card. delirium — if there are four or more card types among cards in your g | 1 | Pick the Brain | soi |
 | target player sacrifices a creature or planeswalker of their choice. delirium — if there are four or more card types among cards in your graveyard, instead that | 1 | To the Slaughter | soi |
-| westvale cult leader's power and toughness are each equal to the number of creatures you control. | 1 | Hanweir Militia Captain // Westvale Cult Leader | soi |
 | when enchanted creature dies, return ~ to the battlefield transformed under your control. | 1 | Skin Invasion // Skin Shedder | soi |
 | when equipped creature transforms, transform ~. | 1 | Neglected Heirloom // Ashmouth Blade | soi |
 | when ~ dies, return it to the battlefield transformed under your control attached to target opponent. | 1 | Accursed Witch // Infectious Curse | soi |

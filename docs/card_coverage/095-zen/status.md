@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 10.0% |
-| Works (untested) | 115 | 52.3% |
-| Partial (unaudited) | 8 | 3.6% |
-| Not working | 75 | 34.1% |
+| Tested | 23 | 10.5% |
+| Works (untested) | 117 | 53.2% |
+| Partial (unaudited) | 7 | 3.2% |
+| Not working | 73 | 33.2% |
 
 ## Cards needing work
 
@@ -41,8 +41,6 @@
 | Eldrazi Monument | silent | At the beginning of your upkeep, sacrifice a creature. If you can't, sacrifice this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Electropotence | silent | Whenever a creature you control enters, you may pay {2}{R}. If you do, that creature deals damage equal to its power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Eternity Vessel | silent | Landfall — Whenever a land you control enters, you may have your life total become the number of charge counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Explorer's Scope | silent | Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Felidar Sovereign | silent | At the beginning of your upkeep, if you have 40 or more life, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gigantiform | silent | Enchanted creature has base power and toughness 8/8 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gomazoa | silent | {T}: Put this creature and each creature it's blocking on top of their owners' libraries, then those players shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grappling Hook | silent | Whenever equipped creature attacks, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -103,7 +101,6 @@
 | Primal Bellow | notice | Target creature gets +1/+1 until end of turn for each Forest you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Figment | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Archmage Ascension | unaudited | As long as this enchantment has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into y | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Blazing Torch | unaudited | Equipped creature can't be blocked by Vampires or Zombies. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Iona, Shield of Emeria | unaudited | Your opponents can't cast spells of the chosen color. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nissa's Chosen | unaudited | If this creature would die, put it on the bottom of its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Oracle of Mul Daya | unaudited | Play with the top card of your library revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -126,7 +123,9 @@
 | Disfigure | handled | Target creature gets -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emeria Angel | handled | Landfall — Whenever a land you control enters, you may create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Emeria, the Sky Ruin | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Explorer's Scope | handled | Whenever equipped creature attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feast of Blood | handled | Cast this spell only if you control two or more Vampires. Destroy target creature. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Felidar Sovereign | handled | At the beginning of your upkeep, if you have 40 or more life, you win the game. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Frontier Guide | handled | {3}{G}, {T}: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gatekeeper of Malakir | handled | When this creature enters, if it was kicked, target player sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Geyser Glider | handled | Landfall — Whenever a land you control enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -228,11 +227,12 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Archive Trap
 - Arid Mesa
 - Blade of the Bloodchief
+- Blazing Torch
 - Burst Lightning
 - Caller of Gales
 - Expedition Map
@@ -266,7 +266,6 @@
 | as long as ~ has seven or more quest counters on it, creatures you control get +N/+N. | 1 | Beastmaster Ascension | zen |
 | as long as ~ has six or more quest counters on it, if you would draw a card, you may instead search your library for a card, put that card into your hand, then  | 1 | Archmage Ascension | zen |
 | as long as ~ is equipped, it has double strike. | 1 | Kor Duelist | zen |
-| at the beginning of your upkeep, if you have N or more life, you win the game. | 1 | Felidar Sovereign | zen |
 | at the beginning of your upkeep, sacrifice a creature. if you can't, sacrifice ~. | 1 | Eldrazi Monument | zen |
 | at the beginning of your upkeep, sacrifice ~ unless you return a land you control to its owner's hand. | 1 | Living Tsunami | zen |
 | at the beginning of your upkeep, you lose N life unless an opponent has N or less life. | 1 | Vampire Lacerator | zen |
@@ -276,7 +275,6 @@
 | destroy target land. its controller discards a card. | 1 | Desecrated Earth | zen |
 | enchanted creature has base power and toughness N/N and has trample. | 1 | Gigantiform | zen |
 | enchanted land is an island. | 1 | Spreading Seas | zen |
-| equipped creature can't be blocked by vampires or zombies. | 1 | Blazing Torch | zen |
 | equipped creature has nonbasic landwalk. | 1 | Trailblazer's Boots | zen |
 | gain control of target creature until end of turn. put a +N/+N counter on it and untap it. that creature gains haste until end of turn. (it can attack and {M} ~ | 1 | Mark of Mutiny | zen |
 | if an opponent drew three or more cards ~, you may pay {M} rather than pay ~ mana cost. ~ deals damage to target player equal to the number of cards in that pla | 1 | Runeflare Trap | zen |
@@ -310,7 +308,6 @@
 | whenever a spell or ability you control counters a spell, you may create a N/N blue merfolk creature token. | 1 | Lullmage Mentor | zen |
 | whenever an opponent shuffles their library, you may put a +N/+N counter on ~. | 1 | Cosi's Trickster | zen |
 | whenever enchanted creature deals combat damage to a player, double its controller's life total. | 1 | Celestial Mantle | zen |
-| whenever equipped creature attacks, look at the top card of your library. if it's a land card, you may put it onto the battlefield tapped. | 1 | Explorer's Scope | zen |
 | whenever equipped creature attacks, you may have target creature block it ~ if able. | 1 | Grappling Hook | zen |
 | whenever lorthos attacks, you may pay {M}. if you do, tap up to eight target permanents. those permanents don"..." next untap steps. | 1 | Lorthos, the Tidemaker | zen |
 | whenever ~ deals damage to an opponent, sacrifice a land. | 1 | Ruinous Minotaur | zen |

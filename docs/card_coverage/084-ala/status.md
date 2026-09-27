@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 4.0% |
-| Works (untested) | 137 | 61.4% |
-| Partial (unaudited) | 9 | 4.0% |
-| Not working | 68 | 30.5% |
+| Tested | 10 | 4.5% |
+| Works (untested) | 138 | 61.9% |
+| Partial (unaudited) | 8 | 3.6% |
+| Not working | 67 | 30.0% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Court Archers | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Covenant of Minds | silent | Reveal the top three cards of your library. Target opponent may choose to put those cards into your hand. If they don't, put those cards into your graveyard and | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cradle of Vitality | silent | Whenever you gain life, you may pay {1}{W}. If you do, put a +1/+1 counter on target creature for each 1 life you gained. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Crucible of Fire | silent | Dragon creatures you control get +3/+3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cruel Ultimatum | silent | Target opponent sacrifices a creature of their choice, discards three cards, then loses 5 life. You return a creature card from your graveyard to your hand, dra | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dawnray Archer | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Death Baron | silent | Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -100,7 +99,6 @@
 | Lich's Mirror | unaudited | If you would lose the game, instead shuffle your hand, your graveyard, and all permanents you own into your library, then draw seven cards and your life total b | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mindlock Orb | unaudited | Players can't search libraries. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Qasali Ambusher | unaudited | If a creature is attacking you and you control a Forest and a Plains, you may cast this creature without paying its mana cost and as though it had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Salvage Titan | unaudited | You may sacrifice three artifacts rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sedris, the Traitor King | unaudited | Each creature card in your graveyard has unearth {2}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Stoic Angel | unaudited | Players can't untap more than one creature during their untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Agony Warp | handled | Target creature gets -3/-0 until end of turn. Target creature gets -0/-3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -123,6 +121,7 @@
 | Coma Veil | handled | Enchanted permanent doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Corpse Connoisseur | handled | When this creature enters, you may search your library for a creature card, put that card into your graveyard, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Courier's Capsule | handled | {1}{U}, {T}, Sacrifice this artifact: Draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Crucible of Fire | handled | Dragon creatures you control get +3/+3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crumbling Necropolis | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cunning Lethemancer | handled | At the beginning of your upkeep, each player discards a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cylian Elf | handled |  |  | Y/-/- | not_tested |
@@ -244,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Angelsong
 - Bone Splinters
@@ -254,6 +253,7 @@
 - Gustrider Exuberant
 - Punish Ignorance
 - Relic of Progenitus
+- Salvage Titan
 - Thunder-Thrash Elder
 
 </details>
@@ -274,7 +274,6 @@
 | choose five permanents you control. for each of those permanents, you may search your library for a card with the same name as that permanent. put those cards o | 1 | Clarion Ultimatum | ala |
 | count the number of cards in your library. your life total becomes that number. | 1 | Invincible Hymn | ala |
 | counter target spell that targets you or a permanent you control. draw a card. | 1 | Hindering Light | ala |
-| dragon creatures you control get +N/+N. | 1 | Crucible of Fire | ala |
 | each creature card in your graveyard has unearth {M}{M}. | 1 | Sedris, the Traitor King | ala |
 | each player who has cast a nonartifact spell ~ can't cast additional nonartifact spells. | 1 | Ethersworn Canonist | ala |
 | enchanted land is a mountain, forest, and plains. | 1 | Lush Growth | ala |
@@ -308,7 +307,6 @@
 | whenever you cast a spell, ~ gets +N/+N until end of turn, where N is that spell's mana value. | 1 | Manaplasm | ala |
 | whenever you gain life, you may pay {M}{M}. if you do, put a +N/+N counter on target creature for each N life you gained. | 1 | Cradle of Vitality | ala |
 | you gain life equal to target creature's power. | 1 | Soul's Grace | ala |
-| you may sacrifice three artifacts rather than pay ~ mana cost. | 1 | Salvage Titan | ala |
 | {M}, sacrifice ~: destroy all permanents except for artifacts and lands. activate only during your upkeep. | 1 | Scourglass | ala |
 | {M}, {M}: prevent the next N damage that would be dealt to you ~. | 1 | Esper Battlemage | ala |
 | {M}, {M}: ~ deals damage equal to its power to target creature. that creature deals damage equal to its power to ~. | 1 | Vein Drinker | ala |

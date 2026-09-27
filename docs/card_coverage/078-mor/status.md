@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 7.4% |
-| Works (untested) | 54 | 36.5% |
+| Tested | 12 | 8.1% |
+| Works (untested) | 55 | 37.2% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 76 | 51.4% |
+| Not working | 74 | 50.0% |
 
 ## Cards needing work
 
@@ -39,13 +39,12 @@
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fendeep Summoner | silent | {T}: Up to two target Swamps each become 3/5 Treefolk Warrior creatures in addition to their other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fertilid | silent | {1}{G}, Remove a +1/+1 counter from this creature: Target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Festercreep | silent | {1}{B}, Remove a +1/+1 counter from this creature: All other creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fire Juggler | silent | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Floodchaser | silent | {U}, Remove a +1/+1 counter from this creature: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Forfend | silent | Prevent all damage that would be dealt to creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gilt-Leaf Archdruid | silent | Tap seven untapped Druids you control: Gain control of all lands target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graceful Reprieve | silent | When target creature dies this turn, return that card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Greatbow Doyen | silent | Other Archer creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Greatbow Doyen | silent | Whenever an Archer you control deals damage to a creature, that Archer deals that much damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire Thief | silent | Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hunting Triad | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ink Dissolver | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +58,6 @@
 | Mind Shatter | silent | Target player discards X cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mosquito Guard | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Mudbutton Clanger | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mutavault | silent | {1}: This land becomes a 2/2 creature with all creature types until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nevermaker | silent | When this creature leaves the battlefield, put target nonland permanent on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightshade Schemers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noggin Whack | silent | Prowl {1}{B} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Target player reveals three cards from their  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -123,6 +121,7 @@
 | Diviner's Wand | handled | Equipped creature has "Whenever you draw a card, this creature gets +1/+1 and gains flying until end of turn" and "{4}: Draw a card." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Everbark Shaman | handled | {T}, Exile a Treefolk card from your graveyard: Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fencer Clique | handled | {U}: Put this creature on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Festercreep | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feudkiller's Verdict | handled | You gain 10 life. Then if you have more life than an opponent, create a 5/5 white Giant Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Final-Sting Faerie | handled | When this creature enters, destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Game-Trail Changeling | handled | Trample | machines/combat.py | Y/-/- | not_tested |
@@ -167,7 +166,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Deglamer
 - Distant Melody
@@ -176,6 +175,7 @@
 - Maralen of the Mornsong
 - Meadowboon
 - Morsel Theft
+- Mutavault
 - Negate
 - Scapeshift
 - Stenchskipper
@@ -213,7 +213,6 @@
 | kithkin spells and soldier spells you cast cost {M} less to cast. | 1 | Ballyrush Banneret | mor |
 | knight creatures you control have double strike. | 1 | Kinsbaile Cavalier | mor |
 | merfolk spells and wizard spells you cast cost {M} less to cast. | 1 | Stonybrook Banneret | mor |
-| other archer creatures you control get +N/+N. | 1 | Greatbow Doyen | mor |
 | prevent all damage that would be dealt to creatures ~. | 1 | Forfend | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) create N N/N black faerie rogue creature tokens with flying, | 1 | Notorious Throng | mor |
 | prowl {M}{M} (you may cast ~ its prowl cost if you dealt combat damage to a player ~ with a rogue.) search target opponent's library for an instant or sorcery c | 1 | Knowledge Exploitation | mor |
@@ -238,14 +237,13 @@
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
 | whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |
 | whenever a goblin or rogue you control deals combat damage to a player, if ~ is in your graveyard, you may return ~ to your hand. | 1 | Auntie's Snitch | mor |
+| whenever an archer you control deals damage to a creature, that archer deals that much damage to that creature's controller. | 1 | Greatbow Doyen | mor |
 | whenever another treefolk creature you control enters, you may gain life equal to that creature's toughness. | 1 | Orchard Warden | mor |
 | whenever ~ attacks, you may put a soldier creature card from your hand onto the battlefield tapped and attacking. | 1 | Preeminent Captain | mor |
 | whenever ~ becomes blocked, clash with an opponent. if you win, ~ deals N damage to each creature blocking it. | 1 | Fire Juggler | mor |
 | whenever ~ becomes tapped, exile the top three cards of target opponent's library face down. | 1 | Grimoire Thief | mor |
 | {M}, remove a +N/+N counter from ~: target land becomes an island until end of turn. | 1 | Floodchaser | mor |
 | {M}: up to two target swamps each become N/N treefolk warrior creatures in addition to their other types until end of turn. | 1 | Fendeep Summoner | mor |
-| {M}: ~ becomes a N/N creature with all creature types until end of turn. it's still a land. | 1 | Mutavault | mor |
-| {M}{M}, remove a +N/+N counter from ~: all other creatures get -N/-N until end of turn. | 1 | Festercreep | mor |
 | {M}{M}, remove a +N/+N counter from ~: target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. | 1 | Fertilid | mor |
 | {M}{M}, {M}: search your library for an equipment card, put it onto the battlefield, attach it to a creature you control, then shuffle. | 1 | Stonehewer Giant | mor |
 | {M}{M}, {M}: ~ deals N damage to any target and N damage to itself, where N is the number of elemental cards in your graveyard. | 1 | Sunflare Shaman | mor |

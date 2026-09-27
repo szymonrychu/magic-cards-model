@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 59 | 41.5% |
+| Works (untested) | 61 | 43.0% |
 | Partial (unaudited) | 15 | 10.6% |
-| Not working | 57 | 40.1% |
+| Not working | 55 | 38.7% |
 
 ## Cards needing work
 
@@ -47,13 +47,11 @@
 | Jwari Shapeshifter | silent | You may have this creature enter as a copy of any Ally creature on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kazuul, Tyrant of the Cliffs | silent | Whenever a creature an opponent controls attacks, if you're the defending player, create a 3/3 red Ogre creature token unless that creature's controller pays {3 | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kitesail Apprentice | silent | As long as this creature is equipped, it gets +1/+1 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Lavaclaw Reaches | silent | {1}{B}{R}: Until end of turn, this land becomes a 2/2 black and red Elemental creature with "{X}: This creature gets +X/+0 until end of turn." It's still a land | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lightkeeper of Emeria | silent | When this creature enters, you gain 2 life for each time it was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mire's Toll | silent | Target player reveals a number of cards from their hand equal to the number of Swamps you control. You choose one of them. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Novablast Wurm | silent | Whenever this creature attacks, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for Ula's Temple | silent | At the beginning of your upkeep, you may look at the top card of your library. If it's a creature card, you may reveal it and put a quest counter on this enchan | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for the Nihil Stone | silent | At the beginning of each opponent's upkeep, if that player has no cards in hand and this enchantment has two or more quest counters on it, you may have that pla | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Raging Ravine | silent | {2}{R}{G}: Until end of turn, this land becomes a 3/3 red and green Elemental creature with "Whenever this creature attacks, put a +1/+1 counter on it." It's st | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Refraction Trap | silent | If an opponent cast a red instant or sorcery spell this turn, you may pay {W} rather than pay this spell's mana cost. Prevent the next 3 damage that a source of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rumbling Aftershocks | silent | Whenever you cast a kicked spell, you may have this enchantment deal damage to any target equal to the number of times that spell was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Selective Memory | silent | Search your library for any number of nonland cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -130,6 +128,7 @@
 | Khalni Garden | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kitesail | handled | Equipped creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kor Firewalker | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Lavaclaw Reaches | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Leatherback Baloth | handled |  |  | Y/-/- | not_tested |
 | Marsh Threader | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Marshal's Anthem | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -138,6 +137,7 @@
 | Permafrost Trap | handled | If an opponent had a green creature enter the battlefield under their control this turn, you may pay {U} rather than pay this spell's mana cost. Tap up to two t | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pilgrim's Eye | handled | When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pulse Tracker | handled | Whenever this creature attacks, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Raging Ravine | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razor Boomerang | handled | Equipped creature has "{T}, Unattach Razor Boomerang: It deals 1 damage to any target. Return Razor Boomerang to its owner's hand." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rest for the Weary | handled | Target player gains 4 life. Landfall — If you had a land enter the battlefield under your control this turn, that player gains 8 life instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ruin Ghost | handled | {W}, {T}: Exile target land you control, then return it to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -239,8 +239,6 @@
 | {M}: put target creature card from an opponent's graveyard onto the battlefield under your control if its mana value is less than or equal to the number of alli | 1 | Agadeem Occultist | wwk |
 | {M}: target land you control becomes an N/N elemental creature until end of turn, where N is the number of allies you control. it's still a land. | 1 | Vastwood Animist | wwk |
 | {M}: target player gains control of target artifact, creature, or land you control. | 1 | Bazaar Trader | wwk |
-| {M}{M}{M}: until end of turn, ~ becomes a N/N black and red elemental creature with "..." it's still a land. | 1 | Lavaclaw Reaches | wwk |
-| {M}{M}{M}: until end of turn, ~ becomes a N/N red and green elemental creature with "..." it's still a land. | 1 | Raging Ravine | wwk |
 | ~ costs {M} less to cast for each attacking creature. create a N/N colorless construct artifact creature token with trample. exile it at the beginning of your n | 1 | Stone Idol Trap | wwk |
 | ~ deals N damage to each creature, where N is the number of creatures on the battlefield. | 1 | Chain Reaction | wwk |
 | ~ enters with a charge counter on it for each time it was kicked. | 1 | Everflowing Chalice | wwk |

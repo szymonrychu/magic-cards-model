@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 21.6% |
+| Tested | 26 | 22.4% |
 | Works (untested) | 60 | 51.7% |
-| Partial (unaudited) | 5 | 4.3% |
+| Partial (unaudited) | 4 | 3.4% |
 | Not working | 26 | 22.4% |
 
 ## Cards needing work
@@ -55,7 +55,6 @@
 | Consecrate Land | unaudited | Enchanted land has indestructible and can't be enchanted by other Auras. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fear | unaudited | Enchanted creature has fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Invisibility | unaudited | Enchanted creature can't be blocked except by Walls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Juggernaut | unaudited | This creature can't be blocked by Walls. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Lure | unaudited | All creatures able to block enchanted creature do so. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Air Elemental | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Black Knight | handled | First strike | machines/combat.py | Y/-/- | not_tested |
@@ -121,7 +120,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Birds of Paradise
 - Clone
@@ -137,6 +136,7 @@
 - Hill Giant
 - Icy Manipulator
 - Island
+- Juggernaut
 - Karma
 - Lightning Bolt
 - Llanowar Elves
@@ -181,7 +181,6 @@
 | {M}: the next time a white source of your choice would deal damage to you ~, prevent that damage. | 1 | Circle of Protection: White | lea |
 | {M}: ~ becomes a N/N golem artifact creature until end of combat. activate only during combat. | 1 | Jade Statue | lea |
 | {M}: ~ gets +N/+N until end of turn. if ~ has been activated four or more times ~, sacrifice ~ at the beginning of the next end step. | 1 | Dragon Whelp | lea |
-| ~ can't be blocked by walls. | 1 | Juggernaut | lea |
 | ~ deals N damage to any target. if it"..."t be regenerated ~, and if it would die ~, exile it instead. | 1 | Disintegrate | lea |
 | ~ deals N damage to each creature with flying and each player. | 1 | Hurricane | lea |
 | ~ deals N damage to each creature without flying and each player. | 1 | Earthquake | lea |

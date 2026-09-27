@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 4.9% |
-| Works (untested) | 67 | 46.9% |
-| Partial (unaudited) | 11 | 7.7% |
-| Not working | 58 | 40.6% |
+| Tested | 9 | 6.3% |
+| Works (untested) | 68 | 47.6% |
+| Partial (unaudited) | 10 | 7.0% |
+| Not working | 56 | 39.2% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Lord of Extinction | silent | Lord of Extinction's power and toughness are each equal to the number of cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mage Slayer | silent | Whenever equipped creature attacks, it deals damage equal to its power to the player or planeswalker it's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Marrow Chomper | silent | When this creature enters, you gain 2 life for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mayael's Aria | silent | At the beginning of your upkeep, put a +1/+1 counter on each creature you control if you control a creature with power 5 or greater. Then you gain 10 life if yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Funeral | silent | Target opponent reveals cards from the top of their library until four land cards are revealed. That player puts all cards revealed this way into their graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Morbid Bloom | silent | Exile target creature card from a graveyard, then create X 1/1 green Saproling creature tokens, where X is the exiled card's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Naya Hushblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has shroud. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -79,13 +78,11 @@
 | Unscythe, Killer of Kings | silent | Whenever a creature dealt damage by equipped creature this turn dies, you may exile that card. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vedalken Ghoul | silent | Whenever this creature becomes blocked, defending player loses 4 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aven Mimeomancer | notice | At the beginning of your upkeep, you may put a feather counter on target creature. If you do, that creature has base power and toughness 3/1 and has flying for  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Maelstrom Pulse | notice | Destroy target nonland permanent and all other permanents with the same name as that permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Slave of Bolas | notice | Gain control of target creature. Untap that creature. It gains haste until end of turn. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vengeful Rebirth | notice | Return target card from your graveyard to your hand. If you return a nonland card to your hand this way, Vengeful Rebirth deals damage equal to that card's mana | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wargate | notice | Search your library for a permanent card with mana value X or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Zealous Persecution | notice | Until end of turn, creatures you control get +1/+1 and creatures your opponents control get -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Arsenal Thresher | unaudited | As this creature enters, you may reveal any number of other artifact cards from your hand. This creature enters with a +1/+1 counter on it for each card reveale | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Dragon Appeasement | unaudited | Skip your draw step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fieldmist Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Firewild Borderpost | unaudited | You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mask of Riddles | unaudited | Equipped creature has fear. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -134,6 +131,7 @@
 | Madrush Cyclops | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magefire Wings | handled | Enchanted creature gets +2/+0 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Marisi's Twinclaws | handled | Double strike | machines/combat.py | Y/-/- | not_tested |
+| Mayael's Aria | handled | At the beginning of your upkeep, put a +1/+1 counter on each creature you control if you control a creature with power 5 or greater. Then you gain 10 life if yo | the engine reads this text and performs it | Y/-/- | not_tested |
 | Messenger Falcons | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Monstrous Carabid | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mycoid Shepherd | handled | Whenever this creature or another creature you control with power 5 or greater dies, you may gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,11 +164,13 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>9 cards</summary>
 
 - Architects of Will
 - Bloodbraid Elf
+- Dragon Appeasement
 - Maelstrom Nexus
+- Maelstrom Pulse
 - Predatory Advantage
 - Putrid Leech
 - Sigil Captain
@@ -193,14 +193,12 @@
 | as ~ enters, you may reveal any number of other artifact cards from your hand. ~ enters with a +N/+N counter on it for each card revealed ~. | 1 | Arsenal Thresher | arb |
 | at the beginning of each upkeep, create a N/N red and green dragon creature token with flying and devour N. | 1 | Dragon Broodmother | arb |
 | at the beginning of your upkeep, choose target opponent. ~, that player can"..."s hand ~. | 1 | Sen Triplets | arb |
-| at the beginning of your upkeep, put a +N/+N counter on each creature you control if you control a creature with power N or greater. then you gain N life if you | 1 | Mayael's Aria | arb |
 | at the beginning of your upkeep, you may put a feather counter on target creature. if you do, that creature has base power and toughness N/N and has flying for  | 1 | Aven Mimeomancer | arb |
 | choose a nonland card name. target player reveals their hand. ~ deals N damage to that player for each card with the chosen name revealed ~. search that player' | 1 | Thought Hemorrhage | arb |
 | counter up to two target spells. | 1 | Double Negative | arb |
 | create N N/N white bird soldier creature tokens with flying, where N is the number of attacking creatures. | 1 | Flurry of Wings | arb |
 | creature spells you control with power N or greater can't be countered. | 1 | Spellbreaker Behemoth | arb |
 | destroy all blocking creatures and all blocked creatures. | 1 | Fight to the Death | arb |
-| destroy target nonland permanent and all other permanents with the same name as that permanent. | 1 | Maelstrom Pulse | arb |
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
 | during your turn, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
@@ -213,7 +211,6 @@
 | return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | 1 | Soulquake | arb |
 | return target card from your graveyard to your hand. if you return a nonland card to your hand ~, ~ deals damage equal to that card's mana value to any target.  | 1 | Vengeful Rebirth | arb |
 | search your library for a permanent card with mana value N or less, put it onto the battlefield, then shuffle. | 1 | Wargate | arb |
-| skip your draw step. | 1 | Dragon Appeasement | arb |
 | target opponent reveals cards from the top of their library until four land cards are revealed. that player puts all cards revealed ~ into their graveyard. | 1 | Mind Funeral | arb |
 | until end of turn, creatures you control get +N/+N and creatures your opponents control get -N/-N. | 1 | Zealous Persecution | arb |
 | when enchanted creature becomes the target of a spell or ability, exile that creature. | 1 | Crystallization | arb |

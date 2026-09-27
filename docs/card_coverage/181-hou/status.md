@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 10 | 5.5% |
-| Works (untested) | 88 | 48.1% |
-| Partial (unaudited) | 6 | 3.3% |
-| Not working | 79 | 43.2% |
+| Tested | 11 | 6.0% |
+| Works (untested) | 89 | 48.6% |
+| Partial (unaudited) | 5 | 2.7% |
+| Not working | 78 | 42.6% |
 
 ## Cards needing work
 
@@ -56,13 +56,12 @@
 | Kefnet's Last Word | silent | Gain control of target artifact, creature, or enchantment. Lands you control don't untap during your next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Khenra Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Khenra Scrapper | silent | You may exert this creature as it attacks. When you do, it gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Leave // Chance | silent | Return any number of target permanents you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Leave // Chance | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Majestic Myriarch | silent | Majestic Myriarch's power and toughness are each equal to twice the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Manticore Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Merciless Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Neheb, the Eternal | silent | At the beginning of each of your postcombat main phases, add {R} for each 1 life your opponents have lost this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nicol Bolas, God-Pharaoh | silent | +1: Each opponent exiles two cards from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Nicol Bolas, the Deceiver | silent | +3: Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nimble Obstructionist | silent | When you cycle this card, counter target activated or triggered ability you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Encouragement | silent | Search your library and graveyard for a card named Forest, a card named Brambleweft Behemoth, and a card named Nissa, Genesis Mage. Reveal those cards, put them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Genesis Mage | silent | +2: Untap up to two target creatures and up to two target lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -110,7 +109,6 @@
 | Djeru, With Eyes Open | unaudited | If a source would deal damage to a planeswalker you control, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oketra's Avenger | unaudited | You may exert this creature as it attacks. When you do, prevent all combat damage that would be dealt to it this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Overwhelming Splendor | unaudited | Creatures enchanted player controls lose all abilities and have base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Solemnity | unaudited | Players can't get counters. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Accursed Horde | handled | {1}{B}: Target attacking Zombie gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aerial Guide | handled | Whenever this creature attacks, another target attacking creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ambuscade | handled | Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -168,6 +166,7 @@
 | Mirage Mirror | handled | {2}: This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moaning Wall | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
 | Mummy Paramount | handled | Whenever another Zombie you control enters, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Nicol Bolas, the Deceiver | handled | +3: Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oasis Ritualist | handled | Exert | machines/keywords.py | Y/Y/- | not_tested |
 | Obelisk Spider | handled | Whenever this creature deals combat damage to a creature, put a -1/-1 counter on that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ominous Sphinx | handled | Whenever you cycle or discard a card, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -203,7 +202,7 @@
 ## Fully supported
 
 <details>
-<summary>10 cards</summary>
+<summary>11 cards</summary>
 
 - Abrade
 - Desert of the True
@@ -213,6 +212,7 @@
 - Nissa's Defeat
 - Pride Sovereign
 - Sand Strangler
+- Solemnity
 - Striped Riverwinder
 - Wall of Forgotten Pharaohs
 
@@ -223,11 +223,10 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | afflict | 6 | Eternal of Harsh Truths, Frontline Devastator, Khenra Eternal, Manticore Eternal, Merciless Eternal | hou |
-| aftermath | 5 | Appeal // Authority, Claim // Fame, Consign // Oblivion, Farm // Market, Grind // Dust | hou |
+| aftermath | 6 | Appeal // Authority, Claim // Fame, Consign // Oblivion, Farm // Market, Grind // Dust | hou |
 | eternalize | 4 | Adorned Pouncer, Champion of Wits, Proven Combatant, Steadfast Sentinel | hou |
 | Choose one | 1 | Doomfall | hou |
 | +N: each opponent exiles two cards from their hand. | 1 | Nicol Bolas, God-Pharaoh | hou |
-| +N: each opponent loses N life unless that player sacrifices a nonland permanent of their choice or discards a card. | 1 | Nicol Bolas, the Deceiver | hou |
 | +N: untap up to two target creatures and up to two target lands. | 1 | Nissa, Genesis Mage | hou |
 | aftermath (cast ~ only from your graveyard. then exile it.) each player shuffles their graveyard into their library. | 1 | Struggle // Survive | hou |
 | aftermath (cast ~ only from your graveyard. then exile it.) look at the top card of your library. you may put it onto the battlefield if it"..."t, put it into y | 1 | Reason // Believe | hou |
@@ -252,11 +251,9 @@
 | exile target white creature that's attacking or blocking. if it was a gideon planeswalker, you gain N life. | 1 | Gideon's Defeat | hou |
 | gain control of target artifact, creature, or enchantment. lands you control don't untap during your next untap step. | 1 | Kefnet's Last Word | hou |
 | if a source would deal damage to a planeswalker you control, prevent N of that damage. | 1 | Djeru, With Eyes Open | hou |
-| players can't get counters. | 1 | Solemnity | hou |
 | put a -N/-N counter on target creature. ~ deals N damage to that creature's controller. | 1 | Blur of Blades | hou |
 | put three -N/-N counters on target creature. its controller loses N life unless they sacrifice another nonland permanent of their choice or discard a card. | 1 | Torment of Venom | hou |
 | repeat the following process N times. each opponent loses N life unless that player sacrifices a nonland permanent of their choice or discards a card. | 1 | Torment of Hailfire | hou |
-| return any number of target permanents you own to your hand. | 1 | Leave // Chance | hou |
 | search your library and graveyard for a card named forest, a card named brambleweft behemoth, and a card named nissa, genesis mage. reveal those cards, put them | 1 | Nissa's Encouragement | hou |
 | search your library for up to N creature cards with different names that each have mana value N, reveal them, put them into your hand, then shuffle. | 1 | Uncage the Menagerie | hou |
 | shuffle your library, then exile the top four cards. you may cast any number of spells with mana value N or less from among them without paying their mana costs | 1 | Hazoret's Undying Fury | hou |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 5 | 4.7% |
-| Works (untested) | 57 | 53.3% |
+| Works (untested) | 58 | 54.2% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 43 | 40.2% |
+| Not working | 42 | 39.3% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Cathedral of War | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Chandra's Fury | silent | Chandra's Fury deals 4 damage to target player or planeswalker and 1 damage to each creature that player or that planeswalker's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Courtly Provocateur | silent | {T}: Target creature blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crippling Blight | silent | Enchanted creature gets -1/-1 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Disciple of Bolas | silent | When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskmantle Prowler | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -82,6 +81,7 @@
 | Captain's Call | handled | Create three 1/1 white Soldier creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chronomaton | handled | {1}, {T}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cleaver Riot | handled | Creatures you control gain double strike until end of turn. (They deal both first-strike and regular combat damage.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Courtly Provocateur | handled | {T}: Target creature attacks this turn if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cower in Fear | handled | Creatures your opponents control get -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Craterize | handled | Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crusader of Odric | handled | Crusader of Odric's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -172,7 +172,6 @@
 | you may cast green creature spells as though they had flash. | 1 | Yeva, Nature's Herald | m13 |
 | {M}, {M}, sacrifice ~: search your library for an island card, a swamp card, and a mountain card. reveal those cards, put them into your hand, then shuffle. | 1 | Gem of Becoming | m13 |
 | {M}: regenerate equipped creature. | 1 | Ring of Xathrid | m13 |
-| {M}: target creature blocks ~ if able. | 1 | Courtly Provocateur | m13 |
 | {M}{M}, {M}: put a petrification counter on target creature. it gains defender and becomes a colorless artifact in addition to its other types. its activated ab | 1 | Xathrid Gorgon | m13 |
 | {M}{M}, {M}: put ~ and target creature on top of their owners' libraries, then those players shuffle their libraries. | 1 | Void Stalker | m13 |
 | ~ deals N damage to each creature without flying and each planeswalker. | 1 | Magmaquake | m13 |

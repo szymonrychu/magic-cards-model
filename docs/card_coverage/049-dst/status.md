@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 2.5% |
+| Tested | 7 | 4.3% |
 | Works (untested) | 74 | 45.7% |
-| Partial (unaudited) | 11 | 6.8% |
-| Not working | 73 | 45.1% |
+| Partial (unaudited) | 10 | 6.2% |
+| Not working | 71 | 43.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aether Snap | silent | Remove all counters from all permanents and exile all tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aether Vial | silent | {T}: You may put a creature card with mana value equal to the number of charge counters on this artifact from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Bruiser | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arcbound Crusher | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -50,7 +49,6 @@
 | Drooling Ogre | silent | Whenever a player casts an artifact spell, that player gains control of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dross Golem | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eater of Days | silent | When this creature enters, you skip your next two turns. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Echoing Truth | silent | Return target nonland permanent and all other permanents with the same name as that permanent to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Emissary of Despair | silent | Whenever this creature deals combat damage to a player, that player loses 1 life for each artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Emissary of Hope | silent | Whenever this creature deals combat damage to a player, you gain 1 life for each artifact that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -108,7 +106,6 @@
 | Psychic Overload | unaudited | Enchanted permanent has "Discard two artifact cards: Untap this permanent." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Serum Powder | unaudited | Any time you could mulligan and this card is in your hand, you may exile all the cards from your hand, then draw that many cards. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shield of Kaldra | unaudited | Equipment named Sword of Kaldra, Shield of Kaldra, and Helm of Kaldra have indestructible. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Tanglewalker | unaudited | Each creature you control can't be blocked as long as defending player controls an artifact land. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Whispersilk Cloak | unaudited | Equipped creature can't be blocked and has shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ageless Entity | handled | Whenever you gain life, put that many +1/+1 counters on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Feather | handled | Whenever a player casts a white spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -188,11 +185,14 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>7 cards</summary>
 
+- Aether Snap
 - Echoing Courage
+- Echoing Truth
 - Furnace Dragon
 - Sword of Fire and Ice
+- Tanglewalker
 - Trinisphere
 
 </details>
@@ -225,7 +225,6 @@
 | destroy target equipment. if that equipment was attached to a creature, ~ deals N damage to that creature. | 1 | Unforge | dst |
 | destroy target nonblack creature. it can't be regenerated. you gain control of all equipment that were attached to it. (~ lasts indefinitely.) | 1 | Murderous Spoils | dst |
 | draw two cards, then discard a card. then if an opponent has more cards in hand than you, return ~ to its owner's hand. | 1 | Pulse of the Grid | dst |
-| each creature you control can't be blocked as long as defending player controls an artifact land. | 1 | Tanglewalker | dst |
 | each player loses N life, discards N cards, sacrifices N creatures of their choice, then sacrifices N lands of their choice. | 1 | Death Cloud | dst |
 | enchanted permanent has "..." | 1 | Psychic Overload | dst |
 | equipment named sword of kaldra, ~, and helm of kaldra have indestructible. | 1 | Shield of Kaldra | dst |
@@ -238,9 +237,7 @@
 | prevent the next N damage that would be dealt to target creature ~. for each N damage prevented ~, put a +N/+N counter on that creature. | 1 | Test of Faith | dst |
 | put two +N/+N counters on target creature and two +N/+N counters on another target creature. | 1 | Stand Together | dst |
 | put two target artifacts on top of their owners' libraries. | 1 | Rebuking Ceremony | dst |
-| remove all counters from all permanents and exile all tokens. | 1 | Aether Snap | dst |
 | return all artifacts you control to their owner's hand. | 1 | Retract | dst |
-| return target nonland permanent and all other permanents with the same name as that permanent to their owners' hands. | 1 | Echoing Truth | dst |
 | target creature gets +N/+N until end of turn for each artifact you control. | 1 | Hunger of the Nim | dst |
 | target opponent chooses an artifact card in their graveyard. put that card onto the battlefield under your control. | 1 | Scrounge | dst |
 | target player loses N life for each tapped artifact they control. | 1 | Burden of Greed | dst |

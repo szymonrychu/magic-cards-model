@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.0% |
-| Works (untested) | 115 | 44.7% |
+| Tested | 20 | 7.8% |
+| Works (untested) | 116 | 45.1% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 107 | 41.6% |
+| Not working | 104 | 40.5% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Contact Other Plane | silent | Roll a d20. 1—9 \| Draw two cards. 10—19 \| Scry 2, then draw two cards. 20 \| Scry 3, then draw three cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dancing Sword | silent | When equipped creature dies, you may have this Equipment become a 2/1 Construct artifact creature with flying and ward {1}. If you do, it isn't an Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Delina, Wild Mage | silent | Whenever Delina attacks, choose target creature you control, then roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Den of the Bugbear | silent | {3}{R}: Until end of turn, this land becomes a 3/2 red Goblin creature with "Whenever this creature attacks, create a 1/1 red Goblin creature token that's tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Djinni Windseer | silent | When this creature enters, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragon Turtle | silent | Drag Below — When this creature enters, tap it and up to one target creature an opponent controls. They don't untap during their controllers' next untap steps. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Druid Class | silent | When this Class becomes level 3, target land you control becomes a creature with haste and "This creature's power and toughness are each equal to the number of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,7 +66,6 @@
 | Guardian of Faith | silent | When this creature enters, any number of other target creatures you control phase out. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hand of Vecna | silent | At the beginning of combat on your turn, equipped creature or a creature you control named Vecna gets +X/+X until end of turn, where X is the number of cards in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Herald of Hadar | silent | Circle of Death — {5}{B}: Roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hive of the Eye Tyrant | silent | {3}{B}: Until end of turn, this land becomes a 3/3 black Beholder creature with menace and "Whenever this creature attacks, exile target card from defending pla | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hoarding Ogre | silent | Whenever this creature attacks, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hobgoblin Bandit Lord | silent | {R}, {T}: This creature deals damage equal to the number of Goblins that entered the battlefield under your control this turn to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icingdeath, Frost Tyrant | silent | When Icingdeath, Frost Tyrant dies, create Icingdeath, Frost Tongue, a legendary white Equipment artifact token with "Equipped creature gets +2/+0," "Whenever e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,7 +84,6 @@
 | Reaper's Talisman | silent | Whenever equipped creature attacks alone, defending player loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rogue Class | silent | Whenever a creature you control deals combat damage to a player, exile the top card of that player's library face down. You may look at it for as long as it rem | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scion of Stygia | silent | Cone of Cold — When this creature enters, choose target creature an opponent controls, then roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shessra, Death's Whisper | silent | Bewitching Whispers — When Shessra enters, target creature blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skeletal Swarming | silent | Each Skeleton you control has trample, attacks each combat if able, and gets +X/+0, where X is the number of other Skeletons you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorcerer Class | silent | Whenever you cast an instant or sorcery spell, that spell deals damage to each opponent equal to the number of instant and sorcery spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphere of Annihilation | silent | At the beginning of your upkeep, exile this artifact, all creatures and planeswalkers with mana value less than or equal to the number of void counters on it, a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -233,6 +230,7 @@
 | Secret Door | handled | {4}{U}: Venture into the dungeon. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sepulcher Ghoul | handled | Sacrifice another creature: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shambling Ghast | handled | When this creature dies, choose one — • Target creature an opponent controls gets -1/-1 until end of turn. • Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shessra, Death's Whisper | handled | Bewitching Whispers — When Shessra enters, target creature blocks this turn if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shocking Grasp | handled | Target creature gets -2/-0 until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shortcut Seeker | handled | Whenever this creature deals combat damage to a player, venture into the dungeon. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silver Raven | handled | When this creature enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -269,17 +267,19 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
 - Choose Your Weapon
+- Den of the Bugbear
 - Drizzt Do'Urden
 - Dungeon Map
 - Eccentric Apprentice
 - Gnoll Hunter
 - Hall of Storm Giants
 - Hired Hexblade
+- Hive of the Eye Tyrant
 - Minsc, Beloved Ranger
 - Mordenkainen's Polymorph
 - Orb of Dragonkind
@@ -302,7 +302,6 @@
 | whenever ~ attacks, roll a dN. | 2 | Hoarding Ogre, Sylvan Shepherd | afr |
 | Animate Walking Statue | 1 | The Blackstaff of Waterdeep | afr |
 | Bear Form | 1 | Circle of the Moon Druid | afr |
-| Bewitching Whispers | 1 | Shessra, Death's Whisper | afr |
 | Circle of Death | 1 | Herald of Hadar | afr |
 | Cone of Cold | 1 | Scion of Stygia | afr |
 | Dark One's Own Luck | 1 | Farideh, Devil's Chosen | afr |
@@ -399,8 +398,6 @@
 | {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
 | {M}{M}: roll a dN. activate only if ~ is in your graveyard. | 1 | Loathsome Troll | afr |
 | {M}{M}: target creature gets +N/+N until end of turn. if mana from a treasure was spent to activate ~, that creature also gains deathtouch until end of turn. | 1 | Forsworn Paladin | afr |
-| {M}{M}: until end of turn, ~ becomes a N/N black beholder creature with menace and "..." it's still a land. | 1 | Hive of the Eye Tyrant | afr |
-| {M}{M}: until end of turn, ~ becomes a N/N red goblin creature with "..." it's still a land. | 1 | Den of the Bugbear | afr |
 | {M}{M}: until end of turn, ~ becomes an N/N green hydra creature. it"..."t be N. | 1 | Lair of the Hydra | afr |
 | {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
 | {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |

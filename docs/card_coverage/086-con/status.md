@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 6.4% |
-| Works (untested) | 74 | 52.5% |
+| Works (untested) | 75 | 53.2% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 53 | 37.6% |
+| Not working | 52 | 36.9% |
 
 ## Cards needing work
 
@@ -50,8 +50,7 @@
 | Martial Coup | silent | Create X 1/1 white Soldier creature tokens. If X is 5 or more, destroy all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Meglonoth | silent | Whenever this creature blocks a creature, this creature deals damage to that creature's controller equal to this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Might of Alara | silent | Domain — Target creature gets +1/+1 until end of turn for each basic land type among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nacatl Hunt-Pride | silent | {G}, {T}: Target creature blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nicol Bolas, Planeswalker | silent | −2: Gain control of target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Nicol Bolas, Planeswalker | silent | −9: Nicol Bolas deals 7 damage to target player or planeswalker. That player or that planeswalker's controller discards seven cards, then sacrifices seven perma | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noble Hierarch | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Paragon of the Amesha | silent | {W}{U}{B}{R}{G}: Until end of turn, this creature becomes an Angel, gets +3/+3, and gains flying and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rhox Bodyguard | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -126,6 +125,7 @@
 | Matca Rioters | handled | Domain — Matca Rioters's power and toughness are each equal to the number of basic land types among lands you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirror-Sigil Sergeant | handled | At the beginning of your upkeep, if you control a blue permanent, you may create a token that's a copy of this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molten Frame | handled | Destroy target artifact creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nacatl Hunt-Pride | handled | {R}, {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nacatl Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Nacatl Savage | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Obelisk of Alara | handled | {1}{W}, {T}: You gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -210,7 +210,6 @@
 | whenever ~ blocks a creature, ~ deals damage to that creature's controller equal to ~ power. | 1 | Meglonoth | con |
 | whenever ~ deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | 1 | Maelstrom Archangel | con |
 | you may cast ~ from your graveyard by paying {M}{M}{M}{M}{M} rather than paying its mana cost. if you do, it enters with two +N/+N counters on it. | 1 | Worldheart Phoenix | con |
-| {M}, {M}: target creature blocks ~ if able. | 1 | Nacatl Hunt-Pride | con |
 | {M}{M}, {M}: put a bribery counter on target creature you don't control. its controller draws a card. | 1 | Gwafa Hazid, Profiteer | con |
 | {M}{M}: ~ gains fear and vigilance until end of turn. | 1 | Scornful Aether-Lich | con |
 | {M}{M}: ~ gets -N/-N until end of turn and can't be blocked ~. | 1 | Vectis Agents | con |
@@ -227,7 +226,7 @@
 | ~ has deathtouch as long as you control a green permanent. | 1 | Toxic Iguanar | con |
 | ~ has flying and trample if it devoured a creature. | 1 | Hellkite Hatchling | con |
 | ~ has haste as long as you control a red permanent. | 1 | Cliffrunner Behemoth | con |
-| −N: gain control of target creature. | 1 | Nicol Bolas, Planeswalker | con |
+| −N: nicol bolas deals N damage to target player or planeswalker. that player or that planeswalker's controller discards seven cards, then sacrifices seven perma | 1 | Nicol Bolas, Planeswalker | con |
 
 ## Notes
 

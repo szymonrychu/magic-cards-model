@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 10.9% |
+| Tested | 32 | 11.7% |
 | Works (untested) | 152 | 55.5% |
 | Partial (unaudited) | 5 | 1.8% |
-| Not working | 87 | 31.8% |
+| Not working | 85 | 31.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Academic Dispute | silent | Target creature blocks this turn if able. You may have it gain reach until end of turn. Learn. (You may reveal a Lesson card you own from outside the game and p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archway Commons | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Augmenter Pugilist // Echoing Equation | silent | Choose target creature you control. Each other creature you control becomes a copy of it until end of turn, except those creatures aren't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baleful Mastery | silent | You may pay {1}{B} rather than pay this spell's mana cost. If the {1}{B} cost was paid, an opponent draws a card. Exile target creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -49,7 +48,6 @@
 | Draconic Intervention | silent | As an additional cost to cast this spell, exile an instant or sorcery card from your graveyard. Draconic Intervention deals X damage to each non-Dragon creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ecological Appreciation | silent | Search your library and graveyard for up to four creature cards with different names that each have mana value X or less and reveal them. An opponent chooses tw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elemental Expressionist | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, choose target creature you control. Until end of turn, it gains "If this creature would leave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elite Spellbinder | silent | When this creature enters, look at target opponent's hand. You may exile a nonland card from it. For as long as that card remains exiled, its owner may play it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exponential Growth | silent | Until end of turn, double target creature's power X times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Extus, Oriq Overlord // Awaken the Blood Avatar | silent | As an additional cost to cast this spell, you may sacrifice any number of creatures. This spell costs {2} less to cast for each creature sacrificed this way. Ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fervent Mastery | silent | You may pay {2}{R}{R} rather than pay this spell's mana cost. If the {2}{R}{R} cost was paid, an opponent discards any number of cards, then draws that many car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -274,8 +272,9 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>32 cards</summary>
 
+- Academic Dispute
 - Bayou Groff
 - Body of Research
 - Brackish Trudge
@@ -287,6 +286,7 @@
 - Dragon's Approach
 - Dueling Coach
 - Elemental Masterpiece
+- Elite Spellbinder
 - Environmental Sciences
 - Expressive Iteration
 - Eyetwitch
@@ -355,14 +355,12 @@
 | search your library for a basic land card, put it onto the battlefield tapped, then shuffle. that land becomes a N/N green and blue fractal creature that's stil | 1 | Emergent Sequence | stx |
 | spells you cast that target a creature cost {M} less to cast. | 1 | Killian, Ink Duelist | stx |
 | spirits you control get +N/+N and have trample and haste. | 1 | Hofri Ghostforge | stx |
-| target creature blocks ~ if able. you may have it gain reach until end of turn. learn. (you may reveal a lesson card you own from outside the game and put it in | 1 | Academic Dispute | stx |
 | target creature gets -N/-N until end of turn, where N is N minus the number of cards in that creature"..."s hand. | 1 | Flunk | stx |
 | target creature you control deals damage equal to its power to target creature or planeswalker you don"..."t control dies ~, you gain N life. | 1 | Devouring Tendrils | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
 | until end of turn, double target creature's power N times. | 1 | Exponential Growth | stx |
 | until end of turn, target nonland permanent loses all abilities and becomes your choice of a blue frog creature with base power and toughness N/N or a blue octo | 1 | Mercurial Transformation | stx |
 | when ~ enters, double the number of +N/+N counters on target creature you control. | 1 | Tanazir Quandrix | stx |
-| when ~ enters, look at target opponent's hand. you may exile a nonland card from it. for as long as that card remains exiled, its owner may play it. a spell cas | 1 | Elite Spellbinder | stx |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Archway Commons | stx |
 | whenever a creature you control deals combat damage to an opponent, put a point counter on ~. then if it has ten or more point counters on it, remove them all a | 1 | Strixhaven Stadium | stx |
 | whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {M}. | 1 | Strict Proctor | stx |

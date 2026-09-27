@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.2% |
-| Works (untested) | 90 | 62.5% |
-| Partial (unaudited) | 4 | 2.8% |
-| Not working | 41 | 28.5% |
+| Tested | 12 | 8.3% |
+| Works (untested) | 91 | 63.2% |
+| Partial (unaudited) | 3 | 2.1% |
+| Not working | 38 | 26.4% |
 
 ## Cards needing work
 
@@ -47,12 +47,9 @@
 | Lunar Insight | silent | Draw a card for each different mana value among nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Midnight Snack | silent | {2}{B}, Sacrifice this enchantment: Target opponent loses X life, where X is the amount of life you gained this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Niv-Mizzet, Visionary | silent | Whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Perforating Artist | silent | Raid — At the beginning of your end step, if you attacked this turn, each opponent loses 3 life unless that player sacrifices a nonland permanent of their choic | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Quick-Draw Katana | silent | During your turn, equipped creature gets +2/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ravenous Amulet | silent | {4}, {T}, Sacrifice this artifact: Each opponent loses life equal to the number of soul counters on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Skyknight Squire | silent | As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Soul-Shackled Zombie | silent | When this creature enters, exile up to two target cards from a single graveyard. If at least one creature card was exiled this way, each opponent loses 2 life a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Soulstone Sanctuary | silent | {4}: This land becomes a 3/3 creature with vigilance and all creature types. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sphinx of Forgotten Lore | silent | Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spinner of Souls | silent | Whenever another nontoken creature you control dies, you may reveal cards from the top of your library until you reveal a creature card. Put that card into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Squad Rallier | silent | {2}{W}: Look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your hand. Put the rest  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -67,7 +64,6 @@
 | Strongbox Raider | notice | Raid — When this creature enters, if you attacked this turn, exile the top two cards of your library. Choose one of them. Until the end of your next turn, you m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Vampire Gourmand | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Cephalid Inkmage | unaudited | Threshold — This creature can't be blocked as long as there are seven or more cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Goblin Boarders | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Herald of Eternal Dawn | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Nine-Lives Familiar | unaudited | This creature enters with eight revival counters on it if you cast it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -88,6 +84,7 @@
 | Carnelian Orb of Dragonkind | handled |  |  | Y/Y/Y | not_tested |
 | Cat Collector | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Celestial Armor | handled | When this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Cephalid Inkmage | handled | When this creature enters, surveil 3. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Claws Out | handled | Affinity for Cats (This spell costs {1} less to cast for each Cat you control.) Creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Clinquant Skymage | handled | Whenever you draw a card, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Courageous Goblin | handled | Whenever this creature attacks while you control a creature with power 4 or greater, this creature gets +1/+0 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -165,7 +162,7 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>12 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
@@ -173,9 +170,12 @@
 - Curator of Destinies
 - High Fae Trickster
 - Inspiration from Beyond
+- Perforating Artist
 - Quilled Greatwurm
 - Raise the Past
 - Sire of Seven Deaths
+- Soul-Shackled Zombie
+- Soulstone Sanctuary
 
 </details>
 
@@ -183,9 +183,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Raid | 4 | Alesha, Who Laughs at Fate, Goblin Boarders, Perforating Artist, Strongbox Raider | fdn |
+| Raid | 3 | Alesha, Who Laughs at Fate, Goblin Boarders, Strongbox Raider | fdn |
 | Morbid | 1 | Tragic Banshee | fdn |
-| Threshold | 1 | Cephalid Inkmage | fdn |
 | +N: add {M}{M}{M}. exile the top three cards of your library. choose one. you may play that card ~. | 1 | Chandra, Flameshaper | fdn |
 | as long as your life total is greater than your starting life total, elenda gets +N/+N and has menace. elenda gets an additional +N/+N as long as your life tota | 1 | Elenda, Saint of Dusk | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
@@ -202,7 +201,6 @@
 | when ~ dies, if it wasn"..."s control with two +N/+N counters on it. it's a demon in addition to its other types. | 1 | Infernal Vessel | fdn |
 | when ~ dies, return another target non-bear creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Fiendish Panda | fdn |
 | when ~ enters, create a number of N/N white rabbit creature tokens equal to the number of other creatures you control named ~. | 1 | Hare Apparent | fdn |
-| when ~ enters, exile up to two target cards from a single graveyard. if at least one creature card was exiled ~, each opponent loses N life and you gain N life. | 1 | Soul-Shackled Zombie | fdn |
 | whenever a nontoken, non-angel creature you control dies, return that card to the battlefield under its owner's control with a +N/+N counter on it. it has flyin | 1 | Valkyrie's Call | fdn |
 | whenever a source you control deals noncombat damage to an opponent, you draw that many cards. | 1 | Niv-Mizzet, Visionary | fdn |
 | whenever an opponent discards a card, exile it from their graveyard with a stash counter on it. | 1 | Tinybones, Bauble Burglar | fdn |
@@ -217,7 +215,6 @@
 | {M}, {M}, sacrifice ~: each opponent loses life equal to the number of soul counters on ~. | 1 | Ravenous Amulet | fdn |
 | {M}: exile target creature card from a graveyard that was put there ~. create a token that"..."s a nightmare in addition to its other types. then exile all othe | 1 | Abyssal Harvester | fdn |
 | {M}: until end of turn, another target goblin you control gains flying and "..." | 1 | Dropkick Bomber | fdn |
-| {M}: ~ becomes a N/N creature with vigilance and all creature types. it's still a land. | 1 | Soulstone Sanctuary | fdn |
 | {M}{M}, sacrifice ~: target opponent loses N life, where N is the amount of life you gained ~. | 1 | Midnight Snack | fdn |
 | {M}{M}, {M}: double the number of each kind of counter on up to two target creatures and/or artifacts you control. | 1 | Zimone, Paradox Sculptor | fdn |
 | {M}{M}: if kellan is a scout, it becomes a human faerie detective and gains "..." | 1 | Kellan, Planar Trailblazer | fdn |

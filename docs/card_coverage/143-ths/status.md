@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 8.5% |
-| Works (untested) | 126 | 59.7% |
+| Works (untested) | 130 | 61.6% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 59 | 28.0% |
+| Not working | 55 | 26.1% |
 
 ## Cards needing work
 
@@ -49,15 +49,11 @@
 | Hythonia the Cruel | silent | When Hythonia becomes monstrous, destroy all non-Gorgon creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kragma Warcaller | silent | Minotaur creatures you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loathsome Catoblepas | silent | {2}{G}: This creature must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Master of Waves | silent | Elemental creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Master of Waves | silent | When this creature enters, create a number of 1/0 blue Elemental creature tokens equal to your devotion to blue. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Meletis Charlatan | silent | {2}{U}, {T}: The controller of target instant or sorcery spell copies it. That player may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis's Marauder | silent | When this creature enters, up to X target creatures each gain intimidate and haste until end of turn, where X is your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nemesis of Mortals | silent | {7}{G}{G}: Monstrosity 5. This ability costs {1} less to activate for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nylea's Presence | silent | Enchanted land is every basic land type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ordeal of Erebos | silent | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ordeal of Heliod | silent | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ordeal of Nylea | silent | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ordeal of Thassa | silent | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Intrusion | silent | Target opponent reveals their hand. You choose a nonland card from that player's graveyard or hand and exile it. You may cast that card for as long as it remain | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rageblood Shaman | silent | Other Minotaur creatures you control get +1/+1 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Returned Phalanx | silent | {1}{U}: This creature can attack this turn as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -163,6 +159,10 @@
 | Observant Alseid | handled | Enchanted creature gets +2/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Omenspeaker | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Opaline Unicorn | handled |  |  | Y/Y/- | not_tested |
+| Ordeal of Erebos | handled | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ordeal of Heliod | handled | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ordeal of Nylea | handled | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ordeal of Thassa | handled | Whenever enchanted creature attacks, put a +1/+1 counter on it. Then if it has three or more +1/+1 counters on it, sacrifice this Aura. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Peak Eruption | handled | Destroy target Mountain. Peak Eruption deals 3 damage to that land's controller. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phalanx Leader | handled | Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pharika's Cure | handled | Pharika's Cure deals 2 damage to target creature and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,7 +251,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Heroic | 4 | Anthousa, Setessan Hero, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
-| whenever enchanted creature attacks, put a +N/+N counter on it. then if it has three or more +N/+N counters on it, sacrifice ~. | 4 | Ordeal of Erebos, Ordeal of Heliod, Ordeal of Nylea, Ordeal of Thassa | ths |
 | +N: add N mana in any combination of {M} and/or {M}, where N is the number of creatures you control. | 1 | Xenagos, the Reveler | ths |
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
@@ -259,7 +258,6 @@
 | choose target creature an opponent controls. when that creature dies ~, you gain N life. target creature you control fights that creature. (each deals damage eq | 1 | Time to Feed | ths |
 | discard a creature card: ~ gets +N/+N until end of turn. if ~ is an aura, enchanted creature gets +N/+N until end of turn instead. | 1 | Erebos's Emissary | ths |
 | each human creature you control has "..." | 1 | Titan of Eternal Fire | ths |
-| elemental creatures you control get +N/+N. | 1 | Master of Waves | ths |
 | enchanted creature gets +N/+N and has intimidate. | 1 | Cavern Lampad | ths |
 | enchanted creature gets -N/-N, and its activated abilities can't be activated. | 1 | Viper's Kiss | ths |
 | enchanted land is every basic land type in addition to its other types. | 1 | Nylea's Presence | ths |
@@ -286,6 +284,7 @@
 | when ~ dies, exile it and each player returns all creature cards from their graveyard to their hand. | 1 | Underworld Cerberus | ths |
 | when ~ enters, an opponent gains control of it. | 1 | Akroan Horse | ths |
 | when ~ enters, create a number of N/N black harpy creature tokens with flying equal to your devotion to black. | 1 | Abhorrent Overlord | ths |
+| when ~ enters, create a number of N/N blue elemental creature tokens equal to your devotion to blue. | 1 | Master of Waves | ths |
 | when ~ enters, create a number of N/N white soldier creature tokens equal to your devotion to white. | 1 | Evangel of Heliod | ths |
 | when ~ enters, it deals damage to each opponent equal to your devotion to red. | 1 | Fanatic of Mogis | ths |
 | when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |

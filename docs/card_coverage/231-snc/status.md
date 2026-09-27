@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 7.9% |
-| Works (untested) | 131 | 51.8% |
+| Works (untested) | 134 | 53.0% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 90 | 35.6% |
+| Not working | 87 | 34.4% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Brokers Ascendancy | silent | At the beginning of your end step, put a +1/+1 counter on each creature you control and a loyalty counter on each planeswalker you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cabaretti Ascendancy | silent | At the beginning of your upkeep, look at the top card of your library. If it's a creature or planeswalker card, you may reveal it and put it into your hand. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Caldaia Strongarm | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Capenna Express | silent | Sacrifice a Treasure: This Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Case the Joint | silent | Draw two cards, then look at the top card of each player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Celestial Regulator | silent | When this creature enters, choose target creature you don't control and tap it. If you control a creature with a counter on it, the chosen creature doesn't unta | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cemetery Tampering | silent | At the beginning of your upkeep, you may mill three cards. Then if there are twenty or more cards in your graveyard, you may play the exiled card without paying | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -57,7 +56,6 @@
 | Glamorous Outlaw | silent | When this creature enters, it deals 2 damage to each opponent and you scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graveyard Shift | silent | This spell has flash as long as there are five or more mana values among cards in your graveyard. Return target creature card from your graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grisly Sigil | silent | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell and you may choose a new target for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Halo Fountain | silent | {W}{W}{W}{W}{W}, {T}, Untap fifteen tapped creatures you control: You win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hoard Hauler | silent | Whenever this Vehicle deals combat damage to a player, create a Treasure token for each artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incandescent Aria | silent | Incandescent Aria deals 3 damage to each nontoken creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incriminate | silent | Choose two target creatures controlled by the same player. That player sacrifices one of them of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,7 +76,6 @@
 | Plasma Jockey | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Psychic Pickpocket | silent | When this creature enters, it connives. When it connives this way, return up to one target nonland permanent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pugnacious Pugilist | silent | Whenever this creature attacks, create a tapped and attacking 1/1 red Devil creature token with "When this token dies, it deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Pyre-Sledge Arsonist | silent | {1}, {T}: This creature deals X damage to any target, where X is the number of permanents you've sacrificed this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rabble Rousing | silent | Whenever you attack with one or more creatures, create that many 1/1 green and white Citizen creature tokens. Then if you control ten or more creatures, you may | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Raffine, Scheming Seer | silent | Whenever you attack, target attacking creature connives X, where X is the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reservoir Kraken | silent | At the beginning of each combat, if this creature is untapped, any opponent may tap an untapped creature they control. If they do, tap this creature and create  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -95,7 +92,7 @@
 | Syndicate Infiltrator | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Underdog | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Toluz, Clever Conductor | silent | Whenever you discard one or more cards, exile them from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Unlicensed Hearse | silent | {T}: Exile up to two target cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Unlicensed Hearse | silent | Unlicensed Hearse's power and toughness are each equal to the number of cards exiled with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vampire Scrivener | silent | Whenever you lose life during your turn, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Widespread Thieving | silent | Whenever you cast a multicolored spell, create a Treasure token. Then you may pay {W}{U}{B}{R}{G}. If you do, you may play the exiled card without paying its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wiretapping | silent | Whenever you draw your first card during each of your draw steps, draw a card. Then if you have nine or more cards in hand, you may play the exiled card without | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -150,6 +147,7 @@
 | Cabaretti Courtyard | handled | When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shu | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cabaretti Initiate | handled | {2}{R/W}: This creature gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Call In a Professional | handled | Players can't gain life this turn. Damage can't be prevented this turn. Call In a Professional deals 3 damage to any target. (Shield counters don't prevent this | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Capenna Express | handled | Sacrifice a Treasure: This Vehicle becomes an artifact creature until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Celebrity Fencer | handled | Alliance — Whenever another creature you control enters, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cement Shoes | handled | Equipped creature gets +3/+3 and has "At the beginning of your end step, tap this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ceremonial Groundbreaker | handled | Equipped creature gets +2/+1 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -182,6 +180,7 @@
 | Glittering Stockpile | handled |  |  | Y/Y/- | not_tested |
 | Glittermonger | handled | {T}: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goldhound | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
+| Halo Fountain | handled | {W}, {T}, Untap a tapped creature you control: Create a 1/1 green and white Citizen creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halo Scarab | handled | {2}, Exile this card from your graveyard: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | High-Rise Sawjack | handled | Whenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hostile Takeover | handled | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -216,6 +215,7 @@
 | Patch Up | handled | Return up to three target creature cards with total mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prizefight | handled | Target creature you control fights target creature you don't control. (Each deals damage equal to its power to the other.) Create a Treasure token. (It's an art | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Professional Face-Breaker | handled | Whenever one or more creatures you control deal combat damage to a player, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Pyre-Sledge Arsonist | handled | {1}, {T}: This creature deals X damage to any target, where X is the number of permanents you've sacrificed this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Queza, Augur of Agonies | handled | Whenever you draw a card, target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Racers' Ring | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raffine's Informant | handled | When this creature enters, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -335,7 +335,6 @@
 | if your life total is less than your starting life total, ~ costs {M} less to cast, where N is the difference. | 1 | Shadow of Mortality | snc |
 | once during each of your turns, you may cast an instant or sorcery spell from your graveyard by sacrificing a creature in addition to paying its other costs. if | 1 | Maestros Ascendancy | snc |
 | put a +N/+N counter on target creature. it phases out. (treat it and anything attached to it as though they don"..."s next turn.) | 1 | Slip Out the Back | snc |
-| sacrifice a treasure: ~ becomes an artifact creature until end of turn. | 1 | Capenna Express | snc |
 | target creature gets +N/+N until end of turn. if it has a counter on it, it also gains flying and lifelink until end of turn. | 1 | Revelation of Power | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
 | when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
@@ -371,17 +370,15 @@
 | you may have ~ enter as a copy of any creature on the battlefield, except it enters with a shield counter on it if you control that creature. | 1 | Undercover Operative | snc |
 | you may pay {M}{M} rather than pay ~ mana cost. spend only mana produced by treasures to cast it ~. | 1 | Security Rhox | snc |
 | {M}, {M}, sacrifice a creature: count the colors of the sacrificed creature, then search your library for a creature card that's exactly that many colors plus o | 1 | Evolving Door | snc |
-| {M}, {M}: ~ deals N damage to any target, where N is the number of permanents you've sacrificed ~. | 1 | Pyre-Sledge Arsonist | snc |
-| {M}: exile up to two target cards from a single graveyard. | 1 | Unlicensed Hearse | snc |
 | {M}{M}, {M}: copy target spell you control that wasn't cast. you may choose new targets for the copy. | 1 | Errant, Street Artist | snc |
 | {M}{M}: ~ can't be blocked ~. ~ costs {M} less to activate if there are five or more mana values among cards in your graveyard. | 1 | Sewer Crocodile | snc |
-| {M}{M}{M}{M}{M}, {M}, untap fifteen tapped creatures you control: you win the game. | 1 | Halo Fountain | snc |
 | ~ costs {M} less to cast if it targets a black permanent. ~ deals N damage to target creature or planeswalker, where N is the greatest power among creatures you | 1 | Bouncer's Beatdown | snc |
 | ~ deals N damage to each nontoken creature. | 1 | Incandescent Aria | snc |
 | ~ deals N damage to target creature or planeswalker. when it deals excess damage ~, destroy target artifact or enchantment an opponent controls with mana value  | 1 | Unleash the Inferno | snc |
 | ~ has flash as long as there are five or more mana values among cards in your graveyard. return target creature card from your graveyard to the battlefield. | 1 | Graveyard Shift | snc |
 | ~ has indestructible as long as it entered ~. | 1 | Crew Captain | snc |
 | ~ has trample as long as it has a shield counter on it. | 1 | Rhox Pummeler | snc |
+| ~'s power and toughness are each equal to the number of cards exiled with it. | 1 | Unlicensed Hearse | snc |
 
 ## Notes
 

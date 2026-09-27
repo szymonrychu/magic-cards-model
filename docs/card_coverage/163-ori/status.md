@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 7.7% |
+| Tested | 15 | 8.3% |
 | Works (untested) | 103 | 56.9% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 57 | 31.5% |
+| Not working | 56 | 30.9% |
 
 ## Cards needing work
 
@@ -36,7 +36,6 @@
 | Consul's Lieutenant | silent | Whenever this creature attacks, if it's renowned, other attacking creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Dabbling | silent | Regenerate target creature. Draw a card. (The next time the creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Displacement Wave | silent | Return all nonland permanents with mana value X or less to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dwynen, Gilt-Leaf Daen | silent | Other Elf creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Erebos's Titan | silent | Whenever a creature card leaves an opponent's graveyard, you may discard a card. If you do, return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Eyeblight Massacre | silent | Non-Elf creatures get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gather the Pack | silent | Reveal the top five cards of your library. You may put a creature card from among them into your hand. Put the rest into your graveyard. Spell mastery — If ther | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -117,6 +116,7 @@
 | Despoiler of Souls | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Disciple of the Ring | handled | {1}, Exile an instant or sorcery card from your graveyard: Choose one — • Counter target noncreature spell unless its controller pays {2}. • This creature gets  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dwynen's Elite | handled | When this creature enters, if you control another Elf, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dwynen, Gilt-Leaf Daen | handled | Other Elf creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elemental Bond | handled | Whenever a creature you control with power 3 or greater enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enlightened Ascetic | handled | When this creature enters, you may destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enthralling Victor | handled | When this creature enters, gain control of target creature an opponent controls with power 2 or less until end of turn. Untap that creature. It gains haste unti | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -191,13 +191,12 @@
 | War Oracle | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Whirler Rogue | handled | When this creature enters, create two 1/1 colorless Thopter artifact creature tokens with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wild Instincts | handled | Target creature you control gets +2/+2 until end of turn. It fights target creature an opponent controls. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Zendikar Incarnate | handled | Zendikar Incarnate's power is equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zendikar's Roil | handled | Landfall — Whenever a land you control enters, create a 2/2 green Elemental creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Alhammarret's Archive
 - Boggart Brute
@@ -213,6 +212,7 @@
 - Scab-Clan Berserker
 - Sigil of Valor
 - Unholy Hunger
+- Zendikar Incarnate
 
 </details>
 
@@ -243,7 +243,6 @@
 | if another red source you control would deal damage to a permanent or player, it deals that much damage plus N to that permanent or player instead. | 1 | Embermaw Hellion | ori |
 | non-elf creatures get -N/-N until end of turn. | 1 | Eyeblight Massacre | ori |
 | other creatures you control with flying get +N/+N. | 1 | Thunderclap Wyvern | ori |
-| other elf creatures you control get +N/+N. | 1 | Dwynen, Gilt-Leaf Daen | ori |
 | prevent all combat damage that would be dealt ~ by creatures with power N or less. | 1 | Vine Snare | ori |
 | put target creature card from a graveyard onto the battlefield under your control. spell mastery — if there are two or more instant and/or sorcery cards in your | 1 | Necromantic Summons | ori |
 | put target creature on top of its owner's library. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Anchor to the Aether | ori |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.3% |
-| Works (untested) | 87 | 61.3% |
+| Tested | 11 | 7.7% |
+| Works (untested) | 88 | 62.0% |
 | Partial (unaudited) | 7 | 4.9% |
-| Not working | 39 | 27.5% |
+| Not working | 36 | 25.4% |
 
 ## Cards needing work
 
@@ -52,12 +52,9 @@
 | Silverskin Armor | silent | Equipped creature gets +1/+1 and is an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skinwing | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Spin Engine | silent | {R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Spiraling Duelist | silent | Metalcraft — This creature has double strike as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spire Serpent | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strandwalker | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Sword of Feast and Famine | silent | Whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tezzeret, Agent of Bolas | silent | −1: Target artifact becomes an artifact creature with base power and toughness 5/5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Treasure Mage | silent | When this creature enters, you may search your library for an artifact card with mana value 6 or greater, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Victory's Herald | silent | Whenever this creature attacks, attacking creatures gain flying and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Burn the Impure | notice | Burn the Impure deals 3 damage to target creature. If that creature has infect, Burn the Impure deals 3 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gore Vassal | notice | Sacrifice this creature: Put a -1/-1 counter on target creature. Then if that creature's toughness is 1 or greater, regenerate it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -100,7 +97,6 @@
 | Hero of Bladehold | handled | Whenever this creature attacks, create two 1/1 white Soldier creature tokens that are tapped and attacking. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hexplate Golem | handled |  |  | Y/-/- | not_tested |
 | Horrifying Revelation | handled | Target player discards a card, then mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Ichor Wellspring | handled | When this artifact enters or is put into a graveyard from the battlefield, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inkmoth Nexus | handled | {1}: This land becomes a 1/1 Phyrexian Blinkmoth artifact creature with flying and infect until end of turn. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the Core | handled | Exile two target artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Koth's Courier | handled | Landwalk | no code needed | Y/-/- | not_tested |
@@ -144,6 +140,7 @@
 | Shriekhorn | handled | This artifact enters with three charge counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Slagstorm | handled | Choose one — • Slagstorm deals 3 damage to each creature. • Slagstorm deals 3 damage to each player. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spine of Ish Sah | handled | When this artifact enters, destroy target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Spiraling Duelist | handled | Metalcraft — This creature has double strike as long as you control three or more artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spread the Sickness | handled | Destroy target creature, then proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Steel Sabotage | handled | Choose one — • Counter target artifact spell. • Return target artifact to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tangle Hulk | handled | {2}{G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -151,6 +148,7 @@
 | Thrun, the Last Troll | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tine Shrike | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Titan Forge | handled | {3}, {T}: Put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Treasure Mage | handled | When this creature enters, you may search your library for an artifact card with mana value 6 or greater, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Turn the Tide | handled | Creatures your opponents control get -2/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unnatural Predation | handled | Target creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Infuser | handled | At the beginning of your upkeep, you may put a charge counter on target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -163,16 +161,18 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Accorder Paladin
 - Fuel for the Cause
 - Green Sun's Zenith
+- Ichor Wellspring
 - Knowledge Pool
 - Lead the Stampede
 - Melira's Keepers
 - Phyrexian Revoker
 - Septic Rats
+- Sword of Feast and Famine
 - Thopter Assembly
 
 </details>
@@ -182,7 +182,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | living weapon | 5 | Bonehoard, Flayer Husk, Mortarpod, Skinwing, Strandwalker | mbs |
-| Metalcraft | 4 | Ardent Recruit, Razorfield Rhino, Spiraling Duelist, Spire Serpent | mbs |
+| Metalcraft | 3 | Ardent Recruit, Razorfield Rhino, Spire Serpent | mbs |
 | at the beginning of your upkeep, you may have ~ become a copy of another target creature, except it has ~. | 1 | Cryptoplasm | mbs |
 | at the beginning of your upkeep, you may look at the top card of your library. you may cast it without paying its mana cost if it's an instant or sorcery spell. | 1 | Galvanoth | mbs |
 | attacking creatures get +N/+N and gain first strike until end of turn. | 1 | Rally the Forces | mbs |
@@ -200,12 +200,10 @@
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
 | sacrifice ~: put a -N/-N counter on target creature. then if that creature's toughness is N or greater, regenerate it. | 1 | Gore Vassal | mbs |
 | search your library for a card, exile it, then shuffle. any opponent may have you put that card into your hand. if no player does, you draw three cards. | 1 | Distant Memories | mbs |
-| when ~ enters, you may search your library for an artifact card with mana value N or greater, reveal it, put it into your hand, then shuffle. | 1 | Treasure Mage | mbs |
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Leonin Relic-Warder | mbs |
 | whenever a creature deals combat damage to you, that creature's controller gains control of ~. | 1 | Contested War Zone | mbs |
 | whenever another artifact is put into a graveyard from the battlefield, ~ deals N damage to that artifact's controller. | 1 | Magnetic Mine | mbs |
 | whenever another nontoken artifact you control enters, you may pay {M}. if you do, create a token that's a copy of that artifact. | 1 | Mirrorworks | mbs |
-| whenever equipped creature deals combat damage to a player, that player discards a card and you untap all lands you control. | 1 | Sword of Feast and Famine | mbs |
 | whenever ~ attacks, attacking creatures gain flying and lifelink until end of turn. | 1 | Victory's Herald | mbs |
 | whenever ~ attacks, creatures with power N or less can't block ~. | 1 | Hero of Oxid Ridge | mbs |
 | you may cast artifact spells as though they had flash. | 1 | Shimmer Myr | mbs |

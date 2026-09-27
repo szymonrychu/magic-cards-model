@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 12.6% |
-| Works (untested) | 107 | 53.8% |
+| Tested | 26 | 13.1% |
+| Works (untested) | 108 | 54.3% |
 | Partial (unaudited) | 9 | 4.5% |
-| Not working | 58 | 29.1% |
+| Not working | 56 | 28.1% |
 
 ## Cards needing work
 
@@ -73,8 +73,6 @@
 | Thraben Foulbloods | silent | Delirium — This creature gets +1/+1 and has menace as long as there are four or more card types among cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tree of Perdition | silent | {T}: Exchange target opponent's life total with this creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ulrich of the Krallenhorde // Ulrich, Uncontested Alpha | silent | Whenever this creature transforms into Ulrich, Uncontested Alpha, you may have it fight target non-Werewolf creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vampire Cutthroat | silent | Skulk | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Wharf Infiltrator | silent | Whenever you discard a creature card, you may pay {2}. If you do, create a 3/2 colorless Eldrazi Horror creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Whispers of Emrakul | silent | Target opponent discards a card at random. Delirium — If there are four or more card types among cards in your graveyard, that player discards two cards at rand | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Collective Defiance | notice | Escalate {1} (Pay this cost for each mode chosen beyond the first.) Choose one or more — • Target player discards all the cards in their hand, then draws that m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Drownyard Behemoth | notice | This creature has hexproof as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -192,6 +190,7 @@
 | Thraben Standard Bearer | handled | {1}{W}, {T}, Discard a card: Create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Captive // Ulvenwald Abomination | handled | {5}{G}{G}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Observer | handled | Whenever a creature you control with toughness 4 or greater dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Vampire Cutthroat | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Vildin-Pack Outcast // Dronepack Kindred | handled | {R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voldaren Pariah // Abolisher of Bloodlines | handled | Sacrifice three other creatures: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wailing Ghoul | handled | When this creature enters, mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -204,7 +203,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Blessed Alliance
 - Cemetery Recruitment
@@ -230,6 +229,7 @@
 - Thirsting Axe
 - Unsubstantiate
 - Vexing Scuttler
+- Wharf Infiltrator
 - Wretched Gryff
 
 </details>
@@ -255,7 +255,6 @@
 | prevent all damage that would be dealt ~ by non-human sources. | 1 | Repel the Abominable | emn |
 | return up to one target instant card and up to one target sorcery card from your graveyard to your hand, then discard a card. exile ~. | 1 | Shreds of Sanity | emn |
 | sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}, where N is ~ power. | 1 | Mausoleum Wanderer | emn |
-| skulk | 1 | Vampire Cutthroat | emn |
 | target creature gets +N/+N until end of turn and can block any number of creatures ~. | 1 | Give No Ground | emn |
 | target opponent discards a card at random. delirium — if there are four or more card types among cards in your graveyard, that player discards two cards at rand | 1 | Whispers of Emrakul | emn |
 | target opponent gains control of target permanent you control. | 1 | Harmless Offering | emn |
@@ -278,7 +277,6 @@
 | whenever an equipment you control enters, you may attach it to target creature you control. | 1 | Sigarda's Aid | emn |
 | whenever an opponent casts their first spell each turn, that player exiles the top card of their library. if it's a nonland card, you may cast it without paying | 1 | Mind's Dilation | emn |
 | whenever equipped creature attacks, it doesn"..."s next untap step. | 1 | Stitcher's Graft | emn |
-| whenever you discard a creature card, you may pay {M}. if you do, create a N/N colorless eldrazi horror creature token. | 1 | Wharf Infiltrator | emn |
 | whenever ~ attacks, add {M} at the beginning of your next main phase ~. | 1 | Conduit of Storms // Conduit of Emrakul | emn |
 | whenever ~ attacks, you may exile another target nontoken creature. if you do, ~ becomes a copy of that creature until end of turn. return the exiled card to th | 1 | Identity Thief | emn |
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature and N damage to that creature's controller. | 1 | Assembled Alphas | emn |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.0% |
-| Works (untested) | 124 | 53.2% |
+| Works (untested) | 125 | 53.6% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 84 | 36.1% |
+| Not working | 83 | 35.6% |
 
 ## Cards needing work
 
@@ -71,14 +71,12 @@
 | Qarsi Sadist | silent | When this creature exploits a creature, target opponent loses 2 life and you gain 2 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Rakshasa Gravecaller | silent | When this creature exploits a creature, create two 2/2 black Zombie creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Revealing Wind | silent | Prevent all combat damage that would be dealt this turn. You may look at each face-down creature that's attacking or blocking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Risen Executioner | silent | Other Zombie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandcrafter Mage | silent | When this creature enters, bolster 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Scavenger | silent | When this creature enters, bolster 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan Unbroken | silent | +1: Draw a card, then add one mana of any color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan's Rage | silent | Sarkhan's Rage deals 5 damage to any target. If you control no Dragons, Sarkhan's Rage deals 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Savage Ventmaw | silent | Whenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scale Blessing | silent | Bolster 1, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it. (To bolster 1, choose a creature with the least toughness among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Servant of the Scale | silent | When this creature dies, put X +1/+1 counters on target creature you control, where X is the number of +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shaman of Forgotten Ways | silent | Formidable — {9}{G}{G}, {T}: Each player's life total becomes the number of creatures they control. Activate only if creatures you control have total power 8 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shieldhide Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shorecrasher Elemental | silent | {U}: Exile this creature, then return it to the battlefield face down under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -106,6 +104,7 @@
 | Mirror Mockery | notice | Whenever enchanted creature attacks, you may create a token that's a copy of that creature. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ojutai Exemplars | notice | Whenever you cast a noncreature spell, choose one — • Tap target creature. • This creature gains first strike and lifelink until end of turn. • Exile this creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pristine Skywise | notice | Whenever you cast a noncreature spell, untap this creature. It gains protection from the color of your choice until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Risen Executioner | notice | You may cast this creature from your graveyard if you pay {1} more to cast it for each other creature card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Self-Inflicted Wound | notice | Target opponent sacrifices a green or white creature of their choice. If that player does, they lose 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swift Warkite | notice | When this creature enters, you may put a creature card with mana value 3 or less from your hand or graveyard onto the battlefield. That creature gains haste. Re | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Taigam's Strike | notice | Target creature gets +2/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -212,6 +211,7 @@
 | Secure the Wastes | handled | Create X 1/1 white Warrior creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Segmented Krotiq | handled | Megamorph | machines/casting.py | Y/Y/- | not_tested |
 | Seismic Rupture | handled | Seismic Rupture deals 2 damage to each creature without flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Servant of the Scale | handled | This creature enters with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shambling Goblin | handled | When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shape the Sands | handled | Target creature gets +0/+5 and gains reach until end of turn. (It can block creatures with flying.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sibsig Icebreakers | handled | When this creature enters, each player discards a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -300,7 +300,6 @@
 | enchanted land has "..." | 1 | Sheltered Aerie | dtk |
 | exile target creature an opponent controls. that player reveals cards from the top of their library until a creature card is revealed. the player puts that card | 1 | Blessed Reincarnation | dtk |
 | other warrior creatures you control have vigilance. | 1 | Herald of Dromoka | dtk |
-| other zombie creatures you control get +N/+N. | 1 | Risen Executioner | dtk |
 | prevent all combat damage that would be dealt ~. you may look at each face-down creature that's attacking or blocking. | 1 | Revealing Wind | dtk |
 | return target creature card from your graveyard to your hand. target creature gets -N/-N until end of turn, where N is the toughness of the card returned ~. | 1 | Foul Renewal | dtk |
 | return target instant or sorcery card from your graveyard to your hand. ~ deals damage equal to that card's mana value to each creature your opponents control.  | 1 | Volcanic Vision | dtk |
@@ -313,7 +312,6 @@
 | target player shuffles their graveyard into their library. draw a card. | 1 | Learn from the Past | dtk |
 | until end of turn, target creature you control becomes a blue dragon illusion with base power and toughness N/N, loses all abilities, and gains flying. | 1 | Dance of the Skywise | dtk |
 | when sidisi exploits a creature, you may search your library for a card, put it into your hand, then shuffle. | 1 | Sidisi, Undead Vizier | dtk |
-| when ~ dies, put N +N/+N counters on target creature you control, where N is the number of +N/+N counters on ~. | 1 | Servant of the Scale | dtk |
 | when ~ dies, you may put it on your choice of the top or bottom of its owner's library. | 1 | Arashin Sovereign | dtk |
 | when ~ enters, exile target opponent's graveyard. | 1 | Hedonist's Trove | dtk |
 | when ~ enters, if you cast it from your hand and there are five or more other creatures on the battlefield, destroy all other creatures. | 1 | Deathbringer Regent | dtk |
@@ -343,6 +341,7 @@
 | whenever ~ attacks, warrior creatures you control gain menace until end of turn. | 1 | Blood-Chin Rager | dtk |
 | whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Kolaghan Aspirant | dtk |
 | whenever ~ deals combat damage to a player, you may pay {M}. if you do, create a N/N black zombie creature token and each opponent mills two cards. | 1 | Necromaster Dragon | dtk |
+| you may cast ~ from your graveyard if you pay {M} more to cast it for each other creature card in your graveyard. | 1 | Risen Executioner | dtk |
 | you may look at face-down creatures you don't control any time. | 1 | Keeper of the Lens | dtk |
 | {M}: exile ~, then return it to the battlefield face down under its owner's control. | 1 | Shorecrasher Elemental | dtk |
 | {M}: target creature with defender can attack ~ as though it didn't have defender. | 1 | Assault Formation | dtk |

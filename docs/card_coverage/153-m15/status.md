@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 4.9% |
-| Works (untested) | 72 | 50.3% |
-| Partial (unaudited) | 6 | 4.2% |
-| Not working | 58 | 40.6% |
+| Tested | 8 | 5.6% |
+| Works (untested) | 73 | 51.0% |
+| Partial (unaudited) | 5 | 3.5% |
+| Not working | 57 | 39.9% |
 
 ## Cards needing work
 
@@ -55,7 +55,6 @@
 | Master of Predicaments | silent | Whenever this creature deals combat damage to a player, choose a card in your hand. That player guesses whether the card's mana value is greater than 4. If the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromancer's Stockpile | silent | {1}{B}, Discard a creature card: Draw a card. If the discarded card was a Zombie card, create a tapped 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Worldwaker | silent | +1: Target land you control becomes a 4/4 Elemental creature with trample. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ob Nixilis, Unshackled | silent | Whenever an opponent searches their library, that player sacrifices a creature of their choice and loses 10 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Paragon of Eternal Wilds | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Paragon of Fierce Defiance | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Paragon of Gathering Mists | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,7 +71,7 @@
 | Stain the Mind | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Choose a no | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Chain Veil | silent | {4}, {T}: For each planeswalker you control, you may activate one of its loyalty abilities once this turn as though none of its loyalty abilities have been acti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Venom Sliver | silent | Sliver creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Waste Not | silent | Whenever an opponent discards a creature card, create a 2/2 black Zombie creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
+| Waste Not | silent | Whenever an opponent discards a noncreature, nonland card, draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Xathrid Slyblade | silent | {3}{B}: Until end of turn, this creature loses hexproof and gains first strike and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yisan, the Wanderer Bard | silent | {2}{G}, {T}, Put a verse counter on Yisan: Search your library for a creature card with mana value equal to the number of verse counters on Yisan, put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blastfire Bolt | notice | Blastfire Bolt deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -85,7 +84,6 @@
 | Sunblade Elf | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warden of the Beyond | notice | This creature gets +2/+2 as long as an opponent owns a card in exile. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aggressive Mining | unaudited | You can't play lands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Chief Engineer | unaudited | Artifact spells you cast have convoke. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Constricting Sliver | unaudited | Sliver creatures you control have "When this creature enters, you may exile target creature an opponent controls until this creature leaves the battlefield." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shield of the Avatar | unaudited | If a source would deal damage to equipped creature, prevent X of that damage, where X is the number of creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sliver Hivelord | unaudited | Sliver creatures you control have indestructible. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -100,6 +98,7 @@
 | Burning Anger | handled | Enchanted creature has "{T}: This creature deals damage equal to its power to any target." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carnivorous Moss-Beast | handled | {5}{G}{G}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Carrion Crow | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chief Engineer | handled | Artifact spells you cast have convoke. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Covenant of Blood | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Covenant of | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crowd's Favor | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Target crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cruel Sadist | handled | {B}, {T}, Pay 1 life: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -166,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Ensoul Artifact
 - Feast on the Fallen
@@ -174,6 +173,7 @@
 - Goblin Kaboomist
 - Hushwing Gryff
 - Might Makes Right
+- Ob Nixilis, Unshackled
 - Soul of Shandalar
 
 </details>
@@ -184,7 +184,6 @@
 |---|---|---|---|
 | +N: look at the top two cards of your library. put one of them into your graveyard. | 1 | Jace, the Living Guildpact | m15 |
 | +N: target land you control becomes a N/N elemental creature with trample. it's still a land. | 1 | Nissa, Worldwaker | m15 |
-| artifact spells you cast have convoke. | 1 | Chief Engineer | m15 |
 | as an additional cost to cast ~, sacrifice a creature. draw cards equal to the sacrificed creature's power. | 1 | Life's Legacy | m15 |
 | as long as you control an artifact, ~ gets +N/+N and has trample. | 1 | Scrapyard Mongrel | m15 |
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
@@ -221,8 +220,7 @@
 | whenever a creature card is put into an opponent's graveyard from anywhere, you gain N life. | 1 | Profane Memento | m15 |
 | whenever a sliver you control attacks, defending player loses N life. | 1 | Leeching Sliver | m15 |
 | whenever an aura becomes attached to ~, create a N/N red dragon creature token with flying. it has "..." | 1 | Brood Keeper | m15 |
-| whenever an opponent discards a creature card, create a N/N black zombie creature token. | 1 | Waste Not | m15 |
-| whenever an opponent searches their library, that player sacrifices a creature of their choice and loses N life. | 1 | Ob Nixilis, Unshackled | m15 |
+| whenever an opponent discards a noncreature, nonland card, draw a card. | 1 | Waste Not | m15 |
 | whenever equipped creature dies, target opponent gains control of ~. | 1 | Avarice Amulet | m15 |
 | whenever equipped creature is dealt damage, destroy it. | 1 | Hot Soup | m15 |
 | whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {M}. if you do, copy that ability. you may choose new targets for the c | 1 | Kurkesh, Onakke Ancient | m15 |

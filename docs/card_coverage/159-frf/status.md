@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 6.8% |
-| Works (untested) | 73 | 45.3% |
+| Works (untested) | 74 | 46.0% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 66 | 41.0% |
+| Not working | 65 | 40.4% |
 
 ## Cards needing work
 
@@ -63,7 +63,6 @@
 | Renowned Weaponsmith | silent | {U}, {T}: Search your library for a card named Heart-Piercer Bow or Vial of Dragonfire, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rite of Undoing | silent | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Return target nonland permanent you control and target nonland permanent  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sage's Reverie | silent | When this Aura enters, draw a card for each Aura you control that's attached to a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sage-Eye Avengers | silent | Whenever this creature attacks, you may return target creature to its owner's hand if its power is less than this creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sandsteppe Mastodon | silent | When this creature enters, bolster 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scroll of the Masters | silent | {3}, {T}: Target creature you control gets +1/+1 until end of turn for each lore counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shockmaw Dragon | silent | Whenever this creature deals combat damage to a player, it deals 1 damage to each creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -157,6 +156,7 @@
 | Refocus | handled | Untap target creature. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Return to the Earth | handled | Destroy target artifact, enchantment, or creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Instincts | handled | Choose one — • Target nonattacking creature gains reach and deathtouch until end of turn. Untap it. • Target attacking creature gets +2/+2 and gains trample unt | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sage-Eye Avengers | handled | Whenever this creature attacks, you may return target creature to its owner's hand if its power is less than this creature's power. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sandblast | handled | Sandblast deals 5 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sandsteppe Outcast | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • Create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shaman of the Great Hunt | handled | Whenever a creature you control deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -257,7 +257,6 @@
 | whenever a permanent you control is turned face up, if it"..."t control. | 1 | Temur War Shaman | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
-| whenever ~ attacks, you may return target creature to its owner's hand if its power is less than ~ power. | 1 | Sage-Eye Avengers | frf |
 | whenever ~ deals combat damage to a player, it deals N damage to each creature that player controls. | 1 | Shockmaw Dragon | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
 | you may cast ~ from your graveyard as long as you control a black or green permanent. | 1 | Marang River Prowler | frf |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 11.9% |
-| Works (untested) | 98 | 46.7% |
+| Tested | 26 | 12.4% |
+| Works (untested) | 99 | 47.1% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 72 | 34.3% |
+| Not working | 70 | 33.3% |
 
 ## Cards needing work
 
@@ -33,14 +33,12 @@
 | Aria of Flame | silent | When this enchantment enters, each opponent gains 10 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Astral Drift | silent | Whenever you cycle this card or cycle another card while this enchantment is on the battlefield, you may exile target creature. If you do, return that card to t | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bellowing Elk | silent | As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Cleaving Sliver | silent | Sliver creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudshredder Sliver | silent | Sliver creatures you control have flying and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Collected Conjuring | silent | Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conifer Wurm | silent | {3}{G}: This creature gets +X/+X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cunning Evasion | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Force of Despair | silent | If it's not your turn, you may exile a black card from your hand rather than pay this spell's mana cost. Destroy all creatures that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frostwalk Bastion | silent | Whenever this land deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Giver of Runes | silent | {T}: Another target creature you control gains protection from colorless or from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gluttonous Slug | silent | Evolve | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -123,6 +121,7 @@
 | Bogardan Dragonheart | handled | Sacrifice another creature: Until end of turn, this creature becomes a Dragon with base power and toughness 4/4, flying, and haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cave of Temptation | handled | {4}, {T}, Sacrifice this land: Put two +1/+1 counters on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chillerpillar | handled | {4}{S}{S}: Monstrosity 2. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Cleaving Sliver | handled | Sliver creatures you control get +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cordial Vampire | handled | Whenever this creature or another creature dies, put a +1/+1 counter on each Vampire you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Crashing Footfalls | handled | Suspend 4—{G} (Rather than cast this card from your hand, pay {G} and exile it with four time counters on it. At the beginning of your upkeep, remove a time cou | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deep Forest Hermit | handled | When this creature enters, create four 1/1 green Squirrel creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,13 +214,14 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
 - Ephemerate
 - Everdream
 - Fiery Islet
+- Force of Despair
 - Force of Negation
 - Force of Vigor
 - Glacial Revelation
@@ -278,7 +278,6 @@
 | exile the top six cards of your library. you may cast up to two sorcery spells with mana value N or less from among them without paying their mana costs. put th | 1 | Collected Conjuring | mh1 |
 | exploit | 1 | Silumgar Scavenger | mh1 |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if that creature is a goat, it also gets +N/+N until e | 1 | Goatnap | mh1 |
-| if it's not your turn, you may exile a black card from your hand rather than pay ~ mana cost. destroy all creatures that entered ~. | 1 | Force of Despair | mh1 |
 | if it's not your turn, you may exile a red card from your hand rather than pay ~ mana cost. create two N/N red elemental creature tokens with trample and haste. | 1 | Force of Rage | mh1 |
 | if it's not your turn, you may exile a white card from your hand rather than pay ~ mana cost. | 1 | Force of Virtue | mh1 |
 | level up {M} ({M}: put a level counter on this. level up only as a sorcery.) level N-N N/N protection from instants level N+ N/N protection from everything | 1 | Hexdrinker | mh1 |
@@ -288,7 +287,6 @@
 | retrace | 1 | Throes of Chaos | mh1 |
 | return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
 | return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |
-| sliver creatures you control get +N/+N. | 1 | Cleaving Sliver | mh1 |
 | sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
 | sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
 | sliver creatures you control have flying and haste. | 1 | Cloudshredder Sliver | mh1 |

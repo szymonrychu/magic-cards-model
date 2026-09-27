@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 9.7% |
-| Works (untested) | 70 | 45.5% |
+| Works (untested) | 72 | 46.8% |
 | Partial (unaudited) | 5 | 3.2% |
-| Not working | 64 | 41.6% |
+| Not working | 62 | 40.3% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Curse of Echoes | silent | Whenever enchanted player casts an instant or sorcery spell, each other player may copy that spell and may choose new targets for the copy they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Misfortunes | silent | At the beginning of your upkeep, you may search your library for a Curse card that doesn't have the same name as a Curse attached to enchanted player, put it on | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of Thirst | silent | At the beginning of enchanted player's upkeep, this Aura deals damage to that player equal to the number of Curses attached to them. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Diregraf Captain | silent | Other Zombie creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drogskol Captain | silent | Other Spirit creatures you control get +1/+1 and have hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elbrus, the Binding Blade // Withengar Unbound | silent | When equipped creature deals combat damage to a player, unattach Elbrus, then transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiend of the Shadows | silent | Whenever this creature deals combat damage to a player, that player exiles a card from their hand. You may play that card for as long as it remains exiled. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,7 +63,6 @@
 | Pyreheart Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ravenous Demon // Archdemon of Greed | silent | At the beginning of your upkeep, sacrifice a Human. If you can't, tap this creature and it deals 9 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Relentless Skaabs | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Saving Grasp | silent | Return target creature you own to your hand. Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scorch the Fields | silent | Destroy target land. Scorch the Fields deals 1 damage to each Human creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shattered Perception | silent | Discard all the cards in your hand, then draw that many cards. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile i | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sightless Ghoul | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -111,6 +109,7 @@
 | Crushing Vines | handled | Choose one — • Destroy target creature with flying. • Destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dawntreader Elk | handled | {G}, Sacrifice this creature: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deranged Outcast | handled | {1}{G}, Sacrifice a Human: Put two +1/+1 counters on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Diregraf Captain | handled | Other Zombie creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drogskol Reaver | handled | Whenever you gain life, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elgaud Inquisitor | handled | When this creature dies, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Erdwal Ripper | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -146,6 +145,7 @@
 | Requiem Angel | handled | Whenever another non-Spirit creature you control dies, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Russet Wolves | handled |  |  | Y/-/- | not_tested |
 | Sanctuary Cat | handled |  |  | Y/-/- | not_tested |
+| Saving Grasp | handled | Return target creature you own to your hand. Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scorned Villager // Moonscarred Werewolf | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Screeching Skaab | handled | When this creature enters, mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shriekgeist | handled | Whenever this creature deals combat damage to a player, that player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -215,11 +215,9 @@
 | if a source would deal damage to enchanted player, it deals double that damage to that player instead. | 1 | Curse of Bloodletting | dka |
 | other spirit creatures you control get +N/+N and have hexproof. | 1 | Drogskol Captain | dka |
 | other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
-| other zombie creatures you control get +N/+N. | 1 | Diregraf Captain | dka |
 | prevent all combat damage that would be dealt ~. fateful hour — if you have N or less life, tap all attacking creatures. those creatures don"..."s next untap st | 1 | Clinging Mists | dka |
 | put target creature on top of its owner's library. | 1 | Griptide | dka |
 | return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |
-| return target creature you own to your hand. flashback {M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Saving Grasp | dka |
 | reveal the top four cards of your library. put a creature card from among them into your hand and the rest into your graveyard. flashback {M}{M} (you may cast ~ | 1 | Tracker's Instincts | dka |
 | search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |
 | target creature an opponent controls deals damage equal to its power to each other creature that player controls, then each of those creatures deals damage equa | 1 | Alpha Brawl | dka |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 15.0% |
+| Tested | 30 | 16.0% |
 | Works (untested) | 97 | 51.9% |
-| Partial (unaudited) | 15 | 8.0% |
-| Not working | 47 | 25.1% |
+| Partial (unaudited) | 14 | 7.5% |
+| Not working | 46 | 24.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Aunt May | silent | Whenever another creature you control enters, you gain 1 life. If it's a Spider, put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Black Cat, Cunning Thief | silent | When Black Cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cheering Crowd | silent | At the beginning of each player's first main phase, that player may put a +1/+1 counter on this creature. If they do, they add {C} for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cosmic Spider-Man | silent | At the beginning of combat on your turn, other Spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -81,7 +80,6 @@
 | Kraven, Proud Predator | unaudited | Top of the Food Chain — Kraven's power is equal to the greatest mana value among permanents you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Madame Web, Clairvoyant | unaudited | You may cast Spider spells and noncreature spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Morlun, Devourer of Spiders | unaudited | Morlun enters with X +1/+1 counters on him. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Multiversal Passage | unaudited | As this land enters, choose a basic land type. Then you may pay 2 life. If you don't, it enters tapped. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Norman Osborn // Green Goblin | unaudited | Norman Osborn can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Peter Parker // Amazing Spider-Man | unaudited | Each legendary spell you cast that's one or more colors has web-slinging {G}{W}{U}. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Scarlet Spider, Ben Reilly | unaudited | Sensational Save — If Scarlet Spider was cast using web-slinging, he enters with X +1/+1 counters on him, where X is the mana value of the returned creature. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -189,8 +187,9 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
+- Aunt May
 - Doc Ock's Henchmen
 - Doc Ock's Tentacles
 - Doctor Octopus, Master Planner
@@ -202,6 +201,7 @@
 - Lizard, Connors's Curse
 - Mister Negative
 - Mob Lookout
+- Multiversal Passage
 - Peter Parker's Camera
 - Prison Break
 - Rhino, Barreling Brute
@@ -234,7 +234,6 @@
 | animal may-ham — other spiders, boars, bats, bears, birds, cats, dogs, frogs, jackals, lizards, mice, otters, rabbits, raccoons, rats, squirrels, turtles, and w | 1 | Spider-Ham, Peter Porker | spm |
 | as arachne enters, look at an opponent's hand, then choose a card type other than creature. | 1 | Arachne, Psionic Weaver | spm |
 | as long as there are eight or more cards in your graveyard, doc ock has base power and toughness N/N. | 1 | Doc Ock, Sinister Scientist | spm |
-| as ~ enters, choose a basic land type. then you may pay N life. if you don't, it enters tapped. | 1 | Multiversal Passage | spm |
 | at the beginning of combat on your turn, other spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | 1 | Cosmic Spider-Man | spm |
 | at the beginning of combat on your turn, target non-equipment artifact you control becomes an artifact creature with base power and toughness N/N until end of t | 1 | Living Brain, Mechanical Marvel | spm |
 | at the beginning of each player's first main phase, that player may put a +N/+N counter on ~. if they do, they add {M} for each counter on it. | 1 | Cheering Crowd | spm |
@@ -267,7 +266,6 @@
 | when you next cast a creature spell ~, copy it, except the copy isn't legendary. | 1 | The Clone Saga | spm |
 | when ~ enters, exile the top card of your library. you may play that card for as long as you control ~. | 1 | Gwen Stacy // Ghost-Spider | spm |
 | when ~ leaves the battlefield, put its +N/+N counters on target creature you control. | 1 | Selfless Police Captain | spm |
-| whenever another creature you control enters, you gain N life. if it's a spider, put a +N/+N counter on it. | 1 | Aunt May | spm |
 | whenever gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. if you ca | 1 | Gwenom, Remorseless | spm |
 | whenever spider-slayer deals damage to a spider, destroy that creature. | 1 | Spider-Slayer, Hatred Honed | spm |
 | whenever venom attacks, you may sacrifice another creature. if you do, draw N cards, then you may put a permanent card with mana value N or less from your hand  | 1 | Eddie Brock // Venom, Lethal Protector | spm |

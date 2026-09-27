@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 9.1% |
+| Tested | 5 | 11.4% |
 | Works (untested) | 32 | 72.7% |
 | Partial (unaudited) | 2 | 4.5% |
-| Not working | 6 | 13.6% |
+| Not working | 5 | 11.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Coalition Victory | silent | You win the game if you control a land of each basic land type and a creature of each color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Champion | silent | Other Elf creatures get +1/+1 and have forestwalk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fact or Fiction | silent | Reveal the top five cards of your library. An opponent separates those cards into two piles. Put one pile into your hand and the other into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Obliterate | silent | This spell can't be countered. Destroy all artifacts, creatures, and lands. They can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -70,9 +69,10 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Chromatic Sphere
+- Coalition Victory
 - Opt
 - Skizzik
 - Tribal Flames
@@ -89,7 +89,6 @@
 | other enchantments you control have shroud. | 1 | Sterling Grove | inv |
 | reveal the top five cards of your library. an opponent separates those cards into two piles. put one pile into your hand and the other into your graveyard. | 1 | Fact or Fiction | inv |
 | saproling creatures and other treefolk creatures get +N/+N. | 1 | Verdeloth the Ancient | inv |
-| you win the game if you control a land of each basic land type and a creature of each color. | 1 | Coalition Victory | inv |
 | ~ can"..."t be regenerated. | 1 | Obliterate | inv |
 
 ## Notes

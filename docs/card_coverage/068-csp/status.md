@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 5.6% |
-| Works (untested) | 58 | 40.6% |
-| Partial (unaudited) | 13 | 9.1% |
-| Not working | 64 | 44.8% |
+| Works (untested) | 60 | 42.0% |
+| Partial (unaudited) | 12 | 8.4% |
+| Not working | 63 | 44.1% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Lightning Storm | silent | Lightning Storm deals X damage to any target, where X is 3 plus the number of charge counters on Lightning Storm. Discard a land card: Put two charge counters o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Luminesce | silent | Prevent all damage that black sources and red sources would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magmatic Core | silent | At the beginning of your end step, this enchantment deals X damage divided as you choose among any number of target creatures, where X is the number of age coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Martyr of Bones | silent | {1}, Reveal X black cards from your hand, Sacrifice this creature: Exile up to X target cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Perilous Research | silent | Draw two cards, then sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Phobian Phantasm | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Resize | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -94,7 +93,6 @@
 | Freyalise's Radiance | unaudited | Snow permanents don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gelid Shackles | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Furrier | unaudited | Prevent all damage that this creature would deal to snow creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Greater Stone Spirit | unaudited | This creature can't be blocked by creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Haakon, Stromgald Scourge | unaudited | You may cast this card from your graveyard, but not from anywhere else. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Karplusan Strider | unaudited | This creature can't be the target of blue or black spells. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Panglacial Wurm | unaudited | While you're searching your library, you may cast this card from your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -121,6 +119,7 @@
 | Frost Raptor | handled | {S}{S}: This creature gains shroud until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Garza Zol, Plague Queen | handled | Whenever a creature dealt damage by Garza Zol this turn dies, put a +1/+1 counter on Garza Zol. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Rimerunner | handled | {T}: Target creature can't block this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Greater Stone Spirit | handled | This creature can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gristle Grinner | handled | Whenever a creature dies, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gutless Ghoul | handled | {1}, Sacrifice a creature: You gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heidar, Rimewind Master | handled | {2}, {T}: Return target permanent to its owner's hand. Activate only if you control four or more snow permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -132,6 +131,7 @@
 | Krovikan Scoundrel | handled |  |  | Y/-/- | not_tested |
 | Krovikan Whispers | handled | You control enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lightning Serpent | handled | This creature enters with X +1/+0 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Martyr of Bones | handled | {1}, Reveal X black cards from your hand, Sacrifice this creature: Exile up to X target cards from a single graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Martyr of Spores | handled | {1}, Reveal X green cards from your hand, Sacrifice this creature: Target creature gets +X/+X until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mouth of Ronom | handled | {4}{S}, {T}, Sacrifice this land: It deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ohran Yeti | handled | {2}{S}: Target snow creature gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -230,7 +230,6 @@
 | you may cast ~ from your graveyard, but not from anywhere else. | 1 | Haakon, Stromgald Scourge | csp |
 | you may exile two blue cards from your hand rather than pay ~ mana cost. gain control of target noncreature spell. you may choose new targets for it. (if that s | 1 | Commandeer | csp |
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
-| {M}, reveal N black cards from your hand, sacrifice ~: exile up to N target cards from a single graveyard. | 1 | Martyr of Bones | csp |
 | {M}, {M}: target snow land becomes a N/N blue elemental creature with flying. it's still a land. | 1 | Balduvian Frostwaker | csp |
 | {M}: remove target blocking creature from combat. creatures it was blocking that hadn't become blocked by another creature ~ become unblocked, then it blocks an | 1 | Balduvian Warlord | csp |
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
@@ -238,7 +237,6 @@
 | {M}{M}, {M}: look at the top card of your library. if that card is snow, you may reveal it and put it into your hand. | 1 | Scrying Sheets | csp |
 | {M}{M}: snow creatures you control get +N/+N until end of turn. | 1 | Diamond Faerie | csp |
 | {M}{M}: target creature loses flying until end of turn. | 1 | Adarkar Windform | csp |
-| ~ can't be blocked by creatures with flying. | 1 | Greater Stone Spirit | csp |
 | ~ can't be the target of blue or black spells. | 1 | Karplusan Strider | csp |
 | ~ deals N damage to any target, where N is N plus the number of charge counters on ~. discard a land card: put two charge counters on ~. you may choose a new ta | 1 | Lightning Storm | csp |
 | ~ deals N damage to target creature and you gain N life, where N is N plus the number of cards named ~ in all graveyards. | 1 | Feast of Flesh | csp |

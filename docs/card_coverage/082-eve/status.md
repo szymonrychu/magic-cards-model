@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 4.5% |
+| Tested | 9 | 5.0% |
 | Works (untested) | 92 | 51.4% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 75 | 41.9% |
+| Not working | 74 | 41.3% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Glamerdye | silent | Change the text of target spell or permanent by replacing all instances of one color word with another. Retrace (You may cast this card from your graveyard by d | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hag Hedge-Mage | silent | When this creature enters, if you control two or more Swamps, you may have target player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heartlash Cinder | silent | Chroma — When this creature enters, it gets +X/+0 until end of turn, where X is the number of red mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Helix Pinnacle | silent | At the beginning of your upkeep, if there are 100 or more tower counters on this enchantment, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Impelled Giant | silent | Tap an untapped red creature you control other than this creature: This creature gets +X/+0 until end of turn, where X is the power of the creature tapped this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Indigo Faerie | silent | {U}: Target permanent becomes blue in addition to its other colors until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inundate | silent | Return all nonblue creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -201,13 +200,14 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Antler Skulkin
 - Belligerent Hatchling
 - Divinity of Pride
 - Figure of Destiny
 - Flickerwisp
+- Helix Pinnacle
 - Merrow Bonegnawer
 - Shorecrasher Mimic
 - Soul Snuffers
@@ -227,7 +227,6 @@
 | as long as enchanted creature is red, it gets +N/+N and has "..." | 1 | Scourge of the Nobilis | eve |
 | as long as enchanted creature is white, it gets +N/+N. | 1 | Edge of the Divinity | eve |
 | as ~ enters, choose an opponent. ~ enters with a -N/-N counter on it for each creature that player controls. | 1 | Canker Abomination | eve |
-| at the beginning of your upkeep, if there are N or more tower counters on ~, you win the game. | 1 | Helix Pinnacle | eve |
 | at the beginning of your upkeep, return a permanent you control to its owner's hand. | 1 | Cache Raiders | eve |
 | at the beginning of your upkeep, sacrifice a creature. you gain life equal to that creature's toughness. | 1 | Doomgape | eve |
 | at the beginning of your upkeep, you may gain control of target permanent until end of turn. if you do, untap it and it gains haste until end of turn. | 1 | Dominus of Fealty | eve |

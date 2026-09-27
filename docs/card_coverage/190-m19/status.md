@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.1% |
-| Works (untested) | 122 | 67.8% |
-| Partial (unaudited) | 7 | 3.9% |
-| Not working | 40 | 22.2% |
+| Tested | 14 | 7.8% |
+| Works (untested) | 127 | 70.6% |
+| Partial (unaudited) | 2 | 1.1% |
+| Not working | 37 | 20.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aerial Engineer | silent | As long as you control an artifact, this creature gets +2/+0 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aether Tunnel | silent | Enchanted creature gets +1/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ajani, Wise Counselor | silent | −9: Put X +1/+1 counters on target creature, where X is your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Amulet of Safekeeping | silent | Whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {1}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Apex of Power | silent | Exile the top seven cards of your library. Until end of turn, you may cast spells from among them. If this spell was cast from your hand, add ten mana of any on | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcades, the Strategist | silent | Each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,7 +42,6 @@
 | Goreclaw, Terror of Qal Sisma | silent | Whenever Goreclaw attacks, each creature you control with power 4 or greater gets +1/+1 and gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infernal Reckoning | silent | Exile target colorless creature. You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inferno Hellion | silent | At the beginning of each end step, if this creature attacked or blocked this turn, its owner shuffles it into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Liliana's Contract | silent | At the beginning of your upkeep, if you control four or more Demons with different names, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, the Necromancer | silent | −7: Destroy up to two target creatures. Put up to two creature cards from graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Militia Bugler | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Novice Knight | silent | As long as this creature is enchanted or equipped, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,15 +62,9 @@
 | Isareth the Awakener | notice | Whenever Isareth attacks, you may pay {X}. When you do, return target creature card with mana value X from your graveyard to the battlefield with a corpse count | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nightmare's Thirst | notice | You gain 1 life. Target creature gets -X/-X until end of turn, where X is the amount of life you gained this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Palladia-Mors, the Ruiner | notice | Palladia-Mors has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Suncleanser | notice | When this creature enters, choose one — • Remove all counters from target creature. It can't have counters put on it for as long as this creature remains on the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vaevictis Asmadi, the Dire | notice | Whenever Vaevictis Asmadi attacks, for each player, choose target permanent that player controls. Those players sacrifice those permanents. Each player who sacr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ghastbark Twins | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Lightning Mare | unaudited | This creature can't be blocked by blue creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Metamorphic Alteration | unaudited | As this Aura enters, choose a creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Plague Mare | unaudited | This creature can't be blocked by white creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Shield Mare | unaudited | This creature can't be blocked by red creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Surge Mare | unaudited | This creature can't be blocked by green creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vine Mare | unaudited | This creature can't be blocked by black creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abnormal Endurance | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies, return it to the battlefield tapped under its owner's control." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aegis of the Heavens | handled | Target creature gets +1/+7 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aethershield Artificer | handled | At the beginning of combat on your turn, target artifact creature you control gets +2/+2 and gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -81,6 +73,7 @@
 | Ajani's Last Stand | handled | Whenever a creature or planeswalker you control dies, you may sacrifice this enchantment. If you do, create a 4/4 white Avatar creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Welcome | handled | Whenever a creature you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani, Adversary of Tyrants | handled | +1: Put a +1/+1 counter on each of up to two target creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ajani, Wise Counselor | handled | +2: You gain 1 life for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angel of the Dawn | handled | When this creature enters, creatures you control get +1/+1 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arcane Encyclopedia | handled | {3}, {T}: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aven Wind Mage | handled | Whenever you cast an instant or sorcery spell, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -134,6 +127,7 @@
 | Leonin Vanguard | handled | At the beginning of combat on your turn, if you control three or more creatures, this creature gets +1/+1 until end of turn and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Leonin Warleader | handled | Whenever this creature attacks, create two 1/1 white Cat creature tokens with lifelink that are tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lich's Caress | handled | Destroy target creature. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lightning Mare | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Liliana's Spoils | handled | Target opponent discards a card. Look at the top five cards of your library. You may reveal a black card from among them and put it into your hand. Put the rest | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Loxodon Line Breaker | handled |  |  | Y/Y/- | not_tested |
 | Marauder's Axe | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -142,6 +136,7 @@
 | Mystic Archaeologist | handled | {3}{U}{U}: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Onakke Ogre | handled |  |  | Y/Y/- | not_tested |
 | Open the Graves | handled | Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Plague Mare | handled | This creature can't be blocked by white creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Poison-Tip Archer | handled | Whenever another creature dies, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prodigious Growth | handled | Enchanted creature gets +7/+7 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Psychic Symbiont | handled | When this creature enters, target opponent discards a card and you draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -162,6 +157,7 @@
 | Satyr Enchanter | handled | Whenever you cast an enchantment spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scholar of Stars | handled | When this creature enters, if you control an artifact, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Serra's Guardian | handled | Other creatures you control have vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Shield Mare | handled | This creature can't be blocked by red creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siegebreaker Giant | handled | {3}{R}: Target creature can't block this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silverbeak Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Skalla Wolf | handled | When this creature enters, look at the top five cards of your library. You may reveal a green card from among them and put it into your hand. Put the rest on th | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -174,6 +170,7 @@
 | Star-Crowned Stag | handled | Whenever this creature attacks, tap target creature defending player controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stitcher's Supplier | handled | When this creature enters or dies, mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Strangling Spores | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Surge Mare | handled | This creature can't be blocked by green creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Suspicious Bookcase | handled | {3}, {T}: Target creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Take Vengeance | handled | Destroy target tapped creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Talons of Wildwood | handled | Enchanted creature gets +1/+1 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -199,19 +196,22 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>14 cards</summary>
 
 - Alpine Moon
 - Arisen Gorgon
 - Doublecast
 - Hungering Hydra
 - Lena, Selfless Champion
+- Liliana's Contract
 - Liliana, Untouched by Death
 - Mistcaller
 - Nicol Bolas, the Ravager // Nicol Bolas, the Arisen
 - One with the Machine
 - Sarkhan, Fireblood
+- Suncleanser
 - Supreme Phantom
+- Vine Mare
 
 </details>
 
@@ -226,7 +226,6 @@
 | as long as ~ is enchanted or equipped, it can attack as though it didn't have defender. | 1 | Novice Knight | m19 |
 | as ~ enters, choose a creature. | 1 | Metamorphic Alteration | m19 |
 | at the beginning of each end step, if ~ attacked or blocked ~, its owner shuffles it into their library. | 1 | Inferno Hellion | m19 |
-| at the beginning of your upkeep, if you control four or more demons with different names, you win the game. | 1 | Liliana's Contract | m19 |
 | at the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard ~. | 1 | Patient Rebuilding | m19 |
 | discard a card: until end of turn, chromium becomes a human with base power and toughness N/N, loses all abilities, and gains hexproof. it can't be blocked ~. | 1 | Chromium, the Mutable | m19 |
 | each creature you control with defender assigns combat damage equal to its toughness rather than its power and can attack as though it didn't have defender. | 1 | Arcades, the Strategist | m19 |
@@ -238,7 +237,6 @@
 | palladia-mors has hexproof as long as it hasn't dealt damage yet. | 1 | Palladia-Mors, the Ruiner | m19 |
 | target creature gets +N/+N until end of turn. all creatures able to block it ~ do so. | 1 | Declare Dominance | m19 |
 | when enchanted creature blocks, destroy it. | 1 | Dwindle | m19 |
-| when ~ enters, choose one — • remove all counters from target creature. it can"..."t get counters for as long as ~ remains on the battlefield. | 1 | Suncleanser | m19 |
 | when ~ enters, look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Militia Bugler | m19 |
 | when ~ enters, target artifact you control becomes an artifact creature with base power and toughness N/N for as long as ~ remains on the battlefield. | 1 | Skilled Animator | m19 |
 | whenever equipped creature attacks, create a N/N white knight creature token with vigilance that's attacking. | 1 | Sigiled Sword of Valeron | m19 |
@@ -258,14 +256,8 @@
 | {M}{M}: ~ gets +N/+N and becomes a bear berserker until end of turn. activate only once each turn. | 1 | Ursine Champion | m19 |
 | {M}{M}{M}, {M}: search your library for a card named ~, put it onto the battlefield, then shuffle. | 1 | Elvish Clancaller | m19 |
 | ~ can block an additional creature each combat. | 1 | Ghastbark Twins | m19 |
-| ~ can't be blocked by black creatures. | 1 | Vine Mare | m19 |
-| ~ can't be blocked by blue creatures. | 1 | Lightning Mare | m19 |
-| ~ can't be blocked by green creatures. | 1 | Surge Mare | m19 |
-| ~ can't be blocked by red creatures. | 1 | Shield Mare | m19 |
-| ~ can't be blocked by white creatures. | 1 | Plague Mare | m19 |
 | ~ gets +N/+N as long as you control an ajani planeswalker. | 1 | Court Cleric | m19 |
 | −N: destroy up to two target creatures. put up to two creature cards from graveyards onto the battlefield under your control. | 1 | Liliana, the Necromancer | m19 |
-| −N: put N +N/+N counters on target creature, where N is your life total. | 1 | Ajani, Wise Counselor | m19 |
 
 ## Notes
 

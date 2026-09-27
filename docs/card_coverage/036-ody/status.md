@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 13.7% |
+| Tested | 8 | 15.7% |
 | Works (untested) | 28 | 54.9% |
 | Partial (unaudited) | 4 | 7.8% |
-| Not working | 12 | 23.5% |
+| Not working | 11 | 21.6% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Aura Graft | silent | Gain control of target Aura that's attached to a permanent. Attach it to another permanent it can enchant. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aven Windreader | silent | {1}{U}: Target player reveals the top card of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Battle of Wits | silent | At the beginning of your upkeep, if you have 200 or more cards in your library, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chance Encounter | silent | Whenever you win a coin flip, put a luck counter on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Deluge | silent | Tap all creatures without flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Haunting Echoes | silent | Exile all cards from target player's graveyard other than basic land cards. For each card exiled this way, search that player's library for all cards with the s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -74,9 +73,10 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Barbarian Ring
+- Battle of Wits
 - Diabolic Tutor
 - Millikin
 - Mirari
@@ -91,7 +91,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | enchanted land has "..." | 2 | Caustic Tar, Squirrel Nest | ody |
-| at the beginning of your upkeep, if you have N or more cards in your library, you win the game. | 1 | Battle of Wits | ody |
 | cards in graveyards can't be the targets of spells or abilities. | 1 | Ground Seal | ody |
 | exile all cards from target player"..."s library for all cards with the same name as that card and exile them. then that player shuffles. | 1 | Haunting Echoes | ody |
 | fear | 1 | Shadowmage Infiltrator | ody |

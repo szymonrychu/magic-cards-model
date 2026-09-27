@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 7.5% |
-| Works (untested) | 83 | 51.9% |
-| Partial (unaudited) | 10 | 6.2% |
-| Not working | 55 | 34.4% |
+| Works (untested) | 86 | 53.8% |
+| Partial (unaudited) | 9 | 5.6% |
+| Not working | 53 | 33.1% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Archetype of Imagination | silent | Creatures your opponents control lose flying and can't have or gain flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Astral Cornucopia | silent | {T}: Choose a color. Add one mana of that color for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brimaz, King of Oreskos | silent | Whenever Brimaz attacks, create a 1/1 white Cat Soldier creature token with vigilance that's attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Culling Mark | silent | Target creature blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eidolon of Countless Battles | silent | This creature and enchanted creature each get +1/+1 for each creature you control and +1/+1 for each Aura you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ephara's Enlightenment | silent | When this Aura enters, put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Hammer | silent | Target creature you control deals damage equal to its power to another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -60,7 +59,6 @@
 | Sanguimancy | silent | You draw X cards and you lose X life, where X is your devotion to black. (Each {B} in the mana costs of permanents you control counts toward your devotion to bl | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Satyr Nyx-Smith | silent | Inspired — Whenever this creature becomes untapped, you may pay {2}{R}. If you do, create a 3/1 red Elemental enchantment creature token with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Servant of Tymaret | silent | Inspired — Whenever this creature becomes untapped, each opponent loses 1 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Siren of the Fanged Coast | silent | When this creature enters, if tribute wasn't paid, gain control of target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siren of the Silent Song | silent | Inspired — Whenever this creature becomes untapped, each opponent discards a card, then each opponent mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Skyreaping | silent | Skyreaping deals damage to each creature with flying equal to your devotion to green. (Each {G} in the mana costs of permanents you control counts toward your d | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spiteful Returned | silent | Whenever this creature or enchanted creature attacks, defending player loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +85,6 @@
 | Grisly Transformation | unaudited | Enchanted creature has intimidate. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kraken of the Straits | unaudited | Creatures with power less than the number of Islands you control can't block this creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Loyal Pegasus | unaudited | This creature can't attack or block alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Marshmist Titan | unaudited | This spell costs {X} less to cast, where X is your devotion to black. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Noble Quarry | unaudited | All creatures able to block this creature or enchanted creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Stratus Walk | unaudited | Enchanted creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tromokratis | unaudited | Tromokratis can't be blocked unless all creatures defending player controls block it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -104,6 +101,7 @@
 | Chorus of the Tides | handled | Heroic — Whenever you cast a spell that targets this creature, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chromanticore | handled | Enchanted creature gets +4/+4 and has flying, first strike, vigilance, trample, and lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Claim of Erebos | handled | Enchanted creature has "{1}{B}, {T}: Target player loses 2 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Culling Mark | handled | Target creature blocks this turn if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cyclops of One-Eyed Pass | handled |  |  | Y/Y/- | not_tested |
 | Dawn to Dusk | handled | Choose one or both — • Return target enchantment card from your graveyard to your hand. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drown in Sorrow | handled | All creatures get -2/-2 until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,6 +130,7 @@
 | Karametra's Favor | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Karametra, God of Harvests | handled | As long as your devotion to green and white is less than seven, Karametra isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kragma Butcher | handled | Inspired — Whenever this creature becomes untapped, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Marshmist Titan | handled | This spell costs {X} less to cast, where X is your devotion to black. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meletis Astronomer | handled | Heroic — Whenever you cast a spell that targets this creature, look at the top three cards of your library. You may reveal an enchantment card from among them a | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindreaver | handled | Heroic — Whenever you cast a spell that targets this creature, exile the top three cards of target player's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mischief and Mayhem | handled | Up to two target creatures each get +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -163,6 +162,7 @@
 | Shrike Harpy | handled | When this creature enters, if tribute wasn't paid, target opponent sacrifices a creature of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Silent Sentinel | handled | Whenever this creature attacks, you may return target enchantment card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siren Song Lyre | handled | Equipped creature has "{2}, {T}: Tap target creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Siren of the Fanged Coast | handled | When this creature enters, if tribute wasn't paid, gain control of target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sphinx's Disciple | handled | Inspired — Whenever this creature becomes untapped, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormcaller of Keranos | handled | {1}{U}: Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sunbond | handled | Enchanted creature has "Whenever you gain life, put that many +1/+1 counters on this creature." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -226,7 +226,6 @@
 | search your library for up to two basic land cards, reveal those cards, and put one onto the battlefield tapped and the other into your hand. shuffle, then scry | 1 | Peregrination | bng |
 | starting with you, each player separates all permanents they control into three piles. then each player chooses one of their piles at random and sacrifices thos | 1 | Whims of the Fates | bng |
 | tap up to two target creatures. those creatures don"..." next untap steps. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Sudden Storm | bng |
-| target creature blocks ~ if able. | 1 | Culling Mark | bng |
 | target creature gets +N/+N until end of turn, where N is your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devoti | 1 | Aspect of Hydra | bng |
 | target creature gets -N/-N until end of turn. if it's a cyclops, destroy it. | 1 | Eye Gouge | bng |
 | target creature you control deals damage equal to its power to another target creature. | 1 | Fall of the Hammer | bng |
@@ -234,7 +233,6 @@
 | until end of turn, creatures you control gain "..." | 1 | Lightning Volley | bng |
 | until end of turn, target creature gains "..." | 1 | Retraction Helix | bng |
 | when ~ enters, if tribute wasn"..."s hand." | 1 | Flame-Wreathed Phoenix | bng |
-| when ~ enters, if tribute wasn't paid, gain control of target creature. | 1 | Siren of the Fanged Coast | bng |
 | when ~ enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Oracle of Bones | bng |
 | when ~ enters, if tribute wasn't paid, you may have ~ fight another target creature. | 1 | Nessian Wilds Ravager | bng |
 | when ~ enters, put a +N/+N counter on enchanted creature. | 1 | Ephara's Enlightenment | bng |
@@ -252,7 +250,6 @@
 | ~ can"..."s hand. | 1 | Floodtide Serpent | bng |
 | ~ can't attack or block alone. | 1 | Loyal Pegasus | bng |
 | ~ can't be blocked unless all creatures defending player controls block it. | 1 | Tromokratis | bng |
-| ~ costs {M} less to cast, where N is your devotion to black. | 1 | Marshmist Titan | bng |
 | ~ deals N damage to target creature. when that creature dies ~, ~ deals N damage to the creature's controller. | 1 | Searing Blood | bng |
 | ~ deals damage to each creature with flying equal to your devotion to green. (each {M} in the mana costs of permanents you control counts toward your devotion t | 1 | Skyreaping | bng |
 

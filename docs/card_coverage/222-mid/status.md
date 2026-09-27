@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 10.4% |
-| Works (untested) | 119 | 47.8% |
-| Partial (unaudited) | 16 | 6.4% |
-| Not working | 88 | 35.3% |
+| Tested | 28 | 11.2% |
+| Works (untested) | 122 | 49.0% |
+| Partial (unaudited) | 15 | 6.0% |
+| Not working | 84 | 33.7% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Galedrifter // Waildrifter | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ghoulcaller's Harvest | silent | Create X 2/2 black Zombie creature tokens with decayed, where X is half the number of creature cards in your graveyard, rounded up. (A creature with decayed can | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gisa, Glorious Resurrector | silent | At the beginning of your upkeep, put all creature cards exiled with Gisa onto the battlefield under your control. They gain decayed. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Graveyard Trespasser // Graveyard Glutton | silent | Whenever this creature enters or attacks, exile up to one target card from a graveyard. If a creature card was exiled this way, each opponent loses 1 life and y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvesttide Sentry | silent | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature can't be blocked by creatures with  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hostile Hostel // Creeping Inn | silent | Whenever this creature attacks, you may exile a creature card from your graveyard. If you do, each opponent loses X life and you gain X life, where X is the num | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Howl of the Hunt | silent | When this Aura enters, if enchanted creature is a Wolf or Werewolf, untap that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -72,9 +71,7 @@
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Play with Fire | silent | Play with Fire deals 2 damage to any target. If a player is dealt damage this way, scry 1. (Look at the top card of your library. You may put that card on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rootcoil Creeper | silent | {G}{U}, {T}, Exile this creature: Return target card with flashback you own from exile to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shipwreck Sifters | silent | Whenever you discard a Spirit card or a card with disturb, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slaughter Specialist | silent | When this creature enters, each opponent creates a 1/1 white Human creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +84,6 @@
 | The Celestus | silent | {3}, {T}: If it's night, it becomes day. Otherwise, it becomes night. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Meathook Massacre | silent | When The Meathook Massacre enters, each creature gets -X/-X until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | silent | At the beginning of your upkeep, if you control three or more Wolves and/or Werewolves, it becomes night. Then transform any number of Human Werewolves you cont | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Triskaidekaphile | silent | At the beginning of your upkeep, if you have exactly thirteen cards in your hand, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Turn the Earth | silent | Choose up to three target cards in graveyards. The owners of those cards shuffle them into their libraries. You gain 2 life. Flashback {1}{G} (You may cast this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unnatural Growth | silent | At the beginning of each combat, double the power and toughness of each creature you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vengeful Strangler // Strangling Grasp | silent | When this creature dies, return it to the battlefield transformed under your control attached to target creature or planeswalker an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -119,7 +115,6 @@
 | Consuming Blob | unaudited | Consuming Blob's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Curse of Leeches // Leeching Lurker | unaudited | As this permanent transforms into Curse of Leeches, attach it to a player. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Grizzly Ghoul | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Hedgewitch's Mask | unaudited | Equipped creature can't be blocked by creatures with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Katilda, Dawnhart Prime | unaudited | Human creatures you control have "{T}: Add one mana of any of this creature's colors." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lier, Disciple of the Drowned | unaudited | Spells can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mounted Dreadknight | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -222,10 +217,12 @@
 | Rite of Oblivion | handled | As an additional cost to cast this spell, sacrifice a nonland permanent. Exile target nonland permanent. Flashback {2}{W}{B} (You may cast this card from your g | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual Guardian | handled | Coven — At the beginning of combat on your turn, if you control three or more creatures with different powers, this creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual of Hope | handled | Creatures you control get +1/+1 until end of turn. Coven — If you control three or more creatures with different powers, creatures you control get +2/+1 until e | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rootcoil Creeper | handled | {G}{U}, {T}, Exile this creature: Return target card with flashback you own from exile to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rotten Reunion | handled | Exile up to one target card from a graveyard. Create a 2/2 black Zombie creature token with decayed. (It can't block. When it attacks, sacrifice it at end of co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sacred Fire | handled | Sacred Fire deals 2 damage to any target and you gain 2 life. Flashback {4}{R}{W} (You may cast this card from your graveyard for its flashback cost. Then exile | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shadowbeast Sighting | handled | Create a 4/4 green Beast creature token. Flashback {6}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shady Traveler // Stalking Predator | handled | Transform | no code needed | Y/Y/- | not_tested |
+| Shipwreck Sifters | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Siege Zombie | handled | Tap three untapped creatures you control: Each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sigarda, Champion of Light | handled | Humans you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sigardian Savior | handled | When this creature enters, if you cast it, return up to two target creature cards with mana value 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -246,6 +243,7 @@
 | Thraben Exorcism | handled | Exile target Spirit, creature with disturb, or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tireless Hauler // Dire-Strain Brawler | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Tovolar's Huntmaster // Tovolar's Packleader | handled | When this creature enters, create two 2/2 green Wolf creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Triskaidekaphile | handled | You have no maximum hand size. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unblinking Observer | handled |  |  | Y/Y/- | not_tested |
 | Vanquish the Horde | handled | This spell costs {1} less to cast for each creature on the battlefield. Destroy all creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voldaren Ambusher | handled | When this creature enters, if an opponent lost life this turn, it deals X damage to up to one target creature or planeswalker, where X is the number of Vampires | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -253,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>28 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
@@ -267,7 +265,9 @@
 - Falkenrath Pit Fighter
 - Gavony Dawnguard
 - Geistflame Reservoir
+- Graveyard Trespasser // Graveyard Glutton
 - Haunted Ridge
+- Hedgewitch's Mask
 - Jadar, Ghoulcaller of Nephalia
 - Moonsilver Key
 - Otherworldly Gaze
@@ -303,7 +303,6 @@
 | at the beginning of enchanted player's upkeep, any number of target players other than that player each draw cards equal to the number of curses attached to tha | 1 | Curse of Surveillance | mid |
 | at the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for ~. then note your life total. | 1 | Sigarda's Splendor | mid |
 | at the beginning of your upkeep, if you control three or more wolves and/or werewolves, it becomes night. then transform any number of human werewolves you cont | 1 | Tovolar, Dire Overlord // Tovolar, the Midnight Scourge | mid |
-| at the beginning of your upkeep, if you have exactly thirteen cards in your hand, you win the game. | 1 | Triskaidekaphile | mid |
 | at the beginning of your upkeep, put all creature cards exiled with gisa onto the battlefield under your control. they gain decayed. | 1 | Gisa, Glorious Resurrector | mid |
 | at the beginning of your upkeep, you may exile a card from a graveyard. if a creature card was exiled ~, put a +N/+N counter on ~. | 1 | Deathbonnet Sprout // Deathbonnet Hulk | mid |
 | choose up to three target cards in graveyards. the owners of those cards shuffle them into their libraries. you gain N life. flashback {M}{M} (you may cast ~ fr | 1 | Turn the Earth | mid |
@@ -315,7 +314,6 @@
 | destroy target artifact, enchantment, or land. if a land was destroyed ~, its controller may search their library for up to two basic land cards, put them onto  | 1 | Dire-Strain Rampage | mid |
 | destroy target creature or planeswalker. its controller investigates. (they create a clue token. it's an artifact with "...") | 1 | Fateful Absence | mid |
 | enchanted creature has vigilance and "..." | 1 | Cathar's Call | mid |
-| equipped creature can't be blocked by creatures with power N or greater. | 1 | Hedgewitch's Mask | mid |
 | exile target nonlegendary creature, then return it to the battlefield under its owner's control. if it entered under your control, put a +N/+N counter on it. ot | 1 | Hallowed Respite | mid |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if you control a wolf or werewolf, scry N. (look at th | 1 | Pack's Betrayal | mid |
 | human creatures you control have "..." | 1 | Katilda, Dawnhart Prime | mid |
@@ -357,19 +355,16 @@
 | whenever one or more creature cards are put into graveyards from anywhere, investigate. ~ triggers only once each turn. | 1 | Dennick, Pious Apprentice // Dennick, Pious Apparition | mid |
 | whenever you attack, for each opponent, create a N/N white human creature token that's tapped and attacking that player or a planeswalker they control. | 1 | Adeline, Resplendent Cathar | mid |
 | whenever you cast a spell, you may discard your hand. if you do, draw a card for each of that spell's colors. | 1 | Moonveil Regent | mid |
-| whenever you discard a spirit card or a card with disturb, put a +N/+N counter on ~. | 1 | Shipwreck Sifters | mid |
 | whenever ~ attacks, add {M} or {M}. until end of turn, you don't lose ~ as steps and phases end. | 1 | Kessig Naturalist // Lord of the Ulvenwald | mid |
 | whenever ~ attacks, it deals N damage to defending player. | 1 | Falkenrath Perforator | mid |
 | whenever ~ attacks, it deals N damage to target creature defending player controls. if that creature is a zombie, ~ deals N damage to it instead. | 1 | Purifying Dragon | mid |
 | whenever ~ attacks, return target creature card with mana value N or less from your graveyard to the battlefield tapped and attacking. | 1 | Bereaved Survivor // Dauntless Avenger | mid |
 | whenever ~ attacks, you may exile a creature card from your graveyard. if you do, each opponent loses N life and you gain N life, where N is the number of creat | 1 | Hostile Hostel // Creeping Inn | mid |
 | whenever ~ becomes blocked, each creature blocking it gets -N/-N until end of turn. | 1 | Baneblade Scoundrel // Baneclaw Marauder | mid |
-| whenever ~ enters or attacks, exile up to one target card from a graveyard. if a creature card was exiled ~, each opponent loses N life and you gain N life. | 1 | Graveyard Trespasser // Graveyard Glutton | mid |
 | wolves and werewolves you control have haste. | 1 | Village Watch // Village Reavers | mid |
 | {M}, sacrifice ~: counter target noncreature spell unless its controller pays {M}. | 1 | Malevolent Hermit // Benevolent Geist | mid |
 | {M}, {M}, pay N life, discard a card: draw a card, mill a card, then put a ritual counter on ~. then if it has three or more ritual counters on it, remove them  | 1 | Heirloom Mirror // Inherited Fiend | mid |
 | {M}, {M}: if it's night, it becomes day. otherwise, it becomes night. activate only as a sorcery. | 1 | The Celestus | mid |
-| {M}{M}, {M}, exile ~: return target card with flashback you own from exile to your hand. | 1 | Rootcoil Creeper | mid |
 | {M}{M}{M}{M}{M}, exile N creature cards from your graveyard: transform ludevic. N can't be N. activate only as a sorcery. | 1 | Ludevic, Necrogenius // Olag, Ludevic's Hubris | mid |
 | ~ costs {M} less to cast for each creature you attacked with ~. | 1 | Search Party Captain | mid |
 | ~ costs {M} less to cast if you control a vampire. ~ deals N damage to target creature and N damage to its controller. draw a card. | 1 | Neonate's Rush | mid |

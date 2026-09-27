@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 7.1% |
-| Works (untested) | 100 | 44.6% |
+| Tested | 19 | 8.5% |
+| Works (untested) | 98 | 43.8% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 98 | 43.8% |
+| Not working | 97 | 43.3% |
 
 ## Cards needing work
 
@@ -115,7 +115,6 @@
 | Volatile Rig | silent | When this creature dies, flip a coin. If you lose the flip, it deals 4 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska the Unseen | silent | +1: Until your next turn, whenever a creature deals combat damage to Vraska, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wayfaring Temple | silent | Whenever this creature deals combat damage to a player, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Worldspine Wurm | silent | When Worldspine Wurm is put into a graveyard from anywhere, shuffle it into its owner's library. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Zanikev Locust | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Assassin's Strike | notice | Destroy target creature. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Azorius Charm | notice | Choose one — • Creatures you control gain lifelink until end of turn. • Draw a card. • Put target attacking or blocking creature on top of its owner's library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -172,14 +171,12 @@
 | Frostburn Weird | handled | {U/R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gobbling Ooze | handled | {G}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Rally | handled | Create four 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Golgari Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Golgari Keyrune | handled | {B}{G}: This artifact becomes a 2/2 black and green Insect artifact creature with deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Golgari Longlegs | handled |  |  | Y/Y/- | not_tested |
 | Grove of the Guardian | handled | {3}{G}{W}, {T}, Tap two untapped creatures you control, Sacrifice this land: Create an 8/8 green and white Elemental creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Havoc Festival | handled | Players can't gain life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hover Barrier | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Hussar Patrol | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
-| Izzet Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Izzet Keyrune | handled | {U}{R}: Until end of turn, this artifact becomes a 2/1 blue and red Elemental artifact creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Keening Apparition | handled | Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Knightly Valor | handled | When this Aura enters, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,7 +193,6 @@
 | Phantom General | handled | Creature tokens you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pursuit of Flight | handled | Enchanted creature gets +2/+2 and has "{U}: This creature gains flying until end of turn." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyroconvergence | handled | Whenever you cast a multicolored spell, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rakdos Guildgate | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rakdos Keyrune | handled | {B}{R}: This artifact becomes a 3/1 black and red Devil artifact creature with first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakdos Ragemutt | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Rakdos Shred-Freak | handled | Haste | machines/combat.py | Y/Y/- | not_tested |
@@ -234,11 +230,12 @@
 | Vassal Soul | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Viashino Racketeer | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voidwielder | handled | When this creature enters, you may return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Worldspine Wurm | handled | When this creature dies, create three 5/5 green Wurm creature tokens with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>19 cards</summary>
 
 - Abrupt Decay
 - Azorius Guildgate
@@ -247,10 +244,13 @@
 - Dark Revenant
 - Fencing Ace
 - Gatecreeper Vine
+- Golgari Guildgate
 - Grisly Salvage
 - Guttersnipe
+- Izzet Guildgate
 - Nivix Guildmage
 - Precinct Captain
+- Rakdos Guildgate
 - Rest in Peace
 - Selesnya Guildgate
 - Shrieking Affliction
@@ -310,7 +310,6 @@
 | when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Transguild Promenade | rtr |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Faerie Impostor | rtr |
-| when ~ is put into a graveyard from anywhere, shuffle it into its owner's library. | 1 | Worldspine Wurm | rtr |
 | when ~ leaves the battlefield, return the exiled cards to the battlefield under their owner's control. | 1 | Detention Sphere | rtr |
 | when ~ leaves the battlefield, return the exiled cards to their owners' hands. | 1 | Angel of Serenity | rtr |
 | whenever a creature attacks you or a planeswalker you control, you may draw a card. | 1 | Isperia, Supreme Judge | rtr |

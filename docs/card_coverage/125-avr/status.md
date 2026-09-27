@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 5.5% |
-| Works (untested) | 102 | 47.0% |
-| Partial (unaudited) | 18 | 8.3% |
-| Not working | 85 | 39.2% |
+| Works (untested) | 104 | 47.9% |
+| Partial (unaudited) | 17 | 7.8% |
+| Not working | 84 | 38.7% |
 
 ## Cards needing work
 
@@ -104,7 +104,6 @@
 | Descent into Madness | notice | At the beginning of your upkeep, put a despair counter on this enchantment, then each player exiles X permanents they control and/or cards from their hand, wher | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eaten by Spiders | notice | Destroy target creature with flying and all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Herald of War | notice | Angel spells and Human spells you cast cost {1} less to cast for each +1/+1 counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Holy Justiciar | notice | {2}{W}, {T}: Tap target creature. If that creature is a Zombie, exile it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Leap of Faith | notice | Target creature gains flying until end of turn. Prevent all damage that would be dealt to that creature this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -122,7 +121,6 @@
 | Gisela, Blade of Goldnight | unaudited | If a source would deal damage to an opponent or a permanent an opponent controls, that source deals double that damage to that player or permanent instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gloom Surgeon | unaudited | If combat damage would be dealt to this creature, prevent that damage and exile that many cards from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Grounded | unaudited | Enchanted creature loses flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Hunted Ghoul | unaudited | This creature can't block Humans. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Misthollow Griffin | unaudited | You may cast this card from exile. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Predator's Gambit | unaudited | Enchanted creature has intimidate as long as its controller controls no other creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Riders of Gavony | unaudited | Human creatures you control have protection from creatures of the chosen type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -170,7 +168,9 @@
 | Harvester of Souls | handled | Whenever another nontoken creature dies, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Haunted Guardian | handled | First strike | machines/combat.py | Y/-/- | not_tested |
 | Havengul Vampire | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Holy Justiciar | handled | {2}{W}, {T}: Tap target creature. If that creature is a Zombie, exile it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Human Frailty | handled | Destroy target Human creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Hunted Ghoul | handled | This creature can't block Humans. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Into the Void | handled | Return up to two target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kessig Malcontents | handled | When this creature enters, it deals damage to target player or planeswalker equal to the number of Humans you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kruin Striker | handled | Whenever another creature you control enters, this creature gets +1/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -340,12 +340,10 @@
 | whenever ~ attacks, return another creature you control to its owner's hand. | 1 | Havengul Skaab | avr |
 | whenever ~ becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Somberwald Vigilante | avr |
 | you may cast ~ from exile. | 1 | Misthollow Griffin | avr |
-| {M}{M}, {M}: tap target creature. if that creature is a zombie, exile it. | 1 | Holy Justiciar | avr |
 | {M}{M}, {M}: you may cast spells ~ as though they had flash. | 1 | Alchemist's Refuge | avr |
 | {M}{M}: prevent all combat damage that would be dealt to and dealt by ~ ~. | 1 | Moonlight Geist | avr |
 | ~ can block only creatures with flying. | 1 | Scrapskin Drake | avr |
 | ~ can"..."s paired with a creature with soulbond. | 1 | Flowering Lumberknot | avr |
-| ~ can't block humans. | 1 | Hunted Ghoul | avr |
 | ~ deals N damage to each creature target player controls. each creature dealt damage ~ attacks ~ if able. | 1 | Aggravate | avr |
 | ~'s power and toughness are each equal to half the highest life total among your opponents, rounded up. | 1 | Malignus | avr |
 | −N: draw a card for each tapped creature target player controls. | 1 | Tamiyo, the Moon Sage | avr |

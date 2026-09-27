@@ -17,24 +17,22 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 12.3% |
-| Works (untested) | 31 | 54.4% |
+| Tested | 8 | 14.0% |
+| Works (untested) | 32 | 56.1% |
 | Partial (unaudited) | 5 | 8.8% |
-| Not working | 14 | 24.6% |
+| Not working | 12 | 21.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Boil | silent | Destroy all Islands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dauthi Slayer | silent | Shadow | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Death Pits of Rath | silent | Whenever a creature is dealt damage, destroy it. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Fury | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jinxed Idol | silent | Sacrifice a creature: Target opponent gains control of this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rathi Dragon | silent | When this creature enters, sacrifice it unless you sacrifice two Mountains. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rootwater Matriarch | silent | {T}: Gain control of target creature for as long as that creature is enchanted. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shimmering Wings | silent | {U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soltari Priest | silent | Shadow | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sudden Impact | silent | Sudden Impact deals damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Time Warp | silent | Target player takes an extra turn after this one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,6 +69,7 @@
 | Sapphire Medallion | handled | Blue spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scragnoth | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skyshroud Ranger | handled | {T}: You may put a land card from your hand onto the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Soltari Priest | handled | Shadow | machines/combat.py | Y/-/- | not_tested |
 | Staunch Defenders | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stun | handled | Target creature can't block this turn. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Trained Armodon | handled |  |  | Y/-/- | not_tested |
@@ -80,8 +79,9 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
+- Dauthi Slayer
 - Diabolic Edict
 - Furnace of Rath
 - Goblin Bombardment
@@ -97,7 +97,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | buyback | 2 | Elvish Fury, Whispers of the Muse | tmp |
-| shadow | 2 | Dauthi Slayer, Soltari Priest | tmp |
 | artifacts and lands enter tapped. | 1 | Root Maze | tmp |
 | as ~ enters, choose an opponent and a card name other than a basic land card name. | 1 | Booby Trap | tmp |
 | creatures with power N or greater don"..." untap steps. | 1 | Marble Titan | tmp |

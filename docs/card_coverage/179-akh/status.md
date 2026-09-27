@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 6.2% |
-| Works (untested) | 129 | 53.5% |
-| Partial (unaudited) | 20 | 8.3% |
-| Not working | 77 | 32.0% |
+| Tested | 16 | 6.6% |
+| Works (untested) | 130 | 53.9% |
+| Partial (unaudited) | 19 | 7.9% |
+| Not working | 76 | 31.5% |
 
 ## Cards needing work
 
@@ -83,7 +83,6 @@
 | Regal Caracal | silent | Other Cats you control get +1/+1 and have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rhet-Crop Spearmaster | silent | You may exert this creature as it attacks. When you do, it gets +1/+0 and gains first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sacred Cat | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Scarab Feast | silent | Exile up to three target cards from a single graveyard. Cycling {B} ({B}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadow of the Grave | silent | Return to your hand all cards in your graveyard that you cycled or discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Soulstinger | silent | When this creature dies, you may put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spring // Mind | silent | Aftermath | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -120,7 +119,6 @@
 | Oketra the True | unaudited | Oketra can't attack or block unless you control at least three other creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Protection of the Hekma | unaudited | If a source an opponent controls would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rhonas the Indomitable | unaudited | Rhonas can't attack or block unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Soul-Scar Mage | unaudited | If a source you control would deal noncombat damage to a creature an opponent controls, put that many -1/-1 counters on that creature instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vizier of the Menagerie | unaudited | You can spend mana of any type to cast creature spells. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Watchful Naga | unaudited | You may exert this creature as it attacks. When you do, draw a card. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Anointed Procession | handled | If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -218,6 +216,7 @@
 | Sacred Excavation | handled | Return up to two target cards with cycling from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Samut, Voice of Dissent | handled | Other creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scaled Behemoth | handled | Hexproof | machines/casting.py (target legality) | Y/Y/- | not_tested |
+| Scarab Feast | handled | Exile up to three target cards from a single graveyard. Cycling {B} ({B}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scattered Groves | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scribe of the Mindful | handled | {1}, {T}, Sacrifice this creature: Return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seeker of Insight | handled | {T}: Draw a card, then discard a card. Activate only if you've cast a noncreature spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -256,7 +255,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Angler Drake
 - Archfiend of Ifnir
@@ -268,6 +267,7 @@
 - Luxa River Shrine
 - Oracle's Vault
 - Sandwurm Convergence
+- Soul-Scar Mage
 - Sunscorched Desert
 - Supply Caravan
 - Throne of the God-Pharaoh
@@ -305,11 +305,9 @@
 | damage can't be prevented ~. if a source you control would deal damage ~, it deals double that damage instead. | 1 | Insult // Injury | akh |
 | enchanted land has "..." | 1 | Gift of Paradise | akh |
 | end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |
-| exile up to three target cards from a single graveyard. cycling {M} ({M}, discard ~: draw a card.) | 1 | Scarab Feast | akh |
 | exile ~: each opponent chooses two cards in their graveyard and exiles the rest. | 1 | Watchers of the Dead | akh |
 | hazoret can't attack or block unless you have one or fewer cards in hand. | 1 | Hazoret the Fervent | akh |
 | if a source an opponent controls would deal damage to you, prevent N of that damage. | 1 | Protection of the Hekma | akh |
-| if a source you control would deal noncombat damage to a creature an opponent controls, put that many -N/-N counters on that creature instead. | 1 | Soul-Scar Mage | akh |
 | if ~ hasn't been exerted ~, you may exert it as it attacks. when you do, untap all other creatures you control and after ~, there is an additional combat phase. | 1 | Combat Celebrant | akh |
 | if ~ was cast from your hand and you"..."s library seventh from the top and you gain N life. | 1 | Approach of the Second Sun | akh |
 | oketra can't attack or block unless you control at least three other creatures. | 1 | Oketra the True | akh |

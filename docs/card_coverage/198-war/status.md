@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 7.8% |
-| Works (untested) | 140 | 57.4% |
-| Partial (unaudited) | 17 | 7.0% |
+| Works (untested) | 141 | 57.8% |
+| Partial (unaudited) | 16 | 6.6% |
 | Not working | 68 | 27.9% |
 
 ## Cards needing work
@@ -104,7 +104,6 @@
 | Jaya, Venerated Firemage | unaudited | If another red source you control would deal damage to a permanent or player, it deals that much damage plus 1 to that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Jiang Yanggu, Wildcrafter | unaudited | Each creature you control with a +1/+1 counter on it has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kasmina's Transmutation | unaudited | Enchanted creature loses all abilities and has base power and toughness 1/1. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Kaya, Bane of the Dead | unaudited | Your opponents and permanents your opponents control with hexproof can be the targets of spells and abilities you control as though they didn't have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mowu, Loyal Companion | unaudited | If one or more +1/+1 counters would be put on Mowu, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Raging Kronch | unaudited | This creature can't attack alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rescuer Sphinx | unaudited | As this creature enters, you may return a nonland permanent you control to its owner's hand. If you do, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -182,6 +181,7 @@
 | Jaya's Greeting | handled | Jaya's Greeting deals 3 damage to target creature. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Karn's Bastion | handled | {4}, {T}: Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kaya's Ghostform | handled | When enchanted permanent dies or is put into exile, return that card to the battlefield under your control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Kaya, Bane of the Dead | handled | Your opponents and permanents your opponents control with hexproof can be the targets of spells and abilities you control as though they didn't have hexproof. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kiora's Dambreaker | handled | When this creature enters, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kiora, Behemoth Beckoner | handled | Whenever a creature you control with power 4 or greater enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Stinger | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
@@ -349,7 +349,6 @@
 | you may have ~ enter as a copy of a creature or planeswalker you control, except it enters with an additional +N/+N counter on it if it"..."s a planeswalker, an | 1 | Spark Double | war |
 | you may play lands and cast spells from the top of your library. if you cast a spell ~, pay life equal to its mana value rather than pay its mana cost. | 1 | Bolas's Citadel | war |
 | you may reveal the first card you draw each turn as you draw it. whenever you reveal an instant or sorcery card ~, copy that card and you may cast the copy. tha | 1 | God-Eternal Kefnet | war |
-| your opponents and permanents your opponents control with hexproof can be the targets of spells and abilities you control as though they didn't have hexproof. | 1 | Kaya, Bane of the Dead | war |
 | your opponents can't gain life. | 1 | Tibalt, Rakish Instigator | war |
 | zombie tokens you control have deathtouch. | 1 | Vizier of the Scorpion | war |
 | zombie tokens you control have flying. | 1 | Eternal Skylord | war |

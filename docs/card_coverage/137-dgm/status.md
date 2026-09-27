@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.6% |
-| Works (untested) | 74 | 51.7% |
+| Tested | 11 | 7.7% |
+| Works (untested) | 72 | 50.3% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 56 | 39.2% |
+| Not working | 55 | 38.5% |
 
 ## Cards needing work
 
@@ -79,7 +79,6 @@
 | Vorel of the Hull Clade | silent | {G}{U}, {T}: Double the number of each kind of counter on target artifact, creature, or land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wake the Reflections | silent | Populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Weapon Surge | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Aetherling | notice | {U}: Exile this creature. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pontiff of Blight | notice | Other creatures you control have extort. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warped Physique | notice | Target creature gets +X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood Scrivener | unaudited | If you would draw a card while you have no cards in hand, instead you draw two cards and you lose 1 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -116,7 +115,6 @@
 | Izzet Cluestone | handled | {U}{R}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kraul Warrior | handled | {5}{G}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Maw of the Obzedat | handled | Sacrifice a creature: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Maze's End | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mending Touch | handled | Regenerate target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mindstatic | handled | Counter target spell unless its controller pays {6}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murmuring Phantasm | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
@@ -128,7 +126,6 @@
 | Pilfered Plans | handled | Target player mills two cards. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Profit // Loss | handled | Creatures you control get +1/+1 until end of turn. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Progenitor Mimic | handled | You may have this creature enter as a copy of any creature on the battlefield, except it has "At the beginning of your upkeep, if this creature isn't a token, c | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Protect // Serve | handled | Target creature gets +2/+4 until end of turn. Fuse (You may cast one or both halves of this card from your hand.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Punish the Enemy | handled | Punish the Enemy deals 3 damage to target player or planeswalker and 3 damage to target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakdos Cluestone | handled | {B}{R}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ready // Willing | handled | Creatures you control gain indestructible until end of turn. Untap each creature you control. Fuse (You may cast one or both halves of this card from your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -165,13 +162,16 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>11 cards</summary>
 
+- Aetherling
 - Beck // Call
 - Gleam of Battle
 - Korozda Gorgon
+- Maze's End
 - Notion Thief
 - Possibility Storm
+- Protect // Serve
 - Trostani's Summoner
 - Voice of Resurgence
 - Wear // Tear
@@ -237,7 +237,6 @@
 | whenever ~ attacks, other attacking creatures get +N/+N until end of turn. | 1 | Jelenn Sphinx | dgm |
 | whenever ~ evolves, put a +N/+N counter on each other creature you control with a +N/+N counter on it. | 1 | Renegade Krasis | dgm |
 | you gain N life for each creature your opponents control. prevent all damage that would be dealt to you ~. | 1 | Riot Control | dgm |
-| {M}: exile ~. return it to the battlefield under its owner's control at the beginning of the next end step. | 1 | Aetherling | dgm |
 | {M}{M}, {M}: double the number of each kind of counter on target artifact, creature, or land. | 1 | Vorel of the Hull Clade | dgm |
 | {M}{M}, {M}: target opponent loses N life, then reveals a card at random from their hand. | 1 | Hired Torturer | dgm |
 | {M}{M}{M}, return ~ to its owner's hand: put two +N/+N counters on enchanted creature. | 1 | Krasis Incubation | dgm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.2% |
-| Works (untested) | 135 | 50.2% |
-| Partial (unaudited) | 25 | 9.3% |
-| Not working | 79 | 29.4% |
+| Tested | 31 | 11.5% |
+| Works (untested) | 137 | 50.9% |
+| Partial (unaudited) | 24 | 8.9% |
+| Not working | 77 | 28.6% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Doom Foretold | silent | At the beginning of each player's upkeep, that player sacrifices a nonland, nontoken permanent of their choice. If that player can't, they discard a card, they  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Embereth Skyblazer | silent | Whenever this creature attacks, you may pay {2}{R}. If you do, creatures you control get +X/+0 until end of turn, where X is the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Escape to the Wilds | silent | Exile the top five cards of your library. You may play cards exiled this way until the end of your next turn. You may play an additional land this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fabled Passage | silent | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, u | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Faeburrow Elder | silent | {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ferocity of the Wilds | silent | Attacking non-Human creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Folio of Fancies | silent | {2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,7 +63,6 @@
 | Opportunistic Dragon | silent | When this creature enters, choose target Human or artifact an opponent controls. For as long as this creature remains on the battlefield, gain control of that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Outlaws' Merriment | silent | At the beginning of your upkeep, choose one at random. Create a red and white creature token with those characteristics. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overwhelmed Apprentice | silent | When this creature enters, each opponent mills two cards. Then you scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Piper of the Swarm | silent | {2}{B}{B}, {T}, Sacrifice three Rats: Gain control of target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Queen of Ice // Rage of Winter | silent | Whenever this creature deals combat damage to a creature, tap that creature. It doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rally for the Throne | silent | Create two 1/1 white Human creature tokens. Adamant — If at least three white mana was spent to cast this spell, you gain 1 life for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rankle, Master of Pranks | silent | Whenever Rankle deals combat damage to a player, choose any number — • Each player discards a card. • Each player loses 1 life and draws a card. • Each player s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -121,7 +119,6 @@
 | Mysterious Pathlighter | unaudited | Each creature you control that has an Adventure enters with an additional +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oathsworn Knight | unaudited | If damage would be dealt to this creature while it has a +1/+1 counter on it, prevent that damage and remove a +1/+1 counter from it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Questing Beast | unaudited | Combat damage that would be dealt by creatures you control can't be prevented. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rampart Smasher | unaudited | This creature can't be blocked by Knights or Walls. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Seven Dwarves | unaudited | A deck can have up to seven cards named Seven Dwarves. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shambling Suit | unaudited | Shambling Suit's power is equal to the number of artifacts and/or enchantments you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shimmer Dragon | unaudited | As long as you control four or more artifacts, this creature has hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -213,9 +210,11 @@
 | Oko's Hospitality | handled | Creatures you control have base power and toughness 3/3 until end of turn. You may search your library and/or graveyard for a card named Oko, the Trickster, rev | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Order of Midnight // Alter Fate | handled | Return target creature card from your graveyard to your hand. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Outflank | handled | Outflank deals damage to target attacking or blocking creature equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Piper of the Swarm | handled | Rats you control have menace. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prized Griffin | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Prophet of the Peak | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raging Redcap | handled | Double strike | machines/combat.py | Y/Y/Y | not_tested |
+| Rampart Smasher | handled | This creature can't be blocked by Knights or Walls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Redcap Raiders | handled | Whenever this creature attacks, you may tap an untapped non-Human creature you control. If you do, this creature gets +1/+1 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Resolute Rider | handled | {W/B}{W/B}: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rosethorn Halberd | handled | When this Equipment enters, attach it to target non-Human creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -269,7 +268,7 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Bartered Cow
 - Bonecrusher Giant // Stomp
@@ -282,6 +281,7 @@
 - Drown in the Loch
 - Dwarven Mine
 - Emry, Lurker of the Loch
+- Fabled Passage
 - Fae of Wishes // Granted
 - Faerie Vandal
 - Fervent Champion
@@ -383,7 +383,6 @@
 | you may have ~ enter as a copy of any artifact or enchantment on the battlefield. | 1 | Mirrormade | eld |
 | you may sacrifice a food. if you do, target creature gets +N/+N until end of turn. otherwise, that creature gets +N/+N until end of turn. | 1 | Insatiable Appetite | eld |
 | you may sacrifice two foods. if you do, create a N/N green giant creature token. otherwise, create three food tokens. (they're artifacts with "...") | 1 | Giant Opportunity | eld |
-| {M}, sacrifice ~: search your library for a basic land card, put it onto the battlefield tapped, then shuffle. then if you control four or more lands, untap tha | 1 | Fabled Passage | eld |
 | {M}, {M}, remove a wish counter from ~: search your library for a card, put it into your hand, then shuffle. an opponent gains control of ~. activate only durin | 1 | Wishclaw Talisman | eld |
 | {M}: for each color among permanents you control, add one mana of that color. | 1 | Faeburrow Elder | eld |
 | {M}: ~ can't be blocked ~ except by creatures with haste. | 1 | Gingerbrute | eld |
@@ -391,11 +390,9 @@
 | {M}{M}, {M}: each opponent mills cards equal to the number of cards in their hand. | 1 | Folio of Fancies | eld |
 | {M}{M}: ~ loses defender and becomes a human until end of turn. | 1 | Wishful Merfolk | eld |
 | {M}{M}{M}, sacrifice ~: return all knight creature cards from your graveyard to the battlefield. | 1 | Knights' Charge | eld |
-| {M}{M}{M}, {M}, sacrifice three rats: gain control of target creature. | 1 | Piper of the Swarm | eld |
 | ~ can block only creatures with flying. | 1 | Brazen Borrower // Petty Theft | eld |
 | ~ can't attack unless defending player has seven or more cards in their graveyard. | 1 | Vantress Gargoyle | eld |
 | ~ can't attack unless you control a N/N creature. | 1 | Lovestruck Beast // Heart's Desire | eld |
-| ~ can't be blocked by knights or walls. | 1 | Rampart Smasher | eld |
 | ~ costs {M} less to cast for each attacking creature you control. | 1 | Embercleave | eld |
 | ~ deals N damage divided as you choose among one, two, or three targets. if at least seven red mana was spent to cast ~, instead ~ deals N damage to each of tho | 1 | Sundering Stroke | eld |
 | ~ deals N damage to any target. adamant — if at least three red mana was spent to cast ~, it deals N damage instead. | 1 | Slaying Fire | eld |

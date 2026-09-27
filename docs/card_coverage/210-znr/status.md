@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.6% |
+| Tested | 23 | 9.0% |
 | Works (untested) | 123 | 48.2% |
-| Partial (unaudited) | 21 | 8.2% |
-| Not working | 89 | 34.9% |
+| Partial (unaudited) | 22 | 8.6% |
+| Not working | 87 | 34.1% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Acquisitions Expert | silent | When this creature enters, target opponent reveals a number of cards from their hand equal to the number of creatures in your party. You choose one of those car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Adventure Awaits | silent | Look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Agadeem's Awakening // Agadeem, the Undercrypt | silent | Return from your graveyard to the battlefield any number of target creature cards that each have a different mana value X or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akiri, Fearless Voyager | silent | {W}: You may unattach an Equipment from a creature you control. If you do, tap that creature and it gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angel of Destiny | silent | Whenever a creature you control deals combat damage to a player, you and that player each gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anticognition | silent | Counter target creature or planeswalker spell unless its controller pays {2}. If an opponent has eight or more cards in their graveyard, instead counter that sp | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -62,7 +61,6 @@
 | Master of Winds | silent | Whenever you cast an instant, sorcery, or Wizard spell, you may have this creature's base power and toughness become 4/1 or 1/4 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mesa Lynx | silent | During turns other than yours, this creature gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Moraug, Fury of Akoum | silent | Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, un | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Myriad Construct | silent | When this creature becomes the target of a spell, sacrifice it and create a number of 1/1 colorless Construct artifact creature tokens equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri's Lithoforming | silent | Sacrifice X lands. For each land sacrificed this way, draw a card. You may play X additional lands this turn. Lands you control enter tapped this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nahiri, Heir of the Ancients | silent | +1: Create a 1/1 white Kor Warrior creature token. You may attach an Equipment you control to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nimana Skitter-Sneak | silent | As long as an opponent has eight or more cards in their graveyard, this creature gets +1/+0 and has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -125,6 +123,7 @@
 | Leyline Tyrant | unaudited | You don't lose unspent red mana as steps and phases end. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lithoform Blight | unaudited | Enchanted land loses all land types and abilities and has "{T}: Add {C}" and "{T}, Pay 1 life: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Moss-Pit Skeleton | unaudited | If this creature was kicked, it enters with three +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Myriad Construct | unaudited | If this creature was kicked, it enters with a +1/+1 counter on it for each nonbasic land your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nahiri's Binding | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nissa's Zendikon | unaudited | Enchanted land is a 4/4 Elemental creature with reach and haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relic Golem | unaudited | This creature can't attack or block unless an opponent has eight or more cards in their graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -263,8 +262,9 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
+- Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
 - Ancient Greenwarden
 - Beyeen Veil // Beyeen Coast
@@ -324,6 +324,7 @@
 | equipped creature gets +N/+N for each creature in your party and has menace. | 1 | Ravager's Mace | znr |
 | equipped warriors you control have double strike. | 1 | Kor Blademaster | znr |
 | exile all creatures and planeswalkers with mana value N or less from the battlefield and all creature and planeswalker cards with mana value N or less from all  | 1 | Shadows' Verdict | znr |
+| if ~ was kicked, it enters with a +N/+N counter on it for each nonbasic land your opponents control. | 1 | Myriad Construct | znr |
 | if ~ was kicked, it enters with a +N/+N counter on it. | 1 | Shatterskull Charger | znr |
 | if ~ was kicked, it enters with four +N/+N counters on it. | 1 | Cragplate Baloth | znr |
 | if ~ was kicked, it enters with three +N/+N counters on it. | 1 | Moss-Pit Skeleton | znr |
@@ -333,7 +334,6 @@
 | look at the top N cards of your library, where N is three plus the number of creatures in your party. put three of those cards into your hand and the rest on th | 1 | Skyclave Plunder | znr |
 | look at the top five cards of your library. you may reveal a creature card from among them and put it into your hand. put the rest on the bottom of your library | 1 | Adventure Awaits | znr |
 | nontoken creatures you control are forest lands in addition to their other types. | 1 | Ashaya, Soul of the Wild | znr |
-| return from your graveyard to the battlefield any number of target creature cards that each have a different mana value N or less. | 1 | Agadeem's Awakening // Agadeem, the Undercrypt | znr |
 | sacrifice N lands. for each land sacrificed ~, draw a card. you may play N additional lands ~. lands you control enter tapped ~. | 1 | Nahiri's Lithoforming | znr |
 | sacrifice a land. search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | 1 | Roiling Regrowth | znr |
 | spells your opponents cast that target charix cost {M} more to cast. | 1 | Charix, the Raging Isle | znr |
@@ -347,7 +347,6 @@
 | when jace enters, if jace was kicked, create a token that"..."s not legendary and its starting loyalty is N. | 1 | Jace, Mirror Mage | znr |
 | when phylath enters, create a N/N green plant creature token for each basic land you control. | 1 | Phylath, World Sculptor | znr |
 | when yasharn enters, search your library for a basic forest card and a basic plains card, reveal those cards, put them into your hand, then shuffle. | 1 | Yasharn, Implacable Earth | znr |
-| when ~ becomes the target of a spell, sacrifice it and create a number of N/N colorless construct artifact creature tokens equal to its power. | 1 | Myriad Construct | znr |
 | when ~ enters, add {M} for each creature in your party. | 1 | Ardent Electromancer | znr |
 | when ~ enters, copy the next instant or sorcery spell with mana value N or less you cast ~ when you cast it. if ~ was kicked, copy that spell twice instead. you | 1 | Sea Gate Stormcaller | znr |
 | when ~ enters, create a N/N white kor warrior creature token for each creature in your party. | 1 | Squad Commander | znr |

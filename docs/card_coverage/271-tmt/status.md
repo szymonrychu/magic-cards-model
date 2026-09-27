@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 85 | 45.5% |
-| Works (untested) | 102 | 54.5% |
+| Tested | 86 | 46.0% |
+| Works (untested) | 101 | 54.0% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
@@ -113,7 +113,6 @@
 | Splinter's Technique | handled | Sneak {1}{B} (You may cast this spell for {1}{B} if you also return an unblocked attacker you control to hand during the declare blockers step.) Search your lib | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Splinter, Hamato Yoshi | handled | Other Ninjas you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Splinter, Radical Rat | handled | If a triggered ability of a Ninja creature you control triggers, that ability triggers an additional time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Squirrelanoids | handled | Deathtouch | machines/combat.py | Y/Y/Y | not_tested |
 | Stockman, Mad Fly-entist | handled | When Stockman enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stomped by the Foot | handled | Kicker—Sacrifice an artifact or creature. (You may sacrifice an artifact or creature in addition to any other costs as you cast this spell.) Target creature get | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Super Shredder | handled | Whenever another permanent leaves the battlefield, put a +1/+1 counter on Super Shredder. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -132,7 +131,7 @@
 ## Fully supported
 
 <details>
-<summary>85 cards</summary>
+<summary>86 cards</summary>
 
 - April O'Neil, Hacktivist
 - April O'Neil, Kunoichi Trainee
@@ -202,6 +201,7 @@
 - Slithering Cryptid
 - South Wind Avatar
 - Spicy Oatmeal Pizza
+- Squirrelanoids
 - Tainted Treats
 - Technodrome
 - The Cloning of Shredder

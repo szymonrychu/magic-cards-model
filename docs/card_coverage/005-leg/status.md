@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 5 | 17.2% |
-| Works (untested) | 17 | 58.6% |
+| Works (untested) | 18 | 62.1% |
 | Partial (unaudited) | 2 | 6.9% |
-| Not working | 5 | 17.2% |
+| Not working | 4 | 13.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Craw Giant | silent | Rampage | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Kobold Taskmaster | silent | Other Kobold creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nicol Bolas | silent | At the beginning of your upkeep, sacrifice Nicol Bolas unless you pay {U}{B}{R}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pendelhaven | silent | {T}: Target 1/1 creature gets +1/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spirit Link | silent | Whenever enchanted creature deals damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,6 +43,7 @@
 | Horror of Horrors | handled | Sacrifice a Swamp: Regenerate target black creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Immolation | handled | Enchanted creature gets +2/-2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jasmine Boreal | handled |  |  | Y/-/- | not_tested |
+| Kobold Taskmaster | handled | Other Kobold creatures you control get +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moss Monster | handled |  |  | Y/-/- | not_tested |
 | Relic Barrier | handled | {T}: Tap target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Remove Soul | handled | Counter target creature spell. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -70,7 +70,6 @@
 |---|---|---|---|
 | at the beginning of your upkeep, sacrifice ~ unless you pay {M}{M}{M}. | 1 | Nicol Bolas | leg |
 | non-eye creatures you control can't attack. | 1 | Evil Eye of Orms-by-Gore | leg |
-| other kobold creatures you control get +N/+N. | 1 | Kobold Taskmaster | leg |
 | rampage | 1 | Craw Giant | leg |
 | whenever enchanted creature deals damage, you gain that much life. | 1 | Spirit Link | leg |
 | {M}: target N/N creature gets +N/+N until end of turn. | 1 | Pendelhaven | leg |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 10.3% |
-| Works (untested) | 111 | 60.0% |
-| Partial (unaudited) | 7 | 3.8% |
-| Not working | 48 | 25.9% |
+| Tested | 22 | 11.9% |
+| Works (untested) | 113 | 61.1% |
+| Partial (unaudited) | 5 | 2.7% |
+| Not working | 45 | 24.3% |
 
 ## Cards needing work
 
@@ -32,11 +32,8 @@
 | Aetherwind Basker | silent | Whenever this creature enters or attacks, you get {E} for each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani Unyielding | silent | +2: Reveal the top three cards of your library. Put all nonland permanent cards revealed this way into your hand and the rest on the bottom of your library in a | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani's Aid | silent | When this enchantment enters, you may search your library and/or graveyard for a card named Ajani, Valiant Protector, reveal it, and put it into your hand. If y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ajani, Valiant Protector | silent | −11: Put X +1/+1 counters on target creature, where X is your life total. That creature gains trample until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral's Expertise | silent | Return up to three target artifacts and/or creatures to their owners' hands. You may cast a spell with mana value 4 or less from your hand without paying its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baral, Chief of Compliance | silent | Whenever a spell or ability you control counters a spell, you may draw a card. If you do, discard a card. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Consulate Crackdown | silent | When this enchantment enters, exile all artifacts your opponents control until this enchantment leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Daredevil Dragster | silent | At end of combat, if this Vehicle attacked or blocked this combat, put a velocity counter on it. Then if it has two or more velocity counters on it, sacrifice i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Intimations | silent | Each opponent sacrifices a creature or planeswalker of their choice, then discards a card. You return a creature or planeswalker card from your graveyard to you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Decommission | silent | Destroy target artifact or enchantment. Revolt — If a permanent left the battlefield under your control this turn, you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fourth Bridge Prowler | silent | When this creature enters, you may have target creature get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -74,9 +71,7 @@
 | Secret Salvage | notice | Exile target nonland card from your graveyard. Search your library for any number of cards with the same name as that card, reveal them, put them into your hand | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tezzeret's Betrayal | notice | Destroy target creature. You may search your library and/or graveyard for a card named Tezzeret, Master of Metal, reveal it, and put it into your hand. If you s | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Treasure Keeper | notice | When this creature dies, reveal cards from the top of your library until you reveal a nonland card with mana value 3 or less. You may cast that card without pay | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Audacious Infiltrator | unaudited | This creature can't be blocked by artifact creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Exquisite Archangel | unaudited | If you would lose the game, instead exile this creature and your life total becomes equal to your starting life total. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Fen Hauler | unaudited | This creature can't be blocked by artifact creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Heart of Kiran | unaudited | You may remove a loyalty counter from a planeswalker you control rather than pay Heart of Kiran's crew cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Night Market Guard | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rishkar, Peema Renegade | unaudited | Each creature you control with a counter on it has "{T}: Add {G}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -86,10 +81,10 @@
 | Aether Herder | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Inspector | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aether Poisoner | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Aether Swooper | handled | When this creature enters, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Aethergeode Miner | handled | Whenever this creature attacks, you get {E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Airdrop Aeronauts | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, you gain 5 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ajani's Comrade | handled | At the beginning of combat on your turn, if you control an Ajani planeswalker, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ajani, Valiant Protector | handled | +2: Put two +1/+1 counters on up to one target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alley Evasion | handled | Choose one — • Target creature you control gets +1/+2 until end of turn. • Return target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alley Strangler | handled | Menace | machines/combat.py | Y/Y/- | not_tested |
 | Augmenting Automaton | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -102,6 +97,7 @@
 | Countless Gears Renegade | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crackdown Construct | handled | Whenever you activate an ability of an artifact or creature that isn't a mana ability, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cruel Finality | handled | Target creature gets -2/-2 until end of turn. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Daredevil Dragster | handled | At end of combat, if this Vehicle attacked or blocked this combat, put a velocity counter on it. Then if it has two or more velocity counters on it, sacrifice i | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Daring Demolition | handled | Destroy target creature or Vehicle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dawnfeather Eagle | handled | When this creature enters, creatures you control get +1/+1 and gain vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Harpooner | handled | Revolt — When this creature enters, if a permanent left the battlefield under your control this turn, destroy target tapped creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -114,6 +110,7 @@
 | Embraal Gear-Smasher | handled | {T}, Sacrifice an artifact: This creature deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Enraged Giant | handled | Improvise | machines/objects_as_costs.py (improvise) | Y/Y/- | not_tested |
 | Felidar Guardian | handled | When this creature enters, you may exile another target permanent you control, then return that card to the battlefield under its owner's control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Fen Hauler | handled | This creature can't be blocked by artifact creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Filigree Crawler | handled | When this creature dies, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foundry Assembler | handled | Improvise | machines/objects_as_costs.py (improvise) | Y/Y/- | not_tested |
 | Freejam Regent | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,12 +193,15 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>22 cards</summary>
 
 - Aether Chaser
+- Aether Swooper
 - Aetherstream Leopard
 - Aid from the Cowl
+- Audacious Infiltrator
 - Bastion Enforcer
+- Consulate Crackdown
 - Consulate Dreadnought
 - Fatal Push
 - Foundry Hornet
@@ -226,10 +226,8 @@
 |---|---|---|---|
 | as long as enchanted permanent is a vehicle, it's a creature in addition to its other types. | 2 | Aerial Modification, Siege Modification | aer |
 | when ~ enters, target artifact you control gains "..." for as long as you control ~. | 2 | Quicksmith Rebel, Quicksmith Spy | aer |
-| ~ can't be blocked by artifact creatures. | 2 | Audacious Infiltrator, Fen Hauler | aer |
 | Choose one | 1 | Destructive Tampering | aer |
 | +N: reveal the top three cards of your library. put all nonland permanent cards revealed ~ into your hand and the rest on the bottom of your library in any orde | 1 | Ajani Unyielding | aer |
-| at end of combat, if ~ attacked or blocked ~, put a velocity counter on it. then if it has two or more velocity counters on it, sacrifice it and draw two cards. | 1 | Daredevil Dragster | aer |
 | at the beginning of your end step, ~ deals N damage to enchanted artifact's controller. | 1 | Gremlin Infestation | aer |
 | at the beginning of your upkeep, create a token that's a copy of enchanted artifact. then if you control eight or more artifacts with the same name as one anoth | 1 | Mechanized Production | aer |
 | create three N/N colorless servo artifact creature tokens. you may cast a spell with mana value N or less from your hand without paying its mana cost. | 1 | Sram's Expertise | aer |
@@ -253,7 +251,6 @@
 | sacrifice ~: until your next turn, target player who was dealt combat damage by ~ ~ can't cast noncreature spells. | 1 | Hope of Ghirapur | aer |
 | when enchanted artifact is put into a graveyard, return that card to its owner's hand. | 1 | Tezzeret's Touch | aer |
 | when ~ dies, reveal cards from the top of your library until you reveal a nonland card with mana value N or less. you may cast that card without paying its mana | 1 | Treasure Keeper | aer |
-| when ~ enters, exile all artifacts your opponents control until ~ leaves the battlefield. | 1 | Consulate Crackdown | aer |
 | when ~ enters, pay {M}{M} . if you can"..."s hand and you get {M}. | 1 | Greenbelt Rampager | aer |
 | when ~ enters, you get an amount of {M} equal to the greatest power among creatures you control. | 1 | Peema Aether-Seer | aer |
 | when ~ enters, you get six {M} . | 1 | Aethertide Whale | aer |
@@ -274,7 +271,6 @@
 | ~ deals N damage divided as you choose among any number of target creatures, where N is the greatest power among creatures you control as you cast ~. | 1 | Monstrous Onslaught | aer |
 | ~ deals N damage to target creature. tap target land. that land doesn"..."s next untap step. | 1 | Chandra's Revolution | aer |
 | ~ is the chosen type in addition to its other types. | 1 | Metallic Mimic | aer |
-| −N: put N +N/+N counters on target creature, where N is your life total. that creature gains trample until end of turn. | 1 | Ajani, Valiant Protector | aer |
 | −N: target opponent loses life equal to the number of artifacts you control. | 1 | Tezzeret, Master of Metal | aer |
 
 ## Notes

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 10.7% |
-| Works (untested) | 93 | 52.2% |
-| Partial (unaudited) | 11 | 6.2% |
-| Not working | 55 | 30.9% |
+| Works (untested) | 95 | 53.4% |
+| Partial (unaudited) | 10 | 5.6% |
+| Not working | 54 | 30.3% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hadana's Climb // Winged Temple of Orazca | notice | At the beginning of combat on your turn, put a +1/+1 counter on target creature you control. Then if that creature has three or more +1/+1 counters on it, trans | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kitesail Corsair | notice | This creature has flying as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Nezahal, Primal Tide | notice | Discard three cards: Exile Nezahal. Return it to the battlefield tapped under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Profane Procession // Tomb of the Dusk Rose | notice | {3}{W}{B}: Exile target creature. Then if there are three or more cards exiled with Profane Procession, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Release to the Wind | notice | Exile target nonland permanent. For as long as that card remains exiled, its owner may cast it without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Skymarcher Aspirant | notice | This creature has flying as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -86,7 +85,6 @@
 | Oathsworn Vampire | unaudited | You may cast this card from your graveyard if you gained life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Protean Raider | unaudited | Raid — If you attacked this turn, you may have this creature enter as a copy of any creature on the battlefield. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Relentless Raptor | unaudited | This creature attacks or blocks each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| River Darter | unaudited | This creature can't be blocked by Dinosaurs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Slippery Scoundrel | unaudited | As long as you have the city's blessing, this creature has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Swaggering Corsair | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Temple Altisaur | unaudited | If a source would deal damage to another Dinosaur you control, prevent all but 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -141,6 +139,7 @@
 | Mist-Cloaked Herald | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moment of Craving | handled | Target creature gets -2/-2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Moment of Triumph | handled | Target creature gets +2/+2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Nezahal, Primal Tide | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orazca Frillback | handled |  |  | Y/Y/- | not_tested |
 | Orazca Raptor | handled |  |  | Y/Y/- | not_tested |
 | Overgrown Armasaur | handled | Enrage — Whenever this creature is dealt damage, create a 1/1 green Saproling creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -154,6 +153,7 @@
 | Reaver Ambush | handled | Exile target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reckless Rage | handled | Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rekindling Phoenix | handled | When this creature dies, create a 0/1 red Elemental creature token with "At the beginning of your upkeep, sacrifice this token and return target card named Reki | the engine reads this text and performs it | Y/Y/- | not_tested |
+| River Darter | handled | This creature can't be blocked by Dinosaurs. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riverwise Augur | handled | When this creature enters, draw three cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sadistic Skymarcher | handled | As an additional cost to cast this spell, reveal a Vampire card from your hand or pay {1}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanguine Glorifier | handled | When this creature enters, put a +1/+1 counter on another target Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,7 +229,6 @@
 | at the beginning of your upkeep, if you have the city"..."s mana value. | 1 | Twilight Prophet | rix |
 | attacking pirates you control get +N/+N. | 1 | Dire Fleet Neckbreaker | rix |
 | destroy target creature. ~ deals N damage to target player or planeswalker. you may search your library and/or graveyard for a card named angrath, minotaur pira | 1 | Angrath's Fury | rix |
-| discard three cards: exile nezahal. return it to the battlefield tapped under its owner's control at the beginning of the next end step. | 1 | Nezahal, Primal Tide | rix |
 | during your turn, ~ gets +N/+N. | 1 | Hardy Veteran | rix |
 | each opponent can"..."s next turn. | 1 | Sphinx's Decree | rix |
 | each opponent loses N life for each creature you control. | 1 | Gruesome Fate | rix |
@@ -268,7 +267,6 @@
 | {M}{M}{M}: exile target creature. then if there are three or more cards exiled with ~, transform it. | 1 | Profane Procession // Tomb of the Dusk Rose | rix |
 | ~ attacks or blocks each combat if able. | 1 | Relentless Raptor | rix |
 | ~ can"..."s blessing. | 1 | Wayward Swordtooth | rix |
-| ~ can't be blocked by dinosaurs. | 1 | River Darter | rix |
 | ~ gets +N/+N as long as it's attacking. | 1 | Grasping Scoundrel | rix |
 | ~ gets +N/+N as long as you control an angrath planeswalker. | 1 | Angrath's Ambusher | rix |
 | ~ has double strike as long as you have the city's blessing. | 1 | Storm Fleet Swashbuckler | rix |

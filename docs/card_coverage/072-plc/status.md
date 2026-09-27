@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 6.8% |
-| Works (untested) | 63 | 38.9% |
+| Works (untested) | 64 | 39.5% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 76 | 46.9% |
+| Not working | 75 | 46.3% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Dichotomancy | silent | For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dormant Sliver | silent | All Sliver creatures have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dust Corona | silent | Enchanted creature gets +2/+0 and can't be blocked by creatures with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dust Elemental | silent | When this creature enters, return three creatures you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Enslave | silent | At the beginning of your upkeep, enchanted creature deals 1 damage to its owner. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Erratic Mutation | silent | Choose target creature. Reveal cards from the top of your library until you reveal a nonland card. That creature gets +X/-X until end of turn, where X is that c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -129,6 +128,7 @@
 | Dead // Gone | handled | Dead deals 2 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deadwood Treefolk | handled | When this creature enters or leaves the battlefield, return another target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreamscape Artist | handled | {2}{U}, {T}, Discard a card, Sacrifice a land: Search your library for up to two basic land cards, put them onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dust Corona | handled | Enchanted creature gets +2/+0 and can't be blocked by creatures with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Warden | handled | Whenever another creature enters, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evolution Charm | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Return target creature card from your graveyard to y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaea's Anthem | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -226,7 +226,6 @@
 | counter target spell that targets a permanent you control. | 1 | Rebuff the Wicked | plc |
 | counter target spell. its controller discards a card. | 1 | Dismal Failure | plc |
 | destroy target creature. it can't be regenerated. its controller creates a N/N green ape creature token. | 1 | Pongify | plc |
-| enchanted creature gets +N/+N and can't be blocked by creatures with flying. | 1 | Dust Corona | plc |
 | enchanted creature gets +N/+N as long as it's white. otherwise, it gets -N/-N. | 1 | Serra's Boon | plc |
 | enchanted creature gets +N/+N for each aura attached to it and has vigilance. | 1 | Auramancer's Guise | plc |
 | for each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. put those cards onto t | 1 | Dichotomancy | plc |

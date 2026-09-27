@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 6.9% |
-| Works (untested) | 155 | 63.3% |
+| Tested | 18 | 7.3% |
+| Works (untested) | 158 | 64.5% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 59 | 24.1% |
+| Not working | 55 | 22.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adanto Vanguard | silent | As long as this creature is attacking, it gets +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Admiral Beckett Brass | silent | At the beginning of your end step, gain control of target nonland permanent controlled by a player who was dealt combat damage by three or more Pirates this tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anointed Deacon | silent | At the beginning of combat on your turn, you may have target Vampire get +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcane Adaptation | silent | Creatures you control are the chosen type in addition to their other types. The same is true for creature spells you control and creature cards you own that are | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Atzocan Archer | silent | When this creature enters, you may have it fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,15 +46,12 @@
 | Huatli, Warrior Poet | silent | −X: Huatli deals X damage divided as you choose among any number of target creatures. Creatures dealt damage this way can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace's Sentinel | silent | As long as you control a Jace planeswalker, this creature gets +1/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Cunning Castaway | silent | +1: Whenever one or more creatures you control deal combat damage to a player this turn, draw a card, then discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Jace, Ingenious Mind-Mage | silent | −9: Gain control of up to three target creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kitesail Freebooter | silent | When this creature enters, target opponent reveals their hand. You choose a noncreature, nonland card from it. Exile that card until this creature leaves the ba | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Legion Conquistador | silent | When this creature enters, you may search your library for any number of cards named Legion Conquistador, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lurking Chupacabra | silent | Whenever a creature you control explores, target creature an opponent controls gets -2/-2 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Old-Growth Dryads | silent | When this creature enters, each opponent may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perilous Voyage | silent | Return target nonland permanent you don't control to its owner's hand. If its mana value was 2 or less, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Priest of the Wakening Sun | silent | At the beginning of your upkeep, you may reveal a Dinosaur card from your hand. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Raging Swordtooth | silent | When this creature enters, it deals 1 damage to each other creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Revel in Riches | silent | At the beginning of your upkeep, if you control ten or more Treasures, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River Heralds' Boon | silent | Put a +1/+1 counter on target creature and a +1/+1 counter on up to one target Merfolk. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | River's Rebuke | silent | Return all nonland permanents target player controls to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowdy Crew | silent | When this creature enters, draw three cards, then discard two cards at random. If two cards that share a card type are discarded this way, put two +1/+1 counter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -99,6 +95,7 @@
 | Spike-Tailed Ceratops | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Storm Fleet Aerialist | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Trove of Temptation | unaudited | Each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Admiral Beckett Brass | handled | Other Pirates you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ancient Brontodon | handled |  |  | Y/Y/- | not_tested |
 | Angrath's Marauders | handled | If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bishop of Rebirth | handled | Whenever this creature attacks, you may return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -164,6 +161,7 @@
 | Inspiring Cleric | handled | When this creature enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ixalli's Diviner | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ixalli's Keeper | handled | {7}{G}, {T}, Sacrifice this creature: Target creature gets +5/+5 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Jace, Ingenious Mind-Mage | handled | +1: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jade Guardian | handled | When this creature enters, put a +1/+1 counter on target Merfolk you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Jungle Delver | handled | {3}{G}: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kinjalli's Caller | handled | Dinosaur spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -202,6 +200,7 @@
 | Ravenous Daggertooth | handled | Enrage — Whenever this creature is dealt damage, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regisaur Alpha | handled | Other Dinosaurs you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Repeating Barrage | handled | Repeating Barrage deals 3 damage to any target. Raid — {3}{R}{R}: Return this card from your graveyard to your hand. Activate only if you attacked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Revel in Riches | handled | Whenever a creature an opponent controls dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rile | handled | Rile deals 1 damage to target creature you control. That creature gains trample until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ripjaw Raptor | handled | Enrage — Whenever this creature is dealt damage, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual of Rejuvenation | handled | You gain 4 life. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,7 +257,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Bellowing Aegisaur
 - Captivating Crew
@@ -268,6 +267,7 @@
 - Fiery Cannonade
 - Hostage Taker
 - Kinjalli's Sunwing
+- Kitesail Freebooter
 - Merfolk Branchwalker
 - Ranging Raptors
 - Search for Azcanta // Azcanta, the Sunken Ruin
@@ -292,9 +292,7 @@
 | as long as ~ is attacking, it gets +N/+N. | 1 | Adanto Vanguard | xln |
 | as ~ enters, look at an opponent's hand, then choose any card name. | 1 | Sorcerous Spyglass | xln |
 | at the beginning of combat on your turn, you may have target vampire get +N/+N until end of turn. | 1 | Anointed Deacon | xln |
-| at the beginning of your end step, gain control of target nonland permanent controlled by a player who was dealt combat damage by three or more pirates ~. | 1 | Admiral Beckett Brass | xln |
 | at the beginning of your upkeep, exile the top card of your library. if it's a nonland card, you may cast that card ~. | 1 | Vance's Blasting Cannons // Spitfire Bastion | xln |
-| at the beginning of your upkeep, if you control ten or more treasures, you win the game. | 1 | Revel in Riches | xln |
 | at the beginning of your upkeep, you may have two target players exchange life totals. | 1 | Axis of Mortality | xln |
 | at the beginning of your upkeep, you may reveal a dinosaur card from your hand. if you do, you gain N life. | 1 | Priest of the Wakening Sun | xln |
 | attacking creatures get +N/+N until end of turn. dinosaurs you control gain trample until end of turn. | 1 | Dinosaur Stampede | xln |
@@ -328,7 +326,6 @@
 | when ~ enters, if you cast it from your hand, destroy all non-dinosaur creatures. | 1 | Wakening Sun's Avatar | xln |
 | when ~ enters, it deals N damage to each other creature. | 1 | Raging Swordtooth | xln |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Storm Sculptor | xln |
-| when ~ enters, target opponent reveals their hand. you choose a noncreature, nonland card from it. exile that card until ~ leaves the battlefield. | 1 | Kitesail Freebooter | xln |
 | when ~ enters, you may have it fight another target creature. | 1 | Atzocan Archer | xln |
 | when ~ enters, you may search your library and/or graveyard for a card named huatli, dinosaur knight, reveal it, then put it into your hand. if you search your  | 1 | Sun-Blessed Mount | xln |
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Legion Conquistador | xln |
@@ -351,7 +348,6 @@
 | ~ enters with a +N/+N counter on it for each creature that died ~. | 1 | Bloodcrazed Paladin | xln |
 | ~ gets +N/+N as long as you control a dinosaur. | 1 | Drover of the Mighty | xln |
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
-| −N: gain control of up to three target creatures. | 1 | Jace, Ingenious Mind-Mage | xln |
 | −N: huatli deals N damage divided as you choose among any number of target creatures. creatures dealt damage ~ can't block ~. | 1 | Huatli, Warrior Poet | xln |
 | −N: target dinosaur you control deals damage equal to its power to target creature you don't control. | 1 | Huatli, Dinosaur Knight | xln |
 | −N: target player's life total becomes N. | 1 | Vraska, Relic Seeker | xln |

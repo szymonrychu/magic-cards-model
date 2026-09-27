@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.2% |
-| Works (untested) | 158 | 70.2% |
+| Works (untested) | 160 | 71.1% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 44 | 19.6% |
+| Not working | 42 | 18.7% |
 
 ## Cards needing work
 
@@ -31,8 +31,6 @@
 | Avalanche Tusker | silent | Whenever this creature attacks, target creature defending player controls blocks it this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barrage of Boulders | silent | Barrage of Boulders deals 1 damage to each creature you don't control. Ferocious — If you control a creature with power 4 or greater, creatures can't block this | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bellowing Saddlebrute | silent | Raid — When this creature enters, you lose 4 life unless you attacked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chief of the Edge | silent | Other Warrior creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chief of the Scale | silent | Other Warrior creatures you control get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crackling Doom | silent | Crackling Doom deals 2 damage to each opponent. Each opponent sacrifices a creature with the greatest power among creatures that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cranial Archive | silent | {2}, Exile this artifact: Target player shuffles their graveyard into their library. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crater's Claws | silent | Crater's Claws deals X damage to any target. Ferocious — Crater's Claws deals X plus 2 damage instead if you control a creature with power 4 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -104,6 +102,8 @@
 | Briber's Purse | handled | This artifact enters with X gem counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Butcher of the Horde | handled | Sacrifice another creature: This creature gains your choice of vigilance, lifelink, or haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canyon Lurkers | handled | Morph | machines/casting.py | Y/Y/- | not_tested |
+| Chief of the Edge | handled | Other Warrior creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chief of the Scale | handled | Other Warrior creatures you control get +0/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dazzling Ramparts | handled | {1}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dead Drop | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Target player sacrifices two creatures of their choice. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Death Frenzy | handled | All creatures get -2/-2 until end of turn. Whenever a creature dies this turn, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -266,7 +266,6 @@
 |---|---|---|---|
 | Choose one | 3 | Jeskai Charm, Mardu Charm, Temur Charm | ktk |
 | Raid | 2 | Bellowing Saddlebrute, War-Name Aspirant | ktk |
-| other warrior creatures you control get +N/+N. | 2 | Chief of the Edge, Chief of the Scale | ktk |
 | Ferocious | 1 | Dragon Grip | ktk |
 | +N: until end of turn, sarkhan becomes a legendary N/N red dragon creature with flying, indestructible, and haste. | 1 | Sarkhan, the Dragonspeaker | ktk |
 | +N: until your next turn, creatures you control get +N/+N and gain lifelink. | 1 | Sorin, Solemn Visitor | ktk |

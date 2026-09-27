@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.4% |
-| Works (untested) | 131 | 51.2% |
-| Partial (unaudited) | 12 | 4.7% |
-| Not working | 89 | 34.8% |
+| Works (untested) | 135 | 52.7% |
+| Partial (unaudited) | 11 | 4.3% |
+| Not working | 86 | 33.6% |
 
 ## Cards needing work
 
@@ -93,7 +93,6 @@
 | Urza, Powerstone Prodigy | silent | Whenever you discard one or more artifact cards, create a tapped Powerstone token. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Woodcaller Automaton | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Arms Race | notice | {3}{R}: You may put an artifact card from your hand onto the battlefield. That artifact gains haste. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Carrion Locust | notice | When this creature enters, exile target card from an opponent's graveyard. If it was a creature card, that player loses 1 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Coastal Bulwark | notice | This creature gets +2/+0 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feldon, Ronom Excavator | notice | Whenever Feldon is dealt damage, exile that many cards from the top of your library. Choose one of them. Until the end of your next turn, you may play that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gix's Command | notice | Choose two — • Put two +1/+1 counters on up to one creature. It gains lifelink until end of turn. • Destroy each creature with power 2 or less. • Return up to t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -110,13 +109,10 @@
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sibling Rivalry | notice | Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn. Create a tapped Powerstone token. (It's an artifact w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Soul Partition | notice | Exile target nonland permanent. For as long as that card remains exiled, its owner may play it. A spell cast by an opponent this way costs {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Teething Wurmlet | notice | This creature has deathtouch as long as you control three or more artifacts. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tocasia, Dig Site Mentor | notice | Creatures you control have vigilance and "{T}: Surveil 1." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unleash Shell | notice | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Zephyr Sentinel | notice | When this creature enters, return up to one other target creature you control to its owner's hand. If it was a Soldier, put a +1/+1 counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Argoth, Sanctum of Nature | unaudited | This land enters tapped unless you control a legendary green creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Argothian Sprite | unaudited | This creature can't be blocked by artifact creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Fortified Beachhead | unaudited | As this land enters, you may reveal a Soldier card from your hand. This land enters tapped unless you revealed a Soldier card this way or you control a Soldier. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Liberator, Urza's Battlethopter | unaudited | You may cast colorless spells and artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Mechanized Warfare | unaudited | If a red or artifact source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -133,6 +129,7 @@
 | Ambush Paratrooper | handled | {5}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arbalest Engineers | handled | When this creature enters, choose one — • This creature deals 1 damage to any target. • Put a +1/+1 counter on target creature. It gains trample and haste until | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argothian Opportunist | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Argothian Sprite | handled | This creature can't be blocked by artifact creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashnod's Harvester | handled | Whenever this creature attacks, exile target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashnod's Intervention | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies or is put into exile from the battlefield, return it to its owner's hand." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashnod, Flesh Mechanist | handled | Whenever Ashnod attacks, you may sacrifice another creature. If you do, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -141,6 +138,7 @@
 | Blanchwood Prowler | handled | When this creature enters, mill three cards. You may put a land card from among the cards milled this way into your hand. If you don't, put a +1/+1 counter on t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burrowing Razormaw | handled | When this creature dies, mill four cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bushwhack | handled | Choose one — • Search your library for a basic land card, reveal it, put it into your hand, then shuffle. • Target creature you control fights target creature y | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Carrion Locust | handled | When this creature enters, exile target card from an opponent's graveyard. If it was a creature card, that player loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citanul Stalwart | handled |  |  | Y/Y/- | not_tested |
 | Clay Revenant | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Combat Courier | handled | {2}, Sacrifice this creature: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,6 +227,7 @@
 | Swiftgear Drake | handled | When this creature enters, put up to one target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Symmetry Matrix | handled | Whenever a creature you control with power equal to its toughness enters, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Take Flight | handled | Enchanted creature gets +1/+0 and has flying and "Whenever this creature attacks, draw a card." | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Teething Wurmlet | handled | This creature has deathtouch as long as you control three or more artifacts. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Terror Ballista | handled | Whenever this creature attacks, you may sacrifice another creature. When you do, destroy target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | The Mightstone and Weakstone | handled | When The Mightstone and Weakstone enters, choose one — • Draw two cards. • Target creature gets -5/-5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Third Path Iconoclast | handled | Whenever you cast a noncreature spell, create a 1/1 colorless Soldier artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,6 +257,7 @@
 | Yotian Dissident | handled | Whenever an artifact you control enters, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yotian Frontliner | handled | Whenever this creature attacks, another target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yotian Medic | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
+| Zephyr Sentinel | handled | When this creature enters, return up to one other target creature you control to its owner's hand. If it was a Soldier, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
 
@@ -339,11 +339,9 @@
 | when ~ dies, you may gain N life for each creature card in your graveyard. if you do, exile ~ from your graveyard. | 1 | Skyfisher Spider | bro |
 | when ~ enters, choose up to two other target creatures you control. for each {M}{M} spent to cast ~, put a +N/+N counter on each of them. | 1 | Clay Champion | bro |
 | when ~ enters, create a tapped powerstone token for each other creature you control. | 1 | Great Desert Prospector | bro |
-| when ~ enters, exile target card from an opponent's graveyard. if it was a creature card, that player loses N life. | 1 | Carrion Locust | bro |
 | when ~ enters, for each {M}{M} spent to cast it, draw a card. | 1 | Bladecoil Serpent | bro |
 | when ~ enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to ~ power from your graveyard. copy that card. you may c | 1 | Arcane Proxy | bro |
 | when ~ enters, mill three cards. you may put a plains card or a creature card with mana value N or less from among the cards milled ~ into your hand. if you don | 1 | Airlift Chaplain | bro |
-| when ~ enters, return up to one other target creature you control to its owner's hand. if it was a soldier, put a +N/+N counter on ~. | 1 | Zephyr Sentinel | bro |
 | when ~ enters, scry N, where N is its power. | 1 | Spotter Thopter | bro |
 | when ~ enters, you and target opponent each create a tapped powerstone token. | 1 | Thran Spider | bro |
 | when ~ enters, you gain life equal to its power. | 1 | Boulderbranch Golem | bro |
@@ -372,14 +370,12 @@
 | {M}{M}{M}, sacrifice ~: create an N/N colorless golem artifact creature token, where N is three times ~ power. it gains haste until end of turn. activate only a | 1 | Rootwire Amalgam | bro |
 | {M}{M}{M}, {M}, exile ~: each player chooses six lands they control. destroy all other permanents. activate only as a sorcery. | 1 | Urza's Sylex | bro |
 | {M}{M}{M}: return ~ from your graveyard to the battlefield with a +N/+N counter on it. ~ costs {M} less to activate if an opponent controls four or more nonbasi | 1 | Razorlash Transmogrant | bro |
-| ~ can't be blocked by artifact creatures. | 1 | Argothian Sprite | bro |
 | ~ can't be countered. destroy target artifact. if its mana value was N or less, draw a card. | 1 | Raze to the Ground | bro |
 | ~ deals N damage to target creature or planeswalker and N damage to that permanent's controller. | 1 | Unleash Shell | bro |
 | ~ deals N damage to target creature or planeswalker. if that creature or planeswalker would die ~, exile it instead. | 1 | Obliterating Bolt | bro |
 | ~ enters tapped unless you control a legendary green creature. | 1 | Argoth, Sanctum of Nature | bro |
 | ~ enters with two +N/+N counters on it unless two or more colors of mana were spent to cast it. | 1 | Steel Exemplar | bro |
 | ~ gets +N/+N as long as you control an island. | 1 | Coastal Bulwark | bro |
-| ~ has deathtouch as long as you control three or more artifacts. | 1 | Teething Wurmlet | bro |
 | −N: target opponent chooses a permanent they control and returns it to its owner"..."s library. | 1 | Teferi, Temporal Pilgrim | bro |
 
 ## Notes

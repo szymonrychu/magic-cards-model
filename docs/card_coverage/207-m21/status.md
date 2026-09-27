@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 8.2% |
-| Works (untested) | 94 | 51.6% |
-| Partial (unaudited) | 11 | 6.0% |
-| Not working | 62 | 34.1% |
+| Tested | 16 | 8.8% |
+| Works (untested) | 95 | 52.2% |
+| Partial (unaudited) | 10 | 5.5% |
+| Not working | 61 | 33.5% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Teferi, Timeless Voyager | silent | −3: Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Terror of the Peaks | silent | Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thieves' Guild Enforcer | silent | Whenever this creature or another Rogue you control enters, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Track Down | silent | Scry 3, then reveal the top card of your library. If it's a creature or land card, draw a card. (To scry 3, look at the top three cards of your library, then pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vito, Thorn of the Dusk Rose | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warded Battlements | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,7 +96,6 @@
 | Sanctum of All | unaudited | If a triggered ability of another Shrine you control triggers while you control six or more Shrines, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shacklegeist | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Stormwing Entity | unaudited | This spell costs {2}{U} less to cast if you've cast an instant or sorcery spell this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Tome Anima | unaudited | This creature can't be blocked as long as you've drawn two or more cards this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Watcher of the Spheres | unaudited | Creature spells with flying you cast cost {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Adherent of Hope | handled | At the beginning of combat on your turn, if you control a Basri planeswalker, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alpine Watchdog | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
@@ -184,6 +182,7 @@
 | Tempered Veteran | handled | {W}, {T}: Put a +1/+1 counter on target creature with a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tide Skimmer | handled | Whenever you attack with two or more creatures with flying, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tolarian Kraken | handled | Whenever you draw a card, you may pay {1}. When you do, you may tap or untap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tome Anima | handled | This creature can't be blocked as long as you've drawn two or more cards this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trufflesnout | handled | When this creature enters, choose one — • Put a +1/+1 counter on this creature. • You gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Twinblade Assassins | handled | At the beginning of your end step, if a creature died this turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valorous Steed | handled | When this creature enters, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -197,7 +196,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -213,6 +212,7 @@
 - Sanctum of Fruitful Harvest
 - Speaker of the Heavens
 - Teferi, Master of Time
+- Track Down
 - Waker of Waves
 
 </details>
@@ -247,7 +247,6 @@
 | other creatures get -N/-N. | 1 | Kaervek, the Spiteful | m21 |
 | play with the top card of your library revealed. | 1 | Conspicuous Snoop | m21 |
 | put a +N/+N counter on each of up to two target creatures. you may search your library and/or graveyard for a card named basri, devoted paladin, reveal it, and  | 1 | Basri's Aegis | m21 |
-| scry N, then reveal the top card of your library. if it's a creature or land card, draw a card. (to scry N, look at the top three cards of your library, then pu | 1 | Track Down | m21 |
 | target creature gets +N/+N and gains your choice of deathtouch or lifelink until end of turn. (any amount of damage a creature with deathtouch deals to a creatu | 1 | Alchemist's Gift | m21 |
 | triple | 1 | Fiery Emancipation | m21 |
 | until end of turn, target creature gets +N/+N and another target creature gets -N/-N. | 1 | Rookie Mistake | m21 |
@@ -282,7 +281,6 @@
 | {M}, sacrifice ~: it deals damage equal to its power to target creature or planeswalker. | 1 | Heartfire Immolator | m21 |
 | {M}{M}{M}: until end of turn, creatures you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Jolrael, Mwonvuli Recluse | m21 |
 | ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
-| ~ can"..."ve drawn two or more cards ~. | 1 | Tome Anima | m21 |
 | ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
 | ~ deals N damage to target creature or planeswalker. that permanent loses indestructible until end of turn. | 1 | Soul Sear | m21 |
 | ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |

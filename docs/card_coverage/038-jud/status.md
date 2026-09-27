@@ -35,7 +35,7 @@
 | Cephalid Constable | notice | Whenever this creature deals combat damage to a player, return up to that many target permanents that player controls to their owner's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Valor | notice | As long as this card is in your graveyard and you control a Plains, creatures you control have first strike. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wonder | notice | As long as this card is in your graveyard and you control an Island, creatures you control have flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Solitary Confinement | unaudited | Skip your draw step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Solitary Confinement | unaudited | Prevent all damage that would be dealt to you. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sutured Ghoul | unaudited | As this creature enters, exile any number of creature cards from your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arcane Teachings | handled | Enchanted creature gets +2/+2 and has "{T}: This creature deals 1 damage to any target." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battle Screech | handled | Create two 1/1 white Bird creature tokens with flying. Flashback—Tap three untapped white creatures you control. (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -65,7 +65,7 @@
 | as long as ~ is in your graveyard and you control an island, creatures you control have flying. | 1 | Wonder | jud |
 | as ~ enters, exile any number of creature cards from your graveyard. | 1 | Sutured Ghoul | jud |
 | destroy target attacking creature. you gain life equal to its power. | 1 | Chastise | jud |
-| skip your draw step. | 1 | Solitary Confinement | jud |
+| prevent all damage that would be dealt to you. | 1 | Solitary Confinement | jud |
 | when ~ enters, you gain N life for each card in your graveyard. | 1 | Ancestor's Chosen | jud |
 | whenever ~ deals combat damage to a player, return up to that many target permanents that player controls to their owner's hand. | 1 | Cephalid Constable | jud |
 | whenever ~ deals combat damage to a player, that player exiles the top four cards of their library. if two or more of those cards have the same name, repeat ~. | 1 | Scalpelexis | jud |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 7.0% |
-| Works (untested) | 114 | 41.9% |
-| Partial (unaudited) | 10 | 3.7% |
-| Not working | 129 | 47.4% |
+| Tested | 55 | 20.2% |
+| Works (untested) | 99 | 36.4% |
+| Partial (unaudited) | 6 | 2.2% |
+| Not working | 112 | 41.2% |
 
 ## Cards needing work
 
@@ -69,20 +69,6 @@
 | Ichor Drinker | silent | {B}, Exile this card from your graveyard: Incubate 2. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Infected Defector | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Injector Crocodile | silent | When this creature dies, incubate 3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Alara // Awaken the Maelstrom | silent | When this Siege enters, exile cards from the top of your library until you exile two nonland cards with mana value 4 or less. You may cast one of those two card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Arcavios // Invocation of the Founders | silent | When this Siege enters, search your library, graveyard, and/or outside the game for an instant or sorcery card you own, reveal it, and put it into your hand. If | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Fiora // Marchesa, Resolute Monarch | silent | Whenever Marchesa attacks, remove all counters from up to one target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Gobakhan // Lightshield Array | silent | When this Siege enters, look at target opponent's hand. You may exile a nonland card from it. For as long as that card remains exiled, its owner may play it. A  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Ikoria // Zilortha, Apex of Ikoria | silent | When this Siege enters, search your library and/or graveyard for a non-Human creature card with mana value X or less and put it onto the battlefield. If you sea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Kaldheim // Pyre of the World Tree | silent | When this Siege enters, exile all cards from your hand, then draw that many cards. Until the end of your next turn, you may play cards exiled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Lorwyn // Winnowing Forces | silent | Winnowing Forces's power and toughness are each equal to the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of New Capenna // Holy Frazzle-Cannon | silent | Whenever equipped creature attacks, put a +1/+1 counter on that creature and each other creature you control that shares a creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of New Phyrexia // Teferi Akosa of Zhalfir | silent | When this Siege enters, create X 2/2 white and blue Knight creature tokens with vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Pyrulea // Gargantuan Slabhorn | silent | When this Siege enters, scry 3, then reveal the top card of your library. If it's a land or double-faced card, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Ravnica // Guildpact Paragon | silent | Whenever you cast a spell that's exactly two colors, look at the top six cards of your library. You may reveal a card that's exactly two colors from among them  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Theros // Ephara, Ever-Sheltering | silent | Ephara has lifelink and indestructible as long as you control at least three other enchantments. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Xerex // Vertex Paladin | silent | Vertex Paladin's power and toughness are each equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Zendikar // Awakened Skyclave | silent | As long as this creature is on the battlefield, it's a land in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jin-Gitaxias // The Great Synthesis | silent | I — Draw cards equal to the number of cards in your hand. You have no maximum hand size for as long as you control this Saga. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Karsus Depthguard | silent | As long as this creature's power is 5 or greater, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Knight-Errant of Eos | silent | When this creature enters, look at the top six cards of your library. You may reveal up to two creature cards with mana value X or less from among them, where X | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -138,9 +124,6 @@
 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | notice | Spells you cast cost {1} less to cast for each card your opponents have drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Inga and Esika | notice | Creatures you control have vigilance and "{T}: Add one mana of any color. Spend this mana only to cast a creature spell." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Into the Fire | notice | Choose one — • Into the Fire deals 2 damage to each creature, planeswalker, and battle. • Put any number of cards from your hand on the bottom of your library,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Invasion of Amonkhet // Lazotep Convert | notice | You may have this creature enter as a copy of any creature card in a graveyard, except it's a 4/4 black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Invasion of Innistrad // Deluge of the Dead | notice | {2}{B}: Exile target card from a graveyard. If it was a creature card, create a 2/2 black Zombie creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Invasion of Tarkir // Defiant Thundermaw | notice | When this Siege enters, reveal any number of Dragon cards from your hand. When you do, this Siege deals X plus 2 damage to any other target, where X is the numb | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Joyful Stormsculptor | notice | Whenever you cast a spell that has convoke, this creature deals 1 damage to each opponent and each battle they protect. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kroxa and Kunoros | notice | Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lithomantic Barrage | notice | This spell can't be countered. Lithomantic Barrage deals 1 damage to target creature or planeswalker. It deals 5 damage instead if that target is white and/or b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -158,10 +141,6 @@
 | Ancient Imperiosaur | unaudited | This creature enters with two +1/+1 counters on it for each creature that convoked it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Disturbing Conversion | unaudited | Enchanted creature gets -X/-0, where X is the number of cards in its controller's graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Errant and Giada | unaudited | You may cast spells with flash or flying from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Invasion of Kaladesh // Aetherwing, Golden-Scale Flagship | unaudited | Aetherwing's power is equal to the number of artifacts you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Invasion of Kylem // Valor's Reach Tag Team | unaudited | Create two 3/2 red and white Warrior creature tokens with "Whenever this token and at least one other creature token attack, put a +1/+1 counter on this token." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Invasion of Regatha // Disciples of the Inferno | unaudited | If a noncreature source you control would deal damage to a creature, battle, or opponent, it deals that much damage plus 2 instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Invasion of Segovia // Caetus, Sea Tyrant of Segovia | unaudited | Noncreature spells you cast have convoke. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oculus Whelp | unaudited | As long as you control a transformed permanent, this creature has "When this creature dies, draw a card." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Phyrexian Censor | unaudited | Non-Phyrexian creatures enter tapped. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Realmbreaker's Grasp | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -207,21 +186,6 @@
 | Harried Artisan // Phyrexian Skyflayer | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herbology Instructor // Malady Invoker | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Interdisciplinary Mascot | handled | When this creature enters, look at the top four cards of your library. Put one of them into your hand and the rest on the bottom of your library in a random ord | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Azgol // Ashen Reaper | handled | When this Siege enters, target player sacrifices a creature or planeswalker of their choice and loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Belenon // Belenon War Anthem | handled | When this Siege enters, create a 2/2 white and blue Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Dominaria // Serra Faithkeeper | handled | When this Siege enters, you gain 4 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Eldraine // Prickle Faeries | handled | When this Siege enters, target opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Ergamon // Truga Cliffcharger | handled | When this Siege enters, create a Treasure token. Then you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Ixalan // Belligerent Regisaur | handled | When this Siege enters, look at the top five cards of your library. You may reveal a permanent card from among them and put it into your hand. Put the rest on t | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Kamigawa // Rooftop Saboteurs | handled | When this Siege enters, tap target artifact or creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Karsus // Refraction Elemental | handled | When this Siege enters, it deals 3 damage to each creature and each planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Mercadia // Kyren Flamewright | handled | When this Siege enters, you may discard a card. If you do, draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Moag // Bloomwielder Dryads | handled | When this Siege enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Muraganda // Primordial Plasm | handled | When this Siege enters, put a +1/+1 counter on target creature you control. Then that creature fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Shandalar // Leyline Surge | handled | When this Siege enters, return up to three target permanent cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Tolvada // The Broken Sky | handled | When this Siege enters, return target nonbattle permanent card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Ulgrotha // Grandmother Ravi Sengir | handled | When this Siege enters, it deals 3 damage to any other target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Invasion of Vryn // Overloaded Mage-Ring | handled | When this Siege enters, draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iridescent Blademaster | handled | {3}{G}: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Khenra Spellspear // Gitaxian Spellstalker | handled | {3}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kithkin Billyrider | handled | Double strike | machines/combat.py | Y/Y/- | not_tested |
@@ -283,7 +247,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>55 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -294,6 +258,42 @@
 - Flywheel Racer
 - Glistening Deluge
 - Ichor Shade
+- Invasion of Alara // Awaken the Maelstrom
+- Invasion of Amonkhet // Lazotep Convert
+- Invasion of Arcavios // Invocation of the Founders
+- Invasion of Azgol // Ashen Reaper
+- Invasion of Belenon // Belenon War Anthem
+- Invasion of Dominaria // Serra Faithkeeper
+- Invasion of Eldraine // Prickle Faeries
+- Invasion of Ergamon // Truga Cliffcharger
+- Invasion of Fiora // Marchesa, Resolute Monarch
+- Invasion of Gobakhan // Lightshield Array
+- Invasion of Ikoria // Zilortha, Apex of Ikoria
+- Invasion of Innistrad // Deluge of the Dead
+- Invasion of Ixalan // Belligerent Regisaur
+- Invasion of Kaladesh // Aetherwing, Golden-Scale Flagship
+- Invasion of Kaldheim // Pyre of the World Tree
+- Invasion of Kamigawa // Rooftop Saboteurs
+- Invasion of Karsus // Refraction Elemental
+- Invasion of Kylem // Valor's Reach Tag Team
+- Invasion of Lorwyn // Winnowing Forces
+- Invasion of Mercadia // Kyren Flamewright
+- Invasion of Moag // Bloomwielder Dryads
+- Invasion of Muraganda // Primordial Plasm
+- Invasion of New Capenna // Holy Frazzle-Cannon
+- Invasion of New Phyrexia // Teferi Akosa of Zhalfir
+- Invasion of Pyrulea // Gargantuan Slabhorn
+- Invasion of Ravnica // Guildpact Paragon
+- Invasion of Regatha // Disciples of the Inferno
+- Invasion of Segovia // Caetus, Sea Tyrant of Segovia
+- Invasion of Shandalar // Leyline Surge
+- Invasion of Tarkir // Defiant Thundermaw
+- Invasion of Theros // Ephara, Ever-Sheltering
+- Invasion of Tolvada // The Broken Sky
+- Invasion of Ulgrotha // Grandmother Ravi Sengir
+- Invasion of Vryn // Overloaded Mage-Ring
+- Invasion of Xerex // Vertex Paladin
+- Invasion of Zendikar // Awakened Skyclave
 - Kami of Whispered Hopes
 - Sandstalker Moloch
 - See Double
@@ -319,16 +319,13 @@
 | Choose one | 1 | Into the Fire | mom |
 | +N: exile the top five cards of your library. until the end of your next turn, you may cast an instant or sorcery spell from among those exiled cards. | 1 | Chandra, Hope's Beacon | mom |
 | +N: up to one target land you control becomes a N/N elemental creature with vigilance, hexproof, and haste until your next turn. it's still a land. | 1 | Wrenn and Realmbreaker | mom |
-| aetherwing's power is equal to the number of artifacts you control. | 1 | Invasion of Kaladesh // Aetherwing, Golden-Scale Flagship | mom |
 | as long as an opponent has eight or more cards in their graveyard, ~ can attack as though it didn"..."t be blocked. | 1 | Expedition Lookout | mom |
 | as long as you control a transformed permanent, ~ has "..." | 1 | Oculus Whelp | mom |
 | as long as you have one or fewer cards in hand, ~ has vigilance and haste. | 1 | Djeru and Hazoret | mom |
-| as long as ~ is on the battlefield, it's a land in addition to its other types. | 1 | Invasion of Zendikar // Awakened Skyclave | mom |
 | as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
 | at the beginning of your first main phase, look at the top card of your library. you may reveal that card if it has three or more colored mana symbols in its ma | 1 | Omnath, Locus of All | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
-| create two N/N red and white warrior creature tokens with "..." | 1 | Invasion of Kylem // Valor's Reach Tag Team | mom |
 | creatures you control have vigilance and "..." | 1 | Inga and Esika | mom |
 | draw cards equal to the number of cards in your hand. you have no maximum hand size for as long as you control ~. | 1 | Jin-Gitaxias // The Great Synthesis | mom |
 | each player mills ten cards. for each player, choose a creature or planeswalker card in that player's graveyard. put those cards onto the battlefield under your | 1 | Breach the Multiverse | mom |
@@ -336,16 +333,13 @@
 | enchanted creature gets -N/-N, where N is the number of cards in its controller's graveyard. | 1 | Disturbing Conversion | mom |
 | enchanted creature has base power and toughness N/N, has defender, and loses all other abilities. | 1 | Stasis Field | mom |
 | enchanted permanent can"..."t be activated unless they're mana abilities. | 1 | Realmbreaker's Grasp | mom |
-| ephara has lifelink and indestructible as long as you control at least three other enchantments. | 1 | Invasion of Theros // Ephara, Ever-Sheltering | mom |
 | exile all creatures. incubate N, where N is the number of creatures exiled ~. (create an incubator token with N +N/+N counters on it and "..." it transforms int | 1 | Sunfall | mom |
 | exile target creature. incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) | 1 | Merciless Repurposing | mom |
 | gain control of target creature until end of turn. untap that creature. until end of turn, it gains haste and "..." (it's an artifact with "...") | 1 | Furnace Reins | mom |
-| if a noncreature source you control would deal damage to a creature, battle, or opponent, it deals that much damage plus N instead. | 1 | Invasion of Regatha // Disciples of the Inferno | mom |
 | incubate N twice, where N is the number of lands you control. (to incubate N, create an incubator token with N +N/+N counters on it and "..." it transforms into | 1 | Glistening Dawn | mom |
 | incubate N. (create an incubator token with three +N/+N counters on it and "..." it transforms into a N/N phyrexian artifact creature.) draw a card. | 1 | Eyes of Gitaxias | mom |
 | look at the top three cards of your library. put one of those cards into your hand, one into your graveyard, and one on the bottom of your library. | 1 | Moment of Truth | mom |
 | non-phyrexian creatures enter tapped. | 1 | Phyrexian Censor | mom |
-| noncreature spells you cast have convoke. | 1 | Invasion of Segovia // Caetus, Sea Tyrant of Segovia | mom |
 | put all creature cards from all graveyards onto the battlefield under your control. exile ~, then return it to the battlefield . | 1 | Sheoldred // The True Scriptures | mom |
 | spells you cast cost {M} less to cast for each card your opponents have drawn ~. | 1 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | mom |
 | target creature or land you control becomes a N/N elemental creature with haste in addition to its other types until end of turn. it must be blocked ~ if able. | 1 | Vengeant Earth | mom |
@@ -355,40 +349,28 @@
 | target player searches their library for a basic land card, puts it onto the battlefield tapped, then shuffles. put two +N/+N counters on up to one target artif | 1 | Fertilid's Favor | mom |
 | triple | 1 | City on Fire | mom |
 | up to two target creatures you control each get +N/+N until end of turn. they each deal damage equal to their power to another target creature, planeswalker, or | 1 | Tandem Takedown | mom |
-| vertex paladin's power and toughness are each equal to the number of creatures you control. | 1 | Invasion of Xerex // Vertex Paladin | mom |
 | when ~ dies, each player mills two cards. then you may exile ~. when you do, put target creature or battle card from your graveyard on top of your library. | 1 | Flitting Guerrilla | mom |
 | when ~ dies, exile the top card of your library. target opponent loses life equal to its mana value. if it's an instant or sorcery card, you may cast it without | 1 | Hidetsugu and Kairi | mom |
 | when ~ enters or dies, choose one — • draw a card, then discard a card. • shuffle up to four target cards with mana value N or greater from your graveyard into  | 1 | Oracle of Tragedy | mom |
 | when ~ enters, choose one — • put a +N/+N counter on target artifact or creature you control. • transform target incubator token you control. | 1 | Seedpod Caretaker | mom |
 | when ~ enters, choose one — • target opponent loses N life and you gain N life. • choose target battle. if an opponent protects it, remove three defense counter | 1 | Etched Host Doombringer | mom |
-| when ~ enters, create N N/N white and blue knight creature tokens with vigilance. | 1 | Invasion of New Phyrexia // Teferi Akosa of Zhalfir | mom |
 | when ~ enters, each player mills two cards. then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | 1 | Halo-Charged Skaab | mom |
-| when ~ enters, exile all cards from your hand, then draw that many cards. until the end of your next turn, you may play cards exiled ~. | 1 | Invasion of Kaldheim // Pyre of the World Tree | mom |
-| when ~ enters, exile cards from the top of your library until you exile two nonland cards with mana value N or less. you may cast one of those two cards without | 1 | Invasion of Alara // Awaken the Maelstrom | mom |
 | when ~ enters, incubate N N times. | 1 | Progenitor Exarch | mom |
-| when ~ enters, look at target opponent's hand. you may exile a nonland card from it. for as long as that card remains exiled, its owner may play it. a spell cas | 1 | Invasion of Gobakhan // Lightshield Array | mom |
 | when ~ enters, look at the top five cards of your library. you may reveal a land or double-faced card from among them and put that card into your hand. put the  | 1 | Overgrown Pest | mom |
 | when ~ enters, look at the top six cards of your library. you may reveal up to two creature cards with mana value N or less from among them, where N is the numb | 1 | Knight-Errant of Eos | mom |
 | when ~ enters, put a flying counter on each creature that convoked it. | 1 | Zephyr Singer | mom |
-| when ~ enters, reveal any number of dragon cards from your hand. when you do, ~ deals N plus N damage to any other target, where N is the number of cards reveal | 1 | Invasion of Tarkir // Defiant Thundermaw | mom |
-| when ~ enters, scry N, then reveal the top card of your library. if it's a land or double-faced card, draw a card. | 1 | Invasion of Pyrulea // Gargantuan Slabhorn | mom |
-| when ~ enters, search your library and/or graveyard for a non-human creature card with mana value N or less and put it onto the battlefield. if you search your  | 1 | Invasion of Ikoria // Zilortha, Apex of Ikoria | mom |
 | when ~ enters, search your library for a card, exile it face down, then shuffle. for as long as that card remains exiled, you may play it. | 1 | Hoarding Broodlord | mom |
-| when ~ enters, search your library, graveyard, and/or outside the game for an instant or sorcery card you own, reveal it, and put it into your hand. if you sear | 1 | Invasion of Arcavios // Invocation of the Founders | mom |
 | when ~ enters, you gain N life and incubate N. | 1 | Tangled Skyline | mom |
 | when ~ enters, you may pay {M}. when you do, you may cast target instant or sorcery card with mana value N from a graveyard without paying its mana cost. if tha | 1 | Halo Forager | mom |
 | whenever a creature you control becomes the target of a backup ability, copy that ability. you may choose new targets for the copy. ~ triggers only once each tu | 1 | Mirror-Shield Hoplite | mom |
 | whenever a source an opponent controls deals damage to you or a permanent you control, that source's controller loses N life unless they pay {M}. | 1 | Elesh Norn // The Argent Etchings | mom |
 | whenever a source deals damage to rona, that source"..."s a land card, you may put it onto the battlefield under your control. otherwise, you may cast it withou | 1 | Rona, Herald of Invasion // Rona, Tolarian Obliterator | mom |
-| whenever equipped creature attacks, put a +N/+N counter on that creature and each other creature you control that shares a creature type with it. | 1 | Invasion of New Capenna // Holy Frazzle-Cannon | mom |
 | whenever equipped creature deals combat damage to a player, surveil N. then you may cast an instant or sorcery spell with mana value N or less from your graveya | 1 | Sword of Once and Future | mom |
-| whenever marchesa attacks, remove all counters from up to one target permanent. | 1 | Invasion of Fiora // Marchesa, Resolute Monarch | mom |
 | whenever one or more dragons you control deal combat damage to a player or battle, look at the top three cards of your library. put one of them into your hand a | 1 | Zurgo and Ojutai | mom |
 | whenever you attack, choose one — • create a tapped and attacking N/N green dinosaur creature token with trample, where N is the greatest power among other atta | 1 | Ghalta and Mavren | mom |
 | whenever you cast a noncreature spell, incubate N, where N is that spell's mana value. | 1 | Chrome Host Seedshark | mom |
 | whenever you cast a spell that has convoke, ~ deals N damage to each opponent and each battle they protect. | 1 | Joyful Stormsculptor | mom |
 | whenever you cast a spell that targets one or more permanents, incubate N. | 1 | Tiller of Flesh | mom |
-| whenever you cast a spell that"..."s exactly two colors from among them and put it into your hand. put the rest on the bottom of your library in a random order. | 1 | Invasion of Ravnica // Guildpact Paragon | mom |
 | whenever you cast your first instant or sorcery spell each turn, you may cast a spell with lesser mana value that shares a card type with it from your hand with | 1 | Baral and Kari Zev | mom |
 | whenever ~ attacks a battle, double its power until end of turn. | 1 | War-Trained Slasher | mom |
 | whenever ~ attacks, create a tapped and attacking token that's a copy of it. put a +N/+N counter on that token for each +N/+N counter on ~. sacrifice that token | 1 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | mom |
@@ -400,17 +382,14 @@
 | whenever ~ deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | 1 | Rampaging Raptor | mom |
 | whenever ~ enters or attacks, you may exile five cards from your graveyard. when you do, return target creature card from your graveyard to the battlefield. | 1 | Kroxa and Kunoros | mom |
 | whenever ~ or another phyrexian you control enters, incubate N. | 1 | Essence of Orthodoxy | mom |
-| winnowing forces's power and toughness are each equal to the number of lands you control. | 1 | Invasion of Lorwyn // Winnowing Forces | mom |
 | you and permanents you control gain hexproof until end of turn. prevent all damage that black and/or red sources would deal to creatures you control ~. | 1 | Surge of Salvation | mom |
 | you may cast spells with flash or flying from the top of your library. | 1 | Errant and Giada | mom |
-| you may have ~ enter as a copy of any creature card in a graveyard, except it's a N/N black zombie in addition to its other colors and types. | 1 | Invasion of Amonkhet // Lazotep Convert | mom |
 | {M}, exile ~ from your graveyard: incubate N. activate only as a sorcery. | 1 | Ichor Drinker | mom |
 | {M}, sacrifice another creature or artifact: ayara deals N damage to target opponent or battle and you gain N life, where N is the sacrificed permanent's mana v | 1 | Ayara, Widow of the Realm // Ayara, Furnace Queen | mom |
 | {M}, sacrifice another creature: draw a card. you may put a land card from your hand onto the battlefield tapped. if you control eight or more lands, repeat ~ o | 1 | Zimone and Dina | mom |
 | {M}, {M}, sacrifice another creature or artifact: incubate N. | 1 | Compleated Huntmaster | mom |
 | {M}, {M}: target opponent mills three cards. put a land card from their graveyard onto the battlefield tapped under your control. it gains "..." | 1 | Realmbreaker, the Invasion Tree | mom |
 | {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
-| {M}{M}: exile target card from a graveyard. if it was a creature card, create a N/N black zombie creature token. | 1 | Invasion of Innistrad // Deluge of the Dead | mom |
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
 | ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |

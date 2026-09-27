@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 5.6% |
-| Works (untested) | 139 | 48.4% |
-| Partial (unaudited) | 16 | 5.6% |
-| Not working | 116 | 40.4% |
+| Tested | 18 | 6.3% |
+| Works (untested) | 140 | 48.8% |
+| Partial (unaudited) | 15 | 5.2% |
+| Not working | 114 | 39.7% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Egon, God of Death // Throne of Death | silent | At the beginning of your upkeep, exile two cards from your graveyard. If you can't, sacrifice Egon and draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elven Bow | silent | When this Equipment enters, you may pay {2}. If you do, create a 1/1 green Elf Warrior creature token, then attach this Equipment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eradicator Valkyrie | silent | Boast — {1}{B}, Sacrifice a creature: Each opponent sacrifices a creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Faceless Haven | silent | {S}{S}{S}: This land becomes a 4/3 creature with vigilance and all creature types until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fall of the Impostor | silent | III — Exile a creature with the greatest power among creatures target opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fire Giant's Fury | silent | Target Giant you control gets +2/+2 and gains trample until end of turn. Whenever it deals combat damage to a player this turn, exile that many cards from the t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Firja's Retribution | silent | II — Until end of turn, Angels you control gain "{T}: Destroy target creature with power less than this creature's power." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,7 +85,6 @@
 | Priest of the Haunted Edge | silent | {T}, Sacrifice this creature: Target creature gets -X/-X until end of turn, where X is the number of snow lands you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pyre of Heroes | silent | {2}, {T}, Sacrifice a creature: Search your library for a creature card that shares a creature type with the sacrificed creature and has mana value equal to 1 p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Quakebringer | silent | At the beginning of your upkeep, Quakebringer deals 2 damage to each opponent. This ability triggers only if Quakebringer is on the battlefield or if Quakebring | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Raiders' Karve | silent | Whenever this Vehicle attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rampage of the Valkyries | silent | Whenever an Angel you control dies, each other player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reckless Crew | silent | Create X 2/1 red Dwarf Berserker creature tokens, where X is the number of Vehicles you control plus the number of Equipment you control. For each of those toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Righteous Valkyrie | silent | Whenever another Angel or Cleric you control enters, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -156,7 +154,6 @@
 | Stalwart Valkyrie | unaudited | You may pay {1}{W} and exile a creature card from your graveyard rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | The World Tree | unaudited | As long as you control six or more lands, lands you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Tyvar Kell | unaudited | Elves you control have "{T}: Add {B}." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Vorinclex, Monstrous Raider | unaudited | If you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Withercrown | unaudited | Enchanted creature has base power 0 and has "At the beginning of your upkeep, you lose 1 life unless you sacrifice this creature." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Alpine Meadow | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Alrund's Epiphany | handled | Create two 1/1 blue Bird creature tokens with flying. Take an extra turn after this one. Exile Alrund's Epiphany. Foretell {4}{U}{U} (During your turn, you may  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -255,6 +252,7 @@
 | Path to the World Tree | handled | When this enchantment enters, search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pilfering Hawk | handled | {S}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Port of Karfell | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Raiders' Karve | handled | Whenever this Vehicle attacks, look at the top card of your library. If it's a land card, you may put it onto the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raise the Draugr | handled | Choose one — • Return target creature card from your graveyard to your hand. • Return two target creature cards that share a creature type from your graveyard t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rally the Ranks | handled | As this enchantment enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenform | handled | Exile target artifact or creature. Its controller creates a 1/1 blue Bird creature token with flying. Foretell {U} (During your turn, you may pay {2} and exile  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -301,7 +299,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Axgard Braggart
 - Cleaving Reaper
@@ -310,6 +308,7 @@
 - Deathknell Berserker
 - Dual Strike
 - Duskwielder
+- Faceless Haven
 - Littjara Kinseekers
 - Magda, Brazen Outlaw
 - Moritte of the Frost
@@ -317,6 +316,7 @@
 - Saw It Coming
 - The Trickster-God's Heist
 - Vega, the Watcher
+- Vorinclex, Monstrous Raider
 - Warchanter Skald
 - Weathered Runestone
 
@@ -378,7 +378,6 @@
 | foretelling cards from your hand costs {M} less and can be done on any player's turn. | 1 | Cosmos Charger | khm |
 | gain control of target creature until end of turn. untap that creature. until end of turn, it gains haste and "..." | 1 | Shackles of Treachery | khm |
 | if a nontoken creature an opponent controls would die, exile that card with an ice counter on it instead. | 1 | Draugr Necromancer | khm |
-| if you would put one or more counters on a permanent or player, put twice that many of each of those kinds of counters on that permanent or player instead. | 1 | Vorinclex, Monstrous Raider | khm |
 | look at the top three cards of your library. put one of them into your hand and the rest on the bottom of your library in any order. as long as you control a gi | 1 | Glimpse the Cosmos | khm |
 | mill three cards, then return a land card or elf card from your graveyard to your hand. if you can't, draw a card. (to mill a card, put the top card of your lib | 1 | Roots of Wisdom | khm |
 | mill three cards. you may put an elf or tyvar card from your graveyard onto the battlefield. | 1 | Harald Unites the Elves | khm |
@@ -434,7 +433,6 @@
 | whenever you cast an instant or sorcery spell, if it targets one or more other permanents you control, create a token that's a copy of one of those permanents. | 1 | Orvar, the All-Form | khm |
 | whenever you foretell a card, ~ gets +N/+N until end of turn. | 1 | Dream Devourer | khm |
 | whenever ~ attacks, add {M}{M}{M} and you gain N life. until end of turn, you don't lose ~ as steps and phases end. | 1 | Colossal Plow | khm |
-| whenever ~ attacks, look at the top card of your library. if it's a land card, you may put it onto the battlefield tapped. | 1 | Raiders' Karve | khm |
 | whenever ~ attacks, you may cast an instant or sorcery spell from your hand without paying its mana cost. | 1 | Surtland Elementalist | khm |
 | whenever ~ attacks, you may sacrifice another creature. when you do, ~ deals damage equal to the sacrificed creature's power to any target. if the sacrificed cr | 1 | Surtland Flinger | khm |
 | you gain N life for each foretold card you own in exile. | 1 | Niko Defies Destiny | khm |
@@ -447,7 +445,6 @@
 | {M}, {M}: look at the top card of your library. if it's a snow card, you may reveal it and put it into your hand. | 1 | Frost Augur | khm |
 | {M}: target snow land you control becomes a N/N elemental creature with hexproof and haste until end of turn. it's still a land. | 1 | Avalanche Caller | khm |
 | {M}{M}{M}: if ~ is a warrior, put a flying counter on it and it becomes a spirit warrior angel with base power and toughness N/N. | 1 | Ascendant Spirit | khm |
-| {M}{M}{M}: ~ becomes a N/N creature with vigilance and all creature types until end of turn. it's still a land. | 1 | Faceless Haven | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: create a token that's a copy of target creature you control, except it enters with an additional +N/+N counter on it. activate o | 1 | Littjara Mirrorlake | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: search your library for an aura card and/or an equipment card, reveal them, put them into your hand, then shuffle. | 1 | Axgard Armory | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: up to one target creature you don't control gets -N/-N until end of turn. create two N/N green elf warrior creature tokens. acti | 1 | Skemfar Elderhall | khm |

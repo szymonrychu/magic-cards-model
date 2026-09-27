@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 12.4% |
-| Works (untested) | 61 | 58.1% |
-| Partial (unaudited) | 7 | 6.7% |
-| Not working | 24 | 22.9% |
+| Tested | 14 | 13.3% |
+| Works (untested) | 62 | 59.0% |
+| Partial (unaudited) | 6 | 5.7% |
+| Not working | 23 | 21.9% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Autumn's Veil | silent | Spells you control can't be countered by blue or black spells this turn, and creatures you control can't be the targets of blue or black spells this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Tithe | silent | Each opponent loses 3 life. You gain life equal to the life lost this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Captivating Vampire | silent | Other Vampire creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Combust | silent | This spell can't be countered. Combust deals 5 damage to target white or blue creature. The damage can't be prevented. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Conundrum Sphinx | silent | Whenever this creature attacks, each player chooses a card name. Then each player reveals the top card of their library. If the card a player revealed has the n | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclops Gladiator | silent | Whenever this creature attacks, you may have it deal damage equal to its power to target creature defending player controls. If you do, that creature deals dama | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -52,7 +51,6 @@
 | Wild Evocation | silent | At the beginning of each player's upkeep, that player reveals a card at random from their hand. If it's a land card, the player puts it onto the battlefield. Ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Angelic Arbiter | unaudited | Each opponent who cast a spell this turn can't attack with creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bloodcrazed Goblin | unaudited | This creature can't attack unless an opponent has been dealt damage this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Demon of Death's Gate | unaudited | You may pay 6 life and sacrifice three black creatures rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fire Servant | unaudited | If a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gaea's Revenge | unaudited | This creature can't be the target of nongreen spells or abilities from nongreen sources. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Harbor Serpent | unaudited | This creature can't attack unless there are five or more Islands on the battlefield. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -72,6 +70,7 @@
 | Cloud Crusader | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Crystal Ball | handled | {1}, {T}: Scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Tutelage | handled | At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Demon of Death's Gate | handled | You may pay 6 life and sacrifice three black creatures rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Destructive Force | handled | Each player sacrifices five lands of their choice. Destructive Force deals 5 damage to each creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Diminish | handled | Target creature has base power and toughness 1/1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dryad's Favor | handled | Enchanted creature has forestwalk. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -122,11 +121,12 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Aether Adept
 - Ajani's Mantra
 - Brittle Effigy
+- Captivating Vampire
 - Cultivate
 - Frost Titan
 - Inferno Titan
@@ -154,7 +154,6 @@
 | if a red instant or sorcery spell you control would deal damage, it deals double that damage instead. | 1 | Fire Servant | m11 |
 | if a spell or ability an opponent controls causes you to discard ~, put it onto the battlefield instead of putting it into your graveyard. | 1 | Obstinate Baloth | m11 |
 | other knight creatures you control get +N/+N and have indestructible. | 1 | Knight Exemplar | m11 |
-| other vampire creatures you control get +N/+N. | 1 | Captivating Vampire | m11 |
 | spells you control can"..."t be the targets of blue or black spells ~. | 1 | Autumn's Veil | m11 |
 | target creature becomes red until end of turn and attacks ~ if able. | 1 | Incite | m11 |
 | until end of turn, creatures you control gain trample and get +N/+N, where N is the greatest power among creatures you control. | 1 | Overwhelming Stampede | m11 |
@@ -166,7 +165,6 @@
 | whenever ~ attacks, you may have it deal damage equal to its power to target creature defending player controls. if you do, that creature deals damage equal to  | 1 | Cyclops Gladiator | m11 |
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |
-| you may pay N life and sacrifice three black creatures rather than pay ~ mana cost. | 1 | Demon of Death's Gate | m11 |
 | {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |
 | {M}: prevent the next N damage that would be dealt to you ~. if damage is prevented ~, ~ deals that much damage to target player or planeswalker. | 1 | Vengeful Archon | m11 |
 | {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |

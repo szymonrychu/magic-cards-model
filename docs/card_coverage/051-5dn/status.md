@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.8% |
-| Works (untested) | 94 | 58.0% |
-| Partial (unaudited) | 18 | 11.1% |
-| Not working | 39 | 24.1% |
+| Tested | 12 | 7.4% |
+| Works (untested) | 98 | 60.5% |
+| Partial (unaudited) | 12 | 7.4% |
+| Not working | 40 | 24.7% |
 
 ## Cards needing work
 
@@ -57,6 +57,7 @@
 | Summoner's Egg | silent | Imprint — When this creature enters, you may exile a card from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synod Centurion | silent | When you control no other artifacts, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Vedalken Shackles | silent | {2}, {T}: Gain control of target creature with power less than or equal to the number of Islands you control for as long as this artifact remains tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Bringer of the Red Dawn | notice | At the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. That creature gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chimeric Coils | notice | {X}{1}: This artifact becomes an X/X Construct artifact creature. Sacrifice it at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Devour in Shadow | notice | Destroy target creature. It can't be regenerated. You lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ouphe Vandals | notice | {G}, Sacrifice this creature: Counter target activated ability from an artifact source and destroy that artifact if it's on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -65,11 +66,6 @@
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vicious Betrayal | notice | As an additional cost to cast this spell, sacrifice any number of creatures. Target creature gets +2/+2 until end of turn for each creature sacrificed this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Bringer of the Black Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Bringer of the Blue Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Bringer of the Green Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Bringer of the Red Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Bringer of the White Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Disruption Aura | unaudited | Enchanted artifact has "At the beginning of your upkeep, sacrifice this artifact unless you pay its mana cost." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Endless Whispers | unaudited | Each creature has "When this creature dies, choose target opponent. That player puts this card from its owner's graveyard onto the battlefield under their contr | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Eon Hub | unaudited | Players skip their upkeep steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -77,7 +73,6 @@
 | Goblin Brawler | unaudited | This creature can't be equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Lantern of Insight | unaudited | Players play with the top card of their libraries revealed. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Mycosynth Golem | unaudited | Artifact creature spells you cast have affinity for artifacts. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Opaline Bracers | unaudited | Equipped creature gets +X/+X, where X is the number of charge counters on this Equipment. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Razorgrass Screen | unaudited | This creature blocks each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Relentless Rats | unaudited | A deck can have any number of cards named Relentless Rats. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Silent Arbiter | unaudited | No more than one creature can attack each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -98,6 +93,10 @@
 | Beacon of Destruction | handled | Beacon of Destruction deals 5 damage to any target. Shuffle Beacon of Destruction into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blasting Station | handled | {T}, Sacrifice a creature: This artifact deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blind Creeper | handled | Whenever a player casts a spell, this creature gets -1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bringer of the Black Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bringer of the Blue Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bringer of the Green Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bringer of the White Dawn | handled | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cackling Imp | handled | {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Channel the Suns | handled | Add {W}{U}{B}{R}{G}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Clearwater Goblet | handled | At the beginning of your upkeep, you may gain life equal to the number of charge counters on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -181,7 +180,7 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>12 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
@@ -190,6 +189,7 @@
 - Eternal Witness
 - Grinding Station
 - Magma Jet
+- Opaline Bracers
 - Paradise Mantle
 - Solarion
 - Trinket Mage
@@ -201,7 +201,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| you may pay {M}{M}{M}{M}{M} rather than pay ~ mana cost. | 5 | Bringer of the Black Dawn, Bringer of the Blue Dawn, Bringer of the Green Dawn, Bringer of the Red Dawn, Bringer of the White Dawn | 5dn |
 | Choose one | 3 | Plunge into Darkness, Rude Awakening, Spectral Shift | 5dn |
 | Imprint | 1 | Summoner's Egg | 5dn |
 | a deck can have any number of cards named ~. | 1 | Relentless Rats | 5dn |
@@ -214,6 +213,7 @@
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |
 | at the beginning of your upkeep, if ~ is on the battlefield, each player returns all cards named ~ from their graveyard to the battlefield. | 1 | Myr Servitor | 5dn |
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice two lands. | 1 | Cosmic Larva | 5dn |
+| at the beginning of your upkeep, you may untap target creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Bringer of the Red Dawn | 5dn |
 | attach target equipment to target creature. (control of the equipment doesn't change.) | 1 | Magnetic Theft | 5dn |
 | counter target spell. if that spell is countered ~, its controller may put a creature card from their hand onto the battlefield. | 1 | Fold into Aether | 5dn |
 | destroy all creatures that dealt damage to you ~. | 1 | Retaliate | 5dn |
@@ -224,7 +224,6 @@
 | each player returns all artifact cards from their graveyard to the battlefield. | 1 | Roar of Reclamation | 5dn |
 | enchanted artifact can"..."t be activated. | 1 | Stasis Cocoon | 5dn |
 | enchanted artifact has "..." | 1 | Disruption Aura | 5dn |
-| equipped creature gets +N/+N, where N is the number of charge counters on ~. | 1 | Opaline Bracers | 5dn |
 | for each color, return up to one target card of that color from your graveyard to your hand. exile ~. | 1 | All Suns' Dawn | 5dn |
 | modular | 1 | Arcbound Wanderer | 5dn |
 | no more than one creature can attack each combat. | 1 | Silent Arbiter | 5dn |

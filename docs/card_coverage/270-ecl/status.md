@@ -17,17 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 136 | 54.0% |
+| Tested | 138 | 54.8% |
 | Works (untested) | 113 | 44.8% |
-| Partial (unaudited) | 3 | 1.2% |
+| Partial (unaudited) | 1 | 0.4% |
 | Not working | 0 | 0.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight | unaudited | Creature spells you cast have convoke. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Sunderflock | unaudited | This spell costs {X} less to cast, where X is the greatest mana value among Elementals you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Wildvine Pummeler | unaudited | Vivid — This spell costs {1} less to cast for each color among permanents you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aquitect's Defenses | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Assert Perfection | handled | Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to up to one target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -146,7 +144,7 @@
 ## Fully supported
 
 <details>
-<summary>136 cards</summary>
+<summary>138 cards</summary>
 
 - Abigale, Eloquent First-Year
 - Adept Watershaper
@@ -194,6 +192,7 @@
 - Dream Seizer
 - Eclipsed Boggart
 - Eclipsed Realms
+- Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight
 - Encumbered Reejerey
 - End-Blaze Epiphany
 - Explosive Prodigy
@@ -269,6 +268,7 @@
 - Squawkroaster
 - Stalactite Dagger
 - Sting-Slinger
+- Sunderflock
 - Sygg's Command
 - Sygg, Wanderwine Wisdom // Sygg, Wanderbrine Shield
 - Tam, Mindful First-Year
@@ -292,8 +292,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Vivid | 1 | Wildvine Pummeler | ecl |
-| creature spells you cast have convoke. | 1 | Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight | ecl |
-| ~ costs {M} less to cast, where N is the greatest mana value among elementals you control. | 1 | Sunderflock | ecl |
 
 ## Notes
 

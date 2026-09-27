@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 12.5% |
-| Works (untested) | 92 | 52.3% |
+| Tested | 24 | 13.6% |
+| Works (untested) | 94 | 53.4% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 57 | 32.4% |
+| Not working | 53 | 30.1% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Aerial Assault | silent | Destroy target tapped creature. You gain 1 life for each creature you control with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Agent of Treachery | silent | When this creature enters, gain control of target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ajani, Strength of the Pride | silent | 0: If you have at least 15 life more than your starting life total, exile Ajani and each artifact and creature your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Guardian | silent | Whenever one or more creatures you control attack, they gain indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Atemsis, All-Seeing | silent | Whenever Atemsis deals damage to an opponent, you may reveal your hand. If cards with at least six different mana values are revealed this way, that player lose | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,12 +50,10 @@
 | Goldmane Griffin | silent | When this creature enters, you may search your library and/or graveyard for a card named Ajani, Inspiring Leader, reveal it, and put it into your hand. If you s | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Golos, Tireless Pilgrim | silent | {2}{W}{U}{B}{R}{G}: Exile the top three cards of your library. You may play them this turn without paying their mana costs. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Icon of Ancestry | silent | {3}, {T}: Look at the top three cards of your library. You may reveal a creature card of the chosen type from among them and put it into your hand. Put the rest | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Kethis, the Hidden Hand | silent | Exile two legendary cards from your graveyard: Until end of turn, each legendary card in your graveyard gains "You may play this card from your graveyard." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Loxodon Lifechanter | silent | When this creature enters, you may have your life total become the total toughness of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Marauding Raptor | silent | Whenever another creature you control enters, this creature deals 2 damage to it. If a Dinosaur is dealt damage this way, this creature gets +2/+0 until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mu Yanling, Celestial Wind | silent | +1: Until your next turn, up to one target creature gets -5/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mu Yanling, Sky Dancer | silent | +2: Until your next turn, up to one target creature gets -2/-0 and loses flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Overgrowth Elemental | silent | Whenever another creature you control dies, you gain 1 life. If that creature was an Elemental, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pack Mastiff | silent | {1}{R}: Each creature you control named Pack Mastiff gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pattern Matcher | silent | When this creature enters, you may search your library for a card with the same name as another creature you control, reveal it, put it into your hand, then shu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Portal of Sanctuary | silent | {1}, {T}: Return target creature you control and each Aura attached to it to their owners' hands. Activate only during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -68,7 +65,6 @@
 | Sorin, Vampire Lord | silent | −8: Until end of turn, each Vampire you control gains "{T}: Gain control of target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tale's End | silent | Counter target activated ability, triggered ability, or legendary spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thought Distortion | silent | This spell can't be countered. Target opponent reveals their hand. Exile all noncreature, nonland cards from that player's hand and graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wolfrider's Saddle | silent | Equipped creature gets +1/+1 and can't be blocked by more than one creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yanling's Harbinger | silent | When this creature enters, you may search your library and/or graveyard for a card named Mu Yanling, Celestial Wind, reveal it, and put it into your hand. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Fenlurker | silent | When this creature enters, each opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Yarok's Wavecrasher | silent | When this creature enters, return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -76,9 +72,9 @@
 | Celestial Messenger | notice | This creature gets +1/+1 as long as you control a Yanling planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Elvish Reclaimer | notice | This creature gets +2/+2 as long as there are three or more land cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Growth Cycle | notice | Target creature gets +3/+3 until end of turn. It gets an additional +2/+2 until end of turn for each card named Growth Cycle in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Kethis, the Hidden Hand | notice | Legendary spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Legion's End | notice | Exile target creature an opponent controls with mana value 2 or less and all other creatures that player controls with the same name as that creature. Then that | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Masterful Replication | notice | Choose one — • Create two 3/3 colorless Golem artifact creature tokens. • Choose target artifact you control. Each other artifact you control becomes a copy of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sorin, Imperious Bloodlord | notice | +1: Target creature you control gains deathtouch and lifelink until end of turn. If it's a Vampire, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Thunderkin Awakener | notice | Whenever this creature attacks, choose target Elemental creature card in your graveyard with toughness less than this creature's toughness. Return that card to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unchained Berserker | notice | This creature gets +2/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vivien's Crocodile | notice | This creature gets +1/+1 as long as you control a Vivien planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -148,6 +144,7 @@
 | Noxious Grasp | handled | Destroy target creature or planeswalker that's green or white. You gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Octoprophet | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ogre Siegebreaker | handled | {2}{B}{R}: Destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Overgrowth Elemental | handled | When this creature enters, put a +1/+1 counter on another target Elemental you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyroclastic Elemental | handled | {1}{R}{R}: This creature deals 1 damage to target player. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rapacious Dragon | handled | When this creature enters, create two Treasure tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Reckless Air Strike | handled | Choose one — • Reckless Air Strike deals 3 damage to target creature with flying. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -164,6 +161,7 @@
 | Silverback Shaman | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skyknight Vanguard | handled | Whenever this creature attacks, create a 1/1 white Soldier creature token that's tapped and attacking. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sorcerer of the Fang | handled | {5}{B}, {T}: This creature deals 2 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sorin, Imperious Bloodlord | handled | +1: Target creature you control gains deathtouch and lifelink until end of turn. If it's a Vampire, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Starfield Mystic | handled | Enchantment spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Steadfast Sentry | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thicket Crasher | handled | Other Elementals you control have trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -184,9 +182,10 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>24 cards</summary>
 
 - Aether Gust
+- Agent of Treachery
 - Angel of Vitality
 - Blood Burglar
 - Brineborn Cutthroat
@@ -208,6 +207,7 @@
 - Veil of Summer
 - Vivien, Arkbow Ranger
 - Wildfire Elemental
+- Wolfrider's Saddle
 
 </details>
 
@@ -217,7 +217,6 @@
 |---|---|---|---|
 | Choose one | 1 | Masterful Replication | m20 |
 | +N: each opponent gets an emblem with "..." | 1 | Chandra, Awakened Inferno | m20 |
-| +N: target creature you control gains deathtouch and lifelink until end of turn. if it's a vampire, put a +N/+N counter on it. | 1 | Sorin, Imperious Bloodlord | m20 |
 | +N: until your next turn, up to one target creature gets -N/-N and loses flying. | 1 | Mu Yanling, Sky Dancer | m20 |
 | +N: until your next turn, up to one target creature gets -N/-N. | 1 | Mu Yanling, Celestial Wind | m20 |
 | N: if you have at least N life more than your starting life total, exile ajani and each artifact and creature your opponents control. | 1 | Ajani, Strength of the Pride | m20 |
@@ -228,10 +227,9 @@
 | creatures your opponents control can't have +N/+N counters put on them. | 1 | Blightbeetle | m20 |
 | destroy target tapped creature. you gain N life for each creature you control with flying. | 1 | Aerial Assault | m20 |
 | enchanted creature gets +N/+N and assigns combat damage equal to its toughness rather than its power. | 1 | Gauntlets of Light | m20 |
-| equipped creature gets +N/+N and can't be blocked by more than one creature. | 1 | Wolfrider's Saddle | m20 |
 | equipped creature gets +N/+N and loses flying. | 1 | Colossus Hammer | m20 |
 | exile target creature an opponent controls with mana value N or less and all other creatures that player controls with the same name as that creature. then that | 1 | Legion's End | m20 |
-| exile two legendary cards from your graveyard: until end of turn, each legendary card in your graveyard gains "..." | 1 | Kethis, the Hidden Hand | m20 |
+| legendary spells you cast cost {M} less to cast. | 1 | Kethis, the Hidden Hand | m20 |
 | other creatures you control with flying get +N/+N. | 1 | Empyrean Eagle | m20 |
 | other multicolored creatures you control get +N/+N. | 1 | Rienne, Angel of Rebirth | m20 |
 | put target creature with power N or greater on the bottom of its owner's library. | 1 | Eternal Isolation | m20 |
@@ -241,7 +239,6 @@
 | when you next cast an instant spell, cast a sorcery spell, or activate a loyalty ability ~, copy that spell or ability twice. you may choose new targets for the | 1 | Repeated Reverberation | m20 |
 | when ~ enters, choose one — • double the number of +N/+N counters on ~. • ~ fights target creature you don't control. | 1 | Voracious Hydra | m20 |
 | when ~ enters, each opponent exiles a card from their hand. | 1 | Yarok's Fenlurker | m20 |
-| when ~ enters, gain control of target permanent. | 1 | Agent of Treachery | m20 |
 | when ~ enters, return another creature you control to its owner's hand. | 1 | Yarok's Wavecrasher | m20 |
 | when ~ enters, reveal the top five cards of your library. put a land card from among them onto the battlefield and the rest into your graveyard. | 1 | Cavalier of Thorns | m20 |
 | when ~ enters, you may have your life total become the total toughness of creatures you control. | 1 | Loxodon Lifechanter | m20 |
@@ -251,7 +248,6 @@
 | when ~ enters, you may search your library and/or graveyard for a card named vivien, nature's avenger, reveal it, and put it into your hand. if you search your  | 1 | Ethereal Elk | m20 |
 | when ~ enters, you may search your library for a card with the same name as another creature you control, reveal it, put it into your hand, then shuffle. | 1 | Pattern Matcher | m20 |
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Battalion Foot Soldier | m20 |
-| whenever another creature you control dies, you gain N life. if that creature was an elemental, put a +N/+N counter on ~. | 1 | Overgrowth Elemental | m20 |
 | whenever another creature you control enters, ~ deals N damage to it. if a dinosaur is dealt damage ~, ~ gets +N/+N until end of turn. | 1 | Marauding Raptor | m20 |
 | whenever atemsis deals damage to an opponent, you may reveal your hand. if cards with at least six different mana values are revealed ~, that player loses the g | 1 | Atemsis, All-Seeing | m20 |
 | whenever one or more creatures you control attack, they gain indestructible until end of turn. | 1 | Angelic Guardian | m20 |

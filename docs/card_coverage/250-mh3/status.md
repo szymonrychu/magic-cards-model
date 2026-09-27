@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 62 | 23.7% |
-| Works (untested) | 89 | 34.0% |
-| Partial (unaudited) | 19 | 7.3% |
-| Not working | 92 | 35.1% |
+| Tested | 64 | 24.4% |
+| Works (untested) | 90 | 34.4% |
+| Partial (unaudited) | 18 | 6.9% |
+| Not working | 90 | 34.4% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Amped Raptor | silent | When this creature enters, you get {E}{E} . Then if you cast it from your hand, exile cards from the top of your library until you exile a nonland card. You may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arcbound Condor | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Arna Kennerüd, Skycaptain | silent | Whenever a modified creature you control attacks, double the number of each kind of counter on it. Then for each nontoken permanent attached to it, create a tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bespoke Battlewagon | silent | Pay {E}{E}{E}{E}: This Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodsoaked Insight // Sanguine Morass | silent | This spell costs {1} less to cast for each 1 life your opponents have lost this turn. Target opponent exiles the top three cards of their library. Until the end | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breathe Your Last | silent | Destroy target creature or planeswalker. You gain 1 life for each of its colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Colossal Dreadmask | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -93,7 +92,6 @@
 | Shadow of the Second Sun | silent | At the beginning of each of enchanted player's postcombat main phases, there is an additional beginning phase after this phase. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shilgengar, Sire of Famine | silent | Sacrifice another creature: Create a Blood token. If you sacrificed an Angel this way, create a number of Blood tokens equal to its toughness instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Signature Slam | silent | Put a +1/+1 counter on target creature you control, then each modified creature you control deals damage equal to its power to target creature you don't control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sorin of House Markov // Sorin, Ravenous Neonate | silent | −6: Gain control of target creature. It becomes a Vampire in addition to its other types. Put a lifelink counter on it if you control a white permanent other th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Springheart Nantuko | silent | Landfall — Whenever a land you control enters, you may pay {1}{G} if this permanent is attached to a creature you control. If you do, create a token that's a co | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spymaster's Vault | silent | {B}, {T}: Target creature you control connives X, where X is the number of creatures that died this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Strength of the Harvest // Haven of the Harvest | silent | Enchanted creature gets +1/+1 for each creature and/or enchantment you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -126,7 +124,6 @@
 | Echoes of Eternity | unaudited | If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Etherium Pteramander | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hydra Trainer | unaudited | You may exert this creature as it attacks. When you do, target creature gets +X/+X until end of turn, where X is the number of counters on permanents you contro | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Necrodominance | unaudited | Skip your draw step. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Nethergoyf | unaudited | Nethergoyf's power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus 1. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Party Thrasher | unaudited | Noncreature spells you cast from exile have convoke. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Path of Annihilation | unaudited | Eldrazi you control have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -140,6 +137,7 @@
 | Accursed Marauder | handled | When this creature enters, each player sacrifices a nontoken creature of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Amphibian Downpour | handled | Enchanted creature loses all abilities and is a blue Frog creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Argent Dais | handled | This artifact enters with two oil counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bespoke Battlewagon | handled | {T}: You get {E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bountiful Landscape | handled | {T}, Sacrifice this land: Search your library for a basic Forest, Island, or Mountain card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brainsurge | handled | Draw four cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chthonian Nightmare | handled | When this enchantment enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -230,7 +228,7 @@
 ## Fully supported
 
 <details>
-<summary>62 cards</summary>
+<summary>64 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
@@ -264,6 +262,7 @@
 - Kozilek's Command
 - Malevolent Rumble
 - Monumental Henge
+- Necrodominance
 - Null Elemental Blast
 - Ocelot Pride
 - Petrifying Meddler
@@ -276,6 +275,7 @@
 - Shifting Woodland
 - Sink into Stupor // Soporific Springs
 - Smelted Chargebug
+- Sorin of House Markov // Sorin, Ravenous Neonate
 - Sowing Mycospawn
 - Static Prison
 - Strix Serenade
@@ -348,7 +348,6 @@
 | other colorless creatures you control get +N/+N. | 1 | It That Heralds the End | mh3 |
 | other creatures have base power and toughness N/N and are bears in addition to their other types. | 1 | Kudo, King Among Bears | mh3 |
 | overload | 1 | Fangs of Kalonia | mh3 |
-| pay {M}{M}{M}{M}: ~ becomes an artifact creature until end of turn. | 1 | Bespoke Battlewagon | mh3 |
 | permanents you control have "..." | 1 | Cursed Wombat | mh3 |
 | players can't untap more than one nonbasic land during their untap steps. | 1 | Winter Moon | mh3 |
 | prototype | 1 | Frogmyr Enforcer | mh3 |
@@ -359,7 +358,6 @@
 | sacrifice another creature: create a blood token. if you sacrificed an angel ~, create a number of blood tokens equal to its toughness instead. | 1 | Shilgengar, Sire of Famine | mh3 |
 | sacrifice any number of creatures. search your library and/or graveyard for a creature card with mana value less than or equal to the number of creatures sacrif | 1 | The Hunger Tide Rises | mh3 |
 | search your library for a card, exile it face down, then shuffle. | 1 | The Creation of Avacyn | mh3 |
-| skip your draw step. | 1 | Necrodominance | mh3 |
 | until end of turn, double target creature's power and it gains first strike. | 1 | Legion Leadership // Legion Stronghold | mh3 |
 | when imskir enters, you draw N cards and you lose N life, where N is half the number of artifacts you control, rounded down. | 1 | Imskir Iron-Eater | mh3 |
 | when rosheen enters, mill six cards. you may put a card with {M} in its mana cost from among them into your hand. | 1 | Rosheen, Roaring Prophet | mh3 |
@@ -406,7 +404,6 @@
 | ~ costs {M} less to cast for each N life your opponents have lost ~. target opponent exiles the top three cards of their library. until the end of your next tur | 1 | Bloodsoaked Insight // Sanguine Morass | mh3 |
 | ~ has flying as long as it's modified. | 1 | Obstinate Gargoyle | mh3 |
 | ~'s power is equal to the number of card types among cards in your graveyard and its toughness is equal to that number plus N. | 1 | Nethergoyf | mh3 |
-| −N: gain control of target creature. it becomes a vampire in addition to its other types. put a lifelink counter on it if you control a white permanent other th | 1 | Sorin of House Markov // Sorin, Ravenous Neonate | mh3 |
 
 ## Notes
 

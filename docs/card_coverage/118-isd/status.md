@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 10.0% |
-| Works (untested) | 134 | 56.1% |
-| Partial (unaudited) | 16 | 6.7% |
-| Not working | 65 | 27.2% |
+| Works (untested) | 140 | 58.6% |
+| Partial (unaudited) | 15 | 6.3% |
+| Not working | 60 | 25.1% |
 
 ## Cards needing work
 
@@ -28,9 +28,7 @@
 |---|---|---|---|---|---|
 | Abattoir Ghoul | silent | Whenever a creature dealt damage by this creature this turn dies, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balefire Dragon | silent | Whenever this creature deals combat damage to a player, it deals that much damage to each creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Battleground Geist | silent | Other Spirit creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bitterheart Witch | silent | When this creature dies, you may search your library for a Curse card, put it onto the battlefield attached to target player, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bloodline Keeper // Lord of Lineage | silent | Other Vampire creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonds of Faith | silent | Enchanted creature gets +2/+2 as long as it's a Human. Otherwise, it can't attack or block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brain Weevil | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Butcher's Cleaver | silent | As long as equipped creature is a Human, it has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,20 +48,17 @@
 | Frightful Delusion | silent | Counter target spell unless its controller pays {1}. That player discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Full Moon's Rise | silent | Werewolf creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Furor of the Bitten | silent | Enchanted creature gets +2/+2 and attacks each combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gallows Warden | silent | Other Spirit creatures you control get +0/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Garruk Relentless // Garruk, the Veil-Cursed | silent | When Garruk has two or fewer loyalty counters on him, transform him. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Gatstaf Shepherd // Gatstaf Howler | silent | Intimidate | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ghoulraiser | silent | When this creature enters, return a Zombie card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grasp of Phantoms | silent | Put target creature on top of its owner's library. Flashback {7}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire of the Dead | silent | {T}, Remove three study counters from Grimoire of the Dead and sacrifice it: Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gutter Grime | silent | Whenever a nontoken creature you control dies, put a slime counter on this enchantment, then create a green Ooze creature token with "This token's power and tou | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hamlet Captain | silent | Whenever this creature attacks or blocks, other Humans you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Heretic's Punishment | silent | {3}{R}: Choose any target, then mill three cards. This enchantment deals damage to that permanent or player equal to the greatest mana value among the milled ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Instigator Gang // Wildblood Pack | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kessig Cagebreakers | silent | Whenever this creature attacks, create a 2/2 green Wolf creature token that's tapped and attacking for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Make a Wish | silent | Return two cards at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Manor Gargoyle | silent | {1}: Until end of turn, this creature loses defender and gains flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mayor of Avabruck // Howlpack Alpha | silent | Other Human creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory's Journey | silent | Target player shuffles up to three target cards from their graveyard into their library. Flashback {G} (You may cast this card from your graveyard for its flash | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindshrieker | silent | {2}: Target player mills a card. This creature gets +X/+X until end of turn, where X is the milled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Moldgraf Monstrosity | silent | When this creature dies, exile it, then return two creature cards at random from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -104,7 +99,6 @@
 | Rooftop Storm | unaudited | You may pay {0} rather than pay the mana cost for Zombie creature spells you cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Silver-Inlaid Dagger | unaudited | As long as equipped creature is a Human, it gets an additional +1/+0. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Skaab Ruinator | unaudited | You may cast this card from your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Stromkirk Noble | unaudited | This creature can't be blocked by Humans. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Unbreathing Horde | unaudited | This creature enters with a +1/+1 counter on it for each other Zombie you control and each Zombie card in your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wreath of Geists | unaudited | Enchanted creature gets +X/+X, where X is the number of creature cards in your graveyard. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Abbey Griffin | handled | Flying | machines/combat.py | Y/-/- | not_tested |
@@ -114,9 +108,11 @@
 | Armored Skaab | handled | When this creature enters, mill four cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Avacyn's Pilgrim | handled |  |  | Y/-/- | not_tested |
 | Avacynian Priest | handled | {1}, {T}: Tap target non-Human creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Battleground Geist | handled | Other Spirit creatures you control get +1/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blasphemous Act | handled | This spell costs {1} less to cast for each creature on the battlefield. Blasphemous Act deals 13 damage to each creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodcrazed Neonate | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bloodgift Demon | handled | At the beginning of your upkeep, target player draws a card and loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bloodline Keeper // Lord of Lineage | handled | {T}: Create a 2/2 black Vampire creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bramblecrush | handled | Destroy target noncreature permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bump in the Night | handled | Target opponent loses 3 life. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burning Vengeance | handled | Whenever you cast a spell from your graveyard, this enchantment deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -144,6 +140,7 @@
 | Feeling of Dread | handled | Tap up to two target creatures. Flashback {1}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Feral Ridgewolf | handled | {1}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fortress Crab | handled |  |  | Y/Y/- | not_tested |
+| Gallows Warden | handled | Other Spirit creatures you control get +0/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Galvanic Juggernaut | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gavony Township | handled | {2}{G}{W}, {T}: Put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geist of Saint Traft | handled | Whenever Geist of Saint Traft attacks, create a 4/4 white Angel creature token with flying that's tapped and attacking. Exile that token at end of combat. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -156,6 +153,7 @@
 | Grave Bramble | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Graveyard Shovel | handled | {2}, {T}: Target player exiles a card from their graveyard. If it's a creature card, you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grizzled Outcasts // Krallenhorde Wantons | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gutter Grime | handled | Whenever a nontoken creature you control dies, put a slime counter on this enchantment, then create a green Ooze creature token with "This token's power and tou | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hanweir Watchkeep // Bane of Hanweir | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Harvest Pyre | handled | As an additional cost to cast this spell, exile X cards from your graveyard. Harvest Pyre deals X damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartless Summoning | handled | Creature spells you cast cost {2} less to cast. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -178,6 +176,7 @@
 | Mask of Avacyn | handled | Equipped creature gets +1/+2 and has hexproof. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mausoleum Guard | handled | When this creature dies, create two 1/1 white Spirit creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Maw of the Mire | handled | Destroy target land. You gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mayor of Avabruck // Howlpack Alpha | handled | Other Human creatures you control get +1/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mentor of the Meek | handled | Whenever another creature you control with power 2 or less enters, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Midnight Haunting | handled | Create two 1/1 white Spirit creature tokens with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moan of the Unhallowed | handled | Create two 2/2 black Zombie creature tokens. Flashback {5}{B}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -220,6 +219,7 @@
 | Splinterfright | handled | Splinterfright's power and toughness are each equal to the number of creature cards in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stensia Bloodhall | handled | {3}{B}{R}, {T}: This land deals 2 damage to target player or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stitched Drake | handled | As an additional cost to cast this spell, exile a creature card from your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stromkirk Noble | handled | This creature can't be blocked by Humans. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stromkirk Patrol | handled | Whenever this creature deals combat damage to a player, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sulfur Falls | handled | This land enters tapped unless you control an Island or a Mountain. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thraben Purebloods | handled |  |  | Y/-/- | not_tested |
@@ -279,7 +279,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | intimidate | 3 | Brain Weevil, Gatstaf Shepherd // Gatstaf Howler, Spectral Rider | isd |
-| other spirit creatures you control get +N/+N. | 2 | Battleground Geist, Gallows Warden | isd |
 | Morbid | 1 | Woodland Sleuth | isd |
 | as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to target creature. | 1 | Corpse Lunge | isd |
 | as long as equipped creature is a human, it gets +N/+N. | 1 | Sharpened Pitchfork | isd |
@@ -310,8 +309,6 @@
 | grimgrin enters tapped and doesn't untap during your untap step. | 1 | Grimgrin, Corpse-Born | isd |
 | if equipped creature would deal combat damage, it deals double that damage instead. | 1 | Inquisitor's Flail | isd |
 | if you would draw a card while your library has no cards in it, you win the game instead. | 1 | Laboratory Maniac | isd |
-| other human creatures you control get +N/+N. | 1 | Mayor of Avabruck // Howlpack Alpha | isd |
-| other vampire creatures you control get +N/+N. | 1 | Bloodline Keeper // Lord of Lineage | isd |
 | prevent all combat damage that would be dealt to and dealt by enchanted creature. | 1 | Ghostly Possession | isd |
 | put target creature on top of its owner's library. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Grasp of Phantoms | isd |
 | return target exiled card with flashback you own to your hand. | 1 | Runic Repetition | isd |
@@ -331,7 +328,6 @@
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Fiend Hunter | isd |
 | whenever a creature card is put into an opponent's graveyard from their library, exile that card and create a N/N black zombie creature token. | 1 | Undead Alchemist | isd |
 | whenever a creature dealt damage by ~ ~ dies, you gain life equal to that creature's toughness. | 1 | Abattoir Ghoul | isd |
-| whenever a nontoken creature you control dies, put a slime counter on ~, then create a green ooze creature token with "..." | 1 | Gutter Grime | isd |
 | whenever equipped creature attacks, defending player reveals cards from the top of their library until they reveal a land card. the creature gets +N/+N until en | 1 | Trepanation Blade | isd |
 | whenever equipped creature blocks or becomes blocked by a vampire, destroy that creature. it can't be regenerated. | 1 | Wooden Stake | isd |
 | whenever ~ attacks or blocks, other humans you control get +N/+N until end of turn. | 1 | Hamlet Captain | isd |
@@ -350,7 +346,6 @@
 | {M}{M}: choose any target, then mill three cards. ~ deals damage to that permanent or player equal to the greatest mana value among the milled cards. | 1 | Heretic's Punishment | isd |
 | {M}{M}: ~ deals N damage to another target creature. that creature becomes a vampire in addition to its other types. put a +N/+N counter on ~. | 1 | Olivia Voldaren | isd |
 | {M}{M}: ~ owner shuffles it into their library. if that player does, they reveal cards from the top of that library until a card named ~ is revealed. the player | 1 | Mirror-Mad Phantasm | isd |
-| ~ can't be blocked by humans. | 1 | Stromkirk Noble | isd |
 | ~ can't be blocked except by creatures with flying or reach. | 1 | Orchard Spirit | isd |
 | ~ enters with a +N/+N counter on it for each other zombie you control and each zombie card in your graveyard. | 1 | Unbreathing Horde | isd |
 | ~ gets +N/+N for each creature your opponents control. | 1 | Scourge of Geier Reach | isd |

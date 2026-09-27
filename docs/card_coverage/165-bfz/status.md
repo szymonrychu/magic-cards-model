@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.2% |
+| Tested | 16 | 7.1% |
 | Works (untested) | 141 | 62.4% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 65 | 28.8% |
+| Not working | 63 | 27.9% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Akoum Hellkite | silent | Landfall — Whenever a land you control enters, this creature deals 1 damage to any target. If that land is a Mountain, this creature deals 2 damage instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Aligned Hedron Network | silent | When this artifact enters, exile all creatures with power 5 or greater until this artifact leaves the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angelic Captain | silent | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Ally. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bane of Bala Ged | silent | Whenever this creature attacks, defending player exiles two permanents they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benthic Infiltrator | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -37,7 +36,6 @@
 | Call the Scions | silent | Devoid (This card has no color.) Create two 1/1 colorless Eldrazi Scion creature tokens. They have "Sacrifice this token: Add {C}." | the engine's reading came from quoted text, not this clause's own words | Y/Y/- | not_working |
 | Clutch of Currents | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Coastal Discovery | silent | Awaken | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Conduit of Ruin | silent | When you cast this spell, you may search your library for a colorless creature card with mana value 7 or greater, reveal it, then shuffle and put that card on t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Crumble to Dust | silent | Devoid (This card has no color.) Exile target nonbasic land. Search its controller's graveyard, hand, and library for any number of cards with the same name as  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Culling Drone | silent | Ingest | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Defiant Bloodlord | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -242,10 +240,12 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>16 cards</summary>
 
+- Aligned Hedron Network
 - Blisterpod
 - Canopy Vista
+- Conduit of Ruin
 - Dust Stalker
 - Endless One
 - Kiora, Master of the Depths
@@ -290,8 +290,6 @@
 | put target creature on top of its owner"..."s still a land.) | 1 | Roil Spout | bfz |
 | target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
 | until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
-| when you cast ~, you may search your library for a colorless creature card with mana value N or greater, reveal it, then shuffle and put that card on top. | 1 | Conduit of Ruin | bfz |
-| when ~ enters, exile all creatures with power N or greater until ~ leaves the battlefield. | 1 | Aligned Hedron Network | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |
 | when ~ enters, you may look at the top five cards of your library. if you do, reveal up to one basic land card from among them, then put that card on top of you | 1 | Fertile Thicket | bfz |

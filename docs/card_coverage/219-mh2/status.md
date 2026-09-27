@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 13.2% |
+| Tested | 36 | 14.0% |
 | Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 90 | 34.9% |
+| Not working | 88 | 34.1% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Chrome Courier | silent | When this creature enters, reveal the top two cards of your library. Put one of them into your hand and the other into your graveyard. If you put an artifact ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dakkon, Shadow Slayer | silent | −6: You may put an artifact card from your hand or graveyard onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Damn | silent | Destroy target creature. A creature destroyed this way can't be regenerated. Overload {2}{W}{W} (You may cast this spell for its overload cost. If you do, chang | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dauthi Voidwalker | silent | {T}, Sacrifice this creature: Choose an exiled card an opponent owns with a void counter on it. You may play it this turn without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dermotaxi | silent | Tap two untapped creatures you control: Until end of turn, this Vehicle becomes a copy of the exiled card, except it's a Vehicle artifact in addition to its oth | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dihada's Ploy | silent | Jump | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Discerning Taste | silent | Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. You gain life equal to the greatest power among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -112,7 +111,6 @@
 | Blacksmith's Skill | notice | Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flay Essence | notice | Exile target creature or planeswalker. You gain life equal to the number of counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mount Velus Manticore | notice | At the beginning of combat on your turn, you may discard a card. When you do, this creature deals X damage to any target, where X is the number of card types th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Svyelun of Sea and Sky | notice | Svyelun has indestructible as long as you control at least two other Merfolk. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unmarked Grave | notice | Search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Verdant Command | notice | Choose two — • Target player creates two tapped 1/1 green Squirrel creature tokens. • Counter target loyalty ability of a planeswalker. • Exile target card from | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Young Necromancer | notice | When this creature enters, you may exile two cards from your graveyard. When you do, return target creature card from your graveyard to the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -254,13 +252,14 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>36 cards</summary>
 
 - Abiding Grace
 - Archon of Cruelty
 - Blazing Rootwalla
 - Blossoming Calm
 - Chatterfang, Squirrel General
+- Dauthi Voidwalker
 - Dragon's Rage Channeler
 - Dress Down
 - Echoing Return
@@ -284,6 +283,7 @@
 - Solitude
 - Subtlety
 - Suspend
+- Svyelun of Sea and Sky
 - Territorial Kavu
 - Tireless Provisioner
 - Unholy Heat
@@ -345,7 +345,6 @@
 | suspend N—{M} until end of turn, you may play lands and cast spells from your graveyard. if a card would be put into your graveyard from anywhere ~, exile that  | 1 | Gaea's Will | mh2 |
 | suspend N—{M}{M} shuffle all permanents you own into your library, then reveal that many cards from the top of your library. put all non-aura permanent cards re | 1 | Glimpse of Tomorrow | mh2 |
 | suspend N—{M}{M}{M} (rather than cast ~ from your hand, pay {M}{M}{M} and exile it with three time counters on it. at the beginning of your upkeep, remove a tim | 1 | Inevitable Betrayal | mh2 |
-| svyelun has indestructible as long as you control at least two other merfolk. | 1 | Svyelun of Sea and Sky | mh2 |
 | tap two untapped creatures you control: until end of turn, ~ becomes a copy of the exiled card, except it's a vehicle artifact in addition to its other types. | 1 | Dermotaxi | mh2 |
 | target noncreature artifact you control becomes a N/N artifact creature. put four +N/+N counters on each artifact that became a creature ~. overload {M}{M}{M} ( | 1 | Rise and Shine | mh2 |
 | target opponent reveals their hand. you choose a card from it. that player discards that card, then discards a card at random. | 1 | Tourach's Canticle | mh2 |
@@ -375,7 +374,6 @@
 | whenever yusri attacks, choose a number between N and N. flip that many coins. for each flip you win, draw a card. for each flip you lose, yusri deals N damage  | 1 | Yusri, Fortune's Flame | mh2 |
 | whenever ~ attacks, flip three coins. for each flip you win, create a N/N red goblin creature token that's tapped and attacking. | 1 | Goblin Traprunner | mh2 |
 | {M}, sacrifice N clues: target opponent reveals the top N cards of their library. you may put a nonland permanent card with mana value N or less from among them | 1 | Lonis, Cryptozoologist | mh2 |
-| {M}, sacrifice ~: choose an exiled card an opponent owns with a void counter on it. you may play it ~ without paying its mana cost. | 1 | Dauthi Voidwalker | mh2 |
 | {M}: choose a card name that hasn't been chosen from among disenchant, braingeyser, terror, shivan dragon, regrowth, and black lotus. create a copy of the card  | 1 | Garth One-Eye | mh2 |
 | {M}{M}{M}: put enchanted creature into its owner's library third from the top. | 1 | Shattered Ego | mh2 |
 | ~ costs {M} less to cast for each other spell cast ~. | 1 | Thrasta, Tempest's Roar | mh2 |
