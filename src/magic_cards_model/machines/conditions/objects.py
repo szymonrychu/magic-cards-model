@@ -405,6 +405,43 @@ def _declared_as_an_attacker(context: "ConditionContext", match: re.Match[str]) 
     return event.declared_attacker == (match.group("negated") is None)
 
 
+def _attacking_defender_quality(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "it's attacking a battle" (Rampaging Geoderm) - CR 508.1's declared
+    defender, read off `Game.combat` right now rather than off the trigger
+    event, since the object asked about is whichever creature the resolving
+    pump names ("target attacking creature"), not necessarily the one whose
+    attack triggered the ability. Templated over CR 508.1b's whole list of
+    eligible defenders - a player, a planeswalker, or a battle - rather than
+    fixed to the one word "battle" this session's reported card happens to
+    print, so "attacking a planeswalker"/"attacking a player" read the same
+    generic way.
+
+    False for a subject that is not attacking at all. A battle defender is a
+    `Type.BATTLE` permanent CR 508.1b's declaration already accepted, which
+    is the only fact this clause needs."""
+    from ...models.card import Type
+    from ...models.card_state import CardState
+
+    subject = _subject(context, match.group("subject"))
+    if subject is None:
+        return False
+    attack = context.game.combat.attack_by(subject.id)
+    if attack is None:
+        held = False
+    else:
+        defender = context.game.resolve_target(attack.defender)
+        quality = match.group("quality").lower()
+        if quality == "player":
+            held = defender is not None and not isinstance(defender, CardState)
+        else:
+            wanted = Type.PLANESWALKER if quality == "planeswalker" else Type.BATTLE
+            held = (
+                isinstance(defender, CardState)
+                and wanted in context.game.characteristics_of(defender).types
+            )
+    return held != bool(match.group("negated"))
+
+
 # -- characteristics, now or as it last existed --------------------------------
 
 
@@ -1080,6 +1117,13 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(r"it (?:is(?P<negated>n't| not)|is) being declared as an attacker"),
         _declared_as_an_attacker,
+    ),
+    ConditionReader(
+        re.compile(
+            rf"(?P<subject>{SUBJECT})(?:'s| is|'re| are)(?P<negated>n'?t| not)? attacking an? "
+            r"(?P<quality>player|planeswalker|battle)"
+        ),
+        _attacking_defender_quality,
     ),
     ConditionReader(
         re.compile(

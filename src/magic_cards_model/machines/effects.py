@@ -2778,6 +2778,19 @@ _MASS_POWER_FILTER_RE = re.compile(
     rf"with power {count_pattern('power', article=False)} or greater\b",
     re.IGNORECASE,
 )
+#: "Artifact creatures you control" / "... your opponents control" - CR
+#: 205.2a's card type narrowing the ordinary "creatures [you|your opponents]
+#: control" subject the identical way `_MASS_COLOR_FILTER_RE`'s colour and
+#: `_MASS_POWER_FILTER_RE`'s power already do. Age of Ultron's own chapter
+#: III: "Artifact creatures you control gain deathtouch until end of turn.
+#: Put a +1/+1 counter on each of them." - the second real printing of
+#: Summon: Knights of Round's "counter on each of them" shape, narrowed by a
+#: type this reader had no branch for at all before this card needed one.
+_MASS_TYPE_FILTER_RE = re.compile(
+    r"^(?P<type>artifact|enchantment|land|planeswalker|battle) creatures "
+    r"(?P<whose>you control|your opponents control)\b",
+    re.IGNORECASE,
+)
 #: The two whole-board subjects `_MASS_SUBJECT_RE` reads that also open
 #: sentences which are not a pump at all - see `_parse_mass_pump_clause`.
 _MASS_WHOLE_BOARD_SUBJECT_RE = re.compile(
@@ -2923,6 +2936,21 @@ def _mass_creature_group_targets(
             permanent
             for permanent in game.battlefield
             if board.of(permanent).is_creature and wanted & set(board.of(permanent).colors)
+        ]
+    type_filter_match = _MASS_TYPE_FILTER_RE.match(text.strip())
+    if type_filter_match is not None:
+        wanted_type = Type(type_filter_match.group("type").lower())
+        base_selector = (
+            creatures_controlled_by(controller)
+            if type_filter_match.group("whose") == "you control"
+            else creatures_controlled_by_opponents_of(controller)
+        )
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base_selector(board.of(permanent), board.characteristics)
+            and wanted_type in board.of(permanent).types
         ]
     power_filter_match = _MASS_POWER_FILTER_RE.match(text.strip())
     if power_filter_match is not None:
@@ -3089,6 +3117,7 @@ def _parse_mass_pump_clause(
         _MASS_SUBJECT_RE.match(text) is None
         and _MASS_SUBTYPE_SUBJECT_RE.match(text) is None
         and _MASS_EACH_SUBJECT_RE.match(text) is None
+        and _MASS_TYPE_FILTER_RE.match(text) is None
     ):
         return None
     if Duration.UNTIL_END_OF_TURN not in text.lower():
@@ -3148,6 +3177,7 @@ def _mass_pump_parseable(literal: str) -> str:
     subtype_match = _MASS_SUBTYPE_SUBJECT_RE.match(literal.strip())
     power_filter_match = _MASS_POWER_FILTER_RE.match(literal.strip())
     color_filter_match = _MASS_COLOR_FILTER_RE.match(literal.strip())
+    type_filter_match = _MASS_TYPE_FILTER_RE.match(literal.strip())
     each_match = _MASS_EACH_SUBJECT_RE.match(literal.strip())
     other_match = _MASS_OTHER_CREATURES_RE.match(literal.strip())
     if other_match is not None:
@@ -3178,6 +3208,12 @@ def _mass_pump_parseable(literal: str) -> str:
         )
     elif subtype_match is not None:
         parseable = "creatures " + literal.strip()[subtype_match.start("whose") :]
+    elif type_filter_match is not None:
+        # The card-type filter, like the power filter above: `targets`
+        # already carries only the creatures of that type
+        # (`_mass_creature_group_targets`), so the filter word itself is
+        # stripped before `machines/layers.py` ever sees the sentence.
+        parseable = "creatures " + literal.strip()[type_filter_match.start("whose") :]
     elif (token_match := _MASS_TOKEN_SUBJECT_RE.match(literal.strip())) is not None:
         # Ravenous Robots: "Creature tokens you control gain haste until end
         # of turn." - `targets` (`_mass_creature_group_targets`) already
@@ -3206,13 +3242,20 @@ def _run_mass_pump(
     controller: str,
     template: str,
     magnitude_expr: MassPumpMagnitude | None,
-) -> None:
+) -> list[CardState]:
     """Resolve one mass-pump clause: substitute its magnitude (if it has one),
     fix the group of creatures it affects, and hand the literal sentence to
     `machines/layers.py`'s own parser - the same `parsed_layer_effects` every
     other continuous effect in this file goes through, not a second
     ContinuousEffect-building path (Craterhoof's trample grant still lives or
     dies by `_KNOWN_KEYWORDS`'s whitelist there).
+
+    Returns the group the sentence's own antecedent found (CR 611.2c fixes it
+    once, right here) - empty when there was nobody to affect at all, but
+    still the group when the sentence's own predicate could not be built
+    (recorded as a `LayerNotice` instead), so a caller composing a sibling
+    "... on each of them" instruction (Summon: Knights of Round's chapter V)
+    can still find who "them" is even on that path.
 
     Trap: the magnitude is read **once**, right here, into a plain `int` -
     never carried forward as `magnitude_expr` itself - so a creature that
@@ -3228,7 +3271,7 @@ def _run_mass_pump(
         )
     targets = _mass_creature_group_targets(game, controller, source.id, literal)
     if not targets:
-        return
+        return []
     parseable = _mass_pump_parseable(literal)
     builder = parsed_layer_effects(parseable)
     if builder is None:
@@ -3239,13 +3282,87 @@ def _run_mass_pump(
         continuous_effects(game).layer_notices.append(
             LayerNotice(source_id=source.id, source_name=source.name, text=literal)
         )
-        return
+        return targets
     store = continuous_effects(game)
     timestamp = store.tick()
     context = layer_context_for(game, game.player(controller))
     for built in builder(source, timestamp, targets, context):
         if built.holds(game):
             store.add(built)
+    return targets
+
+
+#: "If `<condition>`, those creatures get `<A>`/`<B>` until end of turn
+#: instead." - Pride of Conquerors' own city's-blessing upgrade ("Creatures
+#: you control get +1/+1 until end of turn. If you have the city's blessing,
+#: those creatures get +2/+2 until end of turn instead.") and Dauntless
+#: Unity's identically shaped kicker one ("... get +1/+1 until end of turn.
+#: If this spell was kicked, those creatures get +2/+1 until end of turn
+#: instead."). The mass-pump twin of `_parse_layer_counter_instead_upgrade`'s
+#: single-target "put N counters on it instead" (CR 614.1a: "instead"
+#: replaces the whole preceding sentence's effect, never adds to it) - here
+#: the replacement is a bigger pump on the *same* group the leading
+#: sentence's own antecedent found, never a counter. `Game.condition_holds`
+#: already answers the condition itself; this only reads which magnitude
+#: applies to the group `_run_mass_pump` already knows how to find.
+_MASS_PUMP_INSTEAD_UPGRADE_RE = re.compile(
+    r"^if (?P<condition>.+?),\s*those creatures get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) until end of turn instead$",
+    re.IGNORECASE,
+)
+
+#: A literal "+N/+N" pump already substituted into a mass-pump template
+#: (never the still-unsubstituted "+X/+X" placeholder, which only a `where X
+#: is ...`/`for each` clause leaves behind and which `_MASS_PUMP_INSTEAD_
+#: UPGRADE_RE`'s own caller never reaches for - see its `magnitude_expr is
+#: None` guard) - replaced once, by the upgrade's own numbers.
+_MASS_PUMP_LITERAL_PT_RE = re.compile(r"[+-]\d+/[+-]\d+")
+
+
+def _parse_mass_pump_instead_upgrade(remainder_text: str) -> tuple[str, int, int] | None:
+    """`_MASS_PUMP_INSTEAD_UPGRADE_RE`'s shape, or `None`."""
+    match = _MASS_PUMP_INSTEAD_UPGRADE_RE.fullmatch(remainder_text.strip().rstrip(".").strip())
+    if match is None:
+        return None
+    return (
+        match.group("condition").strip(),
+        int(match.group("power")),
+        int(match.group("toughness")),
+    )
+
+
+def _mass_pump_instead_upgrade_template(template: str, power: int, toughness: int) -> str:
+    """`template`'s own literal pump, replaced by the upgrade's `power`/
+    `toughness` - the same group `_mass_creature_group_targets` finds either
+    way, since nothing about who is affected changes, only how much."""
+    return _MASS_PUMP_LITERAL_PT_RE.sub(f"{power:+d}/{toughness:+d}", template, count=1)
+
+
+#: "Put `<n>` `<kind>` counter(s) on each of them." after a mass pump or
+#: grant - Summon: Knights of Round's own chapter V ("Other creatures you
+#: control get +2/+2 until end of turn. Put an indestructible counter on
+#: each of them.") and Age of Ultron's chapter III ("Artifact creatures you
+#: control gain deathtouch until end of turn. Put a +1/+1 counter on each of
+#: them."). Additive (CR 608.2c: a further instruction, not a CR 614.1a
+#: "instead" swap) - the counters land on the exact group the leading
+#: sentence's own antecedent already found (`_run_mass_pump`'s own return),
+#: whatever that group's subject or filter, never re-derived from the
+#: rider's own words.
+_MASS_PUMP_COUNTER_ON_EACH_RE = re.compile(
+    rf"^put {count_pattern('n')} (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on each of them$",
+    re.IGNORECASE,
+)
+
+
+def _parse_mass_pump_counter_on_each(remainder_text: str) -> tuple[int, "Counter | str"] | None:
+    """`_MASS_PUMP_COUNTER_ON_EACH_RE`'s shape, or `None`."""
+    match = _MASS_PUMP_COUNTER_ON_EACH_RE.fullmatch(remainder_text.strip().rstrip(".").strip())
+    if match is None:
+        return None
+    amount = parse_count(match.group("n"))
+    if amount is None:
+        return None
+    return amount, _counter_kind(match.group("kind"))
 
 
 def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
@@ -3257,12 +3374,64 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
     layer sentence's own remainder - run in printed order (CR 608.2c) when it
     parses, recorded as a `LayerRemainderNotice` when it does not, rather
     than silently folded into (and lost inside) the pump's own template the
-    way it used to be.
+    way it used to be. Two shapes are read ahead of that ordinary "any other
+    instruction" fallback: a "those creatures get ... instead" magnitude
+    upgrade (`_parse_mass_pump_instead_upgrade`) and a "counter on each of
+    them" addition (`_parse_mass_pump_counter_on_each`), both keyed to the
+    exact same group the pump itself already found rather than to a second,
+    independently-resolved one.
     """
     parsed = _parse_mass_pump_clause(effect_text)
     if parsed is None:
         return None
     template, magnitude_expr, remainder = parsed
+
+    instead_upgrade = (
+        _parse_mass_pump_instead_upgrade(remainder)
+        if remainder and magnitude_expr is None
+        else None
+    )
+    if instead_upgrade is not None:
+        condition_text, up_power, up_toughness = instead_upgrade
+        upgraded_template = _mass_pump_instead_upgrade_template(template, up_power, up_toughness)
+
+        def instead_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None:
+                return
+            holds = game.condition_holds(ability.controller, condition_text, source)
+            chosen = upgraded_template if holds else template
+            _run_mass_pump(game, source, ability.controller, chosen, None)
+            if holds is None:
+                game.layer_remainder_notices.append(
+                    LayerRemainderNotice(
+                        source_id=ability.source_id,
+                        source_name=ability.source_name,
+                        text=remainder,
+                    )
+                )
+
+        from . import conditions
+
+        if conditions.claims(condition_text):
+            return instead_effect
+        return _with_unparsed_remainder(instead_effect, remainder)
+
+    counter_on_each = _parse_mass_pump_counter_on_each(remainder) if remainder else None
+    if counter_on_each is not None:
+        counter_amount, counter_kind = counter_on_each
+
+        def counter_effect(game: "Game", ability: AbilityOnStack) -> None:
+            source = ability.source(game)
+            if source is None:
+                return
+            targets = _run_mass_pump(game, source, ability.controller, template, magnitude_expr)
+            for target in targets:
+                if target.zone is Zone.BATTLEFIELD:
+                    game.add_counters(target, counter_kind, counter_amount)
+
+        return counter_effect
+
     remainder_effect = parse_mixed_effect(remainder) if remainder else None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
@@ -4160,12 +4329,61 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
     702.85a's exile-hit-free-cast pipeline reads no part of this sentence).
 
     Composes a sibling sentence after the pump the same way
-    `_mass_pump_ability_effect` does - Artifist Acumen's own "Draw a card."
+    `_mass_pump_ability_effect` does - Artifist Acumen's own "Draw a card." -
+    including that function's own two group-scoped shapes ahead of the
+    ordinary fallback: Pride of Conquerors' and Dauntless Unity's own "those
+    creatures get ... instead" magnitude upgrade, and a "counter on each of
+    them" addition (neither reported for a pool spell yet, but the identical
+    sentence shape a spell prints exactly as an ability does - `_parse_mass_
+    pump_clause`/`_run_mass_pump` are already shared between the two, so the
+    read is too).
     """
     parsed = _parse_mass_pump_clause(effect_text)
     if parsed is None:
         return None
     template, magnitude_expr, remainder = parsed
+
+    instead_upgrade = (
+        _parse_mass_pump_instead_upgrade(remainder)
+        if remainder and magnitude_expr is None
+        else None
+    )
+    if instead_upgrade is not None:
+        condition_text, up_power, up_toughness = instead_upgrade
+        upgraded_template = _mass_pump_instead_upgrade_template(template, up_power, up_toughness)
+
+        def instead_effect(game: "Game", spell: CardState) -> None:
+            controller = game.controller_of(spell).username
+            holds = game.condition_holds(controller, condition_text, spell)
+            chosen = upgraded_template if holds else template
+            _run_mass_pump(game, spell, controller, chosen, None)
+            if holds is None:
+                game.layer_remainder_notices.append(
+                    LayerRemainderNotice(
+                        source_id=spell.id, source_name=spell.card.name, text=remainder
+                    )
+                )
+
+        from . import conditions
+
+        if conditions.claims(condition_text):
+            return instead_effect
+        return _with_unparsed_remainder(instead_effect, remainder)
+
+    counter_on_each = _parse_mass_pump_counter_on_each(remainder) if remainder else None
+    if counter_on_each is not None:
+        counter_amount, counter_kind = counter_on_each
+
+        def counter_effect(game: "Game", spell: CardState) -> None:
+            targets = _run_mass_pump(
+                game, spell, game.controller_of(spell).username, template, magnitude_expr
+            )
+            for target in targets:
+                if target.zone is Zone.BATTLEFIELD:
+                    game.add_counters(target, counter_kind, counter_amount)
+
+        return counter_effect
+
     remainder_effect = parse_mixed_effect_for_spell(remainder) if remainder else None
 
     def effect(game: "Game", spell: CardState) -> None:
@@ -24536,7 +24754,31 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
             if source is None or source.zone is not Zone.BATTLEFIELD:
                 return
             controller = game.controller_of(ability)
-            holds = game.condition_holds(controller.username, condition_text, source)
+            ability_text = (
+                substitute_x(ability.ability.text, ability.x_value)
+                if isinstance(ability.ability, ActivatedAbility)
+                and cost_announces_x(ability.ability.cost)
+                else ability.ability.text
+            )
+            profile = profile_for_text(ability_text)
+            requires_target = profile.understood and bool(profile.requirements)
+            targets = game.resolve_card_targets(ability) if requires_target else [source]
+            # CR 608.2h: the condition's own "it"/"that creature" is the same
+            # object the pump (or the counter swap) affects - the ability's
+            # own target when the printed sentence has one (Rampaging
+            # Geoderm's "target attacking creature ... If it's attacking a
+            # battle, ..."), the source otherwise (Desperate Futurescribe's
+            # own scry/surveil condition names no object at all). Reading the
+            # condition against the source alone used to answer Rampaging
+            # Geoderm's own "it" as the ability's permanent rather than the
+            # creature it just pumped. `ability=ability` additionally threads
+            # the resolving `AbilityOnStack` itself through, for a condition
+            # about the activation's own mana payment (`machines/conditions/
+            # activation.py`) rather than about either object.
+            condition_subject = targets[0] if targets else source
+            holds = game.condition_holds(
+                controller.username, condition_text, condition_subject, ability=ability
+            )
             if holds is None:
                 # Unreadable condition: fail closed exactly as an ordinary
                 # unreadable remainder always has - run the pump and record
@@ -24553,15 +24795,6 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
             if not holds:
                 create_continuous_effect_of_ability(game, ability)
                 return
-            ability_text = (
-                substitute_x(ability.ability.text, ability.x_value)
-                if isinstance(ability.ability, ActivatedAbility)
-                and cost_announces_x(ability.ability.cost)
-                else ability.ability.text
-            )
-            profile = profile_for_text(ability_text)
-            requires_target = profile.understood and bool(profile.requirements)
-            targets = game.resolve_card_targets(ability) if requires_target else [source]
             for target in targets:
                 if target.zone is Zone.BATTLEFIELD:
                     game.add_counters(target, upgrade_kind, upgrade_amount)
@@ -27275,8 +27508,14 @@ _SERIAL_INSTRUCTION_SEPARATOR_RE = re.compile(r",\s*(?:and\s+|then\s+)?", re.IGN
 
 #: "attach it to target <description>" / "attach this Aura to target ..." -
 #: CR 701.3a's attach of the ability's own source onto its announced target.
+#: Bounded to this one sentence (`[^.]*$`, never `.+$`) - a `.` matches any
+#: non-newline character, so a greedier tail used to read straight through
+#: this sentence's own trailing period and swallow every sibling sentence
+#: after it (Hidden Blade's own "If that creature is an Assassin, it gains
+#: deathtouch until end of turn.") as though it were still part of "target
+#: `<description>`", with nothing left to notice the words it never ran.
 _ATTACH_SELF_TO_TARGET_RE = re.compile(
-    r"^attach (?:it|this (?:aura|equipment|fortification|permanent)) to target\b.+$",
+    r"^attach (?:it|this (?:aura|equipment|fortification|permanent)) to target\b[^.]*$",
     re.IGNORECASE,
 )
 
@@ -27313,6 +27552,24 @@ def attach_permanent(game: "Game", attached: CardState, host: CardState) -> bool
     return True
 
 
+def _attach_self_to_announced_target(game: "Game", ability: AbilityOnStack) -> CardState | None:
+    """CR 701.3a: the ability's source attached to whichever of its own
+    announced targets accepts it (CR 603.3d), rechecked by `Game.
+    resolve_targets` (CR 608.2b) - the primitive `_attach_self_to_target_
+    effect` and its own conditional-rider sibling
+    (`_parse_attach_self_then_conditional_rider_clause`) both build on, so
+    the second knows exactly which object the first attached to rather than
+    re-resolving (and possibly re-choosing among) the targets a second time.
+    """
+    source = ability.source(game)
+    if source is None or source.zone is not Zone.BATTLEFIELD:
+        return None
+    for target in game.resolve_targets(ability):
+        if isinstance(target, CardState) and attach_permanent(game, source, target):
+            return target
+    return None
+
+
 def _attach_self_to_target_effect(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_TO_TARGET_RE`: the source attached to the target the
     ability announced (CR 603.3d), rechecked by `Game.resolve_targets` (CR
@@ -27321,14 +27578,72 @@ def _attach_self_to_target_effect(text: str) -> AbilityEffect | None:
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
-        if source is None or source.zone is not Zone.BATTLEFIELD:
-            return
-        for target in game.resolve_targets(ability):
-            if isinstance(target, CardState) and attach_permanent(game, source, target):
-                return
+        _attach_self_to_announced_target(game, ability)
 
     return effect
+
+
+#: "attach it to target <description>. If that `<noun>` is a/an `<quality>`,
+#: it `<effect>`." - Hidden Blade's own "attach it to target creature you
+#: control. If that creature is an Assassin, it gains deathtouch until end
+#: of turn." CR 608.2c: two instructions in the order written - the attach,
+#: then a rider whose own condition is a characteristic of the object just
+#: attached to (CR 613.5's computed board), not a board-state clause about
+#: the ability's own source the way every other reader of `Game.condition_
+#: holds` in this file asks it. `<quality>` is any subtype, card type, or
+#: other quality `_is_quality` (`machines/conditions/objects.py`) already
+#: reads generically - never hand-fitted to "Assassin" - and `<effect>` is
+#: read by `_parse_referent_object_clause`, the same dispatcher every other
+#: "it `<verb>`..." rider in this file already goes through.
+_ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE = re.compile(
+    r"^(?P<attach>attach (?:it|this (?:aura|equipment|fortification|permanent)) to target"
+    r"[^.]*)\.\s*if (?P<subject>that (?:creature|permanent|artifact|enchantment|land"
+    r"|planeswalker|vehicle)|this (?:creature|permanent|artifact|enchantment|land"
+    r"|planeswalker|vehicle))\s+(?P<condition>(?:is|are|was|were)\b.+?),\s*(?P<rider>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_attach_self_then_conditional_rider_clause(text: str) -> AbilityEffect | None:
+    """`_ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE`'s shape, or `None`."""
+    match = _ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    condition_text = f"it {match.group('condition').strip()}"
+    rider_text = match.group("rider").strip().rstrip(".") + "."
+    inner = _parse_referent_object_clause(rider_text)
+    if inner is None:
+        return None
+    remainder_text = (
+        f"If {match.group('subject')} {match.group('condition')}, {match.group('rider')}"
+    )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target = _attach_self_to_announced_target(game, ability)
+        if target is None:
+            return
+        controller = game.controller_of(ability).username
+        holds = game.condition_holds(controller, condition_text, target)
+        if holds is None:
+            # Unreadable condition: fail closed exactly as an ordinary
+            # unreadable remainder always has - the attach still ran, and the
+            # untried rider is recorded rather than guessed at.
+            game.layer_remainder_notices.append(
+                LayerRemainderNotice(
+                    source_id=ability.source_id,
+                    source_name=ability.source_name,
+                    text=remainder_text,
+                )
+            )
+            return
+        if holds:
+            inner(game, [target], ability)
+
+    from . import conditions
+
+    if conditions.claims(condition_text):
+        return effect
+    return _with_unparsed_remainder(effect, remainder_text)
 
 
 def _optional_transform_payoff(payoff: str) -> AbilityEffect | None:
@@ -69460,6 +69775,7 @@ def _source_relative_whole_text_ability_effect(effect_text: str) -> AbilityEffec
         _parse_transform_it,
         _parse_attach_target_equipment_to_self,
         _parse_attach_self_then_that_creature,
+        _parse_attach_self_then_conditional_rider_clause,
         _parse_put_type_from_hand_attach_if_subtype,
         _parse_return_self_then_may_attach_equipment,
         _parse_self_counter_then_rider,

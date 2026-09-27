@@ -971,6 +971,26 @@ class AbilityOnStack(EngineModel):
     token has ceased to exist (CR 704.5d), which happens before this ability
     resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
 
+    mana_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much mana of each colour paid this ability's own activation cost
+    (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/
+    cost.ManaPayment.spend` the same moment `Game.activate_ability` reads
+    `cost_sacrificed_card_ids`/`cost_exiled_card_ids` off the same settled
+    payment - Paragon of Modernity's own "If exactly three colors of mana
+    were spent to activate this ability, put a +1/+1 counter on it instead."
+    `CastRecord.mana_spent` is the identical field for a *cast* spell; an
+    activated ability was never cast (CR 601.2a) and has no `CastRecord` of
+    its own, so this is where its own activation's payment is remembered.
+    Empty for a mana ability (CR 605.3b never builds an `AbilityOnStack` at
+    all) or one activated with no open `CostPayment` to read back."""
+
+    treasure_mana_spent: int = 0
+    """How much of `mana_spent` came from a Treasure (CR 106.3's source of
+    mana), from `ManaPayment.treasure_spent` - Jetmir's Fixer's own "If mana
+    from a Treasure was spent to activate this ability, put a +1/+1 counter
+    on this creature instead." `CastRecord.treasure_mana_spent`'s activation
+    twin, for the identical reason `mana_spent` is `CastRecord.mana_spent`'s."""
+
     unless_payment: "CostPayment | None" = Field(default=None, repr=False)
     """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
 

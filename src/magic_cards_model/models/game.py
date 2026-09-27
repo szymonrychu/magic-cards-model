@@ -4193,7 +4193,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 101
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 97
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4340,6 +4340,11 @@ class Game(EngineModel):
     #: 101: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
     #: Start your engines! speed, R0a-T8; renumbered from 96 at the R0a
     #: integration).
+    #: 97: `AbilityOnStack` gained `mana_spent` and `treasure_mana_spent`
+    #: (CR 601.2h via CR 602.2b: what paid an activation's own cost, the
+    #: ability-side twin of `CastRecord`'s identical two fields) - Paragon of
+    #: Modernity's and Jetmir's Fixer's own "If `<mana condition>`, put a
+    #: +1/+1 counter on it instead" (ec7-instead).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -25335,6 +25340,20 @@ class Game(EngineModel):
                     _cost_moved(paid, ComponentKind.EXILE)
                     if paid is not None
                     else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
+                ),
+                # CR 601.2h via CR 602.2b: what actually paid this activation's
+                # cost, read off the settled payment the same moment the two
+                # fields just above are - `CastRecord.mana_spent`'s own twin
+                # for an ability, which was never cast and has no such record.
+                mana_spent=(
+                    dict(paid.mana_payment.spend)
+                    if paid is not None and paid.mana_payment is not None
+                    else {}
+                ),
+                treasure_mana_spent=(
+                    sum(paid.mana_payment.treasure_spent.values())
+                    if paid is not None and paid.mana_payment is not None
+                    else 0
                 ),
             )
             # CR 608.2h: what each sacrificed permanent's mana value was, taken
