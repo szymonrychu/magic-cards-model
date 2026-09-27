@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 6.1% |
-| Works (untested) | 121 | 67.2% |
+| Works (untested) | 122 | 67.8% |
 | Partial (unaudited) | 7 | 3.9% |
-| Not working | 41 | 22.8% |
+| Not working | 40 | 22.2% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Liliana's Contract | silent | At the beginning of your upkeep, if you control four or more Demons with different names, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Liliana, the Necromancer | silent | −7: Destroy up to two target creatures. Put up to two creature cards from graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Militia Bugler | silent | When this creature enters, look at the top four cards of your library. You may reveal a creature card with power 2 or less from among them and put it into your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mirror Image | silent | You may have this creature enter as a copy of a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Novice Knight | silent | As long as this creature is enchanted or equipped, it can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Patient Rebuilding | silent | At the beginning of your upkeep, target opponent mills three cards, then you draw a card for each land card put into their graveyard this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Psychic Corrosion | silent | Whenever you draw a card, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -139,6 +138,7 @@
 | Loxodon Line Breaker | handled |  |  | Y/Y/- | not_tested |
 | Marauder's Axe | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meteor Golem | handled | When this creature enters, destroy target nonland permanent an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mirror Image | handled | You may have this creature enter as a copy of a creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mystic Archaeologist | handled | {3}{U}{U}: Draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Onakke Ogre | handled |  |  | Y/Y/- | not_tested |
 | Open the Graves | handled | Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -250,7 +250,6 @@
 | whenever you become the target of a spell or ability an opponent controls, counter that spell or ability unless its controller pays {M}. | 1 | Amulet of Safekeeping | m19 |
 | whenever you draw a card, each opponent mills two cards. | 1 | Psychic Corrosion | m19 |
 | you gain N life. target creature gets -N/-N until end of turn, where N is the amount of life you gained ~. | 1 | Nightmare's Thirst | m19 |
-| you may have ~ enter as a copy of a creature you control. | 1 | Mirror Image | m19 |
 | {M}, {M}: target opponent exiles cards from the top of their library until they exile an instant or sorcery card. you may cast that card without paying its mana | 1 | Chaos Wand | m19 |
 | {M}, {M}: until end of turn, your opponents and creatures your opponents control with hexproof can be the targets of spells and abilities you control as though  | 1 | Detection Tower | m19 |
 | {M}: look at the top card of your library. if it's a land card, you may reveal it and put it into your hand. | 1 | Dryad Greenseeker | m19 |

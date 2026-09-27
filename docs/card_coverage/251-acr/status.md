@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 6.6% |
-| Works (untested) | 36 | 34.0% |
-| Partial (unaudited) | 7 | 6.6% |
-| Not working | 56 | 52.8% |
+| Tested | 8 | 7.5% |
+| Works (untested) | 37 | 34.9% |
+| Partial (unaudited) | 6 | 5.7% |
+| Not working | 55 | 51.9% |
 
 ## Cards needing work
 
@@ -80,14 +80,12 @@
 | Battlefield Improvisation | notice | Target creature gets +2/+2 until end of turn. If that creature is attacking, you may attach any number of Equipment you control to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Havi, the All-Father | notice | Havi has indestructible as long as there are four or more historic cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Misthios's Fury | notice | Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sokrates, Athenian Teacher | notice | Sokrates has hexproof as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | What Must Be Done | notice | Choose one — • Let the World Burn — Destroy all artifacts and creatures. • Release Juno — Return target historic permanent card from your graveyard to the battl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Bureau Headmaster | unaudited | Equip abilities you activate cost {1} less to activate. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Crystal Skull, Isu Spyglass | unaudited | You may play historic lands and cast historic spells from the top of your library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Excalibur, Sword of Eden | unaudited | This spell costs {X} less to cast, where X is the total mana value of historic permanents you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ezio Auditore da Firenze | unaudited | Assassin spells you cast have freerunning {B}{B}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ratonhnhaké꞉ton | unaudited | As long as Ratonhnhaké꞉ton hasn't dealt damage yet, it has hexproof and can't be blocked. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Smoke Bomb | unaudited | All creatures have shroud. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Templar Knight | unaudited | A deck can have any number of cards named Templar Knight. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arbaaz Mir | handled | Whenever Arbaaz Mir or another nontoken historic permanent you control enters, Arbaaz Mir deals 1 damage to each opponent and you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Arno Dorian | handled | Other Assassins you control get +2/+0. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -117,6 +115,7 @@
 | Shao Jun | handled | Leap Strike — During your turn, Shao Jun has flying and first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Shay Cormac | handled | {1}: Permanents your opponents control lose hexproof, indestructible, protection, shroud, and ward until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sigurd, Jarl of Ravensthorpe | handled | Boast — {1}: Put a lore counter on target Saga you control or remove one from it. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sokrates, Athenian Teacher | handled | Sokrates has hexproof as long as it's untapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spartan Veteran | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Surtr, Fiery Jötun | handled | Whenever you cast a historic spell, Surtr deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | The Animus | handled | At the beginning of your end step, exile up to one target legendary creature card from a graveyard with a memory counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -129,7 +128,7 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Abstergo Entertainment
 - Ballad of the Black Flag
@@ -138,6 +137,7 @@
 - Haystack
 - Jacob Frye
 - Labyrinth Adversary
+- Smoke Bomb
 
 </details>
 
@@ -150,7 +150,6 @@
 | Choose one | 1 | What Must Be Done | acr |
 | Choose one or both | 1 | Auditore Ambush | acr |
 | a deck can have any number of cards named ~. | 1 | Templar Knight | acr |
-| all creatures have shroud. | 1 | Smoke Bomb | acr |
 | as long as ezio has two or more counters on it, it has first strike and is an assassin in addition to its other types. | 1 | Ezio, Brash Novice | acr |
 | as long as you have N or more life, equipped creature gets +N/+N and has indestructible and "..." | 1 | Caduceus, Staff of Hermes | acr |
 | as long as ~ hasn"..."t be blocked. | 1 | Ratonhnhaké꞉ton | acr |
@@ -175,7 +174,6 @@
 | other creatures you control are assassins in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Roshan, Hidden Magister | acr |
 | other knights you control get +N/+N and have protection from assassins. | 1 | Haytham Kenway | acr |
 | return each nonland permanent that"..."s hand. (artifacts, legendaries, and sagas are historic.) | 1 | Desynchronization | acr |
-| sokrates has hexproof as long as it's untapped. | 1 | Sokrates, Athenian Teacher | acr |
 | target creature gets +N/+N until end of turn. if that creature is attacking, you may attach any number of equipment you control to it. | 1 | Battlefield Improvisation | acr |
 | when a legendary creature you control attacks and isn't blocked, if ~ is exiled, put it onto the battlefield attacking. | 1 | Senu, Keen-Eyed Protector | acr |
 | when adéwalé enters, reveal the top six cards of your library. put an assassin, pirate, or vehicle card from among them into your hand and the rest on the botto | 1 | Adéwalé, Breaker of Chains | acr |

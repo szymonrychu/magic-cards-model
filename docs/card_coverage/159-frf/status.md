@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.6% |
+| Tested | 11 | 6.8% |
 | Works (untested) | 73 | 45.3% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 68 | 42.2% |
+| Not working | 66 | 41.0% |
 
 ## Cards needing work
 
@@ -58,7 +58,6 @@
 | Lightform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Map the Wastes | silent | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Bolster 1. (Choose a creature with the least toughness among creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mardu Runemark | silent | Enchanted creature has first strike as long as you control a white or black permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mardu Woe-Reaper | silent | Whenever this creature or another Warrior you control enters, you may exile target creature card from a graveyard. If you do, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rageform | silent | When this enchantment enters, it becomes an Aura with enchant creature. Manifest the top card of your library and attach this enchantment to it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakshasa's Disdain | silent | Counter target spell unless its controller pays {1} for each card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renowned Weaponsmith | silent | {U}, {T}: Search your library for a card named Heart-Piercer Bow or Vial of Dragonfire, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -80,7 +79,6 @@
 | Torrent Elemental | silent | Whenever this creature attacks, tap all creatures defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin's Construct | silent | When this creature enters, sacrifice a permanent that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin, the Spirit Dragon | silent | −X: Exile each permanent with mana value X or less that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Warden of the First Tree | silent | {1}{W/B}: This creature becomes a Human Warrior with base power and toughness 3/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whisk Away | silent | Put target attacking or blocking creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whisperwood Elemental | silent | Sacrifice this creature: Until end of turn, face-up nontoken creatures you control gain "When this creature dies, manifest the top card of your library." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildcall | silent | Manifest the top card of your library, then put X +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -182,17 +180,19 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Ainok Guide
 - Break Through the Line
 - Dark Deal
 - Ethereal Ambush
+- Mardu Woe-Reaper
 - Mastery of the Unseen
 - Mob Rule
 - Shifting Loyalties
 - Temur Battle Rage
 - Wandering Champion
+- Warden of the First Tree
 
 </details>
 
@@ -259,14 +259,12 @@
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
 | whenever ~ attacks, you may return target creature to its owner's hand if its power is less than ~ power. | 1 | Sage-Eye Avengers | frf |
 | whenever ~ deals combat damage to a player, it deals N damage to each creature that player controls. | 1 | Shockmaw Dragon | frf |
-| whenever ~ or another warrior you control enters, you may exile target creature card from a graveyard. if you do, you gain N life. | 1 | Mardu Woe-Reaper | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |
 | you may cast ~ from your graveyard as long as you control a black or green permanent. | 1 | Marang River Prowler | frf |
 | {M}, {M}: search your library for a card named heart-piercer bow or vial of dragonfire, reveal it, put it into your hand, then shuffle. | 1 | Renowned Weaponsmith | frf |
 | {M}, {M}: target creature you control gets +N/+N until end of turn for each lore counter on ~. | 1 | Scroll of the Masters | frf |
 | {M}: draw two cards. target opponent gains control of ~. activate only during your turn. | 1 | Humble Defector | frf |
 | {M}{M}: you may return another creature you control to its owner's hand. if you do, ~ gains indestructible until end of turn. | 1 | Temur Sabertooth | frf |
-| {M}{M}: ~ becomes a human warrior with base power and toughness N/N. | 1 | Warden of the First Tree | frf |
 | {M}{M}{M}: mill two cards, then return a nonland card of an opponent's choice from your graveyard to your hand. | 1 | Tasigur, the Golden Fang | frf |
 | {M}{M}{M}: move a +N/+N counter from target creature onto a second target creature. | 1 | Daghatar the Adamant | frf |
 | ~ has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | 1 | Bloodfire Enforcers | frf |

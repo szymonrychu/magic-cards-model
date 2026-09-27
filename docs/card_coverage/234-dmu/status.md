@@ -45,7 +45,6 @@
 | Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Evolved Sleeper | silent | {B}: This creature becomes a Human Cleric with base power and toughness 2/2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garna, Bloodfist of Keld | silent | Whenever another creature you control dies, draw a card if it was attacking. Otherwise, Garna deals 1 damage to each opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Guardian of New Benalia | silent | Whenever this creature enlists a creature, scry 2. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -112,6 +111,7 @@
 | Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ertai Resurrected | notice | When Ertai Resurrected enters, choose up to one — • Counter target spell, activated ability, or triggered ability. Its controller draws a card. • Destroy anothe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Evolved Sleeper | notice | {1}{B}: If this creature is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golden Argosy | notice | Whenever Golden Argosy attacks, exile each creature that crewed it this turn. Return them to the battlefield tapped under their owner's control at the beginning | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | In Thrall to the Pit | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Gain control of target creature until end of turn. Untap that creature. It gains haste  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jodah, the Unifier | notice | Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -366,9 +366,9 @@
 | {M}: target land you control becomes a N/N elemental creature with haste until end of turn. it's still a land. activate only as a sorcery. | 1 | Llanowar Loamspeaker | dmu |
 | {M}: target land you control becomes the basic land type of your choice until end of turn. | 1 | Pixie Illusionist | dmu |
 | {M}: until end of turn, target creature with defender gains haste, can attack as though it didn't have defender, and assigns combat damage equal to its toughnes | 1 | Walking Bulwark | dmu |
-| {M}: ~ becomes a human cleric with base power and toughness N/N. | 1 | Evolved Sleeper | dmu |
 | {M}{M}, {M}: each opponent loses N life, where N is the number of creatures with defender you control. | 1 | Blight Pile | dmu |
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Coral Colony | dmu |
+| {M}{M}: if ~ is a cleric, put a deathtouch counter on it and it becomes a phyrexian human cleric with base power and toughness N/N. | 1 | Evolved Sleeper | dmu |
 | {M}{M}{M}: put a +N/+N counter on king darien and create a N/N white soldier creature token. | 1 | King Darien XLVIII | dmu |
 | ~ can"..."ve cast an instant or sorcery spell ~. | 1 | Haunting Figment | dmu |
 | ~ is the chosen type in addition to its other types. | 1 | Thran Portal | dmu |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.4% |
-| Works (untested) | 130 | 50.8% |
+| Works (untested) | 131 | 51.2% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 90 | 35.2% |
+| Not working | 89 | 34.8% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Iron-Craw Crusher | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Kayla's Reconstruction | silent | Look at the top seven cards of your library. Put up to X artifact and/or creature cards with mana value 3 or less from among them onto the battlefield. Put the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mishra's Domination | silent | As long as you control enchanted creature, it gets +2/+2. Otherwise, it can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mishra's Foundry | silent | {1}, {T}: Target attacking Assembly-Worker gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mishra, Claimed by Gix | silent | Whenever you attack, each opponent loses X life and you gain X life, where X is the number of attacking creatures. If Mishra, Claimed by Gix and a creature name | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mishra, Excavation Prodigy | silent | Whenever you discard one or more artifact cards, add {R}{R}. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Over the Top | silent | Each player reveals a number of cards from the top of their library equal to the number of nonland permanents they control, puts all permanent cards they reveal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -191,6 +190,7 @@
 | Mightstone's Animation | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Military Discipline | handled | When this Aura enters, enchanted creature gains first strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Misery's Shadow | handled | If a creature an opponent controls would die, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mishra's Foundry | handled | {2}: This land becomes a 2/2 Assembly-Worker artifact creature until end of turn. It's still a land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mishra's Juggernaut | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mishra's Onslaught | handled | Choose one — • Create two 1/1 colorless Soldier artifact creature tokens. • Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moment of Defiance | handled | Target creature gets +2/+1 and gains lifelink until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -364,7 +364,6 @@
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |
 | {M}, {M}: discard all the cards in your hand, then draw that many cards. you may choose an artifact or creature card with mana value N you discarded ~, then do  | 1 | Queen Kayla bin-Kroog | bro |
 | {M}, {M}: each opponent loses N life. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Battlefield Butcher | bro |
-| {M}, {M}: target attacking assembly-worker gets +N/+N until end of turn. | 1 | Mishra's Foundry | bro |
 | {M}: artifact creatures you control get +N/+N until end of turn. | 1 | Artificer's Dragon | bro |
 | {M}: until end of turn, ~ gets -N/-N and gains your choice of flying, vigilance, deathtouch, or haste. | 1 | Argivian Avenger | bro |
 | {M}: ~ loses defender and gains "..." | 1 | Surge Engine | bro |

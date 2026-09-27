@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.5% |
-| Works (untested) | 106 | 42.1% |
+| Works (untested) | 107 | 42.5% |
 | Partial (unaudited) | 10 | 4.0% |
-| Not working | 112 | 44.4% |
+| Not working | 111 | 44.0% |
 
 ## Cards needing work
 
@@ -28,7 +28,7 @@
 |---|---|---|---|---|---|
 | All Will Be One | silent | Whenever you put one or more counters on a permanent or player, this enchantment deals that much damage to target opponent, creature an opponent controls, or pl | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Apostle of Invasion | silent | Corrupted — As long as an opponent has three or more poison counters, this creature has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Archfiend of the Dross | silent | At the beginning of your upkeep, remove an oil counter from this creature. Then if it has no oil counters on it, you lose the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Archfiend of the Dross | silent | Whenever a creature an opponent controls dies, its controller loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argentum Masticore | silent | At the beginning of your upkeep, sacrifice this creature unless you discard a card. When you discard a card this way, destroy target nonland permanent an oppone | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Barbed Batterfist | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Basilica Shepherd | silent | When this creature enters, create two 1/1 colorless Phyrexian Mite artifact creature tokens with toxic 1 and "This token can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -43,7 +43,6 @@
 | Crawling Chorus | silent | When this creature dies, create a 1/1 colorless Phyrexian Mite artifact creature token with toxic 1 and "This token can't block." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dragonwing Glider | silent | For Mirrodin! | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Encroaching Mycosynth | silent | Nonland permanents you control are artifacts in addition to their other types. The same is true for permanent spells you control and nonland permanent cards you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Evolved Spinoderm | silent | At the beginning of your upkeep, remove an oil counter from this creature. Then if it has no oil counters on it, sacrifice it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Expand the Sphere | silent | Look at the top six cards of your library. Put up to two land cards from among them onto the battlefield tapped and the rest on the bottom of your library in a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eye of Malcator | silent | Whenever another artifact you control enters, this artifact becomes a 4/4 Phyrexian Eye artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ezuri, Stalker of Spheres | silent | When Ezuri enters, you may pay {3}. If you do, proliferate twice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -118,10 +117,10 @@
 | Aspirant's Ascent | notice | Until end of turn, target creature gets +1/+3 and gains flying and toxic 1. (Players dealt combat damage by that creature also get a poison counter.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Atraxa's Skitterfang | notice | At the beginning of combat on your turn, you may remove an oil counter from this creature. When you do, target creature you control gains your choice of flying, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Cacophony Scamp | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, proliferate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Carnivorous Canopy | notice | Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate. (Choose any number of permanents and/o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Charge of the Mites | notice | Choose one — • Charge of the Mites deals damage equal to the number of creatures you control to target creature or planeswalker. • Create two 1/1 colorless Phyr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Compleat Devotion | notice | Target creature you control gets +2/+2 until end of turn. If that creature has toxic, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Evolved Spinoderm | notice | This creature has trample as long as it has two or fewer oil counters on it. Otherwise, it has hexproof. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Evolving Adaptive | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Exuberant Fuseling | notice | This creature gets +1/+0 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Forgehammer Centurion | notice | Whenever this creature attacks, you may remove two oil counters from it. When you do, target creature can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -160,6 +159,7 @@
 | Blightbelly Rat | handled | When this creature dies, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloated Contaminator | handled | Whenever this creature deals combat damage to a player, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Branchblight Stalker | handled | Toxic | machines/combat.py | Y/Y/- | not_tested |
+| Cacophony Scamp | handled | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cankerbloom | handled | {1}, Sacrifice this creature: Choose one — • Destroy target artifact. • Destroy target enchantment. • Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cephalopod Sentry | handled | Cephalopod Sentry's power is equal to the number of artifacts you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charforger | handled | When this creature enters, create a 1/1 red Phyrexian Goblin creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -310,8 +310,6 @@
 | at the beginning of each player's upkeep, ~ deals N damage to that player unless they control two or more basic lands. | 1 | Furnace Punisher | one |
 | at the beginning of your end step, return ~ to its owner's hand unless you remove two oil counters from it. | 1 | Magmatic Sprinter | one |
 | at the beginning of your end step, you may sacrifice another creature. if you do, reveal cards from the top of your library until you reveal a nonlegendary crea | 1 | Kethek, Crucible Goliath | one |
-| at the beginning of your upkeep, remove an oil counter from ~. then if it has no oil counters on it, sacrifice it. | 1 | Evolved Spinoderm | one |
-| at the beginning of your upkeep, remove an oil counter from ~. then if it has no oil counters on it, you lose the game. | 1 | Archfiend of the Dross | one |
 | at the beginning of your upkeep, sacrifice ~ unless you discard a card. when you discard a card ~, destroy target nonland permanent an opponent controls with ma | 1 | Argentum Masticore | one |
 | at the beginning of your upkeep, you lose N life and create a N/N colorless phyrexian mite artifact creature token with toxic N and "..." | 1 | Skrelv's Hive | one |
 | counter target spell unless its controller pays {M}. corrupted — counter that spell instead if its controller has three or more poison counters. | 1 | Bring the Ending | one |
@@ -359,6 +357,7 @@
 | when ~ enters, you may pay N life. when you do, target creature gets -N/-N until end of turn. | 1 | Ambulatory Edifice | one |
 | when ~ enters, you may return another permanent you control to its owner"..."t block." | 1 | Indoctrination Attendant | one |
 | when ~ enters, you may tap it. if you do, proliferate. | 1 | Gitaxian Anatomist | one |
+| whenever a creature an opponent controls dies, its controller loses N life. | 1 | Archfiend of the Dross | one |
 | whenever a creature you control with toxic deals combat damage to a player, that player gets an additional poison counter. | 1 | Necrogen Rotpriest | one |
 | whenever a player casts their first multicolored spell each turn, each other player draws a card. | 1 | Zenith Chronicler | one |
 | whenever an equipped creature you control other than rhuk attacks or dies, you may attach all equipment attached to that creature to rhuk. | 1 | Rhuk, Hexgold Nabber | one |
@@ -378,7 +377,6 @@
 | whenever ~ attacks, you may remove two oil counters from it. when you do, target creature can't block ~. | 1 | Forgehammer Centurion | one |
 | whenever ~ becomes attached to a creature, for as long as ~ remains attached to it, you may have that creature become a copy of another target creature you cont | 1 | Blade of Shared Souls | one |
 | whenever ~ deals combat damage to a player, you may remove two oil counters from it. if you do, when you next cast an instant or sorcery spell ~, copy that spel | 1 | Mercurial Spelldancer | one |
-| whenever ~ deals combat damage to a player, you may sacrifice it. if you do, proliferate. | 1 | Cacophony Scamp | one |
 | you draw three cards and you lose N life. corrupted — each opponent who has three or more poison counters loses N life. | 1 | Feed the Infection | one |
 | you draw two cards and you lose N life. each opponent gets a poison counter. | 1 | Infectious Inquiry | one |
 | you gain N life. create N N/N colorless phyrexian mite artifact creature tokens with toxic N and "..." if N is N or more, destroy all other creatures. (players  | 1 | White Sun's Twilight | one |
@@ -397,6 +395,7 @@
 | ~ deals N damage to target creature. if that creature has toxic, ~ deals N damage to that creature instead. | 1 | Hexgold Slash | one |
 | ~ gets +N/+N as long as it has three or more oil counters on it. | 1 | Armored Scrapgorger | one |
 | ~ gets +N/+N as long as you control two or more artifacts. | 1 | Orthodoxy Enforcer | one |
+| ~ has trample as long as it has two or fewer oil counters on it. otherwise, it has hexproof. | 1 | Evolved Spinoderm | one |
 | −N: create a N/N green phyrexian beast creature token with toxic N. | 1 | Lukka, Bound to Ruin | one |
 | −N: target creature becomes a treasure artifact with "..." and loses all other card types and abilities. | 1 | Vraska, Betrayal's Sting | one |
 

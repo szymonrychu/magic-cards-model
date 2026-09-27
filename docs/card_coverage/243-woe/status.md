@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.0% |
-| Works (untested) | 138 | 51.9% |
+| Tested | 17 | 6.4% |
+| Works (untested) | 140 | 52.6% |
 | Partial (unaudited) | 10 | 3.8% |
-| Not working | 102 | 38.3% |
+| Not working | 99 | 37.2% |
 
 ## Cards needing work
 
@@ -38,7 +38,6 @@
 | Brave the Wilds | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, target land you control becomes a 3/3 Elemen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Break the Spell | silent | Destroy target enchantment. If a permanent you controlled or a token was destroyed this way, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Callous Sell-Sword // Burn Together | silent | Target creature you control deals damage equal to its power to any other target. Then sacrifice it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Chancellor of Tales | silent | Whenever you cast an Adventure spell, you may copy it. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charging Hooligan | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each attacking creature. If a Rat is attacking, this creature gains trample until end of tur | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Charmed Clothier | silent | When this creature enters, create a Royal Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cruel Somnophage // Can't Wake Up | silent | Cruel Somnophage's power and toughness are each equal to the number of creature cards in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -65,7 +64,7 @@
 | Hylda's Crown of Winter | silent | {1}, {T}: Tap target creature. This ability costs {1} less to activate during your turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Icewrought Sentry | silent | Whenever you tap an untapped creature an opponent controls, this creature gets +2/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Imodane, the Pyrohammer | silent | Whenever an instant or sorcery spell you control that targets only a single creature deals damage to that creature, Imodane deals that much damage to each oppon | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ingenious Prodigy | silent | At the beginning of your upkeep, if this creature has one or more +1/+1 counters on it, you may remove a +1/+1 counter from it. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Ingenious Prodigy | silent | Skulk | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Into the Fae Court | silent | Draw three cards. Create a 1/1 blue Faerie creature token with flying and "This token can block only creatures with flying." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lich-Knights' Conquest | silent | Sacrifice any number of artifacts, enchantments, and/or tokens. Return that many creature cards from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Living Lectern | silent | {1}, Sacrifice this creature: Draw a card. Create a Sorcerer Role token attached to up to one other target creature you control. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -77,7 +76,6 @@
 | Regal Bunnicorn | silent | Regal Bunnicorn's power and toughness are each equal to the number of nonland permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Restless Fortress | silent | Whenever this land attacks, defending player loses 2 life and you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Restless Spire | silent | {U}{R}: Until end of turn, this land becomes a 2/1 blue and red Elemental creature with "During your turn, this creature has first strike." It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Restless Vinestalk | silent | Whenever this land attacks, up to one other target creature has base power and toughness 3/3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan's Grim Search | silent | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) If this spell was bargained, look at the top four cards of your library,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowan, Scion of War | silent | {T}: Spells you cast this turn that are black and/or red cost {X} less to cast, where X is the amount of life you lost this turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sharae of Numbing Depths | silent | Whenever you tap one or more untapped creatures your opponents control, draw a card. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -88,7 +86,6 @@
 | Song of Totentanz | silent | Create X 1/1 black Rat creature tokens with "This token can't block." Creatures you control gain haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spell Stutter | silent | Counter target spell unless its controller pays {2} plus an additional {1} for each Faerie you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Splashy Spellcaster | silent | Whenever you cast an instant or sorcery spell, create a Sorcerer Role token attached to up to one other target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Stockpiling Celebrant | silent | When this creature enters, you may return another target nonland permanent you control to its owner's hand. If you do, scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Syr Armont, the Redeemer | silent | When Syr Armont enters, create a Monster Role token attached to another target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Syr Ginger, the Meal Ender | silent | {2}, {T}, Sacrifice Syr Ginger: You gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Talion, the Kindly Lord | silent | Whenever an opponent casts a spell with mana value, power, or toughness equal to the chosen number, that player loses 2 life and you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -152,6 +149,7 @@
 | Boundary Lands Ranger | handled | At the beginning of combat on your turn, if you control a creature with power 4 or greater, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candy Grapple | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Target creature gets -3/-3 until end of turn. If this spell was bargained | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Candy Trail | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Chancellor of Tales | handled | Whenever you cast an Adventure spell, you may copy it. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Charming Scoundrel | handled | When this creature enters, choose one — • Discard a card, then draw a card. • Create a Treasure token. • Create a Wicked Role token attached to target creature  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Collector's Vault | handled | {2}, {T}: Draw a card, then discard a card. Create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Conceited Witch // Price of Beauty | handled | Create a Wicked Role token attached to target creature you control. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -222,6 +220,7 @@
 | Redtooth Vanguard | handled | Whenever an enchantment you control enters, you may pay {2}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Bivouac | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Restless Cottage | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Restless Vinestalk | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Return Triumphant | handled | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Create a Young Hero Role token attached to it. (Enchanted creature | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Return from the Wilds | handled | Choose two — • Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. • Create a 1/1 white Human creature token. • Create  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rimefur Reindeer | handled | Whenever an enchantment you control enters, tap target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -239,6 +238,7 @@
 | Spellscorn Coven // Take It Back | handled | Return target spell to its owner's hand. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spider Food | handled | Destroy up to one target artifact, enchantment, or creature with flying. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stingblade Assassin | handled | When this creature enters, destroy target creature an opponent controls that was dealt damage this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Stockpiling Celebrant | handled | When this creature enters, you may return another target nonland permanent you control to its owner's hand. If you do, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stonesplitter Bolt | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Stonesplitter Bolt deals X damage to target creature or planeswalker. If  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stormkeld Prowler | handled | Whenever you cast a spell with mana value 5 or greater, put two +1/+1 counters on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stormkeld Vanguard // Bear Down | handled | Destroy target artifact or enchantment. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -260,7 +260,6 @@
 | Torch the Tower | handled | Bargain (You may sacrifice an artifact, enchantment, or token as you cast this spell.) Torch the Tower deals 2 damage to target creature or planeswalker. If thi | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Totentanz, Swarm Piper | handled | Whenever Totentanz or another nontoken creature you control dies, create a 1/1 black Rat creature token with "This token can't block." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tough Cookie | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Troyan, Gutsy Explorer | handled | {U}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twining Twins // Swift Spiral | handled | Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Two-Headed Hunter // Twice the Rage | handled | Target creature gains double strike until end of turn. (Then exile this card. You may cast the creature later from exile.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unassuming Sage | handled | When this creature enters, you may pay {2}. If you do, create a Sorcerer Role token attached to it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -280,7 +279,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Agatha's Champion
 - Agatha's Soul Cauldron
@@ -298,6 +297,7 @@
 - Ruby, Daring Tracker
 - Spiteful Hexmage
 - Troublemaker Ouphe
+- Troyan, Gutsy Explorer
 
 </details>
 
@@ -312,7 +312,6 @@
 | any number of target enchanted creatures you control and up to one other target creature you control each deal damage equal to their power to target creature yo | 1 | Graceful Takedown | woe |
 | at the beginning of combat on your turn, if you control a creature with power N or greater, ~ gets +N/+N until end of turn and can attack ~ as though it didn't  | 1 | Territorial Witchstalker | woe |
 | at the beginning of your end step, put a +N/+N counter on each creature you control. untap those creatures. | 1 | Virtue of Loyalty // Ardenvale Fealty | woe |
-| at the beginning of your upkeep, if ~ has one or more +N/+N counters on it, you may remove a +N/+N counter from it. if you do, draw a card. | 1 | Ingenious Prodigy | woe |
 | at the beginning of your upkeep, you may sacrifice an artifact, enchantment, or token. if you don't, tap ~. | 1 | Devouring Sugarmaw // Have for Dinner | woe |
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) if ~ was bargained, look at the top four cards of your library, then put up to two | 1 | Rowan's Grim Search | woe |
 | bargain (you may sacrifice an artifact, enchantment, or token as you cast ~.) if ~ was bargained, target land you control becomes a N/N elemental creature with  | 1 | Brave the Wilds | woe |
@@ -348,6 +347,7 @@
 | return all creatures to their owners' hands. for each opponent who controlled a creature returned ~, you create two N/N blue faerie creature tokens with flying  | 1 | Faerie Slumber Party | woe |
 | return the exiled card to the battlefield under its owner's control. | 1 | The Princess Takes Flight | woe |
 | sacrifice any number of artifacts, enchantments, and/or tokens. return that many creature cards from your graveyard to the battlefield. | 1 | Lich-Knights' Conquest | woe |
+| skulk | 1 | Ingenious Prodigy | woe |
 | target creature you control deals damage equal to its power to any other target. then sacrifice it. | 1 | Callous Sell-Sword // Burn Together | woe |
 | target creature you control gets +N/+N until end of turn. it can't be blocked by creatures with power N or greater ~. | 1 | Cheeky House-Mouse // Squeak By | woe |
 | target opponent discards two cards. create a wicked role token attached to up to one target creature you control. (if you control another role on it, put that o | 1 | Eriette's Whisper | woe |
@@ -367,14 +367,12 @@
 | when ~ enters, exile up to N target creatures. for each of those cards, its owner may play it for as long as it remains exiled. | 1 | Extraordinary Journey | woe |
 | when ~ enters, sacrifice any number of artifacts, enchantments, and/or tokens, then draw that many cards. | 1 | Malevolent Witchkite | woe |
 | when ~ enters, you may exile one or more creature cards from your graveyard. when you do, each other creature gets -N/-N until end of turn, where N is the numbe | 1 | Specter of Mortality | woe |
-| when ~ enters, you may return another target nonland permanent you control to its owner's hand. if you do, scry N. | 1 | Stockpiling Celebrant | woe |
 | whenever a legendary creature you control enters, you may have ~ become a legendary equipment artifact named everflame, heroes' legacy. if you do, it gains equi | 1 | The Irencrag | woe |
 | whenever a rat you control becomes blocked, it gets +N/+N until end of turn. | 1 | Tattered Ratter | woe |
 | whenever a source you control deals noncombat damage to an opponent, you may exile that many cards from the top of your library. you may play those cards ~. | 1 | Virtue of Courage // Embereth Blaze | woe |
 | whenever an instant or sorcery spell you control that targets only a single creature deals damage to that creature, imodane deals that much damage to each oppon | 1 | Imodane, the Pyrohammer | woe |
 | whenever an opponent casts a spell with mana value, power, or toughness equal to the chosen number, that player loses N life and you draw a card. | 1 | Talion, the Kindly Lord | woe |
 | whenever you cast a spell that's white, blue, black, or red, put a +N/+N counter on ~. | 1 | Questing Druid // Seek the Beast | woe |
-| whenever you cast an adventure spell, you may copy it. you may choose new targets for the copy. | 1 | Chancellor of Tales | woe |
 | whenever you cast an instant or sorcery spell, create a sorcerer role token attached to up to one other target creature you control. | 1 | Splashy Spellcaster | woe |
 | whenever you tap an untapped creature an opponent controls, put a +N/+N counter on target creature you control. | 1 | Solitary Sanctuary | woe |
 | whenever you tap an untapped creature an opponent controls, you may pay {M}. when you do, choose one — • create a N/N white and blue elemental creature token. • | 1 | Hylda of the Icy Crown | woe |
@@ -382,7 +380,6 @@
 | whenever you tap one or more untapped creatures your opponents control, draw a card. ~ triggers only once each turn. | 1 | Sharae of Numbing Depths | woe |
 | whenever ~ attacks, defending player loses N life and you gain N life. | 1 | Restless Fortress | woe |
 | whenever ~ attacks, it gets +N/+N until end of turn for each attacking creature. if a rat is attacking, ~ gains trample until end of turn. | 1 | Charging Hooligan | woe |
-| whenever ~ attacks, up to one other target creature has base power and toughness N/N until end of turn. | 1 | Restless Vinestalk | woe |
 | whenever ~ attacks, you may sacrifice a food. if you do, attacking creatures get +N/+N and gain trample until end of turn. | 1 | Provisions Merchant | woe |
 | whenever ~ blocks or becomes blocked by a creature, ~ deals N damage to that creature. | 1 | Skewer Slinger | woe |
 | whenever ~ deals combat damage to a player, put a skewer counter on ~. then you may sacrifice it. if you do, exile the top N cards of your library, where N is t | 1 | Rotisserie Elemental | woe |

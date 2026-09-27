@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 8.9% |
-| Works (untested) | 128 | 45.7% |
+| Tested | 30 | 10.7% |
+| Works (untested) | 127 | 45.4% |
 | Partial (unaudited) | 13 | 4.6% |
-| Not working | 114 | 40.7% |
+| Not working | 110 | 39.3% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Adder-Staff Boggart | silent | When this creature enters, clash with an opponent. If you win, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Amoeboid Changeling | silent | {T}: Target creature gains all creature types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arbiter of Knollridge | silent | When this creature enters, each player's life total becomes the highest life total among all players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashling the Pilgrim | silent | {1}{R}: Put a +1/+1 counter on Ashling. If this is the third time this ability has resolved this turn, remove all +1/+1 counters from Ashling, and it deals that | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashling's Prerogative | silent | Each creature with mana value of the chosen quality has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -59,7 +58,6 @@
 | Gilt-Leaf Ambush | silent | Create two 1/1 green Elf Warrior creature tokens. Clash with an opponent. If you win, those creatures gain deathtouch until end of turn. (Each clashing player r | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glarewielder | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Guile | silent | When Guile is put into a graveyard from anywhere, shuffle it into its owner's library. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Heat Shimmer | silent | Create a token that's a copy of target creature, except it has haste and "At the beginning of the end step, exile this token." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hoarder's Greed | silent | You lose 2 life and draw two cards, then clash with an opponent. If you win, repeat this process. (Each clashing player reveals the top card of their library, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horde of Notions | silent | {W}{U}{B}{R}{G}: You may play target Elemental card from your graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hostility | silent | When Hostility is put into a graveyard from anywhere, shuffle it into its owner's library. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -108,7 +106,6 @@
 | Streambed Aquitects | silent | {T}: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunrise Sovereign | silent | Other Giant creatures you control get +2/+2 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sylvan Echoes | silent | Whenever you clash and win, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Thieving Sprite | silent | When this creature enters, target player reveals X cards from their hand, where X is the number of Faeries you control. You choose one of those cards. That play | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thorntooth Witch | silent | Whenever you cast a Treefolk spell, you may have target creature get +3/-3 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thoughtweft Trio | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thundercloud Shaman | silent | When this creature enters, it deals damage equal to the number of Giants you control to each non-Giant creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -139,7 +136,6 @@
 | Nameless Inversion | notice | Changeling (This card is every creature type.) Target creature gets +3/-3 and loses all creature types until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Primal Command | notice | Choose two — • Target player gains 7 life. • Put target noncreature permanent on top of its owner's library. • Target player shuffles their graveyard into their | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Warren Pilferers | notice | When this creature enters, return target creature card from your graveyard to your hand. If that card is a Goblin card, this creature gains haste until end of t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Wings of Velis Vel | notice | Changeling (This card is every creature type.) Until end of turn, target creature has base power and toughness 4/4, gains all creature types, and gains flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dolmen Gate | unaudited | Prevent all combat damage that would be dealt to attacking creatures you control. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Doran, the Siege Tower | unaudited | Each creature assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ethereal Whiskergill | unaudited | This creature can't attack unless defending player controls an Island. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -206,13 +202,12 @@
 | Gilt-Leaf Seer | handled | {G}, {T}: Look at the top two cards of your library, then put them back in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glen Elendra Pranksters | handled | Whenever you cast a spell during an opponent's turn, you may return target creature you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Glimmerdust Nap | handled | Enchanted creature doesn't untap during its controller's untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Goldmeadow Dodger | handled | This creature can't be blocked by creatures with power 4 or greater. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Goldmeadow Harrier | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldmeadow Stalwart | handled | As an additional cost to cast this spell, reveal a Kithkin card from your hand or pay {3}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Guardian of Cloverdell | handled | When this creature enters, create three 1/1 white Kithkin Soldier creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hamletback Goliath | handled | Whenever another creature enters, you may put X +1/+1 counters on this creature, where X is that creature's power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Harpoon Sniper | handled | {W}, {T}: This creature deals X damage to target attacking or blocking creature, where X is the number of Merfolk you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hearthcage Giant | handled | When this creature enters, create two 3/1 red Elemental Shaman creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Heat Shimmer | handled | Create a token that's a copy of target creature, except it has haste and "At the beginning of the end step, exile this token." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Herbal Poultice | handled | {3}, Sacrifice this artifact: Regenerate target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hillcomber Giant | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Hoofprints of the Stag | handled | Whenever you draw a card, you may put a hoofprint counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -285,8 +280,9 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>30 cards</summary>
 
+- Amoeboid Changeling
 - Aquitect's Will
 - Battle Mastery
 - Ceaseless Searblades
@@ -296,6 +292,8 @@
 - Fire-Belly Changeling
 - Giant's Ire
 - Gilt-Leaf Palace
+- Goldmeadow Dodger
+- Goldmeadow Harrier
 - Immaculate Magistrate
 - Jace Beleren
 - Kinsbaile Skirmisher
@@ -309,9 +307,11 @@
 - Smokebraider
 - Spellstutter Sprite
 - Springleaf Drum
+- Thieving Sprite
 - Thorn of Amethyst
 - Thoughtseize
 - Thousand-Year Elixir
+- Wings of Velis Vel
 
 </details>
 
@@ -337,13 +337,11 @@
 | changeling (~ is every creature type.) creatures target player controls get +N/+N and gain all creature types until end of turn. | 1 | Shields of Velis Vel | lrw |
 | changeling (~ is every creature type.) creatures target player controls get -N/-N and lose all creature types until end of turn. | 1 | Ego Erasure | lrw |
 | changeling (~ is every creature type.) target creature gets +N/-N and loses all creature types until end of turn. | 1 | Nameless Inversion | lrw |
-| changeling (~ is every creature type.) until end of turn, target creature has base power and toughness N/N, gains all creature types, and gains flying. | 1 | Wings of Velis Vel | lrw |
 | changeling (~ is every creature type.) up to two target creatures each get +N/+N and gain all creature types until end of turn. | 1 | Blades of Velis Vel | lrw |
 | choose a card name, then target player mills a card. if a card with the chosen name was milled ~, you gain life equal to its mana value. draw a card. | 1 | Lammastide Weave | lrw |
 | counter target non-faerie spell. if that spell is countered ~, exile it instead of putting it into its owner's graveyard. | 1 | Faerie Trickery | lrw |
 | counter target spell unless its controller pays {M}. clash with an opponent. if you win, that spell's controller mills four cards. (each clashing player reveals | 1 | Broken Ambitions | lrw |
 | counter target spell. clash with an opponent. if you win, at the beginning of your next main phase, you may add an amount of {M} equal to that spell's mana valu | 1 | Scattering Stroke | lrw |
-| create a token that's a copy of target creature, except it has haste and "..." | 1 | Heat Shimmer | lrw |
 | create two N/N green elf warrior creature tokens. clash with an opponent. if you win, those creatures gain deathtouch until end of turn. (each clashing player r | 1 | Gilt-Leaf Ambush | lrw |
 | destroy target creature. clash with an opponent. if you win, you gain life equal to that creature's toughness. (each clashing player reveals the top card of the | 1 | Weed Strangle | lrw |
 | destroy target enchantment. clash with an opponent. if you win, destroy all enchantments your opponents control. (each clashing player reveals the top card of t | 1 | Spring Cleaning | lrw |
@@ -379,7 +377,6 @@
 | when ~ enters, it deals damage equal to the number of giants you control to each non-giant creature. | 1 | Thundercloud Shaman | lrw |
 | when ~ enters, return target creature card from your graveyard to your hand. if that card is a goblin card, ~ gains haste until end of turn. | 1 | Warren Pilferers | lrw |
 | when ~ enters, target creature gains fear until end of turn. | 1 | Spiderwig Boggart | lrw |
-| when ~ enters, target player reveals N cards from their hand, where N is the number of faeries you control. you choose one of those cards. that player discards  | 1 | Thieving Sprite | lrw |
 | when ~ enters, untap enchanted creature. | 1 | Triclopean Sight | lrw |
 | when ~ enters, untap target goat and gain control of it until end of turn. it gains haste until end of turn. | 1 | Goatnapper | lrw |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Glarewielder | lrw |
@@ -409,7 +406,6 @@
 | {M}, {M}: you may play the exiled card without paying its mana cost if each player has no cards in hand. | 1 | Howltooth Hollow | lrw |
 | {M}, {M}: you may play the exiled card without paying its mana cost if you attacked with three or more creatures ~. | 1 | Windbrisk Heights | lrw |
 | {M}: put ~ on top of its owner's library. | 1 | Soaring Hope | lrw |
-| {M}: target creature gains all creature types until end of turn. | 1 | Amoeboid Changeling | lrw |
 | {M}: target creature gets -N/-N until end of turn, where N is the number of merfolk and/or faeries you control. | 1 | Silvergill Douser | lrw |
 | {M}: target goblin creature you control gets +N/+N and gains flying until end of turn. sacrifice that creature at the beginning of the next end step. | 1 | Lowland Oaf | lrw |
 | {M}: target land becomes an island until end of turn. | 1 | Streambed Aquitects | lrw |

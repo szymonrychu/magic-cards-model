@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 5.6% |
-| Works (untested) | 90 | 55.9% |
+| Works (untested) | 92 | 57.1% |
 | Partial (unaudited) | 7 | 4.3% |
-| Not working | 55 | 34.2% |
+| Not working | 53 | 32.9% |
 
 ## Cards needing work
 
@@ -74,8 +74,6 @@
 | Swarmborn Giant | silent | When you're dealt combat damage, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Bearer of the Heavens | notice | When this creature dies, destroy all permanents at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Colossal Heroics | notice | Strive — This spell costs {1}{G} more to cast for each target beyond the first. Any number of target creatures each get +2/+2 until end of turn. Untap those cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flamespeaker's Will | notice | Whenever enchanted creature deals combat damage to a player, you may sacrifice this Aura. If you do, destroy target artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Mortal Obstinacy | notice | Whenever enchanted creature deals combat damage to a player, you may sacrifice this Aura. If you do, destroy target enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nightmarish End | notice | Target creature gets -X/-X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Silence the Believers | notice | Strive — This spell costs {2}{B} more to cast for each target beyond the first. Exile any number of target creatures and all Auras attached to them. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Starfall | notice | Starfall deals 3 damage to target creature. If that creature is an enchantment, Starfall deals 3 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -116,6 +114,7 @@
 | Eidolon of Rhetoric | handled | Each player can't cast more than one spell each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eidolon of the Great Revel | handled | Whenever a player casts a spell with mana value 3 or less, this creature deals 2 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Extinguish All Hope | handled | Destroy all nonenchantment creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Flamespeaker's Will | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleetfeather Cockatrice | handled | {5}{G}{U}: Monstrosity 3. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flurry of Horns | handled | Create two 2/3 red Minotaur creature tokens with haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Font of Fertility | handled | {1}{G}, Sacrifice this enchantment: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -136,6 +135,7 @@
 | Leonin Iconoclast | handled | Heroic — Whenever you cast a spell that targets this creature, destroy target enchantment creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Diadem | handled | When this Aura enters, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Market Festival | handled | Whenever enchanted land is tapped for mana, its controller adds an additional two mana in any combination of colors. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mortal Obstinacy | handled | Enchanted creature gets +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyx Weaver | handled | At the beginning of your upkeep, mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nyx-Fleece Ram | handled | At the beginning of your upkeep, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Oakheart Dryads | handled | Constellation — Whenever this creature or another enchantment you control enters, target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -240,8 +240,6 @@
 | when ~ enters, target opponent reveals their hand and you choose a nonland card from it. exile that card until ~ leaves the battlefield. | 1 | Brain Maggot | jou |
 | whenever a +N/+N counter is put on ~, remove a +N/+N counter from target creature an opponent controls. | 1 | Bloodcrazed Hoplite | jou |
 | whenever another creature you own dies, return it to your hand unless target opponent pays N life. | 1 | Athreos, God of Passage | jou |
-| whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target artifact. | 1 | Flamespeaker's Will | jou |
-| whenever enchanted creature deals combat damage to a player, you may sacrifice ~. if you do, destroy target enchantment. | 1 | Mortal Obstinacy | jou |
 | whenever equipped creature blocks or becomes blocked by one or more creatures, you may exile one of those creatures. | 1 | Godsend | jou |
 | you may choose not to untap ~ during your untap step. | 1 | Deserter's Quarters | jou |
 | {M}, {M}: each player reveals the top card of their library. you may put the revealed cards into their owners"..."t, each player draws a card. | 1 | Dakra Mystic | jou |

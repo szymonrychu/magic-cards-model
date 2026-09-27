@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 10.6% |
-| Works (untested) | 150 | 54.7% |
+| Tested | 30 | 10.9% |
+| Works (untested) | 152 | 55.5% |
 | Partial (unaudited) | 5 | 1.8% |
-| Not working | 90 | 32.8% |
+| Not working | 87 | 31.8% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Academic Dispute | silent | Target creature blocks this turn if able. You may have it gain reach until end of turn. Learn. (You may reveal a Lesson card you own from outside the game and p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archway Commons | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Arrogant Poet | silent | Whenever this creature attacks, you may pay 2 life. If you do, it gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Augmenter Pugilist // Echoing Equation | silent | Choose target creature you control. Each other creature you control becomes a copy of it until end of turn, except those creatures aren't legendary. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Baleful Mastery | silent | You may pay {1}{B} rather than pay this spell's mana cost. If the {1}{B} cost was paid, an opponent draws a card. Exile target creature or planeswalker. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blex, Vexing Pest // Search for Blex | silent | Look at the top five cards of your library. You may put any number of them into your hand and the rest into your graveyard. You lose 3 life for each card you pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -51,7 +50,6 @@
 | Ecological Appreciation | silent | Search your library and graveyard for up to four creature cards with different names that each have mana value X or less and reveal them. An opponent chooses tw | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elemental Expressionist | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, choose target creature you control. Until end of turn, it gains "If this creature would leave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elite Spellbinder | silent | When this creature enters, look at target opponent's hand. You may exile a nonland card from it. For as long as that card remains exiled, its owner may play it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Explosive Welcome | silent | Explosive Welcome deals 5 damage to any target and 3 damage to any other target. Add {R}{R}{R}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Exponential Growth | silent | Until end of turn, double target creature's power X times. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Extus, Oriq Overlord // Awaken the Blood Avatar | silent | As an additional cost to cast this spell, you may sacrifice any number of creatures. This spell costs {2} less to cast for each creature sacrificed this way. Ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fervent Mastery | silent | You may pay {2}{R}{R} rather than pay this spell's mana cost. If the {2}{R}{R} cost was paid, an opponent discards any number of cards, then draws that many car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,7 +85,6 @@
 | Shaile, Dean of Radiance // Embrose, Dean of Shadow | silent | {T}: Put a +1/+1 counter on each creature that entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stonebinder's Familiar | silent | Whenever one or more cards are put into exile during your turn, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Strict Proctor | silent | Whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {2}. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Strixhaven Stadium | silent | Whenever a creature deals combat damage to you, remove a point counter from this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Symmetry Sage | silent | Magecraft — Whenever you cast or copy an instant or sorcery spell, target creature you control has base power 2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tanazir Quandrix | silent | When Tanazir Quandrix enters, double the number of +1/+1 counters on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Teachings of the Archaics | silent | If an opponent has more cards in hand than you, draw two cards. Draw three cards instead if an opponent has at least four more cards in hand than you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -109,12 +106,12 @@
 | Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fortifying Draught | notice | You gain 2 life. Target creature gets +X/+X until end of turn, where X is the amount of life you gained this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lorehold Command | notice | Choose two — • Create a 3/2 red and white Spirit creature token. • Creatures you control get +1/+0 and gain indestructible and haste until end of turn. • Loreho | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Make Your Mark | notice | Target creature gets +1/+0 until end of turn. When that creature dies this turn, create a 3/2 red and white Spirit creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pigment Storm | notice | Pigment Storm deals 5 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Quandrix Command | notice | Choose two — • Return target creature or planeswalker to its owner's hand. • Counter target artifact or enchantment spell. • Put two +1/+1 counters on target cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Scurrid Colony | notice | This creature gets +2/+2 as long as you control eight or more lands. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Semester's End | notice | Exile any number of target creatures and/or planeswalkers you control. At the beginning of the next end step, return each of them to the battlefield under its o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Strixhaven Stadium | notice | Whenever a creature you control deals combat damage to an opponent, put a point counter on this artifact. Then if it has ten or more point counters on it, remov | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tend the Pests | notice | As an additional cost to cast this spell, sacrifice a creature. Create X 1/1 black and green Pest creature tokens with "When this token dies, you gain 1 life,"  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Codie, Vociferous Codex | unaudited | You can't cast permanent spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Kasmina, Enigma Sage | unaudited | Each other planeswalker you control has the loyalty abilities of Kasmina. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -127,6 +124,7 @@
 | Ageless Guardian | handled |  |  | Y/Y/- | not_tested |
 | Arcane Subtraction | handled | Target creature gets -4/-0 until end of turn. Learn. (You may reveal a Lesson card you own from outside the game and put it into your hand, or discard a card to | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Archmage Emeritus | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Arrogant Poet | handled | Whenever this creature attacks, you may pay 2 life. If you do, it gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basic Conjuration | handled | Look at the top six cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beaming Defiance | handled | Target creature you control gets +2/+2 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beledros Witherbloom | handled | At the beginning of each upkeep, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -160,6 +158,7 @@
 | Exhilarating Elocution | handled | Put two +1/+1 counters on target creature you control. Other creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expanded Anatomy | handled | Put two +1/+1 counters on target creature. It gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expel | handled | Exile target tapped creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Explosive Welcome | handled | Explosive Welcome deals 5 damage to any target and 3 damage to any other target. Add {R}{R}{R}. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Field Trip | handled | Search your library for a basic Forest card, put that card onto the battlefield tapped, then shuffle. Learn. (You may reveal a Lesson card you own from outside  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fractal Summoning | handled | Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fracture | handled | Destroy target artifact, enchantment, or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -275,7 +274,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Bayou Groff
 - Body of Research
@@ -298,6 +297,7 @@
 - Infuse with Vitality
 - Introduction to Annihilation
 - Kelpie Guide
+- Make Your Mark
 - Mascot Exhibition
 - Prismari Command
 - Promising Duskmage
@@ -356,7 +356,6 @@
 | spells you cast that target a creature cost {M} less to cast. | 1 | Killian, Ink Duelist | stx |
 | spirits you control get +N/+N and have trample and haste. | 1 | Hofri Ghostforge | stx |
 | target creature blocks ~ if able. you may have it gain reach until end of turn. learn. (you may reveal a lesson card you own from outside the game and put it in | 1 | Academic Dispute | stx |
-| target creature gets +N/+N until end of turn. when that creature dies ~, create a N/N red and white spirit creature token. | 1 | Make Your Mark | stx |
 | target creature gets -N/-N until end of turn, where N is N minus the number of cards in that creature"..."s hand. | 1 | Flunk | stx |
 | target creature you control deals damage equal to its power to target creature or planeswalker you don"..."t control dies ~, you gain N life. | 1 | Devouring Tendrils | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
@@ -365,7 +364,7 @@
 | when ~ enters, double the number of +N/+N counters on target creature you control. | 1 | Tanazir Quandrix | stx |
 | when ~ enters, look at target opponent's hand. you may exile a nonland card from it. for as long as that card remains exiled, its owner may play it. a spell cas | 1 | Elite Spellbinder | stx |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Archway Commons | stx |
-| whenever a creature deals combat damage to you, remove a point counter from ~. | 1 | Strixhaven Stadium | stx |
+| whenever a creature you control deals combat damage to an opponent, put a point counter on ~. then if it has ten or more point counters on it, remove them all a | 1 | Strixhaven Stadium | stx |
 | whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {M}. | 1 | Strict Proctor | stx |
 | whenever one or more cards are put into exile during your turn, put a +N/+N counter on ~. ~ triggers only once each turn. | 1 | Stonebinder's Familiar | stx |
 | whenever you gain life, you may pay {M}. if you do, put a +N/+N counter on each creature you control and those creatures gain trample until end of turn. | 1 | Valentin, Dean of the Vein // Lisette, Dean of the Root | stx |
@@ -373,7 +372,6 @@
 | whenever ~ attacks, it gains flying until end of turn if you control a creature with flying. the same is true for first strike, double strike, deathtouch, indes | 1 | Thunderous Orator | stx |
 | whenever ~ attacks, look at the top seven cards of your library. you may cast an instant or sorcery spell with mana value less than or equal to ~'s power from a | 1 | Velomachus Lorehold | stx |
 | whenever ~ attacks, the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is ~ power as ~ resolves. | 1 | Maelstrom Muse | stx |
-| whenever ~ attacks, you may pay N life. if you do, it gains flying until end of turn. | 1 | Arrogant Poet | stx |
 | whenever ~ attacks, you may pay {M} and discard a card. if you do, draw a card. | 1 | Conspiracy Theorist | stx |
 | whenever ~ attacks, you may put an instant or sorcery card from your graveyard on the bottom of your library. if you do, exile the top two cards of your library | 1 | Ardent Dustspeaker | stx |
 | you can't cast permanent spells. | 1 | Codie, Vociferous Codex | stx |
@@ -395,7 +393,6 @@
 | {M}: you may cast target instant or sorcery card from your graveyard ~. if that spell doesn't target a creature you control, it costs {M} more to cast ~. if tha | 1 | Mavinda, Students' Advocate | stx |
 | {M}{M}: double ~ power and toughness until end of turn. | 1 | Reckless Amplimancer | stx |
 | ~ costs {M} less to cast if it targets an attacking creature. put target creature into its owner's library second from the top. | 1 | Bury in Books | stx |
-| ~ deals N damage to any target and N damage to any other target. add {M}{M}{M}. | 1 | Explosive Welcome | stx |
 | ~ deals N damage to target creature. excess damage is dealt to that creature's controller instead. | 1 | Pigment Storm | stx |
 | ~ deals five times N damage to each of up to N targets. | 1 | Crackle with Power | stx |
 | ~ gets +N/+N as long as you control eight or more lands. | 1 | Scurrid Colony | stx |

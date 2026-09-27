@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 10 | 5.5% |
-| Works (untested) | 86 | 47.0% |
+| Works (untested) | 88 | 48.1% |
 | Partial (unaudited) | 6 | 3.3% |
-| Not working | 81 | 44.3% |
+| Not working | 79 | 43.2% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Khenra Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Khenra Scrapper | silent | You may exert this creature as it attacks. When you do, it gets +2/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Leave // Chance | silent | Return any number of target permanents you own to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Magmaroth | silent | Whenever you cast a noncreature spell, remove a -1/-1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Majestic Myriarch | silent | Majestic Myriarch's power and toughness are each equal to twice the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Manticore Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Merciless Eternal | silent | Afflict | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -83,7 +82,6 @@
 | Steadfast Sentinel | silent | Eternalize | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Struggle // Survive | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Each player shuffles their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sunscourge Champion | silent | When this creature enters, you gain life equal to its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Swarm Intelligence | silent | Whenever you cast an instant or sorcery spell, you may copy that spell. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tenacious Hunter | silent | As long as a creature has a -1/-1 counter on it, this creature has vigilance and deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Hailfire | silent | Repeat the following process X times. Each opponent loses 3 life unless that player sacrifices a nonland permanent of their choice or discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Torment of Scarabs | silent | At the beginning of enchanted player's upkeep, that player loses 3 life unless they sacrifice a nonland permanent of their choice or discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -165,6 +163,7 @@
 | Lethal Sting | handled | As an additional cost to cast this spell, put a -1/-1 counter on a creature you control. Destroy target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Life Goes On | handled | You gain 4 life. If a creature died this turn, you gain 8 life instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lurching Rotbeast | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
+| Magmaroth | handled | At the beginning of your upkeep, put a -1/-1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marauding Boneslasher | handled | This creature can't block unless you control another Zombie. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mirage Mirror | handled | {2}: This artifact becomes a copy of target artifact, creature, enchantment, or land until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moaning Wall | handled | Defender | machines/combat.py | Y/Y/- | not_tested |
@@ -192,6 +191,7 @@
 | Sunset Pyramid | handled | This artifact enters with three brick counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Supreme Will | handled | Choose one — • Counter target spell unless its controller pays {3}. • Look at the top four cards of your library. Put one of them into your hand and the rest on | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Survivors' Encampment | handled |  |  | Y/Y/- | not_tested |
+| Swarm Intelligence | handled | Whenever you cast an instant or sorcery spell, you may copy that spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unconventional Tactics | handled | Target creature gets +3/+3 and gains flying until end of turn. Whenever a Zombie you control enters, you may pay {W}. If you do, return this card from your grav | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unquenchable Thirst | handled | When this Aura enters, if you control a Desert or there is a Desert card in your graveyard, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unraveling Mummy | handled | {1}{W}: Target attacking Zombie gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -272,10 +272,8 @@
 | when ~ enters, you may search your library and/or graveyard for a card named nicol bolas, the deceiver, reveal it, and put it into your hand. if you search your | 1 | Visage of Bolas | hou |
 | whenever unesh or another sphinx you control enters, reveal the top four cards of your library. an opponent separates those cards into two piles. put one pile i | 1 | Unesh, Criosphinx Sovereign | hou |
 | whenever you activate an eternalize or embalm ability, draw a card. | 1 | Vizier of the Anointed | hou |
-| whenever you cast a noncreature spell, remove a -N/-N counter from ~. | 1 | Magmaroth | hou |
 | whenever you cast a noncreature spell, you may have ~ become a N/N sphinx creature with flying in addition to its other types until end of turn. | 1 | Riddleform | hou |
 | whenever you cast a spell with mana value equal to the number of doom counters on ~, ~ deals that much damage to any target. then put a doom counter on ~. | 1 | Imminent Doom | hou |
-| whenever you cast an instant or sorcery spell, you may copy that spell. you may choose new targets for the copy. | 1 | Swarm Intelligence | hou |
 | whenever you cycle or discard a card, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Cunning Survivor | hou |
 | whenever you exert a creature, tap target creature an opponent controls. | 1 | Vizier of the True | hou |
 | whenever you exert a creature, ~ deals N damage to each opponent and you gain N life. | 1 | Resolute Survivors | hou |

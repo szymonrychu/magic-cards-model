@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 99 | 36.9% |
+| Works (untested) | 101 | 37.7% |
 | Partial (unaudited) | 30 | 11.2% |
-| Not working | 116 | 43.3% |
+| Not working | 114 | 42.5% |
 
 ## Cards needing work
 
@@ -38,12 +38,10 @@
 | Chameleon Blur | silent | Prevent all damage that creatures would deal to players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chronosavant | silent | {1}{W}: Return this card from your graveyard to the battlefield tapped. You skip your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clockspinning | silent | Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.) Choose a counter on target permanent | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Clockwork Hydra | silent | Whenever this creature attacks or blocks, remove a +1/+1 counter from it. If you do, it deals 1 damage to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Corpulent Corpse | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Crookclaw Transmuter | silent | When this creature enters, switch target creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Curse of the Cabal | silent | Target player sacrifices half the permanents they control of their choice, rounded down. Suspend 2—{2}{B}{B} (Rather than cast this card from your hand, you may | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cyclopean Giant | silent | When this creature dies, target land becomes a Swamp. Exile this card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Deep-Sea Kraken | silent | Whenever an opponent casts a spell, if this card is suspended, remove a time counter from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Demonic Collusion | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Divine Congregation | silent | You gain 2 life for each creature target player controls. Suspend 5—{1}{W} (Rather than cast this card from your hand, you may pay {1}{W} and exile it with five | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dream Stalker | silent | When this creature enters, return a permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -187,12 +185,14 @@
 | Cancel | handled | Counter target spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Careful Consideration | handled | Target player draws four cards, then discards three cards. If you cast this spell during your main phase, instead that player draws four cards, then discards tw | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chromatic Star | handled | When this artifact is put into a graveyard from the battlefield, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Clockwork Hydra | handled | This creature enters with four +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cloudchaser Kestrel | handled | When this creature enters, destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Conflagrate | handled | Conflagrate deals X damage divided as you choose among any number of targets. Flashback—{R}{R}, Discard X cards. (You may cast this card from your graveyard for | the engine reads this text and performs it | Y/-/- | not_tested |
 | Coral Trickster | handled | When this creature is turned face up, you may tap or untap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | D'Avenant Healer | handled | {T}: This creature deals 1 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dark Withering | handled | Destroy target nonblack creature. Madness {B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your gr | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deathspore Thallid | handled | At the beginning of your upkeep, put a spore counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Deep-Sea Kraken | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Draining Whelk | handled | When this creature enters, counter target spell. Put X +1/+1 counters on this creature, where X is that spell's mana value. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dread Return | handled | Return target creature card from your graveyard to the battlefield. Flashback—Sacrifice three creatures. (You may cast this card from your graveyard for its fla | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dreadship Reef | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -381,7 +381,6 @@
 | when ~ is put into a graveyard from the battlefield, if it was a creature, return ~ to its owner's hand. | 1 | Weatherseed Totem | tsp |
 | when ~ leaves the battlefield, return the exiled card to the battlefield under its owner's control. | 1 | Faceless Devourer | tsp |
 | whenever a creature an opponent controls dies, you may pay {M}{M}. if you do, return that card to the battlefield under your control. if it"..."s a zombie in ad | 1 | Lim-Dûl the Necromancer | tsp |
-| whenever an opponent casts a spell, if ~ is suspended, remove a time counter from it. | 1 | Deep-Sea Kraken | tsp |
 | whenever an opponent casts a spell, if ~ is suspended, that player may put a time counter on ~. | 1 | Pardic Dragon | tsp |
 | whenever another creature is put into your graveyard from the battlefield, you may pay {M}. if you do, return ~ from your graveyard to the battlefield. | 1 | Nether Traitor | tsp |
 | whenever another goblin you control becomes blocked, sacrifice it. if you do, it deals N damage to each creature blocking it. | 1 | Ib Halfheart, Goblin Tactician | tsp |
@@ -389,7 +388,6 @@
 | whenever you cast a creature spell, create N N/N black thrull creature tokens, where N is that spell's mana value. | 1 | Endrek Sahr, Master Breeder | tsp |
 | whenever you cast an artifact spell, you may search your graveyard, hand, and/or library for a card with the same name as that spell and put it onto the battlef | 1 | Mishra, Artificer Prodigy | tsp |
 | whenever ~ attacks and isn't blocked, you may have it deal N damage to target creature. if you do, prevent all combat damage ~ would deal ~. | 1 | Zealot il-Vec | tsp |
-| whenever ~ attacks or blocks, remove a +N/+N counter from it. if you do, it deals N damage to any target. | 1 | Clockwork Hydra | tsp |
 | whenever ~ attacks, if defending player controls no black permanents, it doesn't untap during your next untap step. | 1 | Spectral Force | tsp |
 | whenever ~ becomes blocked by a creature, destroy that creature. | 1 | Evil Eye of Urborg | tsp |
 | whenever ~ becomes blocked, you may untap ~ and remove it from combat. | 1 | Gustcloak Cavalier | tsp |

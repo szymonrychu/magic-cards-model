@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.9% |
-| Works (untested) | 71 | 49.7% |
+| Works (untested) | 72 | 50.3% |
 | Partial (unaudited) | 6 | 4.2% |
-| Not working | 59 | 41.3% |
+| Not working | 58 | 40.6% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Kurkesh, Onakke Ancient | silent | Whenever you activate an ability of an artifact, if it isn't a mana ability, you may pay {R}. If you do, copy that ability. You may choose new targets for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Leeching Sliver | silent | Whenever a Sliver you control attacks, defending player loses 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Master of Predicaments | silent | Whenever this creature deals combat damage to a player, choose a card in your hand. That player guesses whether the card's mana value is greater than 4. If the  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mercurial Pretender | silent | You may have this creature enter as a copy of a creature you control, except it has "{2}{U}{U}: Return this creature to its owner's hand." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Necromancer's Stockpile | silent | {1}{B}, Discard a creature card: Draw a card. If the discarded card was a Zombie card, create a tapped 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Worldwaker | silent | +1: Target land you control becomes a 4/4 Elemental creature with trample. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ob Nixilis, Unshackled | silent | Whenever an opponent searches their library, that player sacrifices a creature of their choice and loses 10 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -122,6 +121,7 @@
 | Living Totem | handled | When this creature enters, you may put a +1/+1 counter on another target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Marked by Honor | handled | Enchanted creature gets +2/+2 and has vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meditation Puzzle | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) You gain 8  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mercurial Pretender | handled | You may have this creature enter as a copy of a creature you control, except it has "{2}{U}{U}: Return this creature to its owner's hand." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meteorite | handled | When this artifact enters, it deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Military Intelligence | handled | Whenever you attack with two or more creatures, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Miner's Bane | handled | {2}{R}: This creature gets +1/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -229,7 +229,6 @@
 | whenever ~ attacks, it gets +N/+N until end of turn for each other attacking goblin. | 1 | Goblin Rabblemaster | m15 |
 | whenever ~ deals combat damage to a player, choose a card in your hand. that player guesses whether the card's mana value is greater than N. if the player guess | 1 | Master of Predicaments | m15 |
 | you can't play lands. | 1 | Aggressive Mining | m15 |
-| you may have ~ enter as a copy of a creature you control, except it has "..." | 1 | Mercurial Pretender | m15 |
 | {M}, {M}: for each planeswalker you control, you may activate one of its loyalty abilities once ~ as though none of its loyalty abilities have been activated ~. | 1 | The Chain Veil | m15 |
 | {M}{M}, discard a creature card: draw a card. if the discarded card was a zombie card, create a tapped N/N black zombie creature token. | 1 | Necromancer's Stockpile | m15 |
 | {M}{M}, {M}, put a verse counter on yisan: search your library for a creature card with mana value equal to the number of verse counters on yisan, put it onto t | 1 | Yisan, the Wanderer Bard | m15 |

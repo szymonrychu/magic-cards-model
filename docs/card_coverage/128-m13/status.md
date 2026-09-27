@@ -18,15 +18,14 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 5 | 4.7% |
-| Works (untested) | 56 | 52.3% |
+| Works (untested) | 57 | 53.3% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 44 | 41.1% |
+| Not working | 43 | 40.2% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Ajani, Caller of the Pride | silent | −8: Create X 2/2 white Cat creature tokens, where X is your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blood Reckoning | silent | Whenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Cathedral of War | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Chandra's Fury | silent | Chandra's Fury deals 4 damage to target player or planeswalker and 1 damage to each creature that player or that planeswalker's controller controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -73,6 +72,7 @@
 | Encrust | unaudited | Enchanted permanent doesn't untap during its controller's untap step and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Yeva, Nature's Herald | unaudited | You may cast green creature spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Ajani's Sunstriker | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
+| Ajani, Caller of the Pride | handled | +1: Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Archaeomancer | handled | When this creature enters, return target instant or sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Attended Knight | handled | When this creature enters, create a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Battleflight Eagle | handled | When this creature enters, target creature gets +2/+2 and gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -184,7 +184,6 @@
 | ~ gets +N/+N as long as you control a swamp. | 1 | Crimson Muckwader | m13 |
 | ~ gets +N/+N as long as you control an island. | 1 | Harbor Bandit | m13 |
 | ~ gets +N/+N for each other creature you control named ~. | 1 | Timberpack Wolf | m13 |
-| −N: create N N/N white cat creature tokens, where N is your life total. | 1 | Ajani, Caller of the Pride | m13 |
 | −N: target creature gets +N/+N or -N/-N until end of turn, where N is the number of swamps you control. | 1 | Liliana of the Dark Realms | m13 |
 
 ## Notes

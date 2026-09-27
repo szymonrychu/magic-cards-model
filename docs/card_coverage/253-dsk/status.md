@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.1% |
-| Works (untested) | 99 | 37.4% |
-| Partial (unaudited) | 17 | 6.4% |
-| Not working | 125 | 47.2% |
+| Tested | 25 | 9.4% |
+| Works (untested) | 101 | 38.1% |
+| Partial (unaudited) | 16 | 6.0% |
+| Not working | 123 | 46.4% |
 
 ## Cards needing work
 
@@ -52,7 +52,6 @@
 | Fear of Abduction | silent | When this creature leaves the battlefield, put each card exiled with it into its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fear of Burning Alive | silent | Delirium — Whenever a source you control deals noncombat damage to an opponent, if there are four or more card types among cards in your graveyard, this creatur | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Fear of Falling | silent | Whenever this creature attacks, target creature defending player controls gets -2/-0 and loses flying until your next turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Fear of Impostors | silent | When this creature enters, counter target spell. Its controller manifests dread. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fear of Infinity | silent | Eerie — Whenever an enchantment you control enters and whenever you fully unlock a Room, you may return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Floodpits Drowner | silent | {1}{U}, {T}: Shuffle this creature and target creature with a stun counter on it into their owners' libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Funeral Room // Awakening Hall | silent | When you unlock this door, return all creature cards from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -149,7 +148,6 @@
 | Toby, Beastie Befriender | notice | As long as you control four or more creature tokens, creature tokens you control have flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Turn Inside Out | notice | Target creature gets +3/+0 until end of turn. When it dies this turn, manifest dread. (Look at the top two cards of your library. Put one onto the battlefield f | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Untimely Malfunction | notice | Choose one — • Destroy target artifact. • Change the target of target spell or ability with a single target. • One or two target creatures can't block this turn | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Unwanted Remake | notice | Destroy target creature. Its controller manifests dread. (That player looks at the top two cards of their library, then puts one onto the battlefield face down  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Vengeful Possession | notice | Gain control of target creature until end of turn. Untap it. It gains haste until end of turn. You may discard a card. If you do, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Chainsaw | unaudited | Equipped creature gets +X/+0, where X is the number of rev counters on this Equipment. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Charred Foyer // Warped Space | unaudited | Once each turn, you may pay {0} rather than pay the mana cost for a spell you cast from exile. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -164,7 +162,6 @@
 | Patchwork Beastie | unaudited | Delirium — This creature can't attack or block unless there are four or more card types among cards in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Shardmage's Rescue | unaudited | As long as this Aura entered this turn, enchanted creature has hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | The Rollercrusher Ride | unaudited | Delirium — If a source you control would deal noncombat damage to a permanent or player while there are four or more card types among cards in your graveyard, i | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| The Wandering Rescuer | unaudited | Other tapped creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Undead Sprinter | unaudited | You may cast this card from your graveyard if a non-Zombie creature died this turn. If you do, this creature enters with a +1/+1 counter on it. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Valgavoth, Terror Eater | unaudited | If a card you didn't control would be put into an opponent's graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Winter, Misanthropic Guide | unaudited | Delirium — As long as there are four or more card types among cards in your graveyard, each opponent's maximum hand size is equal to seven minus the number of t | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -254,11 +251,13 @@
 | Spectral Snatcher | handled | Landcycling | machines/keywords.py | Y/Y/Y | not_tested |
 | Splitskin Doll | handled | When this creature enters, draw a card. Then discard a card unless you control another creature with power 2 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Strangled Cemetery | handled | This land enters tapped unless a player has 13 or less life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| The Wandering Rescuer | handled | Other tapped creatures you control have hexproof. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Threats Around Every Corner | handled | When this enchantment enters, manifest dread. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Trapped in the Screen | handled | When this enchantment enters, exile target artifact, creature, or enchantment an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Twist Reality | handled | Choose one — • Counter target spell. • Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face down as a 2/2 creature and  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unnerving Grasp | handled | Return up to one target nonland permanent to its owner's hand. Manifest dread. (Look at the top two cards of your library. Put one onto the battlefield face dow | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unsettling Twins | handled | When this creature enters, manifest dread. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Unwanted Remake | handled | Destroy target creature. Its controller manifests dread. (That player looks at the top two cards of their library, then puts one onto the battlefield face down  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Valgavoth's Faithful | handled | {3}{B}, Sacrifice this creature: Return target creature card from your graveyard to the battlefield. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Valgavoth's Lair | handled | This land enters tapped. As it enters, choose a color. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vanish from Sight | handled | Target nonland permanent's owner puts it on their choice of the top or bottom of their library. Surveil 1. (Look at the top card of your library. You may put it | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -271,7 +270,7 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Abhorrent Oculus
 - Balustrade Wurm
@@ -281,6 +280,7 @@
 - Drag to the Roots
 - Enduring Curiosity
 - Enduring Innocence
+- Fear of Impostors
 - Fear of the Dark
 - Give In to Violence
 - Gloomlake Verge
@@ -328,7 +328,6 @@
 | creatures you control have base power and toughness each equal to the number of creatures you control. | 1 | Dollmaker's Shop // Porcelain Gallery | dsk |
 | creatures your opponents control can be the targets of spells and abilities as though they didn"..."t trigger. | 1 | Nowhere to Run | dsk |
 | destroy target creature. if a creature card is put into a graveyard ~, return it to the battlefield under your control. sacrifice it at the beginning of your ne | 1 | Come Back Wrong | dsk |
-| destroy target creature. its controller manifests dread. (that player looks at the top two cards of their library, then puts one onto the battlefield face down  | 1 | Unwanted Remake | dsk |
 | discard your hand. then draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Peer Past the Veil | dsk |
 | draw two cards. create a N/N white glimmer enchantment creature token. | 1 | Glimmerburst | dsk |
 | enchanted creature gets -N/-N and loses all abilities. | 1 | Duskmourn's Domination | dsk |
@@ -341,7 +340,6 @@
 | mill three cards. then you may return a creature or land card from your graveyard to your hand. exile ~ and two other cards named ~ from your graveyard: search  | 1 | Say Its Name | dsk |
 | mill two cards. if two cards that share a card type were milled ~, draw a card and repeat ~. | 1 | The Tale of Tamiyo | dsk |
 | once each turn, you may pay {M} rather than pay the mana cost for a spell you cast from exile. | 1 | Charred Foyer // Warped Space | dsk |
-| other tapped creatures you control have hexproof. | 1 | The Wandering Rescuer | dsk |
 | search your library for a demon card, reveal it, put it into your hand, then shuffle. delirium — if there are four or more card types among cards in your gravey | 1 | Demonic Counsel | dsk |
 | tap one or two target untapped creatures you control. they each deal damage equal to their power to target creature an opponent controls. | 1 | Coordinated Clobbering | dsk |
 | target creature gets +N/+N until end of turn. when it dies ~, manifest dread. (look at the top two cards of your library. put one onto the battlefield face down | 1 | Turn Inside Out | dsk |
@@ -370,7 +368,6 @@
 | when you unlock ~, ~ deals N damage to target creature an opponent controls. | 1 | Glassworks // Shattered Yard | dsk |
 | when you unlock ~, ~ deals damage equal to the number of cards in your hand to target creature an opponent controls. | 1 | Roaring Furnace // Steaming Sauna | dsk |
 | when ~ dies, look at the top five cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put the  | 1 | Living Phone | dsk |
-| when ~ enters, counter target spell. its controller manifests dread. | 1 | Fear of Impostors | dsk |
 | when ~ enters, each opponent sacrifices a nontoken enchantment of their choice, then sacrifices a nontoken creature of their choice. | 1 | Vile Mutilator | dsk |
 | when ~ enters, each player discards a card. if you discarded a card ~, draw a card. | 1 | Fanatic of the Harrowing | dsk |
 | when ~ enters, return an enchantment card from your graveyard to your hand or unlock a locked door of a room you control. | 1 | Ghostly Dancers | dsk |

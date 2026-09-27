@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 6.9% |
-| Works (untested) | 153 | 62.4% |
+| Works (untested) | 155 | 63.3% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 61 | 24.9% |
+| Not working | 59 | 24.1% |
 
 ## Cards needing work
 
@@ -39,8 +39,6 @@
 | Dire Fleet Captain | silent | Whenever this creature attacks, it gets +1/+1 until end of turn for each other attacking Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Ravager | silent | When this creature enters, each player loses a third of their life, rounded up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dowsing Dagger // Lost Vale | silent | Whenever equipped creature deals combat damage to a player, you may transform this Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Duskborne Skymarcher | silent | {W}, {T}: Target attacking Vampire gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Elaborate Firecannon | silent | At the beginning of your upkeep, you may discard a card. If you do, untap this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Entrancing Melody | silent | Gain control of target creature with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gishath, Sun's Avatar | silent | Whenever Gishath deals combat damage to a player, reveal that many cards from the top of your library. Put any number of Dinosaur creature cards from among them | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Grasping Current | silent | Return up to two target creatures to their owner's hand. Search your library and/or graveyard for a card named Jace, Ingenious Mind-Mage, reveal it, and put it  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -137,6 +135,8 @@
 | Dire Fleet Interloper | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dive Down | handled | Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dusk Legion Dreadnought | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
+| Duskborne Skymarcher | handled | {W}, {T}: Target attacking Vampire gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Elaborate Firecannon | handled | This artifact doesn't untap during your untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emissary of Sunrise | handled | When this creature enters, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Emperor's Vanguard | handled | Whenever this creature deals combat damage to a player, it explores. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Encampment Keeper | handled | {7}{W}, {T}, Sacrifice this creature: Creatures you control get +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -295,7 +295,6 @@
 | at the beginning of your end step, gain control of target nonland permanent controlled by a player who was dealt combat damage by three or more pirates ~. | 1 | Admiral Beckett Brass | xln |
 | at the beginning of your upkeep, exile the top card of your library. if it's a nonland card, you may cast that card ~. | 1 | Vance's Blasting Cannons // Spitfire Bastion | xln |
 | at the beginning of your upkeep, if you control ten or more treasures, you win the game. | 1 | Revel in Riches | xln |
-| at the beginning of your upkeep, you may discard a card. if you do, untap ~. | 1 | Elaborate Firecannon | xln |
 | at the beginning of your upkeep, you may have two target players exchange life totals. | 1 | Axis of Mortality | xln |
 | at the beginning of your upkeep, you may reveal a dinosaur card from your hand. if you do, you gain N life. | 1 | Priest of the Wakening Sun | xln |
 | attacking creatures get +N/+N until end of turn. dinosaurs you control gain trample until end of turn. | 1 | Dinosaur Stampede | xln |
@@ -345,7 +344,6 @@
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ixalan's Binding | xln |
 | {M}, sacrifice a creature: you gain life equal to the sacrificed creature's toughness. | 1 | Arguel's Blood Fast // Temple of Aclazotz | xln |
-| {M}, {M}: target attacking vampire gets +N/+N until end of turn. | 1 | Duskborne Skymarcher | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
 | ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |
 | ~ can block only creatures with flying. | 1 | Dreamcaller Siren | xln |

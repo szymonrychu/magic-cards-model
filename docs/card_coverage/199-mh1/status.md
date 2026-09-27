@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 25 | 11.9% |
-| Works (untested) | 95 | 45.2% |
+| Works (untested) | 98 | 46.7% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 75 | 35.7% |
+| Not working | 72 | 34.3% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Aria of Flame | silent | When this enchantment enters, each opponent gains 10 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Astral Drift | silent | Whenever you cycle this card or cycle another card while this enchantment is on the battlefield, you may exile target creature. If you do, return that card to t | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bellowing Elk | silent | As long as you had another creature enter the battlefield under your control this turn, this creature has trample and indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bogardan Dragonheart | silent | Sacrifice another creature: Until end of turn, this creature becomes a Dragon with base power and toughness 4/4, flying, and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cleaving Sliver | silent | Sliver creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudshredder Sliver | silent | Sliver creatures you control have flying and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Collected Conjuring | silent | Exile the top six cards of your library. You may cast up to two sorcery spells with mana value 3 or less from among them without paying their mana costs. Put th | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -41,7 +40,6 @@
 | Cunning Evasion | silent | Whenever a creature you control becomes blocked, you may return it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Dead of Winter | silent | All nonsnow creatures get -X/-X until end of turn, where X is the number of snow permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Face of Divinity | silent | As long as another Aura is attached to enchanted creature, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Feaster of Fools | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Force of Despair | silent | If it's not your turn, you may exile a black card from your hand rather than pay this spell's mana cost. Destroy all creatures that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frostwalk Bastion | silent | Whenever this land deals combat damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Giver of Runes | silent | {T}: Another target creature you control gains protection from colorless or from the color of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -61,7 +59,6 @@
 | Plague Engineer | silent | Creatures of the chosen type your opponents control get -1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyrophobia | silent | Pyrophobia deals 3 damage to target creature. Cowards can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quakefoot Cyclops | silent | When this creature enters, up to two target creatures can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Rank Officer | silent | When this creature enters, you may discard a card. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reap the Past | silent | Return X cards at random from your graveyard to your hand. Exile Reap the Past. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Recruit the Worthy | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Rotwidow Pack | silent | {3}{B}{G}, Exile a creature card from your graveyard: Create a 1/2 green Spider creature token with reach, then each opponent loses 1 life for each Spider you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -123,6 +120,7 @@
 | Bazaar Trademage | handled | When this creature enters, draw two cards, then discard three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Birthing Boughs | handled | {4}, {T}: Create a 2/2 colorless Shapeshifter creature token with changeling. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blizzard Strix | handled | When this creature enters, if you control another snow permanent, exile target permanent other than this creature. Return that card to the battlefield under its | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bogardan Dragonheart | handled | Sacrifice another creature: Until end of turn, this creature becomes a Dragon with base power and toughness 4/4, flying, and haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cave of Temptation | handled | {4}, {T}, Sacrifice this land: Put two +1/+1 counters on target creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chillerpillar | handled | {4}{S}{S}: Monstrosity 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cordial Vampire | handled | Whenever this creature or another creature dies, put a +1/+1 counter on each Vampire you control. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -134,6 +132,7 @@
 | Excavating Anurid | handled | When this creature enters, you may sacrifice a land. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faerie Seer | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Farmstead Gleaner | handled | This creature doesn't untap during your untap step. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Feaster of Fools | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | First-Sphere Gargantua | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fountain of Ichor | handled | {3}: This artifact becomes a 3/3 Dinosaur artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Frostwalla | handled | {S}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,6 +168,7 @@
 | Prismatic Vista | handled | {T}, Pay 1 life, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Putrid Goblin | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
 | Rain of Revelation | handled | Draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rank Officer | handled | When this creature enters, you may discard a card. If you do, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ransack the Lab | handled | Look at the top three cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ravenous Giant | handled | At the beginning of your upkeep, this creature deals 1 damage to you. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Reprobation | handled | Enchanted creature loses all abilities and is a Coward creature with base power and toughness 0/1. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -266,7 +266,6 @@
 | buyback | 1 | Recruit the Worthy | mh1 |
 | choose creature or land. reveal the top four cards of your library. put all cards of the chosen type revealed ~ into your hand and the rest into your graveyard. | 1 | Winding Way | mh1 |
 | creatures of the chosen type your opponents control get -N/-N. | 1 | Plague Engineer | mh1 |
-| devour | 1 | Feaster of Fools | mh1 |
 | draw a card. until end of turn, target creature gains trample and gets +N/+N for each card you"..."s attacking.) | 1 | Fists of Flame | mh1 |
 | each land card in your hand has cycling {M}. | 1 | Tectonic Reformation | mh1 |
 | each sliver creature card in your graveyard has unearth {M}. | 1 | Dregscape Sliver | mh1 |
@@ -289,7 +288,6 @@
 | retrace | 1 | Throes of Chaos | mh1 |
 | return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
 | return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |
-| sacrifice another creature: until end of turn, ~ becomes a dragon with base power and toughness N/N, flying, and haste. | 1 | Bogardan Dragonheart | mh1 |
 | sliver creatures you control get +N/+N. | 1 | Cleaving Sliver | mh1 |
 | sliver creatures you control have exalted. | 1 | First Sliver's Chosen | mh1 |
 | sliver creatures you control have first strike. | 1 | Lancer Sliver | mh1 |
@@ -303,7 +301,6 @@
 | when a ninja you control enters, you may return ~ from your graveyard to the battlefield attached to that creature. | 1 | Smoke Shroud | mh1 |
 | when ~ enters, each opponent gains N life. | 1 | Aria of Flame | mh1 |
 | when ~ enters, up to two target creatures can't block ~. | 1 | Quakefoot Cyclops | mh1 |
-| when ~ enters, you may discard a card. if you do, create a N/N black zombie creature token. | 1 | Rank Officer | mh1 |
 | when ~ enters, you may search your library for an artifact card with mana value N, reveal that card, put it into your hand, then shuffle. | 1 | Tribute Mage | mh1 |
 | when ~ leaves the battlefield, sacrifice a mountain. | 1 | Alpine Guide | mh1 |
 | whenever a creature you control becomes blocked, you may return it to its owner's hand. | 1 | Cunning Evasion | mh1 |

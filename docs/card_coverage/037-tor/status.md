@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 7.1% |
-| Works (untested) | 7 | 50.0% |
+| Tested | 2 | 14.3% |
+| Works (untested) | 6 | 42.9% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 6 | 42.9% |
 
@@ -32,7 +32,6 @@
 | Mortal Combat | silent | At the beginning of your upkeep, if twenty or more creature cards are in your graveyard, you win the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mutilate | silent | All creatures get -1/-1 until end of turn for each Swamp you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pay No Heed | silent | Prevent all damage a source of your choice would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ambassador Laquatus | handled | {3}: Target player mills three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cabal Coffers | handled |  |  | Y/-/- | not_tested |
 | Deep Analysis | handled | Target player draws two cards. Flashback—{1}{U}, Pay 3 life. (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiery Temper | handled | Fiery Temper deals 3 damage to any target. Madness {R} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it int | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -43,8 +42,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Ambassador Laquatus
 - Plagiarize
 
 </details>

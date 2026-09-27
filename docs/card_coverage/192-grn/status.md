@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.0% |
-| Works (untested) | 128 | 54.9% |
+| Works (untested) | 129 | 55.4% |
 | Partial (unaudited) | 5 | 2.1% |
-| Not working | 86 | 36.9% |
+| Not working | 85 | 36.5% |
 
 ## Cards needing work
 
@@ -111,7 +111,6 @@
 | Leapfrog | notice | This creature has flying as long as you've cast an instant or sorcery spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mnemonic Betrayal | notice | Exile all opponents' graveyards. You may cast spells from among those cards this turn, and mana of any type can be spent to cast them. At the beginning of the n | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ral's Dispersal | notice | Return target creature to its owner's hand. You may search your library and/or graveyard for a card named Ral, Caller of Storms, reveal it, and put it into your | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Take Heart | notice | Target creature gets +2/+2 until end of turn. You gain 1 life for each attacking creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crackling Drake | unaudited | Crackling Drake's power is equal to the total number of instant and sorcery cards you own in exile and in your graveyard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Demotion | unaudited | Enchanted creature can't block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ochran Assassin | unaudited | All creatures able to block this creature do so. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -225,6 +224,7 @@
 | Swarm Guildmage | handled | {4}{B}, {T}: Creatures you control get +1/+0 and gain menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swiftblade Vindicator | handled | Vigilance | machines/combat.py | Y/Y/Y | not_tested |
 | Sworn Companions | handled | Create two 1/1 white Soldier creature tokens with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Take Heart | handled | Target creature gets +2/+2 until end of turn. You gain 1 life for each attacking creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tenth District Guard | handled | When this creature enters, target creature gets +0/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thought Erasure | handled | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. Surveil 1. (Look at the top card of your library. You may | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Torch Courier | handled | Sacrifice this creature: Another target creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -306,7 +306,6 @@
 | surveil N, then draw two cards. ~ deals N damage to you. (to surveil N, look at the top two cards of your library, then put any number of them into your graveya | 1 | Notion Rain | grn |
 | switch the power and toughness of each of up to two target creatures until end of turn. | 1 | Invert // Invent | grn |
 | target creature deals damage to itself equal to its power. | 1 | Justice Strike | grn |
-| target creature gets +N/+N until end of turn. you gain N life for each attacking creature you control. | 1 | Take Heart | grn |
 | target creature you control deals damage equal to its power to target player. jump-start (you may cast ~ from your graveyard by discarding a card in addition to | 1 | Gravitic Punch | grn |
 | target opponent may have ~ deal N damage to them. if that player doesn't, you draw three cards. jump-start (you may cast ~ from your graveyard by discarding a c | 1 | Risk Factor | grn |
 | target opponent reveals their hand. you choose a nonland card from that player's graveyard or hand and exile it. | 1 | Never Happened | grn |

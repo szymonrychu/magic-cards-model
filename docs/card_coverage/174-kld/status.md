@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.5% |
+| Tested | 22 | 8.9% |
 | Works (untested) | 147 | 59.8% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 71 | 28.9% |
+| Not working | 70 | 28.5% |
 
 ## Cards needing work
 
@@ -81,7 +81,6 @@
 | Propeller Pioneer | silent | Fabricate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rashmi, Eternities Crafter | silent | Whenever you cast your first spell each turn, reveal the top card of your library. You may cast it without paying its mana cost if it's a spell with lesser mana | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Renegade Firebrand | silent | As long as you control a Chandra planeswalker, this creature gets +1/+0 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sequestered Stash | silent | {4}, {T}, Sacrifice this land: Mill five cards. Then you may put an artifact card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shrewd Negotiation | silent | Exchange control of target artifact you control and target artifact or creature you don't control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spark of Creativity | silent | Choose target creature. Exile the top card of your library. You may have Spark of Creativity deal damage to that creature equal to the exiled card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Speedway Fanatic | silent | Whenever this creature crews a Vehicle, that Vehicle gains haste until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -255,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
@@ -273,6 +272,7 @@
 - Panharmonicon
 - Riparian Tiger
 - Scrapheap Scrounger
+- Sequestered Stash
 - Servant of the Conduit
 - Smuggler's Copter
 - Spirebluff Canal
@@ -339,7 +339,6 @@
 | whenever ~ crews a vehicle, that vehicle gets +N/+N until end of turn. | 1 | Veteran Motorist | kld |
 | whenever ~ deals combat damage to a player, you get that many {M} . | 1 | Empyreal Voyager | kld |
 | {M}, pay {M}: tap target creature or planeswalker. its activated abilities can't be activated ~. | 1 | Deadlock Trap | kld |
-| {M}, {M}, sacrifice ~: mill five cards. then you may put an artifact card from your graveyard on top of your library. | 1 | Sequestered Stash | kld |
 | {M}, {M}: choose a counter on target permanent or player. give that permanent or player another counter of that kind. | 1 | Animation Module | kld |
 | {M}{M}: target creature you control can't be blocked by creatures with power N or less ~. | 1 | Ghirapur Guide | kld |
 | ~ can block only creatures with flying. | 1 | Long-Finned Skywhale | kld |

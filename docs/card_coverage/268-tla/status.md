@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 42 | 15.2% |
+| Tested | 43 | 15.5% |
 | Works (untested) | 126 | 45.5% |
 | Partial (unaudited) | 19 | 6.9% |
-| Not working | 90 | 32.5% |
+| Not working | 89 | 32.1% |
 
 ## Cards needing work
 
@@ -79,18 +79,17 @@
 | Secret Tunnel | silent | {4}, {T}: Two target creatures you control that share a creature type can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Secret of Bloodbending | silent | As an additional cost to cast this spell, you may waterbend {10}. You control target opponent during their next combat phase. If this spell's additional cost wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seismic Sense | silent | Look at the top X cards of your library, where X is the number of lands you control. You may reveal a creature or land card from among them and put it into your | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Solstice Revelations | silent | Exile cards from the top of your library until you exile a nonland card. You may cast that card without paying its mana cost if the spell's mana value is less t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sozin's Comet | silent | Each creature you control gains firebending 5 until end of turn. (Whenever it attacks, add {R}{R}{R}{R}{R}. This mana lasts until end of combat.) Foretell {2}{R | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sparring Dummy | silent | {T}: Mill a card. You may put a land card milled this way into your hand. You gain 2 life if a Lesson card is milled this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spirit Water Revival | silent | As an additional cost to cast this spell, you may waterbend {6}. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Team Avatar | silent | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Team Avatar | silent | {2}{W}, Discard this card: It deals damage equal to the number of creatures you control to target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Boulder, Ready to Rumble | silent | Whenever The Boulder attacks, earthbend X, where X is the number of creatures you control with power 4 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Last Agni Kai | silent | Target creature you control fights target creature an opponent controls. If the creature the opponent controls is dealt excess damage this way, add that much {R | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Kyoshi // Avatar Kyoshi | silent | II — Earthbend X, where X is the number of cards in your hand. That land becomes an Island in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Legend of Yangchen // Avatar Yangchen | silent | I — Starting with you, each player chooses up to one permanent with mana value 3 or greater from among permanents your opponents control. Exile those permanents | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Rise of Sozin // Fire Lord Sozin | silent | II — Choose a card name. Search target opponent's graveyard, hand, and library for up to four cards with that name and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tiger-Seal | silent | At the beginning of your upkeep, tap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Toph, Hardheaded Teacher | silent | When Toph enters, you may discard a card. If you do, return target instant or sorcery card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Toph, Hardheaded Teacher | silent | Whenever you cast a spell, earthbend 1. If that spell is a Lesson, put an additional +1/+1 counter on that land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Turtle-Duck | silent | {3}: Until end of turn, this creature has base power 4 and gains trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Unlucky Cabbage Merchant | silent | Whenever you sacrifice a Food, you may search your library for a basic land card and put it onto the battlefield tapped. If you search your library this way, pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vengeful Villagers | silent | Whenever this creature attacks, choose target creature an opponent controls. Tap it, then you may sacrifice an artifact or creature. If you do, put a stun count | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -265,7 +264,7 @@
 ## Fully supported
 
 <details>
-<summary>42 cards</summary>
+<summary>43 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -302,6 +301,7 @@
 - Redirect Lightning
 - Rockalanche
 - Shared Roots
+- Solstice Revelations
 - Teo, Spirited Glider
 - The Earth King
 - The Legend of Roku // Avatar Roku
@@ -346,7 +346,6 @@
 | earthbend N. when you do, up to one target creature you control fights target creature an opponent controls. (to earthbend N, target land you control becomes a  | 1 | Earth Rumble | tla |
 | enchanted creature gets +N/+N for each creature card in your graveyard and is an avatar in addition to its other types. | 1 | Avatar Destiny | tla |
 | enchanted creature loses all abilities and is a citizen with base power and toughness N/N and "..." named humble merchant. | 1 | Honest Work | tla |
-| exile cards from the top of your library until you exile a nonland card. you may cast that card without paying its mana cost if the spell"..."t cast that card ~ | 1 | Solstice Revelations | tla |
 | exile target creature. if it was dealt damage ~, create a clue token. (it's an artifact with "...") | 1 | Sold Out | tla |
 | if a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus an amount of damage equal to the nu | 1 | Fated Firepower | tla |
 | if there are three or more lesson cards in your graveyard, you may cast ~ as though it had flash. | 1 | Serpent of the Pass | tla |
@@ -377,7 +376,6 @@
 | when bumi enters, choose up to N, where N is the number of lesson cards in your graveyard — • put three +N/+N counters on bumi. • target player scries N. • eart | 1 | Bumi, King of Three Trials | tla |
 | when hama enters, target opponent mills three cards. exile up to one noncreature, nonland card from that player's graveyard. for as long as you control hama, yo | 1 | Hama, the Bloodbender | tla |
 | when jet enters, he deals damage equal to the number of creatures you control to target creature an opponent controls. | 1 | Jet, Freedom Fighter | tla |
-| when toph enters, you may discard a card. if you do, return target instant or sorcery card from your graveyard to your hand. | 1 | Toph, Hardheaded Teacher | tla |
 | when wan shi tong enters, put N +N/+N counters on him. then draw half N cards, rounded down. | 1 | Wan Shi Tong, Librarian | tla |
 | when ~ dies, you may exile it. when you do, return target creature card with mana value less than or equal to ~ power from your graveyard to the battlefield. | 1 | Sandbender Scavengers | tla |
 | when ~ enter, if you cast them and there are three or more dragon and/or lesson cards in your graveyard, create a token that"..."s not legendary. | 1 | Ran and Shaw | tla |
@@ -385,7 +383,6 @@
 | when ~ enters, put a +N/+N counter on each other ally creature you control. | 1 | Earth King's Lieutenant | tla |
 | when ~ enters, search your library for up to N basic land cards, where N is the number of shrines you control. put those cards onto the battlefield tapped, then | 1 | Kyoshi Island Plaza | tla |
 | whenever a creature you control attacking causes a triggered ability of that creature to trigger, put a quest counter on ~. then if it has four or more quest co | 1 | Firebender Ascension | tla |
-| whenever a creature you control attacks alone, it gets +N/+N until end of turn, where N is the number of creatures you control. | 1 | Team Avatar | tla |
 | whenever a creature you control deals combat damage to a player, put a quest counter on ~. then if it has four or more quest counters on it, draw a card. | 1 | Waterbender Ascension | tla |
 | whenever a nonland creature you control dies, earthbend N, where N is that creature's power. | 1 | Beifong's Bounty Hunters | tla |
 | whenever another creature you control dies, if it had counters on it, put its counters on ~. | 1 | Buzzard-Wasp Colony | tla |
@@ -393,6 +390,7 @@
 | whenever hei bai enters or attacks, you may sacrifice another creature or artifact. if you do, put two +N/+N counters on hei bai. | 1 | Hei Bai, Spirit of Balance | tla |
 | whenever the boulder attacks, earthbend N, where N is the number of creatures you control with power N or greater. | 1 | The Boulder, Ready to Rumble | tla |
 | whenever you attack, put N +N/+N counters on target attacking creature, where N is the number of permanents you've sacrificed ~. if N is three or more, that cre | 1 | Obsessive Pursuit | tla |
+| whenever you cast a spell, earthbend N. if that spell is a lesson, put an additional +N/+N counter on that land. | 1 | Toph, Hardheaded Teacher | tla |
 | whenever you draw your second card each turn, ~ gets +N/+N until end of turn and can't be blocked ~. | 1 | Otter-Penguin | tla |
 | whenever you put one or more +N/+N counters on a creature, you may gain that much life. do ~ once each turn. | 1 | Earth Kingdom General | tla |
 | whenever you sacrifice a food, you may search your library for a basic land card and put it onto the battlefield tapped. if you search your library ~, put ~ on  | 1 | Unlucky Cabbage Merchant | tla |
@@ -406,6 +404,7 @@
 | {M}: add N mana of any one color, where N is the greatest number of creatures you control that have a creature type in common. | 1 | White Lotus Tile | tla |
 | {M}: mill a card. you may put a land card milled ~ into your hand. you gain N life if a lesson card is milled ~. | 1 | Sparring Dummy | tla |
 | {M}: until end of turn, ~ has base power N and gains trample. | 1 | Turtle-Duck | tla |
+| {M}{M}, discard ~: it deals damage equal to the number of creatures you control to target creature. | 1 | Team Avatar | tla |
 | {M}{M}, {M}: target creature you control gains firebending N until end of turn. | 1 | Fire Nation Palace | tla |
 | ~ can't attack or block unless there are three or more lesson cards in your graveyard. | 1 | The Lion-Turtle | tla |
 | ~ can't attack or block unless you control another creature with power N or greater. | 1 | Tiger-Dillo | tla |

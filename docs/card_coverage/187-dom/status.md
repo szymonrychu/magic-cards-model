@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 7.4% |
-| Works (untested) | 127 | 55.2% |
-| Partial (unaudited) | 21 | 9.1% |
-| Not working | 65 | 28.3% |
+| Tested | 18 | 7.8% |
+| Works (untested) | 129 | 56.1% |
+| Partial (unaudited) | 20 | 8.7% |
+| Not working | 63 | 27.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ancient Animus | silent | Put a +1/+1 counter on target creature you control if it's legendary. Then it fights target creature an opponent controls. (Each deals damage equal to its power | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Chainer's Torment | silent | III — Create an X/X black Nightmare Horror creature token, where X is half your life total, rounded up. It deals X damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Darigaaz Reincarnated | silent | At the beginning of your upkeep, if this card is exiled with an egg counter on it, remove an egg counter from it. Then if this card has no egg counters on it, r | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dark Bargain | silent | Look at the top three cards of your library. Put two of them into your hand and the other into your graveyard. Dark Bargain deals 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dauntless Bodyguard | silent | Sacrifice this creature: The chosen creature gains indestructible until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -86,7 +85,6 @@
 | Danitha Capashen, Paragon | notice | Aura and Equipment spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jhoira's Familiar | notice | Historic spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Merfolk Trickster | notice | When this creature enters, tap target creature an opponent controls. It loses all abilities until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Multani, Yavimaya's Avatar | notice | Multani gets +1/+1 for each land you control and each land card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rampaging Cyclops | notice | This creature gets -2/-0 as long as two or more creatures are blocking it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tempest Djinn | notice | This creature gets +1/+0 for each basic Island you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Thallid Omnivore | notice | {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -103,7 +101,6 @@
 | Precognition Field | unaudited | You may cast instant and sorcery spells from the top of your library. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Raff Capashen, Ship's Mage | unaudited | You may cast historic spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rat Colony | unaudited | A deck can have any number of cards named Rat Colony. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rona, Disciple of Gix | unaudited | You may cast spells from among cards exiled with Rona. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shalai, Voice of Plenty | unaudited | You, planeswalkers you control, and other creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shanna, Sisay's Legacy | unaudited | Shanna can't be the target of abilities your opponents control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Shield of the Realm | unaudited | If a source would deal damage to equipped creature, prevent 2 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -134,6 +131,7 @@
 | Caligo Skin-Witch | handled | When this creature enters, if it was kicked, each opponent discards two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Call the Cavalry | handled | Create two 2/2 white Knight creature tokens with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cast Down | handled | Destroy target nonlegendary creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Chainer's Torment | handled | I, II — This Saga deals 2 damage to each opponent and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chandra, Bold Pyromancer | handled | +1: Add {R}{R}. Chandra deals 2 damage to target player. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charge | handled | Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloudreader Sphinx | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -188,6 +186,7 @@
 | Memorial to War | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mesa Unicorn | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Mishra's Self-Replicator | handled | Whenever you cast a historic spell, you may pay {1}. If you do, create a token that's a copy of this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Multani, Yavimaya's Avatar | handled | Multani gets +1/+1 for each land you control and each land card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Naru Meha, Master Wizard | handled | When Naru Meha enters, copy target instant or sorcery spell you control. You may choose new targets for the copy. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Orcish Vandal | handled | {T}, Sacrifice an artifact: This creature deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pardic Wanderer | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
@@ -243,7 +242,7 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
@@ -259,6 +258,7 @@
 - Knight of Malice
 - Mox Amber
 - Naban, Dean of Iteration
+- Rona, Disciple of Gix
 - Sentinel of the Pearl Trident
 - Teferi, Timebender
 - Tetsuko Umezawa, Fugitive
@@ -284,7 +284,6 @@
 | at the beginning of your upkeep, if ~ is exiled with an egg counter on it, remove an egg counter from it. then if ~ has no egg counters on it, return it to the  | 1 | Darigaaz Reincarnated | dom |
 | aura and equipment spells you cast cost {M} less to cast. | 1 | Danitha Capashen, Paragon | dom |
 | counter target noncreature spell. untap up to three lands. | 1 | Unwind | dom |
-| create an N/N black nightmare horror creature token, where N is half your life total, rounded up. it deals N damage to you. | 1 | Chainer's Torment | dom |
 | creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Baird, Steward of Argive | dom |
 | creatures you control with first strike have double strike. | 1 | Kwende, Pride of Femeref | dom |
 | destroy target land. up to two target creatures can't block ~. | 1 | Seismic Shift | dom |
@@ -304,7 +303,6 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | look at the top three cards of your library. put two of them into your hand and the other into your graveyard. ~ deals N damage to you. | 1 | Dark Bargain | dom |
-| multani gets +N/+N for each land you control and each land card in your graveyard. | 1 | Multani, Yavimaya's Avatar | dom |
 | other angels you control get +N/+N and have lifelink. | 1 | Lyra Dawnbringer | dom |
 | prevent the next N damage that would be dealt to any target ~ by a source of your choice. you gain N life. | 1 | Healing Grace | dom |
 | put a +N/+N counter on target creature you control if it's legendary. then it fights target creature an opponent controls. (each deals damage equal to its power | 1 | Ancient Animus | dom |
@@ -335,7 +333,6 @@
 | you may activate the loyalty abilities of planeswalkers you control twice each turn rather than only once. | 1 | Oath of Teferi | dom |
 | you may cast historic spells as though they had flash. | 1 | Raff Capashen, Ship's Mage | dom |
 | you may cast instant and sorcery spells from the top of your library. | 1 | Precognition Field | dom |
-| you may cast spells from among cards exiled with rona. | 1 | Rona, Disciple of Gix | dom |
 | you may cast ~ from your graveyard or from exile. | 1 | Squee, the Immortal | dom |
 | you may pay {M}{M} and tap an untapped artifact you control rather than pay ~ mana cost. | 1 | Zahid, Djinn of the Lamp | dom |
 | you may pay {M}{M}{M}{M}{M} rather than pay the mana cost for spells you cast. | 1 | Jodah, Archmage Eternal | dom |

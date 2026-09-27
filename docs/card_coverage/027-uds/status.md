@@ -17,9 +17,9 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 3.3% |
+| Tested | 2 | 6.7% |
 | Works (untested) | 13 | 43.3% |
-| Partial (unaudited) | 3 | 10.0% |
+| Partial (unaudited) | 2 | 6.7% |
 | Not working | 13 | 43.3% |
 
 ## Cards needing work
@@ -41,7 +41,6 @@
 | Yavimaya Enchantress | notice | This creature gets +1/+1 for each enchantment on the battlefield. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Storage Matrix | unaudited | As long as this artifact is untapped, each player chooses artifact, creature, or land during their untap step. That player can untap only permanents of the chos | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Thorn Elemental | unaudited | You may have this creature assign its combat damage as though it weren't blocked. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Urza's Incubator | unaudited | Creature spells of the chosen type cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Capashen Knight | handled | {1}{W}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elvish Piper | handled | {G}, {T}: You may put a creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fodder Cannon | handled | {4}, {T}, Sacrifice a creature: This artifact deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -59,9 +58,10 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
 - Ancient Silverback
+- Urza's Incubator
 
 </details>
 
@@ -74,7 +74,6 @@
 | as long as ~ is untapped, each player chooses artifact, creature, or land during their untap step. that player can untap only permanents of the chosen type ~. | 1 | Storage Matrix | uds |
 | attacking creatures get +N/+N until end of turn. | 1 | Trumpet Blast | uds |
 | counter target instant or sorcery spell. search its controller's graveyard, hand, and library for all cards with the same name as that spell and exile them. the | 1 | Quash | uds |
-| creature spells of the chosen type cost {M} less to cast. | 1 | Urza's Incubator | uds |
 | exile target artifact. search its controller's graveyard, hand, and library for all cards with the same name as that artifact and exile them. then that player s | 1 | Splinter | uds |
 | exile target enchantment. search its controller's graveyard, hand, and library for all cards with the same name as that enchantment and exile them. then that pl | 1 | Scour | uds |
 | exile target nonbasic land. search its controller's graveyard, hand, and library for all cards with the same name as that land and exile them. then that player  | 1 | Sowing Salt | uds |

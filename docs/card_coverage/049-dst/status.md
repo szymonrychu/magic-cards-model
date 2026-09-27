@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 2.5% |
-| Works (untested) | 73 | 45.1% |
+| Works (untested) | 74 | 45.7% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 74 | 45.7% |
+| Not working | 73 | 45.1% |
 
 ## Cards needing work
 
@@ -59,7 +59,6 @@
 | Goblin Archaeologist | silent | {R}, {T}: Flip a coin. If you win the flip, destroy target artifact and untap this creature. If you lose the flip, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Greater Harvester | silent | At the beginning of your upkeep, sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hallow | silent | Prevent all damage target spell would deal this turn. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Karstoderm | silent | Whenever an artifact enters, remove a +1/+1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich's Tomb | silent | Whenever you lose life, sacrifice a permanent for each 1 life you lost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magnetic Flux | silent | Artifact creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memnarch | silent | {1}{U}{U}: Target permanent becomes an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -133,6 +132,7 @@
 | Grimclaw Bats | handled | {B}, Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heartseeker | handled | Equipped creature gets +2/+1 and has "{T}, Unattach Heartseeker: Destroy target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Infested Roothold | handled | Whenever an opponent casts an artifact spell, you may create a 1/1 green Insect creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Karstoderm | handled | This creature enters with five +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kraken's Eye | handled | Whenever a player casts a blue spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Krark-Clan Stoker | handled |  |  | Y/-/- | not_tested |
 | Last Word | handled | This spell can't be countered. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -253,7 +253,6 @@
 | when ~ has twenty or more charge counters on it, you win the game. | 1 | Darksteel Reactor | dst |
 | whenever a nontoken creature enters, if ~ is untapped, that creature's controller creates a N/N colorless myr artifact creature token. | 1 | Genesis Chamber | dst |
 | whenever a player casts an artifact spell, that player gains control of ~. | 1 | Drooling Ogre | dst |
-| whenever an artifact enters, remove a +N/+N counter from ~. | 1 | Karstoderm | dst |
 | whenever you gain life, you may pay {M}, where N is less than or equal to the amount of life you gained. if you do, draw N cards. | 1 | Well of Lost Dreams | dst |
 | whenever you lose life, sacrifice a permanent for each N life you lost. | 1 | Lich's Tomb | dst |
 | whenever ~ attacks, create a colorless construct artifact creature token named twin that's attacking. its power is equal to ~ power and its toughness is equal t | 1 | Gemini Engine | dst |

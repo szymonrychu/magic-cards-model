@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 7.7% |
-| Works (untested) | 111 | 40.5% |
-| Partial (unaudited) | 20 | 7.3% |
-| Not working | 122 | 44.5% |
+| Tested | 26 | 9.5% |
+| Works (untested) | 118 | 43.1% |
+| Partial (unaudited) | 18 | 6.6% |
+| Not working | 112 | 40.9% |
 
 ## Cards needing work
 
@@ -32,11 +32,9 @@
 | Armored Ascension | silent | Enchanted creature gets +1/+1 for each Plains you control and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashenmoor Liege | silent | Other black creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Augury Adept | silent | Whenever this creature deals combat damage to a player, reveal the top card of your library and put that card into your hand. You gain life equal to its mana va | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Barkshell Blessing | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Biting Tether | silent | At the beginning of your upkeep, put a -1/-1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodmark Mentor | silent | Red creatures you control have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Boartusk Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Burn Trail | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Cauldron of Souls | silent | {T}: Choose any number of target creatures. Each of those creatures gains persist until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cemetery Puca | silent | Whenever a creature dies, you may pay {1}. If you do, this creature becomes a copy of that creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chainbreaker | silent | {3}, {T}: Remove a -1/-1 counter from target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -50,7 +48,6 @@
 | Deus of Calamity | silent | Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Din of the Fireherd | silent | Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dire Undercurrents | silent | Whenever a blue creature you control enters, you may have target player draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Disturbing Plot | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Dream Salvage | silent | Draw cards equal to the number of cards target opponent discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drove of Elves | silent | Drove of Elves's power and toughness are each equal to the number of green permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elsewhere Flask | silent | Sacrifice this artifact: Choose a basic land type. Each land you control becomes that type until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -64,10 +61,7 @@
 | Fossil Find | silent | Return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fracturing Gust | silent | Destroy all artifacts and enchantments. You gain 2 life for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ghastlord of Fugue | silent | Whenever this creature deals combat damage to a player, that player reveals their hand. You choose a card from it. That player exiles that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Ghastly Discovery | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Giantbaiting | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Glamer Spinners | silent | When this creature enters, attach all Auras enchanting target permanent to another permanent with the same controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gleeful Sabotage | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Glen Elendra Liege | silent | Other blue creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grief Tyrant | silent | When this creature dies, put a -1/-1 counter on target creature for each -1/-1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Heartmender | silent | At the beginning of your upkeep, remove a -1/-1 counter from each creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -87,11 +81,8 @@
 | Mass Calcify | silent | Destroy all nonwhite creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Medicine Runner | silent | When this creature enters, you may remove a counter from target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memory Plunder | silent | You may cast target instant or sorcery card from an opponent's graveyard without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Memory Sluice | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Mercy Killing | silent | Target creature's controller sacrifices it, then creates X 1/1 green and white Elf Warrior creature tokens, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Midnight Banshee | silent | At the beginning of your upkeep, put a -1/-1 counter on each nonblack creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mine Excavation | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Mirrorweave | silent | Each other creature becomes a copy of target nonlegendary creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oona, Queen of the Fae | silent | {X}{U/B}: Choose a color. Target opponent exiles the top X cards of their library. For each card of the chosen color exiled this way, create a 1/1 blue and blac | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oversoul of Dusk | silent | Protection from blue, from black, and from red | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Painter's Servant | silent | All cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -108,7 +99,6 @@
 | River's Grasp | silent | If {U} was spent to cast this spell, return up to one target creature to its owner's hand. If {B} was spent to cast this spell, target player reveals their hand | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Roughshod Mentor | silent | Green creatures you control have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Runes of the Deus | silent | As long as enchanted creature is red, it gets +1/+1 and has double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Scrapbasket | silent | {1}: This creature becomes all colors until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Scuttlemutt | silent | {T}: Target creature becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shield of the Oversoul | silent | As long as enchanted creature is green, it gets +1/+1 and has indestructible. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spell Syphon | silent | Counter target spell unless its controller pays {1} for each blue permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -118,7 +108,6 @@
 | Thistledown Liege | silent | Other white creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Toil to Renown | silent | You gain 1 life for each tapped artifact, creature, and land you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Torrent of Souls | silent | Return up to one target creature card from your graveyard to the battlefield if {B} was spent to cast this spell. Creatures target player controls get +2/+0 and | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Traitor's Roar | silent | Conspire | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Twilight Shepherd | silent | When this creature enters, return to your hand all cards in your graveyard that were put there from the battlefield this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tyrannize | silent | Target player discards their hand unless they pay 7 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Valleymaker | silent | {T}, Sacrifice a Forest: Choose a player. That player adds {G}{G}{G}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -145,6 +134,7 @@
 | Rattleblaze Scarecrow | notice | This creature has persist as long as you control a black creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rite of Consumption | notice | As an additional cost to cast this spell, sacrifice a creature. Rite of Consumption deals damage equal to the sacrificed creature's power to target player or pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thornwatch Scarecrow | notice | This creature has wither as long as you control a green creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Traitor's Roar | notice | Tap target untapped creature. It deals damage equal to its power to its controller. Conspire (As you cast this spell, you may tap two untapped creatures you con | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Watchwing Scarecrow | notice | This creature has vigilance as long as you control a white creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wicker Warcrawler | notice | Whenever this creature attacks or blocks, put a -1/-1 counter on it at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Wingrattle Scarecrow | notice | This creature has flying as long as you control a blue creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -163,13 +153,12 @@
 | Runed Halo | unaudited | You have protection from the chosen card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sootwalkers | unaudited | This creature can't be blocked by white creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Swans of Bryn Argoll | unaudited | If a source would deal damage to this creature, prevent that damage. The source's controller draws cards equal to the damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Tatterkite | unaudited | This creature can't have counters put on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wanderbrine Rootcutters | unaudited | This creature can't be blocked by green creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wheel of Sun and Moon | unaudited | If a card would be put into enchanted player's graveyard from anywhere, instead that card is revealed and put on the bottom of that player's library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Whimwader | unaudited | This creature can't attack unless defending player controls a blue permanent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Wort, the Raidmother | unaudited | Each red or green instant or sorcery spell you cast has conspire. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashenmoor Gouger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Barkshell Blessing | handled | Target creature gets +2/+2 until end of turn. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barrenton Medic | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blight Sickle | handled | Equipped creature gets +1/+0 and has wither. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blistering Dieflyn | handled | {B/R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,6 +169,7 @@
 | Cultbrand Cinder | handled | When this creature enters, put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Curse of Chains | handled | At the beginning of each upkeep, tap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Deep-Slumber Titan | handled | This creature enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Disturbing Plot | handled | Return target creature card from a graveyard to its owner's hand. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dramatic Entrance | handled | You may put a green creature card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drowner Initiate | handled | Whenever a player casts a blue spell, you may pay {1}. If you do, target player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dusk Urchins | handled | Whenever this creature attacks or blocks, put a -1/-1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -192,6 +182,9 @@
 | Foxfire Oak | handled | {R/G}{R/G}{R/G}: This creature gets +3/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fulminator Mage | handled | Sacrifice this creature: Destroy target nonbasic land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Furystoke Giant | handled | When this creature enters, other creatures you control gain "{T}: This creature deals 2 damage to any target" until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Ghastly Discovery | handled | Draw two cards, then discard a card. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When you do, c | the engine reads this text and performs it | Y/-/- | not_tested |
+| Giantbaiting | handled | Create a 4/4 red and green Giant Warrior creature token with haste. Exile it at the beginning of the next end step. Conspire (As you cast this spell, you may ta | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gleeful Sabotage | handled | Destroy target artifact or enchantment. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When you do | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gnarled Effigy | handled | {4}, {T}: Put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goldenglow Moth | handled | Whenever this creature blocks, you may gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gravelgill Axeshark | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
@@ -214,8 +207,10 @@
 | Madblind Mountain | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mana Reflection | handled | If you tap a permanent for mana, it produces twice as much of that mana instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Manaforge Cinder | handled |  |  | Y/-/- | not_tested |
+| Memory Sluice | handled | Target player mills four cards. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When you do, copy i | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Grimeblotter | handled | {1}{U/B}, {Q}: Target creature gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Merrow Wavebreakers | handled | {1}{U}, {Q}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mine Excavation | handled | Return target artifact or enchantment card from a graveyard to its owner's hand. Conspire (As you cast this spell, you may tap two untapped creatures you contro | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mistmeadow Witch | handled | {2}{W}{U}: Exile target creature. Return that card to the battlefield under its owner's control at the beginning of the next end step. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mistveil Plains | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonring Island | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -283,12 +278,13 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>26 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
 - Boggart Ram-Gang
 - Boon Reflection
+- Burn Trail
 - Dawnglow Infusion
 - Devoted Druid
 - Faerie Macabre
@@ -296,16 +292,20 @@
 - Illuminated Folio
 - Kitchen Finks
 - Manamorphose
+- Mirrorweave
 - Mystic Gate
 - Rosheen Meanderer
 - Savor the Moment
+- Scrapbasket
 - Smash to Smithereens
 - Spectral Procession
 - Sunken Ruins
 - Sygg, River Cutthroat
+- Tatterkite
 - Thought Reflection
 - Tower Above
 - Umbral Mantle
+- Wort, the Raidmother
 
 </details>
 
@@ -313,7 +313,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| conspire | 9 | Barkshell Blessing, Burn Trail, Disturbing Plot, Ghastly Discovery, Giantbaiting | shm |
 | ({M} can be paid with any two mana or with {M}. ~ mana value is N.) look at the top five cards of your library. if you control more creatures than each other pl | 1 | Advice from the Fae | shm |
 | all cards that aren't on the battlefield, spells, and permanents are the chosen color in addition to their other colors. | 1 | Painter's Servant | shm |
 | all damage is dealt as though its source had wither. | 1 | Everlasting Torment | shm |
@@ -344,8 +343,6 @@
 | destroy target creature with flying. if that creature was blue or black, create a N/N green spider creature token with reach. (it can block creatures with flyin | 1 | Gloomwidow's Feast | shm |
 | destroy target creature. if that creature was green or white, its controller discards a card. | 1 | Gloomlance | shm |
 | draw cards equal to the number of cards target opponent discarded ~. | 1 | Dream Salvage | shm |
-| each other creature becomes a copy of target nonlegendary creature until end of turn. | 1 | Mirrorweave | shm |
-| each red or green instant or sorcery spell you cast has conspire. | 1 | Wort, the Raidmother | shm |
 | enchanted creature attacks each combat if able. | 1 | Bloodshed Fever | shm |
 | enchanted creature gets +N/+N for each plains you control and has flying. | 1 | Armored Ascension | shm |
 | green creatures you control have trample. | 1 | Roughshod Mentor | shm |
@@ -374,6 +371,7 @@
 | sacrifice ~: choose a basic land type. each land you control becomes that type until end of turn. | 1 | Elsewhere Flask | shm |
 | sacrifice ~: counter target instant or sorcery spell unless its controller pays {M}. | 1 | Cursecatcher | shm |
 | starting with you, each player may pay any amount of life. repeat ~ until no one pays life. each player creates a N/N black rat creature token for each N life t | 1 | Plague of Vermin | shm |
+| tap target untapped creature. it deals damage equal to its power to its controller. conspire (as you cast ~, you may tap two untapped creatures you control that | 1 | Traitor's Roar | shm |
 | target creature becomes black and gains fear until end of turn. (it can't be blocked except by artifact creatures and/or black creatures.) draw a card. | 1 | Aphotic Wisps | shm |
 | target creature becomes green and gets +N/+N until end of turn. draw a card. | 1 | Viridescent Wisps | shm |
 | target creature becomes red and gains haste until end of turn. (it can attack and {M} ~.) draw a card. | 1 | Crimson Wisps | shm |
@@ -414,7 +412,6 @@
 | {M}: choose any number of target creatures. each of those creatures gains persist until end of turn. | 1 | Cauldron of Souls | shm |
 | {M}: target creature becomes the color or colors of your choice until end of turn. | 1 | Scuttlemutt | shm |
 | {M}: target spell can't be countered. | 1 | Vexing Shusher | shm |
-| {M}: ~ becomes all colors until end of turn. | 1 | Scrapbasket | shm |
 | {M}{M}: choose a color. target opponent exiles the top N cards of their library. for each card of the chosen color exiled ~, create a N/N blue and black faerie  | 1 | Oona, Queen of the Fae | shm |
 | {M}{M}: each blocked creature gets +N/+N and gains trample until end of turn. | 1 | Tattermunge Witch | shm |
 | {M}{M}: reveal the top card of your library. if it isn't a creature card, put it into your graveyard. otherwise, put that card onto the battlefield. that creatu | 1 | Impromptu Raid | shm |
@@ -428,7 +425,6 @@
 | ~ can't be blocked by green creatures. | 1 | Wanderbrine Rootcutters | shm |
 | ~ can't be blocked by red creatures. | 1 | Barrenton Cragtreads | shm |
 | ~ can't be blocked by white creatures. | 1 | Sootwalkers | shm |
-| ~ can't have counters put on it. | 1 | Tatterkite | shm |
 | ~ deals N damage divided as you choose among any number of targets, where N is the number of mountains you control as you cast ~. | 1 | Jaws of Stone | shm |
 | ~ deals N damage to each creature without flying if {M} was spent to cast ~ and N damage to each creature with flying if {M} was spent to cast ~. (do both if {M | 1 | Firespout | shm |
 | ~ gets +N/+N as long as a library has twenty or fewer cards in it. | 1 | Isleback Spawn | shm |

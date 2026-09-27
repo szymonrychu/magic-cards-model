@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.9% |
-| Works (untested) | 66 | 46.2% |
+| Works (untested) | 67 | 46.9% |
 | Partial (unaudited) | 11 | 7.7% |
-| Not working | 59 | 41.3% |
+| Not working | 58 | 40.6% |
 
 ## Cards needing work
 
@@ -44,7 +44,6 @@
 | Giant Ambush Beetle | silent | When this creature enters, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glassdust Hulk | silent | Whenever another artifact you control enters, this creature gets +1/+1 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glory of Warfare | silent | During your turn, creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gorger Wurm | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Grixis Grimblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Identity Crisis | silent | Exile all cards from target player's hand and graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intimidation Bolt | silent | Intimidation Bolt deals 3 damage to target creature. Other creatures can't attack this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -119,6 +118,7 @@
 | Filigree Angel | handled | When this creature enters, you gain 3 life for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gloryscale Viashino | handled | Whenever you cast a multicolored spell, this creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Godtracker of Jund | handled | Whenever a creature you control with power 5 or greater enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gorger Wurm | handled | Devour | machines/replacement.py (_expand_devour, CR 702.82) | Y/-/- | not_tested |
 | Grixis Sojourners | handled | When you cycle this card and when this creature dies, you may exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grizzled Leotau | handled |  |  | Y/-/- | not_tested |
 | Igneous Pouncer | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/-/- | not_tested |
@@ -201,7 +201,6 @@
 | creature spells you control with power N or greater can't be countered. | 1 | Spellbreaker Behemoth | arb |
 | destroy all blocking creatures and all blocked creatures. | 1 | Fight to the Death | arb |
 | destroy target nonland permanent and all other permanents with the same name as that permanent. | 1 | Maelstrom Pulse | arb |
-| devour | 1 | Gorger Wurm | arb |
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
 | during your turn, creatures you control get +N/+N. | 1 | Glory of Warfare | arb |
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |

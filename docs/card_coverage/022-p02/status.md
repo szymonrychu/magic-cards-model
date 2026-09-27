@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 1 | 3.8% |
-| Works (untested) | 20 | 76.9% |
+| Tested | 2 | 7.7% |
+| Works (untested) | 19 | 73.1% |
 | Partial (unaudited) | 1 | 3.8% |
 | Not working | 4 | 15.4% |
 
@@ -38,7 +38,6 @@
 | Goblin Glider | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Matron | handled | When this creature enters, you may search your library for a Goblin card, reveal that card, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Mountaineer | handled | Landwalk | no code needed | Y/-/- | not_tested |
-| Goblin Piker | handled |  |  | Y/-/- | not_tested |
 | Goblin Raider | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magma Giant | handled | When this creature enters, it deals 2 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Norwood Ranger | handled |  |  | Y/-/- | not_tested |
@@ -55,8 +54,9 @@
 ## Fully supported
 
 <details>
-<summary>1 cards</summary>
+<summary>2 cards</summary>
 
+- Goblin Piker
 - Sleight of Hand
 
 </details>

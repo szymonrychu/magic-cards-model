@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 3.6% |
-| Works (untested) | 134 | 60.1% |
+| Tested | 9 | 4.0% |
+| Works (untested) | 137 | 61.4% |
 | Partial (unaudited) | 9 | 4.0% |
-| Not working | 72 | 32.3% |
+| Not working | 68 | 30.5% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Behemoth's Herald | silent | {2}{G}, {T}, Sacrifice a red creature, a green creature, and a white creature: Search your library for a card named Godsire, put it onto the battlefield, then s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blightning | silent | Blightning deals 3 damage to target player or planeswalker. That player or that planeswalker's controller discards two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Brilliant Ultimatum | silent | Exile the top five cards of your library. An opponent separates those cards into two piles. You may play lands and cast spells from one of those piles. If you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Caldera Hellion | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Call to Heel | silent | Return target creature to its owner's hand. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Clarion Ultimatum | silent | Choose five permanents you control. For each of those permanents, you may search your library for a card with the same name as that permanent. Put those cards o | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Court Archers | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -65,7 +64,6 @@
 | Minion Reflector | silent | Whenever a nontoken creature you control enters, you may pay {2}. If you do, create a token that's a copy of that creature, except it has haste and "At the begi | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mycoloth | silent | At the beginning of your upkeep, create a 1/1 green Saproling creature token for each +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Outrider of Jhess | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Predator Dragon | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Prince of Thralls | silent | Whenever a permanent an opponent controls is put into a graveyard, put that card onto the battlefield under your control unless that opponent pays 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Puppet Conjurer | silent | At the beginning of your upkeep, sacrifice a Homunculus. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rafiq of the Many | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -87,9 +85,7 @@
 | Sphinx Sovereign | silent | At the beginning of your end step, you gain 3 life if this creature is untapped. Otherwise, each opponent loses 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sphinx's Herald | silent | {2}{U}, {T}, Sacrifice a white creature, a blue creature, and a black creature: Search your library for a card named Sphinx Sovereign, put it onto the battlefie | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tar Fiend | silent | When this creature enters, target player discards a card for each creature it devoured. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thorn-Thrash Viashino | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thoughtcutter Agent | silent | {U}{B}, {T}: Target player loses 1 life and reveals their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Thunder-Thrash Elder | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Vein Drinker | silent | {R}, {T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vicious Shadows | silent | Whenever a creature dies, you may have this enchantment deal damage to target player equal to the number of cards in that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waveskimmer Aven | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -119,6 +115,7 @@
 | Branching Bolt | handled | Choose one or both — • Branching Bolt deals 3 damage to target creature with flying. • Branching Bolt deals 3 damage to target creature without flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Broodmate Dragon | handled | When this creature enters, create a 4/4 red Dragon creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bull Cerodon | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
+| Caldera Hellion | handled | When this creature enters, it deals 3 damage to each creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Carrion Thrash | handled | When this creature dies, you may pay {2}. If you do, return another target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cathartic Adept | handled | {T}: Target player mills a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cavern Thoctar | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -190,6 +187,7 @@
 | Obelisk of Jund | handled |  |  | Y/-/- | not_tested |
 | Obelisk of Naya | handled |  |  | Y/-/- | not_tested |
 | Onyx Goblet | handled | {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Predator Dragon | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Protomatter Powder | handled | {4}{W}, {T}, Sacrifice this artifact: Return target artifact card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quietus Spike | handled | Equipped creature has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rakeclaw Gargantuan | handled | {1}: Target creature with power 5 or greater gains first strike until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -224,6 +222,7 @@
 | Sunseed Nurturer | handled | At the beginning of your end step, if you control a creature with power 5 or greater, you may gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Swerve | handled | Change the target of target spell with a single target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tezzeret the Seeker | handled | +1: Untap up to two target artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Thorn-Thrash Viashino | handled | {G}: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidehollow Sculler | handled | When this creature enters, target opponent reveals their hand and you choose a nonland card from it. Exile that card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tidehollow Strix | handled | Deathtouch | machines/combat.py | Y/-/- | not_tested |
 | Titanic Ultimatum | handled | Until end of turn, creatures you control get +5/+5 and gain first strike, trample, and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -245,7 +244,7 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Angelsong
 - Bone Splinters
@@ -255,6 +254,7 @@
 - Gustrider Exuberant
 - Punish Ignorance
 - Relic of Progenitus
+- Thunder-Thrash Elder
 
 </details>
 
@@ -263,7 +263,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | exalted | 12 | Akrasan Squire, Angelic Benediction, Battlegrace Angel, Court Archers, Dawnray Archer | ala |
-| devour | 4 | Caldera Hellion, Predator Dragon, Thorn-Thrash Viashino, Thunder-Thrash Elder | ala |
 | Choose one | 1 | Bant Charm | ala |
 | +N: target permanent doesn"..."s next untap step. | 1 | Ajani Vengeant | ala |
 | all damage that would be dealt to you is dealt to ~ instead. | 1 | Empyrial Archangel | ala |

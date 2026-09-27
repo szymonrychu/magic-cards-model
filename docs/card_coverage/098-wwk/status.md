@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 58 | 40.8% |
+| Works (untested) | 59 | 41.5% |
 | Partial (unaudited) | 15 | 10.6% |
-| Not working | 58 | 40.8% |
+| Not working | 57 | 40.1% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Raging Ravine | silent | {2}{R}{G}: Until end of turn, this land becomes a 3/3 red and green Elemental creature with "Whenever this creature attacks, put a +1/+1 counter on it." It's st | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Refraction Trap | silent | If an opponent cast a red instant or sorcery spell this turn, you may pay {W} rather than pay this spell's mana cost. Prevent the next 3 damage that a source of | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rumbling Aftershocks | silent | Whenever you cast a kicked spell, you may have this enchantment deal damage to any target equal to the number of times that spell was kicked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Scrib Nibblers | silent | {T}: Exile the top card of target player's library. If it's a land card, you gain 1 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Selective Memory | silent | Search your library for any number of nonland cards, exile them, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Slavering Nulls | silent | Whenever this creature deals combat damage to a player, if you control a Swamp, you may have that player discard a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spell Contortion | silent | Multikicker {1}{U} (You may pay an additional {1}{U} any number of times as you cast this spell.) Counter target spell unless its controller pays {2}. Draw a ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -142,6 +141,7 @@
 | Razor Boomerang | handled | Equipped creature has "{T}, Unattach Razor Boomerang: It deals 1 damage to any target. Return Razor Boomerang to its owner's hand." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rest for the Weary | handled | Target player gains 4 life. Landfall — If you had a land enter the battlefield under your control this turn, that player gains 8 life instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ruin Ghost | handled | {W}, {T}: Exile target land you control, then return it to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Scrib Nibblers | handled | {T}: Exile the top card of target player's library. If it's a land card, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seer's Sundial | handled | Landfall — Whenever a land you control enters, you may pay {2}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sejiri Merfolk | handled | As long as you control a Plains, this creature has first strike and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sejiri Steppe | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -236,7 +236,6 @@
 | you may have ~ enter as a copy of any ally creature on the battlefield. | 1 | Jwari Shapeshifter | wwk |
 | you may put target creature card from your graveyard on top of your library. if you do, ~ deals damage equal to that card's power to target creature. | 1 | Dead Reckoning | wwk |
 | {M}: add N mana of any one color, where N is the number of allies you control. | 1 | Harabaz Druid | wwk |
-| {M}: exile the top card of target player"..."s a land card, you gain N life. | 1 | Scrib Nibblers | wwk |
 | {M}: put target creature card from an opponent's graveyard onto the battlefield under your control if its mana value is less than or equal to the number of alli | 1 | Agadeem Occultist | wwk |
 | {M}: target land you control becomes an N/N elemental creature until end of turn, where N is the number of allies you control. it's still a land. | 1 | Vastwood Animist | wwk |
 | {M}: target player gains control of target artifact, creature, or land you control. | 1 | Bazaar Trader | wwk |

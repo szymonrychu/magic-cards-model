@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.1% |
+| Tested | 11 | 7.4% |
 | Works (untested) | 54 | 36.5% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 78 | 52.7% |
+| Not working | 76 | 51.4% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Countryside Crusher | silent | At the beginning of your upkeep, reveal the top card of your library. If it's a land card, put it into your graveyard and repeat this process. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cream of the Crop | silent | Whenever a creature you control enters, you may look at the top X cards of your library, where X is that creature's power. If you do, put one of those cards on  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Daily Regimen | silent | {1}{W}: Put a +1/+1 counter on enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Distant Melody | silent | Choose a creature type. Draw a card for each permanent you control of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door of Destinies | silent | Creatures you control of the chosen type get +1/+1 for each charge counter on this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earthbrawn | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Earwig Squad | silent | When this creature enters, if its prowl cost was paid, search target opponent's library for three cards and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -57,7 +56,6 @@
 | Leaf-Crowned Elder | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lightning Crafter | silent | Champion | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Luminescent Rain | silent | Choose a creature type. You gain 2 life for each permanent you control of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Maralen of the Mornsong | silent | At the beginning of each player's draw step, that player loses 3 life, searches their library for a card, puts it into their hand, then shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mind Shatter | silent | Target player discards X cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mosquito Guard | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Mudbutton Clanger | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -169,11 +167,13 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Deglamer
+- Distant Melody
 - Indomitable Ancients
 - Latchkey Faerie
+- Maralen of the Mornsong
 - Meadowboon
 - Morsel Theft
 - Negate
@@ -191,9 +191,7 @@
 | reinforce | 7 | Brighthearth Banneret, Burrenton Bombardier, Earthbrawn, Hunting Triad, Mosquito Guard | mor |
 | champion | 2 | Lightning Crafter, Supreme Exemplar | mor |
 | ~ deals N damage to any target. clash with an opponent. if you win, return ~ to its owner's hand. (each clashing player reveals the top card of their library, t | 2 | Release the Ants, Titan's Revenge | mor |
-| at the beginning of each player's draw step, that player loses N life, searches their library for a card, puts it into their hand, then shuffles. | 1 | Maralen of the Mornsong | mor |
 | at the beginning of your upkeep, reveal the top card of your library. if it's a land card, put it into your graveyard and repeat ~. | 1 | Countryside Crusher | mor |
-| choose a creature type. draw a card for each permanent you control of that type. | 1 | Distant Melody | mor |
 | choose a creature type. target creature gets -N/-N until end of turn for each permanent of the chosen type you control. | 1 | Pack's Disdain | mor |
 | choose a creature type. you gain N life for each permanent you control of that type. | 1 | Luminescent Rain | mor |
 | choose a creature type. ~ deals damage to any target equal to the number of permanents you control of the chosen type. | 1 | Roar of the Crowd | mor |

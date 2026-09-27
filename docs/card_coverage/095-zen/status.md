@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 9.5% |
-| Works (untested) | 114 | 51.8% |
+| Tested | 22 | 10.0% |
+| Works (untested) | 115 | 52.3% |
 | Partial (unaudited) | 8 | 3.6% |
-| Not working | 77 | 35.0% |
+| Not working | 75 | 34.1% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Ob Nixilis, the Fallen | silent | Landfall — Whenever a land you control enters, you may have target player lose 3 life. If you do, put three +1/+1 counters on Ob Nixilis. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ondu Cleric | silent | Whenever this creature or another Ally you control enters, you may gain life equal to the number of Allies you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oran-Rief, the Vastwood | silent | {T}: Put a +1/+1 counter on each green creature that entered this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Pyromancer Ascension | silent | Whenever you cast an instant or sorcery spell while this enchantment has two or more quest counters on it, you may copy that spell. You may choose new targets f | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for Ancient Secrets | silent | Whenever a card is put into your graveyard from anywhere, you may put a quest counter on this enchantment. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Quest for Pure Flame | silent | Remove four quest counters from this enchantment and sacrifice it: If any source you control would deal damage to a permanent or player this turn, it deals doub | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Quest for the Holy Relic | silent | Remove five quest counters from this enchantment and sacrifice it: Search your library for an Equipment card, put it onto the battlefield, attach it to a creatu | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -90,7 +89,6 @@
 | Tanglesap | silent | Prevent all combat damage that would be dealt this turn by creatures without trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Trapfinder's Trick | silent | Target player reveals their hand and discards all Trap cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Turntimber Basilisk | silent | Landfall — Whenever a land you control enters, you may have target creature block this creature this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Turntimber Ranger | silent | Whenever this creature or another Ally you control enters, you may create a 2/2 green Wolf creature token. If you do, put a +1/+1 counter on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Lacerator | silent | At the beginning of your upkeep, you lose 1 life unless an opponent has 10 or less life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vines of Vastwood | silent | Kicker {G} (You may pay an additional {G} as you cast this spell.) Target creature can't be the target of spells or abilities your opponents control this turn.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | World Queller | silent | At the beginning of your upkeep, you may choose a card type. If you do, each player sacrifices a permanent of their choice of that type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -117,7 +115,6 @@
 | Baloth Woodcrasher | handled | Landfall — Whenever a land you control enters, this creature gets +4/+4 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bog Tatters | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Bold Defense | handled | Kicker {3}{W} (You may pay an additional {3}{W} as you cast this spell.) Creatures you control get +1/+1 until end of turn. If this spell was kicked, instead cr | the engine reads this text and performs it | Y/-/- | not_tested |
-| Caller of Gales | handled | {1}{U}, {T}: Target creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Caravan Hurda | handled | Lifelink | machines/combat.py | Y/-/- | not_tested |
 | Carnage Altar | handled | {3}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cliff Threader | handled | Landwalk | no code needed | Y/-/- | not_tested |
@@ -181,6 +178,7 @@
 | Plated Geopede | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Predatory Urge | handled | Enchanted creature has "{T}: This creature deals damage equal to its power to target creature. That creature deals damage equal to its power to this creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Punishing Fire | handled | Punishing Fire deals 2 damage to any target. Whenever an opponent gains life, you may pay {R}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Pyromancer Ascension | handled | Whenever you cast an instant or sorcery spell that has the same name as a card in your graveyard, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quest for the Gemblades | handled | Whenever a creature you control deals combat damage to a creature, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Quest for the Gravelord | handled | Whenever a creature dies, you may put a quest counter on this enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rampaging Baloths | handled | Landfall — Whenever a land you control enters, create a 4/4 green Beast creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -216,6 +214,7 @@
 | Trusty Machete | handled | Equipped creature gets +2/+1. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tuktuk Grunts | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Turntimber Grove | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Turntimber Ranger | handled | Whenever this creature or another Ally you control enters, you may create a 2/2 green Wolf creature token. If you do, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Umara Raptor | handled | Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unstable Footing | handled | Kicker {3}{R} (You may pay an additional {3}{R} as you cast this spell.) Damage can't be prevented this turn. If this spell was kicked, it deals 5 damage to tar | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vampire Nighthawk | handled | Deathtouch | machines/combat.py | Y/Y/Y | not_tested |
@@ -229,12 +228,13 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Archive Trap
 - Arid Mesa
 - Blade of the Bloodchief
 - Burst Lightning
+- Caller of Gales
 - Expedition Map
 - Goblin Guide
 - Hellkite Charger
@@ -313,11 +313,9 @@
 | whenever equipped creature attacks, look at the top card of your library. if it's a land card, you may put it onto the battlefield tapped. | 1 | Explorer's Scope | zen |
 | whenever equipped creature attacks, you may have target creature block it ~ if able. | 1 | Grappling Hook | zen |
 | whenever lorthos attacks, you may pay {M}. if you do, tap up to eight target permanents. those permanents don"..." next untap steps. | 1 | Lorthos, the Tidemaker | zen |
-| whenever you cast an instant or sorcery spell while ~ has two or more quest counters on it, you may copy that spell. you may choose new targets for the copy. | 1 | Pyromancer Ascension | zen |
 | whenever ~ deals damage to an opponent, sacrifice a land. | 1 | Ruinous Minotaur | zen |
 | whenever ~ or another ally you control enters, target player reveals a number of cards from their hand equal to the number of allies you control. you choose one | 1 | Bala Ged Thief | zen |
 | whenever ~ or another ally you control enters, you may choose a color. if you do, allies you control gain protection from the chosen color until end of turn. | 1 | Kabira Evangel | zen |
-| whenever ~ or another ally you control enters, you may create a N/N green wolf creature token. if you do, put a +N/+N counter on ~. | 1 | Turntimber Ranger | zen |
 | whenever ~ or another ally you control enters, you may gain life equal to the number of allies you control. | 1 | Ondu Cleric | zen |
 | whenever ~ or another ally you control enters, you may have ally creatures you control gain first strike until end of turn. | 1 | Highland Berserker | zen |
 | whenever ~ or another ally you control enters, you may have ally creatures you control gain flying until end of turn. | 1 | Seascape Aerialist | zen |

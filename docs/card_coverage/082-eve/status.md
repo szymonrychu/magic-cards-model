@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 2.2% |
-| Works (untested) | 88 | 49.2% |
+| Tested | 8 | 4.5% |
+| Works (untested) | 92 | 51.4% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 83 | 46.4% |
+| Not working | 75 | 41.9% |
 
 ## Cards needing work
 
@@ -28,10 +28,8 @@
 |---|---|---|---|---|---|
 | Aerie Ouphes | silent | Sacrifice this creature: It deals damage equal to its power to target creature with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Altar Golem | silent | Altar Golem's power and toughness are each equal to the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Antler Skulkin | silent | {2}: Target white creature gains persist until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Balefire Liege | silent | Other red creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Batwing Brume | silent | Prevent all combat damage that would be dealt this turn if {W} was spent to cast this spell. Each player loses 1 life for each attacking creature they control i | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Belligerent Hatchling | silent | Whenever you cast a red spell, remove a -1/-1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloom Tender | silent | Vivid — {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cache Raiders | silent | At the beginning of your upkeep, return a permanent you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Call the Skybreaker | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -52,7 +50,6 @@
 | Endure | silent | Prevent all damage that would be dealt to you and permanents you control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Favor of the Overbeing | silent | As long as enchanted creature is green, it gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fiery Bombardment | silent | Chroma — {2}, Sacrifice a creature: This enchantment deals damage to any target equal to the number of red mana symbols in the sacrificed creature's mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Figure of Destiny | silent | {R/W}: This creature becomes a Kithkin Spirit with base power and toughness 2/2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flame Jab | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Gift of the Deity | silent | As long as enchanted creature is black, it gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gilder Bairn | silent | {2}{G/U}, {Q}: Double the number of each kind of counter on target permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -76,14 +73,12 @@
 | Needle Specter | silent | Whenever this creature deals combat damage to a player, that player discards that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightmare Incursion | silent | Search target player's library for up to X cards, where X is the number of Swamps you control, and exile them. Then that player shuffles. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nobilis of War | silent | Attacking creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Noxious Hatchling | silent | Whenever you cast a black spell, remove a -1/-1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Oona's Grace | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Outrage Shaman | silent | Chroma — When this creature enters, it deals damage to target creature equal to the number of red mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Overbeing of Myth | silent | Overbeing of Myth's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primalcrux | silent | Chroma — This creature's power and toughness are each equal to the number of green mana symbols in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pyrrhic Revival | silent | Each player returns each creature card from their graveyard to the battlefield with an additional -1/-1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Raven's Crime | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Regal Force | silent | When this creature enters, draw a card for each green creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rise of the Hobgoblins | silent | When this enchantment enters, you may pay {X}. If you do, create X 1/1 red and white Goblin Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Riverfall Mimic | silent | Whenever you cast a spell that's both blue and red, this creature has base power and toughness 3/3 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sanity Grinding | silent | Chroma — Reveal the top ten cards of your library. For each blue mana symbol in the mana costs of the revealed cards, target opponent mills a card. Then put the | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -91,16 +86,13 @@
 | Savage Conception | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Scourge of the Nobilis | silent | As long as enchanted creature is red, it gets +1/+1 and has "{R/W}: This creature gets +1/+0 until end of turn." | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shrewd Hatchling | silent | {U/R}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Soul Snuffers | silent | When this creature enters, put a -1/-1 counter on each creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spitting Image | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Springjack Shepherd | silent | Chroma — When this creature enters, create a 0/1 white Goat creature token for each white mana symbol in the mana costs of permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stigma Lasher | silent | Whenever this creature deals damage to a player, that player can't gain life for the rest of the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sturdy Hatchling | silent | Whenever you cast a green spell, remove a -1/-1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Swirling Spriggan | silent | {G/U}{G/U}: Target creature you control becomes the color or colors of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Syphon Life | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Talara's Bane | silent | Target opponent reveals their hand. You choose a green or white creature card from it. You gain life equal to that creature card's toughness, then that player d | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Umbra Stalker | silent | Chroma — Umbra Stalker's power and toughness are each equal to the number of black mana symbols in the mana costs of cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Voracious Hatchling | silent | Whenever you cast a white spell, remove a -1/-1 counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Waves of Aggression | silent | Untap all creatures that attacked this turn. After this main phase, there is an additional combat phase followed by an additional main phase. Retrace (You may c | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Worm Harvest | silent | Retrace | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ashling, the Extinguisher | notice | Whenever Ashling deals combat damage to a player, choose target creature that player controls. The player sacrifices that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -164,6 +156,7 @@
 | Noggle Bridgebreaker | handled | When this creature enters, return a land you control to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Noggle Hedge-Mage | handled | When this creature enters, if you control two or more Islands, you may tap two target permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Noggle Ransacker | handled | When this creature enters, each player draws two cards, then discards a card at random. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Noxious Hatchling | handled | This creature enters with four -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nucklavee | handled | When this creature enters, you may return target red sorcery card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Odious Trow | handled | {1}{B/G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Patrol Signaler | handled | {1}{W}, {Q}: Create a 1/1 white Kithkin Soldier creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -171,6 +164,7 @@
 | Quillspike | handled | {B/G}, Remove a -1/-1 counter from a creature you control: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razorfin Abolisher | handled | {1}{U}, {T}: Return target creature with a counter on it to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Recumbent Bliss | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Regal Force | handled | When this creature enters, draw a card for each green creature you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rekindled Flame | handled | Rekindled Flame deals 4 damage to any target. At the beginning of your upkeep, if an opponent has no cards in hand, you may return this card from your graveyard | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rendclaw Trow | handled | Persist | machines/keywords.py | Y/-/- | not_tested |
 | Restless Apparition | handled | {W/B}{W/B}{W/B}: This creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -188,6 +182,7 @@
 | Stalker Hag | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Stillmoon Cavalier | handled | {W/B}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Stream Hopper | handled | {U/R}: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sturdy Hatchling | handled | This creature enters with four -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Suture Spirit | handled | {W/B}{W/B}{W/B}: Regenerate target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Talonrend | handled | {U/R}: This creature gets +1/-1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tilling Treefolk | handled | When this creature enters, you may return up to two target land cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -196,6 +191,7 @@
 | Twinblade Slasher | handled | {1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unmake | handled | Exile target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Unnerving Assault | handled | Creatures your opponents control get -1/-0 until end of turn if {U} was spent to cast this spell, and creatures you control get +1/+0 until end of turn if {R} w | the engine reads this text and performs it | Y/-/- | not_tested |
+| Voracious Hatchling | handled | This creature enters with four -1/-1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wake Thrasher | handled | Whenever a permanent you control becomes untapped, this creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wickerbough Elder | handled | This creature enters with a -1/-1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Wilderness Hypnotist | handled | {T}: Target red or green creature gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -205,12 +201,16 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>8 cards</summary>
 
+- Antler Skulkin
+- Belligerent Hatchling
 - Divinity of Pride
+- Figure of Destiny
 - Flickerwisp
 - Merrow Bonegnawer
 - Shorecrasher Mimic
+- Soul Snuffers
 
 </details>
 
@@ -256,20 +256,14 @@
 | target player can"..."t cast creature spells ~ if {M} was spent to cast ~. (do both if {M}{M} was spent.) | 1 | Moonhold | eve |
 | untap all creatures that attacked ~. after ~ phase, there is an additional combat phase followed by an additional main phase. retrace (you may cast ~ from your  | 1 | Waves of Aggression | eve |
 | until end of turn, target creature gains "..." | 1 | Banishing Knack | eve |
-| when ~ enters, draw a card for each green creature you control. | 1 | Regal Force | eve |
 | when ~ enters, if you control two or more swamps, you may have target player discard a card. | 1 | Hag Hedge-Mage | eve |
-| when ~ enters, put a -N/-N counter on each creature. | 1 | Soul Snuffers | eve |
 | when ~ enters, return to your hand the creature card in your graveyard with the greatest power. if two or more cards are tied for greatest power, you choose one | 1 | Desecrator Hag | eve |
 | when ~ enters, search your library for any number of plains cards, exile them, then shuffle. | 1 | Endless Horizons | eve |
 | when ~ enters, you gain N life for each black and/or red permanent target opponent controls. | 1 | Kithkin Zealot | eve |
 | when ~ enters, you may pay {M}. if you do, create N N/N red and white goblin soldier creature tokens. | 1 | Rise of the Hobgoblins | eve |
 | whenever ashling deals combat damage to a player, choose target creature that player controls. the player sacrifices that creature. | 1 | Ashling, the Extinguisher | eve |
-| whenever you cast a black spell, remove a -N/-N counter from ~. | 1 | Noxious Hatchling | eve |
-| whenever you cast a green spell, remove a -N/-N counter from ~. | 1 | Sturdy Hatchling | eve |
-| whenever you cast a red spell, remove a -N/-N counter from ~. | 1 | Belligerent Hatchling | eve |
 | whenever you cast a spell that"..."t be blocked ~. | 1 | Riverfall Mimic | eve |
 | whenever you cast a spell, equipped creature gets +N/+N until end of turn. | 1 | Leering Emblem | eve |
-| whenever you cast a white spell, remove a -N/-N counter from ~. | 1 | Voracious Hatchling | eve |
 | whenever you cast a white spell, ~ loses defender until end of turn. | 1 | Loyal Gyrfalcon | eve |
 | whenever ~ attacks, reveal the top card of your library. if it"..."s toughness, lose life equal to its power, then put it into your hand. | 1 | Sapling of Colfenor | eve |
 | whenever ~ deals combat damage to a player, that player discards that many cards. | 1 | Needle Specter | eve |
@@ -277,8 +271,6 @@
 | {M}: switch ~ power and toughness until end of turn. | 1 | Crag Puca | eve |
 | {M}: target creature can't block ~ ~. | 1 | Shrewd Hatchling | eve |
 | {M}: target permanent becomes blue in addition to its other colors until end of turn. | 1 | Indigo Faerie | eve |
-| {M}: target white creature gains persist until end of turn. | 1 | Antler Skulkin | eve |
-| {M}: ~ becomes a kithkin spirit with base power and toughness N/N. | 1 | Figure of Destiny | eve |
 | {M}{M}, {M}: attacking creatures get +N/+N until end of turn. | 1 | Duergar Mine-Captain | eve |
 | {M}{M}, {M}: double the number of each kind of counter on target permanent. | 1 | Gilder Bairn | eve |
 | {M}{M}: target creature you control becomes the color or colors of your choice until end of turn. | 1 | Swirling Spriggan | eve |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 4.8% |
-| Works (untested) | 56 | 33.9% |
+| Works (untested) | 57 | 34.5% |
 | Partial (unaudited) | 11 | 6.7% |
-| Not working | 90 | 54.5% |
+| Not working | 89 | 53.9% |
 
 ## Cards needing work
 
@@ -58,7 +58,6 @@
 | Hidetsugu's Second Rite | silent | If target player has exactly 10 life, Hidetsugu's Second Rite deals 10 damage to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Homura, Human Ascendant // Homura's Essence | silent | When Homura dies, return it to the battlefield flipped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Iizuka the Ruthless | silent | {2}{R}, Sacrifice a Samurai: Samurai creatures you control gain double strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Iname as One | silent | When Iname as One dies, you may exile it. If you do, return target Spirit permanent card from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Infernal Kirin | silent | Whenever you cast a Spirit or Arcane spell, target player reveals their hand and discards all cards with that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inner Fire | silent | Add {R} for each card in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Inner-Chamber Guard | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -112,10 +111,10 @@
 | Akuta, Born of Ash | notice | At the beginning of your upkeep, if you have more cards in hand than each opponent, you may sacrifice a Swamp. If you do, return Akuta from your graveyard to th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Charge Across the Araba | notice | Sweep — Return any number of Plains you control to their owner's hand. Creatures you control get +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ideas Unbound | notice | Draw three cards. Discard three cards at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Iname as One | notice | When Iname as One enters, if you cast it from your hand, you may search your library for a Spirit permanent card, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Inner Calm, Outer Strength | notice | Target creature gets +X/+X until end of turn, where X is the number of cards in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Miren, the Moaning Well | notice | {3}, {T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Plow Through Reito | notice | Sweep — Return any number of Plains you control to their owner's hand. Target creature gets +1/+1 until end of turn for each Plains returned this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sakashima the Impostor | notice | You may have Sakashima the Impostor enter as a copy of any creature on the battlefield, except its name is Sakashima the Impostor, it's legendary in addition to | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Cowed by Wisdom | unaudited | Enchanted creature can't attack or block unless its controller pays {1} for each card in your hand. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dense Canopy | unaudited | Creatures with flying can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gnat Miser | unaudited | Each opponent's maximum hand size is reduced by one. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -168,6 +167,7 @@
 | Path of Anger's Flame | handled | Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Raving Oni-Slave | handled | When this creature enters or leaves the battlefield, you lose 3 life if you don't control a Demon. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reki, the History of Kamigawa | handled | Whenever you cast a legendary spell, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Sakashima the Impostor | handled | You may have Sakashima the Impostor enter as a copy of any creature on the battlefield, except its name is Sakashima the Impostor, it's legendary in addition to | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sakura-Tribe Scout | handled | {T}: You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Scroll of Origins | handled | {2}, {T}: Draw a card if you have seven or more cards in hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Seek the Horizon | handled | Search your library for up to three basic land cards, reveal them, put them into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -266,7 +266,7 @@
 | when a creature you control dies, sacrifice ~. if you do, create four N/N colorless spirit creature tokens. | 1 | Promise of Bunrei | sok |
 | when homura dies, return it to the battlefield flipped. | 1 | Homura, Human Ascendant // Homura's Essence | sok |
 | when you have N or more life, flip rune-tail. | 1 | Rune-Tail, Kitsune Ascendant // Rune-Tail's Essence | sok |
-| when ~ dies, you may exile it. if you do, return target spirit permanent card from your graveyard to the battlefield. | 1 | Iname as One | sok |
+| when ~ enters, if you cast it from your hand, you may search your library for a spirit permanent card, put it onto the battlefield, then shuffle. | 1 | Iname as One | sok |
 | whenever a land enters, its controller creates a N/N green snake creature token. | 1 | Seed the Land | sok |
 | whenever a spell or ability an opponent controls causes you to discard cards ~, return those cards from your graveyard to your hand. when a spell or ability an  | 1 | Pure Intentions | sok |
 | whenever another card is put into your graveyard from anywhere, target opponent gains control of ~. | 1 | Measure of Wickedness | sok |
@@ -277,7 +277,6 @@
 | whenever you cast a spirit or arcane spell, you may gain life equal to that spell's mana value. | 1 | Bounteous Kirin | sok |
 | whenever you cast a spirit or arcane spell, you may have target player mill N cards, where N is that spell's mana value. | 1 | Cloudhoof Kirin | sok |
 | you gain N life for each card in your hand. | 1 | Presence of the Wise | sok |
-| you may have ~ enter as a copy of any creature on the battlefield, except its name is ~, it"..."s hand at the beginning of the next end step." | 1 | Sakashima the Impostor | sok |
 | your maximum hand size is increased by one. | 1 | Minamo Scrollkeeper | sok |
 | {M}, return a land you control to its owner's hand: target land becomes the basic land type of your choice until end of turn. | 1 | Moonbow Illusionist | sok |
 | {M}, {M}, sacrifice a creature: you gain life equal to the sacrificed creature's toughness. | 1 | Miren, the Moaning Well | sok |

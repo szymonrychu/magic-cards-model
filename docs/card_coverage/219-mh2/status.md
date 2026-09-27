@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 34 | 13.2% |
-| Works (untested) | 121 | 46.9% |
+| Works (untested) | 122 | 47.3% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 91 | 35.3% |
+| Not working | 90 | 34.9% |
 
 ## Cards needing work
 
@@ -43,7 +43,6 @@
 | Break Ties | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Break the Ice | silent | Overload | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Calibrated Blast | silent | Reveal cards from the top of your library until you reveal a nonland card. Put the revealed cards on the bottom of your library in a random order. When you reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Caprichrome | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Captured by Lagacs | silent | When this Aura enters, support 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chainer, Nightmare Adept | silent | Discard a card: You may cast a creature spell from your graveyard this turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chef's Kiss | silent | Gain control of target spell that targets only a single permanent or player. Copy it, then reselect the targets at random for the spell and the copy. The new ta | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -138,6 +137,7 @@
 | Breya's Apprentice | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burdened Aerialist | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cabal Initiate | handled | Discard a card: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Caprichrome | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
 | Captain Ripley Vance | handled | Whenever you cast your third spell each turn, put a +1/+1 counter on Captain Ripley Vance, then it deals damage equal to its power to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chatterstorm | handled | Create a 1/1 green Squirrel creature token. Storm (When you cast this spell, copy it for each spell cast before it this turn.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Clattering Augur | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -314,7 +314,6 @@
 | at the beginning of your upkeep, sacrifice piru unless you pay {M}{M}{M}. | 1 | Piru, the Volatile | mh2 |
 | bushido | 1 | Jade Avenger | mh2 |
 | destroy target creature. a creature destroyed ~ can't be regenerated. overload {M}{M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its t | 1 | Damn | mh2 |
-| devour | 1 | Caprichrome | mh2 |
 | discard a card: switch ~ power and toughness until end of turn. | 1 | Aeromoeba | mh2 |
 | discard a card: you may cast a creature spell from your graveyard ~. activate only once each turn. | 1 | Chainer, Nightmare Adept | mh2 |
 | draw N cards, where N is the number of card types among cards in your graveyard. | 1 | Lucid Dreams | mh2 |

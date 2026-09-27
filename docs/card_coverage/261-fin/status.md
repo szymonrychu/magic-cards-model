@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 28 | 9.2% |
-| Works (untested) | 126 | 41.4% |
+| Works (untested) | 127 | 41.8% |
 | Partial (unaudited) | 17 | 5.6% |
-| Not working | 133 | 43.8% |
+| Not working | 132 | 43.4% |
 
 ## Cards needing work
 
@@ -98,7 +98,6 @@
 | Scorpion Sentinel | silent | As long as you control seven or more lands, this creature gets +3/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Seifer Almasy | silent | Fire Cross — Whenever Seifer Almasy deals combat damage to a player, you may cast target instant or sorcery card with mana value 3 or less from your graveyard w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Self-Destruct | silent | Target creature you control deals X damage to any other target and X damage to itself, where X is its power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Seymour Flux | silent | At the beginning of your upkeep, you may pay 1 life. If you do, draw a card and put a +1/+1 counter on Seymour Flux. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sidequest: Catch a Fish // Cooking Campsite | silent | At the beginning of your upkeep, look at the top card of your library. If it's an artifact or creature card, you may reveal it and put it into your hand. If you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sin, Spira's Punishment | silent | Whenever Sin enters or attacks, exile a permanent card from your graveyard at random, then create a tapped token that's a copy of that card. If the exiled card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sorceress's Schemes | silent | Return target instant or sorcery card from your graveyard or exiled card with flashback you own to your hand. Add {R}. Flashback {4}{R} (You may cast this card  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -108,11 +107,11 @@
 | Summon: Brynhildr | silent | I — Chain — Exile the top card of your library. During any turn you put a lore counter on this Saga, you may play that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Esper Ramuh | silent | I — Judgment Bolt — This creature deals damage equal to the number of noncreature, nonland cards in your graveyard to target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Fenrir | silent | II — Heavenward Howl — When you next cast a creature spell this turn, that creature enters with an additional +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Summon: G.F. Cerberus | silent | II — Double — When you next cast an instant or sorcery spell this turn, copy it. You may choose new targets for the copy. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Summon: G.F. Cerberus | silent | III — Triple — When you next cast an instant or sorcery spell this turn, copy it twice. You may choose new targets for the copies. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summon: Leviathan | silent | I — Return each creature that isn't a Kraken, Leviathan, Merfolk, Octopus, or Serpent to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Summoner's Grimoire | silent | Equipped creature is a Shaman in addition to its other types and has "Whenever this creature attacks, you may put a creature card from your hand onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Swallowed by Leviathan | silent | Choose target spell. Surveil 2, then counter the chosen spell unless its controller pays {1} for each card in your graveyard. (To surveil 2, look at the top two | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Terra, Magical Adept // Esper Terra | silent | When Terra enters, mill five cards. Put up to one enchantment card milled this way into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Terra, Magical Adept // Esper Terra | silent | IV — Add {W}{W}, {U}{U}, {B}{B}, {R}{R}, and {G}{G}. Exile Esper Terra, then return it to the battlefield . | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Emperor of Palamecia // The Lord Master of Hell | silent | Starfall — Whenever The Lord Master of Hell attacks, it deals X damage to each opponent, where X is the number of noncreature, nonland cards in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Final Days | silent | Create two tapped 2/2 black Horror creature tokens. If this spell was cast from a graveyard, instead create X of those tokens, where X is the number of creature | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Gold Saucer | silent | {2}, {T}: Flip a coin. If you win the flip, create a Treasure token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -266,6 +265,7 @@
 | Sandworm | handled | When this creature enters, destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sephiroth's Intervention | handled | Destroy target creature. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sephiroth, Planet's Heir | handled | When Sephiroth enters, creatures your opponents control get -2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Seymour Flux | handled | At the beginning of your upkeep, you may pay 1 life. If you do, draw a card and put a +1/+1 counter on Seymour Flux. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shambling Cie'th | handled | This creature enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sharlayan, Nation of Scholars | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shinra Reinforcements | handled | When this creature enters, mill three cards and you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -369,6 +369,7 @@
 | Wave Cannon | 1 | Omega, Heartless Evolution | fin |
 | N,N needles — whenever ~ attacks, it gets +N/+N until end of turn. | 1 | Jumbo Cactuar | fin |
 | a test of your reflexes! — when ~ enters, you may attach it to target creature you control. if you do, that creature gains first strike until end of turn and mu | 1 | Magitek Scythe | fin |
+| add {M}{M}, {M}{M}, {M}{M}, {M}{M}, and {M}{M}. exile esper terra, then return it to the battlefield . | 1 | Terra, Magical Adept // Esper Terra | fin |
 | artifact creatures and heroes you control get +N/+N for each artificer you control and each artificer card in your graveyard. | 1 | Cid, Timeless Artificer | fin |
 | as an additional cost to cast ~, sacrifice a legendary creature or pay {M}. counter target activated ability, triggered ability, or noncreature spell. | 1 | Louisoix's Sacrifice | fin |
 | as long as cloud is equipped, if a triggered ability of cloud or an equipment attached to it triggers, that ability triggers an additional time. | 1 | Cloud, Midgar Mercenary | fin |
@@ -386,7 +387,6 @@
 | at the beginning of your first main phase, if you both own and control vanille and a creature named fang, fearless l'cie, you may pay {M}{M}{M}. if you do, exil | 1 | Vanille, Cheerful l'Cie | fin |
 | at the beginning of your upkeep, each player exiles the top card of their library. until end of turn, you may play the card you own exiled ~ and each other card | 1 | Triple Triad | fin |
 | at the beginning of your upkeep, look at the top card of your library. if it's an artifact or creature card, you may reveal it and put it into your hand. if you | 1 | Sidequest: Catch a Fish // Cooking Campsite | fin |
-| at the beginning of your upkeep, you may pay N life. if you do, draw a card and put a +N/+N counter on ~. | 1 | Seymour Flux | fin |
 | attacking creatures get +N/+N until end of turn. flashback {M}{M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Auron's Inspiration | fin |
 | chain — exile the top card of your library. during any turn you put a lore counter on ~, you may play that card. | 1 | Summon: Brynhildr | fin |
 | choose target creature you control and target equipment. gain control of that equipment until end of turn. attach it to the chosen creature. when you lose contr | 1 | Stolen Uniform | fin |
@@ -397,7 +397,6 @@
 | damage isn't removed from ~ during cleanup steps. | 1 | Ancient Adamantoise | fin |
 | destroy all artifacts and creatures. end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to the | 1 | Ultima | fin |
 | destroy target creature an opponent controls. then draw a card for each creature that died ~. | 1 | Deadly Embrace | fin |
-| double — when you next cast an instant or sorcery spell ~, copy it. you may choose new targets for the copy. | 1 | Summon: G.F. Cerberus | fin |
 | during your turn, as long as cloud is equipped, it has double strike and indestructible. | 1 | Cloud, Planet's Champion | fin |
 | during your turn, equipped creature has flying. | 1 | Dragoon's Lance | fin |
 | during your turn, yuna and enchantment creatures you control have trample, lifelink, and ward {M}. | 1 | Yuna, Hope of Spira | fin |
@@ -438,9 +437,9 @@
 | tiered (choose one additional cost.) until end of turn, target creature you control gains "..." and has the chosen base power and toughness. • galian beast — {M | 1 | Vincent's Limit Break | fin |
 | tiered (choose one additional cost.) • blizzard — {M} — return target creature to its owner"..."s owner puts it on their choice of the top or bottom of their li | 1 | Ice Magic | fin |
 | triple | 1 | Tifa's Limit Break | fin |
+| triple — when you next cast an instant or sorcery spell ~, copy it twice. you may choose new targets for the copies. | 1 | Summon: G.F. Cerberus | fin |
 | two-headed coin — the first time you flip one or more coins each turn, those coins come up heads and you win those flips. | 1 | Edgar, King of Figaro | fin |
 | vehicles you control get +N/+N and have reach and vigilance. | 1 | Balthier and Fran | fin |
-| when terra enters, mill five cards. put up to one enchantment card milled ~ into your hand. | 1 | Terra, Magical Adept // Esper Terra | fin |
 | when zodiark enters, each player sacrifices half the non-god creatures they control of their choice, rounded down. | 1 | Zodiark, Umbral God | fin |
 | when ~ dies, put N +N/+N counters on each legendary creature you control, where N is the number of +N/+N counters on ~. | 1 | Aerith Gainsborough | fin |
 | when ~ enters, choose one — • destroy target creature that was dealt damage ~. • exile up to two target cards from a single graveyard. | 1 | Qutrub Forayer | fin |

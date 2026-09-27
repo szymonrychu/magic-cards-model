@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 10.1% |
-| Works (untested) | 119 | 46.1% |
+| Works (untested) | 121 | 46.9% |
 | Partial (unaudited) | 9 | 3.5% |
-| Not working | 104 | 40.3% |
+| Not working | 102 | 39.5% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Rockface Village | silent | {R}, {T}: Target Lizard, Mouse, Otter, or Raccoon you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rottenmouth Viper | silent | Whenever this creature enters or attacks, put a blight counter on it. Then for each blight counter on it, each opponent loses 4 life unless that player sacrific | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roughshod Duo | silent | Whenever you expend 4, target creature you control gets +1/+1 and gains trample until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Ruthless Negotiation | silent | Target opponent exiles a card from their hand. If this spell was cast from a graveyard, draw a card. Flashback {4}{B} (You may cast this card from your graveyar | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sazacap's Brew | silent | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Season of Gathering | silent | Choose up to five {P} worth of modes. You may choose the same mode more than once. {P} — Put a +1/+1 counter on a creature you control. It gains vigilance and t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Season of Loss | silent | Choose up to five {P} worth of modes. You may choose the same mode more than once. {P} — Each player sacrifices a creature of their choice. {P}{P} — Draw a card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -121,7 +120,6 @@
 | Kastral, the Windcrested | notice | Whenever one or more Birds you control deal combat damage to a player, choose one — • You may put a Bird creature card from your hand or graveyard onto the batt | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kitnap | notice | When this Aura enters, tap enchanted creature. If the gift wasn't promised, put three stun counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Long River Lurker | notice | When this creature enters, target creature you control can't be blocked this turn. Whenever that creature deals combat damage this turn, you may exile it. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Mabel's Mettle | notice | Target creature gets +2/+2 until end of turn. Up to one other target creature gets +1/+1 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Maha, Its Feathers Night | notice | Creatures your opponents control have base toughness 1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Parting Gust | notice | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Salvation Swan | notice | Whenever this creature or another Bird you control enters, exile up to one target creature you control without flying. Return it to the battlefield under its ow | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -198,6 +196,7 @@
 | Long River's Pull | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Counter target creature spell. If | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lumra, Bellow of the Woods | handled | Lumra's power and toughness are each equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lupinflower Village | handled | {1}{W}, {T}, Sacrifice this land: Look at the top six cards of your library. You may reveal a Bat, Bird, Mouse, or Rabbit card from among them and put it into y | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Mabel's Mettle | handled | Target creature gets +2/+2 until end of turn. Up to one other target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Might of the Meek | handled | Target creature gains trample until end of turn. It also gets +1/+0 until end of turn if you control a Mouse. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mind Spiral | handled | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Moonrise Cleric | handled | Whenever this creature attacks, you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -224,6 +223,7 @@
 | Ravine Raider | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Repel Calamity | handled | Destroy target creature with power or toughness 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rust-Shield Rampager | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ruthless Negotiation | handled | Target opponent exiles a card from their hand. If this spell was cast from a graveyard, draw a card. Flashback {4}{B} (You may cast this card from your graveyar | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Savor | handled | Target creature gets -2/-2 until end of turn. Create a Food token. (It's an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scales of Shale | handled | Affinity for Lizards (This spell costs {1} less to cast for each Lizard you control.) Target creature gets +2/+0 and gains lifelink and indestructible until end | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scrapshooter | handled | When this creature enters, if the gift was promised, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -342,8 +342,6 @@
 | mill four cards. you may put a permanent card from among the cards milled ~ into your hand. if you control a squirrel or returned a squirrel card to your hand ~ | 1 | Cache Grab | blb |
 | other creatures you control enter with an additional +N/+N counter on them for each opponent who lost life ~. | 1 | Gev, Scaled Scorch | blb |
 | tap two untapped tokens you control: ~ becomes an artifact creature until end of turn. | 1 | Tangle Tumbler | blb |
-| target creature gets +N/+N until end of turn. up to one other target creature gets +N/+N until end of turn. | 1 | Mabel's Mettle | blb |
-| target opponent exiles a card from their hand. if ~ was cast from a graveyard, draw a card. flashback {M}{M} (you may cast ~ from your graveyard for its flashba | 1 | Ruthless Negotiation | blb |
 | when mabel enters, create cragflame, a legendary colorless equipment artifact token with "..." and equip {M}. | 1 | Mabel, Heir to Cragflame | blb |
 | when ~ enters and whenever you expend N, put a stash counter on it. | 1 | Hoarder's Overflow | blb |
 | when ~ enters, choose target creature. if that creature's power is N or less or if you control another lizard, gain control of that creature until end of turn,  | 1 | Reptilian Recruiter | blb |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.2% |
+| Tested | 22 | 8.6% |
 | Works (untested) | 123 | 48.2% |
 | Partial (unaudited) | 21 | 8.2% |
-| Not working | 90 | 35.3% |
+| Not working | 89 | 34.9% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Fireblade Charger | silent | As long as this creature is equipped, it has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forsaken Monument | silent | Colorless creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Grasp | silent | Tap target creature. Its controller mills two cards. That creature doesn't untap during its controller's next untap step. (They put the top two cards of their l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Glasspool Mimic // Glasspool Shore | silent | You may have this creature enter as a copy of a creature you control, except it's a Shapeshifter Rogue in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goma Fada Vanguard | silent | Whenever this creature attacks, target creature an opponent controls with power less than or equal to the number of Warriors you control can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grotag Bug-Catcher | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each creature in your party. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Mirror Mage | silent | When Jace enters, if Jace was kicked, create a token that's a copy of Jace, except it's not legendary and its starting loyalty is 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -137,7 +136,6 @@
 | Tazri, Beacon of Unity | unaudited | This spell costs {1} less to cast for each creature in your party. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Veteran Adventurer | unaudited | Veteran Adventurer is also a Cleric, Rogue, Warrior, and Wizard. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vine Gecko | unaudited | The first kicked spell you cast each turn costs {1} less to cast. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Akoum Hellhound | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Akoum Warrior // Akoum Teeth | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Angelheart Protector | handled | When this creature enters, target creature you control gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Archon of Emeria | handled | Each player can't cast more than one spell each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -175,6 +173,7 @@
 | Feed the Swarm | handled | Destroy target creature or enchantment an opponent controls. You lose life equal to that permanent's mana value. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Field Research | handled | Kicker {2}{U} (You may pay an additional {2}{U} as you cast this spell.) Draw two cards. If this spell was kicked, draw three cards instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fissure Wizard | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Glasspool Mimic // Glasspool Shore | handled | You may have this creature enter as a copy of a creature you control, except it's a Shapeshifter Rogue in addition to its other types. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grakmaw, Skyclave Ravager | handled | Grakmaw enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grotag Night-Runner | handled | Whenever this creature deals combat damage to a player, exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guul Draz Mucklord | handled | When this creature dies, put a +1/+1 counter on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -264,8 +263,9 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
+- Akoum Hellhound
 - Ancient Greenwarden
 - Beyeen Veil // Beyeen Coast
 - Cleansing Wildfire
@@ -378,7 +378,6 @@
 | whenever ~ attacks, target creature an opponent controls with power less than or equal to the number of warriors you control can't block ~. | 1 | Goma Fada Vanguard | znr |
 | whenever ~ deals combat damage to a player, that player creates a N/N colorless goblin construct artifact creature token with "..." and "..." | 1 | Relic Robber | znr |
 | you don't lose unspent red mana as steps and phases end. | 1 | Leyline Tyrant | znr |
-| you may have ~ enter as a copy of a creature you control, except it's a shapeshifter rogue in addition to its other types. | 1 | Glasspool Mimic // Glasspool Shore | znr |
 | {M}, {M}: copy target permanent spell you control. | 1 | Lithoform Engine | znr |
 | {M}: put two +N/+N counters on ~. then you may have it become a N/N elemental creature until end of turn. it's still a land. | 1 | Crawling Barrens | znr |
 | {M}: the next instant or sorcery spell you cast ~ costs {M} less to cast, where N is the number of wizards you control as ~ resolves. | 1 | Kaza, Roil Chaser | znr |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 11.7% |
-| Works (untested) | 75 | 46.3% |
+| Works (untested) | 76 | 46.9% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 57 | 35.2% |
+| Not working | 56 | 34.6% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Chancellor of the Tangle | notice | You may reveal this card from your opening hand. If you do, at the beginning of your first main phase of the game, add {G}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Dispatch | notice | Tap target creature. Metalcraft — If you control three or more artifacts, exile that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ichor Explosion | notice | As an additional cost to cast this spell, sacrifice a creature. All creatures get -X/-X until end of turn, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Impaler Shrike | notice | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, draw three cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mycosynth Fiend | notice | This creature gets +1/+1 for each poison counter your opponents have. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Phyrexian Ingester | notice | This creature gets +X/+Y, where X is the exiled creature card's power and Y is its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Viridian Betrayers | notice | This creature has infect as long as an opponent is poisoned. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -120,6 +119,7 @@
 | Gut Shot | handled | ({R/P} can be paid with either {R} or 2 life.) Gut Shot deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hovermyr | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Immolating Souleater | handled | {R/P}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Impaler Shrike | handled | Whenever this creature deals combat damage to a player, you may sacrifice it. If you do, draw three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inquisitor Exarch | handled | When this creature enters, choose one — • You gain 2 life. • Target opponent loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Insatiable Souleater | handled | {G/P}: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Invader Parasite | handled | Imprint — When this creature enters, exile target land. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -245,7 +245,6 @@
 | whenever an opponent casts a spell, counter it unless that player pays {M}. | 1 | Chancellor of the Annex | nph |
 | whenever an opponent shuffles their library, you may look at the top two cards of that library. you may exile one of those cards. then put the rest on top of th | 1 | Psychic Surgery | nph |
 | whenever equipped creature deals combat damage to a player, ~ deals damage to that player equal to the number of cards in their hand and you gain N life for eac | 1 | Sword of War and Peace | nph |
-| whenever ~ deals combat damage to a player, you may sacrifice it. if you do, draw three cards. | 1 | Impaler Shrike | nph |
 | whenever ~ deals combat damage to a player, you may sacrifice it. if you do, that player discards a card for each poison counter they have. | 1 | Whispering Specter | nph |
 | you can't get poison counters. | 1 | Melira, Sylvok Outcast | nph |
 | you don't lose the game for having N or less life. | 1 | Phyrexian Unlife | nph |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 18 | 6.4% |
-| Works (untested) | 120 | 42.4% |
+| Works (untested) | 121 | 42.8% |
 | Partial (unaudited) | 13 | 4.6% |
-| Not working | 132 | 46.6% |
+| Not working | 131 | 46.3% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Honden of Night's Reach | silent | At the beginning of your upkeep, target opponent discards a card for each Shrine you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Horobi, Death's Wail | silent | Whenever a creature becomes the target of a spell or ability, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hundred-Talon Kami | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Iname, Life Aspect | silent | When Iname dies, you may exile it. If you do, return any number of target Spirit cards from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Initiate of Blood // Goka the Unjust | silent | {T}: This creature deals 1 damage to target creature that was dealt damage this turn. When that creature dies this turn, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jushi Apprentice // Tomoya the Revealer | silent | {2}{U}, {T}: Draw a card. If you have nine or more cards in hand, flip this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kami of Lunacy | silent | Soulshift | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -212,6 +211,7 @@
 | Honor-Worn Shaku | handled | Tap an untapped legendary permanent you control: Untap this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Horizon Seed | handled | Whenever you cast a Spirit or Arcane spell, regenerate target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Humble Budoka | handled | Shroud | models/game.py (Game.shroud_refusal), machines/targeting.py (TargetingProfile._check_shroud, CR 702.18a) | Y/-/- | not_tested |
+| Iname, Life Aspect | handled | When Iname dies, you may exile it. If you do, return any number of target Spirit cards from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Indomitable Will | handled | Enchanted creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Innocence Kami | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Jade Idol | handled | Whenever you cast a Spirit or Arcane spell, this artifact becomes a 4/4 Spirit artifact creature until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -382,7 +382,6 @@
 | untap target nonlegendary creature and gain control of it until end of turn. that creature gains haste until end of turn. | 1 | Blind with Anger | chk |
 | up to three target creatures can't block ~. | 1 | Unearthly Blizzard | chk |
 | when a creature dealt damage by ~ ~ dies, flip ~. | 1 | Bushi Tenderfoot // Kenzo the Hardhearted | chk |
-| when iname dies, you may exile it. if you do, return any number of target spirit cards from your graveyard to your hand. | 1 | Iname, Life Aspect | chk |
 | when keiga dies, gain control of target creature. | 1 | Keiga, the Tide Star | chk |
 | when kokusho dies, each opponent loses N life. you gain life equal to the life lost ~. | 1 | Kokusho, the Evening Star | chk |
 | when yosei dies, target player skips their next untap step. tap up to five target permanents that player controls. | 1 | Yosei, the Morning Star | chk |

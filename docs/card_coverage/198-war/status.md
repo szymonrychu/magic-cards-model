@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.4% |
-| Works (untested) | 138 | 56.6% |
+| Tested | 19 | 7.8% |
+| Works (untested) | 140 | 57.4% |
 | Partial (unaudited) | 17 | 7.0% |
-| Not working | 71 | 29.1% |
+| Not working | 68 | 27.9% |
 
 ## Cards needing work
 
@@ -72,7 +72,6 @@
 | Price of Betrayal | silent | Remove up to five counters from target artifact, creature, planeswalker, or opponent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ravnica at War | silent | Exile all multicolored permanents. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Roalesk, Apex Hybrid | silent | When Roalesk dies, proliferate, then proliferate again. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Rubblebelt Rioters | silent | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the greatest power among creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Saheeli's Silverwing | silent | When this creature enters, look at the top card of target opponent's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan the Masterless | silent | Whenever a creature attacks you or a planeswalker you control, each Dragon you control deals 1 damage to that creature. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
 | Single Combat | silent | Each player chooses a creature or planeswalker they control, then sacrifices the rest. Players can't cast creature or planeswalker spells until the end of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -89,10 +88,8 @@
 | Widespread Brutality | silent | Amass Zombies 2, then the Army you amassed deals damage equal to its power to each non-Army creature. (To amass Zombies 2, put two +1/+1 counters on an Army you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Awakening of Vitu-Ghazi | notice | Put nine +1/+1 counters on target land you control. It becomes a legendary 0/0 Elemental creature with haste named Vitu-Ghazi. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bond of Passion | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Bond of Passion deals 2 damage to any other target. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Feather, the Redeemed | notice | Whenever you cast an instant or sorcery spell that targets a creature you control, exile that card instead of putting it into your graveyard as it resolves. If  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Gideon's Battle Cry | notice | Put a +1/+1 counter on each creature you control. You may search your library and/or graveyard for a card named Gideon, the Oathsworn, reveal it, and put it int | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kasmina, Enigmatic Mentor | notice | Spells your opponents cast that target a creature or planeswalker you control cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Paradise Druid | notice | This creature has hexproof as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Planewide Celebration | notice | Choose four. You may choose the same mode more than once. • Create a 2/2 Citizen creature token that's all colors. • Return target permanent card from your grav | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spark Double | notice | You may have this creature enter as a copy of a creature or planeswalker you control, except it enters with an additional +1/+1 counter on it if it's a creature | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Teferi's Time Twist | notice | Exile target permanent you control. Return that card to the battlefield under its owner's control at the beginning of the next end step. If it enters as a creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -204,6 +201,7 @@
 | No Escape | handled | Counter target creature or planeswalker spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ob Nixilis's Cruelty | handled | Target creature gets -5/-5 until end of turn. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ob Nixilis, the Hate-Twisted | handled | Whenever an opponent draws a card, Ob Nixilis deals 1 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Paradise Druid | handled | This creature has hexproof as long as it's untapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pledge of Unity | handled | Put a +1/+1 counter on each creature you control. You gain 1 life for each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pollenbright Druid | handled | When this creature enters, choose one — • Put a +1/+1 counter on target creature. • Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pouncing Lynx | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -216,6 +214,7 @@
 | Return to Nature | handled | Choose one — • Destroy target artifact. • Destroy target enchantment. • Exile target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rising Populace | handled | Whenever another creature or planeswalker you control dies, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Role Reversal | handled | Exchange control of two target permanents that share a permanent type. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rubblebelt Rioters | handled | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the greatest power among creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Samut's Sprint | handled | Target creature gets +2/+1 and gains haste until end of turn. Scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Samut, Tyrant Smasher | handled | Creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sarkhan's Catharsis | handled | Sarkhan's Catharsis deals 5 damage to target player or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -256,13 +255,14 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Arboreal Grazer
 - Ashiok, Dream Render
 - Bolt Bend
 - Commence the Endgame
 - Devouring Hellion
+- Feather, the Redeemed
 - Ilharg, the Raze-Boar
 - Karn, the Great Creator
 - Kronch Wrangler
@@ -344,8 +344,6 @@
 | whenever storrev deals combat damage to a player or planeswalker, return to your hand target creature or planeswalker card in your graveyard that wasn't put the | 1 | Storrev, Devkarin Lich | war |
 | whenever you attack with two or more non-gideon creatures, put a +N/+N counter on each of those creatures. | 1 | Gideon, the Oathsworn | war |
 | whenever you cast a noncreature spell, ~ becomes an artifact creature and gets +N/+N until end of turn. | 1 | Mizzium Tank | war |
-| whenever you cast an instant or sorcery spell that targets a creature you control, exile that card instead of putting it into your graveyard as it resolves. if  | 1 | Feather, the Redeemed | war |
-| whenever ~ attacks, it gets +N/+N until end of turn, where N is the greatest power among creatures you control. | 1 | Rubblebelt Rioters | war |
 | whenever ~ attacks, you may cast target instant or sorcery card with mana value less than or equal to ~ power from your graveyard without paying its mana cost.  | 1 | Dreadhorde Arcanist | war |
 | you may cast up to one target instant card and/or up to one target sorcery card from your graveyard each with mana value N or less without paying their mana cos | 1 | Finale of Promise | war |
 | you may have ~ enter as a copy of a creature or planeswalker you control, except it enters with an additional +N/+N counter on it if it"..."s a planeswalker, an | 1 | Spark Double | war |
@@ -366,7 +364,6 @@
 | ~ can't attack alone. | 1 | Raging Kronch | war |
 | ~ deals N damage to target creature and you gain life equal to the damage dealt ~. target player mills four cards. amass zombies N. (put four +N/+N counters on  | 1 | Enter the God-Eternals | war |
 | ~ enters with a +N/+N counter on it for each loyalty counter on planeswalkers you control. | 1 | Bioessence Hydra | war |
-| ~ has hexproof as long as it's untapped. | 1 | Paradise Druid | war |
 | −N: creatures you control can't be blocked ~. | 1 | Jace, Arcane Strategist | war |
 | −N: each opponent chooses a permanent they control of each permanent type and sacrifices the rest. | 1 | Liliana, Dreadhorde General | war |
 | −N: put a +N/+N counter on each creature you control and a loyalty counter on each other planeswalker you control. | 1 | Ajani, the Greathearted | war |

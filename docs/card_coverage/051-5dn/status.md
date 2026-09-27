@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 11 | 6.8% |
 | Works (untested) | 94 | 58.0% |
-| Partial (unaudited) | 17 | 10.5% |
-| Not working | 40 | 24.7% |
+| Partial (unaudited) | 18 | 11.1% |
+| Not working | 39 | 24.1% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Beacon of Immortality | silent | Double target player's life total. Shuffle Beacon of Immortality into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Beacon of Tomorrows | silent | Target player takes an extra turn after this one. Shuffle Beacon of Tomorrows into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blinkmoth Infusion | silent | Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.) Untap all artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bringer of the Black Dawn | silent | At the beginning of your upkeep, you may pay 2 life. If you do, search your library for a card, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cosmic Larva | silent | At the beginning of your upkeep, sacrifice this creature unless you sacrifice two lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Desecration Elemental | silent | Whenever a player casts a spell, sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Door to Nothingness | silent | {W}{W}{U}{U}{B}{B}{R}{R}{G}{G}, {T}, Sacrifice this artifact: Target player loses the game. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -66,6 +65,7 @@
 | Spectral Shift | notice | Choose one — • Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.) •  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Tangle Asp | notice | Whenever this creature blocks or becomes blocked by a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vicious Betrayal | notice | As an additional cost to cast this spell, sacrifice any number of creatures. Target creature gets +2/+2 until end of turn for each creature sacrificed this way. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Bringer of the Black Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bringer of the Blue Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bringer of the Green Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bringer of the Red Dawn | unaudited | You may pay {W}{U}{B}{R}{G} rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -201,7 +201,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| you may pay {M}{M}{M}{M}{M} rather than pay ~ mana cost. | 4 | Bringer of the Blue Dawn, Bringer of the Green Dawn, Bringer of the Red Dawn, Bringer of the White Dawn | 5dn |
+| you may pay {M}{M}{M}{M}{M} rather than pay ~ mana cost. | 5 | Bringer of the Black Dawn, Bringer of the Blue Dawn, Bringer of the Green Dawn, Bringer of the Red Dawn, Bringer of the White Dawn | 5dn |
 | Choose one | 3 | Plunge into Darkness, Rude Awakening, Spectral Shift | 5dn |
 | Imprint | 1 | Summoner's Egg | 5dn |
 | a deck can have any number of cards named ~. | 1 | Relentless Rats | 5dn |
@@ -214,7 +214,6 @@
 | at the beginning of each opponent's upkeep, ~ deals N damage to that player unless they have exactly three or exactly four cards in hand. | 1 | Skullcage | 5dn |
 | at the beginning of your upkeep, if ~ is on the battlefield, each player returns all cards named ~ from their graveyard to the battlefield. | 1 | Myr Servitor | 5dn |
 | at the beginning of your upkeep, sacrifice ~ unless you sacrifice two lands. | 1 | Cosmic Larva | 5dn |
-| at the beginning of your upkeep, you may pay N life. if you do, search your library for a card, then shuffle and put that card on top. | 1 | Bringer of the Black Dawn | 5dn |
 | attach target equipment to target creature. (control of the equipment doesn't change.) | 1 | Magnetic Theft | 5dn |
 | counter target spell. if that spell is countered ~, its controller may put a creature card from their hand onto the battlefield. | 1 | Fold into Aether | 5dn |
 | destroy all creatures that dealt damage to you ~. | 1 | Retaliate | 5dn |

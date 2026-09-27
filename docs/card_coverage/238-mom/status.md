@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 7.0% |
-| Works (untested) | 111 | 40.8% |
+| Works (untested) | 114 | 41.9% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 132 | 48.5% |
+| Not working | 129 | 47.4% |
 
 ## Cards needing work
 
@@ -61,7 +61,6 @@
 | Glissa, Herald of Predation | silent | Incubate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Glistening Dawn | silent | Incubate X twice, where X is the number of lands you control. (To incubate X, create an Incubator token with X +1/+1 counters on it and "{2}: Transform this tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gloomfang Mauler | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Gnottvold Hermit // Chrome Host Hulk | silent | Whenever this creature attacks, up to one other target creature has base power and toughness 5/5 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Golden-Scale Aeronaut | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Halo-Charged Skaab | silent | When this creature enters, each player mills two cards. Then you may put an instant, sorcery, or battle card from your graveyard on top of your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hangar Scrounger | silent | Backup | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -82,7 +81,6 @@
 | Invasion of Pyrulea // Gargantuan Slabhorn | silent | When this Siege enters, scry 3, then reveal the top card of your library. If it's a land or double-faced card, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasion of Ravnica // Guildpact Paragon | silent | Whenever you cast a spell that's exactly two colors, look at the top six cards of your library. You may reveal a card that's exactly two colors from among them  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasion of Theros // Ephara, Ever-Sheltering | silent | Ephara has lifelink and indestructible as long as you control at least three other enchantments. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Invasion of Ulgrotha // Grandmother Ravi Sengir | silent | When this Siege enters, it deals 3 damage to any other target and you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasion of Xerex // Vertex Paladin | silent | Vertex Paladin's power and toughness are each equal to the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Invasion of Zendikar // Awakened Skyclave | silent | As long as this creature is on the battlefield, it's a land in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jin-Gitaxias // The Great Synthesis | silent | I — Draw cards equal to the number of cards in your hand. You have no maximum hand size for as long as you control this Saga. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -142,7 +140,6 @@
 | Into the Fire | notice | Choose one — • Into the Fire deals 2 damage to each creature, planeswalker, and battle. • Put any number of cards from your hand on the bottom of your library,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Invasion of Amonkhet // Lazotep Convert | notice | You may have this creature enter as a copy of any creature card in a graveyard, except it's a 4/4 black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Invasion of Innistrad // Deluge of the Dead | notice | {2}{B}: Exile target card from a graveyard. If it was a creature card, create a 2/2 black Zombie creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Invasion of Muraganda // Primordial Plasm | notice | At the beginning of combat on your turn, another target creature gets +2/+2 and loses all abilities until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Invasion of Tarkir // Defiant Thundermaw | notice | When this Siege enters, reveal any number of Dragon cards from your hand. When you do, this Siege deals X plus 2 damage to any other target, where X is the numb | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Joyful Stormsculptor | notice | Whenever you cast a spell that has convoke, this creature deals 1 damage to each opponent and each battle they protect. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kroxa and Kunoros | notice | Whenever Kroxa and Kunoros enters or attacks, you may exile five cards from your graveyard. When you do, return target creature card from your graveyard to the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -203,6 +200,7 @@
 | Final Flourish | handled | Kicker—Sacrifice an artifact or creature. (You may sacrifice an artifact or creature in addition to any other costs as you cast this spell.) Target creature get | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Furnace Host Charger | handled | Mountaincycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Furtive Analyst | handled | {2}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gnottvold Hermit // Chrome Host Hulk | handled | {5}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grafted Butcher | handled | When this creature enters, Phyrexians you control gain menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guardian of Ghirapur | handled | When this creature enters, exile up to one other target creature or artifact you control. Return it to the battlefield under its owner's control at the beginnin | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Halo Hopper | handled | Convoke | machines/keywords.py | Y/Y/- | not_tested |
@@ -219,8 +217,10 @@
 | Invasion of Karsus // Refraction Elemental | handled | When this Siege enters, it deals 3 damage to each creature and each planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invasion of Mercadia // Kyren Flamewright | handled | When this Siege enters, you may discard a card. If you do, draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invasion of Moag // Bloomwielder Dryads | handled | When this Siege enters, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Invasion of Muraganda // Primordial Plasm | handled | When this Siege enters, put a +1/+1 counter on target creature you control. Then that creature fights up to one target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invasion of Shandalar // Leyline Surge | handled | When this Siege enters, return up to three target permanent cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invasion of Tolvada // The Broken Sky | handled | When this Siege enters, return target nonbattle permanent card from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Invasion of Ulgrotha // Grandmother Ravi Sengir | handled | When this Siege enters, it deals 3 damage to any other target and you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Invasion of Vryn // Overloaded Mage-Ring | handled | When this Siege enters, draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Iridescent Blademaster | handled | {3}{G}: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Khenra Spellspear // Gitaxian Spellstalker | handled | {3}{U/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -325,7 +325,6 @@
 | as long as you have one or fewer cards in hand, ~ has vigilance and haste. | 1 | Djeru and Hazoret | mom |
 | as long as ~ is on the battlefield, it's a land in addition to its other types. | 1 | Invasion of Zendikar // Awakened Skyclave | mom |
 | as long as ~ power is N or greater, it can attack as though it didn't have defender. | 1 | Karsus Depthguard | mom |
-| at the beginning of combat on your turn, another target creature gets +N/+N and loses all abilities until end of turn. | 1 | Invasion of Muraganda // Primordial Plasm | mom |
 | at the beginning of your first main phase, look at the top card of your library. you may reveal that card if it has three or more colored mana symbols in its ma | 1 | Omnath, Locus of All | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) tap up to two target creature | 1 | Wicked Slumber | mom |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature's color.) you may cast sorcery spells ~ | 1 | Complete the Circuit | mom |
@@ -367,7 +366,6 @@
 | when ~ enters, exile all cards from your hand, then draw that many cards. until the end of your next turn, you may play cards exiled ~. | 1 | Invasion of Kaldheim // Pyre of the World Tree | mom |
 | when ~ enters, exile cards from the top of your library until you exile two nonland cards with mana value N or less. you may cast one of those two cards without | 1 | Invasion of Alara // Awaken the Maelstrom | mom |
 | when ~ enters, incubate N N times. | 1 | Progenitor Exarch | mom |
-| when ~ enters, it deals N damage to any other target and you gain N life. | 1 | Invasion of Ulgrotha // Grandmother Ravi Sengir | mom |
 | when ~ enters, look at target opponent's hand. you may exile a nonland card from it. for as long as that card remains exiled, its owner may play it. a spell cas | 1 | Invasion of Gobakhan // Lightshield Array | mom |
 | when ~ enters, look at the top five cards of your library. you may reveal a land or double-faced card from among them and put that card into your hand. put the  | 1 | Overgrown Pest | mom |
 | when ~ enters, look at the top six cards of your library. you may reveal up to two creature cards with mana value N or less from among them, where N is the numb | 1 | Knight-Errant of Eos | mom |
@@ -395,7 +393,6 @@
 | whenever ~ attacks a battle, double its power until end of turn. | 1 | War-Trained Slasher | mom |
 | whenever ~ attacks, create a tapped and attacking token that's a copy of it. put a +N/+N counter on that token for each +N/+N counter on ~. sacrifice that token | 1 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | mom |
 | whenever ~ attacks, sacrifice a creature or land, then draw a card. | 1 | Thalia and The Gitrog Monster | mom |
-| whenever ~ attacks, up to one other target creature has base power and toughness N/N until end of turn. | 1 | Gnottvold Hermit // Chrome Host Hulk | mom |
 | whenever ~ attacks, you may pay {M}{M}. when you do, return target creature card from your graveyard to the battlefield. it's a phyrexian in addition to its oth | 1 | Terror of Towashi | mom |
 | whenever ~ deals combat damage to a player or battle, choose any number — • each player creates a treasure token. • each player sacrifices a creature of their c | 1 | Rankle and Torbran | mom |
 | whenever ~ deals combat damage to a player or battle, look at that many cards from the top of your library. you may reveal a creature or land card from among th | 1 | Doomskar Warrior | mom |

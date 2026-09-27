@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 29 | 10.8% |
-| Works (untested) | 134 | 49.8% |
+| Tested | 30 | 11.2% |
+| Works (untested) | 135 | 50.2% |
 | Partial (unaudited) | 25 | 9.3% |
-| Not working | 81 | 30.1% |
+| Not working | 79 | 29.4% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Belle of the Brawl | silent | Whenever this creature attacks, other Knights you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blacklance Paragon | silent | When this creature enters, target Knight gains deathtouch and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blow Your House Down | silent | Up to three target creatures can't block this turn. Destroy any of them that are Walls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Burning-Yard Trainer | silent | When this creature enters, another target Knight you control gets +2/+2 and gains trample and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cauldron's Gift | silent | Adamant — If at least three black mana was spent to cast this spell, mill four cards. You may choose a creature card in your graveyard. If you do, return it to  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chittering Witch | silent | When this creature enters, create a number of 1/1 black Rat creature tokens equal to the number of opponents you have. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clackbridge Troll | silent | At the beginning of combat on your turn, any opponent may sacrifice a creature of their choice. If a player does, tap this creature, you gain 3 life, and you dr | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -46,7 +45,6 @@
 | Fabled Passage | silent | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, u | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Faeburrow Elder | silent | {T}: For each color among permanents you control, add one mana of that color. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ferocity of the Wilds | silent | Attacking non-Human creatures you control get +1/+0 and have trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Fervent Champion | silent | Whenever this creature attacks, another target attacking Knight you control gets +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Folio of Fancies | silent | {2}{U}, {T}: Each opponent mills cards equal to the number of cards in their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Foreboding Fruit | silent | Target player draws two cards and loses 2 life. Adamant — If at least three black mana was spent to cast this spell, create a Food token. (It's an artifact with | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gingerbrute | silent | {1}: This creature can't be blocked this turn except by creatures with haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -60,7 +58,7 @@
 | Memory Theft | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. You may put a card that has an Adventure that player owns | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Midnight Clock | silent | When the twelfth hour counter is put on this artifact, shuffle your hand and graveyard into your library, then draw seven cards. Exile this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mirrormade | silent | You may have this enchantment enter as a copy of any artifact or enchantment on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Oko, Thief of Crowns | silent | +1: Target artifact or creature loses all abilities and becomes a green Elk creature with base power and toughness 3/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Oko, Thief of Crowns | silent | −5: Exchange control of target artifact or creature you control and target creature an opponent controls with power 3 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Once Upon a Time | silent | If this spell is the first spell you've cast this game, you may cast it without paying its mana cost. Look at the top five cards of your library. You may reveal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Once and Future | silent | Return target card from your graveyard to your hand. Put up to one other target card from your graveyard on top of your library. Exile Once and Future. Adamant  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Opportunistic Dragon | silent | When this creature enters, choose target Human or artifact an opponent controls. For as long as this creature remains on the battlefield, gain control of that p | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -145,6 +143,7 @@
 | Bog Naughty | handled | {2}{B}, Sacrifice a Food: Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bramblefort Fink | handled | {8}: This creature has base power and toughness 10/10 until end of turn. Activate only if you control an Oko planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brimstone Trebuchet | handled | {T}: This creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Burning-Yard Trainer | handled | When this creature enters, another target Knight you control gets +2/+2 and gains trample and haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Embereth | handled | This land enters tapped unless you control a Mountain. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Garenbrig | handled | This land enters tapped unless you control a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Locthwain | handled | This land enters tapped unless you control a Swamp. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -270,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>29 cards</summary>
+<summary>30 cards</summary>
 
 - Bartered Cow
 - Bonecrusher Giant // Stomp
@@ -285,6 +284,7 @@
 - Emry, Lurker of the Loch
 - Fae of Wishes // Granted
 - Faerie Vandal
+- Fervent Champion
 - Flutterfox
 - Foulmire Knight // Profane Insight
 - Gilded Goose
@@ -310,7 +310,6 @@
 |---|---|---|---|
 | Adamant | 7 | Ardenvale Paladin, Cauldron's Gift, Embereth Paladin, Garenbrig Paladin, Henge Walker | eld |
 | Choose one | 1 | Return of the Wildspeaker | eld |
-| +N: target artifact or creature loses all abilities and becomes a green elk creature with base power and toughness N/N. | 1 | Oko, Thief of Crowns | eld |
 | N: until end of turn, oko becomes a copy of target creature you control. prevent all damage that would be dealt to him ~. | 1 | Oko, the Trickster | eld |
 | a deck can have up to seven cards named ~. | 1 | Seven Dwarves | eld |
 | add one mana of any color. (then exile ~. you may cast the creature later from exile.) | 1 | Rosethorn Acolyte // Seasonal Ritual | eld |
@@ -359,7 +358,6 @@
 | up to three target creatures can't block ~. destroy any of them that are walls. | 1 | Blow Your House Down | eld |
 | when the twelfth hour counter is put on ~, shuffle your hand and graveyard into your library, then draw seven cards. exile ~. | 1 | Midnight Clock | eld |
 | when you cast ~ from your hand, copy it if you control an artifact, then copy it if you control an enchantment. you may choose new targets for the copies. retur | 1 | Banish into Fable | eld |
-| when ~ enters, another target knight you control gets +N/+N and gains trample and haste until end of turn. | 1 | Burning-Yard Trainer | eld |
 | when ~ enters, choose one — • scry N. • you gain N life. • exile another target creature you own. return it to the battlefield under your control at the beginni | 1 | Charming Prince | eld |
 | when ~ enters, choose target human or artifact an opponent controls. for as long as ~ remains on the battlefield, gain control of that permanent, it loses all a | 1 | Opportunistic Dragon | eld |
 | when ~ enters, create a number of N/N black rat creature tokens equal to the number of opponents you have. | 1 | Chittering Witch | eld |
@@ -373,7 +371,6 @@
 | whenever another non-human creature you control enters, you may pay {M}. when you do, put N +N/+N counters on ~. | 1 | Wildborn Preserver | eld |
 | whenever korvold enters or attacks, sacrifice another permanent. | 1 | Korvold, Fae-Cursed King | eld |
 | whenever rankle deals combat damage to a player, choose any number — • each player discards a card. • each player loses N life and draws a card. • each player s | 1 | Rankle, Master of Pranks | eld |
-| whenever ~ attacks, another target attacking knight you control gets +N/+N until end of turn. | 1 | Fervent Champion | eld |
 | whenever ~ attacks, create a number of N/N white knight creature tokens with vigilance equal to the number of opponents you have. | 1 | Silverwing Squadron | eld |
 | whenever ~ attacks, if defending player has more cards in hand than you, exile the top card of their library. during any turn you attacked with a rogue, you may | 1 | Robber of the Rich | eld |
 | whenever ~ attacks, other knights you control get +N/+N until end of turn. | 1 | Belle of the Brawl | eld |
@@ -407,6 +404,7 @@
 | ~ deals N damage to target creature. adamant — if at least three red mana was spent to cast ~, ~ deals N damage to that creature's controller. | 1 | Searing Barrage | eld |
 | ~'s power is equal to the number of artifacts and/or enchantments you control. | 1 | Shambling Suit | eld |
 | ~'s toughness is equal to the number of knights you control. | 1 | Wintermoor Commander | eld |
+| −N: exchange control of target artifact or creature you control and target creature an opponent controls with power N or less. | 1 | Oko, Thief of Crowns | eld |
 | −N: rowan deals N damage to each of up to two target creatures. those creatures can't block ~. | 1 | Rowan, Fearless Sparkmage | eld |
 
 ## Notes

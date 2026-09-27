@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.1% |
-| Works (untested) | 129 | 51.0% |
+| Tested | 20 | 7.9% |
+| Works (untested) | 131 | 51.8% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 94 | 37.2% |
+| Not working | 90 | 35.6% |
 
 ## Cards needing work
 
@@ -86,7 +86,6 @@
 | Riveteers Requisitioner | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Rogues' Gallery | silent | For each color, return up to one target creature card of that color from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rumor Gatherer | silent | Alliance — Whenever another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, draw a card instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Sanguine Spy | silent | At the beginning of your end step, if there are five or more mana values among cards in your graveyard, you may pay 2 life. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Security Bypass | silent | Connive | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shakedown Heavy | silent | Whenever this creature attacks, defending player may have you draw a card. If they do, untap this creature and remove it from combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Snooping Newsie | silent | As long as there are five or more mana values among cards in your graveyard, this creature gets +1/+1 and has lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -98,9 +97,7 @@
 | Toluz, Clever Conductor | silent | Whenever you discard one or more cards, exile them from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unlicensed Hearse | silent | {T}: Exile up to two target cards from a single graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vampire Scrivener | silent | Whenever you lose life during your turn, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Vivien on the Hunt | silent | +1: Mill five cards, then put any number of creature cards milled this way into your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Widespread Thieving | silent | Whenever you cast a multicolored spell, create a Treasure token. Then you may pay {W}{U}{B}{R}{G}. If you do, you may play the exiled card without paying its ma | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Wingshield Agent | silent | Whenever this creature attacks, up to one other target creature gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wiretapping | silent | Whenever you draw your first card during each of your draw steps, draw a card. Then if you have nine or more cards in hand, you may play the exiled card without | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Workshop Warchief | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Ziatora's Envoy | silent | Whenever this creature deals combat damage to a player, look at the top card of your library. You may play a land from the top of your library or cast a spell w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -108,7 +105,6 @@
 | Crew Captain | notice | This creature has indestructible as long as it entered this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extract the Truth | notice | Choose one — • Target opponent reveals their hand. You may choose a creature, enchantment, or planeswalker card from it. That player discards that card. • Targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Extraction Specialist | notice | When this creature enters, return target creature card with mana value 2 or less from your graveyard to the battlefield. That creature can't attack or block for | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Hostile Takeover | notice | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Involuntary Employment | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. Create a Treasure token. (It's an artifact with "{T},  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Revelation of Power | notice | Target creature gets +2/+2 until end of turn. If it has a counter on it, it also gains flying and lifelink until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rhox Pummeler | notice | This creature has trample as long as it has a shield counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -188,6 +184,7 @@
 | Goldhound | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
 | Halo Scarab | handled | {2}, Exile this card from your graveyard: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | High-Rise Sawjack | handled | Whenever this creature blocks a creature with flying, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Hostile Takeover | handled | Up to one target creature has base power and toughness 1/1 until end of turn. Up to one other target creature has base power and toughness 4/4 until end of turn | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Illicit Shipment | handled | Casualty 3 (As you cast this spell, you may sacrifice a creature with power 3 or greater. When you do, copy this spell.) Search your library for a card, put it  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Illuminator Virtuoso | handled | Whenever this creature becomes the target of a spell you control, it connives. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspiring Overseer | handled | When this creature enters, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -257,6 +254,7 @@
 | Warm Welcome | handled | Look at the top five cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of your library | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waterfront District | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whack | handled | This spell costs {3} less to cast if it targets a white creature. Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Wingshield Agent | handled | This creature enters with a shield counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Witty Roastmaster | handled | Alliance — Whenever another creature you control enters, this creature deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wrecking Crew | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Xander's Lounge | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -265,7 +263,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>20 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
@@ -282,9 +280,11 @@
 - Quick-Draw Dagger
 - Riveteers Charm
 - Sanctuary Warden
+- Sanguine Spy
 - Scuttling Butler
 - Take to the Streets
 - Urabrask, Heretic Praetor
+- Vivien on the Hunt
 
 </details>
 
@@ -297,7 +297,6 @@
 | Choose one | 1 | Extract the Truth | snc |
 | +N: choose up to one target creature. put a +N/+N counter and a counter from among flying, first strike, lifelink, or vigilance on it. | 1 | Elspeth Resplendent | snc |
 | +N: each opponent loses N life unless they discard a card. if you control a demon or devil, you gain N life. | 1 | Ob Nixilis, the Adversary | snc |
-| +N: mill five cards, then put any number of creature cards milled ~ into your hand. | 1 | Vivien on the Hunt | snc |
 | all creatures attack enchanted creature's controller each combat if able. | 1 | Public Enemy | snc |
 | as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to each creature and each planeswalk | 1 | Corpse Explosion | snc |
 | as an additional cost to cast ~, sacrifice a creature, discard a card, or pay N life. | 1 | Dusk Mangler | snc |
@@ -308,7 +307,6 @@
 | as long as there are two or more counters among creatures you control, ~ can attack as though it didn't have defender. | 1 | Backstreet Bruiser | snc |
 | as ~ enters, you may choose a nonland permanent. | 1 | Scheming Fence | snc |
 | at the beginning of each combat, if ~ is untapped, any opponent may tap an untapped creature they control. if they do, tap ~ and create a N/N blue fish creature | 1 | Reservoir Kraken | snc |
-| at the beginning of your end step, if there are five or more mana values among cards in your graveyard, you may pay N life. if you do, draw a card. | 1 | Sanguine Spy | snc |
 | at the beginning of your end step, put a +N/+N counter on each creature you control and a loyalty counter on each planeswalker you control. | 1 | Brokers Ascendancy | snc |
 | at the beginning of your end step, you may sacrifice another creature. when you do, ziatora deals damage equal to that creature's power to any target and you cr | 1 | Ziatora, the Incinerator | snc |
 | at the beginning of your upkeep, look at the top card of your library. if it"..."t put the card into your hand, you may put it on the bottom of your library. | 1 | Cabaretti Ascendancy | snc |
@@ -340,7 +338,6 @@
 | sacrifice a treasure: ~ becomes an artifact creature until end of turn. | 1 | Capenna Express | snc |
 | target creature gets +N/+N until end of turn. if it has a counter on it, it also gains flying and lifelink until end of turn. | 1 | Revelation of Power | snc |
 | until end of turn, target artifact or creature becomes a N/N angel artifact creature and gains flying. draw a card. | 1 | Majestic Metamorphosis | snc |
-| up to one target creature has base power and toughness N/N until end of turn. up to one other target creature has base power and toughness N/N until end of turn | 1 | Hostile Takeover | snc |
 | when lord xander enters, target opponent discards half the cards in their hand, rounded down. | 1 | Lord Xander, the Collector | snc |
 | when ~ enters, choose target creature you don"..."t untap during its controller's next untap step. | 1 | Celestial Regulator | snc |
 | when ~ enters, choose two — • destroy target artifact or enchantment. • target player gains N life. • create a N/N green rhino warrior creature token. • put a s | 1 | Titan of Industry | snc |
@@ -365,7 +362,6 @@
 | whenever ~ attacks, create a tapped and attacking N/N red devil creature token with "..." | 1 | Pugnacious Pugilist | snc |
 | whenever ~ attacks, defending player may have you draw a card. if they do, untap ~ and remove it from combat. | 1 | Shakedown Heavy | snc |
 | whenever ~ attacks, if you don't control a devil token, create a tapped and attacking N/N red devil creature token with "..." | 1 | Maestros Diabolist | snc |
-| whenever ~ attacks, up to one other target creature gains flying until end of turn. | 1 | Wingshield Agent | snc |
 | whenever ~ attacks, ~ and up to one other target creature you control both gain your choice of first strike or lifelink until end of turn. | 1 | Ballroom Brawlers | snc |
 | whenever ~ deals combat damage to a player, create a treasure token for each artifact they control. | 1 | Hoard Hauler | snc |
 | whenever ~ deals combat damage to a player, look at the top card of your library. you may play a land from the top of your library or cast a spell with mana val | 1 | Ziatora's Envoy | snc |

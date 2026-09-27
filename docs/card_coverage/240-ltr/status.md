@@ -52,7 +52,7 @@
 | Foray of Orcs | silent | Amass Orcs 2. When you do, Foray of Orcs deals X damage to target creature an opponent controls, where X is the amassed Army's power. (To amass Orcs 2, put two  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Friendly Rivalry | silent | Target creature you control and up to one other target legendary creature you control each deal damage equal to their power to target creature you don't control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frodo, Determined Hero | silent | Whenever Frodo enters or attacks, you may attach target Equipment you control with mana value 2 or 3 to Frodo. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Frodo, Sauron's Bane | silent | {W/B}{W/B}: If Frodo is a Citizen, it becomes a Halfling Scout with base power and toughness 2/3 and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Frodo, Sauron's Bane | silent | {B}{B}{B}: If Frodo is a Scout, it becomes a Halfling Rogue with "Whenever this creature deals combat damage to a player, that player loses the game if the Ring | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Galadriel of Lothlórien | silent | Whenever you scry, you may reveal the top card of your library. If a land card is revealed this way, put it onto the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gimli's Axe | silent | As long as equipped creature is legendary, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gimli, Mournful Avenger | silent | Whenever another creature you control dies, put a +1/+1 counter on Gimli. When this ability resolves for the third time this turn, Gimli fights up to one target | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -429,9 +429,9 @@
 | {M}, remove an indestructible counter from arwen: another target creature gains indestructible until end of turn. put a +N/+N counter and a lifelink counter on  | 1 | Arwen, Mortal Queen | ltr |
 | {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
 | {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
-| {M}{M}: if frodo is a citizen, it becomes a halfling scout with base power and toughness N/N and lifelink. | 1 | Frodo, Sauron's Bane | ltr |
 | {M}{M}{M}, exile ~: draw a card for each verse counter on ~. if it had seven or more verse counters on it, take an extra turn after ~. activate only as a sorcer | 1 | Lost Isle Calling | ltr |
 | {M}{M}{M}, {M}, sacrifice ~ and a legendary artifact: choose up to two creatures, then destroy the rest. activate only as a sorcery. | 1 | Mount Doom | ltr |
+| {M}{M}{M}: if frodo is a scout, it becomes a halfling rogue with "..." | 1 | Frodo, Sauron's Bane | ltr |
 | ~ can't be blocked except by three or more creatures. | 1 | Troll of Khazad-dûm | ltr |
 | ~ can't be copied. copy any number of target instant and/or sorcery spells. you may choose new targets for the copies. | 1 | Display of Power | ltr |
 | ~ costs {M} less to cast for each permanent sacrificed ~. | 1 | The Balrog, Durin's Bane | ltr |

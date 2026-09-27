@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 5.2% |
+| Tested | 16 | 5.6% |
 | Works (untested) | 139 | 48.4% |
 | Partial (unaudited) | 16 | 5.6% |
-| Not working | 117 | 40.8% |
+| Not working | 116 | 40.4% |
 
 ## Cards needing work
 
@@ -30,7 +30,6 @@
 | Alrund, God of the Cosmos // Hakka, Whispering Raven | silent | At the beginning of your end step, choose a card type, then reveal the top two cards of your library. Put all cards of the chosen type revealed this way into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arachnoform | silent | Enchanted creature gets +2/+2, has reach, and is every creature type. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arni Brokenbrow | silent | Boast — {1}: You may have Arni's base power become 1 plus the greatest power among other creatures you control until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ascendant Spirit | silent | {S}{S}: This creature becomes a Spirit Warrior with base power and toughness 2/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ascent of the Worthy | silent | I, II — Choose a creature you control. Until your next turn, all damage that would be dealt to creatures you control is dealt to that creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Avalanche Caller | silent | {2}: Target snow land you control becomes a 4/4 Elemental creature with hexproof and haste until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Basalt Ravager | silent | When this creature enters, it deals X damage to any target, where X is the greatest number of creatures you control that have a creature type in common. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -122,6 +121,7 @@
 | Varragoth, Bloodsky Sire | silent | Boast — {1}{B}: Target player searches their library for a card, then shuffles and puts that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Waking the Trolls | silent | III — Choose target opponent. If they control fewer lands than you, create a number of 4/4 green Troll Warrior creature tokens with trample equal to the differe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Absorb Identity | notice | Return target creature to its owner's hand. You may have Shapeshifters you control become copies of that creature until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Ascendant Spirit | notice | {S}{S}{S}: If this creature is a Warrior, put a flying counter on it and it becomes a Spirit Warrior Angel with base power and toughness 4/4. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Axgard Armory | notice | {1}{R}{R}{W}, {T}, Sacrifice this land: Search your library for an Aura card and/or an Equipment card, reveal them, put them into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Berg Strider | notice | When this creature enters, tap target artifact or creature an opponent controls. If {S} was spent to cast this spell, that permanent doesn't untap during its co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bind the Monster | notice | When this Aura enters, tap enchanted creature. It deals damage to you equal to its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -131,7 +131,6 @@
 | Forging the Tyrite Sword | notice | III — Search your library for a card named Halvar, God of Battle or an Equipment card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kaya the Inexorable | notice | +1: Put a ghostform counter on up to one target nontoken creature. It gains "When this creature dies or is put into exile, return it to its owner's hand and cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | King Harald's Revenge | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. It must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Moritte of the Frost | notice | You may have Moritte enter as a copy of a permanent you control, except it's legendary and snow in addition to its other types and, if it's a creature, it enter | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Omenpaths | notice | Choose one — • Add two mana of any one color and two mana of any other color. Spend this mana only to cast creature or enchantment spells. • Creatures you contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Provoke the Trolls | notice | Provoke the Trolls deals 3 damage to any target. If a creature is dealt damage this way, it gets +5/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Replicating Ring | notice | At the beginning of your upkeep, put a night counter on this artifact. Then if it has eight or more night counters on it, remove all of them and create eight co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -302,7 +301,7 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Axgard Braggart
 - Cleaving Reaper
@@ -313,6 +312,7 @@
 - Duskwielder
 - Littjara Kinseekers
 - Magda, Brazen Outlaw
+- Moritte of the Frost
 - Raven Wings
 - Saw It Coming
 - The Trickster-God's Heist
@@ -439,7 +439,6 @@
 | whenever ~ attacks, you may sacrifice another creature. when you do, ~ deals damage equal to the sacrificed creature's power to any target. if the sacrificed cr | 1 | Surtland Flinger | khm |
 | you gain N life for each foretold card you own in exile. | 1 | Niko Defies Destiny | khm |
 | you may cast creature spells of the chosen type from the top of your library. | 1 | Realmwalker | khm |
-| you may have moritte enter as a copy of a permanent you control, except it"..."s a creature, it enters with two additional +N/+N counters on it and has changeli | 1 | Moritte of the Frost | khm |
 | you may pay {M} rather than pay the mana cost for rune spells you cast. | 1 | Runeforge Champion | khm |
 | you may pay {M}{M} and exile a creature card from your graveyard rather than pay ~ mana cost. | 1 | Stalwart Valkyrie | khm |
 | {M}, sacrifice ~: target creature gets -N/-N until end of turn, where N is the number of snow lands you control. activate only as a sorcery. | 1 | Priest of the Haunted Edge | khm |
@@ -447,7 +446,7 @@
 | {M}, {M}: create a colorless snow artifact token named icy manalith with "..." | 1 | Svella, Ice Shaper | khm |
 | {M}, {M}: look at the top card of your library. if it's a snow card, you may reveal it and put it into your hand. | 1 | Frost Augur | khm |
 | {M}: target snow land you control becomes a N/N elemental creature with hexproof and haste until end of turn. it's still a land. | 1 | Avalanche Caller | khm |
-| {M}{M}: ~ becomes a spirit warrior with base power and toughness N/N. | 1 | Ascendant Spirit | khm |
+| {M}{M}{M}: if ~ is a warrior, put a flying counter on it and it becomes a spirit warrior angel with base power and toughness N/N. | 1 | Ascendant Spirit | khm |
 | {M}{M}{M}: ~ becomes a N/N creature with vigilance and all creature types until end of turn. it's still a land. | 1 | Faceless Haven | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: create a token that's a copy of target creature you control, except it enters with an additional +N/+N counter on it. activate o | 1 | Littjara Mirrorlake | khm |
 | {M}{M}{M}{M}, {M}, sacrifice ~: search your library for an aura card and/or an equipment card, reveal them, put them into your hand, then shuffle. | 1 | Axgard Armory | khm |

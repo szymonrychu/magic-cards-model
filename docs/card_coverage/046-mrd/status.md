@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 7.4% |
-| Works (untested) | 152 | 56.5% |
+| Works (untested) | 153 | 56.9% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 87 | 32.3% |
+| Not working | 86 | 32.0% |
 
 ## Cards needing work
 
@@ -60,7 +60,6 @@
 | Loxodon Peacekeeper | silent | At the beginning of your upkeep, the player with the lowest life total gains control of this creature. If two or more players are tied for lowest life total, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mass Hysteria | silent | All creatures have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mesmeric Orb | silent | Whenever a permanent becomes untapped, that permanent's controller mills a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mindstorm Crown | silent | At the beginning of your upkeep, draw a card if you had no cards in hand at the beginning of this turn. If you had a card in hand, this artifact deals 1 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mourner's Shield | silent | {2}, {T}: Prevent all damage that would be dealt this turn by a source of your choice that shares a color with the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -182,6 +181,7 @@
 | Luminous Angel | handled | At the beginning of your upkeep, you may create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Malachite Golem | handled | {1}{G}: This creature gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mask of Memory | handled | Whenever equipped creature deals combat damage to a player, you may draw two cards. If you do, discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mass Hysteria | handled | All creatures have haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Megatog | handled | Sacrifice an artifact: This creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mind's Eye | handled | Whenever an opponent draws a card, you may pay {1}. If you do, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Molder Slug | handled | At the beginning of each player's upkeep, that player sacrifices an artifact of their choice. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -313,7 +313,6 @@
 | Imprint | 2 | Spellweaver Helix, Thought Prison | mrd |
 | fear | 2 | Dross Prowler, Woebearer | mrd |
 | all creatures able to block target creature ~ do so. | 1 | Bloodscent | mrd |
-| all creatures have haste. | 1 | Mass Hysteria | mrd |
 | artifacts you control have hexproof. | 1 | Leonin Abunas | mrd |
 | as an additional cost to cast ~, sacrifice an artifact. put N +N/+N counters on target creature, where N is the sacrificed artifact's mana value. | 1 | Forge Armor | mrd |
 | as long as a card exiled with ~ is a creature card, ~ has the power, toughness, and creature types of the last creature card exiled with it. it's still a shapes | 1 | Duplicant | mrd |

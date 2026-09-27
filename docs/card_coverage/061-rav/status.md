@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 8.1% |
-| Works (untested) | 114 | 46.2% |
-| Partial (unaudited) | 16 | 6.5% |
-| Not working | 97 | 39.3% |
+| Works (untested) | 116 | 47.0% |
+| Partial (unaudited) | 17 | 6.9% |
+| Not working | 94 | 38.1% |
 
 ## Cards needing work
 
@@ -31,11 +31,9 @@
 | Blockbuster | silent | {1}{R}, Sacrifice this enchantment: It deals 3 damage to each tapped creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blood Funnel | silent | Whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bloodbond March | silent | Whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Bloodletter Quill | silent | {U}{B}: Remove a blood counter from this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bottled Cloister | silent | At the beginning of each opponent's upkeep, exile all cards from your hand face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Breath of Fury | silent | When enchanted creature deals combat damage to a player, sacrifice it and attach this Aura to a creature you control. If you do, untap all creatures you control | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chant of Vitu-Ghazi | silent | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Prevent all | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Circu, Dimir Lobotomist | silent | Whenever you cast a blue spell, exile the top card of target player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cloudstone Curio | silent | Whenever a nonartifact permanent you control enters, you may return another permanent you control that shares a permanent type with it to its owner's hand. | this trigger's condition can never be satisfied - it never triggers | Y/-/- | not_working |
 | Coalhauler Swine | silent | Whenever this creature is dealt damage, it deals that much damage to each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Compulsive Research | silent | Target player draws three cards. Then that player discards two cards unless they discard a land card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -43,7 +41,6 @@
 | Crown of Convergence | silent | As long as the top card of your library is a creature card, creatures you control that share a color with that card get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dimir House Guard | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Dimir Machinations | silent | Look at the top three cards of target player's library. Exile any number of those cards, then put the rest back in any order. Transmute {1}{B}{B} ({1}{B}{B}, Di | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dogpile | silent | Dogpile deals damage to any target equal to the number of attacking creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Drake Familiar | silent | When this creature enters, sacrifice it unless you return an enchantment to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dryad's Caress | silent | You gain 1 life for each creature on the battlefield. If {W} was spent to cast this spell, untap all creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Empty the Catacombs | silent | Each player returns all creature cards from their graveyard to their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -124,6 +121,7 @@
 | Vigor Mortis | notice | Return target creature card from your graveyard to the battlefield. If {G} was spent to cast this spell, that creature enters with an additional +1/+1 counter o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Voyager Staff | notice | {2}, Sacrifice this artifact: Exile target creature. Return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Chorus of the Conclave | unaudited | As an additional cost to cast creature spells, you may pay any amount of mana. If you do, that creature enters with that many additional +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Circu, Dimir Lobotomist | unaudited | Your opponents can't cast spells with the same name as a card exiled with Circu. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dream Leash | unaudited | You can't choose an untapped permanent as this spell's target as you cast it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Excruciator | unaudited | Damage that would be dealt by this creature can't be prevented. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Faith's Fetters | unaudited | Enchanted permanent can't attack or block, and its activated abilities can't be activated unless they're mana abilities. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -142,6 +140,7 @@
 | Autochthon Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Barbarian Riftcutter | handled | {R}, Sacrifice this creature: Destroy target land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Benevolent Ancestor | handled | {T}: Prevent the next 1 damage that would be dealt to any target this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Bloodletter Quill | handled | {2}, {T}, Put a blood counter on this artifact: Draw a card, then you lose 1 life for each blood counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boros Garrison | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boros Guildmage | handled | {1}{R}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Boros Recruit | handled | First strike | machines/combat.py | Y/-/- | not_tested |
@@ -171,6 +170,7 @@
 | Disembowel | handled | Destroy target creature with mana value X. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Divebomber Griffin | handled | {T}, Sacrifice this creature: It deals 3 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dizzy Spell | handled | Target creature gets -3/-0 until end of turn. Transmute {1}{U}{U} ({1}{U}{U}, Discard this card: Search your library for a card with the same mana value as this | the engine reads this text and performs it | Y/-/- | not_tested |
+| Dogpile | handled | Dogpile deals damage to any target equal to the number of attacking creatures you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dowsing Shaman | handled | {2}{G}, {T}: Return target enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Drift of Phantasms | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Dromad Purebred | handled | Whenever this creature is dealt damage, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -352,7 +352,6 @@
 | whenever a player casts a creature spell, each player returns all cards with the same name as that spell from their graveyard to the battlefield. | 1 | Bloodbond March | rav |
 | whenever a player casts an instant or sorcery card, exile it. then that player copies each instant or sorcery card exiled with ~. for each copy, the player may  | 1 | Eye of the Storm | rav |
 | whenever agrus kos attacks, attacking red creatures get +N/+N and attacking white creatures get +N/+N until end of turn. | 1 | Agrus Kos, Wojek Veteran | rav |
-| whenever you cast a blue spell, exile the top card of target player's library. | 1 | Circu, Dimir Lobotomist | rav |
 | whenever you cast a creature spell, ~ becomes a N/N illusion creature with flying in addition to its other types until end of turn. | 1 | Halcyon Glaze | rav |
 | whenever you cast a noncreature spell, counter that spell unless you sacrifice a creature. | 1 | Blood Funnel | rav |
 | whenever you cast a spell, put the cards in your hand on the bottom of your library in any order, then draw that many cards. | 1 | Mindmoil | rav |
@@ -363,6 +362,7 @@
 | whenever ~ is dealt damage, it deals that much damage to each player. | 1 | Coalhauler Swine | rav |
 | you can't choose an untapped permanent as ~ target as you cast it. | 1 | Dream Leash | rav |
 | you gain N life for each creature on the battlefield. if {M} was spent to cast ~, untap all creatures you control. | 1 | Dryad's Caress | rav |
+| your opponents can't cast spells with the same name as a card exiled with circu. | 1 | Circu, Dimir Lobotomist | rav |
 | {M}, sacrifice a creature: look at the top two cards of target opponent's library, then exile one of them. | 1 | Thoughtpicker Witch | rav |
 | {M}, sacrifice ~: create a N/N white spirit creature token with flying at the beginning of the next end step. | 1 | Transluminant | rav |
 | {M}, sacrifice ~: exile target creature. return the exiled card to the battlefield under its owner's control at the beginning of the next end step. | 1 | Voyager Staff | rav |
@@ -380,7 +380,6 @@
 | {M}{M}, unattach ~: search your library for a red or white instant card with mana value N or less and cast that card without paying its mana cost. then shuffle. | 1 | Sunforger | rav |
 | {M}{M}: all creatures able to block ~ ~ do so. | 1 | Mortipede | rav |
 | {M}{M}: creatures without defender can't block ~ ~. | 1 | Sabertooth Alley Cat | rav |
-| {M}{M}: remove a blood counter from ~. | 1 | Bloodletter Quill | rav |
 | {M}{M}{M}, {M}: target forest becomes a N/N black and green elemental horror creature. it's still a land. | 1 | Woodwraith Corrupter | rav |
 | {M}{M}{M}: exile enchanted creature and all auras attached to it. at the beginning of the next end step, return that card to the battlefield under its owner"... | 1 | Flickerform | rav |
 | {M}{M}{M}: exile target creature card from a graveyard. ~ becomes a copy of that card, except it has ~. | 1 | Dimir Doppelganger | rav |
@@ -389,7 +388,6 @@
 | ~ can block an additional creature each combat. | 1 | Selesnya Sagittars | rav |
 | ~ deals N damage to each creature and each player. | 1 | Rain of Embers | rav |
 | ~ deals N damage to target creature and you gain N life. if {M} was spent to cast ~, draw a card. | 1 | Ribbons of Night | rav |
-| ~ deals damage to any target equal to the number of attacking creatures you control. | 1 | Dogpile | rav |
 
 ## Notes
 

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.3% |
-| Works (untested) | 105 | 39.2% |
+| Tested | 34 | 12.7% |
+| Works (untested) | 107 | 39.9% |
 | Partial (unaudited) | 9 | 3.4% |
-| Not working | 121 | 45.1% |
+| Not working | 118 | 44.0% |
 
 ## Cards needing work
 
@@ -81,7 +81,6 @@
 | Hustle // Bustle | silent | Target creature attacks or blocks this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Ill-Timed Explosion | silent | Draw two cards. Then you may discard two cards. When you do, Ill-Timed Explosion deals X damage to each creature, where X is the greatest mana value among cards | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Innocent Bystander | silent | Whenever this creature is dealt 3 or more damage, investigate. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Inside Source | silent | {3}, {T}: Target Detective you control gets +2/+0 and gains vigilance until end of turn. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Insidious Roots | silent | Whenever one or more creature cards leave your graveyard, create a 0/1 green Plant creature token, then put a +1/+1 counter on each Plant you control. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Intrude on the Mind | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put that pile into your hand and the other i | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Izoni, Center of the Web | silent | Whenever Izoni enters or attacks, you may collect evidence 4. If you do, create two 2/1 black and green Spider creature tokens with reach and menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -116,12 +115,11 @@
 | Soul Search | silent | Target opponent reveals their hand. You choose a nonland card from it. Exile that card. If the card's mana value is 1 or less, create a 1/1 white and black Spir | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Steamcore Scholar | silent | When this creature enters, draw two cards. Then discard two cards unless you discard an instant or sorcery card or a creature card with flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Surveillance Monitor | silent | When this creature enters, you may collect evidence 4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Tenth District Hero | silent | {1}{W}, Collect evidence 2: This creature becomes a Human Detective with base power and toughness 4/4 and gains vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Tenth District Hero | silent | {2}{W}, Collect evidence 4: If this creature is a Detective, it becomes a legendary creature named Mileva, the Stalwart, it has base power and toughness 5/5, an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | The Pride of Hull Clade | silent | {2}{U}{U}: Until end of turn, target creature you control gets +1/+0, gains "Whenever this creature deals combat damage to a player, draw cards equal to its tou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tolsimir, Midnight's Light | silent | Whenever a Wolf you control attacks, if Tolsimir attacked this combat, target creature an opponent controls blocks that Wolf this combat if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Tomik, Wielder of Law | silent | Whenever an opponent attacks with creatures, if two or more of those creatures are attacking you and/or planeswalkers you control, that opponent loses 3 life an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Torch the Witness | silent | Torch the Witness deals twice X damage to target creature. If excess damage was dealt to that creature this way, investigate. (Create a Clue token. It's an arti | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Unscrupulous Agent | silent | When this creature enters, target opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Urgent Necropsy | silent | As an additional cost to cast this spell, collect evidence X, where X is the total mana value of the permanents this spell targets. Destroy up to one target art | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Vannifar, Evolved Enigma | silent | Cloak | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Wojek Investigator | silent | At the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -139,7 +137,6 @@
 | Hotshot Investigators | notice | When this creature enters, return up to one other target creature to its owner's hand. If you controlled it, investigate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Incinerator of the Guilty | notice | Whenever this creature deals combat damage to a player, you may collect evidence X. When you do, this creature deals X damage to each creature and planeswalker  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | It Doesn't Add Up | notice | Return target creature card from your graveyard to the battlefield. Suspect it. (It has menace and can't block.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Judith, Carnage Connoisseur | notice | Whenever you cast an instant or sorcery spell, choose one — • That spell gains deathtouch and lifelink. • Create a 2/2 red Imp creature token with "When this to | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kellan, Inquisitive Prodigy // Tail the Suspect | notice | Whenever Kellan attacks, destroy up to one target artifact. If you controlled that permanent, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Push // Pull | notice | Put up to two target creature cards from a single graveyard onto the battlefield under your control. They gain haste until end of turn. Sacrifice them at the be | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Reenact the Crime | notice | Exile target nonland card in a graveyard that was put there from anywhere this turn. Copy it. You may cast the copy without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -202,6 +199,7 @@
 | Homicide Investigator | handled | Whenever one or more nontoken creatures you control die, investigate. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hunted Bonebrute | handled | When this creature enters, target opponent creates two 1/1 white Dog creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Illicit Masquerade | handled | When this enchantment enters, put an impostor counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Inside Source | handled | When this creature enters, create a 2/2 white and blue Detective creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kraul Whipcracker | handled | When this creature enters, destroy target token an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Krenko, Baron of Tin Street | handled | {T}, Sacrifice an artifact: Put a +1/+1 counter on each Goblin you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Krovod Haunch | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -256,6 +254,7 @@
 | Undercity Eliminator | handled | When this creature enters, you may sacrifice an artifact or creature. When you do, exile target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Undercover Crocodelf | handled | Whenever this creature deals combat damage to a player, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Undergrowth Recon | handled | At the beginning of your upkeep, return target land card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Unscrupulous Agent | handled | When this creature enters, target opponent exiles a card from their hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vengeful Creeper | handled | When this creature is turned face up, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vengeful Tracker | handled | Whenever an opponent sacrifices an artifact, this creature deals 2 damage to them. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Warleader's Call | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -265,7 +264,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>34 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -279,6 +278,7 @@
 - Forensic Gadgeteer
 - Forensic Researcher
 - Hedge Maze
+- Judith, Carnage Connoisseur
 - Karlov Watchdog
 - Leyline of the Guildpact
 - Lush Portico
@@ -373,7 +373,6 @@
 | when ~ enters, return up to one other target creature to its owner's hand. if you controlled it, investigate. | 1 | Hotshot Investigators | mkm |
 | when ~ enters, sacrifice it unless you tap an untapped artifact or land you control. | 1 | Public Thoroughfare | mkm |
 | when ~ enters, tap N target creatures. put a stun counter on each of those creatures you don't control. | 1 | Lost in the Maze | mkm |
-| when ~ enters, target opponent exiles a card from their hand. | 1 | Unscrupulous Agent | mkm |
 | when ~ enters, untap enchanted creature. it gains hexproof until end of turn. if it"..."s no longer suspected. | 1 | Airtight Alibi | mkm |
 | when ~ enters, you may collect evidence N. | 1 | Surveillance Monitor | mkm |
 | when ~ enters, you may search your graveyard, hand and/or library for a card named magnifying glass and/or a card named thinking cap and put them onto the battl | 1 | Agency Outfitter | mkm |
@@ -400,7 +399,6 @@
 | whenever one or more creatures die, mill a card and put a bloodstain counter on ~. then sacrifice it if it has five or more bloodstain counters on it. when you  | 1 | Blood Spatter Analysis | mkm |
 | whenever one or more creatures you control and/or creature cards in your graveyard are put into exile, you may choose a creature card from among them. until end | 1 | Kaya, Spirits' Justice | mkm |
 | whenever one or more other creatures you control enter, if ~ is suspected, you may suspect one of the other creatures. if you do, ~ is no longer suspected. | 1 | Frantic Scapegoat | mkm |
-| whenever you cast an instant or sorcery spell, choose one — • that spell gains deathtouch and lifelink. • create a N/N red imp creature token with "..." | 1 | Judith, Carnage Connoisseur | mkm |
 | whenever you draw your second card each turn, ~ loses defender and gains vigilance until end of turn. | 1 | Jaded Analyst | mkm |
 | whenever you sacrifice a clue, you may have lazav become a copy of a creature card exiled with it until end of turn. | 1 | Lazav, Wearer of Faces | mkm |
 | whenever ~ attacks, face-down spells you cast ~ cost {M} less to cast. | 1 | Goblin Maskmaker | mkm |
@@ -412,9 +410,8 @@
 | whenever ~ or another creature you control is turned face up, that creature deals damage equal to its power to each opponent. | 1 | Pyrotechnic Performer | mkm |
 | you may collect evidence N rather than pay the mana cost for spells you cast. | 1 | Conspiracy Unraveler | mkm |
 | {M}, {M}, collect evidence N: each opponent loses N life unless they discard a card or sacrifice a creature. | 1 | Polygraph Orb | mkm |
-| {M}, {M}: target detective you control gets +N/+N and gains vigilance until end of turn. activate only as a sorcery. | 1 | Inside Source | mkm |
 | {M}: until end of turn, you may look at face-down creatures you don't control any time. | 1 | Lumbering Laundry | mkm |
-| {M}{M}, collect evidence N: ~ becomes a human detective with base power and toughness N/N and gains vigilance. | 1 | Tenth District Hero | mkm |
+| {M}{M}, collect evidence N: if ~ is a detective, it becomes a legendary creature named mileva, the stalwart, it has base power and toughness N/N, and it gains " | 1 | Tenth District Hero | mkm |
 | {M}{M}, {M}, collect evidence N: target land you control becomes a N/N green plant boar creature with haste for as long as ~ remains tapped. it's still a land.  | 1 | Hedge Whisperer | mkm |
 | {M}{M}, {M}: tap target creature. you may put a stun counter on it. if you do, put a stun counter on ~. | 1 | Sanctuary Wall | mkm |
 | {M}{M}: if ~ is suspected, put a +N/+N counter on it. otherwise, suspect it. | 1 | Repeat Offender | mkm |

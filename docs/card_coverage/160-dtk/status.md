@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.0% |
-| Works (untested) | 123 | 52.8% |
+| Works (untested) | 124 | 53.2% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 85 | 36.5% |
+| Not working | 84 | 36.1% |
 
 ## Cards needing work
 
@@ -99,7 +99,6 @@
 | Center Soul | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Display of Dominance | notice | Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Draconic Roar | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Draconic Roar deals 3 damage to target creature. If you revealed a Dragon | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dragonlord Ojutai | notice | Dragonlord Ojutai has hexproof as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dromoka's Command | notice | Choose two — • Prevent all damage target instant or sorcery spell would deal this turn. • Target player sacrifices an enchantment of their choice. • Put a +1/+1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Foul Renewal | notice | Return target creature card from your graveyard to your hand. Target creature gets -X/-X until end of turn, where X is the toughness of the card returned this w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Icefall Regent | notice | Spells your opponents cast that target this creature cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -151,6 +150,7 @@
 | Dragonlord Atarka | handled | When Dragonlord Atarka enters, it deals 5 damage divided as you choose among any number of target creatures and/or planeswalkers your opponents control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord Dromoka | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord Kolaghan | handled | Other creatures you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dragonlord Ojutai | handled | Dragonlord Ojutai has hexproof as long as it's untapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord Silumgar | handled | When Dragonlord Silumgar enters, gain control of target creature or planeswalker for as long as you control Dragonlord Silumgar. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord's Prerogative | handled | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. If you revealed a Dragon card or controlled a Dragon as you cast this spe | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dragonlord's Servant | handled | Dragon spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -356,7 +356,6 @@
 | ~ deals N damage to any target. if you control no dragons, ~ deals N damage to you. | 1 | Sarkhan's Rage | dtk |
 | ~ enters with a +N/+N counter on it for each other creature you control with a +N/+N counter on it. | 1 | Avatar of the Resolute | dtk |
 | ~ has flying as long as it has a +N/+N counter on it. | 1 | Lightwalker | dtk |
-| ~ has hexproof as long as it's untapped. | 1 | Dragonlord Ojutai | dtk |
 | ~ has reach as long as it has a +N/+N counter on it. | 1 | Ainok Artillerist | dtk |
 | ~"..."s mana value. | 1 | Living Lore | dtk |
 

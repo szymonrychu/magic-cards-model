@@ -17,21 +17,20 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 17 | 8.1% |
+| Tested | 18 | 8.5% |
 | Works (untested) | 126 | 59.7% |
 | Partial (unaudited) | 8 | 3.8% |
-| Not working | 60 | 28.4% |
+| Not working | 59 | 28.0% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Abhorrent Overlord | silent | When this creature enters, create a number of 1/1 black Harpy creature tokens with flying equal to your devotion to black. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Akroan Hoplite | silent | Whenever this creature attacks, it gets +X/+0 until end of turn, where X is the number of attacking creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Akroan Horse | silent | When this creature enters, an opponent gains control of it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Anthousa, Setessan Hero | silent | Heroic — Whenever you cast a spell that targets Anthousa, up to three target lands you control each become 2/2 Warrior creatures until end of turn. They're stil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Artisan of Forms | silent | Heroic — Whenever you cast a spell that targets this creature, you may have this creature become a copy of target creature, except it has this ability. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ashiok, Nightmare Weaver | silent | +2: Exile the top three cards of target opponent's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Ashiok, Nightmare Weaver | silent | −X: Put a creature card with mana value X exiled with Ashiok onto the battlefield under your control. That creature is a Nightmare in addition to its other type | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bident of Thassa | silent | {1}{U}, {T}: Creatures your opponents control attack this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavern Lampad | silent | Enchanted creature gets +2/+2 and has intimidate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coastline Chimera | silent | {1}{W}: This creature can block an additional creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -224,8 +223,9 @@
 ## Fully supported
 
 <details>
-<summary>17 cards</summary>
+<summary>18 cards</summary>
 
+- Akroan Hoplite
 - Anger of the Gods
 - Arbor Colossus
 - Commune with the Gods
@@ -253,7 +253,6 @@
 | Heroic | 4 | Anthousa, Setessan Hero, Artisan of Forms, Favored Hoplite, Tormented Hero | ths |
 | whenever enchanted creature attacks, put a +N/+N counter on it. then if it has three or more +N/+N counters on it, sacrifice ~. | 4 | Ordeal of Erebos, Ordeal of Heliod, Ordeal of Nylea, Ordeal of Thassa | ths |
 | +N: add N mana in any combination of {M} and/or {M}, where N is the number of creatures you control. | 1 | Xenagos, the Reveler | ths |
-| +N: exile the top three cards of target opponent's library. | 1 | Ashiok, Nightmare Weaver | ths |
 | as an additional cost to cast ~, sacrifice a creature. choose target creature card in your graveyard. return that card and the sacrificed card to the battlefiel | 1 | Rescue from the Underworld | ths |
 | as long as ~ is monstrous, it has reach and can block an additional ninety-nine creatures each combat. | 1 | Hundred-Handed One | ths |
 | as long as ~ is monstrous, it has trample and can attack as though it didn't have defender. | 1 | Colossus of Akros | ths |
@@ -292,7 +291,6 @@
 | when ~ enters, up to N target creatures each gain intimidate and haste until end of turn, where N is your devotion to black. | 1 | Mogis's Marauder | ths |
 | whenever another creature dies, tap ~. | 1 | Fleshmad Steed | ths |
 | whenever daxos deals combat damage to a player, exile the top card of that player"..."s mana value. until end of turn, you may cast that card and you may spend  | 1 | Daxos of Meletis | ths |
-| whenever ~ attacks, it gets +N/+N until end of turn, where N is the number of attacking creatures you control. | 1 | Akroan Hoplite | ths |
 | whenever ~ is dealt damage, it deals that much damage to you. | 1 | Firedrinker Satyr | ths |
 | your opponents can't gain life. | 1 | Erebos, God of the Dead | ths |
 | {M}{M}, {M}, sacrifice a land: create a N/N colorless golem enchantment artifact creature token. | 1 | Hammer of Purphoros | ths |
@@ -312,6 +310,7 @@
 | ~ can block only creatures with flying. | 1 | Vaporkin | ths |
 | ~ deals N damage to target creature. it can't be regenerated ~. scry N. (look at the top card of your library. you may put that card on the bottom.) | 1 | Rage of Purphoros | ths |
 | ~'s power is equal to the number of instant and sorcery cards in your graveyard. | 1 | Spellheart Chimera | ths |
+| −N: put a creature card with mana value N exiled with ashiok onto the battlefield under your control. that creature is a nightmare in addition to its other type | 1 | Ashiok, Nightmare Weaver | ths |
 
 ## Notes
 

@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 6.2% |
-| Works (untested) | 128 | 53.1% |
-| Partial (unaudited) | 21 | 8.7% |
+| Works (untested) | 129 | 53.5% |
+| Partial (unaudited) | 20 | 8.3% |
 | Not working | 77 | 32.0% |
 
 ## Cards needing work
@@ -119,7 +119,6 @@
 | New Perspectives | unaudited | As long as you have seven or more cards in hand, you may pay {0} rather than pay cycling costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oketra the True | unaudited | Oketra can't attack or block unless you control at least three other creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Protection of the Hekma | unaudited | If a source an opponent controls would deal damage to you, prevent 1 of that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Prowling Serpopard | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rhonas the Indomitable | unaudited | Rhonas can't attack or block unless you control another creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Soul-Scar Mage | unaudited | If a source you control would deal noncombat damage to a creature an opponent controls, put that many -1/-1 counters on that creature instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vizier of the Menagerie | unaudited | You can spend mana of any type to cast creature spells. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -210,6 +209,7 @@
 | Pitiless Vizier | handled | Whenever you cycle or discard a card, this creature gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Plague Belcher | handled | When this creature enters, put two -1/-1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pouncing Cheetah | handled | Flash | machines/casting.py (timing) | Y/Y/- | not_tested |
+| Prowling Serpopard | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pull from Tomorrow | handled | Draw X cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyramid of the Pantheon | handled |  |  | Y/Y/- | not_tested |
 | Rhonas's Monument | handled | Green creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -302,7 +302,6 @@
 | attacking creatures get +N/+N until end of turn. cycling {M} ({M}, discard ~: draw a card.) | 1 | Pursue Glory | akh |
 | bontu can't attack or block unless a creature died under your control ~. | 1 | Bontu the Glorified | akh |
 | choose an artifact card name. search target opponent's graveyard, hand, and library for any number of cards with the chosen name and exile them. then that playe | 1 | Dispossess | akh |
-| creature spells you control can't be countered. | 1 | Prowling Serpopard | akh |
 | damage can't be prevented ~. if a source you control would deal damage ~, it deals double that damage instead. | 1 | Insult // Injury | akh |
 | enchanted land has "..." | 1 | Gift of Paradise | akh |
 | end the turn. (exile all spells and abilities from the stack, including ~. the player whose turn it is discards down to their maximum hand size. damage wears of | 1 | Glorious End | akh |

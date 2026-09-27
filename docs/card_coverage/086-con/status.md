@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 9 | 6.4% |
-| Works (untested) | 73 | 51.8% |
+| Works (untested) | 74 | 52.5% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 54 | 38.3% |
+| Not working | 53 | 37.6% |
 
 ## Cards needing work
 
@@ -40,10 +40,8 @@
 | Extractor Demon | silent | Whenever another creature leaves the battlefield, you may have target player mill two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frontline Sage | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Giltspire Avenger | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Gluttonous Slime | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Grixis Illusionist | silent | {T}: Target land you control becomes the basic land type of your choice until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gwafa Hazid, Profiteer | silent | {W}{U}, {T}: Put a bribery counter on target creature you don't control. Its controller draws a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Hellkite Hatchling | silent | Devour | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Ignite Disorder | silent | Ignite Disorder deals 3 damage divided as you choose among one, two, or three target white and/or blue creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Maelstrom Archangel | silent | Whenever this creature deals combat damage to a player, you may cast a spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Magister Sphinx | silent | When this creature enters, target player's life total becomes 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -76,6 +74,7 @@
 | Court Homunculus | notice | This creature gets +1/+1 as long as you control another artifact. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Filigree Fracture | notice | Destroy target artifact or enchantment. If that permanent was blue or black, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fleshformer | notice | {W}{U}{B}{R}{G}: This creature gets +2/+2 and gains fear until end of turn. Target creature gets -2/-2 until end of turn. Activate only during your turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Hellkite Hatchling | notice | This creature has flying and trample if it devoured a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Quenchable Fire | notice | Quenchable Fire deals 3 damage to target player or planeswalker. It deals an additional 3 damage to that player or planeswalker at the beginning of your next up | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Sphinx Summoner | notice | When this creature enters, you may search your library for an artifact creature card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Toxic Iguanar | notice | This creature has deathtouch as long as you control a green permanent. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -109,6 +108,7 @@
 | Font of Mythos | handled | At the beginning of each player's draw step, that player draws two additional cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fusion Elemental | handled |  |  | Y/-/- | not_tested |
 | Gleam of Resistance | handled | Creatures you control get +1/+2 until end of turn. Untap those creatures. Basic landcycling {1}{W} ({1}{W}, Discard this card: Search your library for a basic l | the engine reads this text and performs it | Y/-/- | not_tested |
+| Gluttonous Slime | handled | Flash | machines/casting.py (timing) | Y/-/- | not_tested |
 | Goblin Outlander | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Goblin Razerunners | handled | {1}{R}, Sacrifice a land: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grixis Slavedriver | handled | When this creature leaves the battlefield, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -182,7 +182,6 @@
 |---|---|---|---|
 | Domain | 6 | Aven Trailblazer, Drag Down, Manaforce Mace, Might of Alara, Voices from the Void | con |
 | exalted | 5 | Aven Squire, Frontline Sage, Giltspire Avenger, Noble Hierarch, Rhox Bodyguard | con |
-| devour | 2 | Gluttonous Slime, Hellkite Hatchling | con |
 | {M}: target land you control becomes the basic land type of your choice until end of turn. | 2 | Grixis Illusionist, Unstable Frontier | con |
 | as long as you control a red permanent, ~ gets +N/+N and has first strike. | 1 | Ember Weaver | con |
 | as ~ enters, choose an opponent. | 1 | Nyxathid | con |
@@ -226,6 +225,7 @@
 | ~ enters with N +N/+N counters on it. if N is N or more, it enters with an additional N +N/+N counters on it. | 1 | Apocalypse Hydra | con |
 | ~ gets +N/+N as long as you control another artifact. | 1 | Court Homunculus | con |
 | ~ has deathtouch as long as you control a green permanent. | 1 | Toxic Iguanar | con |
+| ~ has flying and trample if it devoured a creature. | 1 | Hellkite Hatchling | con |
 | ~ has haste as long as you control a red permanent. | 1 | Cliffrunner Behemoth | con |
 | −N: gain control of target creature. | 1 | Nicol Bolas, Planeswalker | con |
 

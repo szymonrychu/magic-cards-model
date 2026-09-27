@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 4 | 2.5% |
-| Works (untested) | 71 | 44.7% |
+| Works (untested) | 72 | 45.3% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 74 | 46.5% |
+| Not working | 73 | 45.9% |
 
 ## Cards needing work
 
@@ -57,7 +57,6 @@
 | Kami of the Honored Dead | silent | Whenever this creature is dealt damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Kentaro, the Smiling Cat | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Kitsune Palliator | silent | {T}: Prevent the next 1 damage that would be dealt to each creature and each player this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Kyoki, Sanity's Eclipse | silent | Whenever you cast a Spirit or Arcane spell, target opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mannichi, the Fevered Dream | silent | {1}{R}: Switch each creature's power and toughness until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Matsu-Tribe Sniper | silent | Whenever this creature deals damage to a creature, tap that creature and it doesn't untap during its controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Minamo's Meddling | silent | Counter target spell. That spell's controller reveals their hand, then discards each card with the same name as a card spliced onto that spell. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -137,6 +136,7 @@
 | Kami of False Hope | handled | Sacrifice this creature: Prevent all combat damage that would be dealt this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kami of Tattered Shoji | handled | Whenever you cast a Spirit or Arcane spell, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kira, Great Glass-Spinner | handled | Creatures you control have "Whenever this creature becomes the target of a spell or ability for the first time each turn, counter that spell or ability." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Kyoki, Sanity's Eclipse | handled | Whenever you cast a Spirit or Arcane spell, target opponent exiles a card from their hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lifegift | handled | Whenever a land enters, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loam Dweller | handled | Whenever you cast a Spirit or Arcane spell, you may put a land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of Sakiko | handled | Enchanted creature has "Whenever this creature deals combat damage to a player, add that much {G}. Until end of turn, you don't lose this mana as steps and phas | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -234,7 +234,6 @@
 | whenever a player casts a spell, tap ~. | 1 | Ogre Recluse | bok |
 | whenever equipped creature deals damage to a creature, tap that creature. that creature doesn"..."s untap step for as long as ~ remains on the battlefield. | 1 | Neko-Te | bok |
 | whenever ink-eyes deals combat damage to a player, you may put target creature card from that player's graveyard onto the battlefield under your control. | 1 | Ink-Eyes, Servant of Oni | bok |
-| whenever you cast a spirit or arcane spell, target opponent exiles a card from their hand. | 1 | Kyoki, Sanity's Eclipse | bok |
 | whenever you cast a spirit or arcane spell, you may search your library for an aura card with enchant creature, reveal it, put it into your hand, then shuffle. | 1 | Tallowisp | bok |
 | whenever ~ attacks, it gains "..." until end of turn unless defending player sacrifices a creature of their choice. | 1 | Ogre Marauder | bok |
 | whenever ~ attacks, you may have it deal N damage to each creature defending player controls. | 1 | Ronin Cliffrider | bok |

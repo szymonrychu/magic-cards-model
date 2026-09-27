@@ -19,8 +19,8 @@
 |---|---|---|
 | Tested | 26 | 10.4% |
 | Works (untested) | 119 | 47.8% |
-| Partial (unaudited) | 15 | 6.0% |
-| Not working | 89 | 35.7% |
+| Partial (unaudited) | 16 | 6.4% |
+| Not working | 88 | 35.3% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Play with Fire | silent | Play with Fire deals 2 damage to any target. If a player is dealt damage this way, scry 1. (Look at the top card of your library. You may put that card on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Primal Adversary | silent | When this creature enters, you may pay {1}{G} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rootcoil Creeper | silent | {G}{U}, {T}, Exile this creature: Return target card with flashback you own from exile to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Saryth, the Viper's Fang | silent | Other tapped creatures you control have deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shipwreck Sifters | silent | Whenever you discard a Spirit card or a card with disturb, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -126,6 +125,7 @@
 | Mounted Dreadknight | unaudited | This creature enters with a +1/+1 counter on it if an opponent lost life this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Poppet Stitcher // Poppet Factory | unaudited | Creature tokens you control lose all abilities and have base power and toughness 3/3. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rem Karolus, Stalwart Slayer | unaudited | If a spell would deal damage to you or another permanent you control, prevent that damage. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| Saryth, the Viper's Fang | unaudited | Other untapped creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Search Party Captain | unaudited | This spell costs {1} less to cast for each creature you attacked with this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Sludge Monster | unaudited | Non-Horror creatures with slime counters on them lose all abilities and have base power and toughness 2/2. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Vadrik, Astral Archmage | unaudited | Instant and sorcery spells you cast cost {X} less to cast, where X is Vadrik's power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -325,7 +325,7 @@
 | look at the top three cards of your library. you may reveal a creature card from among them and put it into your hand. put the rest into your graveyard. flashba | 1 | Tapping at the Window | mid |
 | look at the top two cards of target opponent's library. exile one of them face down and put the other on the bottom of that library. you may play the exiled car | 1 | Siphon Insight | mid |
 | non-horror creatures with slime counters on them lose all abilities and have base power and toughness N/N. | 1 | Sludge Monster | mid |
-| other tapped creatures you control have deathtouch. | 1 | Saryth, the Viper's Fang | mid |
+| other untapped creatures you control have hexproof. | 1 | Saryth, the Viper's Fang | mid |
 | prevent all combat damage that would be dealt by enchanted creature. | 1 | Candletrap | mid |
 | put a +N/+N counter on up to one target creature you control. tap up to one target creature you don"..."t untap during its controller's next untap step. flashba | 1 | Winterthorn Blessing | mid |
 | return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." flashback {M}{M}{M} (you may cast ~ from your grave | 1 | Can't Stay Away | mid |

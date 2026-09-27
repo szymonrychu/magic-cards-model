@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 7.0% |
-| Works (untested) | 94 | 41.2% |
+| Works (untested) | 95 | 41.7% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 96 | 42.1% |
+| Not working | 95 | 41.7% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Necropanther | silent | Whenever this creature mutates, return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Nethroi, Apex of Death | silent | Whenever this creature mutates, return any number of target creature cards with total power 10 or less from your graveyard to the battlefield. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Parcelbeast | silent | Mutate | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Patagia Tiger | silent | When this creature enters, target Human you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Perimeter Sergeant | silent | Whenever this creature attacks, other Humans you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Porcuparrot | silent | {T}: This creature deals X damage to any target, where X is the number of times this creature has mutated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pouncing Shoreshark | silent | Whenever this creature mutates, you may return target creature an opponent controls to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -199,6 +198,7 @@
 | Nightsquad Commando | handled | When this creature enters, if you attacked this turn, create a 1/1 white Human Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Of One Mind | handled | This spell costs {2} less to cast if you control a Human creature and a non-Human creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ominous Seas | handled | Whenever you draw a card, put a foreshadow counter on this enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Patagia Tiger | handled | When this creature enters, target Human you control gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phase Dolphin | handled | Whenever this creature attacks, another target attacking creature can't be blocked this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prickly Marmoset | handled | Whenever you cycle a card, this creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyroceratops | handled | Whenever you cast a noncreature spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -317,7 +317,6 @@
 | when you cycle ~, put a first strike counter on target creature you control. | 1 | Sanctuary Smasher | iko |
 | when you cycle ~, shuffle it into your library from your graveyard. if you've cycled a card named ~ four or more times ~, put it onto the battlefield from your  | 1 | Yidaro, Wandering Monster | iko |
 | when ~ enters, exile target card with a cycling ability from your graveyard. until the end of your next turn, you may play that card. | 1 | Rooting Moloch | iko |
-| when ~ enters, target human you control gets +N/+N until end of turn. | 1 | Patagia Tiger | iko |
 | when ~ enters, target opponent puts a deathtouch counter on a creature they control. | 1 | Hunted Nightmare | iko |
 | whenever a creature you control leaves the battlefield, if it had counters on it, put those counters on ~. | 1 | The Ozolith | iko |
 | whenever a creature you control mutates, put a +N/+N counter on that creature and you gain N life. | 1 | Essence Symbiote | iko |

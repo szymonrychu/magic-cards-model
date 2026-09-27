@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 4.7% |
+| Tested | 13 | 5.1% |
 | Works (untested) | 109 | 42.6% |
 | Partial (unaudited) | 18 | 7.0% |
-| Not working | 117 | 45.7% |
+| Not working | 116 | 45.3% |
 
 ## Cards needing work
 
@@ -109,7 +109,6 @@
 | Shefet Archfiend | silent | When this creature enters, all other creatures get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Silken Strength | silent | When this Aura enters, untap enchanted permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sita Varma, Masked Racer | silent | Exhaust — {X}{G}{G}{U}: Put X +1/+1 counters on Sita Varma. Then you may have the base power and toughness of each other creature you control become equal to Si | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Skyserpent Seeker | silent | Exhaust — {4}: Reveal cards from the top of your library until you reveal two land cards. Put those land cards onto the battlefield tapped and the rest on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Slick Imitator | silent | Max speed | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Spectacular Pileup | silent | All creatures and Vehicles lose indestructible until end of turn, then destroy all creatures and Vehicles. Cycling {2} ({2}, Discard this card: Draw a card.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spikeshell Harrier | silent | When this creature enters, return target creature or Vehicle an opponent controls to its owner's hand. If that opponent's speed is greater than each other playe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -274,7 +273,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Boommobile
 - Captain Howler, Sea Scourge
@@ -285,6 +284,7 @@
 - Ketramose, the New Dawn
 - Marauding Mako
 - Radiant Lotus
+- Skyserpent Seeker
 - Stock Up
 - Ticket Tortoise
 - Venomsac Lagac
@@ -297,7 +297,7 @@
 |---|---|---|---|
 | max speed | 17 | Amonkhet Raceway, Avishkar Raceway, Embalmed Ascendant, Endrider Catalyzer, Endrider Spikespitter | dft |
 | Max speed | 10 | Aether Syphon, Burnout Bashtronaut, Gastal Raider, Gastal Thrillseeker, Kickoff Celebrations | dft |
-| Exhaust | 8 | Boom Scholar, Marshals' Pathcruiser, Mindspring Merfolk, Rocketeer Boostbuggy, Sita Varma, Masked Racer | dft |
+| Exhaust | 7 | Boom Scholar, Marshals' Pathcruiser, Mindspring Merfolk, Rocketeer Boostbuggy, Sita Varma, Masked Racer | dft |
 | start your engines! | 7 | Glitch Ghost Surveyor, Goblin Surveyor, Hazoret, Godseeker, Leonin Surveyor, Loxodon Surveyor | dft |
 | ~ enters tapped unless you control a mount or vehicle. | 5 | Country Roads, Foul Roads, Reef Roads, Rocky Roads, Wild Roads | dft |
 | Choose one | 3 | Collision Course, Crash and Burn, Defend the Rider | dft |

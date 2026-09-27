@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 6.2% |
-| Works (untested) | 113 | 44.0% |
+| Tested | 18 | 7.0% |
+| Works (untested) | 115 | 44.7% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 111 | 43.2% |
+| Not working | 107 | 41.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| +2 Mace | silent | Equipped creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aberrant Mind Sorcerer | silent | Psionic Spells — When this creature enters, choose target instant or sorcery card in your graveyard, then roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Acererak the Archlich | silent | Whenever Acererak attacks, for each opponent, you create a 2/2 black Zombie creature token unless that player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcane Investigator | silent | Search the Room — {5}{U}: Roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -50,7 +49,6 @@
 | Dungeon Crawler | silent | Whenever you complete a dungeon, you may return this card from your graveyard to your hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Dwarfhold Champion | silent | As long as this creature is equipped, it gets +0/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Earth-Cult Elemental | silent | Siege Monster — When this creature enters, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Eccentric Apprentice | silent | At the beginning of combat on your turn, if you've completed a dungeon, up to one target creature becomes a Bird with base power and toughness 1/1 and flying un | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ellywick Tumblestrum | silent | −2: Look at the top six cards of your library. You may reveal a creature card from among them and put it into your hand. If it's legendary, you gain 3 life. Put | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Farideh's Fireball | silent | Farideh's Fireball deals 5 damage to target creature or planeswalker. Roll a d20. 1—9 \| Farideh's Fireball deals 2 damage to each player. 10—20 \| Farideh's Fi | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Farideh, Devil's Chosen | silent | Dark One's Own Luck — Whenever you roll one or more dice, Farideh gains flying and menace until end of turn. If any of those results was 10 or higher, draw a ca | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -98,7 +96,6 @@
 | Swarming Goblins | silent | When this creature enters, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sylvan Shepherd | silent | Whenever this creature attacks, roll a d20. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Targ Nar, Demon-Fang Gnoll | silent | Pack tactics — Whenever Targ Nar attacks, if you attacked with creatures with total power 6 or greater this combat, attacking creatures get +1/+0 until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tasha's Hideous Laughter | silent | Each opponent exiles cards from the top of their library until that player has exiled cards with total mana value 20 or greater. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Blackstaff of Waterdeep | silent | Animate Walking Statue — {1}{U}, {T}: Another target nontoken artifact you control becomes a 4/4 artifact creature for as long as The Blackstaff of Waterdeep re | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Book of Vile Darkness | silent | {T}, Exile The Book of Vile Darkness and artifacts you control named Eye of Vecna and Hand of Vecna: Create Vecna, a legendary 8/8 black Zombie God creature tok | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | The Deck of Many Things | silent | {2}, {T}: Roll a d20 and subtract the number of cards in your hand. If the result is 0 or less, discard your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -127,7 +124,6 @@
 | Orcus, Prince of Undeath | notice | When Orcus enters, choose one — • Each other creature gets -X/-X until end of turn. You lose X life. • Return up to X target creature cards with total mana valu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Paladin Class | notice | Spells your opponents cast during your turn cost {1} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Price of Loyalty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Rally Maneuver | notice | Target creature gets +2/+0 and gains first strike until end of turn. Up to one other target creature gets +0/+2 and gains lifelink until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ray of Enfeeblement | notice | Target creature gets -4/-1 until end of turn. If that creature is white, it gets -4/-4 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spoils of the Hunt | notice | Target creature you control gets +1/+0 until end of turn for each mana from a Treasure that was spent to cast this spell. Then that creature deals damage equal  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Book of Exalted Deeds | notice | {W}{W}{W}, {T}, Exile The Book of Exalted Deeds: Put an enlightened counter on target Angel. It gains "You can't lose the game and your opponents can't win the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -154,6 +150,7 @@
 | Temple of the Dragon Queen | unaudited | As this land enters, you may reveal a Dragon card from your hand. This land enters tapped unless you revealed a Dragon card this way or you control a Dragon. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Xorn | unaudited | If you would create one or more Treasure tokens, instead create those tokens plus an additional Treasure token. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Yuan-Ti Malison | unaudited | This creature can't be blocked as long as it's attacking alone. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
+| +2 Mace | handled | Equipped creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Adult Gold Dragon | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Air-Cult Elemental | handled | Whirlwind — When this creature enters, return up to one other target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Arborea Pegasus | handled | When this creature enters, target creature gets +1/+1 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -225,6 +222,7 @@
 | Priest of Ancient Lore | handled | When this creature enters, you gain 1 life and draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prosperous Innkeeper | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Purple Worm | handled | This spell costs {2} less to cast if a creature died this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Rally Maneuver | handled | Target creature gets +2/+0 and gains first strike until end of turn. Up to one other target creature gets +0/+2 and gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger Class | handled | When this Class enters, create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger's Hawk | handled | {3}, {T}, Tap another untapped creature you control: Venture into the dungeon. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ranger's Longbow | handled | Equipped creature gets +2/+1 and has reach. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -271,19 +269,21 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Bar the Gate
 - Boots of Speed
 - Choose Your Weapon
 - Drizzt Do'Urden
 - Dungeon Map
+- Eccentric Apprentice
 - Gnoll Hunter
 - Hall of Storm Giants
 - Hired Hexblade
 - Minsc, Beloved Ranger
 - Mordenkainen's Polymorph
 - Orb of Dragonkind
+- Tasha's Hideous Laughter
 - Thieves' Tools
 - Veteran Dungeoneer
 - Wish
@@ -331,7 +331,6 @@
 | as ~ enters, you may reveal a dragon card from your hand. if you do or if you control a dragon, ~ enters with a +N/+N counter on it. | 1 | Dragon's Disciple | afr |
 | as ~ enters, you may reveal a dragon card from your hand. ~ enters tapped unless you revealed a dragon card ~ or you control a dragon. | 1 | Temple of the Dragon Queen | afr |
 | at the beginning of combat on your turn, equipped creature or a creature you control named vecna gets +N/+N until end of turn, where N is the number of cards in | 1 | Hand of Vecna | afr |
-| at the beginning of combat on your turn, if you've completed a dungeon, up to one target creature becomes a bird with base power and toughness N/N and flying un | 1 | Eccentric Apprentice | afr |
 | at the beginning of your end step, each opponent loses life equal to the life they lost ~. | 1 | Warlock Class | afr |
 | at the beginning of your upkeep, choose target opponent. until end of turn, that player can't cast spells, you may look at the top card of their library any tim | 1 | Xanathar, Guild Kingpin | afr |
 | at the beginning of your upkeep, exile the top card of your library. for as long as it remains exiled, it has "..." | 1 | Monk Class | afr |
@@ -343,13 +342,11 @@
 | draw a card for each different mana value among nonland cards in your graveyard. | 1 | Sudden Insight | afr |
 | each creature you control gets +N/+N for each equipment attached to it. | 1 | Bruenor Battlehammer | afr |
 | each opponent can't venture into the dungeon more than once each turn. | 1 | Keen-Eared Sentry | afr |
-| each opponent exiles cards from the top of their library until that player has exiled cards with total mana value N or greater. | 1 | Tasha's Hideous Laughter | afr |
 | each skeleton you control has trample, attacks each combat if able, and gets +N/+N, where N is the number of other skeletons you control. | 1 | Skeletal Swarming | afr |
 | enchanted creature has ~ing and "..." | 1 | Fly | afr |
 | enchanted land has "..." | 1 | Find the Path | afr |
 | enchanted permanent is a treasure artifact with "..." and it loses all other abilities. | 1 | Minimus Containment | afr |
 | equip {M}. activate only once each turn. | 1 | Leather Armor | afr |
-| equipped creature gets +N/+N. | 1 | +2 Mace | afr |
 | gain control of target creature until end of turn. untap that creature. it gains haste until end of turn. if mana from a treasure was spent to cast ~, that crea | 1 | Price of Loyalty | afr |
 | if you would create one or more treasure tokens, instead create those tokens plus an additional treasure token. | 1 | Xorn | afr |
 | iymrith has ward {M} as long as it's untapped. | 1 | Iymrith, Desert Doom | afr |
@@ -361,7 +358,6 @@
 | roll a dN. N—N \| draw two cards. N—N \| scry N, then draw two cards. N \| scry N, then draw three cards. | 1 | Contact Other Plane | afr |
 | room abilities of dungeons you own trigger an additional time. | 1 | Hama Pashar, Ruin Seeker | afr |
 | spells your opponents cast during your turn cost {M} more to cast. | 1 | Paladin Class | afr |
-| target creature gets +N/+N and gains first strike until end of turn. up to one other target creature gets +N/+N and gains lifelink until end of turn. | 1 | Rally Maneuver | afr |
 | target creature gets +N/+N until end of turn and must be blocked ~ if able. | 1 | Compelled Duel | afr |
 | target creature gets -N/-N until end of turn. if that creature is white, it gets -N/-N until end of turn instead. | 1 | Ray of Enfeeblement | afr |
 | target creature or planeswalker an opponent controls phases out. if that permanent is black, exile it instead. (if it phases out, treat it and anything attached | 1 | Divine Smite | afr |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 20 | 9.3% |
+| Tested | 21 | 9.8% |
 | Works (untested) | 121 | 56.3% |
 | Partial (unaudited) | 9 | 4.2% |
-| Not working | 65 | 30.2% |
+| Not working | 64 | 29.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Arc Trail | silent | Arc Trail deals 2 damage to any target and 1 damage to any other target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Edgewright | silent | Metalcraft — This creature has double strike as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Replica | silent | {W}, Sacrifice this creature: Prevent all damage a source of your choice would deal to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Sunchaser | silent | Metalcraft — As long as you control three or more artifacts, this creature gets +2/+2 and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -225,8 +224,9 @@
 ## Fully supported
 
 <details>
-<summary>20 cards</summary>
+<summary>21 cards</summary>
 
+- Arc Trail
 - Asceticism
 - Assault Strobe
 - Darkslick Shores
@@ -314,7 +314,6 @@
 | {M}{M}: put target artifact or creature card with mana value N from an opponent's graveyard onto the battlefield tapped under your control. then that player mil | 1 | Geth, Lord of the Vault | som |
 | {M}{M}{M}{M}: elf creatures you control get +N/+N and gain trample until end of turn. | 1 | Ezuri, Renegade Leader | som |
 | ~ can't be blocked as long as defending player controls an artifact. | 1 | Scrapdiver Serpent | som |
-| ~ deals N damage to any target and N damage to any other target. | 1 | Arc Trail | som |
 | ~ deals N damage to target creature. destroy all equipment attached to that creature. | 1 | Turn to Slag | som |
 | −N: creatures can't be blocked ~. | 1 | Venser, the Sojourner | som |
 | −N: destroy all other permanents except for lands and tokens. | 1 | Elspeth Tirel | som |

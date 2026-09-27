@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 13.1% |
-| Works (untested) | 127 | 50.4% |
+| Tested | 35 | 13.9% |
+| Works (untested) | 126 | 50.0% |
 | Partial (unaudited) | 12 | 4.8% |
-| Not working | 80 | 31.7% |
+| Not working | 79 | 31.3% |
 
 ## Cards needing work
 
@@ -32,7 +32,6 @@
 | Attuned Hunter | silent | Whenever one or more cards leave your graveyard during your turn, put a +1/+1 counter on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Betor, Kin to All | silent | At the beginning of your end step, if creatures you control have total toughness 10 or greater, draw a card. Then if creatures you control have total toughness  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bloomvine Regent // Claim Territory | silent | Search your library for up to two basic Forest cards, reveal them, put one onto the battlefield tapped and the other into your hand, then shuffle. (Also shuffle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Breaching Dragonstorm | silent | When this enchantment enters, exile cards from the top of your library until you exile a nonland card. You may cast it without paying its mana cost if that spel | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call the Spirit Dragons | silent | At the beginning of your upkeep, for each color, put a +1/+1 counter on a Dragon you control of that color. If you put +1/+1 counters on five Dragons this way,  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Champion of Dusan | silent | Renew — {1}{G}, Exile this card from your graveyard: Put a +1/+1 counter and a trample counter on target creature. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Death Begets Life | silent | Destroy all creatures and enchantments. Draw a card for each permanent destroyed this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -133,7 +132,6 @@
 | Bewildering Blizzard | handled | Draw three cards. Creatures your opponents control get -3/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bone-Cairn Butcher | handled | Attacking tokens you control have deathtouch. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boulderborn Dragon | handled | Whenever this creature attacks, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Caustic Exhale | handled | As an additional cost to cast this spell, behold a Dragon or pay {1}. (To behold a Dragon, choose a Dragon you control or reveal a Dragon card from your hand.)  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Channeled Dragonfire | handled | Channeled Dragonfire deals 2 damage to any target. Harmonize {5}{R}{R} (You may cast this card from your graveyard for its harmonize cost. You may tap a creatur | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Constrictor Sage | handled | When this creature enters, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Coordinated Maneuver | handled | Choose one — • Coordinated Maneuver deals damage equal to the number of creatures you control to target creature or planeswalker. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -249,11 +247,13 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
 - Aegis Sculptor
 - Ainok Wayfarer
 - Avenger of the Fallen
+- Breaching Dragonstorm
+- Caustic Exhale
 - Clarion Conqueror
 - Cori Mountain Monastery
 - Cori-Steel Cutter
@@ -335,7 +335,6 @@
 | when shiko enters, exile target nonland card with mana value N or less from your graveyard. copy it, then you may cast the copy without paying its mana cost. | 1 | Shiko, Paragon of the Way | tdm |
 | when ~ enters, destroy target nonbasic land an opponent controls. its controller searches their library for a basic land card, puts it onto the battlefield tapp | 1 | Magmatic Hellkite | tdm |
 | when ~ enters, draw a card if you control a creature with a counter on it. if you don't draw a card ~, put a +N/+N counter on ~. | 1 | Trade Route Envoy | tdm |
-| when ~ enters, exile cards from the top of your library until you exile a nonland card. you may cast it without paying its mana cost if that spell"..."t, put th | 1 | Breaching Dragonstorm | tdm |
 | when ~ enters, if it's your main phase, there is an additional combat phase after ~ followed by an additional main phase. when you next attack ~, untap each cre | 1 | All-Out Assault | tdm |
 | when ~ enters, it deals N damage to any target and you gain N life. if a player is dealt damage ~, they discard a card. | 1 | Sonic Shrieker | tdm |
 | when ~ enters, remove all counters from up to one target creature. | 1 | Purging Stormbrood // Absorb Essence | tdm |

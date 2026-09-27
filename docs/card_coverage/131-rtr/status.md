@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 7.1% |
-| Works (untested) | 99 | 44.2% |
+| Works (untested) | 100 | 44.6% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 99 | 44.2% |
+| Not working | 98 | 43.8% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Angel of Serenity | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Archon of the Triumvirate | silent | Whenever this creature attacks, detain up to two target nonland permanents your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Axebane Guardian | silent | {T}: Add X mana in any combination of colors, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Azor's Elocutors | silent | Whenever a source deals damage to you, remove a filibuster counter from this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Arrester | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Azorius Justiciar | silent | When this creature enters, detain up to two target creatures your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bloodfray Giant | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -145,6 +144,7 @@
 | Auger Spree | handled | Target creature gets +4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Avenging Arrow | handled | Destroy target creature that dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Axebane Stag | handled |  |  | Y/Y/- | not_tested |
+| Azor's Elocutors | handled | At the beginning of your upkeep, put a filibuster counter on this creature. Then if this creature has five or more filibuster counters on it, you win the game. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Azorius Keyrune | handled | {W}{U}: This artifact becomes a 2/2 white and blue Bird artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bazaar Krovod | handled | Whenever this creature attacks, another target attacking creature gets +0/+2 until end of turn. Untap that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bellows Lizard | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -316,7 +316,6 @@
 | whenever a creature attacks you or a planeswalker you control, you may draw a card. | 1 | Isperia, Supreme Judge | rtr |
 | whenever a creature you control dies, put N +N/+N counters on target creature you control, where N is the power of the creature that died. | 1 | Death's Presence | rtr |
 | whenever a creature you don't control dies, return it to the battlefield under your control with an additional +N/+N counter on it at the beginning of the next  | 1 | Grave Betrayal | rtr |
-| whenever a source deals damage to you, remove a filibuster counter from ~. | 1 | Azor's Elocutors | rtr |
 | whenever another creature you control enters, you gain life equal to that creature's toughness. | 1 | Trostani, Selesnya's Voice | rtr |
 | whenever enchanted land becomes tapped, its controller mills three cards. | 1 | Chronic Flooding | rtr |
 | whenever you cast a spell, if it's at least one of the chosen colors, you gain N life for each of the chosen colors it is. | 1 | Tablet of the Guilds | rtr |

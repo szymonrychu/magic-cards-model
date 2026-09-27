@@ -39,7 +39,7 @@
 | Controvert | silent | Recover | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Counterbalance | silent | Whenever an opponent casts a spell, you may reveal the top card of your library. If you do, counter that spell if it has the same mana value as the revealed car | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Darien, King of Kjeldor | silent | Whenever you're dealt damage, you may create that many 1/1 white Soldier creature tokens. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
-| Dark Depths | silent | {3}: Remove an ice counter from Dark Depths. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Dark Depths | silent | When Dark Depths has no ice counters on it, sacrifice it. If you do, create Marit Lage, a legendary 20/20 black Avatar creature token with flying and indestruct | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Diamond Faerie | silent | {1}{S}: Snow creatures you control get +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Feast of Flesh | silent | Feast of Flesh deals X damage to target creature and you gain X life, where X is 1 plus the number of cards named Feast of Flesh in all graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Field Marshal | silent | Other Soldier creatures get +1/+1 and have first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -214,6 +214,7 @@
 | when ~ enters, if it's on the battlefield, it deals damage equal to its power to target creature an opponent controls and that creature deals damage equal to it | 1 | Stalking Yeti | csp |
 | when ~ enters, put six +N/+N counters on enchanted creature. | 1 | Shape of the Wiitigo | csp |
 | when ~ enters, sacrifice it unless you sacrifice five lands. | 1 | Jokulmorder | csp |
+| when ~ has no ice counters on it, sacrifice it. if you do, create marit lage, a legendary N/N black avatar creature token with flying and indestructible. | 1 | Dark Depths | csp |
 | when ~ leaves the battlefield, each player gains control of each land they own that you control. | 1 | Herald of Leshrac | csp |
 | whenever a noncreature source you control deals damage, you gain that much life. | 1 | Tamanoa | csp |
 | whenever an opponent casts a spell, you may reveal the top card of your library. if you do, counter that spell if it has the same mana value as the revealed car | 1 | Counterbalance | csp |
@@ -231,7 +232,6 @@
 | you may exile two red cards from your hand rather than pay ~ mana cost. untap all creatures that attacked ~. after ~ phase, there is an additional combat phase  | 1 | Fury of the Horde | csp |
 | {M}, reveal N black cards from your hand, sacrifice ~: exile up to N target cards from a single graveyard. | 1 | Martyr of Bones | csp |
 | {M}, {M}: target snow land becomes a N/N blue elemental creature with flying. it's still a land. | 1 | Balduvian Frostwaker | csp |
-| {M}: remove an ice counter from ~. | 1 | Dark Depths | csp |
 | {M}: remove target blocking creature from combat. creatures it was blocking that hadn't become blocked by another creature ~ become unblocked, then it blocks an | 1 | Balduvian Warlord | csp |
 | {M}: target artifact creature's controller sacrifices it. that player may search their library for a noncreature artifact card, put it onto the battlefield, the | 1 | Arcum Dagsson | csp |
 | {M}: when target creature other than ~ dies ~, return that card to the battlefield under your control. | 1 | Adarkar Valkyrie | csp |

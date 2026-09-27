@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 9.1% |
-| Works (untested) | 104 | 59.1% |
-| Partial (unaudited) | 5 | 2.8% |
-| Not working | 51 | 29.0% |
+| Works (untested) | 109 | 61.9% |
+| Partial (unaudited) | 4 | 2.3% |
+| Not working | 47 | 26.7% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Chandra, Flamecaller | silent | 0: Discard all the cards in your hand, then draw that many cards plus one. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dazzling Reflection | silent | You gain life equal to target creature's power. The next time that creature would deal damage this turn, prevent that damage. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Deceiver of Form | silent | At the beginning of combat on your turn, reveal the top card of your library. If a creature card is revealed this way, you may have creatures you control other  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dimensional Infiltrator | silent | {1}{C}: Target opponent exiles the top card of their library. If it's a land card, you may return this creature to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dread Defiler | silent | {3}{C}, Exile a creature card from your graveyard: Target opponent loses life equal to the exiled card's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Eldrazi Obligator | silent | When you cast this spell, you may pay {1}{C}. If you do, gain control of target creature until end of turn, untap that creature, and it gains haste until end of | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Elemental Uprising | silent | Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. It must be blocked this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -47,7 +46,6 @@
 | Kozilek's Pathfinder | silent | {C}: Target creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kozilek's Return | silent | Devoid (This card has no color.) Kozilek's Return deals 2 damage to each creature. Whenever you cast an Eldrazi creature spell with mana value 7 or greater, you | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lead by Example | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mindmelter | silent | {3}{C}: Target opponent exiles a card from their hand. Activate only as a sorcery. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa's Judgment | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Choose up to one target creature an opponent controls. Each creature you control with a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nissa, Voice of Zendikar | silent | −7: You gain X life and draw X cards, where X is the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Press into Service | silent | Support | no machine in the engine executes this keyword | Y/Y/- | not_working |
@@ -62,12 +60,10 @@
 | Stone Haven Outfitter | silent | Equipped creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Stoneforge Masterwork | silent | Equipped creature gets +1/+1 for each other creature you control that shares a creature type with it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sylvan Advocate | silent | As long as you control six or more lands, this creature and land creatures you control get +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Thought Harvester | silent | Whenever you cast a colorless spell, target opponent exiles the top card of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unity of Purpose | silent | Support 2. (Put a +1/+1 counter on each of up to two target creatures.) Untap each creature you control with a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vile Redeemer | silent | When you cast this spell, you may pay {C}. If you do, create a 1/1 colorless Eldrazi Scion creature token for each nontoken creature that died under your contro | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Visions of Brutality | silent | Whenever enchanted creature deals damage, its controller loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wandering Fumarole | silent | {2}{U}{R}: Until end of turn, this land becomes a 1/4 blue and red Elemental creature with "{0}: Switch this creature's power and toughness until end of turn."  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Witness the End | silent | Devoid (This card has no color.) Target opponent exiles two cards from their hand and loses 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ayli, Eternal Pilgrim | notice | {1}, Sacrifice another creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Baloth Pup | notice | This creature has trample as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Eldrazi Aggressor | notice | This creature has haste as long as you control another colorless creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -81,7 +77,6 @@
 | Kalitas, Traitor of Ghet | unaudited | If a nontoken creature an opponent controls would die, instead exile that card and create a 2/2 black Zombie creature token. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oath of Gideon | unaudited | Each planeswalker you control enters with an additional loyalty counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Oath of Nissa | unaudited | You may spend mana as though it were mana of any color to cast planeswalker spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Sphinx of the Final Word | unaudited | Instant and sorcery spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Abstruse Interference | handled | Devoid (This card has no color.) Counter target spell unless its controller pays {1}. You create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Affa Protector | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
 | Akoum Flameseeker | handled | Cohort — {T}, Tap an untapped Ally you control: Discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -111,6 +106,7 @@
 | Cyclone Sire | handled | When this creature dies, you may put three +1/+1 counters on target land you control. If you do, that land becomes a 0/0 Elemental creature with haste that's st | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deepfathom Skulker | handled | Whenever a creature you control deals combat damage to a player, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Devour in Flames | handled | As an additional cost to cast this spell, return a land you control to its owner's hand. Devour in Flames deals 5 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dimensional Infiltrator | handled | {1}{C}: Target opponent exiles the top card of their library. If it's a land card, you may return this creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Drana's Chosen | handled | Cohort — {T}, Tap an untapped Ally you control: Create a tapped 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Eldrazi Displacer | handled | {2}{C}: Exile another target creature, then return it to the battlefield tapped under its owner's control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Essence Depleter | handled | {1}{C}: Target opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -143,6 +139,7 @@
 | Maw of Kozilek | handled | {C}: This creature gets +2/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meandering River | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mina and Denn, Wildborn | handled | You may play an additional land on each of your turns. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mindmelter | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Munda's Vanguard | handled | Cohort — {T}, Tap an untapped Ally you control: Put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Natural State | handled | Destroy target artifact or enchantment with mana value 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Needle Spires | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -168,6 +165,7 @@
 | Slip Through Space | handled | Devoid (This card has no color.) Target creature can't be blocked this turn. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spatial Contortion | handled | ({C} represents colorless mana.) Target creature gets +3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spawnbinder Mage | handled | Cohort — {T}, Tap an untapped Ally you control: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Sphinx of the Final Word | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stalking Drone | handled | {C}: This creature gets +1/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stoneforge Acolyte | handled | Cohort — {T}, Tap an untapped Ally you control: Look at the top four cards of your library. You may reveal an Equipment card from among them and put it into you | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stormchaser Mage | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -175,6 +173,7 @@
 | Tajuru Pathwarden | handled | Vigilance | machines/combat.py | Y/Y/Y | not_tested |
 | Tar Snare | handled | Target creature gets -3/-2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tears of Valakut | handled | This spell can't be countered. Tears of Valakut deals 5 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Thought Harvester | handled | Whenever you cast a colorless spell, target opponent exiles the top card of their library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Timber Gorge | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tranquil Expanse | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Umara Entangler | handled | Prowess | machines/keywords.py | Y/Y/- | not_tested |
@@ -184,6 +183,7 @@
 | Void Grafter | handled | When this creature enters, another target creature you control gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Void Shatter | handled | Devoid (This card has no color.) Counter target spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warden of Geometries | handled | Vigilance | machines/combat.py | Y/Y/- | not_tested |
+| Witness the End | handled | Devoid (This card has no color.) Target opponent exiles two cards from their hand and loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zada's Commando | handled | Cohort — {T}, Tap an untapped Ally you control: This creature deals 1 damage to target opponent or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Zulaport Chainmage | handled | Cohort — {T}, Tap an untapped Ally you control: Target opponent loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
@@ -224,14 +224,12 @@
 | at the beginning of your upkeep, you may reveal your hand. if you do, you win the game if you own a card named ~ in exile, in your hand, in your graveyard, and  | 1 | Hedron Alignment | ogw |
 | devoid (~ has no color.) search your library for a basic land card and reveal it. you may put that card onto the battlefield tapped if you control a land named  | 1 | Ruin in Their Wake | ogw |
 | devoid (~ has no color.) target creature gets +N/+N until end of turn. regenerate it. | 1 | Unnatural Endurance | ogw |
-| devoid (~ has no color.) target opponent exiles two cards from their hand and loses N life. | 1 | Witness the End | ogw |
 | devoid (~ has no color.) ~ deals N damage to each creature. whenever you cast an eldrazi creature spell with mana value N or greater, you may exile ~ from your  | 1 | Kozilek's Return | ogw |
 | each planeswalker you control enters with an additional loyalty counter on it. | 1 | Oath of Gideon | ogw |
 | enchanted creature gets +N/+N, has vigilance, and can block an additional creature each combat. | 1 | Iona's Blessing | ogw |
 | equipped creature gets +N/+N for each other creature you control that shares a creature type with it. | 1 | Stoneforge Masterwork | ogw |
 | equipped creatures you control get +N/+N. | 1 | Stone Haven Outfitter | ogw |
 | if a nontoken creature an opponent controls would die, instead exile that card and create a N/N black zombie creature token. | 1 | Kalitas, Traitor of Ghet | ogw |
-| instant and sorcery spells you control can't be countered. | 1 | Sphinx of the Final Word | ogw |
 | other creatures you control get +N/+N as long as you control an equipment. | 1 | Weapons Trainer | ogw |
 | return target creature to its owner"..."s library instead. | 1 | Sweep Away | ogw |
 | support | 1 | Press into Service | ogw |
@@ -248,7 +246,6 @@
 | when ~ enters, return target creature an opponent controls to its owner"..."s owner can't cast spells with the same name as that creature until your next turn. | 1 | Reflector Mage | ogw |
 | when ~ enters, you may cast target instant or sorcery card with mana value N or less from your graveyard without paying its mana cost. if that spell would be pu | 1 | Goblin Dark-Dwellers | ogw |
 | whenever enchanted creature deals damage, its controller loses that much life. | 1 | Visions of Brutality | ogw |
-| whenever you cast a colorless spell, target opponent exiles the top card of their library. | 1 | Thought Harvester | ogw |
 | you gain life equal to target creature's power. the next time that creature would deal damage ~, prevent that damage. | 1 | Dazzling Reflection | ogw |
 | you may spend mana as though it were mana of any color to cast planeswalker spells. | 1 | Oath of Nissa | ogw |
 | {M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. | 1 | Ayli, Eternal Pilgrim | ogw |
@@ -256,8 +253,6 @@
 | {M}{M}, exile a creature card from your graveyard: target opponent loses life equal to the exiled card's power. | 1 | Dread Defiler | ogw |
 | {M}{M}: each creature with toughness greater than its power can't block ~. | 1 | Immobilizer Eldrazi | ogw |
 | {M}{M}: target creature with a +N/+N counter on it gains flying and vigilance until end of turn. | 1 | Steppe Glider | ogw |
-| {M}{M}: target opponent exiles a card from their hand. activate only as a sorcery. | 1 | Mindmelter | ogw |
-| {M}{M}: target opponent exiles the top card of their library. if it"..."s hand. | 1 | Dimensional Infiltrator | ogw |
 | {M}{M}{M}: support N. | 1 | Joraga Auxiliary | ogw |
 | {M}{M}{M}: until end of turn, ~ becomes a N/N blue and red elemental creature with "..." it's still a land. | 1 | Wandering Fumarole | ogw |
 | {M}{M}{M}{M}{M}: ally creatures you control get +N/+N until end of turn, where N is the number of colors among those creatures. | 1 | General Tazri | ogw |

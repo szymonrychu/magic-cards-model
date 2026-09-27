@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 14.4% |
-| Works (untested) | 94 | 50.3% |
+| Tested | 28 | 15.0% |
+| Works (untested) | 97 | 51.9% |
 | Partial (unaudited) | 15 | 8.0% |
-| Not working | 51 | 27.3% |
+| Not working | 47 | 25.1% |
 
 ## Cards needing work
 
@@ -28,10 +28,8 @@
 |---|---|---|---|---|---|
 | Aunt May | silent | Whenever another creature you control enters, you gain 1 life. If it's a Spider, put a +1/+1 counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Black Cat, Cunning Thief | silent | When Black Cat enters, look at the top nine cards of target opponent's library, exile two of them face down, then put the rest on the bottom of their library in | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Chameleon, Master of Disguise | silent | You may have Chameleon enter as a copy of a creature you control, except his name is Chameleon, Master of Disguise. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cheering Crowd | silent | At the beginning of each player's first main phase, that player may put a +1/+1 counter on this creature. If they do, they add {C} for each counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Cosmic Spider-Man | silent | At the beginning of combat on your turn, other Spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Ezekiel Sims, Spider-Totem | silent | At the beginning of combat on your turn, target Spider you control gets +2/+2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Friendly Neighborhood | silent | Enchanted land has "{1}, {T}: Target creature gets +1/+1 until end of turn for each creature you control. Activate only as a sorcery." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwen Stacy // Ghost-Spider | silent | When Gwen Stacy enters, exile the top card of your library. You may play that card for as long as you control this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Gwenom, Remorseless | silent | Whenever Gwenom attacks, until end of turn, you may look at the top card of your library any time and you may play cards from the top of your library. If you ca | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -39,7 +37,6 @@
 | Jackal, Genius Geneticist | silent | Whenever you cast a creature spell with mana value equal to Jackal's power, copy that spell, except the copy isn't legendary. Then put a +1/+1 counter on Jackal | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lady Octopus, Inspired Inventor | silent | Whenever you draw your first or second card each turn, put an ingenuity counter on Lady Octopus. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Living Brain, Mechanical Marvel | silent | At the beginning of combat on your turn, target non-Equipment artifact you control becomes an artifact creature with base power and toughness 3/3 until end of t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Lizard, Connors's Curse | silent | Lizard Formula — When Lizard, Connors's Curse enters, up to one other target creature loses all abilities and becomes a green Lizard creature with base power an | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Maximum Carnage | silent | I — Until your next turn, each creature attacks each combat if able and attacks a player other than you if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Miles Morales // Ultimate Spider-Man | silent | Whenever you attack, double the number of each kind of counter on each Spider and legendary creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Molten Man, Inferno Incarnate | silent | When Molten Man leaves the battlefield, sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -48,7 +45,6 @@
 | Rent Is Due | silent | At the beginning of your end step, you may tap two untapped creatures and/or Treasures you control. If you do, draw a card. Otherwise, sacrifice this enchantmen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rhino's Rampage | silent | Target creature you control gets +1/+0 until end of turn. It fights target creature an opponent controls. When excess damage is dealt to the creature an opponen | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sandman, Shifting Scoundrel | silent | {3}{G}{G}: Return this card and target land card from your graveyard to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Scarlet Spider, Kaine | silent | When Scarlet Spider enters, you may discard a card. If you do, put a +1/+1 counter on him. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Selfless Police Captain | silent | When this creature leaves the battlefield, put its +1/+1 counters on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Ham, Peter Porker | silent | Animal May-Ham — Other Spiders, Boars, Bats, Bears, Birds, Cats, Dogs, Frogs, Jackals, Lizards, Mice, Otters, Rabbits, Raccoons, Rats, Squirrels, Turtles, and W | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spider-Man India | silent | Pavitr's Sevā — Whenever you cast a creature spell, put a +1/+1 counter on target creature you control. It gains flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -100,6 +96,7 @@
 | Beetle, Legacy Criminal | handled | {1}{U}, Exile this card from your graveyard: Put a +1/+1 counter on target creature. It gains flying until end of turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Behold the Sinister Six! | handled | Return up to six target creature cards with different names from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Biorganic Carapace | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Chameleon, Master of Disguise | handled | You may have Chameleon enter as a copy of a creature you control, except his name is Chameleon, Master of Disguise. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | City Pigeon | handled | When this creature leaves the battlefield, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Common Crook | handled | When this creature dies, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Costume Closet | handled | This artifact enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -107,6 +104,7 @@
 | Daily Bugle Reporters | handled | When this creature enters, choose one — • Puff Piece — Put a +1/+1 counter on each of up to two target creatures. • Investigative Journalism — Return target cre | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Damage Control Crew | handled | When this creature enters, choose one — • Repair — Return target card with mana value 4 or greater from your graveyard to your hand. • Impound — Exile target ar | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eerie Gravestone | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Ezekiel Sims, Spider-Totem | handled | At the beginning of combat on your turn, target Spider you control gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flying Octobot | handled | Whenever another Villain you control enters, put a +1/+1 counter on this creature. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gallant Citizen | handled | When this creature enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Green Goblin, Revenant | handled | Whenever Green Goblin attacks, discard a card. Then draw a card for each card you've discarded this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -143,6 +141,7 @@
 | SP//dr, Piloted by Peni | handled | When SP//dr enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sandman's Quicksand | handled | Mayhem {3}{B} (You may cast this card from your graveyard for {3}{B} if you discarded it this turn. Timing rules still apply.) All creatures get -2/-2 until end | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Savage Mansion | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Scarlet Spider, Kaine | handled | When Scarlet Spider enters, you may discard a card. If you do, put a +1/+1 counter on him. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scorpion's Sting | handled | Target creature gets -3/-3 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scorpion, Seething Striker | handled | At the beginning of your end step, if a creature died this turn, target creature you control connives. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Secret Identity | handled | Choose one — • Conceal — Until end of turn, target creature you control becomes a Citizen with base power and toughness 1/1 and gains hexproof. • Reveal — Until | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -190,7 +189,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Doc Ock's Henchmen
 - Doc Ock's Tentacles
@@ -200,6 +199,7 @@
 - Hydro-Man, Fluid Felon
 - Impostor Syndrome
 - Interdimensional Web Watch
+- Lizard, Connors's Curse
 - Mister Negative
 - Mob Lookout
 - Peter Parker's Camera
@@ -229,7 +229,6 @@
 | Choose one | 1 | Heroes' Hangout | spm |
 | Dinosaur Formula | 1 | Stegron the Dinosaur Man | spm |
 | From the Future | 1 | Spider-Man 2099 | spm |
-| Lizard Formula | 1 | Lizard, Connors's Curse | spm |
 | Sensational Save | 1 | Scarlet Spider, Ben Reilly | spm |
 | Venom Blast | 1 | Spider-Woman, Stunning Savior | spm |
 | animal may-ham — other spiders, boars, bats, bears, birds, cats, dogs, frogs, jackals, lizards, mice, otters, rabbits, raccoons, rats, squirrels, turtles, and w | 1 | Spider-Ham, Peter Porker | spm |
@@ -238,7 +237,6 @@
 | as ~ enters, choose a basic land type. then you may pay N life. if you don't, it enters tapped. | 1 | Multiversal Passage | spm |
 | at the beginning of combat on your turn, other spiders you control gain flying, first strike, trample, lifelink, and haste until end of turn. | 1 | Cosmic Spider-Man | spm |
 | at the beginning of combat on your turn, target non-equipment artifact you control becomes an artifact creature with base power and toughness N/N until end of t | 1 | Living Brain, Mechanical Marvel | spm |
-| at the beginning of combat on your turn, target spider you control gets +N/+N until end of turn. | 1 | Ezekiel Sims, Spider-Totem | spm |
 | at the beginning of each player's first main phase, that player may put a +N/+N counter on ~. if they do, they add {M} for each counter on it. | 1 | Cheering Crowd | spm |
 | at the beginning of your end step, two target players each reveal the top card of their library. they each lose life equal to the mana value of the card reveale | 1 | Parker Luck | spm |
 | at the beginning of your end step, you may tap two untapped creatures and/or treasures you control. if you do, draw a card. otherwise, sacrifice ~. | 1 | Rent Is Due | spm |
@@ -265,7 +263,6 @@
 | when carnage enters, return target creature card with mana value N or less from your graveyard to the battlefield. it gains "..." and "..." | 1 | Carnage, Crimson Chaos | spm |
 | when molten man leaves the battlefield, sacrifice a land. | 1 | Molten Man, Inferno Incarnate | spm |
 | when mysterio enters, create a N/N blue illusion villain creature token for each nontoken villain you control. exile those tokens when mysterio leaves the battl | 1 | Mysterio, Master of Illusion | spm |
-| when scarlet spider enters, you may discard a card. if you do, put a +N/+N counter on him. | 1 | Scarlet Spider, Kaine | spm |
 | when the spot enters, exile up to one target nonland permanent and up to one target nonland permanent card from a graveyard. | 1 | The Spot, Living Portal | spm |
 | when you next cast a creature spell ~, copy it, except the copy isn't legendary. | 1 | The Clone Saga | spm |
 | when ~ enters, exile the top card of your library. you may play that card for as long as you control ~. | 1 | Gwen Stacy // Ghost-Spider | spm |
@@ -285,7 +282,6 @@
 | you don't lose unspent red mana as steps and phases end. | 1 | Electro, Assaulting Battery | spm |
 | you may cast spider spells and noncreature spells from the top of your library. | 1 | Madame Web, Clairvoyant | spm |
 | you may cast ~ from your graveyard by discarding a card in addition to paying its other costs. | 1 | Alien Symbiosis | spm |
-| you may have chameleon enter as a copy of a creature you control, except his name is ~. | 1 | Chameleon, Master of Disguise | spm |
 | {M}, return a tapped creature you control to its owner's hand: put ~ from your hand onto the battlefield. activate only as a sorcery. | 1 | Urban Retreat | spm |
 | {M}: put a +N/+N counter on each artifact creature and/or vehicle you control. | 1 | Iron Spider, Stark Upgrade | spm |
 | {M}{M}{M}: return ~ and target land card from your graveyard to the battlefield tapped. | 1 | Sandman, Shifting Scoundrel | spm |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 14.5% |
+| Tested | 42 | 15.3% |
 | Works (untested) | 138 | 50.2% |
-| Partial (unaudited) | 15 | 5.5% |
-| Not working | 82 | 29.8% |
+| Partial (unaudited) | 14 | 5.1% |
+| Not working | 81 | 29.5% |
 
 ## Cards needing work
 
@@ -35,7 +35,7 @@
 | Brackish Blunder | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Braided Net // Braided Quipu | silent | {3}{U}, {T}: Draw a card for each artifact you control, then put this artifact into its owner's library third from the top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Brass's Tunnel-Grinder // Tecutlan, the Searing Rift | silent | Whenever you cast a permanent spell using mana produced by Tecutlan, discover X, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Cartographer's Companion | silent | When this creature enters, create a Map token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Cartographer's Companion | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Cavern Stomper | silent | {3}{G}: This creature can't be blocked by creatures with power 2 or less this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Chupacabra Echo | silent | Fathomless descent — When this creature enters, target creature an opponent controls gets -X/-X until end of turn, where X is the number of permanent cards in y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Compass Gnome | silent | When this creature enters, you may search your library for a basic land card or Cave card, reveal it, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -72,12 +72,11 @@
 | Relic's Roar | silent | Until end of turn, target artifact or creature becomes a Dinosaur artifact creature with base power and toughness 4/3 in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Restless Anchorage | silent | Whenever this land attacks, create a Map token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Roaming Throne | silent | This creature is the chosen type in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Sentinel of the Nameless City | silent | Whenever this creature enters or attacks, create a Map token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Sentinel of the Nameless City | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Shipwreck Sentry | silent | As long as an artifact entered the battlefield under your control this turn, this creature can attack as though it didn't have defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Skullcap Snail | silent | When this creature enters, target opponent exiles a card from their hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sovereign Okinec Ahau | silent | Whenever Sovereign Okinec Ahau attacks, for each creature you control with power greater than that creature's base power, put a number of +1/+1 counters on that | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Spring-Loaded Sawblades // Bladewheel Chariot | silent | Tap two other untapped artifacts you control: This Vehicle becomes an artifact creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Spyglass Siren | silent | When this creature enters, create a Map token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Spyglass Siren | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Squirming Emergence | silent | Fathomless descent — Return to the battlefield target nonland permanent card in your graveyard with mana value less than or equal to the number of permanent car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Subterranean Schooner | silent | Whenever this Vehicle attacks, target creature that crewed it this turn explores. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Sunbird Standard // Sunbird Effigy | silent | Sunbird Effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -96,7 +95,7 @@
 | Unstable Glyphbridge // Sandswirl Wanderglyph | silent | When this artifact enters, if you cast it, for each player, choose a creature with power 2 or less that player controls. Then destroy all creatures except creat | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wail of the Forgotten | silent | Descend 8 — Choose one. If there are eight or more permanent cards in your graveyard as you cast this spell, choose one or more instead. • Return target nonland | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Warden of the Inner Sky | silent | As long as this creature has three or more counters on it, it has flying and vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Waterwind Scout | silent | When this creature enters, create a Map token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
+| Waterwind Scout | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Zoyowa Lava-Tongue | silent | At the beginning of your end step, if you descended this turn, each opponent may discard a card or sacrifice a permanent of their choice. Zoyowa deals 3 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Zoyowa's Justice | silent | The owner of target artifact or creature with mana value 1 or greater shuffles it into their library. Then that player discovers X, where X is its mana value. ( | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bonehoard Dracosaur | notice | At the beginning of your upkeep, exile the top two cards of your library. You may play them this turn. If you exiled a land card this way, create a 3/1 red Dino | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -110,7 +109,6 @@
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bedrock Tortoise | unaudited | During your turn, creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Bloodletter of Aclazotz | unaudited | If an opponent would lose life during your turn, they lose twice that much life instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Chimil, the Inner Sun | unaudited | Spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Forgotten Monument | unaudited | Other Caves you control have "{T}, Pay 1 life: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Guardian of the Great Door | unaudited | As an additional cost to cast this spell, tap four untapped artifacts, creatures, and/or lands you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Intrepid Paleontologist | unaudited | You may cast Dinosaur creature spells from among cards you own exiled with this creature. If you cast a spell this way, that creature enters with a finality cou | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -161,7 +159,6 @@
 | Dowsing Device // Geode Grotto | handled | Whenever this artifact or another artifact you control enters, up to one target creature you control gets +1/+0 and gains haste until end of turn. Then transfor | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dusk Rose Reliquary | handled | As an additional cost to cast this spell, sacrifice an artifact or creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Earthshaker Dreadmaw | handled | When this creature enters, draw a card for each other Dinosaur you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Eaten by Piranhas | handled | Enchanted creature loses all abilities and is a black Skeleton creature with base power and toughness 1/1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Echo of Dusk | handled | Descend 4 — As long as there are four or more permanent cards in your graveyard, this creature gets +1/+1 and has lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enterprising Scallywag | handled | At the beginning of your end step, if you descended this turn, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Envoy of Okinec Ahau | handled | {4}{W}: Create a 1/1 colorless Gnome artifact creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -240,6 +237,7 @@
 | Seismic Monstrosaur | handled | {2}{R}, Sacrifice a land: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Self-Reflection | handled | Create a token that's a copy of target creature you control. Flashback {3}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sinuous Benthisaur | handled | When this creature enters, look at the top X cards of your library, where X is the number of Caves you control plus the number of Cave cards in your graveyard.  | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Skullcap Snail | handled | When this creature enters, target opponent exiles a card from their hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Soaring Sandwing | handled | When this creature enters, you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Soulcoil Viper | handled | {B}, {T}, Sacrifice this creature: Return target creature card from your graveyard to the battlefield with a finality counter on it. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Staggering Size | handled | Target creature gets +3/+3 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -265,7 +263,7 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>42 cards</summary>
 
 - Abuelo's Awakening
 - Akawalli, the Seething Tower
@@ -275,11 +273,13 @@
 - Broodrage Mycoid
 - Calamitous Cave-In
 - Captivating Cave
+- Chimil, the Inner Sun
 - Clay-Fired Bricks // Cosmium Kiln
 - Coati Scavenger
 - Deeproot Pilgrimage
 - Didact Echo
 - Dreadmaw's Ire
+- Eaten by Piranhas
 - Echoing Deeps
 - Geological Appraiser
 - Ghalta, Stampede Tyrant
@@ -314,9 +314,8 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
+| explore | 9 | Brackish Blunder, Cartographer's Companion, Deepfathom Echo, Defossilize, Get Lost | lci |
 | Fathomless descent | 5 | Chupacabra Echo, Matzalantli, the Great Door // The Core, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
-| explore | 5 | Brackish Blunder, Deepfathom Echo, Defossilize, Get Lost, Glowcap Lantern | lci |
-| when ~ enters, create a map token. | 3 | Cartographer's Companion, Spyglass Siren, Waterwind Scout | lci |
 | as an additional cost to cast ~, discard a card or sacrifice a permanent. | 1 | Souls of the Lost | lci |
 | as an additional cost to cast ~, sacrifice an artifact or creature. draw two cards and create a map token. (it's an artifact with "...") | 1 | Fanatical Offering | lci |
 | as an additional cost to cast ~, tap four untapped artifacts, creatures, and/or lands you control. | 1 | Guardian of the Great Door | lci |
@@ -343,7 +342,6 @@
 | other caves you control have "..." | 1 | Forgotten Monument | lci |
 | sacrifice ~: exile up to four target cards from a single graveyard. activate only as a sorcery. | 1 | Digsite Conservator | lci |
 | skeletons you control get +N/+N and have haste. | 1 | Corpses of the Lost | lci |
-| spells you control can't be countered. | 1 | Chimil, the Inner Sun | lci |
 | sunbird effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | 1 | Sunbird Standard // Sunbird Effigy | lci |
 | tap two other untapped artifacts you control: ~ becomes an artifact creature until end of turn. | 1 | Spring-Loaded Sawblades // Bladewheel Chariot | lci |
 | the owner of target artifact or creature with mana value N or greater shuffles it into their library. then that player discovers N, where N is its mana value. ( | 1 | Zoyowa's Justice | lci |
@@ -360,7 +358,6 @@
 | when ~ enters, look at target opponent's hand. you may exile a nonland card from it until ~ leaves the battlefield. | 1 | Deep-Cavern Bat | lci |
 | when ~ enters, look at the top six cards of your library. you may put a land card from among them onto the battlefield tapped. put the rest on the bottom in a r | 1 | Kaslem's Stonetree // Kaslem's Strider | lci |
 | when ~ enters, search your library for a basic land card or cave card, put it onto the battlefield tapped, then shuffle. | 1 | Scampering Surveyor | lci |
-| when ~ enters, target opponent exiles a card from their hand. | 1 | Skullcap Snail | lci |
 | when ~ enters, you gain life equal to the mana value of the exiled card used to craft it. | 1 | Jade Seedstones // Jadeheart Attendant | lci |
 | when ~ enters, you may reveal a dinosaur card from your hand. if you do or if you control another dinosaur, you gain N life. | 1 | Armored Kincaller | lci |
 | when ~ enters, you may search your library for a basic land card or cave card, reveal it, then shuffle and put that card on top. | 1 | Compass Gnome | lci |
@@ -384,7 +381,6 @@
 | whenever ~ attacks, create a treasure token. until end of turn, you may look at the top card of your library any time, and you may play lands and cast spells fr | 1 | The Belligerent | lci |
 | whenever ~ attacks, for each creature you control with power greater than that creature's base power, put a number of +N/+N counters on that creature equal to t | 1 | Sovereign Okinec Ahau | lci |
 | whenever ~ attacks, target creature that crewed it ~ explores. | 1 | Subterranean Schooner | lci |
-| whenever ~ enters or attacks, create a map token. | 1 | Sentinel of the Nameless City | lci |
 | whenever ~ enters or attacks, create a number of N/N colorless gnome artifact creature tokens equal to its power. | 1 | Threefold Thunderhulk | lci |
 | you may cast dinosaur creature spells from among cards you own exiled with ~. if you cast a spell ~, that creature enters with a finality counter on it. | 1 | Intrepid Paleontologist | lci |
 | you may mill two cards. then return up to two creature cards from your graveyard to your hand. (to mill two cards, put the top two cards of your library into yo | 1 | Another Chance | lci |

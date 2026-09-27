@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 22 | 9.2% |
-| Works (untested) | 132 | 55.2% |
-| Partial (unaudited) | 11 | 4.6% |
-| Not working | 74 | 31.0% |
+| Works (untested) | 134 | 56.1% |
+| Partial (unaudited) | 10 | 4.2% |
+| Not working | 73 | 30.5% |
 
 ## Cards needing work
 
@@ -28,11 +28,9 @@
 |---|---|---|---|---|---|
 | Amplifire | silent | At the beginning of your upkeep, reveal cards from the top of your library until you reveal a creature card. Until your next turn, this creature's base power be | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angel of Grace | silent | When this creature enters, until end of turn, damage that would reduce your life total to less than 1 reduces it to 1 instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Angelic Exaltation | silent | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Biogenic Upgrade | silent | Distribute three +1/+1 counters among one, two, or three target creatures, then double the number of +1/+1 counters on each of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Biomancer's Familiar | silent | {T}: The next time target creature adapts this turn, it adapts as though it had no +1/+1 counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Carnival // Carnage | silent | Carnage deals 3 damage to target opponent. That player discards two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Carrion Imp | silent | When this creature enters, you may exile target creature card from a graveyard. If you do, you gain 2 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavalcade of Calamity | silent | Whenever a creature you control with power 1 or less attacks, this enchantment deals 1 damage to the player or planeswalker that creature is attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Charging War Boar | silent | As long as you control a Domri planeswalker, this creature gets +1/+1 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Clan Guildmage | silent | {2}{G}, {T}: Target land you control becomes a 4/4 Elemental creature with haste until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,6 +95,7 @@
 | Ethereal Absolution | notice | {2}{W}{B}: Exile target card from an opponent's graveyard. If it was a creature card, you create a 1/1 white and black Spirit creature token with flying. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mirror March | notice | Whenever a nontoken creature you control enters, flip a coin until you lose a flip. For each flip you won, create a token that's a copy of that creature. Those  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Open the Gates | notice | Search your library for a basic land card or Gate card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Rhythm of the Wild | notice | Nontoken creatures you control have riot. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sphinx of Foresight | notice | You may reveal this card from your opening hand. If you do, scry 3 at the beginning of your first upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sphinx of New Prahv | notice | Spells your opponents cast that target this creature cost {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swirling Torrent | notice | Choose one or both — • Put target creature on top of its owner's library. • Return target creature to its owner's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -107,11 +106,11 @@
 | Lawmage's Binding | unaudited | Enchanted creature can't attack or block, and its activated abilities can't be activated. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Nikya of the Old Ways | unaudited | You can't cast noncreature spells. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Persistent Petitioners | unaudited | A deck can have any number of cards named Persistent Petitioners. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Rhythm of the Wild | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Rubblebelt Runner | unaudited | This creature can't be blocked by creature tokens. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Teysa Karlov | unaudited | If a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Theater of Horrors | unaudited | During your turn, if an opponent lost life this turn, you may play lands and cast spells from among cards exiled with this enchantment. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Aeromunculus | handled | {2}{G}{U}: Adapt 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Angelic Exaltation | handled | Whenever a creature you control attacks alone, it gets +X/+X until end of turn, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Applied Biomancy | handled | Choose one or both — • Target creature gets +1/+1 until end of turn. • Return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Archway Angel | handled | When this creature enters, you gain 2 life for each Gate you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Arrester's Admonition | handled | Return target creature to its owner's hand. Addendum — If you cast this spell during your main phase, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -132,6 +131,7 @@
 | Bring to Trial | handled | Exile target creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burn Bright | handled | Creatures you control get +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burning-Tree Vandal | handled | Whenever this creature attacks, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Carrion Imp | handled | When this creature enters, you may exile target creature card from a graveyard. If you do, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Catacomb Crocodile | handled |  |  | Y/Y/- | not_tested |
 | Chillbringer | handled | When this creature enters, tap target creature an opponent controls. It doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cindervines | handled | Whenever an opponent casts a noncreature spell, this enchantment deals 1 damage to that player. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -291,7 +291,6 @@
 | carnage deals N damage to target opponent. that player discards two cards. | 1 | Carnival // Carnage | rna |
 | counter target spell. its controller mills three cards. | 1 | Thought Collapse | rna |
 | create a number of N/N red goblin creature tokens equal to two plus the number of cards named ~ in your graveyard. | 1 | Goblin Gathering | rna |
-| creature spells you control can't be countered. | 1 | Rhythm of the Wild | rna |
 | destroy all artifacts and enchantments. for each permanent destroyed ~, its controller creates a N/N green centaur creature token. | 1 | Rampage of the Clans | rna |
 | destroy all creatures. you gain life equal to the number of creatures you controlled that were destroyed ~. | 1 | Kaya's Wrath | rna |
 | distribute three +N/+N counters among one, two, or three target creatures, then double the number of +N/+N counters on each of those creatures. | 1 | Biogenic Upgrade | rna |
@@ -307,6 +306,7 @@
 | if a creature dying causes a triggered ability of a permanent you control to trigger, that ability triggers an additional time. | 1 | Teysa Karlov | rna |
 | instant and sorcery spells you control have deathtouch. | 1 | Pestilent Spirit | rna |
 | multicolored creatures you control get +N/+N. | 1 | Glass of the Guildpact | rna |
+| nontoken creatures you control have riot. | 1 | Rhythm of the Wild | rna |
 | put target attacking or blocking creature on top of its owner's library. | 1 | Warrant // Warden | rna |
 | put up to one target tapped creature on top of its owner's library. you may search your library and/or graveyard for a card named dovin, architect of law, revea | 1 | Dovin's Dismissal | rna |
 | search your library for a basic land card or gate card, reveal it, put it into your hand, then shuffle. | 1 | Open the Gates | rna |
@@ -324,10 +324,8 @@
 | when ~ enters, target creature you control with flying gets +N/+N until end of turn. | 1 | Spire Mangler | rna |
 | when ~ enters, until end of turn, damage that would reduce your life total to less than N reduces it to N instead. | 1 | Angel of Grace | rna |
 | when ~ enters, until your next turn, creatures can't attack you or planeswalkers you control unless their controller pays {M} for each of those creatures. | 1 | Forbidding Spirit | rna |
-| when ~ enters, you may exile target creature card from a graveyard. if you do, you gain N life. | 1 | Carrion Imp | rna |
 | when ~ enters, you may remove any number of +N/+N counters from among creatures you control. if you do, put twice that many +N/+N counters on ~. | 1 | Galloping Lizrog | rna |
 | when ~ enters, you may search your library and/or graveyard for a card named domri, city smasher, reveal it, and put it into your hand. if you search your libra | 1 | Domri's Nodorog | rna |
-| whenever a creature you control attacks alone, it gets +N/+N until end of turn, where N is the number of creatures you control. | 1 | Angelic Exaltation | rna |
 | whenever a creature you control with power N or less attacks, ~ deals N damage to the player or planeswalker that creature is attacking. | 1 | Cavalcade of Calamity | rna |
 | whenever a nontoken creature you control enters, flip a coin until you lose a flip. for each flip you won, create a token that's a copy of that creature. those  | 1 | Mirror March | rna |
 | whenever an opponent draws a card, that player may pay {M}. if the player doesn't, you create a treasure token. | 1 | Smothering Tithe | rna |

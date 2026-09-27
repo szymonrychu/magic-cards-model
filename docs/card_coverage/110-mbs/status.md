@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.6% |
-| Works (untested) | 86 | 60.6% |
-| Partial (unaudited) | 8 | 5.6% |
-| Not working | 40 | 28.2% |
+| Tested | 9 | 6.3% |
+| Works (untested) | 87 | 61.3% |
+| Partial (unaudited) | 7 | 4.9% |
+| Not working | 39 | 27.5% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Ardent Recruit | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Banishment Decree | silent | Put target artifact, creature, or enchantment on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Black Sun's Zenith | silent | Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonehoard | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Choking Fumes | silent | Put a -1/-1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Concussive Bolt | silent | Concussive Bolt deals 4 damage to target player or planeswalker. Metalcraft — If you control three or more artifacts, creatures controlled by that player or by  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -68,12 +67,12 @@
 | Virulent Wound | notice | Put a -1/-1 counter on target creature. When that creature dies this turn, its controller gets a poison counter. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Blightsteel Colossus | unaudited | If Blightsteel Colossus would be put into a graveyard from anywhere, reveal Blightsteel Colossus and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Kemba's Legion | unaudited | This creature can block an additional creature each combat for each Equipment attached to this creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Melira's Keepers | unaudited | This creature can't have counters put on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Phyrexian Hydra | unaudited | If damage would be dealt to this creature, prevent that damage. Put a -1/-1 counter on this creature for each 1 damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Shimmer Myr | unaudited | You may cast artifact spells as though they had flash. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Signal Pest | unaudited | This creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sphere of the Suns | unaudited | This artifact enters tapped and with three charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Training Drone | unaudited | This creature can't attack or block unless it's equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Black Sun's Zenith | handled | Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bladed Sentinel | handled | {W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blightwidow | handled | Reach | machines/combat.py | Y/-/- | not_tested |
 | Blisterstick Shaman | handled | When this creature enters, it deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -164,13 +163,14 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>9 cards</summary>
 
 - Accorder Paladin
 - Fuel for the Cause
 - Green Sun's Zenith
 - Knowledge Pool
 - Lead the Stampede
+- Melira's Keepers
 - Phyrexian Revoker
 - Septic Rats
 - Thopter Assembly
@@ -193,7 +193,6 @@
 | if damage would be dealt to ~, prevent that damage. put a -N/-N counter on ~ for each N damage prevented ~. | 1 | Phyrexian Hydra | mbs |
 | if ~ would be put into a graveyard from anywhere, reveal ~ and shuffle it into its owner's library instead. | 1 | Blightsteel Colossus | mbs |
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
-| put N -N/-N counters on each creature. shuffle ~ into its owner's library. | 1 | Black Sun's Zenith | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
 | put a -N/-N counter on target creature. when that creature dies ~, its controller gets a poison counter. | 1 | Virulent Wound | mbs |
 | put target artifact, creature, or enchantment on top of its owner's library. | 1 | Banishment Decree | mbs |
@@ -216,7 +215,6 @@
 | ~ can block an additional creature each combat for each equipment attached to ~. | 1 | Kemba's Legion | mbs |
 | ~ can"..."s equipped. | 1 | Training Drone | mbs |
 | ~ can't be blocked except by creatures with flying or reach. | 1 | Signal Pest | mbs |
-| ~ can't have counters put on it. | 1 | Melira's Keepers | mbs |
 | ~ deals N damage to target creature. if that creature has infect, ~ deals N damage to that creature's controller. | 1 | Burn the Impure | mbs |
 | ~ deals N damage to target player or planeswalker. metalcraft — if you control three or more artifacts, creatures controlled by that player or by that planeswal | 1 | Concussive Bolt | mbs |
 | ~ enters tapped and with three charge counters on it. | 1 | Sphere of the Suns | mbs |

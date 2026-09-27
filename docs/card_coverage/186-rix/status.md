@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 10.7% |
-| Works (untested) | 89 | 50.0% |
+| Works (untested) | 93 | 52.2% |
 | Partial (unaudited) | 11 | 6.2% |
-| Not working | 59 | 33.1% |
+| Not working | 55 | 30.9% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Dead Man's Chest | silent | When enchanted creature dies, exile cards equal to its power from the top of its owner's library. You may cast spells from among those cards for as long as they | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dinosaur Hunter | silent | Whenever this creature deals damage to a Dinosaur, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Dire Fleet Neckbreaker | silent | Attacking Pirates you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Dire Fleet Poisoner | silent | When this creature enters, target attacking Pirate you control gets +1/+1 and gains deathtouch until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Etali, Primal Storm | silent | Whenever Etali attacks, exile the top card of each player's library, then you may cast any number of spells from among those cards without paying their mana cos | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Fathom Fleet Boarder | silent | When this creature enters, you lose 2 life unless you control another Pirate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Form of the Dinosaur | silent | When this enchantment enters, your life total becomes 15. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -53,7 +52,6 @@
 | Induced Amnesia | silent | When this enchantment enters, target player exiles all cards from their hand face down, then draws that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Journey to Eternity // Atzal, Cave of Eternity | silent | When enchanted creature dies, return it to the battlefield under your control, then return this card to the battlefield transformed under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kumena's Awakening | silent | At the beginning of your upkeep, each player draws a card. If you have the city's blessing, instead only you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Merfolk Mistbinder | silent | Other Merfolk you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mutiny | silent | Target creature an opponent controls deals damage equal to its power to another target creature that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Path of Mettle // Metzali, Tower of Triumph | silent | When Path of Mettle enters, it deals 1 damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea Legs | silent | Enchanted creature gets +0/+2 as long as it's a Pirate. Otherwise, it gets -2/-0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -65,12 +63,10 @@
 | Tilonalli's Crown | silent | When this Aura enters, it deals 1 damage to enchanted creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Twilight Prophet | silent | At the beginning of your upkeep, if you have the city's blessing, reveal the top card of your library and put it into your hand. Each opponent loses X life and  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vona's Hunger | silent | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Each opponent sacrifices a creature of their choice. If yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Voracious Vampire | silent | When this creature enters, target Vampire you control gets +1/+1 and gains menace until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska, Scheming Gorgon | silent | −10: Until end of turn, creatures you control gain deathtouch and "Whenever this creature deals damage to an opponent, that player loses the game." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warkite Marauder | silent | Whenever this creature attacks, target creature defending player controls loses all abilities and has base power and toughness 0/1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Angrath's Ambusher | notice | This creature gets +2/+0 as long as you control an Angrath planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Angrath's Fury | notice | Destroy target creature. Angrath's Fury deals 3 damage to target player or planeswalker. You may search your library and/or graveyard for a card named Angrath,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Buccaneer's Bravado | notice | Choose one — • Target creature gets +1/+1 and gains first strike until end of turn. • Target Pirate gets +1/+1 and gains double strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dusk Charger | notice | This creature gets +2/+2 as long as you have the city's blessing. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Expel from Orazca | notice | Ascend (If you control ten or more permanents, you get the city's blessing for the rest of the game.) Return target nonland permanent to its owner's hand. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grasping Scoundrel | notice | This creature gets +1/+0 as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -102,6 +98,7 @@
 | Baffling End | handled | When this enchantment enters, exile target creature an opponent controls with mana value 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bombard | handled | Bombard deals 4 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brazen Freebooter | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Buccaneer's Bravado | handled | Choose one — • Target creature gets +1/+1 and gains first strike until end of turn. • Target Pirate gets +1/+1 and gains double strike until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cacophodon | handled | Enrage — Whenever this creature is dealt damage, untap target permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Canal Monitor | handled |  |  | Y/Y/- | not_tested |
 | Cleansing Ray | handled | Choose one — • Destroy target Vampire. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -111,6 +108,7 @@
 | Deadeye Brawler | handled | Whenever this creature deals combat damage to a player, if you have the city's blessing, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deadeye Rig-Hauler | handled | Raid — When this creature enters, if you attacked this turn, you may return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Deeproot Elite | handled | Whenever another Merfolk you control enters, put a +1/+1 counter on target Merfolk you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Dire Fleet Poisoner | handled | When this creature enters, target attacking Pirate you control gets +1/+1 and gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Dusk Legion Zealot | handled | When this creature enters, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elenda, the Dusk Rose | handled | Whenever another creature dies, put a +1/+1 counter on Elenda. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Everdawn Champion | handled | Prevent all combat damage that would be dealt to this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -139,6 +137,7 @@
 | Luminous Bonds | handled | Enchanted creature can't attack or block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Majestic Heliopterus | handled | Whenever this creature attacks, another target Dinosaur you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Martyr of Dusk | handled | When this creature dies, create a 1/1 white Vampire creature token with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Merfolk Mistbinder | handled | Other Merfolk you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mist-Cloaked Herald | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Moment of Craving | handled | Target creature gets -2/-2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Moment of Triumph | handled | Target creature gets +2/+2 until end of turn. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -180,6 +179,7 @@
 | Trapjaw Tyrant | handled | Enrage — Whenever this creature is dealt damage, exile target creature an opponent controls until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vampire Champion | handled | Deathtouch | machines/combat.py | Y/Y/- | not_tested |
 | Vampire Revenant | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
+| Voracious Vampire | handled | When this creature enters, target Vampire you control gets +1/+1 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vraska's Conquistador | handled | Whenever this creature attacks or blocks, if you control a Vraska planeswalker, target opponent loses 2 life and you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waterknot | handled | When this Aura enters, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | World Shaper | handled | Whenever this creature attacks, you may mill three cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -219,7 +219,6 @@
 |---|---|---|---|
 | Raid | 3 | Admiral's Order, Protean Raider, Swaggering Corsair | rix |
 | ~ gets +N/+N as long as you have the city's blessing. | 3 | Dusk Charger, Snubhorn Sentry, Spire Winder | rix |
-| Choose one | 1 | Buccaneer's Bravado | rix |
 | +N: put a loyalty counter on huatli for each creature you control. | 1 | Huatli, Radiant Champion | rix |
 | all lands lose all abilities except mana abilities. | 1 | Blood Sun | rix |
 | as long as you have the city"..."t be blocked. | 1 | Slippery Scoundrel | rix |
@@ -242,7 +241,6 @@
 | for each land you control, create a treasure token. (it's an artifact with "...") | 1 | Brass's Bounty | rix |
 | if a source would deal damage to another dinosaur you control, prevent all but N of that damage. | 1 | Temple Altisaur | rix |
 | if ~ would deal combat damage to a player, it deals double that damage to that player instead. | 1 | Charging Tuskodon | rix |
-| other merfolk you control get +N/+N. | 1 | Merfolk Mistbinder | rix |
 | players can"..." loyalty abilities. | 1 | The Immortal Sun | rix |
 | saprolings you control get +N/+N as long as you have the city's blessing. | 1 | Tendershoot Dryad | rix |
 | target creature an opponent controls deals damage equal to its power to another target creature that player controls. | 1 | Mutiny | rix |
@@ -254,9 +252,7 @@
 | when ~ dies, you may cast dinosaur spells ~ as though they had flash, and whenever you cast a dinosaur spell ~, it gains "..." | 1 | Cherished Hatchling | rix |
 | when ~ enters, it deals N damage to each creature that doesn't have first strike, double strike, vigilance, or haste. | 1 | Path of Mettle // Metzali, Tower of Triumph | rix |
 | when ~ enters, it deals N damage to enchanted creature. | 1 | Tilonalli's Crown | rix |
-| when ~ enters, target attacking pirate you control gets +N/+N and gains deathtouch until end of turn. | 1 | Dire Fleet Poisoner | rix |
 | when ~ enters, target player exiles all cards from their hand face down, then draws that many cards. | 1 | Induced Amnesia | rix |
-| when ~ enters, target vampire you control gets +N/+N and gains menace until end of turn. | 1 | Voracious Vampire | rix |
 | when ~ enters, you draw N cards and you lose N life, where N is the number of vampires you control. | 1 | Champion of Dusk | rix |
 | when ~ enters, you lose N life unless you control another pirate. | 1 | Fathom Fleet Boarder | rix |
 | when ~ enters, your life total becomes N. | 1 | Form of the Dinosaur | rix |

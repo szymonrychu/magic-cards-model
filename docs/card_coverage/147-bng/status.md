@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 7.5% |
-| Works (untested) | 82 | 51.2% |
+| Works (untested) | 83 | 51.9% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 56 | 35.0% |
+| Not working | 55 | 34.4% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Hero of Leina Tower | silent | Heroic — Whenever you cast a spell that targets this creature, you may pay {X}. If you do, put X +1/+1 counters on this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kiora, the Crashing Wave | silent | +1: Until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lightning Volley | silent | Until end of turn, creatures you control gain "{T}: This creature deals 1 damage to any target." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Mindreaver | silent | Heroic — Whenever you cast a spell that targets this creature, exile the top three cards of target player's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mogis, God of Slaughter | silent | At the beginning of each opponent's upkeep, Mogis deals 2 damage to that player unless they sacrifice a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Nessian Wilds Ravager | silent | When this creature enters, if tribute wasn't paid, you may have this creature fight another target creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Oracle of Bones | silent | When this creature enters, if tribute wasn't paid, you may cast an instant or sorcery spell from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -134,6 +133,7 @@
 | Karametra, God of Harvests | handled | As long as your devotion to green and white is less than seven, Karametra isn't a creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Kragma Butcher | handled | Inspired — Whenever this creature becomes untapped, it gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Meletis Astronomer | handled | Heroic — Whenever you cast a spell that targets this creature, look at the top three cards of your library. You may reveal an enchantment card from among them a | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Mindreaver | handled | Heroic — Whenever you cast a spell that targets this creature, exile the top three cards of target player's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mischief and Mayhem | handled | Up to two target creatures each get +4/+4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mortal's Ardor | handled | Target creature gets +1/+1 and gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mortal's Resolve | handled | Target creature gets +1/+1 and gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -200,7 +200,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Inspired | 10 | Aerie Worshippers, Arbiter of the Ideal, Felhide Spiritbinder, Forlorn Pseudamma, God-Favored General | bng |
-| Heroic | 2 | Hero of Leina Tower, Mindreaver | bng |
+| Heroic | 1 | Hero of Leina Tower | bng |
 | +N: until your next turn, prevent all damage that would be dealt to and dealt by target permanent an opponent controls. | 1 | Kiora, the Crashing Wave | bng |
 | all creatures able to block ~ or enchanted creature do so. | 1 | Noble Quarry | bng |
 | as long as ~ is enchanted, it can attack as though it didn't have defender. | 1 | Pillar of War | bng |

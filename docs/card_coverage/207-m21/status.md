@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 15 | 8.2% |
-| Works (untested) | 93 | 51.1% |
+| Works (untested) | 94 | 51.6% |
 | Partial (unaudited) | 11 | 6.0% |
-| Not working | 63 | 34.6% |
+| Not working | 62 | 34.1% |
 
 ## Cards needing work
 
@@ -73,7 +73,6 @@
 | Track Down | silent | Scry 3, then reveal the top card of your library. If it's a creature or land card, draw a card. (To scry 3, look at the top three cards of your library, then pu | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vito, Thorn of the Dusk Rose | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Volcanic Salvo | silent | This spell costs {X} less to cast, where X is the total power of creatures you control. Volcanic Salvo deals 6 damage to each of up to two target creatures and/ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warded Battlements | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alchemist's Gift | notice | Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Basri's Aegis | notice | Put a +1/+1 counter on each of up to two target creatures. You may search your library and/or graveyard for a card named Basri, Devoted Paladin, reveal it, and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -189,6 +188,7 @@
 | Twinblade Assassins | handled | At the beginning of your end step, if a creature died this turn, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valorous Steed | handled | When this creature enters, create a 2/2 white Knight creature token with vigilance. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Village Rites | handled | As an additional cost to cast this spell, sacrifice a creature. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Volcanic Salvo | handled | This spell costs {X} less to cast, where X is the total power of creatures you control. Volcanic Salvo deals 6 damage to each of up to two target creatures and/ | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Warden of the Woods | handled | Whenever this creature becomes the target of a spell or ability an opponent controls, you may draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wildwood Patrol | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
 | Wildwood Scourge | handled | This creature enters with X +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -283,7 +283,6 @@
 | {M}{M}{M}: until end of turn, creatures you control have base power and toughness N/N, where N is the number of cards in your hand. | 1 | Jolrael, Mwonvuli Recluse | m21 |
 | ~ can block only creatures with flying. | 1 | Shacklegeist | m21 |
 | ~ can"..."ve drawn two or more cards ~. | 1 | Tome Anima | m21 |
-| ~ costs {M} less to cast, where N is the total power of creatures you control. ~ deals N damage to each of up to two target creatures and/or planeswalkers. | 1 | Volcanic Salvo | m21 |
 | ~ costs {M}{M} less to cast if you've cast an instant or sorcery spell ~. | 1 | Stormwing Entity | m21 |
 | ~ deals N damage to target creature or planeswalker. that permanent loses indestructible until end of turn. | 1 | Soul Sear | m21 |
 | ~ gets +N/+N as long as you control a garruk planeswalker. | 1 | Predatory Wurm | m21 |

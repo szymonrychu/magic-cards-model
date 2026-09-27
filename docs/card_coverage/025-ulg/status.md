@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 3 | 10.7% |
-| Works (untested) | 19 | 67.9% |
+| Works (untested) | 20 | 71.4% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 6 | 21.4% |
+| Not working | 5 | 17.9% |
 
 ## Cards needing work
 
@@ -29,12 +29,12 @@
 | Avalanche Riders | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Beast of Burden | silent | Beast of Burden's power and toughness are each equal to the number of creatures on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bone Shredder | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Faerie Conclave | silent | {1}{U}: This land becomes a 2/1 blue Faerie creature with flying until end of turn. It's still a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Karmic Guide | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Defense Grid | notice | Each spell costs {3} more to cast except during its controller's turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Angelic Curator | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Archivist | handled | {T}: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Erase | handled | Exile target enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Faerie Conclave | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fleeting Image | handled | {1}{U}: Return this creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Forbidding Watchtower | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ghitu Encampment | handled | This land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -69,7 +69,6 @@
 |---|---|---|---|
 | echo | 3 | Avalanche Riders, Bone Shredder, Karmic Guide | ulg |
 | each spell costs {M} more to cast except during its controller's turn. | 1 | Defense Grid | ulg |
-| {M}{M}: ~ becomes a N/N blue faerie creature with flying until end of turn. it's still a land. | 1 | Faerie Conclave | ulg |
 | ~'s power and toughness are each equal to the number of creatures on the battlefield. | 1 | Beast of Burden | ulg |
 
 ## Notes

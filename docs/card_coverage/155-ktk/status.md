@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 13 | 5.8% |
-| Works (untested) | 155 | 68.9% |
-| Partial (unaudited) | 10 | 4.4% |
-| Not working | 47 | 20.9% |
+| Tested | 14 | 6.2% |
+| Works (untested) | 158 | 70.2% |
+| Partial (unaudited) | 9 | 4.0% |
+| Not working | 44 | 19.6% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Mindswipe | silent | Counter target spell unless its controller pays {X}. Mindswipe deals X damage to that spell's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Narset, Enlightened Master | silent | Whenever Narset attacks, exile the top four cards of your library. Until end of turn, you may cast noncreature spells from among those cards without paying thei | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Pine Walker | silent | Whenever this creature or another creature you control is turned face up, untap that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Raiders' Spoils | silent | Whenever a Warrior you control deals combat damage to a player, you may pay 1 life. If you do, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rakshasa Vizier | silent | Whenever one or more cards are put into exile from your graveyard, put that many +1/+1 counters on this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Roar of Challenge | silent | All creatures able to block target creature this turn do so. Ferocious — That creature gains indestructible until end of turn if you control a creature with pow | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan, the Dragonspeaker | silent | +1: Until end of turn, Sarkhan becomes a legendary 4/4 red Dragon creature with flying, indestructible, and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -59,11 +58,8 @@
 | Set Adrift | silent | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Put target nonland permanent on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Smoke Teller | silent | {1}{U}: Look at target face-down creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sorin, Solemn Visitor | silent | +1: Until your next turn, creatures you control get +1/+0 and gain lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Tomb of the Spirit Dragon | silent | {2}, {T}: You gain 1 life for each colorless creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Villainous Wealth | silent | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wingmate Roc | silent | Whenever this creature attacks, you gain 1 life for each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bring Low | notice | Bring Low deals 3 damage to target creature. If that creature has a +1/+1 counter on it, Bring Low deals 5 damage to it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Burn Away | notice | Burn Away deals 6 damage to target creature. When that creature dies this turn, exile its controller's graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feat of Resistance | notice | Put a +1/+1 counter on target creature you control. It gains protection from the color of your choice until end of turn. (It can't be blocked, targeted, dealt d | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | High Sentinels of Arashin | notice | This creature gets +1/+1 for each other creature you control with a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Jeskai Charm | notice | Choose one — • Put target creature on top of its owner's library. • Jeskai Charm deals 4 damage to target opponent or planeswalker. • Creatures you control get  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -73,6 +69,7 @@
 | Rite of the Serpent | notice | Destroy target creature. If that creature had a +1/+1 counter on it, create a 1/1 green Snake creature token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Savage Punch | notice | Target creature you control fights target creature you don't control. Ferocious — The creature you control gets +2/+2 until end of turn before it fights if you  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Temur Charm | notice | Choose one — • Target creature you control gets +1/+1 until end of turn. It fights target creature you don't control. • Counter target spell unless its controll | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Villainous Wealth | notice | Target opponent exiles the top X cards of their library. You may cast any number of spells with mana value X or less from among them without paying their mana c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Anafenza, the Foremost | unaudited | If a nontoken creature an opponent owns would die or a creature card not on the battlefield would be put into an opponent's graveyard, exile that card instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Brave the Sands | unaudited | Each creature you control can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Dragon Grip | unaudited | Ferocious — If you control a creature with power 4 or greater, you may cast this spell as though it had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -80,7 +77,6 @@
 | Hooded Hydra | unaudited | As this creature is turned face up, put five +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ivorytusk Fortress | unaudited | Untap each creature you control with a +1/+1 counter on it during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Lens of Clarity | unaudited | You may look at the top card of your library and at face-down creatures you don't control any time. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Surrak Dragonclaw | unaudited | Creature spells you control can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ugin's Nexus | unaudited | If a player would begin an extra turn, that player skips that turn instead. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | War-Name Aspirant | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Abomination of Gudul | handled | Whenever this creature deals combat damage to a player, you may draw a card. If you do, discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -171,6 +167,7 @@
 | Pearl Lake Ancient | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ponyback Brigade | handled | When this creature enters or is turned face up, create three 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quiet Contemplation | handled | Whenever you cast a noncreature spell, you may pay {1}. If you do, tap target creature an opponent controls and it doesn't untap during its controller's next un | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Raiders' Spoils | handled | Creatures you control get +1/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakshasa Deathdealer | handled | {B}{G}: This creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rakshasa's Secret | handled | Target opponent discards two cards. You mill two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rattleclaw Mystic | handled | When this creature is turned face up, add {G}{U}{R}. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -206,6 +203,7 @@
 | Sultai Scavenger | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Sultai Soothsayer | handled | When this creature enters, look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Summit Prowler | handled |  |  | Y/Y/- | not_tested |
+| Surrak Dragonclaw | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Suspension Field | handled | When this enchantment enters, you may exile target creature with toughness 3 or greater until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swarm of Bloodflies | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Swift Kick | handled | Target creature you control gets +1/+0 until end of turn. It fights target creature you don't control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -218,6 +216,7 @@
 | Thornwood Falls | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Throttle | handled | Target creature gets -4/-4 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Timely Hordemate | handled | Raid — When this creature enters, if you attacked this turn, return target creature card with mana value 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Tomb of the Spirit Dragon | handled | {2}, {T}: You gain 1 life for each colorless creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tormenting Voice | handled | As an additional cost to cast this spell, discard a card. Draw two cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Trail of Mystery | handled | Whenever a face-down creature you control enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tranquil Cove | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -242,11 +241,12 @@
 ## Fully supported
 
 <details>
-<summary>13 cards</summary>
+<summary>14 cards</summary>
 
 - Abzan Charm
 - Abzan Falconer
 - Ainok Bond-Kin
+- Burn Away
 - Clever Impersonator
 - Hardened Scales
 - Hooting Mandrills
@@ -275,7 +275,6 @@
 | at the beginning of your upkeep, you may pay {M}{M}. if you do, return a creature card at random from your graveyard to the battlefield. it gains flying, trampl | 1 | Kheru Lich Lord | ktk |
 | choose up to one creature. destroy the rest. | 1 | Duneblast | ktk |
 | counter target spell unless its controller pays {M}. ~ deals N damage to that spell's controller. | 1 | Mindswipe | ktk |
-| creature spells you control can't be countered. | 1 | Surrak Dragonclaw | ktk |
 | delve (each card you exile from your graveyard while casting ~ pays for {M}.) put target nonland permanent on top of its owner's library. | 1 | Set Adrift | ktk |
 | destroy all creatures and all permanents attached to creatures. | 1 | End Hostilities | ktk |
 | destroy target blocking creature. creatures that were blocked by that creature ~ gain trample until end of turn. | 1 | Ride Down | ktk |
@@ -296,7 +295,6 @@
 | when you next cast an instant or sorcery spell ~, copy that spell. you may choose new targets for the copy. raid — if you attacked ~, when you next cast an inst | 1 | Howl of the Horde | ktk |
 | when ~ dies, return it to the battlefield face down under your control. | 1 | Ashcloud Phoenix | ktk |
 | when ~ is turned face up, look at target opponent's hand. | 1 | Dragon's Eye Savants | ktk |
-| whenever a warrior you control deals combat damage to a player, you may pay N life. if you do, draw a card. | 1 | Raiders' Spoils | ktk |
 | whenever another permanent you control enters, each opponent mills a card. | 1 | Altar of the Brood | ktk |
 | whenever narset attacks, exile the top four cards of your library. until end of turn, you may cast noncreature spells from among those cards without paying thei | 1 | Narset, Enlightened Master | ktk |
 | whenever one or more cards are put into exile from your graveyard, put that many +N/+N counters on ~. | 1 | Rakshasa Vizier | ktk |
@@ -307,14 +305,12 @@
 | whenever ~ or another creature you control is turned face up, untap that creature. | 1 | Pine Walker | ktk |
 | you may look at the top card of your library and at face-down creatures you don't control any time. | 1 | Lens of Clarity | ktk |
 | {M}, exile ~: target player shuffles their graveyard into their library. draw a card. | 1 | Cranial Archive | ktk |
-| {M}, {M}: you gain N life for each colorless creature you control. | 1 | Tomb of the Spirit Dragon | ktk |
 | {M}{M}, sacrifice another creature: you gain life equal to the sacrificed creature's toughness. | 1 | Kheru Dreadmaw | ktk |
 | {M}{M}: look at target face-down creature. | 1 | Smoke Teller | ktk |
 | ~ deals N damage to any target. ferocious — ~ deals N plus N damage instead if you control a creature with power N or greater. | 1 | Crater's Claws | ktk |
 | ~ deals N damage to each creature you don"..."t block ~. | 1 | Barrage of Boulders | ktk |
 | ~ deals N damage to each opponent. each opponent sacrifices a creature with the greatest power among creatures that player controls. | 1 | Crackling Doom | ktk |
 | ~ deals N damage to target creature. if that creature has a +N/+N counter on it, ~ deals N damage to it instead. | 1 | Bring Low | ktk |
-| ~ deals N damage to target creature. when that creature dies ~, exile its controller's graveyard. | 1 | Burn Away | ktk |
 | ~ equip ability costs {M} less to activate if it targets a colorless creature. | 1 | Ghostfire Blade | ktk |
 | ~ gets +N/+N for each other creature you control with a +N/+N counter on it. | 1 | High Sentinels of Arashin | ktk |
 

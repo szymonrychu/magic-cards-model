@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.2% |
-| Works (untested) | 140 | 61.9% |
+| Works (untested) | 141 | 62.4% |
 | Partial (unaudited) | 6 | 2.7% |
-| Not working | 66 | 29.2% |
+| Not working | 65 | 28.8% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Fathom Feeder | silent | {3}{U}{B}: Draw a card. Each opponent exiles the top card of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fertile Thicket | silent | When this land enters, you may look at the top five cards of your library. If you do, reveal up to one basic land card from among them, then put that card on to | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gideon, Ally of Zendikar | silent | +1: Until end of turn, Gideon becomes a 5/5 Human Soldier Ally creature with indestructible that's still a planeswalker. Prevent all damage that would be dealt  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Greenwarden of Murasa | silent | When this creature dies, you may exile it. If you do, return target card from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grip of Desolation | silent | Devoid (This card has no color.) Exile target creature and target land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gruesome Slaughter | silent | Until end of turn, colorless creatures you control gain "{T}: This creature deals damage equal to its power to target creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hedron Blade | silent | Whenever equipped creature becomes blocked by one or more colorless creatures, it gains deathtouch until end of turn. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
@@ -143,6 +142,7 @@
 | Ghostly Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Gideon's Reproach | handled | Gideon's Reproach deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grave Birthing | handled | Devoid (This card has no color.) Target opponent exiles a card from their graveyard. You create a 1/1 colorless Eldrazi Scion creature token. It has "Sacrifice  | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Greenwarden of Murasa | handled | When this creature enters, you may return target card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grove Rumbler | handled | Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grovetender Druids | handled | Rally — Whenever this creature or another Ally you control enters, you may pay {1}. If you do, create a 1/1 green Plant creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Guul Draz Overseer | handled | Landfall — Whenever a land you control enters, other creatures you control get +1/+0 until end of turn. If that land is a Swamp, those creatures get +2/+0 until | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -291,7 +291,6 @@
 | target creature gets +N/+N until end of turn. prevent all damage that would be dealt to that creature ~ by colorless sources. | 1 | Lithomancer's Focus | bfz |
 | until end of turn, colorless creatures you control gain "..." | 1 | Gruesome Slaughter | bfz |
 | when you cast ~, you may search your library for a colorless creature card with mana value N or greater, reveal it, then shuffle and put that card on top. | 1 | Conduit of Ruin | bfz |
-| when ~ dies, you may exile it. if you do, return target card from your graveyard to your hand. | 1 | Greenwarden of Murasa | bfz |
 | when ~ enters, exile all creatures with power N or greater until ~ leaves the battlefield. | 1 | Aligned Hedron Network | bfz |
 | when ~ enters, for each isolation counter on it, exile up to one target nonland permanent an opponent controls until ~ leaves the battlefield. | 1 | Quarantine Field | bfz |
 | when ~ enters, target creature an opponent controls doesn"..."s next untap step. | 1 | Skyline Cascade | bfz |

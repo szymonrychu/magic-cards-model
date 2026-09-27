@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 16.3% |
-| Works (untested) | 10 | 20.4% |
+| Works (untested) | 11 | 22.4% |
 | Partial (unaudited) | 5 | 10.2% |
-| Not working | 26 | 53.1% |
+| Not working | 25 | 51.0% |
 
 ## Cards needing work
 
@@ -37,7 +37,6 @@
 | Kiora, Sovereign of the Deep | silent | Whenever you cast a Kraken, Leviathan, Octopus, or Serpent spell from your hand, look at the top X cards of your library, where X is that spell's mana value. Yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Metropolis Reformer | silent | Whenever this creature is dealt damage, you gain that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ob Nixilis, Captive Kingpin | silent | Whenever one or more opponents each lose exactly 1 life, put a +1/+1 counter on Ob Nixilis. Exile the top card of your library. Until your next end step, you ma | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Open the Way | silent | X can't be greater than the number of players in the game. Reveal cards from the top of your library until you reveal X land cards. Put those land cards onto th | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Plargg and Nassari | silent | At the beginning of your upkeep, each player exiles cards from the top of their library until they exile a nonland card. An opponent chooses a nonland card exil | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rocco, Street Chef | silent | At the beginning of your end step, each player exiles the top card of their library. Until your next end step, each player may play the card they exiled this wa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sarkhan, Soul Aflame | silent | Whenever a Dragon you control enters, you may have Sarkhan become a copy of it until end of turn, except its name is Sarkhan, Soul Aflame and it's legendary in  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,6 +65,7 @@
 | Kolaghan Warmonger | handled | Whenever this creature attacks, look at the top six cards of your library. You may reveal a Dragon card from among them and put it into your hand. Put the rest  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Markov Baron | handled | Other Vampires you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nissa, Resurgent Animist | handled | Landfall — Whenever a land you control enters, add one mana of any color. Then if this is the second time this ability has resolved this turn, reveal cards from | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Open the Way | handled | X can't be greater than the number of players in the game. Reveal cards from the top of your library until you reveal X land cards. Put those land cards onto th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pia Nalaar, Consul of Revival | handled | Thopters you control have haste. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
@@ -89,7 +89,6 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Undergrowth | 1 | Undercity Upheaval | mat |
-| N can't be greater than the number of players in the game. reveal cards from the top of your library until you reveal N land cards. put those land cards onto th | 1 | Open the Way | mat |
 | as ~ enters, choose a planeswalker type. | 1 | Deification | mat |
 | at the beginning of each combat, you may reveal the top card of your library. if you reveal a creature card ~, ~ becomes a copy of that card until end of turn,  | 1 | Vesuvan Drifter | mat |
 | at the beginning of your end step, each player exiles the top card of their library. until your next end step, each player may play the card they exiled ~. | 1 | Rocco, Street Chef | mat |

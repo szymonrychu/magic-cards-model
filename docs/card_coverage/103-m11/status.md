@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 13 | 12.4% |
-| Works (untested) | 60 | 57.1% |
+| Works (untested) | 61 | 58.1% |
 | Partial (unaudited) | 7 | 6.7% |
-| Not working | 25 | 23.8% |
+| Not working | 24 | 22.9% |
 
 ## Cards needing work
 
@@ -50,7 +50,6 @@
 | Stormtide Leviathan | silent | All lands are Islands in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vengeful Archon | silent | {X}: Prevent the next X damage that would be dealt to you this turn. If damage is prevented this way, this creature deals that much damage to target player or p | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wild Evocation | silent | At the beginning of each player's upkeep, that player reveals a card at random from their hand. If it's a land card, the player puts it onto the battlefield. Ot | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Mystifying Maze | notice | {4}, {T}: Exile target attacking creature an opponent controls. At the beginning of the next end step, return it to the battlefield tapped under its owner's con | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Angelic Arbiter | unaudited | Each opponent who cast a spell this turn can't attack with creatures. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Bloodcrazed Goblin | unaudited | This creature can't attack unless an opponent has been dealt damage this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Demon of Death's Gate | unaudited | You may pay 6 life and sacrifice three black creatures rather than pay this spell's mana cost. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -95,6 +94,7 @@
 | Maritime Guard | handled |  |  | Y/Y/- | not_tested |
 | Mighty Leap | handled | Target creature gets +2/+2 and gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mitotic Slime | handled | When this creature dies, create two 2/2 green Ooze creature tokens. They have "When this token dies, create two 1/1 green Ooze creature tokens." | the engine reads this text and performs it | Y/-/- | not_tested |
+| Mystifying Maze | handled | {4}, {T}: Exile target attacking creature an opponent controls. At the beginning of the next end step, return it to the battlefield tapped under its owner's con | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nether Horror | handled |  |  | Y/-/- | not_tested |
 | Nightwing Shade | handled | {1}{B}: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phantom Beast | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -167,7 +167,6 @@
 | whenever ~ deals combat damage to a player, that player reveals a card at random from their hand. | 1 | Merfolk Spy | m11 |
 | you may choose new targets for target spell. | 1 | Redirect | m11 |
 | you may pay N life and sacrifice three black creatures rather than pay ~ mana cost. | 1 | Demon of Death's Gate | m11 |
-| {M}, {M}: exile target attacking creature an opponent controls. at the beginning of the next end step, return it to the battlefield tapped under its owner's con | 1 | Mystifying Maze | m11 |
 | {M}, {M}: you gain N life. shuffle ~ and your graveyard into their owner's library. | 1 | Elixir of Immortality | m11 |
 | {M}: prevent the next N damage that would be dealt to you ~. if damage is prevented ~, ~ deals that much damage to target player or planeswalker. | 1 | Vengeful Archon | m11 |
 | {M}: put a +N/+N counter on each artifact creature you control. | 1 | Steel Overseer | m11 |

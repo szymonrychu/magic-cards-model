@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 11.9% |
+| Tested | 22 | 12.5% |
 | Works (untested) | 92 | 52.3% |
 | Partial (unaudited) | 5 | 2.8% |
-| Not working | 58 | 33.0% |
+| Not working | 57 | 32.4% |
 
 ## Cards needing work
 
@@ -34,7 +34,6 @@
 | Bag of Holding | silent | Whenever you discard a card, exile that card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Battalion Foot Soldier | silent | When this creature enters, you may search your library for any number of cards named Battalion Foot Soldier, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Blood for Bones | silent | As an additional cost to cast this spell, sacrifice a creature. Return a creature card from your graveyard to the battlefield, then return another creature card | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Boneclad Necromancer | silent | When this creature enters, you may exile target creature card from a graveyard. If you do, create a 2/2 black Zombie creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Brought Back | silent | Choose up to two target permanent cards in your graveyard that were put there from the battlefield this turn. Return them to the battlefield tapped. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cavalier of Thorns | silent | When this creature enters, reveal the top five cards of your library. Put a land card from among them onto the battlefield and the rest into your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chandra's Flame Wave | silent | Chandra's Flame Wave deals 2 damage to target player and each creature that player controls. Search your library and/or graveyard for a card named Chandra, Flam | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -98,8 +97,8 @@
 | Bishop of Wings | handled | Whenever an Angel you control enters, you gain 4 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodsoaked Altar | handled | {T}, Pay 2 life, Discard a card, Sacrifice a creature: Create a 5/5 black Demon creature token with flying. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodthirsty Aerialist | handled | Whenever you gain life, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Boneclad Necromancer | handled | When this creature enters, you may exile target creature card from a graveyard. If you do, create a 2/2 black Zombie creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Brightwood Tracker | handled | {5}{G}, {T}: Look at the top four cards of your library. You may reveal a creature card from among them and put it into your hand. Put the rest on the bottom of | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Brineborn Cutthroat | handled | Whenever you cast a spell during an opponent's turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Captivating Gyre | handled | Return up to three target creatures to their owners' hands. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Dawn | handled | When this creature enters, destroy up to one target nonland permanent. Its controller creates a 3/3 colorless Golem artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cavalier of Night | handled | When this creature enters, you may sacrifice another creature. When you do, destroy target creature an opponent controls. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -185,11 +184,12 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Aether Gust
 - Angel of Vitality
 - Blood Burglar
+- Brineborn Cutthroat
 - Cavalier of Flame
 - Cavalier of Gales
 - Cryptic Caves
@@ -244,7 +244,6 @@
 | when ~ enters, gain control of target permanent. | 1 | Agent of Treachery | m20 |
 | when ~ enters, return another creature you control to its owner's hand. | 1 | Yarok's Wavecrasher | m20 |
 | when ~ enters, reveal the top five cards of your library. put a land card from among them onto the battlefield and the rest into your graveyard. | 1 | Cavalier of Thorns | m20 |
-| when ~ enters, you may exile target creature card from a graveyard. if you do, create a N/N black zombie creature token. | 1 | Boneclad Necromancer | m20 |
 | when ~ enters, you may have your life total become the total toughness of creatures you control. | 1 | Loxodon Lifechanter | m20 |
 | when ~ enters, you may search your library and/or graveyard for a card named ajani, inspiring leader, reveal it, and put it into your hand. if you search your l | 1 | Goldmane Griffin | m20 |
 | when ~ enters, you may search your library and/or graveyard for a card named mu yanling, celestial wind, reveal it, and put it into your hand. if you search you | 1 | Yanling's Harbinger | m20 |
