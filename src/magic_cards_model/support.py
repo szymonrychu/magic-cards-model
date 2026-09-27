@@ -80,6 +80,11 @@ from magic_cards_model.machines.combat import (
     is_self_control_count_restriction_line,
     reads_self_combat_restriction_line,
 )
+from magic_cards_model.machines.combat_statics import (
+    is_group_blocked_by_at_most_one_line,
+    is_must_be_blocked_line,
+    is_power_threshold_restriction_line,
+)
 from magic_cards_model.machines.companion import reads_companion_line
 from magic_cards_model.machines.connive import is_connive_replacement_line, mentions_connive
 from magic_cards_model.machines.cost import (
@@ -1894,6 +1899,23 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if is_blocked_by_at_most_one_line(text, printing.name):
         # CR 509.1b: `combat.declaration_refusal` (via `blocked_by_at_most_
         # one_refusal`) enforces it.
+        return HANDLED
+    if is_group_blocked_by_at_most_one_line(text):
+        # CR 509.1b: `combat.declaration_refusal` (via `combat_statics.
+        # group_blocked_by_at_most_one_refusal`) enforces the group-subject
+        # shape - "`<Type>`s you control"/"Each creature you control with
+        # `<description>` can't be blocked by more than one creature."
+        return HANDLED
+    if is_power_threshold_restriction_line(text, printing.name):
+        # CR 508.1c / 509.1b: `combat.attack_refusal`/`block_refusal` (via
+        # `combat_statics.power_threshold_restriction_refusal`) refuse the
+        # attack or block while the creature's own computed power misses its
+        # printed threshold.
+        return HANDLED
+    if is_must_be_blocked_line(text, printing.name):
+        # CR 509.1c: `combat.declare_blockers` (via `combat_statics.
+        # unobeyed_must_be_blocked_requirement`) refuses a declaration that
+        # leaves this attacker unblocked while a legal blocker exists.
         return HANDLED
     if reads_as_transforms_line(text):
         # CR 712.20: `effects.transform_permanent` applies it as it transforms.

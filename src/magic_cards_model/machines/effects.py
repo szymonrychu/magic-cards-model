@@ -2502,7 +2502,8 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
 # already-resolved group, and everything below computes that group and (when
 # the card prints one) the "where X is ..." magnitude.
 _MASS_SUBJECT_RE = re.compile(
-    r"^(?:(?:other )?creatures (?:you control|your opponents control)|permanents you control"
+    r"^(?:(?:other )?creatures (?:you control|your opponents control)"
+    r"|creature tokens (?:you control|your opponents control)|permanents you control"
     r"|all creatures|creatures that are (?:white|blue|black|red|green)\b)\b",
     re.IGNORECASE,
 )
@@ -2529,6 +2530,14 @@ _MASS_SUBJECT_RE = re.compile(
 _MASS_SUBTYPE_SUBJECT_RE = re.compile(
     r"^(?![Cc]reatures?\b)(?P<subtypes>[A-Z][a-z]+(?:(?:,\s*| and )[A-Z][a-z]+)*) "
     r"(?P<whose>you control|your opponents control)\b"
+)
+#: Ravenous Robots: "Creature tokens you control gain haste until end of
+#: turn." - CR 111.1's token-ness narrowing the ordinary "creatures [you|your
+#: opponents] control" subject, read the identical "known only here, off the
+#: literal text" way `_MASS_SUBTYPE_SUBJECT_RE` already reads a bare subtype
+#: standing in for "creatures".
+_MASS_TOKEN_SUBJECT_RE = re.compile(
+    r"^creature tokens (?P<whose>you control|your opponents control)\b", re.IGNORECASE
 )
 #: "Creatures you control with power `<n>` or greater gain `<keyword(s)>`
 #: until end of turn." (Smuggler's Surprise's third Spree mode: "gain
@@ -2717,6 +2726,32 @@ def _mass_creature_group_targets(
             and (board.of(permanent).power or 0) >= minimum_power
         ]
     opening = text.strip().lower()
+    # Ravenous Robots: "Creature tokens you control gain haste until end of
+    # turn." - CR 111.1's token-ness (`is_token`) narrowing the ordinary
+    # "creatures [you|your opponents] control" selectors, the identical
+    # "one more check on top, known only here off the literal text" shape
+    # `_MASS_SUBTYPE_SUBJECT_RE`'s own subtype filter already uses. Checked
+    # ahead of the plain "creatures ..." `startswith` chain below, whose
+    # narrower literal ("creatures", not "creature tokens") never matches
+    # this subject anyway, but is kept in its own branch rather than folded
+    # in for the same reason the subtype filter above is: a token filter is a
+    # second, independent narrowing, not a fifth base selector.
+    if opening.startswith("creature tokens you control"):
+        base_selector = creatures_controlled_by(controller)
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base_selector(board.of(permanent), board.characteristics) and is_token(permanent)
+        ]
+    if opening.startswith("creature tokens your opponents control"):
+        base_selector = creatures_controlled_by_opponents_of(controller)
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if base_selector(board.of(permanent), board.characteristics) and is_token(permanent)
+        ]
     if opening.startswith("other creatures you control"):
         selector = other_creatures_controlled_by(source_id, controller)
     elif opening.startswith("creatures you control"):
@@ -2902,6 +2937,13 @@ def _mass_pump_parseable(literal: str) -> str:
         )
     elif subtype_match is not None:
         parseable = "creatures " + literal.strip()[subtype_match.start("whose") :]
+    elif (token_match := _MASS_TOKEN_SUBJECT_RE.match(literal.strip())) is not None:
+        # Ravenous Robots: "Creature tokens you control gain haste until end
+        # of turn." - `targets` (`_mass_creature_group_targets`) already
+        # carries only the tokens (CR 111.1); `machines/layers.py`'s own
+        # `_MASS_PUMP_UNTIL_EOT_RE` only knows the bare "creatures ..."
+        # subject, the same rewrite the subtype filter above already needs.
+        parseable = "creatures " + literal.strip()[token_match.start("whose") :]
     else:
         parseable = literal
     # `parsed_layer_effects` reads `_effect_sentences`, which needs a real
@@ -15764,6 +15806,18 @@ _COUNTER_TARGET_ABILITY_OR_SPELL_RE = re.compile(
 #: (CR 113.9) - so `counter_targets` needs nothing new, only this regex to
 #: reach it, the same way `_COUNTER_TARGET_ABILITY_OR_SPELL_RE` already does
 #: for the compound shape.
+#: "Counter target spell that targets `<description>`." (Fugitive Droid) and
+#: "Counter target spell or ability that targets `<description>`." (Siren
+#: Stormtamer) - a general catch-all for any "Counter target `<phrase>`."
+#: sentence none of this file's own hand-fitted templates above already
+#: claims, tried only once they have all declined: `_targets_understood`
+#: (via `machines/targeting.py`'s own reader, widened this task with
+#: `must_target_you`/`must_target_types` for exactly this "that targets ..."
+#: shape) is what actually vets it, so a phrase neither this file nor
+#: targeting.py can read still fails closed rather than silently countering
+#: an unrestricted "any spell".
+_COUNTER_TARGET_PHRASE_RE = re.compile(r"^counter (?P<phrase>target .+?)\.?$", re.IGNORECASE)
+
 _COUNTER_TARGET_ABILITY_RE = re.compile(
     r"^counter target (?:activated or triggered |activated |triggered )?"
     r"abilit(?:y|ies)\.?$",
@@ -18543,6 +18597,31 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
     counter_if_mana_value = _parse_counter_if_mana_value_clause(clause, for_spell=for_spell)
     if counter_if_mana_value is not None:
         return counter_if_mana_value
+
+    if (phrase_match := _COUNTER_TARGET_PHRASE_RE.fullmatch(clause)) and _targets_understood(
+        phrase_match.group("phrase"), battlefield_only=False
+    ):
+        # Fugitive Droid: "Counter target spell that targets an artifact or
+        # creature you control." Siren Stormtamer: "Counter target spell or
+        # ability that targets you or a creature you control." Neither
+        # matches `_COUNTER_TARGET_SPELL_RE`'s own qualifier/predicate slots
+        # (`_SPELL_PREDICATE` only ever reads a trailing "with `<comparison>`
+        # ..."), because the restriction is not on the spell's own printed
+        # characteristics at all - it is on what *that spell itself targets*
+        # (CR 601.2c), which `machines/targeting.py`'s own `must_target_you`/
+        # `must_target_types` fields (widened this task) already enforce at
+        # announcement and at the CR 608.2b recheck. `counter_targets` needs
+        # nothing new beyond a legal target to have been chosen at all.
+        # Tried dead last among every "Counter target ..." shape, after every
+        # more specific one (including the "unless"/mana-value variants just
+        # above) has already declined - `_targets_understood` tolerates a
+        # trailing tail it does not itself read (see its own docstring), so
+        # tried any earlier it would misread an "unless ..." cost clause as
+        # an unconditional counter and silently drop the cost, exactly the
+        # regression a real playtest would call a bug. `battlefield_only=
+        # False`: a spell target lives on the stack, never the battlefield
+        # (CR 112.1, CR 110.1).
+        return counter_targets
 
     if match := _DESTROY_TARGET_RE.fullmatch(clause):
         if not _targets_understood(match.group("phrase"), count_agnostic=True):
@@ -22303,6 +22382,228 @@ def _parse_add_one_mana_of_any_color_trigger(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: Enrage (CR 207.2c ability word): "Whenever `<this>` is dealt damage, add
+#: that much `<mana>`. Until end of turn, you don't lose this mana as steps
+#: and phases end." (Raphael, Ninja Destroyer's own "add that much {R}";
+#: Sakiko, Mother of Summer's differently-triggered "add that much {G}") - the
+#: fixed-colour twin of `_ADD_ONE_MANA_OF_ANY_COLOR_TRIGGER_RE`'s "add that
+#: much mana of any one color" (Photon, Mighty Marvel): "that much" is CR
+#: 607.1's anaphora onto the very event that triggered this ability (the
+#: damage just dealt, `that_many`), and the second sentence tags every unit
+#: added with `ManaRetentionScope.END_OF_TURN` the identical general way
+#: (`models/mana.ManaPool.retained`) firebending's own "until end of combat"
+#: twin already does. One or more literal mana symbols, the same "{R}{R}"
+#: multi-symbol shape `_FIREBENDING_ADD_MANA_RE` already reads, though every
+#: printing in the pool prints exactly one.
+_ADD_THAT_MUCH_COLORED_MANA_RE = re.compile(
+    r"^add that much (?P<mana>(?:\{[wubrgc]\}\s*)+)\.\s*"
+    r"until end of turn, you don'?t lose this mana as steps and phases end\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_add_that_much_colored_mana_trigger(text: str) -> AbilityEffect | None:
+    """`_ADD_THAT_MUCH_COLORED_MANA_RE`'s shape."""
+    match = _ADD_THAT_MUCH_COLORED_MANA_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    symbols = _MANA_SYMBOL_RE.findall(match.group("mana"))
+    if not symbols:
+        return None
+    colors = [Color(symbol.upper()) for symbol in symbols]
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        count = _that_many_or_notice(
+            game,
+            text,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            stack_object=ability,
+        )
+        if count is None or count <= 0:
+            return
+        pool = game.player(ability.controller).mana_pool
+        for _ in range(count):
+            for color in colors:
+                pool.add(color, retain_until=ManaRetentionScope.END_OF_TURN)
+
+    return effect
+
+
+#: CR 118.12a's "unless" cost choice: "sacrifice `<object>` unless you
+#: discard a card[ at random]." - Bebop & Rocksteady's own "Whenever Bebop &
+#: Rocksteady attack or block, sacrifice a permanent unless you discard a
+#: card." (a plain, controller's-choice-of-permanent sacrifice) and Argentum
+#: Masticore's own upkeep trigger "sacrifice this creature unless you discard
+#: a card" (self-sacrifice). CR 118.12a, verified this session: "'[Do
+#: something] unless [a player does something else].' This means the same
+#: thing as '[A player may do something else]. If [that player doesn't], [do
+#: something].'" - `game.may` asks the discard as the *optional* half (CR
+#: 608.2d, no impossible choice: never offered with an empty hand), and the
+#: sacrifice only happens when it is declined or impossible, the identical
+#: shape `_loses_life_unless_step` already runs for the "loses life unless
+#: they discard/sacrifice" punisher template.
+_SACRIFICE_UNLESS_DISCARD_RE = re.compile(
+    r"^sacrifice (?:(?P<self_ref>this (?:creature|permanent|artifact|enchantment|"
+    r"planeswalker|land))|an? (?P<choice>[a-z][a-z' ]*?)) unless you discard a card"
+    r"(?P<random> at random)?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_sacrifice_unless_discard_trigger(text: str) -> AbilityEffect | None:
+    """`_SACRIFICE_UNLESS_DISCARD_RE`'s shape."""
+    match = _SACRIFICE_UNLESS_DISCARD_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    self_ref = match.group("self_ref") is not None
+    choice_description = match.group("choice")
+    random_discard = match.group("random") is not None
+    sacrifice_of_choice: ClauseEffect | None = None
+    if not self_ref:
+        assert choice_description is not None
+        if permanent_description(choice_description) is None:
+            return None
+        sacrifice_of_choice = _sacrifice_of_choice_clause_effect(
+            choice_description, 1, with_indefinite_article(choice_description)
+        )
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.player(ability.controller)
+        prompt = "discard a card rather than sacrifice a permanent"
+        discarded = bool(player.hand) and game.may(
+            player, prompt, source=ability.source_name, source_id=source_id_of(ability)
+        )
+        if discarded:
+            if random_discard:
+                _discard_at_random(game, player, 1, ability.source_name)
+            else:
+                _discard_cards(
+                    game, player, 1, ability.source_name, source_id=source_id_of(ability)
+                )
+            return
+        if self_ref:
+            source = ability.source(game)
+            if source is not None and source.zone is Zone.BATTLEFIELD:
+                game.sacrifice(source)
+            return
+        assert sacrifice_of_choice is not None
+        sacrifice_of_choice(game, player, ability.source_name, source_id_of(ability))
+
+    return effect
+
+
+#: Wingnut, Bat on the Belfry's own Alliance effect: "Wingnut gains your
+#: choice of flying, menace, or haste until end of turn." - the *self*-
+#: referential twin of `_RIDER_KEYWORD_CHOICE_RE`'s targeted "`<it>` gains
+#: your choice of `<keywords>` until end of turn." (Hungering Puppetbeast):
+#: that rider answers an antecedent's own earlier target, where this is the
+#: whole (only) sentence of its own triggered ability, self-referential by
+#: CR 201.5c's own name - `trigger_effect_for`'s existing fallback already
+#: rewrites "Wingnut" to CR 700.7's "this permanent" before trying this
+#: parser a second time, the same way it does for every other self-named
+#: sentence in the pool, so no card-name handling belongs here at all.
+_SELF_KEYWORD_CHOICE_UNTIL_EOT_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|planeswalker|land|enchantment) gains? "
+    r"your choice of (?P<keywords>[a-z]+(?: [a-z]+)?(?:,\s*[a-z]+(?: [a-z]+)?)*"
+    r"(?:,?\s+or\s+[a-z]+(?: [a-z]+)?)?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_self_keyword_choice_until_eot_trigger(text: str) -> AbilityEffect | None:
+    """`_SELF_KEYWORD_CHOICE_UNTIL_EOT_RE`'s shape - CR 608.2d's choice, asked
+    once per resolution, the identical `ContinuousEffect`/`grant_ability`
+    shape `_RIDER_KEYWORD_CHOICE_RE`'s own rider already builds for a target
+    rather than for the source itself."""
+    match = _SELF_KEYWORD_CHOICE_UNTIL_EOT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    keywords = _split_choice_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        chosen = keywords[0]
+        if len(keywords) > 1:
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_A_QUALITY,
+                    player=ability.controller,
+                    prompt="choose a keyword",
+                    source=ability.source_name,
+                    options=tuple(keywords),
+                    source_id=source_id_of(ability),
+                )
+            )
+            assert isinstance(answer, str)
+            chosen = answer
+        effects = game.continuous_effects
+        effects.add(
+            ContinuousEffect(
+                description=f"{ability.source_name}: {source.name} gains {chosen}",
+                layer=Layer.ABILITY,
+                timestamp=effects.tick(),
+                duration=Duration.UNTIL_END_OF_TURN,
+                selector=only_this_incarnation(source, source.zone_change_stamp),
+                modification=grant_ability(chosen),
+            )
+        )
+
+    return effect
+
+
+#: CR 702.91a's Battle cry effect, written out as plain, unkeyworded text:
+#: "each other attacking creature gets +1/+0 until end of turn." (Wingnut,
+#: Bat on the Belfry's own attack trigger). `keywords._battle_cry_effect` is
+#: keyed to the keyword expansion alone (`TriggeredAbility.keyword ==
+#: "battle cry"`), so a card printing the identical effect as ordinary text
+#: rather than through the keyword never reached it - a general amount, not
+#: hardcoded to "+1/+0", though every printing in the pool uses it, the same
+#: generality `_battle_cry_effect`'s own fixed set (CR 611.2c: computed once,
+#: at resolution) is built to.
+_EACH_OTHER_ATTACKING_CREATURE_PUMP_RE = re.compile(
+    r"^each other attacking creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_other_attacking_creature_pump_trigger(text: str) -> AbilityEffect | None:
+    """`_EACH_OTHER_ATTACKING_CREATURE_PUMP_RE`'s shape."""
+    match = _EACH_OTHER_ATTACKING_CREATURE_PUMP_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    power = int(match.group("power"))
+    toughness = int(match.group("toughness"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        store = game.continuous_effects
+        timestamp = store.tick()
+        for creature in game.attacking_creatures():
+            if creature.id == source.id:
+                continue
+            store.add(
+                ContinuousEffect(
+                    description=(f"{source.name}: {creature.name} gets {power:+}/{toughness:+}"),
+                    layer=Layer.POWER_TOUGHNESS,
+                    sublayer=Sublayer.MODIFY,
+                    timestamp=timestamp,
+                    duration=Duration.UNTIL_END_OF_TURN,
+                    selector=_only(creature.id),
+                    modification=modify_power_toughness(power, toughness),
+                )
+            )
+
+    return effect
+
+
 #: "Sacrifice this <type> unless you pay {E}[{E}...]." (Static Prison) - a
 #: fixed-amount CR 107.14/118.3 energy cost that averts the sacrifice rather
 #: than causing a bonus. Only the self-referential "this <type>" subject is
@@ -25745,6 +26046,18 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     add_one_mana_of_any_color = _parse_add_one_mana_of_any_color_trigger(effect_text)
     if add_one_mana_of_any_color is not None:
         return add_one_mana_of_any_color
+    add_that_much_colored_mana = _parse_add_that_much_colored_mana_trigger(effect_text)
+    if add_that_much_colored_mana is not None:
+        return add_that_much_colored_mana
+    sacrifice_unless_discard = _parse_sacrifice_unless_discard_trigger(effect_text)
+    if sacrifice_unless_discard is not None:
+        return sacrifice_unless_discard
+    self_keyword_choice_until_eot = _parse_self_keyword_choice_until_eot_trigger(effect_text)
+    if self_keyword_choice_until_eot is not None:
+        return self_keyword_choice_until_eot
+    each_other_attacking_pump = _parse_each_other_attacking_creature_pump_trigger(effect_text)
+    if each_other_attacking_pump is not None:
+        return each_other_attacking_pump
     may_then_if_you_do_layer = _parse_may_then_if_you_do_layer_clause(effect_text)
     if may_then_if_you_do_layer is not None:
         return may_then_if_you_do_layer
@@ -27138,6 +27451,41 @@ def _parse_tap_attached_clause(clause: str) -> TargetedClause | None:
         attached = _attached_object(game, stack_object)
         if attached is not None:
             game.tap_permanent(attached)
+
+    return effect
+
+
+#: Uneasy Alliance: "Exile enchanted creature." - a Sacrifice-this-Aura
+#: activated ability's own first clause. CR 601.2h/113.7a: the Aura leaves the
+#: battlefield paying its own cost, before the ability it granted itself no
+#: longer needs it ever resolves, so "enchanted creature" can only be read
+#: through `_attached_object`'s existing last-known-attachment fallback
+#: (`CardState.last_known_attached_to`) - the same one Enchanted River's
+#: Grasp's "tap enchanted creature" already relies on for its own trigger.
+#: "Destroy equipped creature." is the identical template on an Equipment's
+#: own sacrifice ability and is read the same way, though none of the pool's
+#: printings need it yet.
+_DESTROY_OR_EXILE_ATTACHED_RE = re.compile(
+    r"^(?P<verb>destroy|exile) (?:enchanted|equipped) (?:creature|permanent)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_destroy_or_exile_attached_clause(clause: str) -> TargetedClause | None:
+    """`_DESTROY_OR_EXILE_ATTACHED_RE`'s shape."""
+    match = _DESTROY_OR_EXILE_ATTACHED_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    verb = match.group("verb").lower()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        attached = _attached_object(game, stack_object)
+        if attached is None:
+            return
+        if verb == "exile":
+            game.exile_permanent(attached)
+        else:
+            game.destroy(attached)
 
     return effect
 
@@ -52802,6 +53150,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     tap_attached = _parse_tap_attached_clause(clause)
     if tap_attached is not None:
         return tap_attached
+    destroy_or_exile_attached = _parse_destroy_or_exile_attached_clause(clause)
+    if destroy_or_exile_attached is not None:
+        return destroy_or_exile_attached
     target_gains_ability_until_cast = _parse_target_gains_ability_until_cast_from_exile_clause(
         clause
     )

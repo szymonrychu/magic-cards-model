@@ -88,6 +88,23 @@ def test_a_card_with_a_genuine_gap_still_classifies_as_silent():
     assert category == SILENT
 
 
+def test_a_rejected_proof_candidate_is_not_left_in_the_pool():
+    """`tests.cards.pool()` globs every file under
+    `src/magic_cards_model/data/printings`, so an abandoned proof-candidate
+    printing joins the swept card pool exactly as if it had been chosen.
+
+    Argentum Masticore was tried as the "sacrifice ~ unless you discard a
+    card" proof printing for T5 (the combat-restrictions task) and explicitly
+    rejected: its first sentence matches the new trigger reader, but its
+    second sentence ("When you discard a card this way, destroy target
+    nonland permanent...") is outside that task's scope and nothing reads it,
+    so leaving its printing in the pool would make it a new `notice`/`silent`
+    card in `sweep_pool.py --effects`'s before/after diff. Molten-Tail
+    Masticore (no second sentence) was used instead; see `MEMORY.md`.
+    """
+    assert "Argentum Masticore" not in {p.name for p in pool().values()}
+
+
 def test_charging_rhinos_blocked_by_at_most_one_static_classifies_as_handled():
     """Charging Rhino's unconditional "This creature can't be blocked by more
     than one creature." (CR 509.1b, the mirror of menace) is fully enforced
