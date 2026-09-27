@@ -33,6 +33,11 @@ Rules verified with `mise run rules:find`:
   and/or toughness without setting them" (`Game.base_power_toughness_board`).
 - CR 105.2c: "A colorless object has no color" - "colors among permanents"
   never counts colorless.
+- CR 709.5c / CR 709.5j: a door is a half of a Room, "unlocked" only while
+  the permanent has that half's unlocked designation; CR 201.2b: "different
+  names" means no two share a name.
+- CR 305.6: the basic land types are Plains, Island, Swamp, Mountain, and
+  Forest; CR 105.1: the five colors are white, blue, black, red, and green.
 - CR 506.2 / CR 508.5: the defending player is the player attacked, or the
   controller of the planeswalker or battle attacked.
 - CR 601.2c / CR 608.2b: whether "that spell could target" an object is
@@ -637,6 +642,73 @@ def _colors_among(context: "ConditionContext", match: re.Match[str]) -> bool:
     return amount(len(colors))
 
 
+#: CR 305.6: "The basic land types are Plains, Island, Swamp, Mountain, and
+#: Forest." CR 105.1: "There are five colors in the Magic game: white, blue,
+#: black, red, and green."
+_BASIC_LAND_TYPES = ("Plains", "Island", "Swamp", "Mountain", "Forest")
+_OF_EACH_PART = re.compile(r"an? (?P<quality>.+?) of each (?P<kind>basic land type|color)")
+_OF_EACH_SPLIT = re.compile(r" and (?=an? )")
+
+
+def _of_each_parts(parts: str) -> list[tuple[ObjectTest, str]] | None:
+    """ "a land of each basic land type and a creature of each color" as
+    `(quality, kind)` pairs, or None when any part is not read."""
+    read: list[tuple[ObjectTest, str]] = []
+    for part in _OF_EACH_SPLIT.split(parts):
+        found = _OF_EACH_PART.fullmatch(part.strip())
+        test = quality(found.group("quality")) if found else None
+        if found is None or test is None:
+            return None
+        read.append((test, found.group("kind")))
+    return read
+
+
+def _controls_one_of_each(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "you control a land of each basic land type and a creature of each
+    color" (Coalition Victory) - for every basic land type (CR 305.6) or
+    every color (CR 105.1), some permanent with the quality has it, read off
+    the computed board (CR 613.5)."""
+    from ...models.card import Color
+
+    parts = _of_each_parts(match.group("parts"))
+    if parts is None:
+        return False
+    board = context.game.computed_board()
+    controlled = context.game.permanents_controlled_by(context.controller)
+    for test, kind in parts:
+        matching = [board.of(state) for state in _matching(context, test, controlled)]
+        if kind == "color":
+            wanted: set = {color for color in Color if color is not Color.COLORLESS}
+            have: set = set().union(*(_colors(chars) for chars in matching))
+        else:
+            wanted = set(_BASIC_LAND_TYPES)
+            have = {subtype for chars in matching for subtype in chars.subtypes}
+        if not wanted <= have:
+            return False
+    return True
+
+
+def _door_names_among(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "there are eight or more different names among unlocked doors of
+    Rooms you control" - CR 709.5j: a door is a half of a Room; CR 709.5c:
+    only a half with its unlocked designation is unlocked (and CR 709.5: a
+    locked half has no name on the battlefield). CR 201.2b: names are
+    different only when no two share one, so a door name repeated across
+    two permanents counts once."""
+    amount = _amount_test(_count_bare(match.group("amount")))
+    test = quality(match.group("quality"))
+    if amount is None or test is None:
+        return False
+    names = {
+        door
+        for state in _matching(
+            context, test, context.game.permanents_controlled_by(context.controller)
+        )
+        for door in state.unlocked_doors
+    }
+    return amount(len(names))
+
+
 def _attached_object_is(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "enchanted permanent is a creature with the greatest power among
     creatures on the battlefield" - the object the source Aura or Equipment
@@ -772,6 +844,22 @@ READERS: tuple[ConditionReader, ...] = (
             _colors_readable,
         ),
         _colors_among,
+    ),
+    ConditionReader(
+        _template(
+            rf"there (?:are|is) (?P<amount>{COUNT} or more|{COUNT} or fewer|{COUNT}) "
+            r"different names? among unlocked doors of (?P<quality>.+?) you control",
+            _colors_readable,
+        ),
+        _door_names_among,
+    ),
+    ConditionReader(
+        _template(
+            r"you control (?P<parts>an? .+? of each (?:basic land type|color)"
+            r"(?: and an? .+? of each (?:basic land type|color))*)",
+            lambda match: _of_each_parts(match.group("parts")) is not None,
+        ),
+        _controls_one_of_each,
     ),
     ConditionReader(
         _template(

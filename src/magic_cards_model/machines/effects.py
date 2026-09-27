@@ -32541,6 +32541,12 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     r0a_t5 = _r0a_t5_spell_effect(whole)
     if r0a_t5 is not None:
         return r0a_t5
+    # Pre-split: a trailing win condition can carry its own "and" (Coalition
+    # Victory's "a land of each basic land type and a creature of each
+    # color"), which `split_effect_clauses` would cut in half.
+    win_if = _parse_if_condition_you_win_the_game_clause(whole, for_spell=True)
+    if win_if is not None:
+        return win_if
     c02_t6 = _c02_t6_spell_effect(whole)
     if c02_t6 is not None:
         return c02_t6
@@ -62359,6 +62365,16 @@ _IF_CONDITION_YOU_WIN_THE_GAME_RE = re.compile(
     r"^if (?P<condition>.+?),\s*you win the game\.?$", re.IGNORECASE
 )
 
+#: "You win the game if `<condition>`." - the same CR 104.2b statement with
+#: its condition trailing (Promising Stairs' "You win the game if there are
+#: eight or more different names among unlocked doors of Rooms you
+#: control."). Unlike the leading form, an unreadable condition is refused
+#: at parse time, so a card whose condition nothing reads stays silent
+#: rather than reading as handled while never winning.
+_YOU_WIN_THE_GAME_IF_CONDITION_RE = re.compile(
+    r"^you win the game if (?P<condition>[^.]+?)\.?$", re.IGNORECASE
+)
+
 
 def _parse_if_condition_you_win_the_game_clause(
     clause: str, *, for_spell: bool
@@ -62372,7 +62388,9 @@ def _parse_if_condition_you_win_the_game_clause(
     """
     match = _IF_CONDITION_YOU_WIN_THE_GAME_RE.fullmatch(clause.strip())
     if match is None:
-        return None
+        match = _YOU_WIN_THE_GAME_IF_CONDITION_RE.fullmatch(clause.strip())
+        if match is None or not _effect_condition_is_readable(match.group("condition")):
+            return None
     condition_text = match.group("condition").strip()
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
