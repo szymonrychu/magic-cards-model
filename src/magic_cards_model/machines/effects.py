@@ -723,6 +723,24 @@ def _cast_trigger_mana_spent_x_value(game: "Game", ability: AbilityOnStack) -> i
     return None if record is None else record.total_mana_spent
 
 
+def _cast_trigger_x_value(game: "Game", ability: AbilityOnStack) -> int | None:
+    """The announced X (CR 107.3a) of the spell that triggered `ability` via a
+    cast-trigger event, or `None` when there is no cast-trigger event or no
+    cast record of it - `_cast_trigger_mana_spent_x_value`'s own twin, for a
+    "When you cast this spell, ... X ..." clause whose X is the just-
+    announced value on the spell itself (Genesis Hydra, Old Stickfingers)
+    rather than a "where X is <expr>" self-defined one (CR 107.3f), which
+    `amount_expression` already reads for those. A triggered ability
+    announces no X of its own (`AbilityOnStack.x_value`'s docstring), so this
+    is never read off `ability` itself."""
+    event = ability.event
+    if event is None or event.event is not TriggerEvent.CAST_SPELL or event.subject_id is None:
+        return None
+    spell = game.find_by_id(event.subject_id)
+    record = game.cast_record_of(spell) if spell is not None else None
+    return None if record is None else record.x_value
+
+
 def _cast_trigger_mana_spent_x_ability_text(game: "Game", ability: AbilityOnStack) -> str | None:
     """`ability.ability.text` with X substituted for the mana spent on the
     spell that triggered it, and the "where X is ..." definition dropped -
@@ -8359,6 +8377,13 @@ def _parse_search_and_exile_then_shuffle_clause(
 #: into a different zone at all - `Game.put_cards_into_library`'s own
 #: `to_bottom=False` arm is exactly CR 701.20d's "a card put on top sits
 #: above every card already there".
+#:
+#: `max_mv`'s bound reads "or greater" as well as "or less" (`_search_
+#: descriptions`/`_bounded_quality_matcher`) - Conduit of Ruin's own cast
+#: trigger, "search your library for a colorless creature card with mana
+#: value 7 or greater", is this same family with a floor instead of Ranger-
+#: Captain of Eos's ceiling; a trigger reaches this parser exactly as a
+#: spell does, both being a `TargetedClause` of `for_spell`'s two callers.
 _SEARCH_REVEAL_SHUFFLE_TOP_RE = re.compile(
     r"(?P<subject>you may )?"
     r"search (?:your|their) library for "
@@ -29321,12 +29346,7 @@ def _parse_cast_trigger_look_top_x_take_one_clause(effect_text: str) -> AbilityE
         if not is_ability(stack_object):
             return
         ability = stack_object
-        event = ability.event
-        spell = (
-            game.find_by_id(event.subject_id) if event is not None and event.subject_id else None
-        )
-        record = game.cast_record_of(spell) if spell is not None else None
-        x = record.x_value if record is not None else 0
+        x = _cast_trigger_x_value(game, ability) or 0
         if x <= 0:
             return
         controller = game.controller_of(ability)
@@ -29351,6 +29371,219 @@ def _parse_cast_trigger_look_top_x_take_one_clause(effect_text: str) -> AbilityE
         for state in taken:
             controller.move(state, Zone.HAND)
         _bottom_in_random_order(game, controller, [state for state in looked if state not in taken])
+
+    return effect
+
+
+#: "Reveal the top X cards of your library[, where X is <expr>]. You may put
+#: a[n] `<quality>` permanent card with mana value X or less from among them
+#: onto the battlefield. [Then shuffle the rest into your library.|Put the
+#: rest on the bottom of your library in a random order.]" - Genesis Hydra's
+#: own cast trigger (X is CR 107.3a's announced value on the spell itself,
+#: `_cast_trigger_x_value`) and Hatchery Spider's Undergrowth twin (X is CR
+#: 107.3f's self-defined "the number of creature cards in your graveyard",
+#: read the same `amount_expression` way `_LOOK_TOP_X_PUT_PERMANENTS_RE`
+#: already reads a self-defined X for its own "look at"/"any number of"
+#: cousin of this shape). CR 701.20a's "reveal" is never CR 701.20e's "look
+#: at" here - every card in this family shows the top cards to both players,
+#: not just the searcher - so a real `Game.reveal` call is made for each,
+#: even though nothing else about the mechanic differs from a "look" cousin.
+_CAST_TRIGGER_REVEAL_TOP_X_PUT_ONE_PERMANENT_RE = re.compile(
+    r"^reveal the top x cards of your library(?:, where x is (?P<expr>.+?))?\.\s*"
+    r"you may put an? (?P<quality>[a-z]+(?: [a-z]+)*?) permanent card with mana value x or less "
+    r"from among them onto the battlefield\.\s*"
+    r"(?P<tail>then shuffle the rest into your library"
+    r"|put the rest on the bottom of your library in a random order)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_CAST_TRIGGER_REVEAL_TOP_X_PUT_ONE_PERMANENT_RE`'s shape - see the
+    banner above.
+
+    CR 608.2d's "may put a[n] `<quality>` permanent card": at most one card,
+    never `_LOOK_TOP_X_PUT_PERMANENTS_RE`'s "any number of" - the established
+    `Game.may` + mandatory-single-pick idiom `_parse_mill_then_may_put_on_
+    top_clause` already uses for exactly this "you may put A card" phrasing.
+    X at 0 or less (CR 107.3a's caster announced none, CR 107.3f's
+    expression evaluates to nothing, or there is no cast-trigger event at
+    all) reveals nothing, the same as any other "top N" reader at N=0.
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
+    match = _CAST_TRIGGER_REVEAL_TOP_X_PUT_ONE_PERMANENT_RE.fullmatch(whole)
+    if match is None:
+        return None
+    quality_matches = _quality_matcher(match.group("quality"))
+    expr = match.group("expr")
+    amount_reader = amount_expression(expr) if expr else None
+    if expr is not None and amount_reader is None:
+        return None
+    shuffle_tail = match.group("tail").lower().startswith("then shuffle")
+    quality_word = match.group("quality")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        if amount_reader is not None:
+            x = amount_reader(game, ability.controller, ability.source(game), 0)
+        else:
+            x = _cast_trigger_x_value(game, ability) or 0
+        if x <= 0:
+            return
+        revealed = list(controller.library[:x])
+        if not revealed:
+            return
+        for state in revealed:
+            game.reveal(state, source=ability.source_name)
+        candidates = [
+            state for state in revealed if quality_matches(state) and state.mana_value <= x
+        ]
+        chosen: CardState | None = None
+        if candidates and game.may(
+            controller,
+            f"put a {quality_word} permanent card with mana value {x} or less onto the battlefield",
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+        ):
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt="put a card onto the battlefield",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            chosen = next((by_id[card_id] for card_id in chosen_ids if card_id in by_id), None)
+        if chosen is not None and chosen.zone is Zone.LIBRARY:
+            game.put_onto_battlefield(chosen, controller.username)
+        rest = [state for state in revealed if state is not chosen and state.zone is Zone.LIBRARY]
+        if shuffle_tail:
+            game.shuffle_library(controller.username)
+        else:
+            _bottom_in_random_order(game, controller, rest)
+
+    return effect
+
+
+#: "Reveal cards from the top of your library until you reveal X creature
+#: cards. Put all creature cards revealed this way into your graveyard, then
+#: put the rest on the bottom of your library in a random order." - Old
+#: Stickfingers's own cast trigger. X is CR 107.3a's announced value on the
+#: spell that triggered this (`_cast_trigger_x_value`), never the ability's
+#: own (a triggered ability announces no X of its own). The "reveal until N
+#: of a kind" mechanics (`_reveal_until_n_of_kind`) and "bottom the rest in a
+#: random order" tail (`_bottom_in_random_order`) are the same primitives
+#: `_merge_reveal_until_n_kind_put_onto_battlefield_clauses`'s family already
+#: built for a fixed literal count; only X's source (a cast trigger's own
+#: announced value, not a literal digit) and the destination (every match
+#: goes to the graveyard, mandatorily, rather than a `CHOOSE_CARDS`-optional
+#: battlefield placement) differ.
+_CAST_TRIGGER_REVEAL_UNTIL_X_KIND_TO_GRAVEYARD_RE = re.compile(
+    r"^reveal cards from the top of your library until you reveal x (?P<kind>[a-z]+) cards\.\s*"
+    r"put all (?P=kind) cards revealed this way into your graveyard,?\s*"
+    r"then put the rest on the bottom of your library in a random order\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_CAST_TRIGGER_REVEAL_UNTIL_X_KIND_TO_GRAVEYARD_RE`'s shape - see the
+    banner above. X at 0 or less looks at nothing (CR 608.2c); a library
+    with fewer than X of the named kind reveals the whole thing (CR 608.2c's
+    own "looks at all of them" when an effect wants more cards than remain).
+    """
+    whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
+    match = _CAST_TRIGGER_REVEAL_UNTIL_X_KIND_TO_GRAVEYARD_RE.fullmatch(whole)
+    if match is None:
+        return None
+    predicate = _SELECT_FROM_TOP_KINDS.get(match.group("kind").lower())
+    if predicate is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        x = _cast_trigger_x_value(game, ability) or 0
+        matches, remainder = _reveal_until_n_of_kind(
+            game, controller, predicate, x, source=ability.source_name
+        )
+        for state in matches:
+            game.put_into_graveyard(state)
+        _bottom_in_random_order(game, controller, remainder)
+
+    return effect
+
+
+#: "Target opponent exiles the top four cards of their library, then you may
+#: put any number of land cards that player owns from exile onto the
+#: battlefield under your control." - Oblivion Sower's own cast trigger.
+#: `_parse_exile_top_of_other_libraries_antecedent`'s own "target opponent
+#: exiles the top `<n>` cards of their library" shape (`_EXILE_TOP_OF_OTHER_
+#: LIBRARIES_RE`'s `target_exiles` branch) is reused whole for the
+#: antecedent (CR 603.3d: a triggered ability's target is chosen the same
+#: way a spell's is, CR 601.2c) - only the consequent is new: CR 110.2a's
+#: "put onto the battlefield under [a stated] control" rather than
+#: `_PLAY_PERMISSION_RE`'s cast/play permission that antecedent is usually
+#: paired with. CR 108.3: an exiled card stays owned by whoever owned it, so
+#: `Game.put_onto_battlefield`'s own `controller` argument here is the
+#: resolving ability's controller - never the opponent whose library was
+#: exiled, and never conflated with ownership.
+_TARGET_OPPONENT_EXILE_TOP_THEN_PUT_LANDS_RE = re.compile(
+    r"^(?P<antecedent>target (?:opponent|player) exiles the top "
+    rf"(?:card|{COUNT} cards) of their library), then you may put any number of "
+    r"land cards that player owns from exile onto the battlefield under your control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_opponent_exile_top_then_put_lands_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_TARGET_OPPONENT_EXILE_TOP_THEN_PUT_LANDS_RE`'s shape - see the
+    banner above. No land among the exiled cards (or nothing exiled at all,
+    an illegal or gone target - CR 608.2b) asks nothing and puts nothing."""
+    whole = " ".join(_strip_non_effect_preamble(effect_text).strip().split())
+    match = _TARGET_OPPONENT_EXILE_TOP_THEN_PUT_LANDS_RE.fullmatch(whole)
+    if match is None:
+        return None
+    antecedent = _parse_exile_top_of_other_libraries_antecedent(match.group("antecedent"))
+    if antecedent is None:
+        return None
+    exile_tops, _ = antecedent
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        exiled = exile_tops(game, ability)
+        lands = [state for state in exiled if state.zone is Zone.EXILE and Type.LAND in state.types]
+        if not lands:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=(
+                    "put any number of the exiled land cards onto the battlefield under "
+                    "your control"
+                ),
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=len(lands),
+                exact=False,
+                cards=tuple(state.id for state in lands),
+            )
+        )
+        by_id = {state.id: state for state in lands}
+        for card_id in chosen_ids:
+            state = by_id.get(card_id)
+            if state is not None and state.zone is Zone.EXILE:
+                game.put_onto_battlefield(state, controller.username)
 
     return effect
 
@@ -29593,6 +29826,21 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     cast_trigger_look_top_x = _parse_cast_trigger_look_top_x_take_one_clause(effect_text)
     if cast_trigger_look_top_x is not None:
         return cast_trigger_look_top_x
+    cast_trigger_reveal_top_x_put_one_permanent = (
+        _parse_cast_trigger_reveal_top_x_put_one_permanent_clause(effect_text)
+    )
+    if cast_trigger_reveal_top_x_put_one_permanent is not None:
+        return cast_trigger_reveal_top_x_put_one_permanent
+    cast_trigger_reveal_until_x_kind_to_graveyard = (
+        _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause(effect_text)
+    )
+    if cast_trigger_reveal_until_x_kind_to_graveyard is not None:
+        return cast_trigger_reveal_until_x_kind_to_graveyard
+    target_opponent_exile_top_then_put_lands = (
+        _parse_target_opponent_exile_top_then_put_lands_clause(effect_text)
+    )
+    if target_opponent_exile_top_then_put_lands is not None:
+        return target_opponent_exile_top_then_put_lands
     damage_target_player_and_theirs = _parse_damage_target_player_and_their_creatures_clause(
         effect_text
     )
