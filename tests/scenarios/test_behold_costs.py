@@ -429,6 +429,13 @@ def test_dazzling_denial_counters_for_two_with_no_bird_controlled():
     scenario.resolve_top()
 
     assert bolt.zone is Zone.GRAVEYARD, "no Bird controlled: bob declined the base {2}"
+    # The amount actually offered, not just the decline outcome, is the
+    # proof: with no Bird controlled the base {2} must be what was asked,
+    # never the escalated {4} - see the "with a Bird" test below, which
+    # would collide with this one on outcome alone if the condition were
+    # ignored (both currently decline and land in the graveyard either way).
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Dazzling Denial"]
+    assert decision.amount == 2, "no Bird controlled: the base amount, not the escalated {4}"
 
 
 def test_dazzling_denial_forces_the_upgraded_payment_while_a_bird_is_controlled():
@@ -461,6 +468,13 @@ def test_dazzling_denial_forces_the_upgraded_payment_while_a_bird_is_controlled(
     scenario.resolve_top()
 
     assert bolt.zone is Zone.GRAVEYARD, "controlling a Bird: bob declined the upgraded {4} too"
+    # Same proof as above, the other way round: the amount actually offered
+    # while a Bird is controlled must be the escalated {4}, which is what
+    # the "if you control a Bird" clause exists to change - not the base
+    # {2}, which is all an implementation ignoring that clause would ever
+    # offer.
+    (decision,) = [q for q in scenario.game.decisions.asked if q.source == "Dazzling Denial"]
+    assert decision.amount == 4, "controlling a Bird: the escalated amount, not the base {2}"
 
 
 # --------------------------------------------------------------------------
