@@ -61,9 +61,13 @@ from magic_cards_model.machines.casting import (
     keyword_cast_options,
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
+    reads_granted_zone_keyword_line,
     reads_mandatory_additional_cost_line,
     reads_or_pay_additional_cost_line,
+    reads_play_cards_exiled_with_line,
     reads_printed_zone_permission_line,
+    reads_static_zone_cast_permission_line,
+    reads_using_keyword_permission_line,
 )
 from magic_cards_model.machines.casting_restrictions import (
     _CANT_BE_COUNTERED_RE,
@@ -1923,6 +1927,23 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if reads_as_graveyard_cast_permission_line(text):
         # CR 601.3: `casting.granted_cast_options` hands out the once-each-turn
         # graveyard cast it grants (Rivaz of the Claw, Kess, Dissident Mage).
+        return HANDLED
+    if reads_static_zone_cast_permission_line(text):
+        # CR 601.3 / CR 611.3d: `casting._static_zone_cast_option` casts from
+        # the graveyard or the top of the library (Leonardo, Sewer Samurai;
+        # Mikey & Don, Party Planners), `Game.land_from_top_of_library_
+        # permission` plays the land half, and `replacement._cast_permission_
+        # rider_modifiers` places the "enters with" rider's counter.
+        return HANDLED
+    if reads_using_keyword_permission_line(text) or reads_granted_zone_keyword_line(printing, text):
+        # CR 611.3d / CR 601.3: `casting._grant_on_a_card_in_a_zone` grants
+        # the keyword where the card lies and `_rezoned_by_using` opens that
+        # zone to it (Ninja Teen's level 3; Iroh, Grand Lotus's flashback).
+        return HANDLED
+    if reads_play_cards_exiled_with_line(printing, text):
+        # CR 601.3 / CR 607.2a: `casting.linked_exile_play_source` opens the
+        # linked pile to casts (`granted_cast_options`) and to the land drop
+        # (`Game.play_land`, `legal_actions`) - The Temporal Anchor.
         return HANDLED
     if keyword_machine.as_enters_day_night(text, printing.name) is not None:
         # CR 731.1: "If it's neither day nor night, it becomes day as this

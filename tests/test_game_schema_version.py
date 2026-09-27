@@ -1432,3 +1432,27 @@ def test_a_snapshot_written_before_skipped_turns_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SKIPPED_TURNS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `CastRecord` gained `enters_with_counters` (a
+#: cast permission's CR 614.1c "enters with a counter" rider) and `Game`
+#: gained `next_spell_keyword_grants` ("the next noncreature spell you cast
+#: this turn has affinity for artifacts", CR 702.41a) - tmt T6.
+_SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS = 89
+
+
+def test_a_snapshot_written_before_cast_permission_riders_is_refused() -> None:
+    """A version-89 dump has no next-spell keyword grants and cast records
+    with no rider: decoded as current, a Leonardo-cast creature on the stack
+    would enter without its finality counter. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS
+    dumped = _a_played_game().model_dump(mode="json")
+    assert dumped["next_spell_keyword_grants"] == []
+    del dumped["next_spell_keyword_grants"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS}",
+    ):
+        Game.model_validate(dumped)

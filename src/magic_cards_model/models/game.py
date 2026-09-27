@@ -54,6 +54,7 @@ from ..machines.casting import (
     hexproof_abilities_in,
     keyword_cast_options,
     life_or_mana_additional_costs,
+    linked_exile_play_source,
     marker_cast_options,
     optional_additional_costs,
     play_permissions_on,
@@ -61,6 +62,7 @@ from ..machines.casting import (
     split_second_restriction_source,
     static_free_cast_grants,
     static_free_cast_refusal,
+    static_zone_cast_permission,
     types_being_cast,
     usable_play_permission,
     why_cannot_cast_restriction,
@@ -233,7 +235,9 @@ from ..machines.layers import (
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
 from ..machines.next_spell import (
     NextSpellFreeCastGrant,
+    NextSpellKeywordGrant,
     SpellCostReductionGrant,
+    next_spell_keyword_grants_for,
     spell_has_quality,
 )
 from ..machines.objects_as_costs import convoke as pay_convoke
@@ -2254,6 +2258,15 @@ class CastRecord(EngineModel):
     value on the battlefield (CR 707.2) is not its card's. Read through
     `Game.last_known_mana_value`, the same number either way."""
 
+    enters_with_counters: list[str] = Field(default_factory=list)
+    """One counter kind per counter the permanent this spell becomes enters
+    with because of how it was cast - a cast permission's own rider, "If you
+    cast a spell this way, that creature enters with a finality counter on
+    it." (Leonardo, Sewer Samurai; `KeywordCastOption.enters_with_counters`).
+    CR 614.1c makes it a replacement effect on the entering permanent,
+    applied by `machines/replacement._cast_permission_rider_modifiers`. Not
+    copied by `Game.copy_spell`: CR 707.10's copy was not cast this way."""
+
     sneak_defender: TargetRef | None = None
     """The player, planeswalker or battle the creature returned to pay this
     spell's sneak cost was attacking (CR 702.190b), copied from `Casting.
@@ -3595,6 +3608,12 @@ class Game(EngineModel):
     its mana cost." (CR 118.9) - live until that spell becomes cast (CR
     601.2i) or the turn ends. See `machines/next_spell.py`."""
 
+    next_spell_keyword_grants: list[NextSpellKeywordGrant] = Field(default_factory=list)
+    """"The next `<quality>` spell you cast this turn has `<keyword>`." (Don &
+    Raph, Hard Science's affinity for artifacts, CR 702.41a; Archway of
+    Innovation's improvise, CR 702.126a) - live until that spell becomes cast
+    (CR 601.2i) or the turn ends. See `machines/next_spell.py`."""
+
     spell_cost_reduction_grants: list[SpellCostReductionGrant] = Field(default_factory=list)
     """"`<Quality>` spells you cast this turn cost {N} less to cast." (CR
     601.2f) - live for the rest of the turn it was created in. See
@@ -3999,7 +4018,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 89
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 90
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4081,6 +4100,10 @@ class Game(EngineModel):
     #: 89: `CastRecord` gained `casualty_paid` (CR 702.153a/b, sos T5), and
     #: `CardState` gained `last_known_spell` (CR 608.2h, sos T5), carrying
     #: its `CastRecord` as JSON.
+    #: 90: `CastRecord` gained `enters_with_counters` (a cast permission's
+    #: CR 614.1c rider, tmt T6) and `Game` gained `next_spell_keyword_grants`
+    #: ("the next noncreature spell you cast this turn has affinity for
+    #: artifacts", CR 702.41a, tmt T6).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6532,6 +6555,7 @@ class Game(EngineModel):
         additional_cost_mana_values: list[float] | None = None,
         is_copy: bool = False,
         sneak_defender: TargetRef | None = None,
+        enters_with_counters: list[str] | None = None,
         kicker_costs_paid: list[str] | None = None,
         bargained: bool = False,
         evidence_collected: bool = False,
@@ -6610,6 +6634,7 @@ class Game(EngineModel):
             card_id=spell.id,
             is_copy=is_copy,
             sneak_defender=sneak_defender,
+            enters_with_counters=[] if is_copy else list(enters_with_counters or []),
             cast_step=None if is_copy or self.turn is None else self.turn.step,
             cast_during_turn_of=(None if is_copy or self.turn is None else self.turn.active_player),
             kicker_costs_paid=list(kicker_costs_paid or []),
@@ -6795,6 +6820,14 @@ class Game(EngineModel):
             for grant in self.next_spell_free_cast_grants
             if not (grant.controller == controller and spell_has_quality(card_state, grant.quality))
         ]
+        # CR 601.2i again: "the next `<quality>` spell you cast this turn has
+        # `<keyword>`" - every such grant this spell answers for is used up
+        # by it (two Don & Raph triggers both applied to this one spell).
+        used = next_spell_keyword_grants_for(self, card_state, controller)
+        if used:
+            self.next_spell_keyword_grants = [
+                grant for grant in self.next_spell_keyword_grants if grant not in used
+            ]
         self.emit(
             GameEvent(
                 event=TriggerEvent.CAST_SPELL,
@@ -19184,9 +19217,15 @@ class Game(EngineModel):
 
     def _plays_lands_from_top_of_library_line(self, text: str) -> bool:
         """Whether one static line is "You may play lands from the top of
-        your library."."""
+        your library." - or `casting.static_zone_cast_permission`'s "You may
+        play lands and cast `<quality>` spells from the top of your library."
+        (Mikey & Don, Party Planners; Traveling Chocobo), whose land half is
+        this same CR 305.1 permission."""
         stripped = self._static_line_without_ability_word(text)
-        return self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(stripped) is not None
+        if self._PLAYS_LANDS_FROM_TOP_OF_LIBRARY_RE.fullmatch(stripped) is not None:
+            return True
+        permission = static_zone_cast_permission(stripped)
+        return permission is not None and permission.plays_lands and permission.zone is Zone.LIBRARY
 
     def controls_look_at_top_permission(self, username: str) -> bool:
         """Whether `username` controls a permanent granting CR 611.3d's "you
@@ -19245,6 +19284,13 @@ class Game(EngineModel):
         against `spell.types`; "non`<type>`" reads as that type's absence
         the same way `_named_type_matcher`'s own "non`<type>`" branch does.
         """
+        if any(
+            grant.keyword == "improvise"
+            for grant in next_spell_keyword_grants_for(self, spell, caster)
+        ):
+            # "The next spell you cast this turn has improvise." (Archway of
+            # Innovation) - a resolved effect's grant rather than a static.
+            return True
         board = self.computed_board()
         for permanent in self.permanents_controlled_by(caster):
             for line in board.of(permanent).abilities:
@@ -20159,6 +20205,7 @@ class Game(EngineModel):
                 permission is None
                 and self.graveyard_land_permission(land, username) is None
                 and self.land_from_top_of_library_permission(land, username) is None
+                and linked_exile_play_source(self, land, username) is None
             ):
                 granted = play_permissions_on(self, land)
                 if granted:
@@ -24569,6 +24616,7 @@ class Game(EngineModel):
             self.graveyard_arrivals_this_turn = []
             self.graveyard_arrivals_announced = 0
             self.next_spell_free_cast_grants = []
+            self.next_spell_keyword_grants = []
             self.spell_cost_reduction_grants = []
             # `play_permissions` is deliberately **not** cleared here. CR 514.2
             # ends an "until end of turn" effect in the cleanup step and

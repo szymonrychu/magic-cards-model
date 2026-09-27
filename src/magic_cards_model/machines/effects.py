@@ -9690,6 +9690,54 @@ _GRAVEYARDS_WITH_N_OR_MORE_CARDS_RE = re.compile(
 )
 
 
+#: "card type(s) among [`<qualifier>`] spells you've cast this turn" - April
+#: O'Neil, Hacktivist's "draw a card for each card type among spells you've
+#: cast this turn" and Hurkyl, Master Wizard's "For each card type among
+#: noncreature spells you've cast this turn, ...". CR 205.2a's card types of
+#: every spell the player cast this turn (`Game.spells_cast_this_turn`, CR
+#: 601.2i), each counted once however many spells share it; CR 205.2b gives
+#: an artifact creature both.
+_CARD_TYPES_AMONG_SPELLS_CAST_RE = re.compile(
+    r"^card types? among (?:(?P<qualifier>[a-z-]+) )?spells you've cast this turn$",
+    re.IGNORECASE,
+)
+
+
+def card_types_among_spells_cast_reader(
+    phrase: str,
+) -> Callable[["Game", str], set[Type]] | None:
+    """`_CARD_TYPES_AMONG_SPELLS_CAST_RE`'s set of card types, as a
+    `(game, player) -> set[Type]` reader, or None for a phrase it does not
+    read. The qualifier is one card type, or "non" one ("noncreature"): a
+    spell that fails it adds none of its types, so an artifact creature
+    spell contributes nothing to Hurkyl's "noncreature spells"."""
+    from .casting import types_being_cast
+
+    match = _CARD_TYPES_AMONG_SPELLS_CAST_RE.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    qualifier = (match.group("qualifier") or "").lower()
+    negated = qualifier.startswith("non")
+    word = qualifier.removeprefix("non").lstrip("-")
+    wanted: Type | None = None
+    if word:
+        try:
+            wanted = Type(word)
+        except ValueError:
+            return None
+
+    def read(game: "Game", player: str) -> set[Type]:
+        found: set[Type] = set()
+        for spell in game.spells_cast_this_turn.get(player, []):
+            types = set(spell.types_as_a_spell(types_being_cast(spell.card, spell.face_played)))
+            if wanted is not None and (wanted in types) is negated:
+                continue
+            found |= types
+        return found
+
+    return read
+
+
 def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int] | None:
     """The count of an "N `<effect>` for each `<phrase>`" tail, as a
     `(game, controller, source_id) -> int` reader, or `None` when `phrase` is
@@ -9705,6 +9753,10 @@ def _for_each_multiplier(phrase: str) -> Callable[["Game", str, str | None], int
     spells the count out that way instead.
     """
     stripped = phrase.strip().rstrip(".")
+    types_among = card_types_among_spells_cast_reader(stripped)
+    if types_among is not None:
+        # CR 608.2h: counted once, as the effect applies.
+        return lambda game, controller, _source_id: len(types_among(game, controller))
     if match := _COUNTER_ON_IT_RE.fullmatch(stripped):
         kind = _counter_kind(match.group("kind"))
 
@@ -12217,11 +12269,103 @@ _POSSIBILITY_STORM_TAIL_RE = re.compile(
 #: CR 205's type/subtype words (`_quality_matcher`), optionally bounded by an
 #: exact mana value - "X" is the activation's announced X (CR 107.3a).
 _CAST_FROM_LINKED_EXILE_RE = re.compile(
-    r"^you may cast an? (?:(?P<quality>.+?) )?spell(?: with mana value (?P<mv>\d+|x))? "
-    r"from among cards (?P<own>you own )?exiled with (?:this \w+|it)"
+    r"^you may cast (?:an? (?:(?P<quality>.+?) )?spell(?: with mana value (?P<mv>\d+|x))? "
+    r"from among cards (?P<own>you own )?|(?P<card>a card) )exiled with (?:this \w+|it)"
     r"(?P<free> without paying its mana cost)?\.?$",
     re.IGNORECASE,
 )
+#: Krang & Shredder's Disappear prints the singular "you may cast a card
+#: exiled with Krang & Shredder without paying its mana cost." - the same
+#: resolution-time cast out of the linked pile (the card's own ruling: "You
+#: cast the card while Krang & Shredder's last ability is resolving and still
+#: on the stack. ... Timing restrictions based on its types are ignored."),
+#: read by the `card` branch of the pattern above.
+
+#: "until end of turn, you may play a card exiled with `<this>`." - Raphael,
+#: Most Attitude's attack trigger. CR 601.1a's "play" (a land drop or a
+#: cast) out of CR 607.2a's linked pile, for the rest of the turn (CR 514.2),
+#: through the priority system rather than during the resolution - and "a
+#: card", so the first card played ends the rest (`PlayPermission.choice_
+#: group`, the same "one of those cards" Nashi's grant uses).
+_PLAY_A_CARD_EXILED_WITH_RE = re.compile(
+    r"^until end of turn, you may play (?P<one>a card|cards) exiled with (?:this \w+|it)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_play_a_card_exiled_with_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`_PLAY_A_CARD_EXILED_WITH_RE`: a `PlayPermission` (CR 601.3) for every
+    face-up card in the source's own pile (`_linked_pile`, that incarnation
+    of it - CR 400.7), timing untouched (the ruling: "you must still follow
+    any timing restrictions and permissions, including those based on the
+    card's type"). Ability-only: a spell has no linked pile."""
+    if for_spell:
+        return None
+    match = _PLAY_A_CARD_EXILED_WITH_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    one_of = match.group("one").lower() == "a card"
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        controller = game.controller_of(stack_object).username
+        for card in _linked_pile(game, stack_object):
+            if card.zone is not Zone.EXILE or not card.face_up:
+                continue
+            game.grant_play_permission(
+                card,
+                controller,
+                action=PlayAction.PLAY,
+                pays_mana_cost=True,
+                source_name=stack_object.source_name,
+                rule="CR 601.3, CR 607.2a",
+                zone=Zone.EXILE,
+                until_end_of_turn=True,
+                choice_group=stack_object.id if one_of else None,
+            )
+
+    return effect
+
+
+#: "they get that many poison counters" - Etali, Primal Sickness's "Whenever
+#: Etali deals combat damage to a player, they get that many poison
+#: counters." CR 122.1f's poison counters, given to the player the event
+#: names ("they", CR 120.2a's damaged player) in the amount the event carried
+#: ("that many", `that_many`).
+_EVENT_PLAYER_GETS_THAT_MANY_POISON_RE = re.compile(
+    r"^(?:they|that player) gets? that many poison counters\.?$", re.IGNORECASE
+)
+
+
+def _parse_event_player_gets_that_many_poison_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EVENT_PLAYER_GETS_THAT_MANY_POISON_RE`. Ability-only: "they" and
+    "that many" both point at a triggering event. No count to read gives a
+    notice and no counters (`_that_many_or_notice`)."""
+    if for_spell or _EVENT_PLAYER_GETS_THAT_MANY_POISON_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack) or stack_object.event is None:
+            return
+        username = stack_object.event.player
+        if username is None:
+            return
+        amount = _that_many_or_notice(
+            game,
+            clause,
+            source_id=stack_object.source_id,
+            source_name=stack_object.source_name,
+            stack_object=stack_object,
+        )
+        if amount is None or amount <= 0:
+            return
+        game.add_player_counters(game.player(username), Counter.POISON, amount)
+
+    return effect
+
 
 #: Pyxis of Pandemonium's "Each player turns face up all cards they own exiled
 #: with this artifact, then puts all permanent cards among them onto the
@@ -12364,6 +12508,7 @@ def _cast_from_linked_exile_effect(match: re.Match[str]) -> AbilityEffect | None
         return None
     matches_quality = _quality_matcher(quality) if quality is not None else None
     mv_word = match.group("mv")
+    a_card = match.group("card") is not None
     own = match.group("own") is not None
     free = match.group("free") is not None
 
@@ -12382,14 +12527,22 @@ def _cast_from_linked_exile_effect(match: re.Match[str]) -> AbilityEffect | None
             and (mana_value is None or (card.card.cmc or 0) == mana_value)
             and game.can_cast_during_resolution(card, caster)
         ]
-        described = "a spell" if quality is None else with_indefinite_article(f"{quality} spell")
+        described = (
+            "a card"
+            if a_card
+            else "a spell"
+            if quality is None
+            else with_indefinite_article(f"{quality} spell")
+        )
         cost_words = " without paying its mana cost" if free else ""
         taken = game.ask(
             Decision(
                 kind=DecisionKind.MAY,
                 player=caster,
                 prompt=(
-                    f"cast {described} from among cards exiled with {ability.source_name}"
+                    f"cast {described} exiled with {ability.source_name}{cost_words}"
+                    if a_card
+                    else f"cast {described} from among cards exiled with {ability.source_name}"
                     f"{cost_words}"
                 ),
                 source=ability.source_name,
@@ -43840,6 +43993,56 @@ _SPELLS_COST_LESS_THIS_TURN_RE = re.compile(
     r"^(?P<quality>[^.]+?) spells you cast this turn cost \{(?P<n>\d+)\} less to cast\.?$",
     re.IGNORECASE,
 )
+#: "The next noncreature spell you cast this turn has affinity for
+#: artifacts." (Don & Raph, Hard Science, CR 702.41a) and "The next spell you
+#: cast this turn has improvise." (Archway of Innovation, CR 702.126a) - a
+#: cost keyword for the next such spell (`next_spell.NextSpellKeywordGrant`),
+#: the keyword phrase read by `spell_grants`'s own reader. Trailing reminder
+#: text is stripped before the match.
+_NEXT_SPELL_HAS_KEYWORD_RE = re.compile(
+    r"^the next (?:(?P<quality>[^.]+?) )?spell you cast this turn has (?P<keyword>[^.(]+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_next_spell_has_keyword(text: str) -> TargetedClause | None:
+    """`_NEXT_SPELL_HAS_KEYWORD_RE`, for the resolving object's controller,
+    this turn - or None when the quality or the keyword is not one this
+    reads (`next_spell.NEXT_SPELL_KEYWORDS`)."""
+    from .next_spell import NEXT_SPELL_KEYWORDS, NextSpellKeywordGrant, spell_quality_is_readable
+    from .spell_grants import _keyword_line
+
+    stripped = re.sub(r"\s*\([^()]*\)\s*$", "", text).strip()
+    match = _NEXT_SPELL_HAS_KEYWORD_RE.fullmatch(stripped)
+    if match is None:
+        return None
+    quality = (match.group("quality") or "").strip()
+    if quality and not spell_quality_is_readable(quality):
+        return None
+    read = _keyword_line(match.group("keyword"), NEXT_SPELL_KEYWORDS)
+    if read is None:
+        return None
+    keyword, line = read
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        game.next_spell_keyword_grants = [
+            *game.next_spell_keyword_grants,
+            NextSpellKeywordGrant(
+                controller=game.controller_of(stack_object).username,
+                source_name=source_name,
+                quality=quality,
+                keyword=keyword,
+                line=line,
+                turn=game.turn.turns_taken if game.turn is not None else 0,
+            ),
+        ]
+
+    return effect
 
 
 def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
@@ -43852,6 +44055,9 @@ def _parse_this_turn_spell_grant_clause(clause: str, *, for_spell: bool) -> Targ
     )
 
     text = " ".join(clause.strip().split())
+    keyword_grant = _parse_next_spell_has_keyword(text)
+    if keyword_grant is not None:
+        return keyword_grant
     free = _NEXT_SPELL_FREE_CAST_RE.fullmatch(text)
     cheaper = _SPELLS_COST_LESS_THIS_TURN_RE.fullmatch(text)
     matched = free or cheaper
@@ -44202,6 +44408,73 @@ def _parse_exile_until_antecedent_target_opponent(
     return exile_until_quality, False
 
 
+#: "each opponent exiles cards from the top of their library until they exile
+#: a `<quality>` card" (Krang & Shredder's enters-or-attacks trigger) and
+#: "each player exiles ..." (Etali, Primal Conqueror's enters trigger) - the
+#: same `keywords.exile_until` process `_EXILE_UNTIL_QUALITY_TARGET_OPPONENT_
+#: RE` reads for one chosen player, run for every player the subject names,
+#: in APNAP order (CR 101.4). The cards exiled are CR 607.2a's pile for any
+#: "exiled with `<this>`" reader the object prints (`link_cards_exiled_
+#: during`, run once the ability has resolved).
+_EACH_PLAYER_EXILES_UNTIL_QUALITY_RE = re.compile(
+    r"^each (?P<who>opponent|player) exiles cards from the top of (?:their|his or her) library "
+    r"until (?:they|that player|he or she) exiles? an? (?P<quality>[\w' ,-]+?) card\.?$",
+    re.IGNORECASE,
+)
+
+
+def _each_player_exile_until(clause: str) -> "ExileAntecedent | None":
+    """`_EACH_PLAYER_EXILES_UNTIL_QUALITY_RE`'s process, returning the card
+    that stopped each player's run (the `<quality>` card "exiled this way"),
+    in APNAP order - or None when the clause is not that shape."""
+    from .keywords import exile_until
+
+    match = _EACH_PLAYER_EXILES_UNTIL_QUALITY_RE.fullmatch(" ".join(clause.strip().split()))
+    if match is None:
+        return None
+    quality = match.group("quality")
+    if not _search_quality_is_readable(quality):
+        return None
+    matches = _quality_matcher(quality)
+    opponents_only = match.group("who").lower() == "opponent"
+
+    def exile_each(game: "Game", stack_object: "StackObject") -> list[CardState]:
+        controller = game.controller_of(stack_object).username
+        source_name = (
+            stack_object.card.name
+            if isinstance(stack_object, CardState)
+            else stack_object.source_name
+        )
+        stoppers: list[CardState] = []
+        for player in _players_in_apnap_order(game):
+            if opponents_only and player.username == controller:
+                continue
+            exiled = exile_until(
+                game, player, lambda state, _: matches(state), source_name=source_name
+            )
+            if exiled and matches(exiled[-1]):
+                stoppers.append(exiled[-1])
+        return stoppers
+
+    return exile_each
+
+
+def _parse_each_player_exiles_until_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_EXILES_UNTIL_QUALITY_RE` standing alone (Krang &
+    Shredder's trigger): the exiling is the whole instruction, and what the
+    object does with the cards later is its other, linked ability's."""
+    exile_each = _each_player_exile_until(clause)
+    if exile_each is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        exile_each(game, stack_object)
+
+    return effect
+
+
 #: "you may cast the exiled `<quality>` card until end of turn" - the "if you
 #: don't" branch of `_merge_exile_until_quality_then_counter_or_cast_clauses`
 #: below. Black Widow's own trailing "and mana of any type can be spent to
@@ -44334,7 +44607,8 @@ def _merge_exile_until_quality_then_counter_or_cast_clauses(
 #: "up to" maximum and the antecedent named rather than pronouned.
 _CAST_ANY_NUMBER_FROM_AMONG_THEM_FREE_RE = re.compile(
     rf"^you may cast (?:any number of|up to {count_pattern('limit')}) spells from among"
-    r" (?:them|the exiled cards) without paying their mana costs\.?$",
+    r" (?:them|the exiled cards|the (?P<this_way>[\w' -]+?) cards exiled this way)"
+    r" without paying their mana costs\.?$",
     re.IGNORECASE,
 )
 
@@ -44351,11 +44625,26 @@ def _merge_exile_then_cast_any_number_free_clauses(
     if cast_match is None:
         return None
     limit = parse_count(cast_match.group("limit")) if cast_match.group("limit") else None
-    antecedent = _parse_exile_top_of_other_libraries_antecedent(clauses[index]) or (
-        _spell_safe_exile_antecedent(clauses[index])
-        if for_spell
-        else (
-            _parse_exile_antecedent(clauses[index]) or _parse_exile_until_antecedent(clauses[index])
+    this_way = cast_match.group("this_way")
+    each_player = _each_player_exile_until(clauses[index])
+    if each_player is not None:
+        # Etali, Primal Conqueror: "the nonland cards exiled this way" are the
+        # cards that stopped each player's run - the antecedent's own quality.
+        antecedent: tuple[ExileAntecedent, bool] | None = (each_player, True)
+    elif this_way is not None:
+        return None
+    else:
+        antecedent = None
+    antecedent = (
+        antecedent
+        or _parse_exile_top_of_other_libraries_antecedent(clauses[index])
+        or (
+            _spell_safe_exile_antecedent(clauses[index])
+            if for_spell
+            else (
+                _parse_exile_antecedent(clauses[index])
+                or _parse_exile_until_antecedent(clauses[index])
+            )
         )
     )
     if antecedent is None:
@@ -49238,8 +49527,13 @@ _PUT_THE_REST_INTO_YOUR_GRAVEYARD_RE = re.compile(
 #: (Portent of Calamity) and "for each card type, you may put a card of that
 #: type from among the revealed cards into your hand" (Atraxa, Grand Unifier):
 #: one pick per CR 205.2a card type, taken to exile or to hand.
+#: Hurkyl, Master Wizard narrows the loop to the card types among the spells
+#: it names: "For each card type among noncreature spells you've cast this
+#: turn, you may put a card of that type ..." (`card_types_among_spells_cast_
+#: reader`).
 _FOR_EACH_CARD_TYPE_MAY_TAKE_RE = re.compile(
-    r"^for each card type, you may (?:(?P<exile>exile)|put) a card of that type from among "
+    r"^for each (?P<among>card type among [^,]+|card type), you may (?:(?P<exile>exile)|put) "
+    r"a card of that type from among "
     r"(?:them|the revealed cards)(?P<hand> into your hand)?$",
     re.IGNORECASE,
 )
@@ -49312,6 +49606,11 @@ def _merge_reveal_top_one_card_per_type_clauses(
     exiling = pick_match.group("exile") is not None
     if exiling == (pick_match.group("hand") is not None):
         return None
+    types_among = None
+    if pick_match.group("among").lower() != "card type":
+        types_among = card_types_among_spells_cast_reader(pick_match.group("among"))
+        if types_among is None:
+            return None
     rest_text = clauses[index + 2].strip()
     rest_match = _THE_OTHER_INTO_A_DESTINATION_RE.fullmatch(rest_text)
     if rest_match is None or not rest_text.lower().startswith("put the rest"):
@@ -49348,7 +49647,10 @@ def _merge_reveal_top_one_card_per_type_clauses(
             game.reveal(state, source=source)
         remaining = list(revealed)
         taken: list[CardState] = []
+        allowed = set(Type) if types_among is None else types_among(game, player.username)
         for card_type in Type:
+            if card_type not in allowed:
+                continue
             candidates = [state for state in remaining if card_type in state.types]
             if not candidates:
                 continue
@@ -52546,6 +52848,15 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     this_turn_spell_grant = _parse_this_turn_spell_grant_clause(clause, for_spell=for_spell)
     if this_turn_spell_grant is not None:
         return this_turn_spell_grant
+    each_player_exiles = _parse_each_player_exiles_until_clause(clause, for_spell=for_spell)
+    if each_player_exiles is not None:
+        return each_player_exiles
+    play_exiled_with = _parse_play_a_card_exiled_with_clause(clause, for_spell=for_spell)
+    if play_exiled_with is not None:
+        return play_exiled_with
+    poison_that_many = _parse_event_player_gets_that_many_poison_clause(clause, for_spell=for_spell)
+    if poison_that_many is not None:
+        return poison_that_many
     draw_the_difference = _parse_draw_the_difference_clause(clause, for_spell=for_spell)
     if draw_the_difference is not None:
         return draw_the_difference

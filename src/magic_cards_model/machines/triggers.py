@@ -6602,7 +6602,9 @@ def _expand_attacks_or_blocks(
 #: with haste, or already on the battlefield when this engine first sees it)
 #: would never see its own attack trigger. "this `<kind>`", the identical
 #: open read `_ATTACKS_OR_BLOCKS_RE` takes just above.
-_ENTERS_OR_ATTACKS_RE = re.compile(r"^this (?P<kind>[a-z]+) enters or attacks$", re.IGNORECASE)
+#: A pair printed as one card says it in the plural - "Whenever Krang &
+#: Shredder enter or attack" - and the events are the same two.
+_ENTERS_OR_ATTACKS_RE = re.compile(r"^this (?P<kind>[a-z]+) enters? or attacks?$", re.IGNORECASE)
 
 #: "Whenever this creature enters or transforms into `<face>`, ..." - Brutal
 #: Cathar's and Huntmaster of the Fells' own condition. CR 603.1b: "A

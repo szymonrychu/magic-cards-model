@@ -21,6 +21,7 @@ import re
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from enum import StrEnum
+from functools import lru_cache
 from typing import Any
 from uuid import UUID
 
@@ -115,6 +116,13 @@ class CastTiming(StrEnum):
     #: type would not allow it (a sorcery, a creature without flash) and shuts
     #: every other moment to this option.
     OWN_DECLARE_BLOCKERS = "own_declare_blockers"
+    #: The spell's own timing, exactly as if it were cast from the hand (CR
+    #: 117.1a): a permission that only opens another zone - "You may cast
+    #: creature spells from the top of your library." - changes where a spell
+    #: is cast from and never when. `KeywordCastOption.why_not` asks
+    #: `why_cannot_cast_now` of the card as a hand card, so flash (CR 702.8a)
+    #: and every flash grant still count.
+    OWN = "own"
 
 
 class KeywordCastOption(EngineModel):
@@ -241,11 +249,37 @@ class KeywordCastOption(EngineModel):
     moment a spell is cast under it, so the same permanent grants no second
     one that turn - while a new object, or a second such permanent, grants
     its own."""
+    additional_cost: TotalCost | None = None
+    """An additional cost the permission itself charges on top of the spell's
+    other costs (CR 601.2f) - Noctis, Prince of Lucis's "by paying 3 life in
+    addition to paying their other costs". Added by `Casting._use_keyword`
+    through `add_additional_cost` when the option is claimed."""
+    enters_with_counters: tuple[str, ...] = ()
+    """One counter kind per counter the spell's permanent enters with because
+    it was cast under this permission - "If you cast a spell this way, that
+    creature enters with a finality counter on it." (Leonardo, Sewer Samurai;
+    Noctis, Prince of Lucis), "... enters with an additional +1/+1 counter on
+    it" (Mikey & Don, Party Planners). CR 614.1c makes it a replacement effect
+    on the entering permanent; `Casting.cast()` copies it onto
+    `CastRecord.enters_with_counters`, which `machines/replacement.py`'s
+    `_cast_permission_rider_modifiers` reads as the permanent enters."""
 
     def why_not(
-        self, spell: CardState, caster: str, game: Any = None, origin: Zone | None = None
+        self,
+        spell: CardState,
+        caster: str,
+        game: Any = None,
+        origin: Zone | None = None,
+        *,
+        cost_paid: bool = False,
     ) -> str | None:
         """Why this option cannot be used right now, or None if it can.
+
+        `cost_paid` is CR 601.2h already behind the cast: a requirement that is
+        only about being able to pay the cost - an unblocked creature to
+        return for sneak (CR 702.190a), a tapped one for web-slinging - was
+        met by paying it, and the creature returned is no longer there to be
+        found, so it is not asked again.
 
         CR 601.3 is the rule: permission first, everything else after.
 
@@ -312,6 +346,7 @@ class KeywordCastOption(EngineModel):
             )
         if (
             self.returns_tapped_creature
+            and not cost_paid
             and game is not None
             and not any(
                 permanent.tapped and game.characteristics_of(permanent).is_creature
@@ -350,8 +385,15 @@ class KeywordCastOption(EngineModel):
             refusal = _why_not_in_own_declare_blockers_step(game, caster, self)
             if refusal is not None:
                 return refusal
+        if self.timing is CastTiming.OWN and game is not None:
+            refusal = why_cannot_cast_now(
+                spell.model_copy(update={"zone": Zone.HAND}), caster, game
+            )
+            if refusal is not None:
+                return refusal
         if (
             self.returns_unblocked_creature
+            and not cost_paid
             and game is not None
             and not any(
                 why_not_unblocked(game, permanent) is None
@@ -1027,11 +1069,107 @@ _ZONE_WORDS_FOR_GRANTS: dict[str, Zone] = {"hand": Zone.HAND, "graveyard": Zone.
 #: may grant an ability to a permanent spell or card that allows it to be
 #: cast" - and the granted keyword is what says which zone it may be cast from
 #: (CR 113.6f, CR 702.34a).
+#: Ninja Teen's level 3 prints the plural of the same shape: "Creature cards
+#: in your graveyard have sneak {3}{B}."
 _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE = re.compile(
-    r"^(?P<during>During your turn, )?[Ee]ach (?P<what>[\w' -]+?) card in your "
-    r"(?P<zone>hand|graveyard) has (?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    r"^(?P<during>During your turn, )?(?:[Ee]ach (?P<what>[\w' -]+?) card in your "
+    r"(?P<zone>hand|graveyard) has|(?P<whats>[\w' -]+?) cards in your "
+    r"(?P<zones>hand|graveyard) have) (?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
     re.DOTALL,
 )
+
+#: "You may cast `<quality>` spells from your graveyard using their
+#: `<keyword>` abilities." - Ninja Teen's level 3. CR 601.3's permission,
+#: opening a zone to a keyword that on its own casts from somewhere else
+#: (sneak casts from the hand, CR 702.190a): the keyword's cost and timing
+#: are unchanged, only the zone the card may be in. It covers every instance
+#: of the keyword the card has, printed or granted (the card's own ruling).
+_CAST_USING_THEIR_KEYWORD_RE = re.compile(
+    r"^you may cast (?P<what>[\w' ,-]+?) spells from your (?P<zone>graveyard|hand) "
+    r"using their (?P<keyword>[a-z]+) abilities\.?$",
+    re.IGNORECASE,
+)
+
+
+def class_gated_lines(permanent: CardState, lines: Sequence[str]) -> tuple[str, ...]:
+    """A permanent's computed ability lines (CR 613.1f) with a Class's
+    not-yet-reached levels taken out (CR 716.2a: a level-3 paragraph on a
+    level-2 Class is printed but not in effect). The computed list carries
+    every printed line whatever the level, so a printed line is kept only
+    when `CardState.class_ability_text` - the level-gated printing - has it;
+    a line some effect granted is not printed at all and is kept as is."""
+    if not permanent.is_class:
+        return tuple(lines)
+    live = set(permanent.class_ability_text.split("\n"))
+    printed = set((permanent.oracle_text or "").split("\n"))
+    return tuple(line for line in lines if line in live or line not in printed)
+
+
+class UsingKeywordPermission(EngineModel):
+    """One `_CAST_USING_THEIR_KEYWORD_RE` line, read."""
+
+    model_config = ConfigDict(frozen=True)
+
+    quality: str
+    zone: Zone
+    keyword: str
+    """Lower case, the keyword's canonical spelling."""
+
+
+def using_keyword_permission(text: str) -> UsingKeywordPermission | None:
+    """Read one static line as `_CAST_USING_THEIR_KEYWORD_RE`, or None."""
+    match = _CAST_USING_THEIR_KEYWORD_RE.fullmatch(_REMINDER_TEXT_RE.sub("", text).strip())
+    if match is None:
+        return None
+    zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+    if zone is None:
+        return None
+    return UsingKeywordPermission(
+        quality=match.group("what").strip(),
+        zone=zone,
+        keyword=match.group("keyword").lower(),
+    )
+
+
+def _using_keyword_permissions(game: Any, caster: str) -> list[UsingKeywordPermission]:
+    """Every "using their `<keyword>` abilities" permission `caster`'s
+    permanents have right now, off their computed abilities (CR 613.1f) - a
+    Class below the level printing it has none (CR 716.2a)."""
+    if game is None:
+        return []
+    board = game.computed_board()
+    found: list[UsingKeywordPermission] = []
+    for permanent in game.permanents_controlled_by(caster):
+        for ability in parse_granted_ability_lines(
+            class_gated_lines(permanent, board.of(permanent).abilities)
+        ):
+            if ability.kind is not AbilityKind.STATIC:
+                continue
+            permission = using_keyword_permission(ability.text or "")
+            if permission is not None:
+                found.append(permission)
+    return found
+
+
+def _rezoned_by_using(
+    option: KeywordCastOption,
+    spell: CardState,
+    zone: Zone,
+    using: list[UsingKeywordPermission],
+) -> KeywordCastOption | None:
+    """`option` moved to `zone` when a "using their `<keyword>` abilities"
+    permission opens that zone to this keyword for this spell, else None."""
+    for permission in using:
+        if (
+            permission.zone is zone
+            and permission.keyword == option.keyword.lower()
+            and _spell_matches_grant_filter(spell, permission.quality)
+        ):
+            return option.model_copy(
+                update={"zone": zone, "rule": f"CR 601.3, CR 611.3d, {option.rule}"}
+            )
+    return None
+
 
 #: The second sentence Iroh prints under the first: the granted cost is the
 #: card's own mana cost rather than a printed one.
@@ -1109,7 +1247,12 @@ def _spell_matches_grant_filter(spell: CardState, what: str) -> bool:
 
 
 def granted_cast_options(
-    game: Any, spell: CardState, caster: str, origin_zone: Zone
+    game: Any,
+    spell: CardState,
+    caster: str,
+    origin_zone: Zone,
+    *,
+    library_top: bool | None = None,
 ) -> list[GrantedCastOption]:
     """Every cast option another permanent grants this spell right now
     (CR 610.5).
@@ -1160,7 +1303,9 @@ def granted_cast_options(
         # way `parse_abilities` reads a printing, and the result is already
         # scoped to the face that's up, so there is no separate `.face`
         # filter to apply here the way there was against `parse_abilities`.
-        for ability in parse_granted_ability_lines(board.of(permanent).abilities):
+        for ability in parse_granted_ability_lines(
+            class_gated_lines(permanent, board.of(permanent).abilities)
+        ):
             if ability.kind is not AbilityKind.STATIC:
                 continue
             text = (ability.text or "").strip()
@@ -1173,8 +1318,32 @@ def granted_cast_options(
                 option = _once_each_turn_cast_from_graveyard(
                     text, spell, origin_zone, game, caster, permanent
                 )
+            if option is None:
+                option = _static_zone_cast_option(
+                    text, game, spell, caster, origin_zone, library_top
+                )
             if option is not None:
                 found.append(GrantedCastOption(source_name=permanent.name, option=option))
+    # "You may cast creature spells from your graveyard using their sneak
+    # abilities." reaches a card's own printed keyword as well as a granted
+    # one (Ninja Teen's ruling): each printed option for that keyword, moved
+    # to the zone the permission opens.
+    if origin_zone is not Zone.HAND and (spell.owner or caster) == caster:
+        using = [
+            permission
+            for permission in _using_keyword_permissions(game, caster)
+            if permission.zone is origin_zone
+        ]
+        if using:
+            for printed in keyword_cast_options(spell.card):
+                if printed.zone is origin_zone:
+                    continue
+                rezoned = _rezoned_by_using(printed, spell, origin_zone, using)
+                if rezoned is not None:
+                    found.append(GrantedCastOption(source_name=spell.name, option=rezoned))
+    linked = _linked_exile_play_option(game, spell, caster, origin_zone)
+    if linked is not None:
+        found.append(GrantedCastOption(source_name=spell.name, option=linked))
     # CR 114.4: an emblem's abilities function in the command zone, so the
     # caster's own emblems grant exactly as a permanent's statics do.
     for emblem in game.emblems_of(caster):
@@ -1340,6 +1509,310 @@ def _graveyard_cast_grant_option(
     )
 
 
+# --------------------------------------------------------------------------
+# A permanent's standing permission to cast out of the graveyard or off the
+# top of the library (CR 601.3, CR 611.3d)
+# --------------------------------------------------------------------------
+
+#: "[During your turn, ]you may [play lands and ]cast `<quality>` spells[ with
+#: `<stat>` N or less/greater] from your graveyard / the top of your library[
+#: by paying N life in addition to paying their other costs].[ `<rider>`]" -
+#: Leonardo, Sewer Samurai ("creature spells with power or toughness 1 or
+#: less from your graveyard"), Noctis, Prince of Lucis ("artifact spells from
+#: your graveyard by paying 3 life in addition to paying their other costs"),
+#: Mikey & Don, Party Planners ("play lands and cast Mutant, Ninja, or Turtle
+#: spells from the top of your library"), Vivien, Monsters' Advocate
+#: ("creature spells from the top of your library"), Traveling Chocobo
+#: ("play lands and cast Bird spells ..."). CR 601.3's "a rule or effect
+#: allows that player to cast it", as a CR 611.3d static permission.
+_STATIC_ZONE_CAST_PERMISSION_RE = re.compile(
+    r"^(?P<during>during your turn, )?you may (?P<lands>play lands and )?cast "
+    r"(?:(?P<what>[\w' ,-]+?) )?spells"
+    r"(?: with (?P<stat>power or toughness|power|toughness|mana value) (?P<n>\d+) or "
+    r"(?P<direction>less|greater))?"
+    r" from (?P<zone>your graveyard|the top of your library)"
+    r"(?: by paying (?P<life>\d+) life in addition to paying their other costs)?\."
+    r"(?P<tail>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+#: "If you cast a[ `<type>`] spell this way, that `<noun>` enters with a[n
+#: additional] `<kind>` counter on it." - the rider every printing above that
+#: has one prints (CR 614.1c's "enters with", scoped to the spells cast under
+#: the permission). A `<type>` narrows it: Mikey & Don's "If you cast a
+#: creature spell this way" puts nothing on a Ninja sorcery.
+_ENTERS_WITH_A_COUNTER_RIDER_RE = re.compile(
+    r"^if you cast an? (?:(?P<type>[a-z]+) )?spell this way, that "
+    r"(?:creature|artifact|enchantment|permanent) enters with (?:an additional|an?|one) "
+    r"(?P<counter>\+1/\+1|[a-z]+) counter on it\.?$",
+    re.IGNORECASE,
+)
+
+#: Reminder text (CR 207.2): "(If a creature with a finality counter on it
+#: would die, exile it instead.)" has no game function of its own.
+_REMINDER_TEXT_RE = re.compile(r"\s*\([^()]*\)")
+
+
+class StaticZoneCastPermission(EngineModel):
+    """One `_STATIC_ZONE_CAST_PERMISSION_RE` line, read."""
+
+    model_config = ConfigDict(frozen=True)
+
+    zone: Zone
+    """`Zone.GRAVEYARD` or `Zone.LIBRARY` (the top card only)."""
+    quality: str = ""
+    """The spell's quality phrase, `""` for "spells" of any kind."""
+    during_your_turn: bool = False
+    plays_lands: bool = False
+    """"You may play lands and cast ..." - CR 305.1's land drop opened to the
+    same zone, read by `Game.land_from_top_of_library_permission`."""
+    stat: str | None = None
+    """"power or toughness", "power", "toughness" or "mana value"."""
+    bound: int | None = None
+    greater: bool = False
+    life: int = 0
+    """Life paid in addition to the spell's other costs (CR 601.2f, CR 119.4)."""
+    rider_type: str | None = None
+    """The card type the enters-with rider names ("If you cast a creature
+    spell this way"), or None when it covers every spell cast this way."""
+    rider_counter: str | None = None
+    """The counter kind the rider puts on the permanent, or None: no rider."""
+
+
+def _normalized_spell_quality(what: str | None) -> str:
+    """The quality phrase with CR 205.1's list punctuation evened out: "Mutant,
+    Ninja, or Turtle" becomes "mutant, ninja, turtle", the comma list
+    `next_spell.spell_has_quality` reads as a disjunction."""
+    quality = (what or "").strip().lower()
+    return re.sub(r",?\s+or\s+", ", ", quality)
+
+
+@lru_cache(maxsize=2048)
+def static_zone_cast_permission(text: str) -> StaticZoneCastPermission | None:
+    """Read one static line as `_STATIC_ZONE_CAST_PERMISSION_RE`, or None.
+
+    Fails closed: an unreadable quality, a rider this does not read, or any
+    other trailing sentence makes the whole line unread - Bolas's Citadel's
+    "If you cast a spell this way, pay life equal to its mana value rather
+    than pay its mana cost." is a different permission, not this one with a
+    sentence ignored."""
+    from .next_spell import spell_quality_is_readable
+
+    line = _REMINDER_TEXT_RE.sub("", text).strip()
+    match = _STATIC_ZONE_CAST_PERMISSION_RE.fullmatch(line)
+    if match is None:
+        return None
+    quality = _normalized_spell_quality(match.group("what"))
+    if quality and not spell_quality_is_readable(quality):
+        return None
+    rider_type: str | None = None
+    rider_counter: str | None = None
+    tail = match.group("tail").strip()
+    if tail:
+        rider = _ENTERS_WITH_A_COUNTER_RIDER_RE.fullmatch(tail)
+        if rider is None:
+            return None
+        rider_type = (rider.group("type") or "").lower() or None
+        if rider_type is not None and rider_type not in {type_.value for type_ in Type}:
+            return None
+        rider_counter = rider.group("counter").lower()
+    zone = Zone.GRAVEYARD if "graveyard" in match.group("zone").lower() else Zone.LIBRARY
+    if match.group("lands") is not None and zone is Zone.GRAVEYARD:
+        # The land half is read for the top of the library only
+        # (`Game.land_from_top_of_library_permission`); a graveyard one would
+        # be credited with a land drop nothing performs.
+        return None
+    return StaticZoneCastPermission(
+        zone=zone,
+        quality=quality,
+        during_your_turn=match.group("during") is not None,
+        plays_lands=match.group("lands") is not None,
+        stat=match.group("stat").lower() if match.group("stat") else None,
+        bound=int(match.group("n")) if match.group("n") else None,
+        greater=(match.group("direction") or "").lower() == "greater",
+        life=int(match.group("life") or 0),
+        rider_type=rider_type,
+        rider_counter=rider_counter,
+    )
+
+
+def reads_static_zone_cast_permission_line(text: str) -> bool:
+    """What `support.py` asks before crediting the line: whether
+    `static_zone_cast_permission` reads all of it."""
+    return static_zone_cast_permission(text) is not None
+
+
+def _within_bound(spell: CardState, permission: StaticZoneCastPermission) -> bool:
+    """ "with power or toughness 1 or less" and its kin, off the spell's own
+    characteristics (CR 208.1, CR 202.3) as it is being cast."""
+    if permission.stat is None or permission.bound is None:
+        return True
+    values: list[float | None]
+    if permission.stat == "power or toughness":
+        values = [spell.power, spell.toughness]
+    elif permission.stat == "power":
+        values = [spell.power]
+    elif permission.stat == "toughness":
+        values = [spell.toughness]
+    else:
+        values = [spell.mana_value]
+    bound = permission.bound
+    return any(
+        value is not None and (value >= bound if permission.greater else value <= bound)
+        for value in values
+    )
+
+
+def is_top_of_library(game: Any, card: CardState, player: str) -> bool:
+    """Whether `card` is the top card of `player`'s own library right now."""
+    library = game.player(player).library if game is not None else []
+    return bool(library) and library[0] is card
+
+
+def _static_zone_cast_option(
+    text: str,
+    game: Any,
+    spell: CardState,
+    caster: str,
+    origin_zone: Zone,
+    library_top: bool | None,
+) -> KeywordCastOption | None:
+    """`static_zone_cast_permission`'s grant for `spell`, or None.
+
+    "your graveyard" / "your library" are the caster's own (CR 108.3's owner);
+    the library permission reaches its top card only - `library_top` is the
+    announcing `Casting`'s own record of that, taken before CR 601.2a moved
+    the card, and None asks the library as it stands. "During your turn" is
+    checked against the turn in progress (CR 611.3a). Timing is the spell's
+    own (`CastTiming.OWN`)."""
+    from .next_spell import spell_has_quality
+
+    permission = static_zone_cast_permission(text)
+    if permission is None or permission.zone is not origin_zone:
+        return None
+    if (spell.owner or caster) != caster:
+        return None
+    if origin_zone is Zone.LIBRARY:
+        on_top = library_top if library_top is not None else is_top_of_library(game, spell, caster)
+        if not on_top:
+            return None
+    if permission.during_your_turn:
+        turn = getattr(game, "turn", None)
+        if turn is None or turn.active_player != caster:
+            return None
+    if permission.quality and not spell_has_quality(spell, permission.quality):
+        return None
+    if not _within_bound(spell, permission):
+        return None
+    counters: tuple[str, ...] = ()
+    if permission.rider_counter is not None and (
+        permission.rider_type is None or Type(permission.rider_type) in spell.types
+    ):
+        counters = (permission.rider_counter,)
+    additional = total_cost_for_phrase(f"Pay {permission.life} life") if permission.life else None
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 611.3d",
+        zone=origin_zone,
+        pays_mana_cost=True,
+        timing=CastTiming.OWN,
+        additional_cost=additional,
+        enters_with_counters=counters,
+    )
+
+
+# --------------------------------------------------------------------------
+# A permanent's standing permission to play the cards exiled with it
+# (CR 601.3, CR 607.2a)
+# --------------------------------------------------------------------------
+
+#: "[During your turn, ]you may play cards exiled with `<this>`." (The
+#: Temporal Anchor) and "You may play lands and cast spells from among cards
+#: exiled with this creature." (Nightveil Specter) - CR 601.1a's "play" (a
+#: land drop or a cast) opened to CR 607.2a's linked pile, read after the
+#: object's own name is normalised to "this `<noun>`" (CR 201.5).
+_PLAY_CARDS_EXILED_WITH_STATIC_RE = re.compile(
+    r"^(?P<during>during your turn, )?you may play (?:cards|lands and cast spells from among "
+    r"cards) exiled with this \w+\.?$",
+    re.IGNORECASE,
+)
+
+
+def play_cards_exiled_with_line(
+    permanent_name: str, text: str, *, legendary: bool = True
+) -> tuple[bool] | None:
+    """`(during_your_turn,)` for a `_PLAY_CARDS_EXILED_WITH_STATIC_RE` line
+    of the permanent named `permanent_name`, or None."""
+    from .abilities import self_normalized_effect_text
+
+    normalized = self_normalized_effect_text(permanent_name, text.strip(), legendary=legendary)
+    match = _PLAY_CARDS_EXILED_WITH_STATIC_RE.fullmatch(normalized.strip())
+    if match is None:
+        return None
+    return (match.group("during") is not None,)
+
+
+def reads_play_cards_exiled_with_line(card: Card, text: str) -> bool:
+    """What `support.py` asks before crediting the line."""
+    from ..models.card import Supertype
+
+    return (
+        play_cards_exiled_with_line(
+            card.name, text, legendary=Supertype.LEGENDARY in card.supertypes
+        )
+        is not None
+    )
+
+
+def linked_exile_play_source(game: Any, card: CardState, player: str) -> CardState | None:
+    """The permanent `player` controls whose "you may play cards exiled with
+    `<this>`" lets them play `card` right now, or None: `card` is face up in
+    exile (CR 406.3b), exiled with that very object (CR 607.2a, CR 400.7 -
+    `ExileAnnotation.links_to`), and the line's "during your turn" holds."""
+    if game is None or card.zone is not Zone.EXILE or not card.face_up:
+        return None
+    annotation = card.exile_annotation
+    if annotation is None:
+        return None
+    from ..models.card import Supertype
+
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(player):
+        if not annotation.links_to(permanent.id, permanent.zone_change_stamp):
+            continue
+        legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        for line in class_gated_lines(permanent, board.of(permanent).abilities):
+            read = play_cards_exiled_with_line(permanent.name, line, legendary=legendary)
+            if read is None:
+                continue
+            (during_your_turn,) = read
+            if during_your_turn:
+                turn = getattr(game, "turn", None)
+                if turn is None or turn.active_player != player:
+                    continue
+            return permanent
+    return None
+
+
+def _linked_exile_play_option(
+    game: Any, spell: CardState, caster: str, origin_zone: Zone
+) -> KeywordCastOption | None:
+    """`linked_exile_play_source`'s cast half: CR 601.3's permission to cast
+    `spell` out of the pile, at its own cost and its own timing."""
+    if origin_zone is not Zone.EXILE:
+        return None
+    probe = spell if spell.zone is Zone.EXILE else None
+    if probe is None or linked_exile_play_source(game, probe, caster) is None:
+        return None
+    return KeywordCastOption(
+        keyword=CAST_PERMISSION,
+        rule="CR 601.3, CR 607.2a",
+        zone=Zone.EXILE,
+        pays_mana_cost=True,
+        timing=CastTiming.OWN,
+    )
+
+
 def exiles_spells_cast_this_way(game: Any, caster: str) -> bool:
     """Whether a static ability `caster` has (an emblem's, CR 114.4) says a
     spell cast under its permission is exiled instead of going to the
@@ -1354,7 +1827,14 @@ def exiles_spells_cast_this_way(game: Any, caster: str) -> bool:
 
 
 def _granted_option(
-    keyword: str, printed: str | None, zone: Zone, face: str, raw: str, rule: str
+    keyword: str,
+    printed: str | None,
+    zone: Zone,
+    face: str,
+    raw: str,
+    rule: str,
+    *,
+    any_zone: bool = False,
 ) -> KeywordCastOption | None:
     """One granted keyword, expanded by the reader that expands printed ones.
 
@@ -1374,7 +1854,7 @@ def _granted_option(
             cost_is_mana=bool(printed) and _ONLY_MANA_SYMBOLS.match(printed or "") is not None,
         )
     )
-    if option is None or option.zone is not zone:
+    if option is None or (option.zone is not zone and not any_zone):
         return None
     # The keyword written back out the way a card would print it, so the object
     # can carry the grant itself once it is announced (CR 400.7b) - see
@@ -1430,14 +1910,18 @@ def _grant_on_a_card_in_a_zone(
     match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(text)
     if match is None:
         return None
-    zone = _ZONE_WORDS_FOR_GRANTS.get(match.group("zone").lower())
+    zone = _ZONE_WORDS_FOR_GRANTS.get((match.group("zone") or match.group("zones")).lower())
     if zone is None or zone is not origin_zone:
         return None
     if match.group("during"):
         turn = getattr(game, "turn", None)
         if turn is None or turn.active_player != caster:
             return None
-    if not _spell_matches_grant_filter(spell, match.group("what")):
+    if (spell.owner or caster) != caster:
+        # "in **your** graveyard/hand": CR 108.3's owner, not whoever is
+        # asking about an opponent's card.
+        return None
+    if not _spell_matches_grant_filter(spell, match.group("what") or match.group("whats")):
         return None
     keyword = match.group("keyword")
     printed = match.group("cost").strip() or None
@@ -1448,7 +1932,71 @@ def _grant_on_a_card_in_a_zone(
         printed = spell.mana_cost or spell.card.mana_cost or None
         if printed is None:
             return None
-    return _granted_option(keyword, printed, zone, face, raw, "CR 611.3d, CR 400.7g")
+    option = _granted_option(
+        keyword, printed, zone, face, raw, "CR 611.3d, CR 400.7g", any_zone=True
+    )
+    if option is None:
+        return None
+    if option.zone is zone:
+        return option
+    # A granted keyword whose own rule casts from another zone - sneak, from
+    # the hand - does nothing where it sits unless a "using their
+    # `<keyword>` abilities" permission opens this zone to it.
+    return _rezoned_by_using(option, spell, zone, _using_keyword_permissions(game, caster))
+
+
+def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
+    """What `support.py` asks before crediting a `_GRANTED_KEYWORD_ON_A_CARD_
+    IN_A_ZONE` line: the keyword expands to a cast option `_option_from_
+    keyword` really builds (its cost read, or Iroh's "The flashback cost is
+    equal to that card's mana cost." standing in for one), with nothing else
+    left unread after it - and the option casts from the zone the line names,
+    or the same card prints the "using their `<keyword>` abilities"
+    permission that opens that zone to it (Ninja Teen's level 3 pair).
+    Without either, a keyword granted to cards in a zone it never casts
+    from does nothing, and is not credited."""
+    match = _GRANTED_KEYWORD_ON_A_CARD_IN_A_ZONE.match(_REMINDER_TEXT_RE.sub("", text).strip())
+    if match is None:
+        return False
+    zone = _ZONE_WORDS_FOR_GRANTS.get((match.group("zone") or match.group("zones")).lower())
+    if zone is None:
+        return False
+    keyword = match.group("keyword")
+    printed = match.group("cost").strip() or None
+    tail = (match.group("tail") or "").strip()
+    if printed is None:
+        cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
+        if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
+            return False
+        printed = "{0}"
+    elif tail:
+        return False
+    option = _granted_option(keyword, printed, zone, card.name, text, "CR 611.3d", any_zone=True)
+    if option is None or not option.understood:
+        return False
+    if option.zone is zone:
+        return True
+    return any(
+        (permission := using_keyword_permission(ability.text or "")) is not None
+        and permission.zone is zone
+        and permission.keyword == option.keyword.lower()
+        for ability in parse_abilities(card)
+        if ability.kind is AbilityKind.STATIC
+    )
+
+
+def reads_using_keyword_permission_line(text: str) -> bool:
+    """What `support.py` asks before crediting "You may cast `<quality>`
+    spells from your graveyard using their `<keyword>` abilities.": the
+    quality reads and the keyword is one `_option_from_keyword` builds a cast
+    option for (`granted_cast_options` then moves it to the zone)."""
+    permission = using_keyword_permission(text)
+    if permission is None:
+        return False
+    option = _granted_option(
+        permission.keyword, "{0}", Zone.HAND, "", text, "CR 601.3", any_zone=True
+    )
+    return option is not None
 
 
 #: A printed cost that is nothing but mana symbols, the same test
@@ -1825,7 +2373,15 @@ def usable_play_permission(
     return None
 
 
-def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = None) -> str | None:
+def why_cannot_cast_from(
+    spell: CardState,
+    caster: str,
+    zone: Zone,
+    game: Any = None,
+    *,
+    library_top: bool | None = None,
+    cost_paid: bool = False,
+) -> str | None:
     """CR 601.3: why this card cannot be cast from where it is, or None.
 
     A card in hand needs no permission - that is where the rules cast from by
@@ -1843,9 +2399,14 @@ def why_cannot_cast_from(spell: CardState, caster: str, zone: Zone, game: Any = 
     options = (
         castable_from(spell.card, zone)
         + [option for option in marker_cast_options(spell) if option.zone is zone]
-        + [granted.option for granted in granted_cast_options(game, spell, caster, zone)]
+        + [
+            granted.option
+            for granted in granted_cast_options(game, spell, caster, zone, library_top=library_top)
+        ]
     )
-    reasons = [option.why_not(spell, caster, game, origin=zone) for option in options]
+    reasons = [
+        option.why_not(spell, caster, game, origin=zone, cost_paid=cost_paid) for option in options
+    ]
     if any(reason is None for reason in reasons):
         return None
     granted = play_permissions_on(game, spell)
@@ -3166,6 +3727,20 @@ class Casting(EngineModel):
     by nothing else. The keyword is not announced until `use_keyword`, after
     the proposal, so the refusal is held here and `cast()` raises it unless
     the keyword actually used was the one that opened the window."""
+    keyword_enters_with_counters: tuple[str, ...] = ()
+    """The claimed option's `KeywordCastOption.enters_with_counters`, copied
+    onto `CastRecord.enters_with_counters` as the spell becomes cast."""
+    announced_library_top: bool | None = None
+    """Whether the card was the top card of its caster's library when the
+    cast was proposed - CR 601.2a has moved it by the time a "from the top of
+    your library" permission is asked about it, so the answer is kept here.
+    None for a cast from anywhere else."""
+    announced_library_index: int | None = None
+    """Where in its owner's library the card sat when the cast was proposed,
+    so a rewound cast (CR 601.6, CR 733.1: "the spell returns to the zone it
+    came from") puts it back in the same place - a library is ordered (CR
+    401.2), and a card cast off the top that comes back to the bottom is a
+    different game."""
     keyword_opens_window: bool = False
     """Whether `keyword_used`'s option carries a timing window of its own
     (`CastTiming.OWN_DECLARE_BLOCKERS`) - what lets `cast()` drop a held
@@ -3516,6 +4091,11 @@ class Casting(EngineModel):
         self.announced_exile_annotation = self.spell.exile_annotation
         self.announced_discarded_by = self.spell.discarded_by
         self.announced_discarded_on_turn = self.spell.discarded_on_turn
+        if self.spell.zone is Zone.LIBRARY:
+            self.announced_library_top = is_top_of_library(game, self.spell, self.caster)
+            library = game.player(self.spell.owner or self.caster).library
+            if self.spell in library:
+                self.announced_library_index = library.index(self.spell)
         self._lift_out_of_every_zone()
         self.spell.move_to(Zone.STACK)
         game.stack.append(self.spell)
@@ -4097,7 +4677,16 @@ class Casting(EngineModel):
     @property
     def granted_cast_options(self) -> list[GrantedCastOption]:
         """CR 610.5's grants, as they stand at this announcement."""
-        return granted_cast_options(self.game, self.spell, self.caster, self.origin_zone)
+        return granted_cast_options(
+            self.game,
+            # As of the proposal (CR 601.3): the pile of exile the card sat in
+            # and the zone it left are what a grant asks about, and CR 601.2a
+            # has already moved the card itself.
+            self._as_announced,
+            self.caster,
+            self.origin_zone,
+            library_top=self.announced_library_top,
+        )
 
     def splice(self, name: str) -> CastingStep:
         """CR 702.47a: reveal a card with splice from hand and add it to this spell.
@@ -4233,7 +4822,12 @@ class Casting(EngineModel):
         """
         return self._refusing(lambda: self._use_keyword(keyword, choosing))
 
-    def _use_keyword(self, keyword: str, choosing: list[CardState] | None) -> CastingStep:
+    def _use_keyword(
+        self,
+        keyword: str,
+        choosing: list[CardState] | None,
+        prefer: TotalCost | None = None,
+    ) -> CastingStep:
         printed_options = keyword_cast_options(self.spell.card)
         marker_options = marker_cast_options(self._as_announced)
         granted_options = [granted.option for granted in self.granted_cast_options]
@@ -4261,12 +4855,22 @@ class Casting(EngineModel):
             raise ValueError(next(reason for reason in reasons if reason is not None))
 
         # A once-each-turn grant is spent by using it, so an unlimited grant
-        # for the same cast is the one to claim when both apply.
-        option = min(usable, key=lambda candidate: candidate.once_per_turn_key is not None)
+        # for the same cast is the one to claim when both apply. `prefer` is
+        # the cost of the one instance the caster named (`use_alternative_
+        # cost` by index or source): a card with two sneak abilities, one
+        # printed and one granted, may use either (Ninja Teen's ruling).
+        option = min(
+            usable,
+            key=lambda candidate: (
+                prefer is not None and candidate.cost != prefer,
+                candidate.once_per_turn_key is not None,
+            ),
+        )
         self._enter_modes()
         self.keyword_used = option.keyword
         self.keyword_normal_face_only = option.normal_face_only
         self.keyword_exiles_instead = option.exile_instead_of_graveyard
+        self.keyword_enters_with_counters = option.enters_with_counters
         self.keyword_once_per_turn_key = option.once_per_turn_key
         self.keyword_cost_paid = not option.pays_mana_cost
         self.keyword_opens_window = option.timing is CastTiming.OWN_DECLARE_BLOCKERS
@@ -4294,6 +4898,10 @@ class Casting(EngineModel):
                 option.granted_line,
             )
 
+        if option.additional_cost is not None:
+            # CR 601.2f: "by paying 3 life in addition to paying their other
+            # costs" - an additional cost the permission itself charges.
+            self.add_additional_cost(option.additional_cost.model_copy(deep=True))
         if option.pays_mana_cost:
             # Warp's second half: the card is cast from exile for its own mana
             # cost, so there is no alternative cost to announce (CR 702.185b).
@@ -4852,7 +5460,8 @@ class Casting(EngineModel):
             raise ValueError(option.unavailable)
 
         if option.source is AlternativeCostSource.KEYWORD and option.keyword is not None:
-            return self.use_keyword(option.keyword, choosing=choosing)
+            keyword = option.keyword
+            return self._refusing(lambda: self._use_keyword(keyword, choosing, prefer=option.cost))
         if option.source is AlternativeCostSource.PERMISSION:
             return self.use_permission()
 
@@ -6281,7 +6890,12 @@ class Casting(EngineModel):
             # so the spell itself does not count against a keyword's own
             # "with the stack empty" (CR 702.170a, CR 307.5).
             refusal = why_cannot_cast_from(
-                self._as_announced, self.caster, self.origin_zone, self.game
+                self._as_announced,
+                self.caster,
+                self.origin_zone,
+                self.game,
+                library_top=self.announced_library_top,
+                cost_paid=True,
             )
             if refusal is not None:
                 raise ValueError(refusal)
@@ -6533,6 +7147,7 @@ class Casting(EngineModel):
                 # number nothing else on the record can answer for.
                 exile_annotation=self.announced_exile_annotation,
                 sneak_defender=self.returned_creature_defender,
+                enters_with_counters=list(self.keyword_enters_with_counters),
                 kicker_costs_paid=list(self.kicker_costs_paid),
                 controlled_subtypes_as_cast=self._controlled_subtypes(),
                 bargained=self.bargained,
@@ -6688,7 +7303,13 @@ class Casting(EngineModel):
         if self.announced_zone in getattr(self.game, "shared_zones", {}):
             self.game.shared_zones[self.announced_zone].append(self.spell)
         else:
-            self.game.player(self.spell.owner or self.caster).add(self.spell, self.announced_zone)
+            owner = self.game.player(self.spell.owner or self.caster)
+            owner.add(self.spell, self.announced_zone)
+            if self.announced_zone is Zone.LIBRARY and self.announced_library_index is not None:
+                # CR 401.2: the library keeps its order, so the card goes back
+                # where it was rather than wherever `Player.add` appended it.
+                owner.library.remove(self.spell)
+                owner.library.insert(self.announced_library_index, self.spell)
         # Written last, because `Player.add` moves the card itself and a move
         # is a new object (CR 400.7) with a fresh stamp - and this rewind is
         # precisely the claim that no move ever happened.

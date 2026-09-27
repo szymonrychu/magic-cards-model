@@ -70,7 +70,7 @@ HAND_GRANT_KEYWORDS: dict[str, str] = {
 #: The keyword phrase itself, as printed after "have"/"has": a bare keyword,
 #: "casualty N", "affinity for <text>", or "miracle <mana cost>".
 _KEYWORD_PHRASE_RE = re.compile(
-    r"^(?:(?P<bare>storm|cascade)"
+    r"^(?:(?P<bare>storm|cascade|improvise)"
     r"|(?P<casualty>casualty) (?P<n>\d+)"
     r"|(?P<affinity>affinity) for (?P<what>[a-z]+)"
     r"|(?P<miracle>miracle) (?P<cost>(?:\{[^{}]+\})+))$",
@@ -287,7 +287,14 @@ def granted_spell_keyword_lines(
     """
     if game is None:
         return []
+    from .next_spell import next_spell_keyword_grants_for
+
     lines: list[str] = []
+    if spell.zone is not Zone.STACK or game.cast_record_of(spell) is None:
+        # "The next `<quality>` spell you cast this turn has `<keyword>`" -
+        # live while this spell is being cast (CR 601.2f), gone the moment it
+        # becomes cast (CR 601.2i), so a spell already cast reads none.
+        lines.extend(grant.line for grant in next_spell_keyword_grants_for(game, spell, caster))
     for _name, grant in _grants_of(game, caster):
         if grant.subject == "hand_card":
             continue
