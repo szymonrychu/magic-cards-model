@@ -186,7 +186,7 @@ class TokenDefinition(EngineModel):
 
     loyalty: str | None = None
     """The printed loyalty a planeswalker token enters with (CR 306.5b), read
-    by `CardState._enter_with_loyalty` exactly as a printed card's own
+    by `CardState.intrinsic_entering_counters` exactly as a printed card's own
     `Card.loyalty` is - a string because `Card.loyalty` is one (Scryfall
     leaves room for a `*` characteristic-defining loyalty no token definition
     here actually uses). `None` for a token that is not a planeswalker."""
@@ -334,7 +334,7 @@ class TokenState(CardState):
     battlefield in the first place.
     """
 
-    def move_to(self, zone: Zone) -> None:
+    def move_to(self, zone: Zone, *, place_intrinsic_counters: bool = True) -> None:
         """CR 111.8: a token that has left the battlefield does not move again.
 
         "A token that has left the battlefield can't move to another zone or come
@@ -352,7 +352,7 @@ class TokenState(CardState):
             return
         if self.zone is Zone.BATTLEFIELD and zone is not Zone.BATTLEFIELD:
             self.left_the_battlefield = True
-        super().move_to(zone)
+        super().move_to(zone, place_intrinsic_counters=place_intrinsic_counters)
 
 
 def move_refused(state: Any, zone: Zone) -> str | None:

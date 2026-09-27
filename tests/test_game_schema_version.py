@@ -1593,3 +1593,25 @@ def test_a_battle_protector_survives_a_dump_and_reload() -> None:
 
     (siege,) = [state for state in reloaded.battlefield if state.name == "Invasion of Zendikar"]
     assert siege.protector == "bob"
+
+
+#: The version stamped before entering loyalty/defense/lore counters went
+#: through counter replacements, and `CounterAmountReplacement` /
+#: `CastingRuleEffect` gained their putter, player, halving and
+#: "for as long as" fields.
+_SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS = 96
+
+
+def test_a_snapshot_written_before_entering_counter_replacements_is_refused() -> None:
+    """A version-96 game with Doubling Season out would put a planeswalker's
+    loyalty on undoubled (CR 306.5b, CR 122.6) where this build doubles it -
+    the same state resolving differently, so it is refused."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS}",
+    ):
+        Game.model_validate(dumped)

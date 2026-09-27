@@ -180,6 +180,9 @@ def executes(keyword: str) -> bool:
         "equip",
         "ward",
         "prowess",
+        # CR 702.118b: an evasion restriction `machines/combat.block_refusal`
+        # enforces.
+        "skulk",
         # CR 702.101a: `_extort_ability` (`_TRIGGER_EXPANSIONS`).
         "extort",
         # CR 702.191a: `_increment_ability` (`_TRIGGER_EXPANSIONS`); its

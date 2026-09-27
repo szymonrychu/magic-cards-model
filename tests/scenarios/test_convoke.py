@@ -24,6 +24,7 @@ session that wrote this file.
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.machines.objects_as_costs import convoke
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card import Color
@@ -364,3 +365,96 @@ def test_a_convoked_creature_still_produced_no_mana():
 
     assert payment.tapped_for_mana == []
     assert scenario.player("alice").mana_pool.is_empty
+
+
+# -- Granted convoke: "`<quality>` spells you cast have convoke." -----------------
+
+
+def test_caetus_grants_convoke_to_a_noncreature_spell():
+    """Invasion of Segovia // Caetus, Sea Tyrant of Segovia's "Noncreature
+    spells you cast have convoke." - `has_convoke_now`'s own granted-convoke
+    branch, read off the battlefield the same "continuous, never locked in"
+    way any other static ability is (CR 611.3a). Sol Ring is `{1}`, an
+    artifact (a noncreature spell), so any untapped creature covers its
+    whole cost."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Sol Ring"], battlefield=["Invasion of Segovia", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    caetus = scenario.creature("Invasion of Segovia", "alice")
+    transform_permanent(scenario.game, caetus)
+    assert caetus.name == "Caetus, Sea Tyrant of Segovia"
+    bear = scenario.creature("Grizzly Bears", "alice")
+
+    casting = scenario.cast("Sol Ring")
+    payment = casting.begin_paying()
+    convoke(payment, casting.spell, bear)
+
+    assert str(payment.mana_owed) == ""
+    payment.pay()
+    spell = scenario.put_on_stack(casting)
+
+    assert spell.zone is Zone.STACK
+    assert bear.tapped
+
+
+def test_caetus_does_not_grant_convoke_to_a_creature_spell():
+    """ "Noncreature spells" excludes a creature spell (CR 205.2a) - Grizzly
+    Bears itself gets no convoke from Caetus."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Grizzly Bears"],
+            battlefield=["Invasion of Segovia", "Savannah Lions"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    caetus = scenario.creature("Invasion of Segovia", "alice")
+    transform_permanent(scenario.game, caetus)
+    lion = scenario.creature("Savannah Lions", "alice")
+
+    casting = scenario.cast("Grizzly Bears")
+    payment = casting.begin_paying()
+
+    with pytest.raises(ValueError, match="does not have convoke"):
+        convoke(payment, casting.spell, lion)
+
+
+def test_eirdu_off_pool_proof_grants_convoke_to_a_creature_spell():
+    """Eirdu, Carrier of Dawn's own "Creature spells you cast have convoke." -
+    a real printing this engine already carried before this session, proving
+    the same grant reader generally rather than only for the reported battle
+    card: the opposite quality (creature, not noncreature) on an unrelated
+    card."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Grizzly Bears"],
+            battlefield=["Eirdu, Carrier of Dawn", "Savannah Lions"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lion = scenario.creature("Savannah Lions", "alice")
+
+    casting = scenario.cast("Grizzly Bears")
+    payment = casting.begin_paying()
+    convoke(payment, casting.spell, lion)
+
+    # {1}{G}: the lion (white, not green) covers only the generic symbol -
+    # CR 702.51a's colour restriction still applies to a granted convoke the
+    # same as a printed one, and the accepted offer (no `ValueError`) is
+    # already proof this quality is genuinely read for a creature spell.
+    assert str(payment.mana_owed) == "{G}"
+    assert not lion.tapped  # CR 601.2h: not tapped until the payment is paid.

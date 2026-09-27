@@ -174,6 +174,12 @@ class CastingRuleKind:
     OPPONENTS_CANT_GAIN_LIFE = "opponents_cant_gain_life"
     """Roiling Vortex's and Atarka's Command's "Your opponents can't gain life
     this turn." - every opponent of `controller` (CR 119.7)."""
+    PLAYER_CANT_GET_COUNTERS = "player_cant_get_counters"
+    """Suncleanser's "That player can't get counters for as long as this
+    creature remains on the battlefield." - `restricted_player` gets no
+    counters (CR 122.6) while `while_source_id` is still the same object on
+    the battlefield (CR 611.2b, CR 400.7). Read by `Game.player_counters_
+    prohibited`."""
     DAMAGE_CANT_BE_PREVENTED = "damage_cant_be_prevented"
     """Skullcrack's, Stomp's and Impractical Joke's "Damage can't be
     prevented this turn." - CR 615.12, read by `Game.damage_cant_be_
@@ -232,6 +238,11 @@ class CastingRuleEffect(EngineModel):
     exile_instead: bool = False
     """`GRAVEYARD_CAST_GRANT`: "If a spell cast this way would be put into a
     graveyard, exile it instead." (CR 614.1a)."""
+    while_source_id: UUID | None = None
+    while_source_stamp: UUID | None = None
+    """`Duration.FOR_AS_LONG_AS`: the permanent whose staying on the
+    battlefield, as this same object (its zone-change stamp, CR 400.7), the
+    effect lasts for (CR 611.2b)."""
     amount: int | None = None
     """`INSTANT_SORCERY_COST_REDUCTION_GRANT`: the flat discount.
     `SPELL_COUNT_CANT_CAST`: the printed cap that has been reached."""

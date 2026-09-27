@@ -1760,9 +1760,9 @@ def test_no_abandoned_proof_candidate_printings_pollute_the_pool():
     `MEMORY.md`, not kept as a live pool entry. (Tam, Mindful First-Year was
     one of ecl-T3's losing candidates too, but ecl-T5 proves its own chosen-
     color/hexproof-from-its-colors readers on Tam, so it is a live, tested
-    printing and not listed here.)"""
+    printing and not listed here. Suncleanser likewise: both its modes are
+    read and played in `tests/scenarios/test_remove_all_counters_family.py`.)"""
     abandoned = {
-        "Suncleanser",
         "Decimator Beetle",
         "Cauldron Haze",
     }

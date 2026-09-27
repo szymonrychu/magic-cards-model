@@ -76,6 +76,7 @@ from .abilities import (
     parse_granted_ability_lines,
     parse_mana_count,
     self_counter_mana_count,
+    self_normalized_effect_text,
     self_reference_names,
     self_reference_pattern,
 )
@@ -1687,6 +1688,29 @@ def _required_becomes_tapped_subtype(condition: str) -> tuple[str, ...] | None:
     return _parse_subtype_list(match.group("subtype"))
 
 
+#: "a `<Subtype>` you control attacks" (Defiant Thundermaw's own back face's
+#: "Whenever a Dragon you control attacks, it deals 2 damage to any
+#: target.") - `_BECOMES_TAPPED_SUBTYPE`'s own bare-subtype-subject shape
+#: reused for the ATTACKS event's verb instead (CR 508.1, 508.3d).
+_ATTACKS_SUBTYPE = re.compile(
+    r"^(?:an?|another|one or more) (?:nontoken )?"
+    r"(?P<subtype>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
+    r"(?: (?:artifact|creature|enchantment|land|planeswalker|permanent)s?)?"
+    r"(?: you control| an opponent controls)?"
+    r" attacks?\b"
+)
+
+
+def _required_attacking_subtype(condition: str) -> tuple[str, ...] | None:
+    """The subtype(s) `_ATTACKS_SUBTYPE` names, or `None` - the ATTACKS twin
+    of `_required_becomes_tapped_subtype`, read the same `_parse_subtype_
+    list` way for a comma/or list."""
+    match = _ATTACKS_SUBTYPE.match(condition)
+    if match is None:
+        return None
+    return _parse_subtype_list(match.group("subtype"))
+
+
 #: An optional card-type word may follow the subtype - Boggart Mischief's "a
 #: Goblin creature you control dies" (CR 205.3m's subtype, then CR 205.2a's
 #: card type, which `_types_match` checks separately).
@@ -2104,20 +2128,42 @@ _COLOR_WORDS: dict[str, Color] = {
 }
 
 
-def _color_condition(condition: str) -> tuple[str, frozenset[Color]] | None:
+#: "exactly `<N>` colors" (Invasion of Ravnica // Guildpact Paragon's own
+#: "Whenever you cast a spell that's exactly two colors") - CR 105.2's color
+#: *count* spelled out with its own number, the identical restriction
+#: "monocolored"/"multicolored" already name for exactly 1 or 2-or-more, just
+#: never spelled this way before. `machines/effects._EXACTLY_N_COLORS_RE`
+#: reads the identical phrase for a *card's* own quality (a search/reveal's
+#: "a card that's exactly two colors"); this is the same words for a *cast
+#: spell*'s own condition instead, kept as its own compiled pattern rather
+#: than imported, the same way this module already keeps `_COLOR_WORDS`
+#: separate from `machines/effects.py`'s own colour vocabulary.
+_EXACTLY_N_COLORS_CONDITION_RE = re.compile(r"\bexactly (?P<n>\w+) colors?\b", re.IGNORECASE)
+
+
+def _color_condition(condition: str) -> tuple[str, frozenset[Color]] | int | None:
     """The color restriction a "cast a ... spell" condition names, or `None`
     when it names none at all - which is what a plain "whenever you cast a
     spell" means.
 
     Reads CR 105.2's whole vocabulary for an object's color: "colorless"
     (CR 105.2c, 202.2b - no colored mana symbols), "monocolored" (CR 105.2a -
-    exactly one color), "multicolored" (CR 105.2b - two or more), and one or
-    more of the five color adjectives named outright (Frontline Heroism's
-    "red" is not this shape - it colors a token the effect creates, not the
-    spell the condition restricts, so this is only ever consulted for the
-    condition clause itself, never the effect that follows it).
+    exactly one color), "multicolored" (CR 105.2b - two or more), a spelled-
+    out "exactly N colors" (an `int`, read before "colored" and "multi/mono"
+    below so "exactly two colors" is never instead swallowed by a later,
+    looser branch that would find no keyword at all in it and fall through
+    to "no restriction"), and one or more of the five color adjectives named
+    outright (Frontline Heroism's "red" is not this shape - it colors a
+    token the effect creates, not the spell the condition restricts, so this
+    is only ever consulted for the condition clause itself, never the effect
+    that follows it).
     """
     lowered = condition.lower()
+    exact = _EXACTLY_N_COLORS_CONDITION_RE.search(lowered)
+    if exact is not None:
+        n = parse_count(exact.group("n"))
+        if n is not None:
+            return n
     if re.search(r"\bcolorless\b", lowered):
         return "colorless", frozenset()
     if re.search(r"\bmonocolored\b", lowered):
@@ -2140,8 +2186,10 @@ def _color_matches(colors: tuple[Color, ...] | None, condition: str) -> bool:
     requirement = _color_condition(condition)
     if requirement is None:
         return True
-    kind, named = requirement
     color_set = set(colors or ())
+    if isinstance(requirement, int):
+        return len(color_set) == requirement
+    kind, named = requirement
     if kind == "colorless":
         return not color_set
     if kind == "monocolored":
@@ -2281,6 +2329,19 @@ def _mana_value_comparison(condition: str) -> tuple[int, str] | None:
 #: planeswalker you control" (Slumbering Dragon, Isperia, Circle of Flame).
 #: The "you control" here is the planeswalker's, never the attacker's.
 _ATTACKS_YOU_RE = re.compile(r"\battacks you(?P<planeswalker> or a planeswalker you control)?$")
+
+#: "Whenever this creature and at least one other creature attack, ..."
+#: (Arthur, Marigold Knight; Sokka, Lateral Strategist; Glimmer Lens' own
+#: "equipped creature" subject) and Valor's Reach Tag Team's own granted
+#: "Whenever this token and at least one other creature token attack, ..." -
+#: a compound self-plus-group attack condition CR 508.1a's ordinary per-
+#: attacker trigger reading has no room for on its own: both the source
+#: *and* at least one other creature (optionally narrowed to a token, CR
+#: 111.1) must be among the creatures declared as attackers this combat.
+_SELF_AND_OTHER_CREATURE_ATTACKS_RE = re.compile(
+    r"^this [a-z]+ and at least one other creature(?P<token> tokens?)? attacks?$",
+    re.IGNORECASE,
+)
 
 #: "an equipped creature you control" as a trigger subject (CR 301.5a) - the
 #: indefinite article is what separates it from an Equipment's own "equipped
@@ -2913,6 +2974,39 @@ def condition_matches(
             return _attacks_you_holds(
                 game, lowered[: defended.start()], defended, controller, event
             )
+        self_and_other = _SELF_AND_OTHER_CREATURE_ATTACKS_RE.match(
+            self_normalized_effect_text(
+                source.name, condition, legendary=_is_legendary_source(source)
+            ).lower()
+            if mine
+            else lowered
+        )
+        if self_and_other is not None:
+            # CR 508.3d's own self-attack trigger, plus Arthur, Marigold
+            # Knight's/Sokka, Lateral Strategist's real "and at least one
+            # other creature attack" widening: read here, ahead of `mine`'s
+            # own bare self-check just below, or the "and at least one
+            # other..." qualifier is silently dropped and this fires the
+            # moment the source alone attacks - the identical bug class the
+            # `mine` branch's own docstring warns every other event reader
+            # about. Sokka, Lateral Strategist prints its own name ("Sokka
+            # and at least one other creature attack") rather than "this
+            # creature" - `self_normalized_effect_text` (CR 201.5/201.5c)
+            # rewrites that to "this creature" first, the same way every
+            # other self-referential condition in this module already
+            # reads a name and "this `<kind>`" as one thing. Valor's Reach
+            # Tag Team's own Warrior tokens narrow "other" to "creature
+            # token" - Warrior Token's own printed "with at least one other
+            # creature token attack" - which is
+            # checked by requiring the other attacker's own `token` flag too.
+            if event.subject_id != source.id:
+                return False
+            require_token = self_and_other.group("token") is not None
+            return any(
+                attacker.id != source.id
+                and (not require_token or getattr(attacker, "token", False))
+                for attacker in game.attacking_creatures()
+            )
         if mine:
             return event.subject_id == source.id
         if _AN_EQUIPPED_CREATURE_RE.search(lowered) and not _has_equipment_attached(
@@ -2922,9 +3016,11 @@ def condition_matches(
             # attached to - Swordsman, Sharp Scoundrel's "Whenever an
             # equipped creature you control attacks" skips a bare attacker.
             return False
-        return _controller_clause_holds(
-            condition, controller, event.subject_controller
-        ) and _types_match(event.subject_types, condition)
+        return (
+            _controller_clause_holds(condition, controller, event.subject_controller)
+            and _types_match(event.subject_types, condition)
+            and _subtype_matches(event.subject_subtypes, _required_attacking_subtype(condition))
+        )
 
     if ability.event is TriggerEvent.BLOCKS:
         if mine:
@@ -3469,7 +3565,7 @@ def condition_matches(
         # every other "you [verb]" condition does.
         if not _controller_clause_holds(condition, controller, event.player):
             return False
-        return discard_occurrences(ability, source, event) > 0
+        return discard_occurrences(game, ability, source, event) > 0
 
     if ability.event is TriggerEvent.LORE_COUNTERS_ADDED:
         # CR 107.15a: always self-referential (a chapter symbol is never
@@ -7790,23 +7886,52 @@ def batched_combat_damage_sources(
 #: discard a card" (and CR 702.29d's "cycle or discard [another] card") is
 #: about each card, so one instruction discarding two cards is two
 #: occurrences. "one or more cards" is the batch itself and stays one.
-_PER_CARD_DISCARD_CONDITION = re.compile(r"\bdiscards? (?P<which>a card|another card)\b")
+#: "discard a `<quality>` card" (Wharf Infiltrator's "a creature card",
+#: Invasion of Kaldheim's "a land card") narrows which discarded cards count
+#: at all - `quality` is one bare type/subtype word, read the identical way
+#: a search's own stated quality is (`machines.effects._quality_matcher`,
+#: imported locally below to avoid this module's own import cycle with
+#: `machines/effects.py`).
+_PER_CARD_DISCARD_CONDITION = re.compile(
+    r"\bdiscards? (?P<which>a card|another card|an? (?P<quality>[a-z]+) card)\b"
+)
 
 
-def discard_occurrences(ability: TriggeredAbility, source: CardState, event: GameEvent) -> int:
+def discard_occurrences(
+    game: "Game", ability: TriggeredAbility, source: CardState, event: GameEvent
+) -> int:
     """How many times a `DISCARDS_A_CARD` trigger fires off `event` (CR
-    603.2c): once per discarded card for a per-card condition - never
-    counting the source itself for "another card" (Curator of Mysteries,
-    Archfiend of Ifnir) - and once for anything else. A cycled card is one
-    discard, so CR 702.29d's "cycles or discards" counts it once."""
+    603.2c): once per discarded card matching the condition's own quality
+    (if it has one) for a per-card condition - never counting the source
+    itself for "another card" (Curator of Mysteries, Archfiend of Ifnir) -
+    and once for anything else. A cycled card is one discard, so CR 702.29d's
+    "cycles or discards" counts it once.
+
+    A quality's card is looked up by id (`Game.find_by_id`) rather than read
+    off the event itself: `Game.discard_cards` moves each card to the
+    graveyard *before* emitting `DISCARDS_A_CARD` (CR 701.9a), so it is
+    already sitting there, with its own printed type line, by the time this
+    ever runs.
+    """
     if ability.event is not TriggerEvent.DISCARDS_A_CARD:
         return 1
     match = _PER_CARD_DISCARD_CONDITION.search(ability.condition.lower())
     if match is None or not event.discarded_ids:
         return 1
+    ids = event.discarded_ids
     if match.group("which") == "another card":
-        return sum(1 for card_id in event.discarded_ids if card_id != source.id)
-    return len(event.discarded_ids)
+        ids = tuple(card_id for card_id in ids if card_id != source.id)
+    quality = match.group("quality")
+    if quality is not None:
+        from .effects import _quality_matcher  # avoids effects<->triggers import cycle
+
+        matches = _quality_matcher(quality)
+        ids = tuple(
+            card_id
+            for card_id in ids
+            if (found := game.find_by_id(card_id)) is not None and matches(found)
+        )
+    return len(ids)
 
 
 def _event_for(
@@ -7862,7 +7987,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
         triggered.append(on_stack)
         # CR 603.2c: one discard instruction of several cards is several
         # occurrences of a per-card "discard a card" condition.
-        for _ in range(discard_occurrences(ability, source, event) - 1):
+        for _ in range(discard_occurrences(game, ability, source, event) - 1):
             triggered.append(on_stack.model_copy(update={"id": new_id()}, deep=True))
         # CR 603.2d: "determine how many times it should trigger, then
         # trigger it that many times" - Panharmonicon. Each extra time is a

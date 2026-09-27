@@ -3909,6 +3909,12 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
     ),
+    # The stock boards' only mana sources are lands.
+    DriverGap(
+        kind="tapped_for_mana",
+        event="a nonland permanent of the controller's tapped for mana",
+        precondition=r"tap a nonland permanent for mana",
+    ),
 )
 
 

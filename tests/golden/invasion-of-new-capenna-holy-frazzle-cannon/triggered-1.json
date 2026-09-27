@@ -1,0 +1,66 @@
+{
+  "ability": "Whenever equipped creature attacks, put a +1/+1 counter on that creature and each other creature you control that shares a creature type with it.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Holy Frazzle-Cannon@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Invasion of New Capenna // Holy Frazzle-Cannon", "A.I.M. Scientists"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "declare_attackers",
+    "tapped": [],
+    "tokens": [],
+    "variant": "quiet",
+    "war_turn": false
+  },
+  "card": "Invasion of New Capenna // Holy Frazzle-Cannon",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["counters_put_this_turn"],
+    "notices": {},
+    "objects": {
+      "A.I.M. Scientists@alice#1": {
+        "counters": [
+          {},
+          {
+            "+1/+1": 1
+          }
+        ],
+        "power": [3, 4],
+        "toughness": [3, 4]
+      }
+    },
+    "players": {},
+    "stack": []
+  },
+  "family": "triggered",
+  "format": 1,
+  "kind": "attacks",
+  "number": 1,
+  "recipe": {
+    "attempt": "combat",
+    "index": 0,
+    "params": {},
+    "variant": "quiet"
+  }
+}

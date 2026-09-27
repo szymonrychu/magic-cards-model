@@ -448,6 +448,36 @@ def has_convoke_now(spell: CardState) -> bool:
 _ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
 
 
+def granted_convoke_line_is_readable(text: str) -> bool:
+    """Whether `text` is a "`<quality>` spells you cast[ from your hand/
+    graveyard] have convoke." line `has_convoke_now` genuinely reads at a
+    real cast (Eirdu, Carrier of Dawn's "Creature spells you cast have
+    convoke.", Invasion of Segovia // Caetus, Sea Tyrant of Segovia's
+    "Noncreature spells you cast have convoke.") - the audit-facing sibling
+    of that function's own live board read, for a caller (`support.py`'s
+    static-ability sweep) with no `CardState` on a stack to ask.
+
+    `has_convoke_now` and this reader are kept in sync structurally rather
+    than by construction - both match `_SPELLS_YOU_CAST_HAVE_RE`, both check
+    `keyword == "convoke"` - because `machines/spell_grants.py`'s own
+    `SPELL_GRANT_KEYWORDS` deliberately excludes convoke (see this module's
+    own docstring above `has_convoke_now`), so nothing there can audit for
+    it and this module is where the grant is actually read.
+    """
+    from .spell_grants import (
+        _SPELLS_YOU_CAST_HAVE_RE,
+        _TRAILING_REMINDER_RE,
+        _normalized_quality,
+        _quality_is_readable,
+    )
+
+    line = _TRAILING_REMINDER_RE.sub("", text.strip()).strip()
+    match = _SPELLS_YOU_CAST_HAVE_RE.fullmatch(line)
+    if match is None or match.group("keyword").strip().lower() != "convoke":
+        return False
+    return _quality_is_readable(_normalized_quality(match.group("what")))
+
+
 def has_delve(card: Card) -> bool:
     """CR 702.66c: multiple instances of delve are redundant."""
     return _has(card, "delve")

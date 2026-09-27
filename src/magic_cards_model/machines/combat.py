@@ -2103,6 +2103,18 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     ):
         return f"{attacker.name} has flying and {blocker.name} has neither flying nor reach"
 
+    if has_keyword(attacker, "skulk", game):
+        # CR 702.118b: "A creature with skulk can't be blocked by creatures
+        # with greater power." Both powers off the computed board (CR 613).
+        attacker_power = game.characteristics_of(attacker).power
+        blocker_power = game.characteristics_of(blocker).power
+        if (
+            attacker_power is not None
+            and blocker_power is not None
+            and blocker_power > attacker_power
+        ):
+            return f"{attacker.name} has skulk and {blocker.name} has greater power (CR 702.118b)"
+
     # CR 702.16f: "Attacking creatures with protection can't be blocked by
     # creatures that have the stated quality."
     quality = game.protection_quality_against(attacker, blocker)
@@ -2689,6 +2701,59 @@ def lethal_for(
     return remaining
 
 
+#: "You may have this creature assign its combat damage as though it
+#: weren't blocked." (Rhox, Lone Wolf, Thorn Elemental, Spinebiter, Pride of
+#: Lions, Wolf Pack, Deathcoil Wurm - and the same line granted rather than
+#: printed: Zilortha, Apex of Ikoria's "For each non-Human creature you
+#: control, you may have that creature assign its combat damage as though it
+#: weren't blocked.", Siege Behemoth's "for each creature you control, ...",
+#: Proud Wildbonder's "Creatures you control with trample have '...'",
+#: Indomitable Might's "Enchanted creature's controller may have it assign
+#: ..."). Not a CR-named keyword: the base rules the permission overrides are
+#: CR 510.1c ("A blocked creature assigns its combat damage to the creatures
+#: blocking it ...") and CR 510.1b ("An unblocked creature assigns its combat
+#: damage to the player, planeswalker, or battle it's attacking ..."); this
+#: permission lets its controller choose 510.1b's rule for a creature that is
+#: in fact blocked, all-or-nothing (Rhox's own ruling: "You can't split the
+#: damage assignment between them").
+#:
+#: `subject` accepts the same self-reference vocabulary a printed restriction
+#: already does (`_self_reference_names`) - the granted line always reads
+#: "this creature", but a printed line may equally name the card itself.
+_ASSIGN_AS_THOUGH_UNBLOCKED_RE = re.compile(
+    r"^you may have (?P<subject>.+?) assign its combat damage as though it "
+    r"weren'?t blocked\.?$",
+    re.IGNORECASE,
+)
+
+#: The fixed ability line `_ASSIGN_AS_THOUGH_UNBLOCKED_RE` reads, self-
+#: referenced the way a granted ability ordinarily is (CR 700.7) - the text a
+#: static grant (Zilortha's, Siege Behemoth's) attaches to each qualifying
+#: creature, so the same detector below reads a granted line exactly as it
+#: reads Rhox's own printed one.
+ASSIGN_AS_THOUGH_UNBLOCKED_TEXT = (
+    "You may have this creature assign its combat damage as though it weren't blocked."
+)
+
+
+def _grants_assign_as_though_unblocked(line: str, name: str) -> bool:
+    match = _ASSIGN_AS_THOUGH_UNBLOCKED_RE.fullmatch(line.strip())
+    if match is None:
+        return False
+    subject = match.group("subject").strip().lower()
+    return subject in {candidate.lower() for candidate in _self_reference_names(name)}
+
+
+def may_assign_as_though_unblocked(game: "Game", creature: CardState) -> bool:
+    """Whether `creature` carries `_ASSIGN_AS_THOUGH_UNBLOCKED_RE`'s
+    permission right now, printed or granted (CR 613.5's computed board)."""
+    characteristics = game.characteristics_of(creature)
+    return any(
+        _grants_assign_as_though_unblocked(line, creature.name)
+        for line in characteristics.abilities
+    )
+
+
 def _attacker_assignment(
     game: "Game",
     attack: Attack,
@@ -2706,6 +2771,12 @@ def _attacker_assignment(
     `ASSIGN_COMBAT_DAMAGE` question; unscripted and unpaused, its default is
     lethal damage to each blocker in declaration order, then the rest through
     with trample or onto the last blocker without it.
+
+    A blocked attacker carrying `may_assign_as_though_unblocked`'s permission
+    gets one more choice ahead of all of that (CR 608.2d, "you may"): assign
+    all its damage as though it were unblocked instead (CR 510.1b), skipping
+    every blocker entirely. All-or-nothing, never split with the ordinary
+    blocked division below (Rhox's own ruling).
     """
     power = _assignment_power_of(game, attacker)
     if power is None:
@@ -2713,6 +2784,16 @@ def _attacker_assignment(
         return []
     if power <= 0:  # CR 510.1a
         return []
+
+    if attack.blocked and may_assign_as_though_unblocked(game, attacker):
+        as_though_unblocked_defender = game.resolve_target(attack.defender)
+        if as_though_unblocked_defender is not None and game.may(
+            game.controller_of(attacker).username,
+            f"have {attacker.name} assign its combat damage as though it weren't blocked",
+            source=attacker.name,
+            source_id=str(attacker.id),
+        ):
+            return [(as_though_unblocked_defender, power)]
 
     blockers = [
         blocker

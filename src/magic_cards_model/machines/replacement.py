@@ -277,6 +277,10 @@ class CopyException(EngineModel):
     #: "it's legendary and snow in addition to its other types" (CR 707.9b,
     #: CR 205.1b's retaining form).
     added_supertypes: tuple[Supertype, ...] = ()
+    #: Colors gained on top of the copied ones - Lazotep Convert's own
+    #: "it's a 4/4 black Zombie in addition to its other colors and types"
+    #: (CR 707.9b, CR 105.3's own "in addition" retaining form for color).
+    added_colors: tuple[Color, ...] = ()
     #: CR 707.9f's gate: "Some exceptions to the copying process apply only if
     #: the copy is or has certain characteristics" - Moritte's "if it's a
     #: creature, ...". Judged on the copy as it would be without the gated
@@ -617,10 +621,23 @@ _COPY_EXCEPT_ENTERS_WITH_COUNTERS = re.compile(
 
 _SUPERTYPE_WORDS = {"legendary": Supertype.LEGENDARY, "snow": Supertype.SNOW}
 
+#: A copy exception's own colour word ("black", "blue", ...) - kept local
+#: rather than imported, the identical per-module convention `machines/
+#: layers.py::_card_type_word`'s own docstring explains (this module already
+#: imports `Color` for `CopyException.added_colors`, but not a shared word
+#: table for it).
+_COLOR_WORDS: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
+
 _COPY_EXCEPT_PT_AND_TYPES = re.compile(
     r"^(?:he|she|it|they)(?:'s| is|'re| are) an? (?:(?P<power>\d+)/(?P<toughness>\d+) )?"
     r"(?P<types>[A-Za-z][\w'-]*(?: [A-Za-z][\w'-]*)*) in addition to "
-    r"(?:his|her|its|their) other types$",
+    r"(?:his|her|its|their) other (?:colors? and types|types)$",
     re.IGNORECASE,
 )
 
@@ -648,6 +665,7 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     added_subtypes: list[str] = []
     added_abilities: list[str] = []
     added_supertypes: list[Supertype] = []
+    added_colors: list[Color] = []
     if_type: Type | None = None
     if_type_abilities: list[str] = []
     enters_with_counters: list[tuple[str, int]] = []
@@ -688,8 +706,17 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
                 power = int(match.group("power"))
                 toughness = int(match.group("toughness"))
             for word in match.group("types").split():
+                color = _COLOR_WORDS.get(word.lower())
                 card_type = _CARD_TYPE_WORDS.get(word.lower())
-                if card_type is not None:
+                if color is not None:
+                    # Lazotep Convert's own "a 4/4 black Zombie in addition
+                    # to its other colors and types" (CR 105.3) - a colour
+                    # word here is never also a card type or subtype word
+                    # (CR 105.1's five colours share no spelling with any
+                    # CR 205.2a card type or real CR 205.3 subtype), so
+                    # checking it first cannot misread a genuine subtype.
+                    added_colors.append(color)
+                elif card_type is not None:
                     added_types.append(card_type)
                 else:
                     # CR 205.3: anything that is not one of CR 300.1's card
@@ -717,6 +744,7 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         and not added_subtypes
         and not added_abilities
         and not added_supertypes
+        and not added_colors
         and not if_type_abilities
         and not enters_with_counters
     ):
@@ -725,6 +753,7 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         name=name,
         power=power,
         toughness=toughness,
+        added_colors=tuple(added_colors),
         added_types=tuple(added_types),
         added_subtypes=tuple(added_subtypes),
         added_abilities=tuple(added_abilities),
@@ -1079,6 +1108,7 @@ def _parse_sentence(sentence: str, names: tuple[str, ...]) -> list[ReplacementEf
         _try_prevent_all,
         _try_prevent_next_time,
         _try_first_time_would,
+        _try_source_damage_plus_recipient_list,
         _try_if_would,
         # "As X enters or is turned face up" must be read by the enters parser
         # first, or the face-up parser swallows "X enters or" as the subject.
@@ -1276,6 +1306,65 @@ def _try_if_would(sentence: str, names: tuple[str, ...]) -> list[ReplacementEffe
             replacement=replacement or None,
             condition=(match.group("condition") or "").strip() or None,
             optional=_is_optional(rest),
+            self_replacement=_refers_to_self(event, names),
+        )
+    ]
+
+
+#: `_IF_WOULD`'s own event/rest split is `.+?` (non-greedy): it stops at the
+#: *first* comma, which is right for the common case (a comma-free event, a
+#: replacement clause that may itself list several results). Disciples of the
+#: Inferno's "If a noncreature source you control would deal damage to a
+#: creature, battle, or opponent, it deals that much damage plus 2 instead."
+#: has an Oxford-comma *recipient list inside the event itself*
+#: (`_DAMAGE_RECIPIENTS`'s own "a creature, battle, or opponent"), so the
+#: first comma falls inside "a creature, battle, or opponent" rather than
+#: between event and rest, and `_IF_WOULD` misreads the event as truncated at
+#: "... to a creature" with the rest of the recipient list swallowed into
+#: "rest" - `_SOURCE_YOU_CONTROL_DAMAGE_EVENT_RE`/`_SOURCE_DAMAGE_MODIFIER_RE`
+#: then both fail to `fullmatch` the wrong halves, so a genuinely-templated
+#: card (Torbran, Jaya, Pyromancer's Swath and the rest of this same "source
+#: you control would deal damage" family, per that family's own docstring)
+#: reads unaudited for a splitting defect, not an engine one.
+#:
+#: This is `_IF_WOULD`'s identical shape, but anchored on the fixed "it
+#: deals ... instead" tail `_SOURCE_DAMAGE_MODIFIER_RE`'s own family always
+#: prints, which lets the (still non-greedy, still trying the first comma
+#: first) event group's regex backtracking find the *right* comma - the one
+#: whose tail actually reads as that fixed shape - rather than widening
+#: `_IF_WOULD` itself, which would trade this family's bug for the opposite
+#: one on any card whose *replacement* clause (not its event) carries the
+#: internal comma list instead (a real, more common shape - see the
+#: docstring above `_try_if_would`'s own dispatch position). Tried ahead of
+#: `_try_if_would` in `_parse_sentence` so it gets first look at exactly this
+#: family's own shape; every other sentence falls through to `_try_if_would`
+#: unchanged.
+_SOURCE_DAMAGE_PLUS_RECIPIENT_LIST_RE = re.compile(
+    rf"^If (?P<event>an? (?:[a-z]+ )?source you control would deal "
+    rf"(?:noncombat )?damage to .+?),\s*"
+    rf"(?P<rest>it deals (?:that much damage plus {COUNT}"
+    rf"|(?:double|triple) that damage)"
+    rf"(?: to that (?:permanent or player|player or permanent))? instead)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _try_source_damage_plus_recipient_list(
+    sentence: str, names: tuple[str, ...]
+) -> list[ReplacementEffect]:
+    match = _SOURCE_DAMAGE_PLUS_RECIPIENT_LIST_RE.match(sentence)
+    if not match:
+        return []
+    event = match.group("event").strip()
+    rest = match.group("rest").strip()
+    replacement = re.sub(r"\s*\binstead\b\s*", " ", rest, flags=re.IGNORECASE).strip()
+    replacement = re.sub(r"\s{2,}", " ", replacement).rstrip(".").strip()
+    return [
+        _make(
+            ReplacementKind.IF_WOULD_INSTEAD,
+            sentence,
+            event=event,
+            replacement=replacement or None,
             self_replacement=_refers_to_self(event, names),
         )
     ]
@@ -2696,6 +2785,23 @@ def _recipient_is_opponents_permanent(
     )
 
 
+def _recipient_is_creature_battle_or_opponent(
+    game: "Game", controller: str, event: ReplaceableEvent
+) -> bool:
+    """ "a creature, battle, or opponent" (Disciples of the Inferno) - CR
+    115.4's own "any target" set for damage minus "player" (narrowed here to
+    "opponent", the card's own wording) and "planeswalker": the two card
+    types this phrase actually names (CR 205.2a), read off the computed board
+    (CR 613.5) since the recipient may be a permanent animated into one of
+    them."""
+    if event.player is not None:
+        return _recipient_is_opponent(game, controller, event)
+    if event.card is None:
+        return False
+    types = game.characteristics_of(event.card).types
+    return Type.CREATURE in types or Type.BATTLE in types
+
+
 _DAMAGE_RECIPIENTS: dict[str, _DamageRecipient] = {
     "an opponent or a permanent an opponent controls": lambda game, you, event: (
         _recipient_is_opponent(game, you, event)
@@ -2705,6 +2811,7 @@ _DAMAGE_RECIPIENTS: dict[str, _DamageRecipient] = {
     "a permanent an opponent controls": _recipient_is_opponents_permanent,
     "a permanent or player": lambda game, you, event: True,
     "a player or permanent": lambda game, you, event: True,
+    "a creature, battle, or opponent": _recipient_is_creature_battle_or_opponent,
 }
 
 
@@ -3671,9 +3778,75 @@ def _normalized_counter_kind(raw: str | None) -> str | None:
     return None if lowered in ("", "counter", "counters") else lowered
 
 
+#: Vorinclex, Monstrous Raider's and Innkeeper's Talent's "If you would put
+#: one or more counters on a permanent or player, ..." and Vorinclex's "If an
+#: opponent would put ...": the putter (CR 122.6a) is who the line watches,
+#: and "a permanent or player" reaches both halves of CR 122.6 - any
+#: permanent, whoever controls it, and any player.
+_PUTTER_COUNTER_EVENT_RE = re.compile(
+    r"^(?P<who>you|an opponent) would put one or more counters on"
+    r" a permanent(?P<or_player> or player)?$",
+    re.IGNORECASE,
+)
+#: "put twice that many ..." / "they put half that many ..., rounded down" -
+#: a multiplier, or a halving whose rounding CR 107.1a requires be printed.
+_PUTTER_COUNTER_REPLACEMENT_RE = re.compile(
+    rf"^(?:they )?put (?:(?P<mult>{MULTIPLIER}) that many|half that many)"
+    r" of each of those kinds of counters on that permanent(?P<or_player> or player)?"
+    r"(?: ?, rounded (?P<rounding>down|up))?$",
+    re.IGNORECASE,
+)
+
+
+def read_putter_counter_amount(effect: ReplacementEffect) -> "CounterAmountReplacement | None":
+    """`_PUTTER_COUNTER_EVENT_RE`/`_PUTTER_COUNTER_REPLACEMENT_RE`'s reader.
+
+    "you" is the source's controller (CR 109.5); "an opponent" is any other
+    player putting counters. Halving needs its
+    rounding printed (CR 107.1a: "If a spell or ability could generate a
+    fractional number, the spell or ability will tell you whether to round
+    up or down"), so an unrounded "half" is left uncompiled.
+    """
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _PUTTER_COUNTER_EVENT_RE.match((effect.event or "").strip())
+    if event_match is None:
+        return None
+    replacement_match = _PUTTER_COUNTER_REPLACEMENT_RE.match(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if replacement_match is None:
+        return None
+    if (event_match.group("or_player") is None) != (replacement_match.group("or_player") is None):
+        return None
+    opponent_puts = event_match.group("who").lower() == "an opponent"
+    multiplier_text = replacement_match.group("mult")
+    rounding = replacement_match.group("rounding")
+    if multiplier_text is not None:
+        multiplier = parse_multiplier(multiplier_text)
+        if multiplier is None or rounding is not None:
+            return None
+        divisor = 1
+    else:
+        if rounding is None:
+            return None
+        multiplier, divisor = 1, 2
+    return CounterAmountReplacement(
+        you_put=not opponent_puts,
+        opponent_puts=opponent_puts,
+        players=event_match.group("or_player") is not None,
+        multiplier=multiplier,
+        divisor=divisor,
+        round_up=rounding is not None and rounding.lower() == "up",
+    )
+
+
 def _compile_counter_doubler(effect: ReplacementEffect) -> CardReplacement | None:
     if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
         return None
+    putter_spec = read_putter_counter_amount(effect)
+    if putter_spec is not None:
+        return _static_form(effect.text, putter_spec)
     event_match = _COUNTER_AMOUNT_EVENT_RE.match((effect.event or "").strip())
     if event_match is None:
         return None
@@ -6063,6 +6236,7 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             added_subtypes=exception.added_subtypes,
             added_abilities=added_abilities,
             added_supertypes=exception.added_supertypes,
+            added_colors=exception.added_colors,
             copiable_values=copiable,
         )(entering, game.continuous_effects.tick(), chosen, LayerContext())
         for built in built_effects:
@@ -6802,7 +6976,7 @@ def _compleated_modifier(
     right rather than a guess:
 
     - **"this permanent"** - only a planeswalker has loyalty counters to
-      begin with (CR 205.2a gates `_enter_with_loyalty` the same way), so a
+      begin with (CR 205.2a gates `CardState.intrinsic_entering_counters` the same way), so a
       Compleated keyword on anything else (none in the pool, but nothing here
       assumes otherwise) does nothing.
     - **"would enter with one or more loyalty counters"** - read off the
@@ -6832,7 +7006,7 @@ def _compleated_modifier(
     # object is not on the battlefield - exactly where this runs, CR 614.12's
     # "while it is still on its way in". `is_planeswalker` is layer-aware and
     # falls back to the printed type off the battlefield too, the same gate
-    # `_enter_with_loyalty` itself uses.
+    # `CardState.intrinsic_entering_counters` itself uses.
     if not card_state.is_planeswalker or (card_state.loyalty or 0) < 1:
         return None
     record = game.cast_record_of(card_state)
@@ -7413,18 +7587,30 @@ class CounterAmountReplacement(EngineModel):
     types: tuple[Type, ...] | None = None
     you_control: bool = False
     you_put: bool = False
+    #: "If an opponent would put ..." (Vorinclex, Monstrous Raider): the
+    #: event's putter (CR 122.6a) is some player other than the controller.
+    opponent_puts: bool = False
+    #: "... on a permanent or player": a player getting counters is the
+    #: event too (CR 122.6, `Game.add_player_counters`).
+    players: bool = False
     multiplier: int = 1
     addend: int = 0
+    #: "half that many ..., rounded down/up" - divided after multiplying,
+    #: rounded as printed (CR 107.1a).
+    divisor: int = 1
+    round_up: bool = False
 
     def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
         if event.kind is not EventKind.ADD_COUNTERS or event.amount <= 0:
             return False
+        if self.you_put and event.putter != controller:
+            return False
+        if self.opponent_puts and (event.putter is None or event.putter == controller):
+            return False
         card = event.card
         if card is None:
-            return False
+            return self.players and event.player is not None and self.counter_kind is None
         if self.you_control and card.controller != controller:
-            return False
-        if self.you_put and event.putter != controller:
             return False
         if self.counter_kind is not None and (
             (event.counter_kind or "").strip().lower() != self.counter_kind
@@ -7438,7 +7624,10 @@ class CounterAmountReplacement(EngineModel):
         return any(wanted in card_types for wanted in self.types)
 
     def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
-        event.amount = max(event.amount * self.multiplier + self.addend, 0)
+        scaled = event.amount * self.multiplier + self.addend
+        if self.divisor > 1:
+            scaled = -(-scaled // self.divisor) if self.round_up else scaled // self.divisor
+        event.amount = max(scaled, 0)
 
 
 class EnterUnderYourControl(EngineModel):

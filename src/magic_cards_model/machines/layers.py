@@ -77,6 +77,7 @@ bottom is where, and `Duration` is how long.
 from __future__ import annotations
 
 import functools
+import operator
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import IntEnum, StrEnum
@@ -110,6 +111,7 @@ from .abilities import (
     self_normalized_effect_text,
 )
 from .combat import (
+    ASSIGN_AS_THOUGH_UNBLOCKED_TEXT,
     ASSIGNS_DAMAGE_AS_THOUGH_POSITIVE_TEXT,
     ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT,
     ATTACK_WITHOUT_DEFENDER_TEXT,
@@ -318,6 +320,13 @@ class Characteristics(EngineModel):
     #: can answer "for each Equipment attached to it" (Winter Soldier, Icy
     #: Assassin; Loxodon Punisher) off the board it is handed.
     attached_to: UUID | None = None
+    #: `CardState.transformed` as of this computation (CR 701.27a) - not a
+    #: characteristic either, carried for the same reason as `is_token`: a
+    #: `Selector` never holds a live `CardState`, and a real printed shape
+    #: filters on exactly this (Invasion of Pyrulea's own back face,
+    #: Gargantuan Slabhorn's "Other transformed permanents you control have
+    #: trample and ward {2}.").
+    transformed: bool = False
 
     @property
     def is_creature(self) -> bool:
@@ -892,6 +901,27 @@ class OtherCreaturesControlledBy(SelectorBase):
         )
 
 
+class OtherTransformedPermanentsControlledBy(SelectorBase):
+    """ "Other transformed permanents you control" (Invasion of Pyrulea's own
+    back face, Gargantuan Slabhorn) - `OtherCreaturesControlledBy`'s own
+    twin, ungated on `is_creature` (the subject is "permanents", CR 300.1's
+    six types, not "creatures") and filtered on `Characteristics.transformed`
+    (CR 701.27a/g) instead."""
+
+    kind: Literal["other_transformed_permanents_controlled_by"] = (
+        "other_transformed_permanents_controlled_by"
+    )
+    source_id: UUID
+    username: str | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return (
+            chars.transformed
+            and chars.controller == self.username
+            and chars.card_id != self.source_id
+        )
+
+
 class OtherCreatures(SelectorBase):
     """Every creature except this one, whoever controls it - Ygra, Eater of
     All's "Other creatures are Food artifacts ..." reaches every creature on
@@ -1174,7 +1204,15 @@ class SelfIfControlsAnyOf(SelectorBase):
 class ControlledCountRequirement(EngineModel):
     """One "you control N or more `<quality>`" test on the board: permanents
     the source's controller controls with this `name` (CR 201.2), card type
-    or subtype, at least `threshold` of them."""
+    or subtype, at least `threshold` of them (`comparison`'s own operator
+    against a bare "at least"/"or more" default).
+
+    `other=True` (Ice-Fang Coatl's "at least three other snow permanents",
+    Svyelun of Sea and Sky's "at least two other Merfolk") is CR 700.4's
+    "other" - the source counting toward its own condition is excluded,
+    which needs the source's own identity (`holds`'s `exclude_id`) rather
+    than anything this frozen model alone carries.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -1182,12 +1220,15 @@ class ControlledCountRequirement(EngineModel):
     card_type: Type | None = None
     subtype: str | None = None
     threshold: int = 1
+    comparison: Literal["ge", "gt", "lt", "le", "eq"] = "ge"
+    other: bool = False
 
-    def holds(self, username: str | None, board: Board) -> bool:
+    def holds(self, username: str | None, board: Board, exclude_id: UUID | None = None) -> bool:
         count = sum(
             1
             for other in board.values()
             if other.controller == username
+            and not (self.other and exclude_id is not None and other.card_id == exclude_id)
             and (self.name is None or other.name == self.name)
             and (self.card_type is None or self.card_type in other.types)
             and (
@@ -1195,14 +1236,32 @@ class ControlledCountRequirement(EngineModel):
                 or any(each.lower() == self.subtype.lower() for each in other.subtypes)
             )
         )
-        return count >= self.threshold
+        return _COUNT_REQUIREMENT_COMPARISONS[self.comparison](count, self.threshold)
+
+
+#: `ControlledCountRequirement.comparison`'s own operator, the identical
+#: vocabulary `machines/triggers.py::_SUBTYPE_COUNT_COMPARISONS` already
+#: reads for the same "at least/more than/fewer than/exactly N" family of
+#: intervening-if conditions - "ge"/"gt"/"lt"/"eq" are this model's own
+#: short, `Literal`-friendly spelling of the same four operators.
+_COUNT_REQUIREMENT_COMPARISONS: dict[str, Callable[[int, int], bool]] = {
+    "ge": operator.ge,
+    "gt": operator.gt,
+    "lt": operator.lt,
+    "le": operator.le,
+    "eq": operator.eq,
+}
 
 
 class SelfIfControlsCounted(SelectorBase):
     """ "As long as you control eight or more permanents named Phoenix Fleet
     Airship, this Vehicle is ..." / "... and you control an Army, Grond is
-    ..." - `Only`'s identity test plus every `ControlledCountRequirement`,
-    re-asked on every CR 613.5 computation (CR 611.3a)."""
+    ..." / "Svyelun has indestructible as long as you control at least two
+    other Merfolk." - `Only`'s identity test plus every `ControlledCountRequirement`,
+    re-asked on every CR 613.5 computation (CR 611.3a). The source's own
+    `card_id` is threaded into each requirement's own `holds` as `exclude_id`
+    so an "other" requirement can tell the source apart from the permanents
+    it is counting."""
 
     kind: Literal["self_if_controls_counted"] = "self_if_controls_counted"
     card_id: UUID
@@ -1211,7 +1270,8 @@ class SelfIfControlsCounted(SelectorBase):
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         return chars.card_id == self.card_id and all(
-            requirement.holds(self.username, board) for requirement in self.requirements
+            requirement.holds(self.username, board, exclude_id=self.card_id)
+            for requirement in self.requirements
         )
 
 
@@ -1336,20 +1396,26 @@ class PermanentsControlledBy(SelectorBase):
 
 
 class CreaturesControlledByWithSubtype(SelectorBase):
-    """ "[Other] <subtype>s you control"."""
+    """ "[Other] <subtype>s you control", or, with `negate` set, "each
+    non-`<subtype>` creature you control" (Zilortha, Apex of Ikoria's own
+    "For each non-Human creature you control, ..." - CR 109.2's negation of
+    CR 205.3m's creature type, on the group side of the same static-grant
+    family this selector already reads the positive shape for)."""
 
     kind: Literal["creatures_controlled_by_with_subtype"] = "creatures_controlled_by_with_subtype"
     username: str | None = None
     subtypes: tuple[str, ...] = ()
     other_than: UUID | None = None
+    negate: bool = False
 
     def __call__(self, chars: Characteristics, board: Board) -> bool:
         wanted = {subtype.lower() for subtype in self.subtypes}
+        has_one = any(subtype.lower() in wanted for subtype in chars.subtypes)
         return (
             chars.is_creature
             and chars.controller == self.username
             and chars.card_id != self.other_than
-            and any(subtype.lower() in wanted for subtype in chars.subtypes)
+            and (not has_one if self.negate else has_one)
         )
 
 
@@ -1405,6 +1471,18 @@ class PermanentsOfTypesControlledBy(SelectorBase):
         return chars.controller == self.username and any(
             card_type in chars.types for card_type in self.card_types
         )
+
+
+class PermanentsOfTypes(SelectorBase):
+    """Every permanent of any of `card_types`, whoever controls it -
+    Solemnity's "Counters can't be put on artifacts, creatures, enchantments,
+    or lands." (CR 205.2a's card types, read off the computed board)."""
+
+    kind: Literal["permanents_of_types"] = "permanents_of_types"
+    card_types: tuple[Type, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        return any(card_type in chars.types for card_type in self.card_types)
 
 
 class PermanentsControlledByWithCounters(SelectorBase):
@@ -1570,6 +1648,7 @@ Selector = Annotated[
     | AllPermanentsControlledBy
     | PermanentsControlledBy
     | PermanentsOfTypesControlledBy
+    | PermanentsOfTypes
     | CreaturesControlledByWithSubtype
     | PermanentsControlledByWithSubtype
     | CreaturesControlledByWithColor
@@ -1577,7 +1656,8 @@ Selector = Annotated[
     | AttackingTokensControlledBy
     | AttackingGroupControlledBy
     | TappedCreaturesControlledBy
-    | WithChangeling,
+    | WithChangeling
+    | OtherTransformedPermanentsControlledBy,
     Field(discriminator="kind"),
 ]
 
@@ -2420,6 +2500,7 @@ def printed_characteristics(
             is_token=state.token,
             zone_change_stamp=state.zone_change_stamp,
             attached_to=state.attached_to,
+            transformed=state.transformed,
         )
     # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
     # characteristics of the face that is up - the front face by default
@@ -2464,6 +2545,7 @@ def printed_characteristics(
         is_token=state.token,
         zone_change_stamp=state.zone_change_stamp,
         attached_to=state.attached_to,
+        transformed=state.transformed,
     )
 
 
@@ -3207,6 +3289,12 @@ def other_creatures_controlled_by(source_id: UUID, username: str | None) -> Sele
     return OtherCreaturesControlledBy(source_id=source_id, username=username)
 
 
+def other_transformed_permanents_controlled_by(source_id: UUID, username: str | None) -> Selector:
+    """ "Other transformed permanents you control" (Invasion of Pyrulea's
+    own back face) - the source itself is excluded."""
+    return OtherTransformedPermanentsControlledBy(source_id=source_id, username=username)
+
+
 def creatures_controlled_by_opponents_of(username: str | None) -> Selector:
     """ "Creatures your opponents control" - every creature someone else controls.
 
@@ -3375,7 +3463,11 @@ def permanents_controlled_by(
 
 
 def creatures_controlled_by_with_subtype(
-    username: str | None, subtypes: Sequence[str], *, other_than: UUID | None = None
+    username: str | None,
+    subtypes: Sequence[str],
+    *,
+    other_than: UUID | None = None,
+    negate: bool = False,
 ) -> Selector:
     """ "[Other] <subtype>s you control" / "each other creature you control
     that's a Cat, Elemental, ... " - an anthem over a filtered subset of the
@@ -3386,9 +3478,13 @@ def creatures_controlled_by_with_subtype(
     single-subtype anthem (Stormscale Scion's Dragons) is the same shape with a
     one-item list. Read against the subtypes on the *computed* board, so a
     creature that gained the subtype in layer 4 is included (CR 613.5).
+
+    `negate` reads the list as CR 109.2's negation instead - "each non-Human
+    creature you control" (Zilortha, Apex of Ikoria) - matching every creature
+    carrying *none* of `subtypes`.
     """
     return CreaturesControlledByWithSubtype(
-        username=username, subtypes=tuple(subtypes), other_than=other_than
+        username=username, subtypes=tuple(subtypes), other_than=other_than, negate=negate
     )
 
 
@@ -4661,6 +4757,7 @@ def _become_a_copy_builder(
     added_abilities: Sequence[str] = (),
     copiable_values: Characteristics | None = None,
     added_supertypes: Sequence[Supertype] = (),
+    added_colors: Sequence[Color] = (),
 ) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
@@ -4721,6 +4818,7 @@ def _become_a_copy_builder(
     added_types = tuple(added_types)
     added_subtypes = tuple(added_subtypes)
     added_abilities = tuple(added_abilities)
+    added_colors = tuple(added_colors)
 
     def builder(
         source: CardState,
@@ -4750,7 +4848,13 @@ def _become_a_copy_builder(
             ),
             types=types,
             subtypes=subtypes,
-            colors=copied.colors,
+            # Lazotep Convert's own "except it's a 4/4 black Zombie in
+            # addition to its other colors and types" - CR 105.3's own
+            # "in addition" form: a new color adds to the existing ones
+            # rather than replacing them, the identical retaining shape CR
+            # 205.1b already gives types/subtypes/supertypes above.
+            colors=copied.colors
+            + tuple(color for color in added_colors if color not in copied.colors),
             abilities=copied.abilities
             + tuple(ability for ability in added_abilities if ability not in copied.abilities),
             power=power_override if power_override is not None else copied.power,
@@ -4818,6 +4922,58 @@ def _all_creatures_keyword_grant_builder(keywords: list[str], *, line: str) -> E
                 modification=grant_ability(keyword),
             )
             for keyword in keywords
+        ]
+
+    return builder
+
+
+#: "For each non-Human creature you control, you may have that creature
+#: assign its combat damage as though it weren't blocked." (Zilortha, Apex
+#: of Ikoria) - a distributive static grant (CR 611.3) of `combat.
+#: ASSIGN_AS_THOUGH_UNBLOCKED_TEXT` to every qualifying creature the
+#: controller controls, worded as "for each ... you may" rather than the
+#: ordinary "<subject>s you control have '<ability>'"
+#: (`_GROUP_QUOTED_ABILITY_GRANT_RE`) - the permission is still the
+#: permanent's own static ability either way (CR 113.6a), read by `combat.
+#: may_assign_as_though_unblocked` off the computed board exactly as a
+#: printed one (Rhox's) already is.
+_FOR_EACH_CREATURE_MAY_ASSIGN_UNBLOCKED_RE = re.compile(
+    r"^for each (?:non-(?P<excluded_subtype>[a-z]+) )?creature you control, "
+    r"you may have that creature assign its combat damage as though it "
+    r"weren'?t blocked\.?$",
+    re.IGNORECASE,
+)
+
+
+def _for_each_creature_may_assign_unblocked_builder(
+    excluded_subtype: str | None, *, line: str
+) -> EffectBuilder | None:
+    if excluded_subtype is not None and excluded_subtype.lower() not in subtype_vocabulary():
+        return None
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = (
+            creatures_controlled_by_with_subtype(
+                source.controller, (excluded_subtype,), negate=True
+            )
+            if excluded_subtype is not None
+            else CreaturesControlledBy(username=source.controller)
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {line}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(ASSIGN_AS_THOUGH_UNBLOCKED_TEXT),
+            )
         ]
 
     return builder
@@ -5066,6 +5222,52 @@ _EACH_INDEFINITE_KEYWORD_GRANT_RE = re.compile(
     rf"(?:have|has) (?P<keywords>{_KEYWORD_LIST_WITH_COSTS})\.?$",
     re.IGNORECASE,
 )
+
+#: "Other transformed permanents you control have `<keyword(s)>`." - Invasion
+#: of Pyrulea's own back face, Gargantuan Slabhorn ("... have trample and
+#: ward {2}."). A separate shape from `_INDEFINITE_KEYWORD_GRANT_RE` rather
+#: than a widening of `_QUALIFIED_CREATURE_SUBJECT` - that fragment's noun
+#: slot is "creatures"/"creature tokens" only (CR 300.1's wider "permanents"
+#: is a wholly different subject, not gated on `is_creature` at all: a
+#: transformed permanent need not be a creature - Ajani, Nacatl Pariah's own
+#: back face is a Planeswalker) and it has no "transformed" adjective to
+#: begin with (CR 701.27a/g, `Characteristics.transformed`).
+_OTHER_TRANSFORMED_PERMANENTS_KEYWORD_GRANT_RE = re.compile(
+    rf"^other transformed permanents you control (?:have|has) "
+    rf"(?P<keywords>{_KEYWORD_LIST_WITH_COSTS})\.?$",
+    re.IGNORECASE,
+)
+
+
+def _other_transformed_permanents_keyword_grant_builder(
+    keywords: list[str], *, line: str
+) -> EffectBuilder:
+    """`_OTHER_TRANSFORMED_PERMANENTS_KEYWORD_GRANT_RE`'s shape - layer 6 (CR
+    613.1f), one grant per keyword, over `other_transformed_permanents_
+    controlled_by` (CR 611.3's static ability, timestamped off the source)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = other_transformed_permanents_controlled_by(source.id, source.controller)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {line}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
+
 
 #: "During your turn, `<type> and <type>` you control have `<keyword(s)>`."
 #: (Sorin, Vengeful Bloodlord: "During your turn, creatures and planeswalkers
@@ -8848,6 +9050,58 @@ def _cant_have_counters_effects(
     return effects
 
 
+#: Solemnity's "Counters can't be put on artifacts, creatures, enchantments,
+#: or lands." - the board-wide form of the same CR 122.6 prohibition, over
+#: every permanent of the listed card types whoever controls it. A type the
+#: list does not name (a planeswalker's loyalty, a battle's defense) is
+#: untouched.
+_TYPES_CANT_HAVE_COUNTERS_RE = re.compile(
+    r"^counters can'?t be put on (?P<types>[a-z, ]+?)\.?$", re.IGNORECASE
+)
+_PLURAL_CARD_TYPES: dict[str, Type] = {
+    f"{card_type.value}s": card_type
+    for card_type in (
+        Type.ARTIFACT,
+        Type.BATTLE,
+        Type.CREATURE,
+        Type.ENCHANTMENT,
+        Type.LAND,
+        Type.PLANESWALKER,
+    )
+}
+
+
+def _plural_card_type_list(text: str) -> tuple[Type, ...] | None:
+    """ "artifacts, creatures, enchantments, or lands" as card types, or None
+    when any word is not a permanent card type's plural."""
+    words = [w for w in re.split(r",\s*(?:or\s+|and\s+)?|\s+(?:or|and)\s+", text.strip()) if w]
+    types = [_PLURAL_CARD_TYPES.get(word.strip().lower()) for word in words]
+    if not types or any(card_type is None for card_type in types):
+        return None
+    return tuple(card_type for card_type in types if card_type is not None)
+
+
+def _types_cant_have_counters_builder(card_types: tuple[Type, ...], *, line: str) -> EffectBuilder:
+    """`_TYPES_CANT_HAVE_COUNTERS_RE`'s shape: Solemnity."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return _cant_have_counters_effects(
+            selector=PermanentsOfTypes(card_types=card_types),
+            subject_words=", ".join(f"{card_type.value}s" for card_type in card_types),
+            also_cant_become_untapped=False,
+            source=source,
+            timestamp=timestamp,
+            line=line,
+        )
+
+    return builder
+
+
 def _self_cant_have_counters_builder(
     *, also_cant_become_untapped: bool, line: str
 ) -> EffectBuilder:
@@ -8923,6 +9177,15 @@ _ALL_COLORS_RE = re.compile(
     r"^each (?P<nonland>nonland )?permanent you control is all colors\.?$",
     re.IGNORECASE,
 )
+
+#: "`<self>` is all colors." (self-normalised to "this permanent" by
+#: `self_normalized_effect_text`, CR 201.5) - Sphinx of the Guildpact's own
+#: characteristic-defining line, and Awaken the Maelstrom's identical one on
+#: a spell face rather than a permanent (CR 112.6a: the ability functions in
+#: whatever zone the object naming itself is in, on the stack included, so
+#: the same layer-5 `set_colors` builder answers for both once `_dispatch_
+#: category`/the spell path feed it the normalised "this permanent" text).
+_SELF_ALL_COLORS_RE = re.compile(r"^this permanent is all colors\.?$", re.IGNORECASE)
 
 #: "As long as there are four or more card types among cards in your graveyard,
 #: this creature gets +2/+2, has flying, and attacks each combat if able."
@@ -9186,6 +9449,44 @@ _SELF_CONTROLS_KEYWORD_GRANT_RE = re.compile(
     r"\.?$",
     re.IGNORECASE,
 )
+
+#: "This creature has deathtouch as long as you control at least three other
+#: snow permanents." (Ice-Fang Coatl) / "Svyelun has indestructible as long
+#: as you control at least two other Merfolk." (Svyelun of Sea and Sky, its
+#: own name already rewritten to "this permanent" by `self_normalized_
+#: effect_text`, CR 201.5) / Ephara, Ever-Sheltering's "... as long as you
+#: control at least three other enchantments." - `_SELF_CONTROLS_KEYWORD_
+#: GRANT_RE`'s identical grant, but counted rather than a bare "a/another
+#: `<quality>`": the comparison vocabulary is `machines/triggers.
+#: py::_CONTROLLED_SUBTYPE_COUNT`'s own ("at least"/"more than"/"fewer
+#: than"/"exactly N", or "N or more"/"N fewer"), read here for a static
+#: continuous grant instead of a triggered ability's intervening *if*
+#: clause. "Snow" (CR 205.4g's supertype, not a type or subtype) is not
+#: read by this shape - no card in the pool needs it read as a static
+#: keyword-grant qualifier, so it is left `None`, the honest unmatched
+#: fallback, rather than guessed at.
+_SELF_CONTROLS_COUNTED_KEYWORD_GRANT_RE = re.compile(
+    r"^this (?:creature|permanent|token) (?:has|have) "
+    r"(?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*) as long as you "
+    r"control "
+    r"(?:(?P<comparison>at least|more than|fewer than|exactly) (?P<count>[a-z]+)"
+    r"|(?P<suffix_count>[a-z]+) or (?P<direction>more|fewer)) "
+    r"(?P<other>other )?(?P<qualifier>[a-zA-Z][a-zA-Z']*)\.?$",
+    re.IGNORECASE,
+)
+
+#: `_SELF_CONTROLS_COUNTED_KEYWORD_GRANT_RE`'s own comparison vocabulary,
+#: the identical mapping `machines/triggers.py::_SUBTYPE_COUNT_COMPARISONS`
+#: already uses for the same four words, spelled as `ControlledCountRequirement.
+#: comparison`'s short `Literal` names rather than as operators directly.
+_COUNTED_KEYWORD_GRANT_COMPARISONS: dict[str, Literal["ge", "gt", "lt", "le", "eq"]] = {
+    "at least": "ge",
+    "more than": "gt",
+    "fewer than": "lt",
+    "exactly": "eq",
+    "more": "ge",
+    "fewer": "le",
+}
 
 #: "As long as you control an artifact creature or a Plan, Doctor Doom has
 #: indestructible." (Doctor Doom, its name already "this creature"), "As long
@@ -11087,6 +11388,40 @@ def _all_colors_builder(*, nonland: bool, line: str) -> EffectBuilder:
     return builder
 
 
+def _self_all_colors_builder(*, line: str) -> EffectBuilder:
+    """`_SELF_ALL_COLORS_RE`'s shape - Sphinx of the Guildpact's own "Sphinx
+    of the Guildpact is all colors." on a permanent (CR 201.5's
+    self-reference, already normalised to "this permanent" by
+    `self_normalized_effect_text`).
+
+    Layer 5 (CR 613.1e), the identical `set_colors` modification `_all_
+    colors_builder` applies board-wide, narrowed to just this one object
+    (`_only`, the same self-selector `_self_cant_have_counters_builder`
+    already uses) rather than every permanent its controller has.
+    """
+    colors = (Color.WHITE, Color.BLUE, Color.BLACK, Color.RED, Color.GREEN)
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: this permanent is all colors",
+                layer=Layer.COLOR,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=set_colors(*colors),
+            )
+        ]
+
+    return builder
+
+
 def _graveyard_card_types_gated_self_static_builder(
     threshold: int, power: int, toughness: int, granted: list[str], *, line: str
 ) -> EffectBuilder:
@@ -11639,6 +11974,56 @@ def _self_gated_by_controlling_keyword_grant_builder(
     ) -> list[ContinuousEffect]:
         selector = self_if_controls(
             source.id, source.controller, card_type=card_type, subtype=subtype, other=other
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: has {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
+
+
+def _self_gated_by_controlling_counted_keyword_grant_builder(
+    keywords: list[str],
+    *,
+    card_type: Type | None,
+    subtype: str | None,
+    threshold: int,
+    comparison: Literal["ge", "gt", "lt", "le", "eq"],
+    other: bool,
+    line: str,
+) -> EffectBuilder:
+    """`_SELF_CONTROLS_COUNTED_KEYWORD_GRANT_RE`'s grant, gated by
+    `SelfIfControlsCounted` (CR 611.3a's live board condition) - the counted
+    sibling of `_self_gated_by_controlling_keyword_grant_builder`'s bare
+    "a/another `<quality>`"."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = SelfIfControlsCounted(
+            card_id=source.id,
+            username=source.controller,
+            requirements=(
+                ControlledCountRequirement(
+                    card_type=card_type,
+                    subtype=subtype,
+                    threshold=threshold,
+                    comparison=comparison,
+                    other=other,
+                ),
+            ),
         )
         return [
             ContinuousEffect(
@@ -12809,6 +13194,11 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             qualifiers=qualifiers_from_subject(match),
         )
+    if match := _OTHER_TRANSFORMED_PERMANENTS_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _other_transformed_permanents_keyword_grant_builder(keywords, line=sentence)
     if match := _GROUP_ATTACK_WITHOUT_DEFENDER_RE.fullmatch(sentence):
         return _indefinite_keyword_grant_builder(
             [ATTACK_WITHOUT_DEFENDER_TEXT],
@@ -13288,6 +13678,12 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
 
     if (counter_static := counter_static_builder(sentence)) is not None:
         return counter_static
+    if match := _FOR_EACH_CREATURE_MAY_ASSIGN_UNBLOCKED_RE.fullmatch(sentence):
+        built = _for_each_creature_may_assign_unblocked_builder(
+            match.group("excluded_subtype"), line=sentence
+        )
+        if built is not None:
+            return built
     if ring_bearer := _RING_BEARER_STATIC_RE.fullmatch(sentence):
         return _ring_bearer_static_builder(ring_bearer.group("predicates"), line=sentence)
     if (all_activated := all_activated_abilities_grant(sentence)) is not None:
@@ -13579,6 +13975,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_legend_rule_exempt_builder(until_end_of_turn=True, line=sentence)
     if _LEGEND_RULE_EXEMPT_RE.fullmatch(sentence):
         return _self_legend_rule_exempt_builder(until_end_of_turn=False, line=sentence)
+    if (match := _TYPES_CANT_HAVE_COUNTERS_RE.fullmatch(sentence)) and (
+        types_named := _plural_card_type_list(match.group("types"))
+    ):
+        return _types_cant_have_counters_builder(types_named, line=sentence)
     if match := _SELF_CANT_HAVE_COUNTERS_RE.fullmatch(sentence):
         return _self_cant_have_counters_builder(
             also_cant_become_untapped=match.group("untap_first") is not None
@@ -13621,6 +14021,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _ALL_COLORS_RE.fullmatch(sentence):
         return _all_colors_builder(nonland=match.group("nonland") is not None, line=sentence)
+    if _SELF_ALL_COLORS_RE.fullmatch(sentence):
+        return _self_all_colors_builder(line=sentence)
     if match := _GRAVEYARD_CARD_TYPES_GATED_SELF_STATIC_RE.fullmatch(sentence):
         threshold = parse_count(match.group("count"), article=False)
         if threshold is None:
@@ -13812,6 +14214,34 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             subtype=subtype,
             line=sentence,
             other=match.group("another") is not None,
+        )
+    if match := _SELF_CONTROLS_COUNTED_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        comparison_word = match.group("comparison")
+        if comparison_word is not None:
+            threshold = parse_count(match.group("count"), article=False)
+        else:
+            comparison_word = match.group("direction")
+            threshold = parse_count(match.group("suffix_count"), article=False)
+        qualifier = match.group("qualifier")
+        card_type = _card_type_word(qualifier)
+        subtype = None if card_type is not None else canonical_subtype(qualifier)
+        comparison = _COUNTED_KEYWORD_GRANT_COMPARISONS.get(comparison_word.lower())
+        if (
+            keywords is None
+            or threshold is None
+            or comparison is None
+            or (card_type is None and subtype is None)
+        ):
+            return None
+        return _self_gated_by_controlling_counted_keyword_grant_builder(
+            keywords,
+            card_type=card_type,
+            subtype=subtype,
+            threshold=threshold,
+            comparison=comparison,
+            other=match.group("other") is not None,
+            line=sentence,
         )
     conditional_type_change = _conditional_self_type_change(sentence)
     if conditional_type_change is not None:

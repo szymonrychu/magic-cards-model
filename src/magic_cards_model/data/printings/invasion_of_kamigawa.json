@@ -1,0 +1,181 @@
+{
+  "object": "card",
+  "id": "3140320d-b932-441f-bff3-9bdf4419b88a",
+  "oracle_id": "462fa2a4-651b-4fc1-b73b-1bd4508c8f75",
+  "multiverse_ids": [
+    607084,
+    607085
+  ],
+  "mtgo_id": 109940,
+  "arena_id": 84320,
+  "tcgplayer_id": 490637,
+  "cardmarket_id": 704017,
+  "name": "Invasion of Kamigawa // Rooftop Saboteurs",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/3140320d-b932-441f-bff3-9bdf4419b88a",
+  "scryfall_uri": "https://scryfall.com/card/mom/62/invasion-of-kamigawa-rooftop-saboteurs?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:30:40Z",
+  "cmc": 4.0,
+  "type_line": "Battle \u2014 Siege // Creature \u2014 Moonfolk Ninja",
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Flying",
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Invasion of Kamigawa",
+      "mana_cost": "{3}{U}",
+      "type_line": "Battle \u2014 Siege",
+      "oracle_text": "(As a Siege enters, choose an opponent to protect it. You and others can attack it. When it's defeated, exile it, then cast it transformed.)\nWhen this Siege enters, tap target artifact or creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+      "colors": [
+        "U"
+      ],
+      "defense": "4",
+      "artist": "Kekai Kotaki",
+      "artist_id": "4b771085-c049-4308-930d-ec9665f803a4",
+      "illustration_id": "adf5b2a4-86e1-4b4b-8267-1bb4a8e19483",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "normal": "https://cards.scryfall.io/normal/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "large": "https://cards.scryfall.io/large/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "png": "https://cards.scryfall.io/png/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.png?1783917040",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "thumb": "https://cards.scryfall.io/thumb/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "grid": "https://cards.scryfall.io/grid/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "display": "https://cards.scryfall.io/display/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "art": "https://cards.scryfall.io/art/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "crop": "https://cards.scryfall.io/crop/front/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Rooftop Saboteurs",
+      "mana_cost": "",
+      "type_line": "Creature \u2014 Moonfolk Ninja",
+      "oracle_text": "Flying\nWhenever this creature deals combat damage to a player or battle, draw a card.",
+      "colors": [
+        "U"
+      ],
+      "color_indicator": [
+        "U"
+      ],
+      "power": "2",
+      "toughness": "3",
+      "flavor_text": "The pace of Kamigawa's development meant that Jin-Gitaxias's intel was already outdated when the invaders arrived.",
+      "artist": "Kekai Kotaki",
+      "artist_id": "4b771085-c049-4308-930d-ec9665f803a4",
+      "illustration_id": "7c3d3138-f125-4616-aafa-8358b5068ee2",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "normal": "https://cards.scryfall.io/normal/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "large": "https://cards.scryfall.io/large/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "png": "https://cards.scryfall.io/png/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.png?1783917040",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.jpg?1783917040",
+        "thumb": "https://cards.scryfall.io/thumb/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "grid": "https://cards.scryfall.io/grid/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "display": "https://cards.scryfall.io/display/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "art": "https://cards.scryfall.io/art/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040",
+        "crop": "https://cards.scryfall.io/crop/back/3/1/3140320d-b932-441f-bff3-9bdf4419b88a.webp?1783917040"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3140320d-b932-441f-bff3-9bdf4419b88a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A462fa2a4-651b-4fc1-b73b-1bd4508c8f75&unique=prints",
+  "collector_number": "62",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Kekai Kotaki",
+  "artist_ids": [
+    "4b771085-c049-4308-930d-ec9665f803a4"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 17946,
+  "preview": {
+    "source": "LelandPalmerMTG",
+    "source_uri": "https://twitter.com/LelandPalmerMTG/status/1641778855781228545",
+    "previewed_at": "2023-03-31"
+  },
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.17",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607084&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BKamigawa%2B%252F%252F%2BRooftop%2BSaboteurs",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BKamigawa%2B%252F%252F%2BRooftop%2BSaboteurs",
+    "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Kamigawa"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490637%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704017&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/109940?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
