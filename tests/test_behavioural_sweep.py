@@ -3868,6 +3868,16 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         precondition=r"if it was cast from your graveyard",
     ),
     DriverGap(
+        kind="enters_the_battlefield",
+        event="another creature entering from a graveyard or cast from one",
+        precondition=r"entered or were cast from a graveyard",
+    ),
+    DriverGap(
+        kind="enters_the_battlefield",
+        event="a token entering under an opponent's control",
+        precondition=r"one or more tokens your opponents control enter",
+    ),
+    DriverGap(
         kind="activated",
         event="an activation in combat by the attacking source",
         precondition=r"activate only if this creature is attacking",

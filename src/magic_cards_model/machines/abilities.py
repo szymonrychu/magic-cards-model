@@ -2203,6 +2203,18 @@ def keyword_ability(card: Card, keyword: str) -> KeywordAbility | None:
 #: never be misread as a self-reference to a planeswalker named Jace.
 _EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
 
+#: A candidate self-name behind an indefinite article or a colour adjective
+#: is a *noun* - a creature type the sentence sets - never CR 201.5's
+#: self-reference, which Oracle text always prints bare: Lizard, Connors's
+#: Curse's own "becomes a green Lizard creature" names the Lizard creature
+#: type (CR 205.3m), not the card calling itself "Lizard". Without this the
+#: sentence read "becomes a green this permanent creature" and the whole
+#: layer effect went unread.
+_TYPE_NOUN_LOOKBEHIND = (
+    r"(?<!(?i:\ba ))(?<!(?i:\ban ))(?<!(?i:white ))(?<!(?i:blue ))(?<!(?i:black ))"
+    r"(?<!(?i:red ))(?<!(?i:green ))(?<!(?i:colorless ))"
+)
+
 #: A candidate self-name is never a match when what follows it in the text is
 #: the start of a *different*, longer capitalized name - "Hanweir" inside "a
 #: creature named Hanweir Garrison" (another card's own full name, `\s+[A-Z]`)
@@ -2251,7 +2263,7 @@ def self_reference_pattern(name: str) -> str:
     reading that works for one ending in punctuation - M.O.D.O.K.'s own
     "M.O.D.O.K. connives." has no `\b` after its final period at all."""
     return (
-        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}(?<!\w){re.escape(name)}(?!\w)"
+        rf"{_EMPOWER_KEYWORD_LOOKBEHIND}{_TYPE_NOUN_LOOKBEHIND}(?<!\w){re.escape(name)}(?!\w)"
         rf"{_LONGER_NAME_CONTINUATION_LOOKAHEAD}"
     )
 
@@ -2553,7 +2565,11 @@ def _layer_readable_sentences_uncached(
     sentences: list[str] = []
     for line in (text or "").split("\n"):
         chapter_line_read = False
-        for ability in _parse_line(line, list(known_keywords or []), face=""):
+        # `face=card_name`: the same face name `parse_abilities` hands the
+        # trigger splitter, so a self-named trigger condition carrying its own
+        # comma ("When Lizard, Connors's Curse enters, ...") is cut after the
+        # whole name, not at the name's own comma (CR 201.5).
+        for ability in _parse_line(line, list(known_keywords or []), face=card_name or ""):
             if isinstance(ability, TriggeredAbility) and ability.chapter is not None:
                 # CR 714.2c: "I, II - [Effect]" is one effect printed once and
                 # triggered at two thresholds - `_parse_chapter_line` returns

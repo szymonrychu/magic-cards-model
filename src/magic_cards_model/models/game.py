@@ -185,7 +185,6 @@ from ..machines.keyword_counters import (
     consume_shield_counter,
     enters_with_counters_pronoun_fallback,
     has_shield_counter,
-    supplemental_keyword_counter_lines,
 )
 from ..machines.keywords import (
     apply_as_enters_day_night,
@@ -372,6 +371,16 @@ _PROTECTION = re.compile(r"protection from ([^.;\n]+)", re.IGNORECASE)
 #: match. What Mother actually grants is written onto the *target* by
 #: `machines/layers.py` as a resolved "Protection from red" line, and that line
 #: is what `Game._effective_protection_qualities` reads.
+#: CR 702.16i/702.16k's player quality: "protection from each of your
+#: opponents" (Figure of Fable's Avatar) is shorthand for protection from
+#: each opponent of the protected permanent's controller, and protection from
+#: a player is protection from every object that player controls (and every
+#: object they own that nobody else controls). Read by
+#: `Game._player_quality_protects`, which knows who "your" is.
+_EACH_OPPONENT_PROTECTION_QUALITY = re.compile(
+    r"^each (?:of your )?opponents?$|^your opponents$", re.IGNORECASE
+)
+
 _UNRESOLVED_PROTECTION_QUALITY = re.compile(
     r"^(?:a |the )?(?:color|colour|card type|quality) of your choice\b", re.IGNORECASE
 )
@@ -3367,6 +3376,11 @@ class Game(EngineModel):
     """The `LEAVES_BATTLEFIELD_TO_HAND` events being raised right now as one
     event (`returned_to_hand_batch`). Empty outside `_announce_returns`. Not
     persisted: read only while those events are being raised."""
+    _entry_batch: tuple[tuple[UUID, Zone | None], ...] = PrivateAttr(default=())
+    """While `entering_together` announces its permanents, every one of them
+    with the zone it came from - written onto each enters event as
+    `GameEvent.entered_together` (CR 603.6a). Not persisted: it opens and
+    closes within one announcement loop."""
     _entering_together: list[CardState] | None = PrivateAttr(default=None)
     #: The zone each permanent entered from, held only between
     #: `enter_the_battlefield` and the enters event it raises (`_enters_event`
@@ -4075,7 +4089,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 92
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 93
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4176,6 +4190,13 @@ class Game(EngineModel):
     #: wording, proven alongside Gathering Stone); `machines/layers.Selector`
     #: gained the `PermanentsControlledByWithSubtype` variant (Selfless
     #: Safewright's own chosen-type grant, ecl T4).
+    #: 93: `ContinuousEffects` gained `keyword_counter_stamps` (CR 613.7c's
+    #: timestamp for a keyword counter, ordered against layer 6 removals, CR
+    #: 613.1f) and `GameEvent` gained `entered_together` (CR 603.6a's one
+    #: enters event for several permanents, a pending or stacked trigger's
+    #: event); token creation raises its enters events together and counts
+    #: each creation event per turn ("token creation", Mirrormind Crown's
+    #: "the first time", ecl T5); renumbered from 92 at integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -9362,7 +9383,10 @@ class Game(EngineModel):
             return False
         source_card = self._source_card_of(subject)
         if not isinstance(thing, AbilityOnStack):
-            if source_card is not None and self.protection_refusal(thing, source_card) is not None:
+            if (
+                source_card is not None
+                and self.protection_refusal(thing, source_card, source_controller=owner) is not None
+            ):
                 return False
             if self.shroud_refusal(thing) is not None:
                 return False
@@ -11601,6 +11625,8 @@ class Game(EngineModel):
             origin = self._entry_origins.pop(card_state.id, None)
             if origin is not None:
                 event = event.model_copy(update={"origin_zone": origin})
+            if self._entry_batch:
+                event = event.model_copy(update={"entered_together": self._entry_batch})
             self.emit(event)
             # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
             # before this point) is not routed through `add_counters` - the same
@@ -11629,9 +11655,16 @@ class Game(EngineModel):
             yield
         finally:
             entered, self._entering_together = self._entering_together, None
-        for card_state in entered:
-            if card_state.zone is Zone.BATTLEFIELD:
+        arrived = [card_state for card_state in entered if card_state.zone is Zone.BATTLEFIELD]
+        batch = tuple(
+            (card_state.id, self._entry_origins.get(card_state.id)) for card_state in arrived
+        )
+        self._entry_batch = batch if len(batch) > 1 else ()
+        try:
+            for card_state in arrived:
                 self._announce_entry(card_state)
+        finally:
+            self._entry_batch = ()
 
     def put_onto_battlefield(
         self,
@@ -14769,6 +14802,16 @@ class Game(EngineModel):
             self._emit_counters_put(permanent, str(kind), event.amount, putter=event.putter)
             return new_total
 
+    def stamp_keyword_counter(self, permanent: CardState, kind: str) -> None:
+        """CR 613.7c's timestamp for a keyword counter (CR 122.1b) just put on
+        `permanent` - `CardState.add_counters` calls this for every kind, and
+        only the keyword kinds are kept (`ContinuousEffects.
+        keyword_counter_grants` orders them in layer 6, CR 613.1f)."""
+        from ..machines.keyword_counters import KEYWORD_COUNTER_KEYWORDS
+
+        if kind.lower() in KEYWORD_COUNTER_KEYWORDS:
+            self.continuous_effects.stamp_keyword_counter(permanent.id, kind.lower())
+
     def proliferate(
         self, chosen: Sequence[CardState], chosen_players: Sequence["Player | str"] = ()
     ) -> None:
@@ -15393,7 +15436,13 @@ class Game(EngineModel):
             return None
 
         source_card = self._source_card_of(spell)
-        if source_card is not None and self.protection_refusal(thing, source_card) is not None:
+        if (
+            source_card is not None
+            and self.protection_refusal(
+                thing, source_card, source_controller=self.controller_of(spell).username
+            )
+            is not None
+        ):
             # CR 702.16b, checked again here because protection can be gained
             # after a spell was legally announced.
             return None
@@ -15777,8 +15826,27 @@ class Game(EngineModel):
         source = spell.source(self)
         return source.card if source is not None else None
 
+    def _player_quality_protects(
+        self, target: CardState, quality: str, source_controller: str | None
+    ) -> bool:
+        """Whether `quality` is CR 702.16k's player quality and names the
+        player controlling the source: "each of your opponents" is every
+        opponent of `target`'s controller (CR 702.16i), so a source an
+        opponent controls is one it has protection from, and one its own
+        controller controls never is. `False` for any other quality, and for a
+        source whose controller is not known."""
+        if source_controller is None or not _EACH_OPPONENT_PROTECTION_QUALITY.match(
+            quality.strip()
+        ):
+            return False
+        return source_controller != self.controller_of(target).username
+
     def protection_refusal(
-        self, target: "Targetable | AbilityOnStack", source: "Card"
+        self,
+        target: "Targetable | AbilityOnStack",
+        source: "Card",
+        *,
+        source_controller: str | None = None,
     ) -> str | None:
         """Why protection stops this source touching this target, or None (CR 702.16b).
 
@@ -15809,7 +15877,9 @@ class Game(EngineModel):
         if not isinstance(target, CardState):
             return None
         for quality in self._effective_protection_qualities(target):
-            if self.source_has_quality_of_card(source, quality):
+            if self._player_quality_protects(
+                target, quality, source_controller
+            ) or self.source_has_quality_of_card(source, quality):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
@@ -16223,8 +16293,11 @@ class Game(EngineModel):
         and the target's protection is `_effective_protection_qualities`', its
         printed protection plus any granted in layer 6 (CR 613.1f).
         """
+        source_controller = self.controller_of(source).username
         for quality in self._effective_protection_qualities(target):
-            if self.source_has_quality(source, quality):
+            if self._player_quality_protects(
+                target, quality, source_controller
+            ) or self.source_has_quality(source, quality):
                 return quality
         return None
 
@@ -16267,7 +16340,9 @@ class Game(EngineModel):
         source = self._source_card_of(spell)
         if source is None:
             return None
-        return self.protection_refusal(target, source)
+        return self.protection_refusal(
+            target, source, source_controller=self.controller_of(spell).username
+        )
 
     def spell_fizzles(self, spell: StackObject) -> bool:
         """Whether this spell would be removed from the stack unresolved (CR 608.2b).
@@ -16716,8 +16791,11 @@ class Game(EngineModel):
             return None
         if event.card is None:
             return self._player_protection_from_damage(event)
+        source_controller = self.controller_of(event.source).username
         for quality in self._effective_protection_qualities(event.card):
-            if self.source_has_quality(event.source, quality):
+            if self._player_quality_protects(
+                event.card, quality, source_controller
+            ) or self.source_has_quality(event.source, quality):
                 return (
                     f"{event.card.name} has protection from {quality}, so damage from "
                     f"{event.source.name} is prevented (CR 702.16e)"
@@ -18245,10 +18323,11 @@ class Game(EngineModel):
         this round, so not a file this task may edit) leaves, closed here
         additively instead, on top of what it already computed:
 
-        - **CR 122.1b's indestructible/hexproof keyword counters**
-          (`supplemental_keyword_counter_lines`, see `machines/keyword_
-          counters.py`'s own docstring for why `machines/layers.py::
-          _keyword_counter_lines` does not already grant these two).
+        - (CR 122.1b's indestructible/hexproof keyword counters used to be
+          added here, after every layer; they are now layer 6 grants at
+          their own CR 613.7c timestamps - `ContinuousEffects.
+          keyword_counter_grants` - so a later "loses all abilities" can
+          take them away, CR 613.1f.)
         - **CR 702.186b's own harness gate** ("As long as this permanent is
           harnessed, it has [Ability]") - an Infinity permanent's "∞ —
           [Ability]" line (parsed as an ordinary triggered ability now that
@@ -18284,10 +18363,6 @@ class Game(EngineModel):
           casting.py`/`machines/layers.py`.
         """
         abilities = chars.abilities
-        supplemental = supplemental_keyword_counter_lines(chars.counters)
-        for line in supplemental:
-            if line not in abilities:
-                abilities = abilities + (line,)
         infinity_lines = [
             stripped
             for raw in (permanent.oracle_text or "").splitlines()

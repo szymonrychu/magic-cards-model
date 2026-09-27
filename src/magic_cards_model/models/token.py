@@ -686,6 +686,7 @@ def create_tokens(
             definition=definition,
         )
         apply_replacements(game, creation)
+        _note_token_creation(game, controller)
         count = creation.amount
         # CR 111.2 makes the creator the owner; a replacement may still move
         # who controls them (Crafty Cutpurse's "is created under your control
@@ -709,17 +710,49 @@ def create_tokens(
         # the event itself (CR 614.6: the modified event is what happens)
         # rather than appending to `extra` the way an additive effect does,
         # so the definition actually built from has to be read back off the
-        # event rather than the original parameter.
-        card = (creation.definition or definition).to_card()
+        # event rather than the original parameter. Mirrormind Crown's "that
+        # many tokens that are copies of equipped creature" replaces it with a
+        # copy instead, of the equipped creature's copiable values (CR 707.2,
+        # `copiable_card_of`).
+        card = (
+            copiable_card_of(game, creation.copy_of)
+            if creation.copy_of is not None
+            else (creation.definition or definition).to_card()
+        )
+        # CR 603.6a: "Each time an event puts one or more permanents onto the
+        # battlefield, all permanents on the battlefield (including the
+        # newcomers) are checked for any enters-the-battlefield triggers that
+        # match the event" - every token one instruction creates enters in
+        # one event, so a "one or more tokens ... enter" trigger (Kambal,
+        # Profiteering Mayor) sees all of them as "them". The riders below
+        # (attach, counters, attacking) happen once they are all there.
+        arrived: list[TokenState] = []
+        additions: list[TokenState] = []
+        with game.entering_together():
+            for _ in range(count):
+                token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=owner)
+                # `zone=Zone.STACK` is only where it is *before* it exists: nothing
+                # holds it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)`
+                # at once. It is never a token in a zone other than the battlefield
+                # for the purposes of CR 111.7, because no state-based action is
+                # checked in between (CR 704.3 checks only when a player would get
+                # priority).
+                game.put_onto_battlefield(token, controller, tapped=tapped)
+                arrived.append(token)
+            for extra in extra_definitions:
+                # A different token with its own stated characteristics (CR
+                # 111.3), so none of this call's `tapped`/`attacking`/`counters`/
+                # `attached_to` applies to it: those describe how *these* tokens
+                # were asked for, and the addition was asked for by somebody
+                # else's card.
+                addition = TokenState(
+                    card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
+                )
+                game.put_onto_battlefield(addition, controller)
+                additions.append(addition)
+
         created: list[TokenState] = []
-        for _ in range(count):
-            token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=owner)
-            # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
-            # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
-            # It is never a token in a zone other than the battlefield for the
-            # purposes of CR 111.7, because no state-based action is checked in
-            # between (CR 704.3 checks only when a player would get priority).
-            game.put_onto_battlefield(token, controller, tapped=tapped)
+        for token in arrived:
             if token.zone is not Zone.BATTLEFIELD:
                 # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
                 # have it cease to exist; it is not attacking and takes no counters.
@@ -734,18 +767,7 @@ def create_tokens(
                 if defender is not None:
                     _put_onto_the_battlefield_attacking(game, token, defender)
             created.append(token)
-
-        for extra in extra_definitions:
-            # A different token with its own stated characteristics (CR 111.3), so
-            # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
-            # applies to it: those describe how *these* tokens were asked for, and
-            # the addition was asked for by somebody else's card.
-            addition = TokenState(
-                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
-            )
-            game.put_onto_battlefield(addition, controller)
-            created.append(addition)
-        return created
+        return created + additions
 
 
 def create_predefined_tokens(
@@ -763,6 +785,18 @@ def create_predefined_tokens(
     if definition is None:
         raise ValueError(f"{name} is not a predefined token this engine knows (CR 111.10)")
     return create_tokens(game, definition, controller, count, **options)
+
+
+#: The per-turn count (`Game.note_turn_count`) of CR 701.7b token-creation
+#: events each player has had, noted once their replacement effects are done -
+#: what "the first time you would create one or more tokens each turn"
+#: (Mirrormind Crown, `machines/replacement._compile_first_time_token_copies`)
+#: asks about.
+TOKEN_CREATION_FACT = "token creation"
+
+
+def _note_token_creation(game: "Game", creator: str) -> None:
+    game.note_turn_count(TOKEN_CREATION_FACT, creator)
 
 
 def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> Card:
@@ -802,6 +836,77 @@ def copiable_card_with_added_abilities(printed: Card, added: Sequence[str]) -> C
     body = "\n".join([*([printed.oracle_text] if printed.oracle_text else []), *lines])
     new_card_id = uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:{printed.id}:{body}")
     return printed.model_copy(update={"id": new_card_id, "oracle_text": body})
+
+
+def copiable_card_of(game: "Game", original: CardState) -> Card:
+    """`original`'s copiable values as one `Card` (CR 707.2).
+
+    CR 707.2: the copiable values are "the values derived from the text
+    printed on the object ... as modified by other copy effects". A permanent
+    no copy effect touches answers with its own `Card` unchanged, so a plain
+    copy pays nothing for this. One that layer 1 has made a copy of something
+    else (Clone, Omni-Changeling, Mirrorform) answers with a `Card` built from
+    `machines/layers.copiable_characteristics` - name, mana value, type line,
+    colour, ability lines and P/T as the copy effects left them, the CR 707.9
+    exceptions of those effects included - so a token copy of it enters as
+    what it copies and never gets the printed card's own "enter as a copy"
+    choice. Off the battlefield the engine keeps no copy effect on the
+    object, so the printed card is the answer.
+
+    **Not modelled**: the mana cost itself - `BecomeACopy` carries only the
+    mana value, so the synthesized card keeps that (`cmc`) and no cost.
+    """
+    if original.zone is not Zone.BATTLEFIELD:
+        return original.card
+    from ..machines.layers import copiable_characteristics, printed_characteristics
+
+    printed = printed_characteristics(original, {})
+    copied = copiable_characteristics(original, game.continuous_effects.active(game))
+    fields = (
+        "name",
+        "mana_value",
+        "supertypes",
+        "types",
+        "subtypes",
+        "colors",
+        "abilities",
+        "power",
+        "toughness",
+    )
+    if all(getattr(printed, field) == getattr(copied, field) for field in fields):
+        return original.card
+    left = " ".join(
+        [*(supertype.value.title() for supertype in copied.supertypes)]
+        + [kind.value.title() for kind in copied.types]
+    )
+    type_line = f"{left} \u2014 {' '.join(copied.subtypes)}" if copied.subtypes else left
+    oracle_text = "\n".join(copied.abilities)
+    body = "|".join(
+        [
+            copied.name,
+            str(copied.mana_value),
+            type_line,
+            "".join(color.value for color in copied.colors),
+            oracle_text,
+            f"{copied.power}/{copied.toughness}",
+        ]
+    )
+    return original.card.model_copy(
+        update={
+            "id": uuid5(NAMESPACE_OID, f"{_TOKEN_CARD_ID_PREFIX}:copiable:{body}"),
+            "name": copied.name,
+            "cmc": copied.mana_value,
+            "mana_cost": None,
+            "type_line": type_line,
+            "oracle_text": oracle_text or None,
+            "colors": list(copied.colors),
+            "keywords": [],
+            "power": None if copied.power is None else str(copied.power),
+            "toughness": None if copied.toughness is None else str(copied.toughness),
+            "layout": Layout.NORMAL,
+            "card_faces": None,
+        }
+    )
 
 
 def _type_line_without_legendary(type_line: str) -> str:
@@ -961,12 +1066,24 @@ def token_copy_of(
             card=original,
         )
         apply_replacements(game, creation)
+        _note_token_creation(game, controller)
         count = creation.amount
         owner = controller  # CR 111.2 - see `create_tokens`
         controller = creation.creating_controller or controller
         extra_definitions = list(creation.extra)
+        if creation.copy_of is not None and creation.copy_of is not original:
+            # Mirrormind Crown replaced *what* the tokens copy (CR 614.1a): plain
+            # copies of the new original, none of this call's own exceptions.
+            original = creation.copy_of
+            added_abilities = ()
+            power = toughness = None
+            added_creature_type = None
+            not_legendary = False
+            colors = creature_types = None
 
-        copiable = copiable_card_with_added_abilities(original.card, added_abilities)
+        copiable = copiable_card_with_added_abilities(
+            copiable_card_of(game, original), added_abilities
+        )
         if (
             power is not None
             or toughness is not None
@@ -1037,16 +1154,19 @@ def token_copy_of(
             copiable = copiable.model_copy(update={"id": new_card_id, **update})
 
         created: list[TokenState] = []
-        for _ in range(count):
-            copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller, owner=owner)
-            game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
-            created.append(copy)
-        for extra in extra_definitions:
-            addition = TokenState(
-                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
-            )
-            game.put_onto_battlefield(addition, controller)
-            created.append(addition)
+        with game.entering_together():  # CR 603.6a: one instruction, one enters event
+            for _ in range(count):
+                copy = TokenState(
+                    card=copiable, zone=Zone.STACK, controller=controller, owner=owner
+                )
+                game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+                created.append(copy)
+            for extra in extra_definitions:
+                addition = TokenState(
+                    card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
+                )
+                game.put_onto_battlefield(addition, controller)
+                created.append(addition)
         return created
 
 

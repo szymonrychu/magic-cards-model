@@ -2588,14 +2588,25 @@ def player_keyword_grant_of_line(line: str) -> tuple[str, list[str]] | None:
     return keyword, [] if raw is None else hexproof_qualities_in(raw)
 
 
+#: CR 702.11g: "'Hexproof from each [characteristic]' is shorthand for
+#: 'hexproof from [quality A],' 'hexproof from [quality B],' and so on for each
+#: possible quality the listed characteristic could have" - Breaker of
+#: Creation's "Hexproof from each color" is one hexproof per colour (CR 105.1;
+#: colorless is not a colour, CR 105.2c).
+_EACH_COLOR_QUALITIES = ("white", "blue", "black", "red", "green")
+
+
 def hexproof_qualities_in(raw: str) -> list[str]:
     """CR 702.11f's shorthand, split: "blue and from black" -> blue, black;
-    "artifacts, creatures, and enchantments" -> each of the three."""
+    "artifacts, creatures, and enchantments" -> each of the three; and CR
+    702.11g's "each color" -> each of the five colours."""
     qualities: list[str] = []
     for part in _QUALITY_SEPARATOR.split(raw):
         quality = _QUALITY_PREFIX.sub("", part.strip().strip(",.").strip()).strip()
-        if quality and quality not in qualities:
-            qualities.append(quality)
+        expanded = _EACH_COLOR_QUALITIES if quality.lower() == "each color" else (quality,)
+        for each in expanded:
+            if each and each not in qualities:
+                qualities.append(each)
     return qualities
 
 

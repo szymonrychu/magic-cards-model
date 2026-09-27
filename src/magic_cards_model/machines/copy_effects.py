@@ -18,7 +18,7 @@ from ..models.card_state import CardState
 from ..models.zone import Zone
 from ..numbers import parse_count
 from .abilities import TriggerEvent
-from .decisions import source_id_of
+from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import CopyNextSpellWithinManaValue, DelayedTrigger
 from .layers import (
     BecomeACopy,
@@ -439,11 +439,16 @@ def _become_a_copy(
     duration: Duration,
     until_next_turn_of: str | None = None,
     condition: Condition | None = None,
+    timestamp: int | None = None,
 ) -> None:
     """CR 707.4: `subject`, staying on the battlefield, becomes a copy of
     `copied` (its copiable values, CR 707.2), with CR 707.9's exceptions
     written into the one layer 1a effect (CR 707.9b: they are part of the
-    copy's copiable values) - never as separate later-layer effects."""
+    copy's copiable values) - never as separate later-layer effects.
+
+    `timestamp` is shared when one instruction makes several permanents
+    copies at once (`_parse_each_becomes_a_copy_clause`, CR 613.7b: one
+    effect, created once)."""
     name = copied.name
     power, toughness = copied.power, copied.toughness
     supertypes = list(copied.supertypes)
@@ -475,7 +480,7 @@ def _become_a_copy(
             description=f"{source_name}: {subject.name} becomes a copy of {copied.name}",
             layer=Layer.COPY,
             sublayer=CopySublayer.COPIABLE,
-            timestamp=store.tick(),
+            timestamp=store.tick() if timestamp is None else timestamp,
             duration=duration,
             until_next_turn_of=until_next_turn_of,
             condition=condition,
@@ -595,6 +600,211 @@ def _parse_becomes_a_copy_clause(
             duration=duration,
             until_next_turn_of=controller if duration is Duration.UNTIL_YOUR_NEXT_TURN else None,
         )
+
+    return effect
+
+
+#: "Each `<group>` becomes a copy of target `<quality>`[ until end of turn]."
+#: - Mirrorform's "Each nonland permanent you control becomes a copy of
+#: target non-Aura permanent." and Mirrorweave's "Each other creature becomes
+#: a copy of target nonlegendary creature until end of turn." CR 707.4: each
+#: permanent in the group stays on the battlefield and copies the target's
+#: copiable values (CR 707.2, as modified by other copy effects), in one
+#: layer 1a effect each (CR 613.1a) sharing one timestamp (CR 613.7b). The
+#: group is fixed as the spell or ability resolves (CR 611.2c). "Other" is
+#: other than the target (and the source, for a permanent's ability). With
+#: no duration the copies last until the end of the game (CR 611.2a).
+_EACH_BECOMES_A_COPY_RE = re.compile(
+    r"^each (?P<other>other )?(?P<group>(?:non(?:land|creature|token|artifact) )?"
+    r"(?:permanent|creature|artifact|enchantment|land|token))"
+    r"(?P<whose> you control| your opponents control)?"
+    r" becomes a copy of (?P<object>target [^.]+?)"
+    r"(?P<trail> until end of turn| until your next turn)?\.?$",
+    re.IGNORECASE,
+)
+
+_GROUP_TYPE_WORDS = {
+    "permanent": None,
+    "creature": Type.CREATURE,
+    "artifact": Type.ARTIFACT,
+    "enchantment": Type.ENCHANTMENT,
+    "land": Type.LAND,
+}
+
+
+def _each_group_member(characteristics: Characteristics, group: str) -> bool:
+    """Whether a permanent with these computed characteristics (CR 613.5) is
+    one of `group`'s ("nonland permanent", "creature", "nontoken creature")."""
+    words = group.lower().split()
+    noun = words[-1]
+    if noun == "token":
+        if not characteristics.is_token:
+            return False
+    else:
+        wanted = _GROUP_TYPE_WORDS[noun]
+        if wanted is not None and wanted not in characteristics.types:
+            return False
+    for word in words[:-1]:
+        excluded = word.removeprefix("non")
+        if excluded == "token":
+            if characteristics.is_token:
+                return False
+            continue
+        excluded_type = _GROUP_TYPE_WORDS.get(excluded)
+        if excluded_type is not None and excluded_type in characteristics.types:
+            return False
+    return True
+
+
+def _parse_each_becomes_a_copy_clause(
+    text: str,
+) -> Callable[[Game, StackObject], None] | None:
+    match = _EACH_BECOMES_A_COPY_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    group = match.group("group")
+    other = match.group("other") is not None
+    whose = (match.group("whose") or "").strip().lower()
+    duration = _copy_duration(match.group("trail"))
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        from .triggers import AbilityOnStack as StackAbility
+
+        is_ability = isinstance(stack_object, StackAbility)
+        controller = game.controller_of(stack_object).username
+        targets = game.resolve_card_targets(stack_object)
+        if not targets:
+            return  # CR 608.2b: the only target is gone or illegal
+        copied_object = targets[0]
+        copied = _copiable_values_of(game, copied_object)
+        source_id = stack_object.source_id if is_ability else stack_object.id
+        board = game.computed_board()
+        group_members = []
+        for permanent in game.battlefield:
+            chars = board.of(permanent)
+            if other and permanent.id in (copied_object.id, source_id):
+                continue
+            permanent_controller = game.controller_of(permanent).username
+            if whose == "you control" and permanent_controller != controller:
+                continue
+            if whose == "your opponents control" and permanent_controller == controller:
+                continue
+            if _each_group_member(chars, group):
+                group_members.append(permanent)
+        if not group_members:
+            return
+        timestamp = game.continuous_effects.tick()
+        source_name = stack_object.source_name if is_ability else stack_object.name
+        for member in group_members:
+            _become_a_copy(
+                game,
+                subject=member,
+                copied=copied,
+                exceptions=None,
+                source_name=source_name,
+                own_name=member.name,
+                this_ability=None,
+                duration=duration,
+                until_next_turn_of=controller
+                if duration is Duration.UNTIL_YOUR_NEXT_TURN
+                else None,
+                timestamp=timestamp,
+            )
+
+    return effect
+
+
+# ---------------------------------------------------------------------------
+# "create a token that's a copy of one of them" / "for each of them, create a
+# token that's a copy of it"
+# ---------------------------------------------------------------------------
+
+#: Twilight Diviner's "create a token that's a copy of one of them." and
+#: Kambal, Profiteering Mayor's "for each of them, create a tapped token
+#: that's a copy of it." - "them" is what entered in the one event that
+#: triggered the ability (CR 603.6a, `GameEvent.entered_together`), narrowed
+#: to the members its own condition and intervening "if" (CR 603.4) are true
+#: of (`_entered_batch`). CR 707.2: each token takes the copiable values; a
+#: member no longer on the battlefield is copied by its last known
+#: information (CR 608.2h), which for a printed card is its printing.
+_COPY_OF_ONE_OF_THEM_RE = re.compile(
+    r"^create an? (?P<tapped>tapped )?token that'?s a copy of one of them\.?$",
+    re.IGNORECASE,
+)
+_FOR_EACH_OF_THEM_COPY_RE = re.compile(
+    r"^for each of them, create an? (?P<tapped>tapped )?token that'?s a copy of it\.?$",
+    re.IGNORECASE,
+)
+
+
+def _entered_batch(game: Game, ability: AbilityOnStack) -> list[CardState]:
+    """The permanents "them" names: the triggering event's subject, plus every
+    other permanent that entered in the same event (CR 603.6a) that this
+    ability's own trigger condition (CR 603.2) and intervening "if" (CR
+    603.4) are true of - read off each one's own enters event, the same
+    reading that decided the subject triggered it."""
+    from .triggers import condition_matches, intervening_if_answer
+
+    event = ability.event
+    source = ability.source_or_last_known(game)
+    if event is None or event.subject_id is None or source is None:
+        return []
+    pairs = event.entered_together or ((event.subject_id, event.origin_zone),)
+    members: list[CardState] = []
+    for member_id, origin in pairs:
+        member = game.find_by_id(member_id)
+        if not isinstance(member, CardState):
+            continue
+        if member_id == event.subject_id:
+            members.append(member)
+            continue
+        if member.zone is not Zone.BATTLEFIELD:
+            continue
+        member_event = game._enters_event(member).model_copy(update={"origin_zone": origin})
+        if not condition_matches(game, ability.ability, source, ability.controller, member_event):
+            continue
+        if ability.ability.intervening_if and not intervening_if_answer(
+            game, ability.ability, source, member_event
+        ):
+            continue
+        members.append(member)
+    return members
+
+
+def _parse_copy_of_them_clause(text: str) -> AbilityEffect | None:
+    one = _COPY_OF_ONE_OF_THEM_RE.fullmatch(" ".join(text.split()))
+    each = _FOR_EACH_OF_THEM_COPY_RE.fullmatch(" ".join(text.split()))
+    match = one or each
+    if match is None:
+        return None
+    tapped = match.group("tapped") is not None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        from ..models.token import token_copy_of
+
+        members = _entered_batch(game, ability)
+        if not members:
+            return
+        if one is not None and len(members) > 1:
+            by_id = {member.id: member for member in members}
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=ability.controller,
+                    prompt="choose one of them to create a token copy of",
+                    source=ability.source_name,
+                    source_id=source_id_of(ability),
+                    amount=1,
+                    cards=tuple(by_id),
+                    card_labels=tuple(member.name for member in members),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            members = [by_id[card_id] for card_id in chosen_ids if card_id in by_id][:1]
+        elif one is not None:
+            members = members[:1]
+        for member in members:
+            token_copy_of(game, member, ability.controller, tapped=tapped)
 
     return effect
 
@@ -783,7 +993,9 @@ def copy_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A copy instruction on an activated or triggered ability, or `None`."""
     for reader in (
         _parse_if_not_a_creature_ability,
+        _parse_copy_of_them_clause,
         _parse_exile_then_become_its_copy_clause,
+        _parse_each_becomes_a_copy_clause,
         _parse_becomes_a_copy_clause,
         _parse_copy_target_ability_clause,
         _parse_copy_next_within_mana_value_ability,
@@ -800,6 +1012,7 @@ def copy_spell_effect(effect_text: str) -> Effect | None:
     """A copy instruction on a resolving spell, or `None`."""
     for reader in (
         _parse_if_not_a_creature_spell,
+        _parse_each_becomes_a_copy_clause,
         _parse_becomes_a_copy_clause,
         _parse_copy_next_within_mana_value_spell,
         _parse_spell_after_cast_trigger,

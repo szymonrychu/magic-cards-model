@@ -1823,7 +1823,14 @@ def _static_ability_category(printing: Card, text: str) -> str:
     every static line on that card. This plan's Task 1.3 moves those rows to
     text shapes, which removes the ambiguity at the source.
     """
-    if printing.name in LAYER_EFFECTS or parsed_layer_effects(text, card_name=printing.name):
+    # `legendary=` as the battlefield sweep passes it (`effects_for`): only a
+    # legend's first-word short name is a CR 201.5 self-reference, so a
+    # nonlegendary Noggle the Mind's own "is a colorless Noggle" must not be
+    # read as "is a colorless this permanent".
+    legendary = Supertype.LEGENDARY in printing.supertypes
+    if printing.name in LAYER_EFFECTS or parsed_layer_effects(
+        text, card_name=printing.name, legendary=legendary
+    ):
         return HANDLED
     if cost_modifier_effect(text) is not None:
         return HANDLED
@@ -1872,7 +1879,9 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 103.6a/103.6b: `Game.take_opening_hand_actions` offers what reads
         # as an action and refuses, with an `OpeningHandNotice`, what does not.
         return HANDLED if isinstance(opening_hand, OpeningHandAction) else NOTICE
-    if looks_like_unparsed_layer_effect(text, static_only=True, card_name=printing.name):
+    if looks_like_unparsed_layer_effect(
+        text, static_only=True, card_name=printing.name, legendary=legendary
+    ):
         return NOTICE
     if looks_like_unparsed_cost_modifier(text):
         return NOTICE

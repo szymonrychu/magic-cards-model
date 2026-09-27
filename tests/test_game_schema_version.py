@@ -1479,3 +1479,28 @@ def test_a_snapshot_written_before_behold_and_exile_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_BEHOLD_AND_EXILE}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `ContinuousEffects` gained
+#: `keyword_counter_stamps` (CR 613.7c's timestamp for each keyword counter,
+#: ordered against "loses all abilities" in layer 6, CR 613.1f) and
+#: `GameEvent` gained `entered_together` (CR 603.6a's one enters event for
+#: several permanents) - ecl T5.
+_SCHEMA_VERSION_BEFORE_KEYWORD_COUNTER_STAMPS = 92
+
+
+def test_a_snapshot_written_before_keyword_counter_stamps_is_refused() -> None:
+    """A version-92 dump has no keyword counter timestamps: decoded as
+    current, a flying counter put on after a "loses all abilities" effect
+    would read as older than it and grant nothing. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_KEYWORD_COUNTER_STAMPS
+    dumped = _a_played_game().model_dump(mode="json")
+    assert dumped["continuous_effects"]["keyword_counter_stamps"] == {}
+    del dumped["continuous_effects"]["keyword_counter_stamps"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_KEYWORD_COUNTER_STAMPS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_KEYWORD_COUNTER_STAMPS}",
+    ):
+        Game.model_validate(dumped)

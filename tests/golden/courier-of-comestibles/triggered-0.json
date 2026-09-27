@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "shuffles_performed", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "shuffles_performed", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {},

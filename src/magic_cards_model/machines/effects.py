@@ -1205,9 +1205,17 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
 #: hexproof from that color" rider (CR 702.11d's "hexproof from [quality]")
 #: granted in layer 6 (CR 613.1f). The duration prints either first or last,
 #: never both.
+#:
+#: Widened (ecl T5) to Puca's Eye's "choose a color. This artifact becomes
+#: the chosen color." - the choice spelled as its own sentence (CR 608.2d
+#: still: made as the ability resolves), any "this <permanent type>" as the
+#: subject, and no duration at all, which CR 611.2a reads as until the end of
+#: the game. Without the "choose a color." sentence a durationless form is
+#: never read here: "the chosen color" would then name some other choice.
 _BECOMES_CHOSEN_COLOR_RE = re.compile(
-    r"^(?P<lead>until end of turn,\s*)?"
-    r"(?P<subject>this (?:creature|permanent)|target [^.]+?) becomes the color of your choice"
+    r"^(?P<lead>until end of turn,\s*)?(?P<choose>choose a colou?r\.\s*)?"
+    r"(?P<subject>this (?:creature|permanent|artifact|enchantment|land)|target [^.]+?) "
+    r"becomes the (?:colou?r of your choice|(?P<chosen>chosen colou?r))"
     r"(?: and gains (?P<keyword>hexproof) from that color)?"
     r"(?P<trail> until end of turn)?\.?$",
     re.IGNORECASE,
@@ -1223,8 +1231,17 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
     text. The colour and the grant share one timestamp and last until
     cleanup (CR 514.2), each keyed to the object as it is now (CR 400.7)."""
     match = _BECOMES_CHOSEN_COLOR_RE.fullmatch(" ".join(text.strip().split()))
-    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
+    if match is None:
         return None
+    lead, trail = match.group("lead") is not None, match.group("trail") is not None
+    if lead and trail:
+        return None
+    chooses = match.group("choose") is not None
+    if (match.group("chosen") is not None) != chooses:
+        return None
+    if not (lead or trail) and not chooses:
+        return None
+    duration = Duration.UNTIL_END_OF_TURN if lead or trail else Duration.INDEFINITE
     subject = match.group("subject")
     targeted = subject.lower().startswith("target ")
     if targeted and not _targets_understood(subject, count_agnostic=False):
@@ -1260,7 +1277,7 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
                     description=f"{source_name}: {permanent.name} becomes {color.value}",
                     layer=Layer.COLOR,
                     timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
+                    duration=duration,
                     selector=selector,
                     modification=set_colors(color),
                 )
@@ -1272,7 +1289,7 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
                         description=f"{source_name}: {permanent.name} gains {granted}",
                         layer=Layer.ABILITY,
                         timestamp=timestamp,
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=duration,
                         selector=selector,
                         modification=grant_ability(granted),
                     )
@@ -9965,12 +9982,24 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
 #: carrying at least one counter of that kind (CR 122.1) - Armorcraft Judge's
 #: "for each creature you control with a +1/+1 counter on it", Eluge, the
 #: Shoreless Sea's "for each land you control with a flood counter on it".
+#: A colour adjective in front of the noun (CR 105.1, CR 105.2c) - Breaker of
+#: Creation's "for each colorless permanent you control".
 _QUALIFIER_YOU_CONTROL_RE = re.compile(
-    rf"^(?P<other>other )?(?P<qualifier>[a-z]+) you control"
+    rf"^(?P<other>other )?(?:(?P<color>colorless|white|blue|black|red|green) )?"
+    rf"(?P<qualifier>[a-z]+) you control"
     rf"(?: with (?P<attr>power|toughness|mana value) (?P<n>{COUNT}) or (?P<dir>greater|less)"
     r"| with (?:an?|one or more) (?P<counter>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|them))?$",
     re.IGNORECASE,
 )
+
+
+_COLOR_WORDS_FOR_COUNT: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
 
 
 def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None], int] | None:
@@ -10001,6 +10030,7 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     bound = parse_count(match.group("n")) if match.group("n") else None
     greater = match.group("dir") == "greater" if match.group("dir") else None
     counter = _counter_kind(match.group("counter")) if match.group("counter") else None
+    color_word = (match.group("color") or "").lower()
 
     def count(game: "Game", controller: str, source_id: str | None) -> int:
         board = game.computed_board()
@@ -10008,6 +10038,14 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
         for permanent in game.battlefield:
             chars = board.of(permanent)
             if chars.controller != controller:
+                continue
+            if color_word == "colorless" and chars.colors:
+                continue  # CR 105.2c: colorless is having no colour at all
+            if (
+                color_word
+                and color_word != "colorless"
+                and (_COLOR_WORDS_FOR_COUNT[color_word] not in chars.colors)
+            ):
                 continue
             if other and source_id is not None and str(permanent.id) == source_id:
                 continue
@@ -22019,6 +22057,14 @@ def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> Tar
     the remainder is always read the same way, regardless of which shape
     carries the layer sentence beside it.
     """
+    from .becomes import counter_list_on_anaphor
+
+    # Abigale, Eloquent First-Year's "Put a flying counter, a first strike
+    # counter, and a lifelink counter on that creature." - one instruction
+    # the clause splitter would cut at its commas (`machines/becomes.py`).
+    counters = counter_list_on_anaphor(remainder_text)
+    if counters is not None:
+        return counters
     return (
         parse_mixed_effect_for_spell(remainder_text)
         if for_spell
@@ -26720,6 +26766,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
+    from .becomes import becomes_ability_effect
+
+    becomes = becomes_ability_effect(effect_text)
+    if becomes is not None:
+        return becomes
     choose_card_name = _parse_choose_card_name_for_source_clause(effect_text)
     if choose_card_name is not None:
         return choose_card_name
@@ -30693,6 +30744,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     counter_resolution = _parse_counter_resolution_text(whole, for_spell=True)
     if counter_resolution is not None:
         return counter_resolution
+    from .becomes import becomes_spell_effect
+
+    becomes = becomes_spell_effect(whole)
+    if becomes is not None:
+        return becomes
     c02_t6 = _c02_t6_spell_effect(whole)
     if c02_t6 is not None:
         return c02_t6
@@ -31855,9 +31911,10 @@ def _parse_x_life_return_types_mv_x_clause(effect_text: str) -> Effect | None:
             for state in list(controller.graveyard)
             if matches(state) and state.mana_value == x_value
         ]
-        for state in chosen:
-            if state.zone is Zone.GRAVEYARD:
-                game.put_onto_battlefield(state, controller.username)
+        with game.entering_together():  # CR 603.6a: one instruction, one event
+            for state in chosen:
+                if state.zone is Zone.GRAVEYARD:
+                    game.put_onto_battlefield(state, controller.username)
 
     return effect
 
@@ -53252,12 +53309,26 @@ def _parse_target_player_creatures_pump_clause(
 #: (CR 611.3), read by `machines/layers.py`'s battlefield sweep, not a
 #: resolution effect. The group subject is any `_mass_creature_group_
 #: targets` reads, plus "creatures target player/opponent controls".
+#:
+#: Widened (ecl T5) to Curious Colossus's "each creature target opponent
+#: controls loses all abilities, becomes a Coward in addition to its other
+#: types, and has base power and toughness 1/1." - the singular "each
+#: creature ... controls" subject, a layer 4 rider that only *adds* creature
+#: types (CR 205.1b's "in addition to its other types", CR 613.1d), and no
+#: duration at all: a targeted subject can never be a permanent's own static
+#: ability (CR 115.1: targets are declared as a spell or ability is put on
+#: the stack, which a static ability never is), so a durationless
+#: targeted sentence is a resolution effect that lasts indefinitely (CR
+#: 611.2a) rather than Dress Down's CR 611.3 static.
 _MASS_LOSE_ALL_ABILITIES_RE = re.compile(
     r"^(?P<leading>until end of turn, )?"
     r"(?P<subject>all creatures|(?:other )?creatures (?:you control|your opponents control)"
-    r"|creatures (?P<targeted>target (?:player|opponent)) controls)"
-    r" lose all abilities"
-    r"(?: and have base power and toughness (?P<power>\d+)/(?P<toughness>\d+))?"
+    r"|creatures (?P<targeted>target (?:player|opponent)) controls"
+    r"|each creature (?P<each_targeted>target (?:player|opponent)) controls)"
+    r" loses? all abilities"
+    r"(?:,? (?:and )?becomes? an? (?P<added>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)*)"
+    r" in addition to (?:its|their) other types)?"
+    r"(?:,? and (?:have|has) base power and toughness (?P<power>\d+)/(?P<toughness>\d+))?"
     r"(?P<trailing> until end of turn)?\.?$",
     re.IGNORECASE,
 )
@@ -53275,12 +53346,19 @@ def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> Ta
     match = _MASS_LOSE_ALL_ABILITIES_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    if bool(match.group("leading")) == bool(match.group("trailing")):
-        return None
     subject = match.group("subject")
-    targeted = match.group("targeted")
+    targeted = match.group("targeted") or match.group("each_targeted")
+    leading, trailing = bool(match.group("leading")), bool(match.group("trailing"))
+    if leading and trailing:
+        return None
+    if not (leading or trailing) and targeted is None:
+        # Dress Down's durationless "Creatures lose all abilities." is a
+        # static ability (CR 611.3), never this resolution reader's.
+        return None
     if targeted is not None and not _targets_understood(targeted, allow_player_targets=True):
         return None
+    duration = Duration.UNTIL_END_OF_TURN if leading or trailing else Duration.INDEFINITE
+    added = tuple((match.group("added") or "").split())
     power = int(match.group("power")) if match.group("power") is not None else None
     toughness = int(match.group("toughness")) if match.group("toughness") is not None else None
 
@@ -53315,11 +53393,23 @@ def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> Ta
                     description=f"{source.name}: {creature.name} loses all abilities",
                     layer=Layer.ABILITY,
                     timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
+                    duration=duration,
                     selector=selector,
                     modification=lose_all_abilities,
                 )
             ]
+            for subtype in added:
+                # CR 205.1b: "in addition to its other types" keeps them all.
+                built.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {creature.name} is also a {subtype}",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=selector,
+                        modification=add_subtype(subtype),
+                    )
+                )
             if power is not None and toughness is not None:
                 built.append(
                     ContinuousEffect(
@@ -53329,7 +53419,7 @@ def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> Ta
                         layer=Layer.POWER_TOUGHNESS,
                         sublayer=Sublayer.SET,
                         timestamp=timestamp,
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=duration,
                         selector=selector,
                         modification=set_power_toughness(power, toughness),
                     )
