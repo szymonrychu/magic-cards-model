@@ -8276,8 +8276,11 @@ def _becomes_creature_with_mana_value_pt_builder(extra_type: Type) -> EffectBuil
 #: singular by `_subtype_list_words` (`data/subtypes.canonical_subtype`, so
 #: "Wolves" is "Wolf", not "Wolve"), and the group is any one of them.
 _SUBTYPE_LIST = r"(?P<subtypes>[A-Z][a-z-]+(?:(?:,| and|, and| or|, or) [A-Z][a-z-]+)*)"
+#: Captivating Vampire's "Other Vampire creatures you control get +1/+1." is
+#: the same group with the creature type written as an adjective in front of
+#: "creatures" - the older lord templating - so the noun is optional here.
 _SUBTYPE_ANTHEM_RE = re.compile(
-    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control get "
+    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST}(?: creatures)? you control get "
     r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$"
 )
 

@@ -28,6 +28,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 
 from .harness import Scenario
 
@@ -303,4 +304,186 @@ def test_rangers_of_ithilien_steal_a_smaller_creature_while_controlled():
     assert _controller(scenario, bears) == "alice"
 
     scenario.game.destroy(rangers)
+    assert _controller(scenario, bears) == "bob"
+
+
+# -- Untimed gain control with a type rider (Sorin, Ravenous Neonate's -6) ----------
+#
+# "Gain control of target creature. It becomes a Vampire in addition to its
+# other types. Put a lifelink counter on it if you control a white permanent
+# other than that creature or Sorin." No duration is printed, so CR 611.2a:
+# "If no duration is stated, it lasts until the end of the game" - the control
+# change (layer 2, CR 613.1b) and the type change (layer 4, CR 613.1d) both
+# outlive the source. The counter is a keyword counter (CR 122.1b), decided as
+# the ability resolves.
+
+SORIN = "Sorin of House Markov // Sorin, Ravenous Neonate"
+
+
+def _sorin_board(*, alice=(), bob=("Grizzly Bears",)):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[SORIN] + list(alice),
+            library=["Plains"] * 5,
+        )
+        .player("bob", battlefield=list(bob), library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sorin = scenario.find("Sorin of House Markov", Zone.BATTLEFIELD, "alice")
+    sorin.transform()  # CR 712.8e: the -6 is only Sorin, Ravenous Neonate's
+    sorin.add_counters(Counter.LOYALTY, 7 - sorin.counters[Counter.LOYALTY])
+    return scenario, sorin
+
+
+def _minus_six(scenario, sorin, target):
+    scenario.activate(sorin, index=2, targets=[target])
+    scenario.pass_until_resolved()
+
+
+def test_sorin_minus_six_steals_for_the_rest_of_the_game_and_makes_it_a_vampire():
+    scenario, sorin = _sorin_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    _minus_six(scenario, sorin, bears)
+
+    assert sorin.loyalty == 1, "CR 606.4: the -6 is its cost"
+    assert _controller(scenario, bears) == "alice"
+    computed = scenario.game.computed_board().of(bears)
+    assert "Vampire" in computed.subtypes
+    assert "Bear" in computed.subtypes, "in addition to its other types"
+    _next_turn(scenario)
+    _next_turn(scenario)
+    assert _controller(scenario, bears) == "alice", "CR 611.2a: no duration, end of game"
+    assert "Vampire" in scenario.game.computed_board().of(bears).subtypes
+
+
+def test_sorin_leaving_does_not_end_the_steal():
+    scenario, sorin = _sorin_board()
+    bears = scenario.creature("Grizzly Bears", "bob")
+    _minus_six(scenario, sorin, bears)
+
+    scenario.game.destroy(sorin)
+
+    assert _controller(scenario, bears) == "alice"
+    assert "Vampire" in scenario.game.computed_board().of(bears).subtypes
+
+
+def test_no_lifelink_counter_without_another_white_permanent():
+    """Sorin, Ravenous Neonate is white itself, but the printed "other than
+    ... Sorin" excludes it."""
+    scenario, sorin = _sorin_board(alice=("Plains",))
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    _minus_six(scenario, sorin, bears)
+
+    assert bears.counters["lifelink"] == 0
+
+
+def test_a_white_permanent_you_control_adds_a_lifelink_counter():
+    scenario, sorin = _sorin_board(alice=("Savannah Lions",))
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    _minus_six(scenario, sorin, bears)
+
+    assert bears.counters["lifelink"] == 1
+    assert "Lifelink" in scenario.game.computed_board().of(bears).abilities, "CR 122.1b"
+
+
+def test_the_stolen_white_creature_itself_does_not_count():
+    scenario, sorin = _sorin_board(bob=("Savannah Lions",))
+    lions = scenario.creature("Savannah Lions", "bob")
+
+    _minus_six(scenario, sorin, lions)
+
+    assert _controller(scenario, lions) == "alice"
+    assert lions.counters["lifelink"] == 0, "other than that creature"
+
+
+def test_a_white_permanent_the_opponent_controls_does_not_count():
+    scenario, sorin = _sorin_board(bob=("Grizzly Bears", "Savannah Lions"))
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    _minus_six(scenario, sorin, bears)
+
+    assert bears.counters["lifelink"] == 0, "a white permanent *you* control"
+
+
+# -- Captivating Vampire (off-set proof) ----------------------------------------------
+#
+# "Other Vampire creatures you control get +1/+1. Tap five untapped Vampires
+# you control: Gain control of target creature. It becomes a Vampire in
+# addition to its other types." - the same untimed control-and-type reader
+# with no counter rider, paid by tapping five Vampires (CR 601.2b), and a
+# CR 205.3m creature-type lord (layer 7c, CR 613.4c) that then pumps the
+# stolen creature, now one of its controller's other Vampires.
+
+VAMPIRE = "Captivating Vampire"
+
+
+def _vampire_board(*, extra=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=[VAMPIRE] + ["Bloodghast"] * 4 + list(extra),
+            library=["Swamp"] * 5,
+        )
+        .player("bob", battlefield=["Grizzly Bears", "Bloodghast"], library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _alice_bloodghasts(scenario):
+    return [
+        state
+        for state in scenario.game.battlefield
+        if state.name == "Bloodghast" and _controller(scenario, state) == "alice"
+    ]
+
+
+def test_captivating_vampire_pumps_only_other_vampires_you_control():
+    scenario = _vampire_board(extra=("Grizzly Bears",))
+    board = scenario.game.computed_board()
+    vampire = scenario.creature(VAMPIRE, "alice")
+    ghast = _alice_bloodghasts(scenario)[0]
+    bob_ghast = scenario.creature("Bloodghast", "bob")
+    alice_bears = scenario.creature("Grizzly Bears", "alice")
+
+    assert (board.of(ghast).power, board.of(ghast).toughness) == (3, 2)
+    assert (board.of(vampire).power, board.of(vampire).toughness) == (2, 2), "other"
+    assert (board.of(bob_ghast).power, board.of(bob_ghast).toughness) == (2, 1)
+    assert (board.of(alice_bears).power, board.of(alice_bears).toughness) == (2, 2)
+
+
+def test_captivating_vampire_steals_and_the_stolen_creature_joins_the_tribe():
+    scenario = _vampire_board()
+    vampire = scenario.creature(VAMPIRE, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    tapped = [vampire, *_alice_bloodghasts(scenario)]
+
+    scenario.activate(vampire, tapping_for_cost=tapped, targets=[bears])
+    scenario.pass_until_resolved()
+
+    assert all(each.tapped for each in tapped)
+    assert _controller(scenario, bears) == "alice"
+    computed = scenario.game.computed_board().of(bears)
+    assert "Vampire" in computed.subtypes
+    assert (computed.power, computed.toughness) == (3, 3), "an other Vampire alice controls"
+    assert bears.counters["lifelink"] == 0, "no counter rider on this printing"
+
+
+def test_captivating_vampire_needs_five_untapped_vampires():
+    scenario = _vampire_board()
+    vampire = scenario.creature(VAMPIRE, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    ghasts = _alice_bloodghasts(scenario)
+    ghasts[0].tapped = True
+
+    with pytest.raises(Exception):
+        scenario.activate(vampire, tapping_for_cost=[vampire, *ghasts], targets=[bears])
     assert _controller(scenario, bears) == "bob"
