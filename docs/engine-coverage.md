@@ -6098,3 +6098,39 @@ needed `_TOKEN_KEYWORDS` widened in `machines/effects.py` (its "if you
 control no creatures with decayed" condition was already read generally by
 `conditions/board.py::quality`'s "with `<keyword>`" suffix - `KEYWORD_
 ABILITY_NAMES` already had decayed). `tests/scenarios/test_decayed.py`.
+
+## 271-tmt T3: counter payoffs - dealt-damage counters, counters-on-self X, reflexive remove-a-counter, crewed-this-turn targeting, pay-life-for-counters
+
+Five Teenage Mutant Ninja Turtles counter-payoff templates, all built into
+the new `machines/counter_payoffs.py` (registered additively into
+`machines/counter_effects.parse_resolution_text`'s own `_WHOLE_TEXT_READERS`
+tuple, so nothing in `machines/effects.py` had to change): a self-referential
+"is dealt damage, put that many counters" trigger, a combined "put a
+counter, then `<X-consuming clause>`, where X is the number of counters on
+self" resolution generalised over an arbitrary tail clause rather than fixed
+to "draw X and lose X life", a genuine CR 603.12 reflexive "remove a counter
+from self" cost (as opposed to `counter_effects._remove_a_counter_if_you_do`'s
+existing same-instruction "remove a counter from a chosen other permanent"
+cost), a new `machines/targeting.TargetRequirement.must_have_crewed_source_
+this_turn` restriction reading `Game.turn_history`'s own "crewed" entries,
+and an optional pay-life-equal-to-a-characteristic cost whose "that many" is
+the amount actually paid rather than `machines/effects.that_many`'s own
+triggering-event anaphora.
+
+`models/game.Game.create_reflexive_trigger` gained one additive, optional
+`event` parameter (default `None`, every existing caller unchanged): a
+reflexive triggered ability's own `DelayedTrigger.event` is never populated
+(CR 603.12 - nothing left to watch for), so `_that_player_of`/`TargetingProfile.
+for_event_player`'s "that player controls" binding, which reads `AbilityOnStack.
+event.player`, would otherwise come back unbound for a reflexive consequence
+that names a specific player at all (Leatherhead's own "destroy target
+artifact or enchantment **that player** controls"). No schema bump: `event`
+was already a field on `AbilityOnStack`, just never populated this way before.
+
+| Mechanic | CR | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|---|
+| "Whenever `<this>` is dealt damage, put that many `<kind>` counters on it." - the trigger condition itself already generic (Hexhaven Invigorator's own passive "is dealt damage" already read); the self-reference is read off `AbilityOnStack.source`, never `GameEvent.subject_id` (CR 120.1's *dealer*, not the recipient of a passive event) | 120.3e, 607.1 | `counter_payoffs._put_that_many_counters_on_it` | Venus, Torn Between Worlds | Hungering Hydra (non-legendary, prints "it" directly with no pronoun to normalise) | `test_dealt_damage_counters.py` |
+| "At the beginning of combat on your turn, put a `<kind>` counter on `<this>`. Then `<clause>`, where X is the number of counters on `<this>`." - X is the *total* across every counter kind (CR 122.1's open set), counted after this same instruction's own put (CR 608.2c); `<clause>` is read generally via `machines/modes.substitute_x` plus the ordinary whole-clause resolver, not fixed to "draw X cards and lose X life" | 122.1, 608.2c | `counter_payoffs._put_counter_then_x_clause_where_x_is_counters_on_self` | Savanti Romero, Time's Exile | Spider-Man Noir (different trigger - "attacks alone" - different `<clause>` - "surveil X" - and the bare pronoun "it" rather than a name-normalised self-reference; no legal second printing shares Savanti Romero's own exact "draw X and lose X life" clause - see MEMORY.md) | `test_counter_count_draw.py` |
+| "Whenever `<this>` deals combat damage to a player, you may remove a counter from `<self-reference>`. When you do, `<consequence>`." - CR 603.12's reflexive triggered ability, its own new stack object (CR 405.6a); `Game.create_reflexive_trigger`'s new `event=` parameter carries the creating ability's own event forward so a consequence naming "that player" binds to the right one | 603.12, 118.12, 405.6a | `counter_payoffs._remove_a_counter_from_it_when_you_do` | Leatherhead, Swamp Stalker | Slumbering Walker (different trigger - "beginning of your end step" - a consequence with no "that player" restraint at all, and the ordinary self-reference "this creature") | `test_reflexive_remove_counter.py` |
+| "Whenever this Vehicle attacks, put a `<kind>` counter on target creature that crewed it this turn. Then if that creature is `<a/an> <quality>`, double the number of `<kind>` counters on it." - a new targeting restriction over this turn's own crew history, plus CR 701.10e's doubling gated on a subtype check | 702.122b, 701.10e | `targeting.TargetRequirement.must_have_crewed_source_this_turn` (extraction/rejection), `counter_payoffs._crewed_this_turn_target_then_maybe_double` (doubling) | Turtle Van | Getaway Car (the targeting restriction alone, on a different Vehicle with a "return to hand" consequence and an "up to one" optional count) | `test_crewed_this_turn.py` |
+| "Whenever another creature you control enters, you may pay life equal to its power. If you do, put that many `<kind>` counters on it." - the "that many" is the life actually paid (computed and paid by this resolution), not `machines/effects.that_many`'s own triggering-event anaphora | 118.12, 119.4, 107.1a | `counter_payoffs._may_pay_life_equal_to_its_power_then_counters` | Madame Null, Power Broker | - (no second Modern/Pioneer/Standard-legal printing combines "pay life equal to a characteristic" with "put that many counters" - exhaustive `card_search` in the session that wrote this wave; see the dated MEMORY.md line) | `test_pay_life_for_counters.py` |

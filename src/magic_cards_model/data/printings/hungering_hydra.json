@@ -1,0 +1,131 @@
+{
+  "object": "card",
+  "id": "cce0561d-252a-499f-bfa0-9de59e4ea5ba",
+  "oracle_id": "d1dde190-8124-4590-9507-801ea4c8cde3",
+  "multiverse_ids": [
+    482805
+  ],
+  "tcgplayer_id": 212518,
+  "cardmarket_id": 454038,
+  "name": "Hungering Hydra",
+  "lang": "en",
+  "released_at": "2020-04-17",
+  "uri": "https://api.scryfall.com/cards/cce0561d-252a-499f-bfa0-9de59e4ea5ba",
+  "scryfall_uri": "https://scryfall.com/card/c20/177/hungering-hydra?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:26:03Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.jpg?1783931163",
+    "normal": "https://cards.scryfall.io/normal/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.jpg?1783931163",
+    "large": "https://cards.scryfall.io/large/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.jpg?1783931163",
+    "png": "https://cards.scryfall.io/png/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.png?1783931163",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.jpg?1783931163",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.jpg?1783931163",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.webp?1783931163",
+    "grid": "https://cards.scryfall.io/grid/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.webp?1783931163",
+    "display": "https://cards.scryfall.io/display/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.webp?1783931163",
+    "art": "https://cards.scryfall.io/art/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.webp?1783931163",
+    "crop": "https://cards.scryfall.io/crop/front/c/c/cce0561d-252a-499f-bfa0-9de59e4ea5ba.webp?1783931163"
+  },
+  "mana_cost": "{X}{G}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Hydra",
+  "oracle_text": "This creature enters with X +1/+1 counters on it.\nThis creature can't be blocked by more than one creature.\nWhenever this creature is dealt damage, put that many +1/+1 counters on it. (It must survive the damage to get the counters.)",
+  "power": "0",
+  "toughness": "0",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set": "c20",
+  "set_name": "Commander 2020",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Ac20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/cce0561d-252a-499f-bfa0-9de59e4ea5ba/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ad1dde190-8124-4590-9507-801ea4c8cde3&unique=prints",
+  "collector_number": "177",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "1820abf2-e5d1-4678-8d42-2218c11acd6b",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 3614,
+  "penny_rank": 10059,
+  "prices": {
+    "usd": "3.63",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "1.42",
+    "eur_foil": null,
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=482805&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHungering%2BHydra",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHungering%2BHydra",
+    "edhrec": "https://edhrec.com/route/?cc=Hungering+Hydra"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212518%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=454038&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Hungering+Hydra&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

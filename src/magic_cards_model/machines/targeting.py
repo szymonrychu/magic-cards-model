@@ -427,6 +427,18 @@ class TargetRequirement(EngineModel):
     turn.turn_number` rather than a dedicated per-turn set - every permanent
     already remembers its own arrival turn, so nothing new has to be tracked
     on `Game` the way `attacked_this_turn` is."""
+    must_have_crewed_source_this_turn: bool = False
+    """"target creature that crewed it this turn" (Turtle Van's own attack
+    trigger) - CR 702.122b's "a creature crews a Vehicle when it's tapped to
+    pay the cost to activate a Vehicle's crew ability", and "it" is this
+    ability's own source Vehicle, not any Vehicle. A per-turn historical fact
+    the same shape `must_have_attacked_this_turn`/`must_have_entered_this_
+    turn` already are, but scoped to *this* target having crewed *this*
+    source specifically - read off `Game.turn_history`'s own "crewed" entries
+    (`related_id` is the Vehicle crewed, `object_id` the creature that
+    crewed it), which `machines/conditions/history._record_crew`/`_bind_
+    crew` already populate for every crew activation in the pool, so nothing
+    new has to be tracked on `Game` for this either."""
     required_subtypes: SortedFrozenSet[str] = frozenset()
     """A bare CR 205.3m creature-type list used as the target noun itself -
     "target Vampire, Werewolf, or Zombie" (Slayer of the Wicked) - rather than
@@ -987,6 +999,9 @@ class TargetRequirement(EngineModel):
         entered = self._rejects_entered_this_turn(target, game)
         if entered is not None:
             return entered
+        crewed = self._rejects_crewed_this_turn(target, game, source_id)
+        if crewed is not None:
+            return crewed
         comparison = self._rejects_comparison(target, game, caster, source_id)
         if comparison is not None:
             return comparison
@@ -1190,6 +1205,28 @@ class TargetRequirement(EngineModel):
         if turn_entered == turn_number:
             return None
         return f"{self.phrase} needs a creature that entered this turn, and {target.name} did not"
+
+    def _rejects_crewed_this_turn(
+        self, target: CardState, game: Any, source_id: UUID | None
+    ) -> str | None:
+        """ "target creature that crewed it this turn" - CR 702.122b, scoped
+        to this ability's own source Vehicle (`source_id`) rather than any
+        Vehicle. No game, or no source id to scope "it" to, fails open the
+        same way `_rejects_attacked_this_turn` does with nothing to read."""
+        if not self.must_have_crewed_source_this_turn:
+            return None
+        turn_history = getattr(game, "turn_history", None)
+        if turn_history is None or source_id is None:
+            return None
+        crewed = any(
+            entry.kind == "crewed"
+            and entry.object_id == target.id
+            and entry.related_id == source_id
+            for entry in turn_history
+        )
+        if crewed:
+            return None
+        return f"{self.phrase} needs a creature that crewed it this turn, and {target.name} did not"
 
     def _current_types(self, target: CardState, game: Any) -> tuple[Type, ...]:
         """This target's card types right now, layers included (CR 613.5, 613.1d).
@@ -4109,6 +4146,8 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
 
     entered_this_turn, rest = _extract_entered_this_turn(rest)
 
+    crewed_source_this_turn, rest = _extract_crewed_this_turn(rest)
+
     color_presence, rest = _extract_color_presence(rest)
     color_count = adjectives.color_count
     if color_presence:
@@ -4305,6 +4344,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
         must_be_attacking_alone=attacking_alone,
         must_have_attacked_this_turn=attacked_this_turn,
         must_have_entered_this_turn=entered_this_turn,
+        must_have_crewed_source_this_turn=crewed_source_this_turn,
         alternatives=compound_alternatives,
         comparison_attribute=comparison_attribute,
         comparison_operator=comparison_operator,
@@ -5097,6 +5137,26 @@ def _extract_entered_this_turn(rest: str) -> tuple[bool, str]:
     """Read a trailing "that entered this turn" clause out of `rest`, or
     leave it untouched when there is none."""
     match = _ENTERED_THIS_TURN_RE.search(rest)
+    if match is None:
+        return False, rest
+    return True, (rest[: match.start()] + rest[match.end() :]).strip()
+
+
+#: "target creature that crewed it this turn" (Turtle Van) - the identical
+#: trailing-relative-clause shape `_ATTACKED_THIS_TURN_RE`/`_ENTERED_THIS_
+#: TURN_RE` already read, for CR 702.122b's own per-turn historical fact
+#: instead: "it" is this ability's own source Vehicle (CR 201.5's "this"
+#: self-reference, spelled "it" for a non-legendary permanent the way
+#: `machines/abilities.legendary_self_pronoun_normalized` already spells a
+#: legendary one's own self-pronoun), enforced at `_rejects_crewed_this_
+#: turn` against `source_id` rather than against a bare board-wide fact.
+_CREWED_THIS_TURN_RE = re.compile(r"\bthat crewed it this turn\b", re.IGNORECASE)
+
+
+def _extract_crewed_this_turn(rest: str) -> tuple[bool, str]:
+    """Read a trailing "that crewed it this turn" clause out of `rest`, or
+    leave it untouched when there is none."""
+    match = _CREWED_THIS_TURN_RE.search(rest)
     if match is None:
         return False, rest
     return True, (rest[: match.start()] + rest[match.end() :]).strip()
