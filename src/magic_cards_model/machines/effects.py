@@ -6427,6 +6427,15 @@ _SEARCH_AND_PUT_RE = re.compile(
     # all. `_search_and_place_for` reads a `None` quality as "every card
     # qualifies".
     r"(?:(?P<quality>.+?) )?card(?:s)?"
+    # "a Room card that doesn't have the same name as a Room you control"
+    # (Central Elevator // Promising Stairs, CR 201.4b's "two objects have the
+    # same name" test) - CR 701.23a's own "description" a search may name
+    # narrows to exclude candidates sharing a name with something the
+    # searcher already controls of the stated type. Read generally (any
+    # `<type-word> you control`), not gated to Rooms specifically, so any
+    # future search naming a different type the same way is covered too.
+    r"(?: that (?:doesn't|don't) have the same name as (?:a|another) "
+    r"(?P<unique_word>[A-Za-z]+) you control)?"
     r"(?P<basic_land_type> with a basic land type)?"
     r"(?: with mana value (?P<max_mv>\d+) or less)?"
     # "with mana cost {0} or {1}" (Urza's Saga chapter III) names printed
@@ -7120,6 +7129,11 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
         else Zone.BATTLEFIELD
     )
     reveal = bool(match.groupdict().get("reveal"))
+    unique_word = match.groupdict().get("unique_word")
+    if unique_word is not None:
+        description = (
+            f"{description} that doesn't have the same name as a {unique_word} you control"
+        )
 
     def run(
         game: "Game",
@@ -7140,9 +7154,28 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
             source_id=source_id,
         ):
             return
+        effective_matches = matches
+        if unique_word is not None:
+            # CR 201.4b: "two objects have the same name" when their printed
+            # names match - so the exclusion is read off `state.card.name`,
+            # against whatever the searcher currently controls of the named
+            # type, at the moment the search actually runs (not baked in at
+            # parse time - the controlled set can only be known then).
+            type_matcher = _named_type_matcher(unique_word)
+            excluded_names = {
+                permanent.card.name
+                for permanent in game.permanents_controlled_by(player.username)
+                if type_matcher(permanent)
+            }
+
+            def effective_matches(
+                state: CardState, _base=matches, _excluded=excluded_names
+            ) -> bool:
+                return _base(state) and state.card.name not in _excluded
+
         game.search_and_put(
             player,
-            matches,
+            effective_matches,
             destination=destination,
             count=count,
             reveal=reveal,

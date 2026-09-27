@@ -35,6 +35,13 @@ printings pool (every card Modern-legal):
   new trigger fires for a *different* door's own text and a different
   effect (a search, not a token), and that casting the *front* half (rather
   than Ritual Chamber's back half) unlocks correctly too.
+
+Also closed here: Central Elevator's own search-quality restriction, "a Room
+card that doesn't have the same name as a Room you control" (CR 201.4b's own
+name-identity test) - `machines/effects._SEARCH_AND_PUT_RE`'s new, general
+"that doesn't have the same name as a `<type>` you control" clause, read off
+any type word rather than gated to Rooms, and enforced dynamically at
+resolution against whatever the searcher actually controls.
 """
 
 from magic_cards_model.machines import Step
@@ -193,8 +200,81 @@ def test_central_elevator_unlocks_and_searches_for_another_room():
 
     # The trigger fires and its search runs (no notice, no exception) - a
     # second door's own text, a different effect entirely (a search, not a
-    # token). The search's own "doesn't have the same name as a Room you
-    # control" restriction is a pre-existing, unrelated search-quality gap
-    # (`machines/effects.py`'s quality vocabulary, not a trigger condition) -
-    # recorded in `MEMORY.md` rather than fixed here.
+    # token).
     assert scenario.game.conditional_clause_notices == []
+    found = scenario.find(UNHOLY_ANNEX, Zone.HAND, "alice")
+    assert found.zone is Zone.HAND
+
+
+def test_central_elevator_search_excludes_a_room_it_already_controls():
+    """ "a Room card that doesn't have the same name as a Room you control"
+    (CR 201.4b's own name-identity test) - a second, differently-worded
+    printing's search-quality restriction, read generally off the "`<type>`
+    you control" phrase rather than gated to Rooms. Only a same-named Room
+    is in the library here, so the restriction has to make the search find
+    nothing at all, not just skip the restriction and fetch it anyway."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[CENTRAL_ELEVATOR],
+            library=[CENTRAL_ELEVATOR],
+            battlefield=["Island", "Island", "Island", "Island", CENTRAL_ELEVATOR],
+        )
+        .player("bob", battlefield=[])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    already_controlled = scenario.find(CENTRAL_ELEVATOR, Zone.BATTLEFIELD, "alice")
+    already_controlled.unlocked_doors = ("Central Elevator",)
+    library_before = len(scenario.player("alice").cards_in(Zone.LIBRARY))
+    hand_before = len(scenario.player("alice").hand)
+
+    islands = scenario.untapped_sources("Island", "Island", "Island", "Island")
+    _cast_split_half(scenario, "Central Elevator", None, *islands)
+    scenario.resolve_top()
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == [f"{CENTRAL_ELEVATOR}'s triggered ability"]
+    scenario.resolve_top()
+
+    # No legal candidate existed (the library's only card shares a name with
+    # a Room alice already controls) - the search found nothing, so the
+    # library still holds it and the hand did not grow.
+    assert scenario.game.conditional_clause_notices == []
+    assert len(scenario.player("alice").cards_in(Zone.LIBRARY)) == library_before
+    assert len(scenario.player("alice").hand) == hand_before - 1  # only the cast card left
+
+
+def test_central_elevator_search_still_finds_a_differently_named_room():
+    """The exclusion is per-name, not "no Rooms at all": a same-named Room
+    sitting in the library right beside a differently-named one still lets
+    the differently-named one be found."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[CENTRAL_ELEVATOR],
+            library=[CENTRAL_ELEVATOR, UNHOLY_ANNEX],
+            battlefield=["Island", "Island", "Island", "Island", CENTRAL_ELEVATOR],
+        )
+        .player("bob", battlefield=[])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    already_controlled = scenario.find(CENTRAL_ELEVATOR, Zone.BATTLEFIELD, "alice")
+    already_controlled.unlocked_doors = ("Central Elevator",)
+
+    islands = scenario.untapped_sources("Island", "Island", "Island", "Island")
+    scenario.will_choose_cards(scenario.find(UNHOLY_ANNEX, Zone.LIBRARY, "alice"))
+    _cast_split_half(scenario, "Central Elevator", None, *islands)
+    scenario.resolve_top()
+    scenario.game.put_triggers_on_stack()
+    scenario.resolve_top()
+
+    assert scenario.game.conditional_clause_notices == []
+    found = scenario.find(UNHOLY_ANNEX, Zone.HAND, "alice")
+    assert found.zone is Zone.HAND
+    # The same-named duplicate was never an offered candidate, so it is
+    # still sitting in the library rather than having been swept up too.
+    still_in_library = scenario.find(CENTRAL_ELEVATOR, Zone.LIBRARY, "alice")
+    assert still_in_library.zone is Zone.LIBRARY
