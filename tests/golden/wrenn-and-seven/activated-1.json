@@ -42,7 +42,7 @@
         "kind": "choose_cards",
         "player": "alice",
         "players": [],
-        "prompt": "choose any number of cards to put onto the battlefield",
+        "prompt": "choose any number of land cards to put onto the battlefield",
         "source": "Wrenn and Seven"
       }
     ],

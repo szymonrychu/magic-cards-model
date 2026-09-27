@@ -173,9 +173,7 @@ from magic_cards_model.machines.triggers import (
     _ENTERS_WITH_COUNTER_RE as _CONDITION_ENTERS_WITH_COUNTER_RE,
 )
 from magic_cards_model.machines.triggers import (
-    _POWER_OR_TOUGHNESS_QUALIFIER as _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE,
-)
-from magic_cards_model.machines.triggers import (
+    _LEAVES_WITH_COUNTER_QUALIFIER_RE,
     _STATE_COUNTER_TRIGGER_RE,
     GameEvent,
     TriggerEvent,
@@ -185,6 +183,9 @@ from magic_cards_model.machines.triggers import (
     is_batched_attack_condition,
     total_power_attack_threshold,
     triggers_only_off_the_stack,
+)
+from magic_cards_model.machines.triggers import (
+    _POWER_OR_TOUGHNESS_QUALIFIER as _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE,
 )
 from magic_cards_model.machines.triggers import (
     _required_entering_subtype as _condition_required_entering_subtype,
@@ -2530,6 +2531,16 @@ def _entering_counter_kind(condition: str) -> str | None:
     return match.group("kind").strip() if match else None
 
 
+def _leaving_counter_kind(condition: str) -> str | None:
+    """The counter kind a leaving/dying subject's "with a/an/one or more
+    [`<kind>`] counter(s) on it" qualifier names (`+1/+1` standing in for a
+    kindless "counters"), or `None` when the condition names none."""
+    match = _LEAVES_WITH_COUNTER_QUALIFIER_RE.search(condition.lower())
+    if match is None:
+        return None
+    return (match.group("kind") or "+1/+1").strip()
+
+
 def _synthetic_permanent(
     card: Card, *, controller: str, token: bool, tapped: bool, counter_kind: str | None
 ) -> CardState:
@@ -2607,6 +2618,13 @@ def _condition_can_fire(printing: Card, ability: TriggeredAbility) -> bool | Non
     token_choices = [token_requirement] if token_requirement is not None else [False, True]
     tapped_choices = _entering_tapped_choices(ability.condition) if entering else [False]
     counter_kind = _entering_counter_kind(ability.condition) if entering else None
+    if ability.event in (TriggerEvent.DIES, TriggerEvent.LEAVES_THE_BATTLEFIELD):
+        # "a permanent an opponent controls with a bounty counter on it dies"
+        # (Chevill), "a creature you control with one or more counters on it
+        # dies" (Shadow Urchin): the qualifier `condition_matches` reads off
+        # the leaving object's counters (CR 603.10a) - named by the condition
+        # itself, never invented; a kindless one is satisfied by any kind.
+        counter_kind = _leaving_counter_kind(ability.condition)
 
     game = Game(
         players=[Player(username="sweep_you"), Player(username="sweep_opp")],

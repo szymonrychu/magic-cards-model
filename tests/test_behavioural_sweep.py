@@ -3844,6 +3844,11 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         precondition=r"creature you control with an? (?:\+1/\+1 )?counter on it leaves",
     ),
     DriverGap(
+        kind="dies",
+        event="a permanent with the counters the condition names dying",
+        precondition=r"with (?:an?|one or more) (?:\S+ )?counters? on it dies",
+    ),
+    DriverGap(
         kind="ring_tempts_you",
         event="the Ring tempting you with a creature other than the source chosen",
         precondition=r"you chose a creature other than",

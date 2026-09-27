@@ -62089,6 +62089,9 @@ def _parse_put_permanent_card_from_hand_clause(
             return None
         amount = parsed
     any_number = match.group("any") is not None
+    # The printed group word, so the question names what the card says
+    # ("a land card", "a creature card"), not a generic "permanent card".
+    group = match.group("group").lower()
     optional = match.group("may") is not None
     tapped = match.group("tapped") is not None
 
@@ -62107,7 +62110,7 @@ def _parse_put_permanent_card_from_hand_clause(
                 Decision(
                     kind=DecisionKind.CHOOSE_CARDS,
                     player=controller.username,
-                    prompt="choose any number of cards to put onto the battlefield",
+                    prompt=f"choose any number of {group} cards to put onto the battlefield",
                     source=source_name,
                     amount=len(candidates),
                     exact=False,
@@ -62125,7 +62128,7 @@ def _parse_put_permanent_card_from_hand_clause(
             return
         if optional and not game.may(
             controller,
-            "put a permanent card from your hand onto the battlefield",
+            f"put {with_indefinite_article(group)} card from your hand onto the battlefield",
             source=source_name,
             source_id=source_id_of(stack_object),
         ):
@@ -62135,7 +62138,7 @@ def _parse_put_permanent_card_from_hand_clause(
             Decision(
                 kind=DecisionKind.CHOOSE_CARDS,
                 player=controller.username,
-                prompt=f"choose {wanted} card(s) to put onto the battlefield",
+                prompt=f"choose {wanted} {group} card(s) to put onto the battlefield",
                 source=source_name,
                 amount=wanted,
                 cards=tuple(state.id for state in candidates),

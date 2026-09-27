@@ -42,7 +42,7 @@
         "kind": "may",
         "player": "alice",
         "players": [],
-        "prompt": "put a permanent card from your hand onto the battlefield",
+        "prompt": "put a creature card from your hand onto the battlefield",
         "source": "Meek Attack"
       },
       {
@@ -51,7 +51,7 @@
         "kind": "choose_cards",
         "player": "alice",
         "players": [],
-        "prompt": "choose 1 card(s) to put onto the battlefield",
+        "prompt": "choose 1 creature card(s) to put onto the battlefield",
         "source": "Meek Attack"
       }
     ],
