@@ -80,3 +80,25 @@ def test_attaching_to_a_non_assassin_grants_nothing_extra():
 
     assert blade.attached_to == bears.id, "the attach itself still ran"
     assert not has_keyword(bears, "deathtouch", scenario.game)
+
+
+def test_the_rider_still_applies_when_the_equipment_is_destroyed_before_its_trigger_resolves():
+    """CR 608.2c/608.2b: "that creature" is the target this trigger already
+    announced going on the stack (CR 603.3d) - if Hidden Blade itself is
+    destroyed before its own ETB trigger resolves, the attach can no longer
+    happen (there is no Equipment left to move), but the target is still
+    legal and the rider still checks it."""
+    from magic_cards_model.models import Zone
+
+    scenario, gloom_ripper = _board("Gloom Ripper")
+    scenario.choose_trigger_targets("Hidden Blade", [gloom_ripper])
+    blade = scenario.cast_and_resolve(
+        "Hidden Blade", *scenario.untapped_sources("Mountain", "Mountain")
+    )
+    scenario.game.destroy(blade)
+    assert blade.zone is not Zone.BATTLEFIELD
+
+    scenario.pass_until_resolved()
+
+    assert blade.attached_to is None, "gone before it could attach anything"
+    assert has_keyword(gloom_ripper, "deathtouch", scenario.game)

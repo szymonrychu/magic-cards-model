@@ -86,7 +86,13 @@ def test_genesis_hydra_puts_the_one_eligible_permanent_and_shuffles_the_rest():
     assert wumpus.id in library_ids
 
 
-def test_genesis_hydra_x_zero_reveals_nothing():
+def test_genesis_hydra_x_zero_reveals_nothing_but_still_shuffles():
+    """Nothing is revealed at X=0 (CR 608.2c's "reveal the top 0 cards" is
+    nothing), but the Oracle ruling for Genesis Hydra is explicit: "the rest"
+    is still shuffled into the library even when it is zero cards (CR
+    701.24d). `Game.shuffles_performed` is the deterministic witness - the
+    library holds only two cards, so a real shuffle can legally land back in
+    its starting order and an order-based assertion would be flaky."""
     scenario = (
         Scenario()
         .player(
@@ -99,7 +105,8 @@ def test_genesis_hydra_x_zero_reveals_nothing():
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    library_before = list(scenario.player("alice").library)
+    library_before_ids = {state.id for state in scenario.player("alice").library}
+    shuffles_before = scenario.game.shuffles_performed
 
     sources = scenario.untapped_sources(*(["Forest"] * 2))
     scenario.game.cast(
@@ -107,7 +114,8 @@ def test_genesis_hydra_x_zero_reveals_nothing():
     )
     resolve_all(scenario)
 
-    assert scenario.player("alice").library == library_before
+    assert {state.id for state in scenario.player("alice").library} == library_before_ids
+    assert scenario.game.shuffles_performed == shuffles_before + 1
     assert scenario.questions_asked() == []
 
 
@@ -165,6 +173,62 @@ def test_genesis_hydra_library_smaller_than_x():
     resolve_all(scenario)
 
     assert elves.zone is Zone.BATTLEFIELD
+
+
+def test_genesis_hydra_countered_in_response_still_digs_with_the_cast_x():
+    """CR 603.3: the trigger sits *above* Genesis Hydra on the stack, so a
+    counterspell can answer Genesis Hydra itself while the trigger still
+    waits - and the Oracle ruling for this whole cast-trigger family
+    (Hydroid Krasis, Genesis Hydra, Old Stickfingers, Geometer's Arthropod)
+    agrees: the trigger still resolves with the cast X even though there is
+    no longer a Genesis Hydra permanent to show for it."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Genesis Hydra"],
+            library=["Llanowar Elves", "Lightning Bolt", "Wumpus Aberration", "Mountain"],
+            battlefield=["Forest"] * 5,
+        )
+        .player("bob", hand=["Counterspell"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    top_three = scenario.top_of_library(3, "alice")
+    elves, bolt, wumpus = top_three
+    scenario.will_take_the_may(True, source="Genesis Hydra")
+    scenario.will_choose_cards(elves, source="Genesis Hydra")
+
+    sources = scenario.untapped_sources(*(["Forest"] * 5))
+    hydra = scenario.game.cast(
+        scenario.find("Genesis Hydra", Zone.HAND, "alice"), "alice", x_value=3, mana_sources=sources
+    )
+    assert scenario.stack_names() == ["Genesis Hydra", "Genesis Hydra's triggered ability"]
+
+    scenario.pass_priority("alice")
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.game.cast(
+        scenario.find("Counterspell", Zone.HAND, "bob"),
+        "bob",
+        mana_sources=islands,
+        targets=[hydra],
+    )
+    assert scenario.stack_names() == [
+        "Genesis Hydra",
+        "Genesis Hydra's triggered ability",
+        "Counterspell",
+    ]
+
+    scenario.resolve_top()  # Counterspell counters Genesis Hydra
+    assert hydra.zone is Zone.GRAVEYARD
+
+    scenario.resolve_top()  # the trigger still resolves - X was 3, not 0
+    scenario.game.put_triggers_on_stack()
+
+    assert elves.zone is Zone.BATTLEFIELD
+    library_ids = {state.id for state in scenario.player("alice").library}
+    assert bolt.id in library_ids
+    assert wumpus.id in library_ids
 
 
 # -- Hatchery Spider: Undergrowth X, may put one green permanent, bottom ---

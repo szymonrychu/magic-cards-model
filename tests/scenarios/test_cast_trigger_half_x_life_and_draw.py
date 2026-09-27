@@ -26,6 +26,7 @@ The effect is `_parse_half_x_life_and_draw_half_x_cards_clause` in
 """
 
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -112,6 +113,60 @@ def test_x_of_one_halves_down_to_zero_not_a_negative_amount():
 
     assert alice.life == life_before
     assert len(alice.hand) == hand_before
+
+
+def test_countered_in_response_still_gains_life_and_draws_with_the_cast_x():
+    """CR 603.3: the trigger sits *above* Hydroid Krasis on the stack, so a
+    counterspell can answer Hydroid Krasis itself while the trigger still
+    waits - and the Oracle ruling for this whole cast-trigger family
+    (Hydroid Krasis, Genesis Hydra, Old Stickfingers, Geometer's Arthropod)
+    agrees: the trigger still resolves with the cast X even though there is
+    no longer a Hydroid Krasis spell for the X to describe."""
+    x = 4
+    forests = x
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Hydroid Krasis"],
+            battlefield=["Forest"] * (forests + 1) + ["Island"],
+            library=["Mountain"] * 10,
+        )
+        .player("bob", hand=["Counterspell"], battlefield=["Island", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    casting = scenario.cast("Hydroid Krasis", "alice")
+    payment = casting.determine_cost(x_value=x)
+    scenario.pay_with(
+        payment,
+        *scenario.untapped_sources(*(["Forest"] * (forests + 1) + ["Island"]), username="alice"),
+    )
+    krasis = scenario.put_on_stack(casting)
+    assert scenario.stack_names() == [
+        "Hydroid Krasis",
+        "Hydroid Krasis's triggered ability",
+    ]
+
+    scenario.pass_priority("alice")
+    islands = scenario.untapped_sources("Island", "Island", username="bob")
+    scenario.game.cast(
+        scenario.find("Counterspell", Zone.HAND, "bob"),
+        "bob",
+        mana_sources=islands,
+        targets=[krasis],
+    )
+    alice = scenario.player("alice")
+    life_before = alice.life
+    hand_before = len(alice.hand)
+
+    scenario.resolve_top()  # Counterspell counters Hydroid Krasis
+    assert krasis.zone is Zone.GRAVEYARD
+
+    scenario.resolve_top()  # the trigger still resolves - X was 4, not 0
+
+    assert alice.life == life_before + 2
+    assert len(alice.hand) == hand_before + 2
 
 
 def test_the_counters_static_still_gives_the_resolved_creature_x_plus_one_plus_one_counters():

@@ -94,6 +94,11 @@ def test_nobody_pays_and_dash_hopes_resolves_and_counters_the_bolt():
 
 
 def test_the_active_player_pays_and_counters_dash_hopes_letting_the_bolt_through():
+    """Oracle ruling's key point: "As soon as any player performs the
+    action, the spell is countered, but the remaining players still get the
+    option" - bob is still asked even though alice's own payment already
+    countered Dash Hopes and there is nothing left on the stack for his
+    answer to counter a second time."""
     scenario = _dash_hopes_board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     alice = scenario.player("alice")
@@ -111,6 +116,14 @@ def test_the_active_player_pays_and_counters_dash_hopes_letting_the_bolt_through
     assert alice.life == 15
     assert dash_hopes.zone is Zone.GRAVEYARD, "countered - CR 701.6a"
     assert scenario.stack_names() == ["Lightning Bolt"]
+    (bob_question,) = [
+        question
+        for question in scenario.questions_asked()
+        if question.kind is DecisionKind.PAY_LIFE
+        and question.player == "bob"
+        and question.source == "Dash Hopes"
+    ]
+    assert bob_question.affirmative_is_legal, "bob still had 20 life to offer"
 
     scenario.resolve_top()  # the Bolt, no longer countered, resolves normally
 

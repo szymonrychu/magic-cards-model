@@ -404,6 +404,28 @@ def _dinas_guidance_hand_or_graveyard() -> tuple[list[Decision], CardState]:
     return _asked(scenario.questions_asked(), DecisionKind.PUT_INTO_HAND_OR_GRAVEYARD), guidance
 
 
+def _clockwork_steed_amount() -> tuple[list[Decision], CardState]:
+    """Clockwork Steed's "{X}, {T}: Put up to X +1/+0 counters on this
+    creature." - CR 608.2d's "up to X" real choice."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Clockwork Steed", "Forest", "Forest", "Forest"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.UPKEEP)
+    steed = scenario.creature("Clockwork Steed", "alice")
+    scenario.will_choose_an_amount(1, source="Clockwork Steed")
+
+    scenario.activate(steed, x_value=2, auto=True)
+    scenario.resolve_top()
+
+    return _asked(scenario.questions_asked(), DecisionKind.CHOOSE_AN_AMOUNT), steed
+
+
 SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.MAY: _may_trigger,
     DecisionKind.PAY_LIFE: _shockland_pay_life,
@@ -411,6 +433,7 @@ SOURCED: dict[DecisionKind, Probe] = {
     DecisionKind.PAY_MANA: _censor_pay_mana,
     DecisionKind.PAY_ENERGY_AMOUNT: _galvanic_discharge_energy_amount,
     DecisionKind.PAY_LIFE_AMOUNT: _necrodominance_life_amount,
+    DecisionKind.CHOOSE_AN_AMOUNT: _clockwork_steed_amount,
     DecisionKind.SCRY: _preordain_scry,
     DecisionKind.SURVEIL: _surveil_land_trigger,
     DecisionKind.OPENING_HAND_ACTION: _opening_hand_action,
