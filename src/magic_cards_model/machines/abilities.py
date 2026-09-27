@@ -3790,11 +3790,15 @@ def _intervening_if_end(parts: list[str]) -> int:
     # A serial list of whole conditions (Happily Ever After's "if A, B, and
     # C, you win the game"): a later item, short of the effect, that opens
     # with the list's closing "and"/"or" pulls every item before it into the
-    # clause too - CR 603.4's clause ends at the comma before the effect.
-    for closing in range(len(parts) - 2, end - 1, -1):
-        if _IF_SERIAL_CLOSING.match(parts[closing].strip()):
-            return closing + 1
-    return end
+    # clause too - CR 603.4's clause ends at the comma before the effect. The
+    # list never runs past a sentence break.
+    serial_end = end
+    for index in range(end, len(parts) - 1):
+        if ". " in parts[index]:
+            break
+        if _IF_SERIAL_CLOSING.match(parts[index].strip()):
+            serial_end = index + 1
+    return serial_end
 
 
 def _trigger_event(condition: str) -> TriggerEvent | None:

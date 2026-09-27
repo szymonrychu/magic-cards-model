@@ -109,6 +109,10 @@ def test_keiga_dying_steals_a_creature():
         "Gain control of target creature of an opponent's choice they control.",
         "gain control of target creature until end of turn.",
         "gain control of target spell.",
+        # Admiral Beckett Brass: the "this turn" damage history is a target
+        # restriction nothing reads, so the steal fails closed.
+        "gain control of target nonland permanent controlled by a player who was dealt "
+        "combat damage by three or more Pirates this turn.",
     ],
 )
 def test_a_rider_duration_or_non_target_is_not_read_as_untimed_control(text):
