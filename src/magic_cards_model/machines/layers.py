@@ -1284,6 +1284,32 @@ class CreaturesControlledByWithSubtype(SelectorBase):
         )
 
 
+class PermanentsControlledByWithSubtype(SelectorBase):
+    """ "Other permanents you control of that type" (Selfless Safewright) -
+    `CreaturesControlledByWithSubtype`'s own non-creature-gated twin.
+
+    CR 205.3m creature types are printed on noncreature permanents too
+    (Adaptive Automaton, Arcane Adaptation, and this card's own "of the
+    chosen type" all speak of "creatures" or "permanents" regardless of
+    whether the permanent carrying the subtype is itself a creature), so
+    this selector - unlike `CreaturesControlledByWithSubtype` - does not
+    require `chars.is_creature`, only that the subtype is among the
+    permanent's own computed subtypes (CR 613.5)."""
+
+    kind: Literal["permanents_controlled_by_with_subtype"] = "permanents_controlled_by_with_subtype"
+    username: str | None = None
+    subtypes: tuple[str, ...] = ()
+    other_than: UUID | None = None
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        wanted = {subtype.lower() for subtype in self.subtypes}
+        return (
+            chars.controller == self.username
+            and chars.card_id != self.other_than
+            and any(subtype.lower() in wanted for subtype in chars.subtypes)
+        )
+
+
 class CreaturesControlledByWithColor(SelectorBase):
     kind: Literal["creatures_controlled_by_with_color"] = "creatures_controlled_by_with_color"
     username: str | None = None
@@ -1446,6 +1472,7 @@ Selector = Annotated[
     | PermanentsControlledBy
     | PermanentsOfTypesControlledBy
     | CreaturesControlledByWithSubtype
+    | PermanentsControlledByWithSubtype
     | CreaturesControlledByWithColor
     | PermanentsControlledByWithCounters
     | AttackingTokensControlledBy
@@ -3239,6 +3266,19 @@ def creatures_controlled_by_with_subtype(
     creature that gained the subtype in layer 4 is included (CR 613.5).
     """
     return CreaturesControlledByWithSubtype(
+        username=username, subtypes=tuple(subtypes), other_than=other_than
+    )
+
+
+def permanents_controlled_by_with_subtype(
+    username: str | None, subtypes: Sequence[str], *, other_than: UUID | None = None
+) -> Selector:
+    """ "Other permanents you control of that type" - `creatures_controlled_
+    by_with_subtype`'s own twin for a subject that says "permanents" rather
+    than "creatures" (Selfless Safewright's own ETB), so a noncreature
+    permanent that somehow carries the subtype is not excluded just for
+    lacking `Type.CREATURE`."""
+    return PermanentsControlledByWithSubtype(
         username=username, subtypes=tuple(subtypes), other_than=other_than
     )
 
@@ -6887,18 +6927,33 @@ def chosen_creature_type_of(source: CardState) -> str | None:
 #: colour choice, just for CR 205.3m's own kind of choice instead.
 _CHOSEN_TYPE_ANTHEM_RE = re.compile(
     r"^creatures you control of the chosen type get "
-    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)\.?$",
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and have (?P<keywords>[a-z ,]+?))?\.?$",
     re.IGNORECASE,
 )
 
 
-def _chosen_type_anthem_builder(power: int, toughness: int, *, line: str) -> EffectBuilder:
+def _chosen_type_anthem_builder(
+    power: int, toughness: int, *, keywords: Sequence[str] = (), line: str
+) -> EffectBuilder:
     """`_CHOSEN_TYPE_ANTHEM_RE`'s shape: layer 7c (CR 613.4c), timestamped
     off the source (CR 613.7a) and live (CR 611.3a) like every other anthem
     in this module - `creatures_controlled_by_with_subtype` already reads
     the computed board (CR 613.5) for a fixed subtype list; a one-item list
     built from the chosen type at builder-call time is the identical
     selector for a type that varies per-source instead.
+
+    `keywords` is Chronicle of Victory's own trailing "and have first strike
+    and trample" - the identical pump-plus-keywords shape `_anthem_and_
+    keyword_grant_builder` already gives an ordinary anthem, just over this
+    selector instead of a fixed subject; each keyword lands as its own layer
+    6 (CR 613.1f) grant alongside the layer 7c pump. Oko, Lorwyn Liege's own
+    "-6: ... You get an emblem with 'Creatures you control of the chosen
+    type get +3/+3 and have vigilance and hexproof.'" reads the identical
+    sentence off the emblem itself (`chosen_type.py`'s own emblem builder
+    sets `ChoiceKind.CREATURE_TYPE` on the emblem the same way an entering
+    permanent's own CR 614.12a choice would), which is why this one builder
+    serves both a permanent's own static and a command-zone emblem's.
 
     No chosen type recorded (a permanent that somehow entered without the
     choice) grants nothing rather than guessing one, the same way
@@ -6916,12 +6971,13 @@ def _chosen_type_anthem_builder(power: int, toughness: int, *, line: str) -> Eff
         if chosen_type is None:
             return []
         selector = creatures_controlled_by_with_subtype(source.controller, [chosen_type])
-        return [
+        description = (
+            f"{source.name}: creatures you control of the chosen type "
+            f"({chosen_type}) get {power:+d}/{toughness:+d}"
+        )
+        effects = [
             ContinuousEffect(
-                description=(
-                    f"{source.name}: creatures you control of the chosen type "
-                    f"({chosen_type}) get {power:+d}/{toughness:+d}"
-                ),
+                description=description,
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
                 timestamp=timestamp,
@@ -6931,6 +6987,19 @@ def _chosen_type_anthem_builder(power: int, toughness: int, *, line: str) -> Eff
                 modification=modify_power_toughness(power, toughness),
             )
         ]
+        for keyword in keywords:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{description.rsplit(' get', 1)[0]} have {keyword}",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=_source_line_for(source, line),
+                    selector=selector,
+                    modification=grant_ability(keyword),
+                )
+            )
+        return effects
 
     return builder
 
@@ -12371,8 +12440,17 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         return _lands_keyword_grant_builder(keywords, line=sentence)
     if match := _CHOSEN_TYPE_ANTHEM_RE.fullmatch(sentence):
+        chosen_type_keywords: list[str] = []
+        if match.group("keywords") is not None:
+            validated = _split_and_validate_keywords(match.group("keywords"))
+            if validated is None:
+                return None
+            chosen_type_keywords = validated
         return _chosen_type_anthem_builder(
-            int(match.group("power")), int(match.group("toughness")), line=sentence
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords=chosen_type_keywords,
+            line=sentence,
         )
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
         subtypes = _subtype_list_words(match.group("subtypes"))

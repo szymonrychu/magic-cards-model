@@ -130,6 +130,13 @@ from .casting import (
     remove_suspend_time_counter,
 )
 from .casting_restrictions import create_targeted_cant_cast_restriction, parse_casting_rule_clause
+from .chosen_type import (
+    ask_creature_type,
+    parse_choose_creature_type_then_emblem_clause,
+    parse_choose_type_hexproof_indestructible_clause,
+    parse_gathering_stone_look_clause,
+    shares_creature_type,
+)
 from .combat import Keyword, has_keyword
 from .connive import parse_connive_clause
 from .converge import colors_of_mana_spent
@@ -4746,6 +4753,34 @@ def _strip_trailing_standalone_activated_ability(text: str) -> str:
     return "\n".join(lines)
 
 
+#: "Flashback—`<cost>`[. (reminder text)]" - CR 702.34a's own keyword line,
+#: always printed last and never part of what CR 608 has a resolving spell
+#: actually do: it is CR 601.3's own alternative-casting permission, read by
+#: `machines/casting.py`'s `_option_from_keyword` and paid at CR 601.2b, not
+#: an instruction a resolving spell carries out. Left in `effect_text`, it
+#: is one more paragraph `split_effect_clauses`'s own `\n+` separator cuts
+#: into a fragment none of this file's clause parsers read - usually
+#: harmless (the fragment is simply its own failed clause and the body
+#: above it still resolves), but Kindle the Inner Flame's own body ends in a
+#: quoted granted ability, and a quote's own internal punctuation can shift
+#: where the *body's* clause itself gets split, corrupting a clause that
+#: would otherwise read cleanly - the identical "second paragraph poisons
+#: the first" failure `_strip_trailing_standalone_triggered_ability` already
+#: documents, just from a keyword line rather than a second ability.
+#: Stripped once, generically, by the printed keyword shape itself, ahead of
+#: every spell's own dispatch - narrowly Flashback for now, since it is the
+#: one keyword-cast-option line this pool has printed after a multi-clause
+#: body; a future card doing the same with Evoke, Escape, or another
+#: CR 601.3 keyword-cost line widens the alternation rather than adding a
+#: second stripper.
+_TRAILING_FLASHBACK_LINE_RE = re.compile(r"\n+flashback[—–-]\s*\S.*$", re.DOTALL | re.IGNORECASE)
+
+
+def _strip_trailing_flashback_line(text: str) -> str:
+    """`_TRAILING_FLASHBACK_LINE_RE`'s shape, or `text` unchanged."""
+    return _TRAILING_FLASHBACK_LINE_RE.sub("", text)
+
+
 #: CR 601.3b's own timing restriction, printed on the card itself (distinct
 #: from `machines/casting_restrictions.py`'s "who may cast when" statics) -
 #: Reset's "Cast this spell only during an opponent's turn after their upkeep
@@ -4801,6 +4836,7 @@ def effect_for(
     if effect_text is None:
         return None
     effect_text = _strip_self_shuffle_clause(card_name, effect_text)
+    effect_text = _strip_trailing_flashback_line(effect_text)
     effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
     effect_text = _strip_trailing_standalone_activated_ability(effect_text)
     effect_text = _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
@@ -7693,6 +7729,291 @@ def _parse_search_mv_lte_count_clause(clause: str, *, for_spell: bool) -> Target
             source=source,
             source_id=source_id_of(stack_object),
         )
+
+
+#: Celestial Reunion's own shape: "Search your library for a creature card
+#: with mana value X or less, reveal it, put it into your hand, then
+#: shuffle. If this spell's additional cost was paid and the revealed card
+#: is the chosen type, put that card onto the battlefield instead of putting
+#: it into your hand." Two sentences read as one clause (CR 608.2c), the
+#: same way `_X_DAMAGE_DIVIDED_DOUBLED_RE` reads Shatterskull Smashing's
+#: pair whole rather than through the generic per-clause splitter, because
+#: the second sentence's "the revealed card" is CR 608.2c's own anaphoric
+#: reference to what the first one just found - there is nothing for a
+#: clause-by-clause dispatch to hand it. "This spell's additional cost was
+#: paid" is CR 607.2i's own linked read, off `CastRecord.behold_chosen_type_
+#: paid` (folded into `optional_additional_cost_paid`, the same generic
+#: door Cinder Strike's and Burning Curiosity's own identical phrase already
+#: use); "the chosen type" is CR 607.2d's, off `CastRecord.chosen_creature_
+#: type` - both set by `Casting.behold_chosen_type_for_cost` as the
+#: optional cost is paid, since this is a sorcery with no permanent
+#: incarnation to carry a CR 614.12a `CardState.choice` on.
+_BEHOLD_CHOSEN_TYPE_SEARCH_RE = re.compile(
+    r"^search (?:your|their) library for a creature card with mana value "
+    r"(?P<mv_expr>[a-z0-9]+) or less, reveal it, put it into your hand, then shuffle\.\s*"
+    r"if this spell'?s additional cost was paid and the revealed card is the chosen type, "
+    r"put that card onto the battlefield instead of putting it into your hand\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_behold_chosen_type_search_clause(text: str, *, for_spell: bool) -> Effect | None:
+    """`_BEHOLD_CHOSEN_TYPE_SEARCH_RE`'s shape, or `None`.
+
+    Spell-only (CR 608.2c's card is a sorcery): `for_spell` mirrors the
+    `for_spell` guard every other search-and-put reader in this module
+    already carries, refusing an activated- or triggered-ability reading of
+    a shape no printing gives one."""
+    if not for_spell:
+        return None
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _BEHOLD_CHOSEN_TYPE_SEARCH_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if match.group("mv_expr").lower() != "x":
+        # CR 107.3a: the printed cap is always X on this shape; a literal
+        # digit is a different card this reader has never seen, and is left
+        # for whatever prints it to add its own read rather than guessed at.
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        record = game.cast_record(spell)
+        ceiling = record.x_value
+
+        def matches(state: CardState) -> bool:
+            return Type.CREATURE in state.types and state.mana_value <= ceiling
+
+        found = game.search_library(
+            controller,
+            matches,
+            count=1,
+            optional=True,
+            shuffle=False,
+            source=spell.name,
+            source_id=source_id_of(spell),
+        )
+        if found:
+            (card,) = found
+            game.reveal(card, source=spell.name)
+            chosen_type = record.chosen_creature_type
+            to_battlefield = (
+                record.optional_additional_cost_paid
+                and chosen_type is not None
+                and chosen_type in {subtype.lower() for subtype in card.subtypes}
+            )
+            if to_battlefield:
+                game.put_onto_battlefield(card, controller.username)
+            else:
+                controller.add(card, Zone.HAND)
+        game.shuffle_library(controller)
+
+    return effect
+
+
+#: Winnowing's own convoke spell body: "For each player, you choose a
+#: creature that player controls. Then each player sacrifices all other
+#: creatures they control that don't share a creature type with the chosen
+#: creature they control." No "target" word at all - CR 608.2b's own
+#: resolution-time choice (the caster chooses, for every player, which of
+#: that player's own creatures the rest of that player's board is judged
+#: against), not CR 601.2c targeting, so this reads at resolution rather
+#: than through `machines/targeting.py`.
+_WINNOWING_SACRIFICE_RE = re.compile(
+    r"^for each player, you choose a creature that player controls\. then each player "
+    r"sacrifices all other creatures they control that don'?t share a creature type "
+    r"with the chosen creature they control\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_shared_type_sacrifice_clause(text: str, *, for_spell: bool) -> Effect | None:
+    """`_WINNOWING_SACRIFICE_RE`'s shape, or `None`.
+
+    CR 101.4's APNAP order governs both halves: the choices are made in that
+    order (`_players_in_apnap_order`), and so is judging each player's own
+    board once every choice has been made - a player with no creature at all
+    is simply skipped, both as a chooser (CR 608.2b never offers a choice
+    with no legal object) and as a sacrificer (nothing there to keep or
+    lose)."""
+    if not for_spell:
+        return None
+    whole = _strip_non_effect_preamble(text).strip()
+    if _WINNOWING_SACRIFICE_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        source_id = source_id_of(spell)
+        order = _players_in_apnap_order(game)
+        chosen: dict[str, CardState] = {}
+        for player in order:
+            creatures = [
+                state
+                for state in game.permanents_controlled_by(player.username)
+                if Type.CREATURE in game.characteristics_of(state).types
+            ]
+            if not creatures:
+                continue
+            answer = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose a creature {player.username} controls",
+                    source=spell.name,
+                    amount=1,
+                    cards=tuple(state.id for state in creatures),
+                    source_id=source_id,
+                )
+            )
+            assert isinstance(answer, tuple)
+            if answer:
+                found = game.find_by_id(answer[0])
+                if isinstance(found, CardState):
+                    chosen[player.username] = found
+        for player in order:
+            pick = chosen.get(player.username)
+            if pick is None:
+                continue
+            for creature in list(game.permanents_controlled_by(player.username)):
+                if creature.id == pick.id:
+                    continue
+                if Type.CREATURE not in game.characteristics_of(creature).types:
+                    continue
+                if shares_creature_type(game, creature, pick):
+                    continue
+                if creature.zone is Zone.BATTLEFIELD:
+                    game.sacrifice(creature)
+
+    return effect
+
+
+#: Bloodline Bidding's own convoke spell body: "Choose a creature type.
+#: Return all creature cards of the chosen type from your graveyard to the
+#: battlefield." CR 608.2c's own two-instruction order: the choice, then a
+#: plain "return all `<quality>` cards ... to the battlefield" (CR 401.2, no
+#: reveal or shuffle involved) judged against whichever type CR 607.2d's
+#: choice just answered.
+_CHOOSE_TYPE_RETURN_FROM_GRAVEYARD_RE = re.compile(
+    r"^choose a creature type\. return all creature cards of the chosen type from your "
+    r"graveyard to the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_choose_type_return_from_graveyard_clause(text: str, *, for_spell: bool) -> Effect | None:
+    """`_CHOOSE_TYPE_RETURN_FROM_GRAVEYARD_RE`'s shape, or `None`."""
+    if not for_spell:
+        return None
+    whole = _strip_non_effect_preamble(text).strip()
+    if _CHOOSE_TYPE_RETURN_FROM_GRAVEYARD_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        chosen = ask_creature_type(
+            game, controller.username, spell.name, source_id_of(spell)
+        ).lower()
+        matches = [
+            state
+            for state in list(controller.graveyard)
+            if Type.CREATURE in state.types and chosen in {s.lower() for s in state.subtypes}
+        ]
+        if matches:
+            with game.entering_together():  # CR 603.6a: one arrival, together
+                for state in matches:
+                    game.put_onto_battlefield(state, controller.username)
+
+    return effect
+
+
+#: Harmonized Crescendo's own convoke spell body: "Choose a creature type.
+#: Draw a card for each permanent you control of that type." A plain
+#: CR 121.1 draw, counted off the live board (CR 613.5) rather than off the
+#: graveyard `_CHOOSE_TYPE_RETURN_FROM_GRAVEYARD_RE` reads.
+_CHOOSE_TYPE_DRAW_PER_PERMANENT_RE = re.compile(
+    r"^choose a creature type\. draw a card for each permanent you control of that "
+    r"type\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_choose_type_draw_per_permanent_clause(text: str, *, for_spell: bool) -> Effect | None:
+    """`_CHOOSE_TYPE_DRAW_PER_PERMANENT_RE`'s shape, or `None`."""
+    if not for_spell:
+        return None
+    whole = _strip_non_effect_preamble(text).strip()
+    if _CHOOSE_TYPE_DRAW_PER_PERMANENT_RE.fullmatch(whole) is None:
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        chosen = ask_creature_type(
+            game, controller.username, spell.name, source_id_of(spell)
+        ).lower()
+        count = sum(
+            1
+            for state in game.permanents_controlled_by(controller.username)
+            if chosen in {s.lower() for s in game.characteristics_of(state).subtypes}
+        )
+        if count:
+            game.draw_cards(controller, count)
+
+    return effect
+
+
+#: Wanderwine Farewell's own convoke spell body: "Return one or two target
+#: nonland permanents to their owners' hands. Then if you control a
+#: Merfolk, create a 1/1 white and blue Merfolk creature token for each
+#: permanent returned to its owner's hand this way." The second sentence's
+#: "returned ... this way" is CR 608.2c's own anaphora for however many the
+#: first sentence's `game.resolve_targets` actually found still legal
+#: (CR 608.2b) - not necessarily the number targeted - so this reads both
+#: sentences as one instruction rather than through the generic per-clause
+#: `_RETURN_TARGET_RE` dispatch, which has nowhere to hand that count on to
+#: a second, independently dispatched clause.
+_WANDERWINE_FAREWELL_RE = re.compile(
+    r"^return (?P<phrase>one or two target nonland permanents) to their owners'? hands\.\s*"
+    r"then if you control a merfolk, create a 1/1 white and blue merfolk creature token "
+    r"for each permanent returned to its owner'?s hand this way\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_wanderwine_farewell_clause(text: str, *, for_spell: bool) -> Effect | None:
+    """`_WANDERWINE_FAREWELL_RE`'s shape, or `None`."""
+    if not for_spell:
+        return None
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _WANDERWINE_FAREWELL_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        returned: list[CardState] = []
+        with game.returning_together():  # CR 603.2c: one instruction, one event
+            for target in game.resolve_targets(spell):
+                if isinstance(target, CardState):
+                    game.return_to_hand(target)
+                    returned.append(target)
+        if not returned:
+            return
+        controls_a_merfolk = any(
+            Type.CREATURE in game.characteristics_of(state).types
+            and "merfolk" in {s.lower() for s in game.characteristics_of(state).subtypes}
+            for state in game.permanents_controlled_by(controller.username)
+        )
+        if not controls_a_merfolk:
+            return
+        token_effect = _parse_token_clause(
+            f"create {len(returned)} 1/1 white and blue Merfolk creature tokens",
+            for_spell=for_spell,
+        )
+        if token_effect is not None:
+            token_effect(game, spell)
 
     return effect
 
@@ -25972,7 +26293,7 @@ def _parse_target_attacking_alone_pump_gain_life_clause(text: str) -> AbilityEff
 #: same expression grammar, just reached from a "deals damage equal to ..."
 #: opening instead of a "for each" one.
 _SELF_DAMAGE_EQUAL_TO_COUNT_RE = re.compile(
-    r"^(?:it|he|she|this [a-z]+) deals damage equal to (?P<expr>.+?) to "
+    r"^(?P<subject>it|he|she|this [a-z]+) deals damage equal to (?P<expr>.+?) to "
     r"(?P<recipient>any (?:other )?target|each opponent)\.?$",
     re.IGNORECASE,
 )
@@ -25984,12 +26305,30 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
     Ability-only: the bare pronoun/"this `<noun>`" subject only ever names a
     permanent's own ability, the same restriction `_parse_damage_that_much_
     clause` already holds itself to for the identical reason.
+
+    A bare pronoun ("it"/"he"/"she") is CR 400.7's ordinary anaphora back to
+    whichever object the trigger's own *condition* clause named as having
+    done something (CR 603.2's "subject" of the event) - Smaug the
+    Magnificent's and Eivor's own "Whenever `<self>` attacks, `<pronoun>`
+    deals damage ..." happens to name the source itself only because the
+    condition is *also* self-referential ("Smaug attacks"); Champion of the
+    Path's "Whenever another Elemental you control enters, it deals damage
+    equal to its power to each opponent" names a genuinely different
+    object - CR 208.1's own "its power" is the entering Elemental's, not
+    Champion's. `event_subject_power`/`ability.event.subject_id` already
+    name exactly that antecedent for *any* of these event kinds (including
+    the purely self-referential ones, where the event's own subject and the
+    ability's source are simply the same object), so a bare-pronoun subject
+    reads through it uniformly rather than defaulting to the source - a
+    printed "this `<noun>`" subject is left alone (the source is genuinely
+    what that phrasing names, CR 201.5).
     """
     if for_spell:
         return None
     match = _SELF_DAMAGE_EQUAL_TO_COUNT_RE.fullmatch(text.strip())
     if match is None:
         return None
+    is_bare_pronoun = match.group("subject").lower() in ("it", "he", "she")
     expr = match.group("expr")
     counted = count_expression(expr)
     # "its power"/"his power"/"her power" (Iron Fist, Living Weapon's own
@@ -26016,6 +26355,11 @@ def _parse_self_damage_equal_to_count_clause(text: str, *, for_spell: bool) -> A
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source_or_last_known(game)
+        if is_bare_pronoun:
+            event = ability.event
+            subject = game.find_by_id(event.subject_id) if event is not None else None
+            if isinstance(subject, CardState):
+                source = subject
         if counted is not None:
             amount = counted(game, ability.controller)
         else:
@@ -26828,6 +27172,17 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     emblem = _parse_get_an_emblem_clause(effect_text)
     if emblem is not None:
         return emblem
+    choose_type_then_emblem = parse_choose_creature_type_then_emblem_clause(effect_text)
+    if choose_type_then_emblem is not None:
+        return choose_type_then_emblem
+    choose_type_hexproof_indestructible = parse_choose_type_hexproof_indestructible_clause(
+        effect_text
+    )
+    if choose_type_hexproof_indestructible is not None:
+        return choose_type_hexproof_indestructible
+    gathering_stone_look = parse_gathering_stone_look_clause(effect_text)
+    if gathering_stone_look is not None:
+        return gathering_stone_look
     counters_by_subtype = _parse_counters_more_if_subtype_clause(effect_text)
     if counters_by_subtype is not None:
         return counters_by_subtype
@@ -30535,6 +30890,25 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     x_divided_damage_doubled = _parse_x_damage_divided_and_doubled_clause(effect_text)
     if x_divided_damage_doubled is not None:
         return x_divided_damage_doubled
+    behold_chosen_type_search = _parse_behold_chosen_type_search_clause(effect_text, for_spell=True)
+    if behold_chosen_type_search is not None:
+        return behold_chosen_type_search
+    shared_type_sacrifice = _parse_shared_type_sacrifice_clause(effect_text, for_spell=True)
+    if shared_type_sacrifice is not None:
+        return shared_type_sacrifice
+    choose_type_return_from_graveyard = _parse_choose_type_return_from_graveyard_clause(
+        effect_text, for_spell=True
+    )
+    if choose_type_return_from_graveyard is not None:
+        return choose_type_return_from_graveyard
+    choose_type_draw_per_permanent = _parse_choose_type_draw_per_permanent_clause(
+        effect_text, for_spell=True
+    )
+    if choose_type_draw_per_permanent is not None:
+        return choose_type_draw_per_permanent
+    wanderwine_farewell = _parse_wanderwine_farewell_clause(effect_text, for_spell=True)
+    if wanderwine_farewell is not None:
+        return wanderwine_farewell
     damage_target_kicked_instead = _parse_damage_target_kicked_instead_clause(effect_text)
     if damage_target_kicked_instead is not None:
         return damage_target_kicked_instead
@@ -46809,6 +47183,21 @@ def _read_token_copy_except(
             int(type_pt.group("toughness")),
             type_pt.group("subtype") or "",
         )
+    mixed_prefix = re.match(r"^(?:it has|they have)\s+", stripped, re.IGNORECASE)
+    if mixed_prefix is not None:
+        # CR 707.9a's granted-ability channel, mixed keyword-then-quoted -
+        # Kindle the Inner Flame's own flashback token, "except it has haste
+        # and 'At the beginning of the end step, sacrifice this token.'" -
+        # neither `_TOKEN_COPY_EXCEPT_QUOTED_RE` (quoted only) nor
+        # `_TOKEN_COPY_EXCEPT_KEYWORDS_RE` (bare keywords only) reads this by
+        # itself, but `_parse_copy_added_ability_lines` already does for
+        # `_FOR_EACH_CREATURE_TARGET_PLAYER_COPY_RE`'s identical tail
+        # grammar, once its own leading "it has"/"they have" (already
+        # stripped off *that* regex's own capture group, but not this one's)
+        # is stripped here too.
+        mixed = _parse_copy_added_ability_lines(stripped[mixed_prefix.end() :])
+        if mixed is not None:
+            return mixed, None, None, None
     return None
 
 

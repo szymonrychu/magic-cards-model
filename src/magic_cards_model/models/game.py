@@ -2246,7 +2246,11 @@ class CastRecord(EngineModel):
         shape assumes exactly one antecedent per card.
         """
         return (
-            self.kicked > 0 or self.offspring_paid or self.blight_paid or self.cast_using_teamwork
+            self.kicked > 0
+            or self.offspring_paid
+            or self.blight_paid
+            or self.cast_using_teamwork
+            or self.behold_chosen_type_paid
         )
 
     gift_promised: bool = False
@@ -2255,6 +2259,24 @@ class CastRecord(EngineModel):
     gift_chosen_player: str | None = None
     """The opponent chosen when the gift was promised (CR 702.174a), copied
     from `Casting.gift_chosen_player`."""
+
+    behold_chosen_type_paid: bool = False
+    """Whether this spell's own optional "you may choose a creature type and
+    behold two creatures of that type" additional cost was paid (CR 118.8b,
+    701.4a) - Celestial Reunion's, copied from `Casting.behold_chosen_type_
+    paid`. Folded into `optional_additional_cost_paid` below the same way
+    `blight_paid` already is, since Celestial Reunion's own resolution text
+    reads the generic "if this spell's additional cost was paid" phrasing
+    (CR 607.2i), not a name of its own."""
+    chosen_creature_type: str | None = None
+    """The creature type named paying `behold_chosen_type_paid` (CR 607.2d's
+    "choose a [value]"/"the chosen [value]" link), lowercased. `None` when
+    the cost was not paid, or the spell prints no such choice at all - this
+    is a *spell's* own one-off announcement, kept on `CastRecord` rather
+    than on `CardState.choice` (`ChoiceKind.CREATURE_TYPE`) because CR
+    614.12a's field is for a *permanent* replacement choice made "as [it]
+    enters"; a sorcery that resolves and heads straight to the graveyard has
+    no permanent incarnation to carry that choice on at all."""
 
     additional_cost_cards: list[UUID] = Field(default_factory=list)
     """Every card consumed paying one of `Casting.additional_costs`'
@@ -4053,7 +4075,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 91
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 92
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4144,6 +4166,16 @@ class Game(EngineModel):
     #: CR 614.1c rider, tmt T6) and `Game` gained `next_spell_keyword_grants`
     #: ("the next noncreature spell you cast this turn has affinity for
     #: artifacts", CR 702.41a, tmt T6; renumbered from 90 at integration).
+    #: 92: `machines/cost.CostComponent` gained `exile_after` (CR 118.8/
+    #: 601.2f's "behold a <quality> and exile it", ecl T4); `CastRecord` and
+    #: `machines/casting.Casting` both gained `behold_chosen_type_paid` and
+    #: `chosen_creature_type` (Celestial Reunion's own optional "choose a
+    #: creature type and behold two creatures of that type" cost, CR 607.2d);
+    #: `machines/cost.CostModifierEffect` gained `creature_only` and
+    #: `scoped_to_caster` (Urza's Incubator's own `CHOSEN_TYPE_DECREASE`
+    #: wording, proven alongside Gathering Stone); `machines/layers.Selector`
+    #: gained the `PermanentsControlledByWithSubtype` variant (Selfless
+    #: Safewright's own chosen-type grant, ecl T4).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6591,6 +6623,8 @@ class Game(EngineModel):
         phyrexian_life_symbols_paid: int = 0,
         gift_promised: bool = False,
         gift_chosen_player: str | None = None,
+        behold_chosen_type_paid: bool = False,
+        chosen_creature_type: str | None = None,
         additional_cost_cards: list[UUID] | None = None,
         additional_cost_mana_values: list[float] | None = None,
         is_copy: bool = False,
@@ -6663,6 +6697,8 @@ class Game(EngineModel):
             phyrexian_life_symbols_paid=phyrexian_life_symbols_paid,
             gift_promised=gift_promised,
             gift_chosen_player=gift_chosen_player,
+            behold_chosen_type_paid=behold_chosen_type_paid,
+            chosen_creature_type=chosen_creature_type,
             additional_cost_cards=list(additional_cost_cards or []),
             additional_cost_mana_values=(
                 list(additional_cost_mana_values)
@@ -21093,6 +21129,37 @@ class Game(EngineModel):
                         continue
                     if chosen.value == spell.name or chosen.value == spell.card.name:
                         increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.CHOSEN_TYPE_DECREASE:
+                    # Gathering Stone: "Spells you cast of the chosen type
+                    # cost {1} less to cast." `NAMED_INCREASE`'s own mirror -
+                    # "you cast" scopes it to the permanent's own controller
+                    # the same way `COLOR_DECREASE`/`TYPE_DECREASE` already
+                    # are. Urza's Incubator prints the same choice with
+                    # neither "you cast" (so `scoped_to_caster` is False and
+                    # every player's matching spell is discounted, not only
+                    # this permanent's controller's) nor a bare "spells" (so
+                    # `creature_only` demands CR 300.1's own type too) - a
+                    # Stone/Incubator that somehow never made its choice
+                    # discounts nothing rather than quietly discounting
+                    # everything.
+                    if effect.scoped_to_caster and permanent.controller != caster:
+                        continue
+                    if effect.creature_only and Type.CREATURE not in spell.types_as_a_spell(
+                        spell.card.types
+                    ):
+                        continue
+                    chosen = permanent.choice
+                    if chosen is None or chosen.kind is not ChoiceKind.CREATURE_TYPE:
+                        if permanent.id not in already_noticed:
+                            already_noticed.add(permanent.id)
+                            self.cost_modifier_notices.append(
+                                CostModifierNotice(
+                                    source_id=permanent.id, source_name=permanent.name, text=text
+                                )
+                            )
+                        continue
+                    if chosen.value.lower() in {subtype.lower() for subtype in spell.subtypes}:
+                        decreases.append(ManaCost.parse(f"{{{effect.amount}}}"))
                 elif effect.kind is CostModifierKind.PER_SPELL_INCREASE:
                     prior = len(self.spells_cast_this_turn.get(caster, []))
                     if prior:

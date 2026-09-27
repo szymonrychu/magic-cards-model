@@ -2654,6 +2654,23 @@ def condition_matches(
         # one that is not does not.
         if not _subtype_matches(event.subject_subtypes, _required_entering_subtype(condition)):
             return False
+        if "of the chosen type" in lowered:
+            # Dawn-Blessed Pennant's own "a permanent you control of the
+            # chosen type enters" (CR 614.12a's choice, read back off
+            # `source.choice` - `source` is this ability's own permanent,
+            # the one that made the choice, never the entering object
+            # itself). `_required_entering_subtype`'s own `_ENTERING_SUBTYPE`
+            # only recognises a printed, capitalised subtype word, so a
+            # lowercase "the chosen type" left this filter unread and the
+            # trigger fired on *any* permanent entering, itself included -
+            # Panharmonicon-style CR 603.6a self-entry among them.
+            choice = source.choice
+            if choice is None or choice.kind is not ChoiceKind.CREATURE_TYPE:
+                return False
+            if choice.value.lower() not in {
+                subtype.lower() for subtype in event.subject_subtypes or ()
+            }:
+                return False
         # "Whenever one or more tokens you control enter" (Caretaker's
         # Talent) - CR 111.1's token, not a card type `_types_match` already
         # reads, so it is checked separately: whatever just entered must be
@@ -6525,7 +6542,17 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
                             card.name,
                             legendary=Supertype.LEGENDARY in card.supertypes,
                         ):
-                            expanded.extend(_expand_enters_or_transforms_into(damage_split))
+                            for upkeep_split in _expand_enters_and_upkeep(
+                                damage_split,
+                                card.name,
+                                legendary=Supertype.LEGENDARY in card.supertypes,
+                            ):
+                                for tapped_split in _expand_enters_or_becomes_tapped(
+                                    upkeep_split,
+                                    card.name,
+                                    legendary=Supertype.LEGENDARY in card.supertypes,
+                                ):
+                                    expanded.extend(_expand_enters_or_transforms_into(tapped_split))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -6841,6 +6868,98 @@ def _expand_enters_or_deals_combat_damage(
             update={
                 "condition": f"{subject} deals combat damage to a player",
                 "event": TriggerEvent.DEALS_DAMAGE,
+            }
+        ),
+    ]
+
+
+#: "Whenever `<self>` enters or becomes tapped, ..." - Champions of the
+#: Shoal's own condition (CR 603.1b, the same "more than one trigger
+#: condition" shape `_expand_enters_or_dies` already splits). `_trigger_
+#: event` (`machines/abilities.py`) reads "enters" first and stops, so the
+#: "becomes tapped" half - which is the half that matters on every turn
+#: after this permanent's own entrance - was silently dropped exactly the
+#: way `_expand_enters_or_dies`'s own docstring describes for "enters or
+#: dies".
+_ENTERS_OR_BECOMES_TAPPED_RE = re.compile(
+    r"^(?P<subject>.+?) enters or becomes tapped$", re.IGNORECASE
+)
+
+
+def _expand_enters_or_becomes_tapped(
+    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
+) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ENTERS_OR_BECOMES_TAPPED_RE`'s shape
+    becomes two: CR 603.6a's enters-the-battlefield ability and CR 701.26a's
+    own `TriggerEvent.BECOMES_TAPPED` one, each self-referential and each a
+    `TriggeredAbility` in its own right - the same split `_expand_enters_or_
+    dies`/`_expand_enters_or_deals_combat_damage` already perform for their
+    own compound conditions, with the same genuine-self-reference
+    requirement on the subject.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    match = _ENTERS_OR_BECOMES_TAPPED_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    subject = match.group("subject")
+    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
+        self_reference_names(card_name, legendary=legendary)
+    ):
+        return [ability]
+    return [
+        ability.model_copy(
+            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
+        ),
+        ability.model_copy(
+            update={"condition": f"{subject} becomes tapped", "event": TriggerEvent.BECOMES_TAPPED}
+        ),
+    ]
+
+
+#: "When `<self>` enters and at the beginning of your upkeep, ..." -
+#: Gathering Stone's own condition (CR 603.1b: "A triggered ability may have
+#: more than one trigger condition, in which case it triggers when any of
+#: the events occurs"). `_trigger_event` (`machines/abilities.py`) reads
+#: "enters" first and stops, so the upkeep half - which is the one that
+#: matters on every turn after the permanent's own entrance - was silently
+#: dropped, the identical gap `_expand_enters_or_dies` already closes for
+#: "enters or dies".
+_ENTERS_AND_UPKEEP_RE = re.compile(
+    r"^(?P<subject>.+?) enters and at the beginning of your upkeep$", re.IGNORECASE
+)
+
+
+def _expand_enters_and_upkeep(
+    ability: TriggeredAbility, card_name: str, *, legendary: bool = True
+) -> list[TriggeredAbility]:
+    """One ability whose condition is `_ENTERS_AND_UPKEEP_RE`'s shape becomes
+    two: CR 603.6a's enters-the-battlefield ability and an ordinary "at the
+    beginning of your upkeep" one (`TriggerEvent.BEGINNING_OF_STEP`, whose
+    own `_step_matches` reads that printed condition text directly - no
+    further field needs setting) - the same split `_expand_enters_or_dies`
+    and `_expand_enters_or_deals_combat_damage` already perform for their
+    own compound conditions, with the same genuine-self-reference
+    requirement on the subject.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    match = _ENTERS_AND_UPKEEP_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    subject = match.group("subject")
+    if not re.fullmatch(r"this [a-z]+", subject, re.IGNORECASE) and subject not in (
+        self_reference_names(card_name, legendary=legendary)
+    ):
+        return [ability]
+    return [
+        ability.model_copy(
+            update={"condition": f"{subject} enters", "event": TriggerEvent.ENTERS_THE_BATTLEFIELD}
+        ),
+        ability.model_copy(
+            update={
+                "condition": "at the beginning of your upkeep",
+                "event": TriggerEvent.BEGINNING_OF_STEP,
             }
         ),
     ]

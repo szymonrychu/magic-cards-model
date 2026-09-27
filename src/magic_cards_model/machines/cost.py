@@ -2683,13 +2683,14 @@ class CostComponent(EngineModel):
     """
 
     link_to_permanent_id: UUID | None = None
-    """`ComponentKind.EXILE` only: the id of the permanent-to-be this exile
-    cost's cards should be recorded as "exiled with" (CR 607.2q: "If a
-    permanent spell has an ability printed on it that allows one or more
-    cards to be exiled while paying a cost to cast it and the permanent that
-    spell becomes has an ability that refers to cards 'exiled with [this
-    object],' those abilities are linked. The second ability refers only to
-    cards exiled to pay the cost of the spell that became that permanent.")
+    """`ComponentKind.EXILE`, and `ComponentKind.BEHOLD` when `exile_after` is
+    set: the id of the permanent-to-be this exile cost's cards should be
+    recorded as "exiled with" (CR 607.2q: "If a permanent spell has an
+    ability printed on it that allows one or more cards to be exiled while
+    paying a cost to cast it and the permanent that spell becomes has an
+    ability that refers to cards 'exiled with [this object],' those
+    abilities are linked. The second ability refers only to cards exiled to
+    pay the cost of the spell that became that permanent.")
 
     Set by `machines/objects_as_costs.delve` to the delving spell's own
     `CardState.id` - which stays the same across the stack-to-battlefield
@@ -2698,7 +2699,34 @@ class CostComponent(EngineModel):
     card exiled with it" can find them again once it resolves. `None` for
     every other exile cost (Force of Will's hand exile, Seasoned Pyromancer's
     graveyard exile), which links nothing and changes nothing about how they
-    pay."""
+    pay.
+
+    `Game.activation_cost`/the cast-cost builder set it the same way for a
+    `BEHOLD` component whose printed text ends "... and exile it" (Champion
+    of the Clachan: "behold a Kithkin and exile it") - CR 607.2q draws no
+    distinction between an object exiled outright and one first beheld
+    (CR 701.4a) and then exiled by the same sentence, so the permanent this
+    spell becomes reads "the exiled card" back through the identical link
+    `card_imprinted_on`/`cards_exiled_with` already resolve for delve."""
+
+    exile_after: bool = False
+    """`ComponentKind.BEHOLD` only: the printed cost does not stop at
+    beholding (CR 701.4a's "reveal ... or choose ..."), it goes on to exile
+    the same object - "behold a Kithkin **and exile it**" (Champion of the
+    Clachan, Champions of the Perfect/Shoal, Champion of the Path/Weird),
+    CR 118.8/601.2f's additional cost applying two verbs to one chosen
+    object in the printed sentence.
+
+    Whichever half of CR 701.4a's disjunction the payer chose - a card shown
+    from hand (CR 701.20a-b's reveal, nothing moves) or a permanent they
+    already control - is exiled once the choice is made: `pay` moves it with
+    `Game.exile_cards` the same way a plain `EXILE` component does, and
+    tags it `ExileMarker.LINKED` against `link_to_permanent_id` so the
+    permanent this spell becomes can read "the exiled card" back
+    (`_parse_return_imprinted_clause`, `machines/effects.py`). `False` for
+    every ordinary behold cost (Silvergill Mentor's own "behold a Merfolk or
+    pay {2}"), which leaves the beheld object exactly where CR 701.4a found
+    it."""
 
     variable_count: bool = False
     """The printed count is CR 107.3a's X or "one or more", so the number is
@@ -3172,34 +3200,7 @@ class CostComponent(EngineModel):
                 # combat clean-up - so this delegates outright rather than
                 # special-casing one more zone by hand.
                 game.exile_cards(list(self.cards))
-                if self.link_to_permanent_id is not None:
-                    # CR 607.2q: cards exiled paying this cost are "exiled
-                    # with" the permanent the spell becomes. Written after
-                    # `exile_cards` moves them - `CardState.move_to` keeps
-                    # `exile_annotation` alone on a move *into* exile
-                    # (`models/card_state.py`'s own docstring) exactly so a
-                    # caller can annotate either side of the move, the same
-                    # hook `Game.put_into_graveyard`'s own "exile instead of
-                    # graveyard, linked" branch already uses.
-                    # `linked_permanent_stamp` is left `None`: the id names
-                    # the spell that is still on the stack right now, and its
-                    # own stamp changes the moment it resolves onto the
-                    # battlefield (`CardState.move_to`), so no stamp fixed
-                    # here would ever equal the one the entering permanent
-                    # reads it back with. `ExileAnnotation.links_to` already
-                    # matches on the id alone whenever either side's stamp is
-                    # `None`.
-                    for card in self.cards:
-                        if card.zone is Zone.EXILE:
-                            card.exile_annotation = ExileAnnotation(
-                                marker=ExileMarker.LINKED,
-                                owner=card.owner,
-                                turn_exiled=(
-                                    game.turn.turns_taken if game.turn is not None else None
-                                ),
-                                linked_permanent_id=self.link_to_permanent_id,
-                                linked_permanent_stamp=None,
-                            )
+                self._link_exiled_cards(game)
         elif self.kind is ComponentKind.REVEAL:
             # CR 701.20a: showing the cards is the whole payment, and CR
             # 701.20b keeps them where they are. The record is what
@@ -3215,13 +3216,26 @@ class CostComponent(EngineModel):
             # CR 701.4a's two halves: a hand card is revealed exactly like
             # `REVEAL` (nothing moves, CR 701.20b); a battlefield permanent is
             # simply chosen (CR 701.4b) and nothing happens to it at all -
-            # not tapped, not sacrificed, not exiled.
+            # not tapped, not sacrificed, not exiled - *unless* the printed
+            # cost goes on to say "... and exile it" (`exile_after`), in
+            # which case whichever half the payer satisfied it with is
+            # exiled too, the same CR 607.2q link an ordinary `EXILE`
+            # component's own cast-cost exile already carries.
             for card in self.cards:
                 self._remember(card)
-                if game is not None and card.zone is Zone.HAND:
+                if game is not None and card.zone is Zone.HAND and not self.exile_after:
                     before = len(game.reveals)
                     game.reveal(card, source=self.source)
                     self._reveals_recorded.extend(game.reveals[before:])
+            if self.exile_after and self.cards and game is not None:
+                # CR 701.20a's `game.reveal` record is for a card that stays
+                # in a hidden zone after being shown; this one is about to
+                # leave the hand for exile - a public zone, CR 400.2 - so the
+                # move itself is what makes it visible, and recording a
+                # separate reveal first would only track a fact no reader
+                # needs once the card is sitting in the open anyway.
+                game.exile_cards(list(self.cards))
+                self._link_exiled_cards(game)
         elif self.kind is ComponentKind.RETURN_TO_HAND:
             # CR 702.49a's own cost: the creature leaves combat as it leaves
             # the battlefield (the zone change is what ends its being an
@@ -3384,14 +3398,22 @@ class CostComponent(EngineModel):
                         game.reveals.remove(record)
             self._reveals_recorded = []
         elif self.kind is ComponentKind.BEHOLD:
-            # Neither half moved anything (CR 701.4a/b), so the rewind is the
-            # same as REVEAL's: only the reveal record a hand-half payment
-            # wrote needs taking back.
-            if game is not None:
-                for record in self._reveals_recorded:
-                    if record in game.reveals:
-                        game.reveals.remove(record)
-            self._reveals_recorded = []
+            if self.exile_after:
+                # "... and exile it" actually moved the beheld object, the
+                # same as a plain `EXILE` component, so the rewind is that
+                # branch's own field-by-field restore (`self._return`) rather
+                # than the no-op below.
+                for card, snapshot in reversed(self._undo):
+                    self._return(game, _live(card), snapshot)
+            else:
+                # Neither half moved anything (CR 701.4a/b), so the rewind is
+                # the same as REVEAL's: only the reveal record a hand-half
+                # payment wrote needs taking back.
+                if game is not None:
+                    for record in self._reveals_recorded:
+                        if record in game.reveals:
+                            game.reveals.remove(record)
+                self._reveals_recorded = []
         elif self.kind is ComponentKind.EXERT:
             # Exerting moves nothing either, and CR 701.43b lets it be exerted
             # more than once, so the rewind is simply putting the flag back.
@@ -3436,6 +3458,33 @@ class CostComponent(EngineModel):
 
         self._undo = []
         self.paid = False
+
+    def _link_exiled_cards(self, game: Any) -> None:
+        """CR 607.2q: once `self.cards` are sitting in exile, tag each with
+        `self.link_to_permanent_id` if this component carries one - the
+        `EXILE` cost's own linking step, shared with `BEHOLD`'s
+        `exile_after` shape (Champion of the Clachan's "behold a Kithkin and
+        exile it") since both are the identical cast-cost exile CR 607.2q
+        describes, just reached through a different keyword action.
+
+        `linked_permanent_stamp` is left `None`: the id names the spell that
+        is still on the stack right now, and its own stamp changes the
+        moment it resolves onto the battlefield (`CardState.move_to`), so no
+        stamp fixed here would ever equal the one the entering permanent
+        reads it back with. `ExileAnnotation.links_to` already matches on
+        the id alone whenever either side's stamp is `None`.
+        """
+        if self.link_to_permanent_id is None:
+            return
+        for card in self.cards:
+            if card.zone is Zone.EXILE:
+                card.exile_annotation = ExileAnnotation(
+                    marker=ExileMarker.LINKED,
+                    owner=card.owner,
+                    turn_exiled=(game.turn.turns_taken if game.turn is not None else None),
+                    linked_permanent_id=self.link_to_permanent_id,
+                    linked_permanent_stamp=None,
+                )
 
     def _remember(self, card: CardState) -> None:
         """Snapshot everything about a card except which printing it is.
@@ -4079,6 +4128,18 @@ class CostModifierKind(StrEnum):
     """"Each spell that would cost less than [N] mana to cast costs [N] mana
     to cast." - Trinisphere."""
 
+    CHOSEN_TYPE_DECREASE = "chosen_type_decrease"
+    """"Spells you cast of the chosen type cost `{N}` less to cast." -
+    Gathering Stone; "Creature spells of the chosen type cost `{N}` less to
+    cast." - Urza's Incubator (Modern-legal proof printing, `creature_only`/
+    `scoped_to_caster` reading its two wording differences). `NAMED_
+    INCREASE`'s own twin: a `TYPE_DECREASE`-shaped discount scoped by a
+    CR 614.12a choice (`CardState.choice`, `ChoiceKind.CREATURE_TYPE`)
+    rather than by a subtype fixed on the card - the amount alone cannot say
+    which subtype it discounts, so `Game.static_cost_modifiers_for` reads
+    the chosen type off the permanent the same way it already reads `NAMED_
+    INCREASE`'s chosen name."""
+
     COLOR_DECREASE = "color_decrease"
     """"`<Color>` spells you cast cost `{N}` less to cast." - the Medallion
     cycle (Ruby Medallion, etc.). "You cast" makes this controller-scoped,
@@ -4158,6 +4219,21 @@ class CostModifierEffect(EngineModel):
     spells you cast cost {1} less to cast." - lowercased (`canonical_subtype`).
     A spell qualifies when it has that subtype (CR 205.3), which a changeling
     spell always does for a creature type (CR 702.73a)."""
+
+    creature_only: bool = False
+    """`CHOSEN_TYPE_DECREASE` only: Urza's Incubator's own "**Creature**
+    spells of the chosen type cost `{2}` less to cast" - the spell must be a
+    creature spell (CR 300.1) as well as carry the chosen subtype, not any
+    spell that merely carries it (Gathering Stone's own "Spells you cast of
+    the chosen type" has no such extra demand, `False`)."""
+
+    scoped_to_caster: bool = True
+    """`CHOSEN_TYPE_DECREASE` only: whether the printed sentence says "you
+    cast" (Gathering Stone - the discount is this permanent's own
+    controller's alone) or omits it (Urza's Incubator's "Creature spells of
+    the chosen type cost {2} less to cast", CR 601.2f's cost reduction
+    naming no caster at all, so it discounts *whichever* player casts one -
+    an unusual, genuinely symmetric effect, not a defect in reading it)."""
 
     condition: str | None = None
     """A trailing "as long as `<condition>`" (Gran-Gran's "... as long as
@@ -4245,6 +4321,22 @@ _FLAT_COST_INCREASE = re.compile(
 #: notice and applied to nothing.
 _NAMED_COST_INCREASE = re.compile(
     r"[Ss]pells with the chosen name cost \{(?P<amount>\d+)\} more to cast\."
+)
+#: Gathering Stone's own discount, `_NAMED_COST_INCREASE`'s twin scoped by a
+#: CR 614.12a creature-type choice instead of a card name - "Spells you cast
+#: of the chosen type cost `{N}` less to cast." Urza's Incubator (Modern-legal,
+#: proof printing) prints the identical CR 614.12a choice two words
+#: narrower and one word wider: "`Creature` spells [no `you cast`] of the
+#: chosen type cost `{N}` less to cast" - `creature_only` is the first
+#: difference (only a creature spell of the type qualifies, not any spell
+#: with the subtype); the missing "you cast" is the second, read as
+#: `scoped_to_caster=False` below rather than a fixed True, since CR 601.2f
+#: cost reductions apply exactly to whoever the printed sentence names as
+#: casting, and this sentence names nobody - it discounts the spell for
+#: *whichever* player casts it, not only this permanent's own controller.
+_CHOSEN_TYPE_COST_DECREASE = re.compile(
+    r"(?P<creature_only>[Cc]reature )?[Ss]pells(?P<scoped> you cast)? of the chosen type cost "
+    r"\{(?P<amount>\d+)\} less to cast\."
 )
 #: Thalia, the Survivor's tax, and Grand Arbiter Augustin IV's own
 #: unqualified "Spells your opponents cast cost {1} more to cast." - the
@@ -4456,6 +4548,14 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
     if match is not None:
         return CostModifierEffect(
             kind=CostModifierKind.NAMED_INCREASE, amount=int(match.group("amount"))
+        )
+    match = _CHOSEN_TYPE_COST_DECREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.CHOSEN_TYPE_DECREASE,
+            amount=int(match.group("amount")),
+            creature_only=match.group("creature_only") is not None,
+            scoped_to_caster=match.group("scoped") is not None,
         )
     match = _OPPONENT_COST_INCREASE.search(text)
     if match is not None:
@@ -5016,12 +5116,28 @@ _PHRASE_REVEAL = re.compile(
     re.IGNORECASE,
 )
 #: CR 701.4a's keyword action as a cost: "behold a Jace" (Countersculpt,
-#: Theorist's Sanctum), "behold a Kithkin" (Kinsbaile Aspirant, off-set).
-#: "Reveal a [quality] card from your hand or choose a [quality] permanent
-#: you control on the battlefield" - one component, `ComponentKind.BEHOLD`,
-#: since CR 701.4a is a single keyword action with two ways to satisfy it,
-#: not two separate costs the way sacrifice-or-discard would be.
-_PHRASE_BEHOLD = re.compile(r"^behold (?:a|an) (?P<quality>[\w' ]+)$", re.IGNORECASE)
+#: Theorist's Sanctum), "behold a Kithkin" (Kinsbaile Aspirant, off-set), and
+#: - CR 118.8/601.2f's own two-verbs-one-object shape - "behold a Kithkin
+#: and exile it" (Champion of the Clachan, Champions of the Perfect/Shoal,
+#: Champion of the Path/Weird), whose trailing "and exile it" the optional
+#: `exile` group captures. "Reveal a [quality] card from your hand or choose
+#: a [quality] permanent you control on the battlefield" - one component,
+#: `ComponentKind.BEHOLD`, since CR 701.4a is a single keyword action with
+#: two ways to satisfy it, not two separate costs the way sacrifice-or-discard
+#: would be; the exile, when printed, applies to whichever one the payer chose.
+_PHRASE_BEHOLD = re.compile(
+    r"^behold (?:a|an) (?P<quality>[\w' ]+?)(?P<exile> and exile it)?$", re.IGNORECASE
+)
+#: CR 701.4a's action, counted and pluralised rather than singular and
+#: articled - Kindle the Inner Flame's own flashback cost, "Flashback—{1}{R},
+#: Behold three Elementals." (CR 702.34a's flashback cost is itself an
+#: alternative cost built from ordinary cost pieces, split apart and each
+#: piece read through this same phrase table - `machines/casting.py`.) The
+#: quality is read plural here ("Elementals") where `_PHRASE_BEHOLD`'s
+#: singular callers already hand `_requirement` the printed capitalised
+#: singular noun; `_behold_n_requirement` below is what turns the plural back
+#: into the singular subtype `_requirement` already understands.
+_PHRASE_BEHOLD_N = re.compile(r"^behold (?P<count>\w+) (?P<quality>[\w' ]+)$", re.IGNORECASE)
 _ZONE_WORDS: dict[str, Zone] = {
     "hand": Zone.HAND,
     "graveyard": Zone.GRAVEYARD,
@@ -5280,6 +5396,35 @@ def _requirement(quality: str) -> CardRequirement | None:
     )
 
 
+def _behold_n_requirement(plural_quality: str) -> CardRequirement | None:
+    """`_requirement` for `_PHRASE_BEHOLD_N`'s own plural noun phrase -
+    "Elementals" (Kindle the Inner Flame's "Behold three Elementals") rather
+    than `_PHRASE_BEHOLD`'s singular, articled "an Elemental".
+
+    `_requirement` keeps a capitalised word verbatim as a subtype
+    (`Sacrifice a Mountain`), which is right for every existing caller since
+    none of them is ever handed a plural - so the plural noun is singularised
+    here, once, before the shared reader ever sees it: each capitalised word
+    is looked up in `canonical_subtype` (which already knows "Elementals" ->
+    "elemental" off the subtype pool's own plural index) and title-cased back
+    to the shape `_requirement` already expects. A capitalised word
+    `canonical_subtype` cannot place is left alone rather than guessed at -
+    Ugin's Labyrinth's colour words never reach this branch at all, so the
+    only risk is an unlisted subtype, which then simply fails to parse as a
+    subtype the same way an unrecognised singular one already does."""
+    words = plural_quality.strip().split()
+
+    def _singular(word: str) -> str:
+        if word[:1].isupper():
+            canonical = canonical_subtype(word)
+            if canonical is not None:
+                return canonical.capitalize()
+        return word
+
+    singularised = [_singular(word) for word in words]
+    return _requirement(" ".join(singularised))
+
+
 def _controlled_requirement(quality: str) -> CardRequirement | None:
     """`_requirement` for the *other* side of a same-name comparison: what the
     permanent on the battlefield has to be.
@@ -5453,6 +5598,17 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             return None
         component = behold_cost(payer=payer, required=1, description=text)
         component.requirement = behold_requirement
+        component.exile_after = behold.group("exile") is not None
+        return component
+
+    behold_n = _PHRASE_BEHOLD_N.match(text)
+    if behold_n is not None:
+        count = parse_count(behold_n.group("count"), article=False)
+        behold_n_requirement = _behold_n_requirement(behold_n.group("quality"))
+        if count is None or behold_n_requirement is None:
+            return None
+        component = behold_cost(payer=payer, required=count, description=text)
+        component.requirement = behold_n_requirement
         return component
 
     exile_and_pay = _PHRASE_EXILE_AND_PAY_MANA_COST.match(text)
@@ -5593,6 +5749,20 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
     mana = ManaCost()
     components: list[CostComponent] = []
     waterbend_generic: int | None = None
+    if "," not in phrase:
+        # `_split_cost_phrase` also splits on a bare " and " - right for a
+        # comma-joined or genuinely compound cost ("Tap two untapped
+        # creatures you control and discard a card", none printed yet, would
+        # be two components), wrong for a *single* component whose own
+        # phrase happens to contain "and" internally - "behold a Kithkin
+        # and exile it" (CR 118.8/601.2f's one object, two verbs) is not
+        # "behold a Kithkin" plus a bare, unreadable "exile it". Trying the
+        # whole un-split phrase first, only when there is no comma to say
+        # this is genuinely a list, catches that shape without touching any
+        # phrase that only reads at all once split.
+        whole = cost_component_for_phrase(phrase.strip().rstrip("."), payer)
+        if whole is not None:
+            return TotalCost(mana=mana, components=[whole], waterbend_generic=waterbend_generic)
     for part in _split_cost_phrase(phrase):
         if _ONLY_MANA.match(part) and not _ACTION_SYMBOL.match(part):
             # A run of braced symbols that is not all mana - CR 107.14's {E}

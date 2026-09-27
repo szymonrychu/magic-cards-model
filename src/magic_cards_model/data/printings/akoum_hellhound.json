@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a",
+  "oracle_id": "05074b68-6b31-4f9f-b3ec-bffe3e7eab47",
+  "multiverse_ids": [
+    491772
+  ],
+  "mtgo_id": 83237,
+  "arena_id": 73333,
+  "tcgplayer_id": 221880,
+  "cardmarket_id": 495009,
+  "name": "Akoum Hellhound",
+  "lang": "en",
+  "released_at": "2020-09-25",
+  "uri": "https://api.scryfall.com/cards/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a",
+  "scryfall_uri": "https://scryfall.com/card/znr/133/akoum-hellhound?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:56:02Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.jpg?1783929362",
+    "normal": "https://cards.scryfall.io/normal/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.jpg?1783929362",
+    "large": "https://cards.scryfall.io/large/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.jpg?1783929362",
+    "png": "https://cards.scryfall.io/png/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.png?1783929362",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.jpg?1783929362",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.jpg?1783929362",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.webp?1783929362",
+    "grid": "https://cards.scryfall.io/grid/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.webp?1783929362",
+    "display": "https://cards.scryfall.io/display/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.webp?1783929362",
+    "art": "https://cards.scryfall.io/art/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.webp?1783929362",
+    "crop": "https://cards.scryfall.io/crop/front/3/a/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a.webp?1783929362"
+  },
+  "mana_cost": "{R}",
+  "cmc": 1.0,
+  "type_line": "Creature \u2014 Elemental Dog",
+  "oracle_text": "Landfall \u2014 Whenever a land you control enters, this creature gets +2/+2 until end of turn.",
+  "power": "0",
+  "toughness": "1",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Landfall"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "f4e01fa7-b254-42dd-849f-69b58027a8c4",
+  "set": "znr",
+  "set_name": "Zendikar Rising",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/f4e01fa7-b254-42dd-849f-69b58027a8c4",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aznr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/znr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/3a5ad1c8-3d70-43ed-9539-2aa6289c5c4a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A05074b68-6b31-4f9f-b3ec-bffe3e7eab47&unique=prints",
+  "collector_number": "133",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Hellhound packs roam the Spikefields, basking in the harsh sunlight and lighting the night with their flames.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason Kang",
+  "artist_ids": [
+    "064b9176-e325-44f6-a413-2cadb7505851"
+  ],
+  "illustration_id": "d7e3014c-ef83-4388-995d-b9102fb76953",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 14691,
+  "penny_rank": 5161,
+  "preview": {
+    "source": "Renzo Arana",
+    "source_uri": "https://twitter.com/RenzoArana_MTG/status/1300980029640323072",
+    "previewed_at": "2020-09-01"
+  },
+  "prices": {
+    "usd": "0.22",
+    "usd_foil": "0.19",
+    "usd_etched": null,
+    "eur": "0.05",
+    "eur_foil": "0.18",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=491772&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAkoum%2BHellhound",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAkoum%2BHellhound",
+    "edhrec": "https://edhrec.com/route/?cc=Akoum+Hellhound"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F221880%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=495009&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/83237?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

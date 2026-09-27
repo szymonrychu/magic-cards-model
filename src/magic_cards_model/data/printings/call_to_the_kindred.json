@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "ee35f96c-6060-4456-897e-27b74c8c2137",
+  "oracle_id": "c2fb8d4c-b973-42a0-9e9c-7abd5cc2c22e",
+  "multiverse_ids": [
+    262706
+  ],
+  "mtgo_id": 43379,
+  "mtgo_foil_id": 43380,
+  "tcgplayer_id": 57856,
+  "cardmarket_id": 252556,
+  "name": "Call to the Kindred",
+  "lang": "en",
+  "released_at": "2012-02-03",
+  "uri": "https://api.scryfall.com/cards/ee35f96c-6060-4456-897e-27b74c8c2137",
+  "scryfall_uri": "https://scryfall.com/card/dka/30/call-to-the-kindred?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:07:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.jpg?1783940846",
+    "normal": "https://cards.scryfall.io/normal/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.jpg?1783940846",
+    "large": "https://cards.scryfall.io/large/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.jpg?1783940846",
+    "png": "https://cards.scryfall.io/png/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.png?1783940846",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.jpg?1783940846",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.jpg?1783940846",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.webp?1783940846",
+    "grid": "https://cards.scryfall.io/grid/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.webp?1783940846",
+    "display": "https://cards.scryfall.io/display/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.webp?1783940846",
+    "art": "https://cards.scryfall.io/art/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.webp?1783940846",
+    "crop": "https://cards.scryfall.io/crop/front/e/e/ee35f96c-6060-4456-897e-27b74c8c2137.webp?1783940846"
+  },
+  "mana_cost": "{3}{U}",
+  "cmc": 4.0,
+  "type_line": "Enchantment \u2014 Aura",
+  "oracle_text": "Enchant creature\nAt the beginning of your upkeep, you may look at the top five cards of your library. If you do, you may put a creature card that shares a creature type with enchanted creature from among them onto the battlefield, then you put the rest of those cards on the bottom of your library in any order.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Enchant"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "8052750a-aaf2-46fc-b46d-633f14124017",
+  "set": "dka",
+  "set_name": "Dark Ascension",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/8052750a-aaf2-46fc-b46d-633f14124017",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Adka&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/dka?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ee35f96c-6060-4456-897e-27b74c8c2137/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac2fb8d4c-b973-42a0-9e9c-7abd5cc2c22e&unique=prints",
+  "collector_number": "30",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason A. Engle",
+  "artist_ids": [
+    "02e2b5de-4341-464c-8fdb-a1adbf873bc0"
+  ],
+  "illustration_id": "f089dc4b-f305-475c-93d6-1cf3fbb65d8d",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10966,
+  "penny_rank": 12235,
+  "prices": {
+    "usd": "1.26",
+    "usd_foil": "2.76",
+    "usd_etched": null,
+    "eur": "0.95",
+    "eur_foil": "1.88",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=262706&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DCall%2Bto%2Bthe%2BKindred",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DCall%2Bto%2Bthe%2BKindred",
+    "edhrec": "https://edhrec.com/route/?cc=Call+to+the+Kindred"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F57856%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=252556&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/43379?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

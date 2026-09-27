@@ -52,6 +52,7 @@ from .casting_restrictions import (
     zone_cast_prohibition_source,
 )
 from .cost import (
+    CardRequirement,
     ComponentKind,
     CostComponent,
     CostPayment,
@@ -62,6 +63,7 @@ from .cost import (
     alternative_cost_offers,
     announce_reveal,
     apply_modifications,
+    behold_cost,
     cost_component_for_phrase,
     mana_value_cap_for,
     pay_life_cost,
@@ -2689,6 +2691,17 @@ _OPTIONAL_COLLECT_EVIDENCE = re.compile(r"^you may (?P<cost>collect evidence \d+
 _OPTIONAL_REVEAL = re.compile(
     r"^you may (?P<cost>reveal an? [\w-]+ card from your hand)$", re.IGNORECASE
 )
+#: Celestial Reunion's own optional additional cost: "you may choose a
+#: creature type and behold two creatures of that type." CR 118.8b's "you
+#: may" plus CR 607.2d's own "choose a [value]" - the type named is not
+#: fixed by the printed text (unlike `_OPTIONAL_REVEAL`'s "a Dragon card"),
+#: so paying it needs both a type and the beheld creatures, which is why this
+#: gets its own method (`behold_chosen_type_for_cost`) rather than sharing
+#: `_optional_sentence`'s single-group "cost" read.
+_OPTIONAL_BEHOLD_CHOSEN_TYPE = re.compile(
+    r"^you may choose a creature type and behold (?P<count>\w+) creatures of that type$",
+    re.IGNORECASE,
+)
 
 
 #: Each keyword of `ADDITIONAL_COST_KEYWORDS` that prints its own cost on its
@@ -3604,6 +3617,16 @@ def mandatory_additional_costs(
                 f"{spell.name}'s additional cost {phrase!r} could not be read, "
                 f"so it cannot be paid (CR 118.3, 601.2f)"
             )
+        for component in cost.components:
+            if component.kind is ComponentKind.BEHOLD and component.exile_after:
+                # CR 607.2q: the permanent this spell becomes keeps `spell`'s
+                # own id across the stack-to-battlefield zone change
+                # (`CardState.move_to`'s docstring), so linking against it
+                # now already names the object whichever printed "return the
+                # exiled card ..." ability on the resolved permanent will
+                # look up later - the same link `objects_as_costs.delve`
+                # fixes onto a delving spell's own cast cost.
+                component.link_to_permanent_id = spell.id
         built.append(cost)
     return built
 
@@ -3929,6 +3952,13 @@ class Casting(EngineModel):
     """The opponent chosen when the gift was promised (CR 702.174a's own
     additional cost, "you may choose an opponent") - who "the chosen player"
     (CR 702.174d-i) refers to."""
+    behold_chosen_type_paid: bool = False
+    """Whether an optional "you may choose a creature type and behold [N]
+    creatures of that type" additional cost (CR 118.8b, 701.4a) was paid -
+    Celestial Reunion's own, set by `behold_chosen_type_for_cost`."""
+    chosen_creature_type_for_cost: str | None = None
+    """The creature type named paying `behold_chosen_type_paid` (CR 607.2d) -
+    lowercased, set alongside it by `behold_chosen_type_for_cost`."""
     payment: CostPayment | None = None
     announced_zone: Zone | None = None
     """The zone this cast was announced from, recorded as CR 601.2a moved the
@@ -5816,6 +5846,58 @@ class Casting(EngineModel):
         self.revealed_for_cost = True
         return self.step
 
+    def behold_chosen_type_for_cost(
+        self, creature_type: str, creatures: Sequence[CardState]
+    ) -> CastingStep:
+        """Pay a printed "you may choose a creature type and behold [N]
+        creatures of that type" as the optional additional cost it is (CR
+        118.8b, CR 701.4a) - Celestial Reunion's own.
+
+        `creature_type` is CR 607.2d's own choice: recorded on the record
+        this cast writes (`Game.cast_record(...).chosen_creature_type`) so
+        the spell's own "the chosen type" reads the same answer back at
+        resolution. `creatures` are beheld to pay it - checked the same way
+        an ordinary printed "behold a [quality]" checks its own fixed
+        quality (`CostComponent._why_not_behold`), just against a quality
+        this cast is choosing rather than one the card prints.
+        """
+        if self.behold_chosen_type_paid:
+            raise ValueError(f"{self.spell.name}'s behold-chosen-type cost was already paid")
+        phrase = None
+        for candidate in additional_cost_phrases(self.spell.card):
+            if _OPTIONAL_BEHOLD_CHOSEN_TYPE.match(candidate):
+                phrase = candidate
+                break
+        if phrase is None:
+            raise ValueError(
+                f"{self.spell.name} has no optional choose-a-creature-type-and-behold "
+                "additional cost (CR 701.4a)"
+            )
+        match = _OPTIONAL_BEHOLD_CHOSEN_TYPE.match(phrase)
+        assert match is not None
+        count = parse_count(match.group("count"), article=False)
+        if count is None:
+            raise ValueError(
+                f"{self.spell.name}'s behold count {match.group('count')!r} could not be read"
+            )
+        if len(creatures) != count:
+            raise ValueError(
+                f"{self.spell.name}'s additional cost needs {count} creature(s) beheld, "
+                f"{len(creatures)} given"
+            )
+        component = behold_cost(*creatures, payer=self.caster, required=count, description=phrase)
+        component.requirement = CardRequirement(
+            types=[Type.CREATURE], subtypes=[creature_type], description=f"{creature_type} creature"
+        )
+        if self.game is not None:
+            refusal = component.why_not(self.game)
+            if refusal is not None:
+                raise ValueError(refusal)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.behold_chosen_type_paid = True
+        self.chosen_creature_type_for_cost = creature_type.lower()
+        return self.step
+
     def pay_teamwork(self, creatures: Sequence[CardState]) -> CastingStep:
         """Pay this spell's Teamwork cost as an optional additional cost
         (CR 601.2b, CR 118.8a/b): tap any number of untapped creatures the
@@ -7137,6 +7219,8 @@ class Casting(EngineModel):
                 ),
                 gift_promised=self.gift_promised,
                 gift_chosen_player=self.gift_chosen_player,
+                behold_chosen_type_paid=self.behold_chosen_type_paid,
+                chosen_creature_type=self.chosen_creature_type_for_cost,
                 # CR 400.7 makes the spell a new object the moment CR 601.2a
                 # moves it off the exile pile, so the annotation that pile
                 # carried is gone by now - `announced_exile_annotation` is the

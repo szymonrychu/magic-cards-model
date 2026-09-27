@@ -130,6 +130,7 @@ from ..numbers import COUNT, MULTIPLIER, parse_count, parse_multiplier
 from ..snapshot import EngineModel
 from .abilities import keywords_in_lines, self_reference_names
 from .casting import PlayAction
+from .chosen_type import RESTRICTED_TRIBAL_TYPES, matches_restricted_creature_type_choice
 from .combat import Keyword
 from .damage_modification import (
     compile_damage_plus_source_characteristic,
@@ -5059,7 +5060,7 @@ def _classify_choice(replacement_text: str) -> ChoiceKind | None:
         return ChoiceKind.COLOR
     if _CHOOSE_A_CARD_NAME_RE.match(text):
         return ChoiceKind.CARD_NAME
-    if _CHOOSE_A_CREATURE_TYPE_RE.match(text):
+    if _CHOOSE_A_CREATURE_TYPE_RE.match(text) or matches_restricted_creature_type_choice(text):
         return ChoiceKind.CREATURE_TYPE
     if _CHOOSE_ODD_OR_EVEN_RE.match(text):
         return ChoiceKind.ODD_OR_EVEN
@@ -5287,7 +5288,13 @@ def _card_name_quality_refusal(value: str, quality: str) -> str | None:
     return None
 
 
-def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None = None) -> Apply:
+def _choose_a_quality(
+    kind: ChoiceKind,
+    card_name: str,
+    name_quality: str | None = None,
+    *,
+    restricted_options: tuple[str, ...] | None = None,
+) -> Apply:
     """Ask CR 614.12a's choice and record it on the entering object itself.
 
     "If a replacement effect that modifies how a permanent enters the
@@ -5308,6 +5315,14 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
     controller, CR 303.4e), and there is no controller at all to ask if this
     is reached some other way, in which case nothing is recorded rather than
     guessing.
+
+    `restricted_options` narrows `_quality_options(kind)`'s own full CR
+    205.3m list to a printed enumeration - Dawn-Blessed Pennant's and
+    Eclipsed Realms's own "choose Elemental, Elf, Faerie, Giant, Goblin,
+    Kithkin, Merfolk, or Treefolk" (`chosen_type.RESTRICTED_TRIBAL_TYPES`) -
+    the same way `name_quality` already narrows a card-name choice
+    (CR 201.4a); an answer outside it is refused exactly like an
+    out-of-characteristic card name is.
     """
 
     def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
@@ -5326,13 +5341,14 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
             if kind is ChoiceKind.ODD_OR_EVEN
             else (f"choose {with_indefinite_article(quality)}")
         )
+        options = restricted_options if restricted_options is not None else _quality_options(kind)
         decision = Decision(
             kind=DecisionKind.CHOOSE_A_QUALITY,
             player=who,
             prompt=prompt,
             source=card_name,
             source_id=source_id_of(source),
-            options=_quality_options(kind),
+            options=options,
             quality=kind.value,
         )
         value = game.ask(decision)
@@ -5341,6 +5357,12 @@ def _choose_a_quality(kind: ChoiceKind, card_name: str, name_quality: str | None
             refusal = _card_name_quality_refusal(value, name_quality)
             if refusal is not None:
                 raise ValueError(f"{card_name}: {refusal}")
+        if restricted_options is not None and value.lower() not in {
+            option.lower() for option in restricted_options
+        }:
+            raise ValueError(
+                f"{card_name}: {value!r} is not one of {', '.join(restricted_options)}"
+            )
         source.choice = Choice(kind=kind, value=value)
         game.unwired_choice_notices.extend(_unwired_choice_notices(source.card, source.id))
 
@@ -6050,6 +6072,11 @@ def _self_enters_modifiers(
                             card_name_quality(effect.replacement or "")
                             if choice_kind is ChoiceKind.CARD_NAME
                             else None,
+                            restricted_options=(
+                                RESTRICTED_TRIBAL_TYPES
+                                if matches_restricted_creature_type_choice(effect.replacement or "")
+                                else None
+                            ),
                         ),
                         effect.text,
                         False,
