@@ -67,6 +67,7 @@ from .cost import (
     cost_component_for_phrase,
     mana_value_cap_for,
     pay_life_cost,
+    per_object_sacrifice_cost_reduction,
     place_counters_cost,
     return_to_hand_cost,
     static_free_cast_grant,
@@ -2975,6 +2976,27 @@ _OPTIONAL_BEHOLD_CHOSEN_TYPE = re.compile(
     r"^you may choose a creature type and behold (?P<count>\w+) creatures of that type$",
     re.IGNORECASE,
 )
+#: Dispelling Exhale's own plain "you may behold a Dragon" - CR 701.4a's
+#: keyword action, a single unrestricted behold with no chosen type and no
+#: count, the shape `_PHRASE_BEHOLD` already reads generally into a
+#: `ComponentKind.BEHOLD` component (`Behold`, Champion of the Path and
+#: friends). `_OPTIONAL_BEHOLD_CHOSEN_TYPE` above is Celestial Reunion's own
+#: different shape - a type the caster picks rather than one the card
+#: prints - which is why that one gets its own `count`/type reading and this
+#: one needs only `Casting.behold_for_cost`'s plain `cost_component_for_
+#: phrase` call, the same as `collect_evidence`/`reveal_for_cost`.
+_OPTIONAL_BEHOLD = re.compile(r"^you may (?P<cost>behold an? [\w' -]+?)$", re.IGNORECASE)
+#: Rottenmouth Viper's own "you may sacrifice any number of nonland
+#: permanents" - CR 118.8b's optional additional cost, CR 107.1c's "any
+#: number of" read the same zero-floor way `_COST_COUNT` (`machines/cost.py`)
+#: now reads it for every other object cost. Paid by `Casting.
+#: sacrifice_for_cost_reduction`, which is also what applies the linked "This
+#: spell costs `<amount>` less to cast for each `<noun>` sacrificed this way"
+#: sentence (`machines.cost.per_object_sacrifice_cost_reduction`) - a second
+#: sentence, never part of this phrase itself.
+_OPTIONAL_SACRIFICE_ANY_NUMBER = re.compile(
+    r"^you may (?P<cost>sacrifice any number of [\w ,]+)$", re.IGNORECASE
+)
 
 
 #: Each keyword of `ADDITIONAL_COST_KEYWORDS` that prints its own cost on its
@@ -3121,6 +3143,19 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             # Charged by `Casting.behold_chosen_type_for_cost` (the type named
             # and the creatures beheld, CR 701.4a).
             found.append(OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a"))
+        elif _OPTIONAL_BEHOLD.match(phrase) is not None:
+            # Charged by `Casting.behold_for_cost` - a plain, fixed quality
+            # (Dispelling Exhale's "a Dragon"), unlike the chosen-type shape
+            # just above.
+            found.append(OptionalAdditionalCost(keyword="behold", cost=phrase, rule="CR 701.4a"))
+        elif _OPTIONAL_SACRIFICE_ANY_NUMBER.match(phrase) is not None:
+            # Charged by `Casting.sacrifice_for_cost_reduction` (CR 118.7a,
+            # CR 118.8b).
+            found.append(
+                OptionalAdditionalCost(
+                    keyword="sacrifice any number", cost=phrase, rule="CR 118.8b"
+                )
+            )
         else:
             found.append(
                 OptionalAdditionalCost(
@@ -4242,6 +4277,21 @@ class Casting(EngineModel):
     """Whether a card was revealed for an optional "you may reveal a
     <quality> card from your hand" additional cost (CR 118.8b), set by
     `reveal_for_cost`."""
+    beheld_for_cost: bool = False
+    """Whether a plain, unrestricted "you may behold a <quality>" additional
+    cost (CR 118.8b, CR 701.4a) was paid - Dispelling Exhale's own "you may
+    behold a Dragon", set by `behold_for_cost`. Distinct from `behold_
+    chosen_type_paid`: this cost's quality is fixed by the card's own
+    printed text, never chosen as the spell is cast."""
+    sacrificed_for_cost_reduction: int = 0
+    """How many objects were sacrificed for an optional "you may sacrifice
+    any number of <quality>. This spell costs <amount> less to cast for
+    each <noun> sacrificed this way." additional cost (CR 118.7a, CR
+    118.8b), set by `sacrifice_for_cost_reduction` - Rottenmouth Viper's
+    own. Zero (the default) both before the cost is announced and when the
+    caster announced it but chose to sacrifice nothing, so this alone never
+    answers "was the cost paid" the way `evidence_collected`'s bare boolean
+    does; nothing printed in the pool needs that distinction yet."""
     gift_chosen_player: str | None = None
     """The opponent chosen when the gift was promised (CR 702.174a's own
     additional cost, "you may choose an opponent") - who "the chosen player"
@@ -6217,6 +6267,72 @@ class Casting(EngineModel):
         self.revealed_for_cost = True
         return self.step
 
+    def behold_for_cost(self, card: CardState) -> CastingStep:
+        """Pay a printed plain "you may behold a <quality>" as the optional
+        additional cost it is (CR 118.8b, CR 701.4a) - Dispelling Exhale's
+        own "a Dragon". `card` is the object beheld: a matching card in the
+        caster's hand (revealed, CR 701.4a) or a matching permanent on the
+        battlefield the caster controls, the same choice `_PHRASE_BEHOLD`'s
+        own `ComponentKind.BEHOLD` component already checks. `beheld_for_cost`
+        is what "if a Dragon was beheld" (`cast_record._beheld`) reads."""
+        if self.beheld_for_cost:
+            raise ValueError(f"{self.spell.name}'s behold cost was already paid")
+        phrase = self._optional_sentence(_OPTIONAL_BEHOLD, "behold", "CR 701.4a")
+        component = cost_component_for_phrase(phrase, self.caster)
+        if component is None:
+            raise ValueError(f"{self.spell.name}'s {phrase!r} could not be read (CR 701.4a)")
+        component.cards = [card]
+        component.required = 1
+        component.source = self.spell.name
+        if self.game is not None:
+            refusal = component.why_not(self.game)
+            if refusal is not None:
+                raise ValueError(refusal)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.beheld_for_cost = True
+        return self.step
+
+    def sacrifice_for_cost_reduction(self, cards: Sequence[CardState] = ()) -> CastingStep:
+        """Pay a printed "you may sacrifice any number of <quality>" as the
+        optional additional cost it is (CR 118.8b), and apply the linked
+        "This spell costs <amount> less to cast for each <noun> sacrificed
+        this way" reduction (CR 118.7a) - Rottenmouth Viper's own.
+
+        `cards` is CR 601.2b's own choice, made once, of everything
+        sacrificed this way; an empty sequence is a legal answer (CR 107.1c:
+        "any number of" includes zero), which pays the cost for nothing and
+        reduces nothing. Unlike `collect_evidence`'s threshold, every named
+        card really is sacrificed (CR 601.2h), so the reduction is exactly
+        `len(cards)` times the card's own per-object amount.
+        """
+        if self.sacrificed_for_cost_reduction:
+            raise ValueError(f"{self.spell.name}'s sacrifice cost was already paid")
+        phrase = self._optional_sentence(
+            _OPTIONAL_SACRIFICE_ANY_NUMBER, "sacrifice any number", "CR 118.8b"
+        )
+        chosen = list(cards)
+        component = cost_component_for_phrase(phrase, self.caster)
+        if component is None:
+            raise ValueError(f"{self.spell.name}'s {phrase!r} could not be read (CR 118.8b)")
+        component.cards = chosen
+        component.required = len(chosen)
+        component.source = self.spell.name
+        if self.game is not None and chosen:
+            refusal = component.why_not(self.game)
+            if refusal is not None:
+                raise ValueError(refusal)
+        if chosen:
+            self.add_additional_cost(TotalCost(components=[component]))
+        if chosen:
+            per_object = per_object_sacrifice_cost_reduction(self.spell.card)
+            if per_object is None:
+                raise ValueError(
+                    f"{self.spell.name} prints no per-object cost reduction to apply (CR 118.7a)"
+                )
+            self.reduce_cost(ManaCost(generic=per_object.generic * len(chosen)))
+        self.sacrificed_for_cost_reduction = len(chosen)
+        return self.step
+
     def behold_chosen_type_for_cost(
         self, creature_type: str, creatures: Sequence[CardState]
     ) -> CastingStep:
@@ -7609,6 +7725,7 @@ class Casting(EngineModel):
                 bargained=self.bargained,
                 evidence_collected=self.evidence_collected,
                 revealed_for_cost=self.revealed_for_cost,
+                beheld_for_cost=self.beheld_for_cost,
                 # CR 106.3's source of the mana spent (a creature) and CR
                 # 107.4h's snow source, read off the settled payment at CR
                 # 601.2h like `treasure_mana_spent`.

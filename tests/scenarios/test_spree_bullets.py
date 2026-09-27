@@ -278,3 +278,109 @@ def test_the_destroy_mode_still_runs_however_it_was_ordered_among_the_choice():
     assert own_bears.zone is Zone.GRAVEYARD
     assert their_bears.zone is Zone.GRAVEYARD
     assert not scenario.game.mode_notices, "every Final Showdown mode reads"
+
+
+# -- Lively Dirge: "Spree + {1} — Search your library for a card, put it --
+# -- into your graveyard, then shuffle. + {2} — Return up to two creature --
+# -- cards with total mana value 4 or less from your graveyard to the -----
+# -- battlefield." ----------------------------------------------------------
+
+
+def _dirge_board(*, graveyard=None) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Lively Dirge"],
+            battlefield=["Swamp"] * 5,
+            library=["Grizzly Bears", "Memnite", "Mountain", "Mountain"],
+            graveyard=graveyard or [],
+        )
+        .player("bob")
+    )
+
+
+def test_lively_dirge_first_mode_searches_a_card_into_the_graveyard():
+    scenario = _dirge_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources(*(["Swamp"] * 3))
+    scenario.will_choose_cards(
+        scenario.find("Grizzly Bears", Zone.LIBRARY, "alice"), source="Lively Dirge"
+    )
+
+    casting = scenario.cast("Lively Dirge")
+    casting.choose_modes([1])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    alice = scenario.player("alice")
+    assert any(c.name == "Grizzly Bears" for c in alice.graveyard)
+    assert not scenario.game.mode_notices
+
+
+def test_lively_dirge_second_mode_returns_up_to_two_within_the_mv_cap():
+    scenario = _dirge_board(graveyard=["Grizzly Bears", "Memnite", "Craw Wurm"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.find("Grizzly Bears", Zone.GRAVEYARD, "alice")
+    memnite = scenario.find("Memnite", Zone.GRAVEYARD, "alice")
+    wurm = scenario.find("Craw Wurm", Zone.GRAVEYARD, "alice")
+    sources = scenario.untapped_sources(*(["Swamp"] * 4))
+    scenario.will_choose_cards(bears, memnite, source="Lively Dirge")
+
+    casting = scenario.cast("Lively Dirge")
+    casting.choose_modes([2])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert memnite.zone is Zone.BATTLEFIELD
+    assert wurm.zone is Zone.GRAVEYARD, "Craw Wurm's mana value 6 alone breaks the cap"
+    assert not scenario.game.mode_notices
+
+
+def test_lively_dirge_choosing_a_total_over_the_cap_is_refused():
+    """CR 608.2d: an illegal choice is refused, not silently trimmed - Craw
+    Wurm alone (mana value 6) already breaks the printed "4 or less"."""
+    scenario = _dirge_board(graveyard=["Craw Wurm"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    wurm = scenario.find("Craw Wurm", Zone.GRAVEYARD, "alice")
+    sources = scenario.untapped_sources(*(["Swamp"] * 4))
+    scenario.will_choose_cards(wurm, source="Lively Dirge")
+
+    casting = scenario.cast("Lively Dirge")
+    casting.choose_modes([2])
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    with pytest.raises(ValueError, match="total mana value"):
+        scenario.resolve_top()
+
+
+def test_lively_dirge_both_modes_together_search_then_reanimate():
+    scenario = _dirge_board(graveyard=["Memnite"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    memnite = scenario.find("Memnite", Zone.GRAVEYARD, "alice")
+    sources = scenario.untapped_sources(*(["Swamp"] * 5))
+    scenario.will_choose_cards(
+        scenario.find("Grizzly Bears", Zone.LIBRARY, "alice"), source="Lively Dirge"
+    )
+    scenario.will_choose_cards(memnite, source="Lively Dirge")
+
+    casting = scenario.cast("Lively Dirge")
+    casting.choose_modes([1, 2])
+
+    assert casting.total_cost.mana == ManaCost.parse("{4}{B}")
+
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *sources)
+    scenario.put_on_stack(casting)
+    scenario.resolve_top()
+
+    alice = scenario.player("alice")
+    assert any(c.name == "Grizzly Bears" for c in alice.graveyard), "mode 1 milled it in"
+    assert memnite.zone is Zone.BATTLEFIELD, "mode 2 returned it"
+    assert not scenario.game.mode_notices

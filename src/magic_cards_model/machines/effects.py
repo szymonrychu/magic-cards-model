@@ -7497,6 +7497,85 @@ def _parse_search_put_battlefield_tapped_then_behold_untap_clause(
     return effect
 
 
+#: "You may behold a `<quality>`. If you do, `<consequence>`." - CR 701.4a's
+#: keyword action as a plain, standalone resolution-time optional action
+#: (CR 608.2d), general rather than pinned to Sarkhan, Dragon Ascendant's own
+#: "When Sarkhan enters, you may behold a Dragon. If you do, create a
+#: Treasure token." Distinct from `_SEARCH_PUT_BATTLEFIELD_TAPPED_THEN_
+#: BEHOLD_UNTAP_RE` above, which reads the identical CR 701.4a action bundled
+#: with a search this shape has none of.
+_OPTIONAL_BEHOLD_THEN_IF_YOU_DO_RE = re.compile(
+    r"^you may behold an? (?P<quality>[a-z' -]+?)\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_optional_behold_then_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_OPTIONAL_BEHOLD_THEN_IF_YOU_DO_RE`'s shape, or `None`.
+
+    The same single `CHOOSE_CARDS` question `_parse_search_put_battlefield_
+    tapped_then_behold_untap_clause` already folds CR 701.4a's own "or" and
+    CR 608.2d's "you may" into: every card in either pool - a matching hand
+    card or a matching battlefield permanent - is one candidate list,
+    `amount=1, exact=False` so declining is a legal answer, offered only
+    when non-empty. "If you do" (CR 608.2d) runs the consequence only when a
+    card was actually beheld.
+    """
+    match = _OPTIONAL_BEHOLD_THEN_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    quality = match.group("quality").strip()
+    behold_matches = _quality_matcher(quality)
+    consequence_text = match.group("consequence").strip()
+    if not consequence_text.endswith("."):
+        consequence_text += "."
+    # `_ability_effect_or_notice`, not `parse_clause_effect`: the consequence
+    # is a whole ability effect in its own right (Sarkhan's own "create a
+    # Treasure token" reaches `_token_creation_clause` only through that
+    # wider dispatcher, which every other whole-ability reader in this file
+    # already calls back into for its own "if you do"/"then" tail).
+    consequence = _ability_effect_or_notice(consequence_text)
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.player(ability.controller)
+        source = ability.source_name
+        source_id = source_id_of(ability)
+        hand_candidates = [state for state in controller.hand if behold_matches(state)]
+        battlefield_candidates = [
+            state
+            for state in game.permanents_controlled_by(controller.username)
+            if behold_matches(state)
+        ]
+        candidates = hand_candidates + battlefield_candidates
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"behold {with_indefinite_article(quality)}",
+                source=source,
+                source_id=source_id,
+                amount=1,
+                exact=False,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        if not chosen_ids:
+            return
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id.get(chosen_ids[0])
+        if chosen is None:
+            return
+        if chosen.zone is Zone.HAND:
+            game.reveal(chosen, source=source)
+        consequence(game, ability)
+
+    return effect
+
+
 #: Roads Go Ever, Ever On's own chapter I: "Search your library for up to two
 #: basic Plains cards, exile them, then shuffle. You gain 2 life." A fifth
 #: search destination beside `_SEARCH_AND_PUT_RE`'s hand/battlefield/
@@ -9515,6 +9594,176 @@ _PLAYER_GAINS_HEXPROOF_RE = re.compile(
 _EACH_OPPONENT_LOSES_LIFE_RE = re.compile(
     rf"each opponent loses (?P<n>{COUNT}) life", re.IGNORECASE
 )
+
+#: "Each opponent loses N life unless that player sacrifices a `<quality>`
+#: [of their choice] or discards a card." (Perforating Artist, Nicol Bolas
+#: the Deceiver's own +3, Torment of Hailfire's repeated process) - CR
+#: 118.12's punisher shape widened from `_LOSES_LIFE_UNLESS_RE`'s single
+#: fixed action to a *choice* of two, the same two-way optional cost
+#: `_MAY_DISCARD_OR_SACRIFICE_IF_YOU_DO_RE` already reads for a plain "you
+#: may ... or ...", read here as "each opponent" rather than "you". Both
+#: printed orders (sacrifice-then-discard, discard-then-sacrifice) are read,
+#: for the identical reason that reader takes both.
+_EACH_OPPONENT_LOSES_LIFE_UNLESS_SACRIFICE_OR_DISCARD_RE = re.compile(
+    r"^each opponent loses (?P<n>\d+) life unless that player "
+    r"(?:sacrifices (?P<restriction_last>[^.]+?) or discards a card"
+    r"|discards a card or sacrifices (?P<restriction_first>[^.]+?))\.?$",
+    re.IGNORECASE,
+)
+_OF_THEIR_CHOICE_TAIL_RE = re.compile(r"\s+of their choice$", re.IGNORECASE)
+
+
+def _parse_each_opponent_loses_life_unless_sacrifice_or_discard_clause(
+    clause: str,
+) -> ClauseEffect | None:
+    """`_EACH_OPPONENT_LOSES_LIFE_UNLESS_SACRIFICE_OR_DISCARD_RE`'s shape.
+
+    Each opponent, independently (CR 102.2), is offered the choice CR
+    608.2d already gives a "you may ... or ..." cost - `_sacrifice_
+    restriction`/`_sacrifice_is_payable`/`_choose_permanents_to_sacrifice`
+    are the exact functions `_parse_may_discard_or_sacrifice_if_you_do_
+    clause` uses for its own "you may" version of the same two actions,
+    reused rather than re-implemented; only who is being asked, and what
+    happens when they decline (losing life, not "nothing"), differ. An
+    opponent who can pay neither half loses the life with no question asked
+    - CR 608.2d never offers an impossible choice - and one who can pay only
+    one half is not asked which, the same "no real choice, no question"
+    shape `_parse_may_discard_or_sacrifice_if_you_do_clause` already keeps.
+    """
+    match = _EACH_OPPONENT_LOSES_LIFE_UNLESS_SACRIFICE_OR_DISCARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount = int(match.group("n"))
+    restriction_text = (match.group("restriction_last") or match.group("restriction_first")).strip()
+    restriction_text = _OF_THEIR_CHOICE_TAIL_RE.sub("", restriction_text).strip()
+    restriction = _sacrifice_restriction(restriction_text)
+    if restriction is None:
+        return None
+    sacrifice_option = f"sacrifice {restriction_text}"
+    discard_option = "discard a card"
+
+    def effect(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        for opponent in _opponents(game, player.username):
+            candidates = restriction.candidates(game, opponent, None)
+            payable = {
+                sacrifice_option: _sacrifice_is_payable(restriction.quantity, candidates),
+                discard_option: len(opponent.hand) >= 1,
+            }
+            options = tuple(
+                option for option in (sacrifice_option, discard_option) if payable[option]
+            )
+            take_action = game.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=opponent.username,
+                    prompt=(
+                        f"{' or '.join(options) if options else sacrifice_option} "
+                        f"rather than lose {amount} life"
+                    ),
+                    source=source,
+                    affirmative_is_legal=bool(options),
+                    source_id=source_id,
+                )
+            )
+            if not take_action:
+                game.lose_life(opponent, amount)
+                continue
+            chosen = options[0]
+            if len(options) > 1:
+                answer = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=opponent.username,
+                        prompt="choose which to do",
+                        source=source,
+                        options=options,
+                        source_id=source_id,
+                    )
+                )
+                assert isinstance(answer, str)
+                chosen = answer
+            if chosen == discard_option:
+                discarded = _discard_cards(game, opponent, 1, source, source_id=source_id)
+                if not discarded:
+                    game.lose_life(opponent, amount)
+            else:
+                sacrificed = _choose_permanents_to_sacrifice(
+                    game,
+                    opponent,
+                    restriction,
+                    candidates,
+                    source_name=source,
+                    source_id=source_id,
+                )
+                if not sacrificed:
+                    game.lose_life(opponent, amount)
+                else:
+                    for permanent in sacrificed:
+                        game.sacrifice(permanent)
+
+    return effect
+
+
+#: "Put a `<kind>` counter on it. Then for each `<kind>` counter on it,
+#: `<effect>`." - Rottenmouth Viper's own "Whenever this creature enters or
+#: attacks, put a blight counter on it. Then for each blight counter on it,
+#: each opponent loses 4 life unless that player sacrifices a nonland
+#: permanent of their choice or discards a card." Read as one CR 608.2c
+#: instruction, the same way `_parse_ante_self_if_you_do_clause` and every
+#: other "run the first sentence, then act on its own result" reader in this
+#: file is: the second sentence's own count is CR 122.1's count on the exact
+#: object the first sentence just modified, not a fresh board fact to
+#: recompute, so a source already carrying counters from an earlier trigger
+#: (an attack after an earlier attack or entrance) punishes that many times
+#: over. `<effect>` is read generically through `parse_clause_effect` - the
+#: same per-clause dispatcher every other player clause in this module goes
+#: through - so a future card pairing a different counter kind with a
+#: different repeated effect reads here too, not only this one punisher.
+_PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE = re.compile(
+    r"^put an? (?P<kind>[a-z]+) counter on it\.\s*"
+    r"then for each (?P<kind2>[a-z]+) counter on it,\s*(?P<rest>.+)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_put_counter_then_for_each_counter_punisher_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE`'s shape, or `None`.
+
+    Ability-only in practice (the "it" is CR 109.2's self-reference to the
+    ability's own source, which a resolving spell has none of the way a
+    permanent's own triggered ability does) - nothing in the pool prints
+    this shape on a spell, so this is never tried against one.
+    """
+    match = _PUT_COUNTER_THEN_FOR_EACH_COUNTER_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    kind = match.group("kind").lower()
+    if match.group("kind2").lower() != kind:
+        return None
+    inner = parse_clause_effect(match.group("rest").strip())
+    if inner is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.add_counters(source, kind, 1)
+        count = source.counter_count(kind)
+        if count <= 0:
+            return
+        player = game.player(ability.controller)
+        source_name = ability.source_name
+        source_id = source_id_of(ability)
+        for _ in range(count):
+            inner(game, player, source_name, source_id)
+            game.announce_batched_events()  # CR 603.2c: one event per instruction
+
+    return effect
+
+
 # CR 107.14: "The energy symbol is {E}. It represents one energy counter."
 _ENERGY_RE = re.compile(r"(?:you )?gets? (?P<e>(?:\{e\})+)", re.IGNORECASE)
 # CR 122.1f: poison counters are a kind a player gets - "you get a poison
@@ -10859,6 +11108,12 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     half_life_loss = _parse_half_life_loss_clause(clause)
     if half_life_loss is not None:
         return half_life_loss
+
+    each_opponent_punisher = _parse_each_opponent_loses_life_unless_sacrifice_or_discard_clause(
+        clause
+    )
+    if each_opponent_punisher is not None:
+        return each_opponent_punisher
 
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -27533,6 +27788,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         parse_sacrifice_self_when_you_do,
     )
 
+    blight_counter_punisher = _parse_put_counter_then_for_each_counter_punisher_clause(effect_text)
+    if blight_counter_punisher is not None:
+        return blight_counter_punisher
+    optional_behold_then_if_you_do = _parse_optional_behold_then_if_you_do_clause(effect_text)
+    if optional_behold_then_if_you_do is not None:
+        return optional_behold_then_if_you_do
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
@@ -28846,6 +29107,19 @@ _MASS_POWER_TOUGHNESS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "<qualifier> that entered [the battlefield] this turn" - Force of
+#: Despair's own "Destroy all creatures that entered this turn." CR 400.7's
+#: "entered the battlefield this turn" is `CardState.turn_entered` compared
+#: against the current turn, the identical reading `machines/targeting.py`'s
+#: own `must_have_entered_this_turn` already gives the same phrase for a
+#: *targeted* restriction and `_parse_mass_return_entered_this_turn_clause`
+#: gives it for its own mass-return subject - read here a third time for a
+#: mass-*destruction*'s subject instead, sharing none of the mass-destroy
+#: qualifier grammar (type, counter, mana value) it is ANDed alongside.
+_MASS_ENTERED_THIS_TURN_RE = re.compile(
+    r"^(?P<qualifier>.+?) that entered(?: the battlefield)? this turn$", re.IGNORECASE
+)
+
 #: "the number of <kind> counters on this <noun>" - Engineered Explosives's
 #: own self-referential right-hand side: "Destroy each nonland permanent
 #: with mana value equal to the number of charge counters on this artifact."
@@ -29019,6 +29293,11 @@ def _parse_mass_destroy_predicate(
     (game, candidate permanent, this clause's own source).
     """
     text = rest.strip()
+    entered_this_turn = False
+    entered_match = _MASS_ENTERED_THIS_TURN_RE.fullmatch(text)
+    if entered_match is not None:
+        entered_this_turn = True
+        text = entered_match.group("qualifier").strip()
     stat_comparison: Callable[[Characteristics], bool] | None = None
     stat_match = _MASS_POWER_TOUGHNESS_RE.fullmatch(text)
     if stat_match is not None:
@@ -29052,6 +29331,10 @@ def _parse_mass_destroy_predicate(
             return False
         if stat_comparison is not None and not stat_comparison(chars):
             return False
+        if entered_this_turn:
+            turn = game.turn
+            if turn is None or permanent.turn_entered != turn.turn_number:
+                return False
         return mv_comparison is None or mv_comparison(game, chars, source)
 
     return predicate
@@ -31936,6 +32219,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     look_top_n_total_mv = _parse_look_top_n_put_total_mv_onto_battlefield(effect_text)
     if look_top_n_total_mv is not None:
         return look_top_n_total_mv
+    return_up_to_n_total_mv_from_graveyard = (
+        _parse_return_up_to_n_total_mv_from_graveyard_to_battlefield(effect_text)
+    )
+    if return_up_to_n_total_mv_from_graveyard is not None:
+        return return_up_to_n_total_mv_from_graveyard
     # -- end whole-text shapes ---------------------------------------------
     if _DAMAGE_THEN_GROUP_TYPE_ABILITY_GRANT_RE.fullmatch(whole):
 
@@ -36046,6 +36334,70 @@ def _parse_counter_unless_pays_then_condition_upgrade_pair(
             target = next((item for item in game.stack if item.id == reference.card_id), None)
             if target is not None:
                 game.counter(target)
+
+    return effect
+
+
+#: Dispelling Exhale's own second sentence: "If a Dragon was beheld, counter
+#: that spell unless its controller pays {4} instead." Unlike Stubborn
+#: Denial's own "instead" (`_COUNTER_INSTEAD_IF_POWER_RE`), which *replaces*
+#: CR 118.12a's payment with an unconditional counter, this "instead"
+#: replaces only the *amount* - the counter is still conditional on a
+#: payment either way, just a steeper one. The condition itself is any
+#: `Game.condition_holds` reads (CR 701.4b's own "if a `<quality>` was
+#: beheld" among them, `cast_record._beheld_for_cost`), not pinned to
+#: Dragons, so a future card pairing a different behold quality with the
+#: same amount-upgrade shape reads here too.
+_COUNTER_UNLESS_PAYS_INSTEAD_CONDITIONAL_AMOUNT_RE = re.compile(
+    r"^if (?P<condition>[^,]+), counter that spell unless its controller pays "
+    r"\{(?P<n>\d+)\} instead\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_counter_unless_pays_then_condition_amount_upgrade_pair(
+    first: str, second: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_COUNTER_UNLESS_PAYS_INSTEAD_CONDITIONAL_AMOUNT_RE`'s shape - see the
+    banner above. Read as a pair for the identical reason `_parse_counter_
+    unless_pays_then_condition_upgrade_pair` is: taken apart, the second
+    sentence would counter the same spell a second time, which "instead" -
+    replacing the first sentence's own outcome - never means.
+
+    The condition is checked once, as this spell resolves (CR 608.2: in the
+    order written), through `Game.condition_holds` - the same reader every
+    other printed condition in this module goes through - against the spell
+    itself as `source` (CR 701.4b's own quality was met by *this spell's*
+    cast, not by its target's). An unreadable condition fails closed with a
+    `ConditionalClauseNotice` rather than guessing which amount to charge.
+    """
+    if not for_spell:
+        return None
+    unless = _COUNTER_UNLESS_PAYS_RE.fullmatch(first.strip())
+    upgrade = _COUNTER_UNLESS_PAYS_INSTEAD_CONDITIONAL_AMOUNT_RE.fullmatch(second.strip())
+    if unless is None or upgrade is None:
+        return None
+    base_amount = int(unless.group("n"))
+    upgraded_amount = int(upgrade.group("n"))
+    condition_text = upgrade.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    base_effect = _counter_unless_pays_effect(base_amount)
+    upgraded_effect = _counter_unless_pays_effect(upgraded_amount)
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        held = game.condition_holds(controller.username, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(spell),
+                source_name=spell.name,
+                text=second,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        (upgraded_effect if held else base_effect)(game, spell)
 
     return effect
 
@@ -54077,6 +54429,116 @@ def _parse_grant_quoted_ability_then_return_front_face_whole_text(
     return effect
 
 
+#: Deadly Cover-Up's own whole spell: "Destroy all creatures. If evidence
+#: was collected, exile a card from an opponent's graveyard. Then search its
+#: owner's graveyard, hand, and library for any number of cards with that
+#: name and exile them. That player shuffles, then draws a card for each
+#: card exiled from their hand this way." A mass destruction
+#: (`_parse_mass_destroy_predicate`'s own qualifier grammar, general to any
+#: printed type list - not pinned to "creatures") ahead of a CR 118.12-style
+#: conditional graveyard-hate tail that reuses `_search_and_exile_matching_
+#: name`, the identical search-exile-shuffle-draw The Stone Brain's and
+#: Surgical Extraction's own readers already established two sections
+#: above: the chosen graveyard card's own name never has to be separately
+#: exiled, since it is itself a graveyard card carrying that name and so is
+#: swept up by the very search it names. `<condition>` is any `Game.
+#: condition_holds` reads, and "your graveyard" alongside "an opponent's" is
+#: read the same generic way the CR 701.4a family and every other
+#: whose-zone reader in this module already keep the two apart.
+_MASS_DESTROY_THEN_CONDITIONAL_GRAVEYARD_HATE_RE = re.compile(
+    r"^destroy (?:each|all) (?P<destroy_rest>[^.]+)\.\s*"
+    r"if (?P<condition>[^,]+), exile a card from (?P<whose>an opponent'?s|your) graveyard\.\s*"
+    r"then search its owner'?s graveyard, hand, and library for any number of cards "
+    r"with that name and exile them\.\s*"
+    r"that player shuffles, then draws a card for each card exiled from their hand this way\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_mass_destroy_then_conditional_graveyard_hate_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_MASS_DESTROY_THEN_CONDITIONAL_GRAVEYARD_HATE_RE`'s shape, or `None`.
+
+    Spell-only: nothing in the pool prints this shape as an ability. The
+    condition is checked once, as the spell resolves, against the spell
+    itself (`game.condition_holds`) - the same object `_parse_counter_
+    unless_pays_then_condition_amount_upgrade_pair` already reads its own
+    linked condition against.
+    """
+    if not for_spell:
+        return None
+    match = _MASS_DESTROY_THEN_CONDITIONAL_GRAVEYARD_HATE_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    destroy_predicate = _parse_mass_destroy_predicate(match.group("destroy_rest"))
+    if destroy_predicate is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+    whose = match.group("whose").lower()
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        source_id = source_id_of(spell)
+        _destroy_matching(game, destroy_predicate, spell)
+        held = game.condition_holds(controller.username, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id,
+                source_name=spell.name,
+                text=text,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if not held:
+            return
+        if whose == "your":
+            zones_owner = controller
+        else:
+            zones_owner = _choose_an_opponent(game, controller, spell.name, source_id)
+        if zones_owner is None:
+            return
+        candidates = list(zones_owner.graveyard)
+        if not candidates:
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=controller.username,
+                prompt=f"exile a card from {zones_owner.username}'s graveyard",
+                source=spell.name,
+                source_id=source_id,
+                amount=1,
+                exact=True,
+                cards=tuple(state.id for state in candidates),
+            )
+        )
+        if not chosen_ids:
+            return
+        by_id = {state.id: state for state in candidates}
+        chosen = by_id.get(chosen_ids[0])
+        if chosen is None:
+            return
+        _exiled, exiled_from_hand = _search_and_exile_matching_name(
+            game,
+            zones_owner,
+            chosen.name,
+            chooser=controller,
+            cap=None,
+            source=spell.name,
+            source_id=source_id,
+        )
+        if exiled_from_hand:
+            game.draw_cards(zones_owner.username, exiled_from_hand)
+
+    return effect
+
+
 def _parse_choose_name_search_and_exile_whole_text(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -56505,6 +56967,17 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
+    mass_destroy_then_graveyard_hate = _parse_mass_destroy_then_conditional_graveyard_hate_clause(
+        text, for_spell=for_spell
+    )
+    if mass_destroy_then_graveyard_hate is not None:
+        return [mass_destroy_then_graveyard_hate]
+    if for_spell:
+        return_up_to_n_total_mv_from_graveyard = (
+            _parse_return_up_to_n_total_mv_from_graveyard_to_battlefield(text)
+        )
+        if return_up_to_n_total_mv_from_graveyard is not None:
+            return [return_up_to_n_total_mv_from_graveyard]
     exile_then_cast_types_effect = _parse_exile_top_then_cast_types_free_this_turn_whole_text(
         text, for_spell=for_spell
     )
@@ -57492,6 +57965,13 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 index += 2
                 continue
             paired = _parse_counter_unless_pays_then_condition_upgrade_pair(
+                clauses[index], clauses[index + 1], for_spell=for_spell
+            )
+            if paired is not None:
+                parsed.append(paired)
+                index += 2
+                continue
+            paired = _parse_counter_unless_pays_then_condition_amount_upgrade_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
             if paired is not None:
@@ -63625,6 +64105,78 @@ def _parse_look_top_n_put_total_mv_onto_battlefield(text: str) -> Effect | None:
         for state in taken:
             game.put_onto_battlefield(state, controller.username)
         _bottom_in_random_order(game, controller, [s for s in looked if s not in taken])
+
+    return effect
+
+
+#: "Return up to `<n>` `<group>` cards with total mana value `<total>` or
+#: less from your graveyard to the battlefield." - Lively Dirge's own Spree
+#: mode (CR 702.172a). The identical two-bound shape `_LOOK_TOP_N_PUT_
+#: TOTAL_MV_ONTO_BATTLEFIELD_RE` already reads for a library look - "up to
+#: N" cards whose mana values (CR 202.3) sum to at most a printed total, a
+#: resolution-time choice (CR 608.2d) rather than a cast-time target - fed
+#: from the graveyard instead: `_parse_card_group_qualifier` is the same
+#: card-type-group reader either shares.
+_RETURN_UP_TO_N_TOTAL_MV_FROM_GRAVEYARD_TO_BATTLEFIELD_RE = re.compile(
+    rf"^return up to (?P<take>{COUNT}) (?P<group>[a-z]+) cards with total mana value "
+    r"(?P<total>\d+) or less from your graveyard to the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_up_to_n_total_mv_from_graveyard_to_battlefield(text: str) -> Effect | None:
+    """`_RETURN_UP_TO_N_TOTAL_MV_FROM_GRAVEYARD_TO_BATTLEFIELD_RE`'s shape,
+    or `None`. Both bounds are the choosing player's own to respect, refused
+    rather than silently trimmed - the identical CR 608.2d discipline
+    `_parse_look_top_n_put_total_mv_onto_battlefield` already keeps for its
+    own pair of the same two bounds.
+    """
+    match = _RETURN_UP_TO_N_TOTAL_MV_FROM_GRAVEYARD_TO_BATTLEFIELD_RE.fullmatch(
+        _strip_non_effect_preamble(text).strip()
+    )
+    if match is None:
+        return None
+    take = parse_count(match.group("take"))
+    if take is None:
+        return None
+    predicate = _parse_card_group_qualifier(match.group("group"))
+    if predicate is None:
+        return None
+    total_bound = int(match.group("total"))
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        candidates = [state for state in controller.graveyard if predicate(state)]
+        taken: list[CardState] = []
+        if candidates:
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=(
+                        f"return up to {take} cards with total mana value {total_bound} "
+                        "or less from your graveyard to the battlefield"
+                    ),
+                    source=spell.name,
+                    source_id=source_id_of(spell),
+                    amount=min(take, len(candidates)),
+                    cards=tuple(state.id for state in candidates),
+                    exact=False,
+                )
+            )
+            by_id = {state.id: state for state in candidates}
+            taken = [by_id[card_id] for card_id in chosen_ids if card_id in by_id]
+            if len(taken) > take:
+                raise ValueError(
+                    f"{spell.name} returns up to {take} cards from the graveyard, not {len(taken)}"
+                )
+            total = sum(state.card.cmc or 0 for state in taken)
+            if total > total_bound:
+                raise ValueError(
+                    f"{spell.name} allows total mana value {total_bound} or less, not {total:g}"
+                )
+        for state in taken:
+            game.put_onto_battlefield(state, controller.username)
 
     return effect
 

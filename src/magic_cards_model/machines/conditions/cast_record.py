@@ -384,6 +384,19 @@ def _evidence_collected(context: "ConditionContext", match: re.Match[str]) -> bo
     return held != bool(match.group("negated"))
 
 
+def _beheld_for_cost(context: "ConditionContext", match: re.Match[str]) -> bool:
+    """ "if a Dragon was beheld" (CR 701.4b) - the plain, unrestricted
+    "you may behold a `<quality>`" additional cost (CR 118.8b), set by
+    `Casting.behold_for_cost`. The quality named in the clause is not
+    re-checked here: it is fixed by the same printed cost sentence that
+    `beheld_for_cost` itself already enforced against whatever was beheld to
+    pay it, the identical division `_evidence_collected` already keeps for
+    its own linked "if evidence was collected" (CR 701.59c)."""
+    record = _record(context)
+    held = record is not None and record.beheld_for_cost
+    return held != bool(match.group("negated"))
+
+
 def _revealed_or_controlled(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "you revealed a Dragon card or controlled a Dragon as you cast this
     spell": the optional reveal was paid, or the caster controlled a
@@ -497,6 +510,10 @@ READERS: tuple[ConditionReader, ...] = (
     ),
     _reader(rf"{_SUBJECT} (?:was|were){_NEGATED} bargained", _bargained),
     _reader(r"evidence was(?P<negated>n't| not)? collected", _evidence_collected),
+    _reader(
+        r"an? (?P<quality>[a-z' -]+?) was(?P<negated>n't| not)? beheld",
+        _beheld_for_cost,
+    ),
     _reader(
         r"you revealed an? (?P<revealed>[a-z]+) card or controlled an? (?P<controlled>[a-z]+) "
         r"as you cast (?:this spell|it)",

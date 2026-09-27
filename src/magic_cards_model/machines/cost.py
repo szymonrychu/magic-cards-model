@@ -2542,6 +2542,15 @@ class CardRequirement(EngineModel):
     """The card must be at least one of these colours."""
     types: list[Type] = Field(default_factory=list)
     """The card must have at least one of these card types."""
+    excluded_types: list[Type] = Field(default_factory=list)
+    """The card must have **none** of these card types - Rottenmouth Viper's
+    own "sacrifice any number of nonland permanents" (CR 118.7a's own
+    "nonland" restriction, read the same negated-type way `machines.
+    targeting.permanent_description` already reads it for a targeted
+    restriction). Unlike `types`, which is a choice among several, this is
+    every one of them excluded at once - "nonland" alone has only ever
+    printed the one card type in this pool, but a future "non-artifact,
+    non-creature" would exclude both."""
     subtypes: list[str] = Field(default_factory=list)
     """The card must have at least one of these subtypes, as printed."""
     supertypes: list[Supertype] = Field(default_factory=list)
@@ -2587,6 +2596,7 @@ class CardRequirement(EngineModel):
         return not (
             self.colors
             or self.types
+            or self.excluded_types
             or self.subtypes
             or self.supertypes
             or self.same_name_as
@@ -2652,6 +2662,9 @@ class CardRequirement(EngineModel):
         if self.types and not types & set(self.types):
             wanted = "/".join(type_.value for type_ in self.types)
             return f"{card.name} is not {with_indefinite_article(wanted)}"
+        if self.excluded_types and types & set(self.excluded_types):
+            unwanted = "/".join(type_.value for type_ in self.excluded_types)
+            return f"{card.name} is {with_indefinite_article(unwanted)}"
         if self.subtypes and not subtypes & self._wanted_subtypes():
             return f"{card.name} is not {with_indefinite_article('/'.join(self.subtypes))}"
         if self.mana_value is not None and mana_value != self.mana_value:
@@ -5101,6 +5114,38 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
     return offers
 
 
+#: Rottenmouth Viper's own second sentence of its own additional cost
+#: paragraph: "As an additional cost to cast this spell, you may sacrifice
+#: any number of nonland permanents. This spell costs {1} less to cast for
+#: each permanent sacrificed this way." CR 118.7a confines a generic-mana
+#: reduction like this one to the cost's own generic component - the same
+#: floor `ManaCost.minus` already enforces for every other per-count
+#: reduction `Game.cost_reduction_for` reads - so this only ever carries a
+#: `ManaCost` built from a plain `{N}`, never a coloured symbol. Distinct
+#: from `Game.cost_reduction_for`'s own board-state reductions: what this
+#: counts is not a fact about the board when the cost is determined, it is
+#: how many objects the payer chose to sacrifice for *this* announced
+#: additional cost (CR 601.2b), so it is read by `Casting.
+#: sacrifice_for_cost_reduction` itself rather than by that generic reader.
+_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE = re.compile(
+    r"this spell costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) less to cast for each "
+    r"(?P<noun>[a-z]+) sacrificed this way\.?",
+    re.IGNORECASE,
+)
+
+
+def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
+    """The per-object amount `_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE` prints
+    on `card`, or `None` when it prints no such sentence at all - as opposed
+    to printing one this engine cannot read, which `Casting.
+    sacrifice_for_cost_reduction` tells apart by trying to parse the amount
+    and raising when that fails rather than silently reducing nothing."""
+    match = _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE.search(card.oracle_text or "")
+    if match is None:
+        return None
+    return ManaCost.try_parse(match.group("amount"))
+
+
 #: Omniscience: "You may cast spells from your hand without paying their mana
 #: costs." CR 118.9's *other* half - "a cost listed in a spell's text, **or
 #: applied to it from another effect**" - so this is read off a permanent on
@@ -5269,9 +5314,14 @@ _COLOR_WORDS = {
 #: the X announced as the cost is paid.
 _PHRASE_PAY_LIFE = re.compile(rf"^pay {count_pattern('amount', x=True)} life$", re.IGNORECASE)
 #: The count of an object cost: a number, CR 107.3a's X ("Exile X cards from
-#: your graveyard", Necropolis Fiend), or "one or more" ("Sacrifice one or
-#: more artifacts", Radiant Lotus). Read back with `_cost_count`.
-_COST_COUNT = rf"(?P<count>one or more|{count_pattern(x=True)})"
+#: your graveyard", Necropolis Fiend), "one or more" ("Sacrifice one or
+#: more artifacts", Radiant Lotus), or CR 107.1c's "any number of"
+#: ("Sacrifice any number of nonland permanents", Rottenmouth Viper's own
+#: additional cost) - the same zero-or-more range `parse_quantity` already
+#: answers `QuantitySource.ANY_NUMBER` for; unlike "one or more" the payer
+#: may name none at all, which `_cost_count` is what tells the two apart.
+#: Read back with `_cost_count`.
+_COST_COUNT = rf"(?P<count>any number of|one or more|{count_pattern(x=True)})"
 #: `Exile a black card from your hand` (Force of Will) and the self-referential
 #: `Exile this card from your graveyard` (Seasoned Pyromancer). CR 406.2 never
 #: restricts exiling to the hand, so the zone is read off the sentence rather
@@ -5505,12 +5555,15 @@ def _cost_count(word: str) -> tuple[int, bool] | None:
 
     A printed number is exact. CR 107.3a's X is announced as the cost is paid
     and may be 0. "One or more" is every object the payer chooses, at least
-    one. The chosen number is filled in by `announce_count`.
+    one. CR 107.1c's "any number of" is the same choice with a floor of zero
+    - declining is legal, unlike "one or more" - so it shares X's own (0,
+    True) answer rather than ONE_OR_MORE's floor of one. The chosen number is
+    filled in by `announce_count`.
     """
     quantity = parse_quantity(word)
     if quantity is None:
         return None
-    if quantity.source is QuantitySource.X:
+    if quantity.source in (QuantitySource.X, QuantitySource.ANY_NUMBER):
         return 0, True
     if quantity.source is QuantitySource.ONE_OR_MORE:
         return 1, True
@@ -5571,6 +5624,7 @@ def _requirement(quality: str) -> CardRequirement | None:
 
     colors: list[Color] = []
     types: list[Type] = []
+    excluded_types: list[Type] = []
     subtypes: list[str] = []
     supertypes: list[Supertype] = []
     tapped: bool | None = None
@@ -5585,6 +5639,13 @@ def _requirement(quality: str) -> CardRequirement | None:
             # CR 110.5's status: web-slinging's "a tapped creature you
             # control" (CR 702.188a).
             tapped = lowered == "tapped"
+            continue
+        negated_type = lowered.removeprefix("non-").removeprefix("non")
+        if lowered.startswith("non") and negated_type in {type_.value for type_ in Type}:
+            # "nonland permanents" (Rottenmouth Viper) - CR 118.7a's own
+            # negated card type, read the same way for any type word rather
+            # than pinned to "land".
+            excluded_types.append(Type(negated_type))
             continue
         if lowered == "permanent":
             # CR 110.1 makes everything on the battlefield a permanent
@@ -5614,6 +5675,7 @@ def _requirement(quality: str) -> CardRequirement | None:
     return CardRequirement(
         colors=colors,
         types=types,
+        excluded_types=excluded_types,
         subtypes=subtypes,
         supertypes=supertypes,
         description=quality.strip(),

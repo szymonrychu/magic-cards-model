@@ -1,0 +1,164 @@
+{
+  "object": "card",
+  "id": "c2200646-7b7c-489d-bbae-16b03e1d7fb2",
+  "oracle_id": "71cb48e2-2328-471c-a04a-7b6461f378f4",
+  "multiverse_ids": [
+    693598
+  ],
+  "mtgo_id": 139189,
+  "arena_id": 95638,
+  "tcgplayer_id": 619632,
+  "cardmarket_id": 817842,
+  "name": "Sarkhan, Dragon Ascendant",
+  "lang": "en",
+  "released_at": "2025-04-11",
+  "uri": "https://api.scryfall.com/cards/c2200646-7b7c-489d-bbae-16b03e1d7fb2",
+  "scryfall_uri": "https://scryfall.com/card/tdm/118/sarkhan-dragon-ascendant?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:49:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.jpg?1783907353",
+    "normal": "https://cards.scryfall.io/normal/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.jpg?1783907353",
+    "large": "https://cards.scryfall.io/large/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.jpg?1783907353",
+    "png": "https://cards.scryfall.io/png/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.png?1783907353",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.jpg?1783907353",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.jpg?1783907353",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.webp?1783907353",
+    "grid": "https://cards.scryfall.io/grid/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.webp?1783907353",
+    "display": "https://cards.scryfall.io/display/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.webp?1783907353",
+    "art": "https://cards.scryfall.io/art/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.webp?1783907353",
+    "crop": "https://cards.scryfall.io/crop/front/c/2/c2200646-7b7c-489d-bbae-16b03e1d7fb2.webp?1783907353"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Druid",
+  "oracle_text": "When Sarkhan enters, you may behold a Dragon. If you do, create a Treasure token. (To behold a Dragon, choose a Dragon you control or reveal a Dragon card from your hand.)\nWhenever a Dragon you control enters, put a +1/+1 counter on Sarkhan. Until end of turn, Sarkhan becomes a Dragon in addition to his other types and gains flying.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Behold",
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "9c8f66e1-4eab-4d51-b10e-9cedd607d709",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/9c8f66e1-4eab-4d51-b10e-9cedd607d709"
+    },
+    {
+      "object": "related_card",
+      "id": "a267ced0-34af-483c-ba42-517f3f7e22dc",
+      "component": "combo_piece",
+      "name": "Sarkhan, Dragon Ascendant",
+      "type_line": "Legendary Creature \u2014 Human Druid",
+      "uri": "https://api.scryfall.com/cards/a267ced0-34af-483c-ba42-517f3f7e22dc"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set": "tdm",
+  "set_name": "Tarkir: Dragonstorm",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/1361ca81-1304-49a8-b2e6-e76a4aa4a8c3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atdm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tdm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/c2200646-7b7c-489d-bbae-16b03e1d7fb2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A71cb48e2-2328-471c-a04a-7b6461f378f4&unique=prints",
+  "collector_number": "118",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Billy Christian",
+  "artist_ids": [
+    "10f26f94-64fc-4174-856e-701bea4f1521"
+  ],
+  "illustration_id": "de1a49ff-1872-49d6-9c3a-a28ca49a73c7",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 7368,
+  "penny_rank": 3827,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/news/feature/collecting-tarkir-dragonstorm",
+    "previewed_at": "2025-02-21"
+  },
+  "prices": {
+    "usd": "0.50",
+    "usd_foil": "0.47",
+    "usd_etched": null,
+    "eur": "0.32",
+    "eur_foil": "0.55",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=693598&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSarkhan%252C%2BDragon%2BAscendant",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSarkhan%252C%2BDragon%2BAscendant",
+    "edhrec": "https://edhrec.com/route/?cc=Sarkhan%2C+Dragon+Ascendant"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F619632%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=817842&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/139189?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
