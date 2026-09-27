@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "a917be03-0c17-4454-b044-c4375e5c8085",
+  "oracle_id": "57b37df5-fee4-4720-931f-f0cb0a8b338c",
+  "multiverse_ids": [
+    680831
+  ],
+  "mtgo_id": 134720,
+  "arena_id": 94120,
+  "tcgplayer_id": 591100,
+  "cardmarket_id": 796139,
+  "name": "Orzhov Guildgate",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/a917be03-0c17-4454-b044-c4375e5c8085",
+  "scryfall_uri": "https://scryfall.com/card/fdn/692/orzhov-guildgate?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:15:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.jpg?1783908900",
+    "normal": "https://cards.scryfall.io/normal/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.jpg?1783908900",
+    "large": "https://cards.scryfall.io/large/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.jpg?1783908900",
+    "png": "https://cards.scryfall.io/png/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.png?1783908900",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.jpg?1783908900",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.jpg?1783908900",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.webp?1783908900",
+    "grid": "https://cards.scryfall.io/grid/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.webp?1783908900",
+    "display": "https://cards.scryfall.io/display/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.webp?1783908900",
+    "art": "https://cards.scryfall.io/art/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.webp?1783908900",
+    "crop": "https://cards.scryfall.io/crop/front/a/9/a917be03-0c17-4454-b044-c4375e5c8085.webp?1783908900"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land \u2014 Gate",
+  "oracle_text": "This land enters tapped.\n{T}: Add {W} or {B}.",
+  "colors": [],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "W"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/a917be03-0c17-4454-b044-c4375e5c8085/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A57b37df5-fee4-4720-931f-f0cb0a8b338c&unique=prints",
+  "collector_number": "692",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Enter to find wealth, security, and eternal life . . . for just a small price up front.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "John Avon",
+  "artist_ids": [
+    "798f3932-30e0-4420-aa3f-db4d613f89ca"
+  ],
+  "illustration_id": "10ef67ba-9de0-4289-bb29-45432d581cbe",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "startercollection"
+  ],
+  "edhrec_rank": 1985,
+  "penny_rank": 1955,
+  "prices": {
+    "usd": "0.14",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=680831&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DOrzhov%2BGuildgate",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DOrzhov%2BGuildgate",
+    "edhrec": "https://edhrec.com/route/?cc=Orzhov+Guildgate"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591100%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=796139&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/134720?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

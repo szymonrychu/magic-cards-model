@@ -62376,6 +62376,15 @@ _YOU_WIN_THE_GAME_IF_CONDITION_RE = re.compile(
 )
 
 
+#: The bare "You win the game." - what is left of a trigger whose condition
+#: is CR 603.4's intervening *if* (Liliana's Contract's "At the beginning of
+#: your upkeep, if you control four or more Demons with different names, you
+#: win the game."), the condition already split off and checked by
+#: `machines/triggers.intervening_if_holds` both as the event occurs and on
+#: resolution (CR 608.2a).
+_YOU_WIN_THE_GAME_RE = re.compile(r"^you win the game\.?$", re.IGNORECASE)
+
+
 def _parse_if_condition_you_win_the_game_clause(
     clause: str, *, for_spell: bool
 ) -> TargetedClause | None:
@@ -62386,17 +62395,21 @@ def _parse_if_condition_you_win_the_game_clause(
     already applies when it cannot read one - since nothing in the pool
     prints this shape with a condition this wave does not also read.
     """
-    match = _IF_CONDITION_YOU_WIN_THE_GAME_RE.fullmatch(clause.strip())
-    if match is None:
-        match = _YOU_WIN_THE_GAME_IF_CONDITION_RE.fullmatch(clause.strip())
-        if match is None or not _effect_condition_is_readable(match.group("condition")):
-            return None
-    condition_text = match.group("condition").strip()
+    condition_text: str | None = None
+    if _YOU_WIN_THE_GAME_RE.fullmatch(clause.strip()) is None:
+        match = _IF_CONDITION_YOU_WIN_THE_GAME_RE.fullmatch(clause.strip())
+        if match is None:
+            match = _YOU_WIN_THE_GAME_IF_CONDITION_RE.fullmatch(clause.strip())
+            if match is None or not _effect_condition_is_readable(match.group("condition")):
+                return None
+        condition_text = match.group("condition").strip()
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         source = stack_object.source(game) if is_ability(stack_object) else stack_object
-        if game.condition_holds(controller.username, condition_text, source):
+        if condition_text is None or game.condition_holds(
+            controller.username, condition_text, source
+        ):
             game.player_wins_the_game(controller.username)
 
     return effect

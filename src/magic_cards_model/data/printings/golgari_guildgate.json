@@ -1,0 +1,138 @@
+{
+  "object": "card",
+  "id": "92d4646c-a375-4835-aa58-8bb77d1a5abf",
+  "oracle_id": "fa2da325-6859-45bb-b185-35526b01bcc1",
+  "multiverse_ids": [
+    680828
+  ],
+  "mtgo_id": 134714,
+  "arena_id": 94117,
+  "tcgplayer_id": 591096,
+  "cardmarket_id": 796136,
+  "name": "Golgari Guildgate",
+  "lang": "en",
+  "released_at": "2024-11-15",
+  "uri": "https://api.scryfall.com/cards/92d4646c-a375-4835-aa58-8bb77d1a5abf",
+  "scryfall_uri": "https://scryfall.com/card/fdn/689/golgari-guildgate?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:15:00Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.jpg?1783908900",
+    "normal": "https://cards.scryfall.io/normal/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.jpg?1783908900",
+    "large": "https://cards.scryfall.io/large/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.jpg?1783908900",
+    "png": "https://cards.scryfall.io/png/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.png?1783908900",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.jpg?1783908900",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.jpg?1783908900",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.webp?1783908900",
+    "grid": "https://cards.scryfall.io/grid/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.webp?1783908900",
+    "display": "https://cards.scryfall.io/display/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.webp?1783908900",
+    "art": "https://cards.scryfall.io/art/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.webp?1783908900",
+    "crop": "https://cards.scryfall.io/crop/front/9/2/92d4646c-a375-4835-aa58-8bb77d1a5abf.webp?1783908900"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land \u2014 Gate",
+  "oracle_text": "This land enters tapped.\n{T}: Add {B} or {G}.",
+  "colors": [],
+  "color_identity": [
+    "B",
+    "G"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "B",
+    "G"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set": "fdn",
+  "set_name": "Foundations",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/a7ecb771-d1b6-4dec-8cf5-8d45179f21e0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Afdn&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/fdn?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/92d4646c-a375-4835-aa58-8bb77d1a5abf/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afa2da325-6859-45bb-b185-35526b01bcc1&unique=prints",
+  "collector_number": "689",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Enter those who are starving and sick. You are welcome among the Swarm when the rest of Ravnica rejects you.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Eytan Zana",
+  "artist_ids": [
+    "0d8d6726-4051-445a-8374-a919aad98f38"
+  ],
+  "illustration_id": "c426ed59-9a99-41a6-bb40-e00d4c8803a8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "startercollection"
+  ],
+  "edhrec_rank": 1626,
+  "penny_rank": 1510,
+  "prices": {
+    "usd": "0.12",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": null,
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=680828&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DGolgari%2BGuildgate",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DGolgari%2BGuildgate",
+    "edhrec": "https://edhrec.com/route/?cc=Golgari+Guildgate"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F591096%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=796136&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/134714?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

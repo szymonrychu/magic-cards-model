@@ -5493,6 +5493,15 @@ _PHRASE_RETURN_TO_HAND = re.compile(
     r"to (?:its owner's hand|their owner's hand|their owners' hands)$",
     re.IGNORECASE,
 )
+#: `Return this land to its owner's hand` (Maze's End's activation cost) - the
+#: self-referential twin of `_PHRASE_RETURN_TO_HAND`: the permanent the
+#: ability is on (CR 602.1a), built empty and filled with it by `Game.
+#: activation_cost`'s self-reference fill-in, like "Exert this land".
+_PHRASE_RETURN_SELF_TO_HAND = re.compile(
+    r"^return this (?P<self_noun>artifact|creature|enchantment|land|permanent|planeswalker"
+    r"|battle) to its owner's hand$",
+    re.IGNORECASE,
+)
 #: `Collect evidence 6` (Detective's Phoenix's `Bestow-{R}, Collect evidence
 #: 6.`) - CR 701.59a's keyword action used as a cost. Nothing is named to
 #: choose: "any number of cards ... with total mana value N or greater" is a
@@ -6069,6 +6078,17 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
             return None
         requirement.excludes_source = another
         component = return_to_hand_cost(payer=payer, required=read[0], description=text)
+        component.requirement = requirement
+        return component
+
+    returning_self = _PHRASE_RETURN_SELF_TO_HAND.match(text)
+    if returning_self is not None:
+        # A requirement marks this as an object cost rather than ninjutsu's
+        # "unblocked attacker" one (`_why_not_return_to_hand`).
+        requirement = _requirement(returning_self.group("self_noun"))
+        if requirement is None:
+            return None
+        component = return_to_hand_cost(payer=payer, required=1, description=text)
         component.requirement = requirement
         return component
 
