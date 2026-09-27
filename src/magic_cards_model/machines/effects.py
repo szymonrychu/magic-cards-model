@@ -65152,6 +65152,7 @@ def _parse_if_self_isnt_a_creature_clause(effect_text: str) -> AbilityEffect | N
 def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
     """R0a-T5's whole-text ability readers, tried ahead of the clause split
     (each reads a multi-sentence instruction chain), one per owning module."""
+    from .delayed import parse_self_flicker_at_next_end_step_clause
     from .designations import parse_becomes_solved_clause
     from .spell_grants import (
         parse_choose_exiled_with_counter_play_clause,
@@ -65162,6 +65163,7 @@ def _r0a_t5_ability_effect(effect_text: str) -> AbilityEffect | None:
         parse_choose_exiled_with_counter_play_clause,
         parse_becomes_solved_clause,
         parse_graveyard_cards_gain_cast_clause,
+        parse_self_flicker_at_next_end_step_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:

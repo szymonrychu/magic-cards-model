@@ -333,6 +333,23 @@ class ReturnSubjectToBattlefieldUnderOwner(DelayedEffectSpecBase):
         game.put_onto_battlefield(permanent, permanent.owner, tapped=self.tapped)
 
 
+class ReturnSubjectToBattlefieldUnderController(DelayedEffectSpecBase):
+    """ "Return it to the battlefield under your control at the beginning of
+    the next end step" (Argent Sphinx) - CR 610.3c's "unless otherwise
+    specified": the delayed ability's controller (CR 603.7d/e: the player who
+    controlled the ability that created it), not the owner."""
+
+    kind: Literal["return_subject_to_battlefield_under_controller"] = (
+        "return_subject_to_battlefield_under_controller"
+    )
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        permanent = trigger.still_affects(game)
+        if permanent is None:
+            return
+        game.put_onto_battlefield(permanent, trigger.controller)
+
+
 class ReturnSubjectToHand(DelayedEffectSpecBase):
     """ "Return it to its owner's hand at the beginning of the next end step" -
     Aether Membrane's and dash's shape. `Game.return_to_hand` already goes to
@@ -1943,6 +1960,7 @@ DelayedEffectSpec = Annotated[
     | SacrificeEach
     | ExileSubjectAtNextEndStep
     | ReturnSubjectToBattlefieldUnderOwner
+    | ReturnSubjectToBattlefieldUnderController
     | ReturnSubjectToHand
     | ReboundRecast
     | ParadigmCopyAndCast
@@ -2978,3 +2996,62 @@ class DelayedTriggers(EngineModel):
     def discard(self, ability: AbilityOnStack) -> None:
         """Forget an ability that has finished resolving (CR 608.2n)."""
         self.pending.pop(ability.id, None)
+
+
+# --------------------------------------------------------------------------
+# R0a-T5: "Exile this creature. Return it to the battlefield under its
+# owner's/your control at the beginning of the next end step." (CR 603.7a)
+# --------------------------------------------------------------------------
+
+#: The activated self-flicker - Fleeting Spirit, Aetherling, Argent Sphinx.
+_SELF_FLICKER_AT_NEXT_END_STEP_RE = re.compile(
+    r"^exile (?:this (?:creature|permanent|artifact|enchantment)|it)\. return (?:it|that card) "
+    r"to the battlefield(?P<tapped> tapped)? under (?P<whose>its owner's|your) control at "
+    r"the beginning of the next end step\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_self_flicker_at_next_end_step_clause(text: str) -> "Callable[..., None] | None":
+    """`_SELF_FLICKER_AT_NEXT_END_STEP_RE`'s effect: the ability's source is
+    exiled, and a delayed trigger (CR 603.7a) returns that exiled object at
+    the beginning of the next end step - not if it has moved on (CR 603.7c)."""
+    match = _SELF_FLICKER_AT_NEXT_END_STEP_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    tapped = match.group("tapped") is not None
+    under_owner = match.group("whose").lower() == "its owner's"
+    return_text = text.split(". ", 1)[1].strip()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        from ..machines import Step
+        from ..models.zone import Zone
+        from .abilities import TriggerEvent
+
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        game.exile_permanent(source)
+        if source.zone is not Zone.EXILE:
+            return
+        spec: ReturnSubjectToBattlefieldUnderOwner | ReturnSubjectToBattlefieldUnderController = (
+            ReturnSubjectToBattlefieldUnderOwner(tapped=tapped)
+            if under_owner
+            else ReturnSubjectToBattlefieldUnderController()
+        )
+        game.create_delayed_trigger(
+            DelayedTrigger(
+                text=return_text,
+                event=TriggerEvent.BEGINNING_OF_STEP,
+                step=Step.END_STEP,
+                controller=ability.controller,
+                source_id=ability.source_id,
+                source_name=ability.source_name,
+                subject_id=source.id,
+                expected_zone=Zone.EXILE,
+                expected_stamp=source.zone_change_stamp,
+                effect=spec,
+            )
+        )
+
+    return effect
