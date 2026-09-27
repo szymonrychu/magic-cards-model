@@ -1,0 +1,144 @@
+{
+  "object": "card",
+  "id": "d239beaf-4f5b-494e-be5c-ffa8b6e28bde",
+  "oracle_id": "a4ae71c8-ea1b-4fa4-9e47-cf00ab60c5ee",
+  "multiverse_ids": [],
+  "resource_id": "31E7A34D0F8936505B57C323A26D8336A8844F4779BE982B7EBE8842BD4D0DCA",
+  "mtgo_id": 147909,
+  "arena_id": 100600,
+  "tcgplayer_id": 673635,
+  "cardmarket_id": 868375,
+  "name": "Don & Leo, Problem Solvers",
+  "lang": "en",
+  "released_at": "2026-03-06",
+  "uri": "https://api.scryfall.com/cards/d239beaf-4f5b-494e-be5c-ffa8b6e28bde",
+  "scryfall_uri": "https://scryfall.com/card/tmt/143/don-&-leo-problem-solvers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:54:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.jpg?1783904079",
+    "normal": "https://cards.scryfall.io/normal/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.jpg?1783904079",
+    "large": "https://cards.scryfall.io/large/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.jpg?1783904079",
+    "png": "https://cards.scryfall.io/png/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.png?1783904079",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.jpg?1783904079",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.jpg?1783904079",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.webp?1783904079",
+    "grid": "https://cards.scryfall.io/grid/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.webp?1783904079",
+    "display": "https://cards.scryfall.io/display/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.webp?1783904079",
+    "art": "https://cards.scryfall.io/art/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.webp?1783904079",
+    "crop": "https://cards.scryfall.io/crop/front/d/2/d239beaf-4f5b-494e-be5c-ffa8b6e28bde.webp?1783904079"
+  },
+  "mana_cost": "{3}{W/U}{W/U}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Mutant Ninja Turtle",
+  "oracle_text": "Vigilance\nAt the beginning of your end step, exile up to one target artifact you control and up to one target creature you control. Then return them to the battlefield under their owners' control.",
+  "power": "4",
+  "toughness": "6",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Vigilance"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set": "tmt",
+  "set_name": "Teenage Mutant Ninja Turtles",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atmt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tmt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d239beaf-4f5b-494e-be5c-ffa8b6e28bde/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa4ae71c8-ea1b-4fa4-9e47-cf00ab60c5ee&unique=prints",
+  "collector_number": "143",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "Technician. Tactician.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "N\u00e9stor Ossand\u00f3n Leal",
+  "artist_ids": [
+    "7a6f1667-a8ac-47f5-a302-f71cb54b2adf"
+  ],
+  "illustration_id": "5f6cc567-a6d0-4067-ab5a-9cbe1a19e086",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 14178,
+  "penny_rank": 8254,
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.38",
+    "usd_etched": null,
+    "eur": "0.21",
+    "eur_foil": "0.34",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDon%2B%2526%2BLeo%252C%2BProblem%2BSolvers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDon%2B%2526%2BLeo%252C%2BProblem%2BSolvers",
+    "edhrec": "https://edhrec.com/route/?cc=Don+%26+Leo%2C+Problem+Solvers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673635%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868375&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/147909?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -1051,7 +1051,7 @@ def token_copy_of(
 
 
 def _put_onto_the_battlefield_attacking(
-    game: "Game", token: TokenState, attacking: "TargetRef | str"
+    game: "Game", permanent: CardState, attacking: "TargetRef | str"
 ) -> None:
     """CR 508.4: a creature put onto the battlefield already in combat.
 
@@ -1061,21 +1061,30 @@ def _put_onto_the_battlefield_attacking(
     does enter the battlefield, but it's never considered to be an attacking
     creature", which is why every branch here returns rather than raising.
 
-    `token.is_creature` reads the printed definition (CR 613.1's starting
+    `permanent.is_creature` reads the printed definition (CR 613.1's starting
     point) - wrong here, because every caller of this function has already
-    verified the token is on the battlefield (`Game.put_onto_battlefield` ran
-    and the zone was checked before this was ever called), which is what
+    verified the permanent is on the battlefield (`Game.put_onto_battlefield`
+    ran and the zone was checked before this was ever called), which is what
     makes `game.characteristics_of` the CR 613.5 answer instead: a
     noncreature token some other permanent's static ability made a creature
     "in addition to its other types" (CR 205.1b) is still a creature for
     CR 506.3a's purposes.
+
+    Despite the name (kept for every existing call site rather than renamed
+    for its own sake), `permanent` is any `CardState` on the battlefield, not
+    only a `TokenState`: `create_tokens`'s own "enters attacking" option was
+    this function's first caller, but a real card returning to the
+    battlefield already attacking - a reanimated creature (`machines/effects.
+    _parse_return_target_from_graveyard_tapped_and_attacking_clause`) or a
+    flickered one (The Neutrinos, TMT) - is the identical CR 508.4 event on a
+    non-token object, and nothing below reads a token-only field.
     """
     from ..machines.combat import Attack  # local: combat imports the models
     from .card_state import TargetRef
 
-    if not game.characteristics_of(token).is_creature:
+    if not game.characteristics_of(permanent).is_creature:
         return  # CR 506.3a
-    if token.controller != game.active_player.username:
+    if permanent.controller != game.active_player.username:
         return  # CR 506.3b
     defender = TargetRef.coerce(attacking)
     if defender.is_player and not game.is_in_game(str(defender.username)):
@@ -1089,7 +1098,7 @@ def _put_onto_the_battlefield_attacking(
     # `declare_attacker` is not a claim that it was; the flag records that
     # CR 508.8's condition was met, which either half of the rule does.
     game.combat.attacked_this_combat = True
-    game.combat.attacks.append(Attack(attacker_id=token.id, defender=defender))
+    game.combat.attacks.append(Attack(attacker_id=permanent.id, defender=defender))
 
 
 # --------------------------------------------------------------------------
