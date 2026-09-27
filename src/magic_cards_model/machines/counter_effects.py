@@ -1528,6 +1528,22 @@ def _counter_payoffs_resolution_text(text: str, *, for_spell: bool):  # noqa: AN
     return counter_payoffs.parse_resolution_text(text, for_spell=for_spell)
 
 
+def _minus_counters_resolution_text(text: str, *, for_spell: bool):  # noqa: ANN202
+    """`machines/minus_counters.parse_resolution_text`, tried as one more
+    entry in `_WHOLE_TEXT_READERS` below - CR 122.5's bare self-removal, the
+    surveil-then-remove-a-counter pair, the dies-and-returns-losing-all-
+    abilities shape, the unqualified mass "each creature" placement, "remove
+    any number of counters from target", and "target opponent exiles cards
+    from their hand", none of which are this module's own to add a
+    card-name row for. Deferred to a function (rather than a bare tuple
+    entry naming the imported callable) for the identical reason `_counter_
+    payoffs_resolution_text` is: this module's own import list stays
+    untouched by a sibling task's additions to that one."""
+    from . import minus_counters
+
+    return minus_counters.parse_resolution_text(text, for_spell=for_spell)
+
+
 _WHOLE_TEXT_READERS = (
     lambda text, *, for_spell: _each_kind_another_counter(text),
     _create_that_many_tokens,
@@ -1546,6 +1562,7 @@ _WHOLE_TEXT_READERS = (
     _choose_any_number_then_double_each,
     _deals_damage_then_may_exile_graveyard_extra_damage,
     _counter_payoffs_resolution_text,
+    _minus_counters_resolution_text,
 )
 
 

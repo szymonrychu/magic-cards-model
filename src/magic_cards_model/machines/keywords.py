@@ -4774,7 +4774,9 @@ def has_persist(card: Card) -> bool:
     return any(keyword.lower() == "persist" for keyword in card.keywords)
 
 
-def persist_return(game: Any, card: CardState) -> CardState | None:
+def persist_return(
+    game: Any, card: CardState, *, keyword_confirmed: bool = False
+) -> CardState | None:
     """Perform a persist trigger (CR 702.79a).
 
     "Persist is a triggered ability. 'Persist' means "When this permanent is put
@@ -4786,8 +4788,21 @@ def persist_return(game: Any, card: CardState) -> CardState | None:
     destroyed its counters on the way out - so `last_known_counters` is what is
     read (CR 704.8, CR 603.10a). Returns the permanent, or None when the *if*
     was false, which is what stops a persisted creature persisting forever.
+
+    `keyword_confirmed=True` is `_persist_effect`'s own promise that the
+    ability resolving here is already a persist ability (CR 400.7b: a
+    *granted* persist - Eirdu, Carrier of Dawn's static, Rhys, the
+    Evermore's temporary "gains persist until end of turn" - "functions" the
+    identical way a printed one does). `has_persist(card.card)` only ever
+    reads Scryfall's own printed `keywords`, never a layer 6 grant computed
+    on the board (`CardState.computed_characteristics`, gone the moment the
+    card left for the graveyard, CR 400.7), so it would wrongly raise for
+    exactly the granted case this parameter is for. A direct call with
+    neither the keyword nor this promise keeps the original guard - the same
+    "prove it before acting on it" check every other caller of this function
+    still gets.
     """
-    if not has_persist(card.card):
+    if not keyword_confirmed and not has_persist(card.card):
         raise ValueError(f"{card.name} has no persist ability ({KeywordRule.PERSIST})")
     if card.zone is not Zone.GRAVEYARD:
         raise ValueError(f"{card.name} is in the {card.zone.value}, not a graveyard")
@@ -5561,7 +5576,7 @@ def _persist_effect(game: Any, ability: AbilityOnStack) -> CardState | None:
     source = ability.source(game)
     if source is None or source.zone is not Zone.GRAVEYARD:
         return None
-    return persist_return(game, source)
+    return persist_return(game, source, keyword_confirmed=True)
 
 
 def _evoke_effect(game: Any, ability: AbilityOnStack) -> CardState | None:

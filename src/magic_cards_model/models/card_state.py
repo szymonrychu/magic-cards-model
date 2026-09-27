@@ -42,6 +42,15 @@ PERMANENT_TYPES = frozenset(
 #: leaves it in place (see `RULE_EFFECT_TEXTS` there).
 CANT_BECOME_UNTAPPED_TEXT = "Can't become untapped."
 
+#: The canonical line an effect that says a permanent "can't have counters
+#: put on it" (Melira's Keepers, Tatterkite, Blossombind's enchanted
+#: creature) puts on it in layer 6 - read by `Game.add_counters`, the one
+#: place every counter placement passes through (CR 122.6). Not an ability
+#: the permanent has, the same way `CANT_BECOME_UNTAPPED_TEXT` is not: see
+#: `layers.RULE_EFFECT_TEXTS`, which this joins so a later "loses all
+#: abilities" effect does not end it either.
+CANT_HAVE_COUNTERS_TEXT = "Can't have counters put on it."
+
 
 class TargetKind(StrEnum):
     """The two things a spell can point at (CR 115.1)."""
@@ -2445,6 +2454,17 @@ class CardState(EngineModel):
         `CANT_BECOME_UNTAPPED_TEXT`. False for an object no game has bound."""
         computed = self.computed_characteristics
         return computed is not None and CANT_BECOME_UNTAPPED_TEXT in computed.abilities
+
+    @property
+    def cant_have_counters_put_on_it(self) -> bool:
+        """Whether an effect says this permanent "can't have counters put on
+        it" (Melira's Keepers, Tatterkite, an enchanted creature under
+        Blossombind) - read off the computed board (CR 613.5) the identical
+        way `cant_become_untapped` is, where the layer-6 effect puts
+        `CANT_HAVE_COUNTERS_TEXT`. False for an object no game has bound, or
+        one not on the battlefield (a card the effect no longer reaches)."""
+        computed = self.computed_characteristics
+        return computed is not None and CANT_HAVE_COUNTERS_TEXT in computed.abilities
 
     def untap(self, *, exert_applies: bool = True) -> None:
         """Untap this card, unless it was exerted (CR 701.43a-b).
