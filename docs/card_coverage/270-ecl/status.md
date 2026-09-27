@@ -298,4 +298,3 @@
 ## Notes
 
 - 2026-09-27: round landed; Eirdu // Isilu, Sunderflock and Wildvine Pummeler sit in "partial" only because the sweep does not audit their static lines - each is proven by a scenario test (test_persist_grants.py, test_vivid_cost_and_cda.py).
-

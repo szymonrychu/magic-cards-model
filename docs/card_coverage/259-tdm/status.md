@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 35 | 13.9% |
-| Works (untested) | 126 | 50.0% |
+| Tested | 36 | 14.3% |
+| Works (untested) | 125 | 49.6% |
 | Partial (unaudited) | 12 | 4.8% |
 | Not working | 79 | 31.3% |
 
@@ -226,7 +226,6 @@
 | Temur Monument | handled | When this artifact enters, search your library for a basic Forest, Island, or Mountain card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temur Tawnyback | handled | When this creature enters, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thunder of Unity | handled | I — You draw two cards and you lose 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Twinmaw Stormbrood // Charring Bite | handled | Charring Bite deals 5 damage to target creature without flying. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Unburied Earthcarver | handled | {2}, Sacrifice another creature: Put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Underfoot Underdogs | handled | When this creature enters, create a 1/1 red Goblin creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Undergrowth Leopard | handled | {1}, Sacrifice this creature: Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -247,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>35 cards</summary>
+<summary>36 cards</summary>
 
 - Aegis Sculptor
 - Ainok Wayfarer
@@ -278,6 +277,7 @@
 - Stalwart Successor
 - Starry-Eyed Skyrider
 - Stormscale Scion
+- Twinmaw Stormbrood // Charring Bite
 - Ugin, Eye of the Storms
 - Ureni, the Song Unending
 - Voice of Victory
