@@ -781,7 +781,16 @@ def _qualities_from_text(text: str | None) -> list[str]:
     """
     qualities: list[str] = []
     for match in _PROTECTION.finditer(text or ""):
-        for part in match.group(1).split(" and from "):
+        # A comma ends the phrase unless another "from" follows it: Emrakul,
+        # the Aeons Torn's "protection from spells that are one or more
+        # colors, annihilator 6" names one quality, then another keyword.
+        pieces = match.group(1).split(", ")
+        phrase = pieces[0]
+        for piece in pieces[1:]:
+            if not piece.lower().startswith(("from ", "and from ")):
+                break
+            phrase += " and from " + piece.split("from ", 1)[1]
+        for part in phrase.split(" and from "):
             quality = part.strip().rstrip(",").strip()
             if not quality or _UNRESOLVED_PROTECTION_QUALITY.match(quality):
                 continue
@@ -1605,6 +1614,27 @@ def _has_color_quality(wanted: str, colors: Iterable[Color]) -> bool | None:
     return None
 
 
+#: "spells that are one or more colors" (Emrakul, the Aeons Torn): CR 112.1's
+#: spell narrowed by a colour quality - a colour word, a CR 105.2a/105.2b
+#: colour count, or CR 105.2's "one or more colors" (anything not colorless,
+#: CR 105.2c).
+_SPELLS_THAT_ARE_QUALITY_RE = re.compile(r"^spells? that (?:are|is) (?P<colors>.+)$", re.IGNORECASE)
+
+
+def _spell_colour_quality(quality: str) -> Callable[[Iterable[Color]], bool] | None:
+    """The colour test a "spells that are `<colour quality>`" protection
+    quality narrows CR 112.1's spell by, or `None` for any other quality."""
+    match = _SPELLS_THAT_ARE_QUALITY_RE.fullmatch(quality.strip())
+    if match is None:
+        return None
+    wanted = match.group("colors").strip().lower()
+    if wanted in ("one or more colors", "one or more colours"):
+        return lambda colors: len(set(colors)) >= 1
+    if wanted in _COLOR_WORDS or wanted in _COLOR_COUNT_QUALITIES:
+        return lambda colors: bool(_has_color_quality(wanted, colors))
+    return None
+
+
 def protection_quality_readable(quality: str) -> bool:
     """Whether the engine's protection readers (`Game.source_has_quality`,
     `Game.source_has_quality_of_card`, `Game._player_quality_protects`) can
@@ -1619,6 +1649,7 @@ def protection_quality_readable(quality: str) -> bool:
         or wanted in _COLOR_COUNT_QUALITIES
         or _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip()) is not None
         or _CAST_THIS_TURN_QUALITY_RE.match(quality.strip()) is not None
+        or _spell_colour_quality(quality) is not None
     )
 
 
@@ -17190,6 +17221,8 @@ class Game(EngineModel):
         wanted = quality.strip().lower()
         if _is_spell_quality(wanted):
             return is_spell
+        if (spell_colours := _spell_colour_quality(wanted)) is not None:
+            return is_spell and spell_colours(source.colors)
         if _is_cast_this_turn_quality(wanted):
             return source_state is not None and self.was_cast_this_turn(source_state)
         card_type = _card_type_named(wanted)
@@ -17716,6 +17749,8 @@ class Game(EngineModel):
         wanted = quality.strip().lower()
         if _is_spell_quality(wanted):
             return source.zone is Zone.STACK
+        if (spell_colours := _spell_colour_quality(wanted)) is not None:
+            return source.zone is Zone.STACK and spell_colours(source.colors)
         if _is_cast_this_turn_quality(wanted):
             return self.was_cast_this_turn(source)
         types, colors = source.types, source.colors
