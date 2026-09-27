@@ -4134,7 +4134,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 95
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 96
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4256,6 +4256,9 @@ class Game(EngineModel):
     #: (Morningtide's Light's own "Until your next turn, prevent all damage
     #: that would be dealt to you.", CR 611.2a, ecl T8; renumbered from 92 at
     #: integration).
+    #: 96: `CardState` gained `protector` (CR 310.9); a creature attacking a
+    #: battle is now defended by its protector, not its controller (CR
+    #: 310.9d, 508.5), and CR 704.5x/704.5y run as state-based actions.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -11713,6 +11716,17 @@ class Game(EngineModel):
             # CR 704.5g's lethal check both read it directly.
             card_state.bind_to_game(self)
             self.battlefield.append(card_state)
+            # CR 310.9a: "As a battle enters the battlefield, its controller
+            # chooses a player to be its protector" (a Siege's from among
+            # their opponents, CR 310.12a). A new object (CR 400.7) never
+            # keeps an old protector. The printed up face gates the computed
+            # read, so a non-battle entering costs no board computation.
+            card_state.protector = (
+                combat_rules.choose_protector(self, card_state)
+                if Type.BATTLE in card_state.types
+                and Type.BATTLE in self.characteristics_of(card_state).types
+                else None
+            )
 
             if attach_to is not None:
                 card_state.attach_to(attach_to)  # CR 608.3c, 701.3a
@@ -18344,8 +18358,12 @@ class Game(EngineModel):
           chapter ability that has triggered but not yet left the stack, goes
           to its owner's graveyard.
 
+        - **CR 704.5x / 704.5y** - a battle with no protector (and nobody
+          attacking it), or a protector who can't be one, gets a new protector
+          chosen by its controller, or goes to its owner's graveyard.
+
         The rest of CR 704.5 needs a mechanic this model does not have: copies
-        (704.5e) and battles (704.5v-704.5x). See `docs/engine-coverage.md`.
+        (704.5e) and battle defense (704.5v-704.5w). See `docs/engine-coverage.md`.
 
         Losing is one-way: a player who is gone stays gone even if something
         later adds life back.
@@ -18882,6 +18900,13 @@ class Game(EngineModel):
         # CR 704.5s, CR 714.4: a Saga whose lore counters reached its final
         # chapter number, once nothing left to run off it is still triggered.
         leaving += [state for state in self._sagas_to_put_into_graveyard() if state not in leaving]
+        # CR 704.5x / 704.5y: a battle without a legal protector gets one, or
+        # goes to its owner's graveyard when nobody can be chosen.
+        leaving += [
+            state
+            for state in combat_rules.battle_protector_state_based_actions(self, board)
+            if state not in leaving
+        ]
         return board, leaving
 
     def _put_state_based_action_losers(
@@ -19343,11 +19368,9 @@ class Game(EngineModel):
             other.defender != attack.defender or other.attacker_id == creature.id
             for other in self.combat.attacks
         )
-        defender_controller = attack.defender.username
-        if not attack.defender.is_player and attack.defender.card_id is not None:
-            defending_permanent = self.find_by_id(attack.defender.card_id)
-            if isinstance(defending_permanent, CardState):
-                defender_controller = self.controller_of(defending_permanent).username
+        # CR 508.5 / 310.9d: the defending player - a battle's protector,
+        # not its controller.
+        defender_controller = combat_rules.defending_player(self, attack.defender)
         self.emit(
             GameEvent(
                 event=TriggerEvent.ATTACKS,

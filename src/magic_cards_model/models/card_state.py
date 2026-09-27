@@ -878,6 +878,14 @@ class CardState(EngineModel):
     spell is copied, the copy is also a prepare spell" is why `Game.copy_spell`
     carries this flag onto any further copy of one of these, rather than
     only setting it where the exile copy is first minted."""
+    protector: str | None = None
+    """CR 310.9: the player designated as this battle's protector - chosen by
+    its controller as it enters (CR 310.9a, 310.12a), replaced by CR
+    704.5x/704.5y, and the "defending player" for a creature attacking it
+    (CR 310.9d, 508.5). `Game.enter_the_battlefield` is the one place it is
+    reset, so a battle that has left the battlefield still answers who it was
+    protected by (CR 508.5's "before it was removed from combat"); CR 310.9g
+    keeps it when the permanent stops being a battle."""
     monstrous: bool = False
     """CR 701.37b's "monstrous" designation, put there by the Monstrosity
     keyword action (CR 701.37a): "'Monstrosity N' means 'If this permanent

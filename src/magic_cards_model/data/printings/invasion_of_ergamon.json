@@ -1,0 +1,200 @@
+{
+  "object": "card",
+  "id": "b3e0fc49-f765-4bd1-a2b9-23e703388b50",
+  "oracle_id": "fe84933e-d98f-4cbc-b272-387a80894e31",
+  "multiverse_ids": [
+    607294,
+    607295
+  ],
+  "mtgo_id": 110360,
+  "arena_id": 84530,
+  "tcgplayer_id": 490330,
+  "cardmarket_id": 704894,
+  "name": "Invasion of Ergamon // Truga Cliffcharger",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/b3e0fc49-f765-4bd1-a2b9-23e703388b50",
+  "scryfall_uri": "https://scryfall.com/card/mom/233/invasion-of-ergamon-truga-cliffcharger?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:29:13Z",
+  "cmc": 2.0,
+  "type_line": "Battle \u2014 Siege // Creature \u2014 Rhino",
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [
+    "Transform",
+    "Treasure",
+    "Trample"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Invasion of Ergamon",
+      "mana_cost": "{R}{G}",
+      "type_line": "Battle \u2014 Siege",
+      "oracle_text": "(As a Siege enters, choose an opponent to protect it. You and others can attack it. When it's defeated, exile it, then cast it transformed.)\nWhen this Siege enters, create a Treasure token. Then you may discard a card. If you do, draw a card.",
+      "colors": [
+        "G",
+        "R"
+      ],
+      "defense": "5",
+      "artist": "Manuel Casta\u00f1\u00f3n",
+      "artist_id": "35f11eeb-36ff-4059-bb70-d1274f5bd858",
+      "illustration_id": "a5576b3b-6a1c-413a-b4b8-36b248ad9e99",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "normal": "https://cards.scryfall.io/normal/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "large": "https://cards.scryfall.io/large/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "png": "https://cards.scryfall.io/png/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.png?1783916953",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "thumb": "https://cards.scryfall.io/thumb/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "grid": "https://cards.scryfall.io/grid/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "display": "https://cards.scryfall.io/display/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "art": "https://cards.scryfall.io/art/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "crop": "https://cards.scryfall.io/crop/front/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Truga Cliffcharger",
+      "mana_cost": "",
+      "type_line": "Creature \u2014 Rhino",
+      "oracle_text": "Trample\nWhen this creature enters, you may discard a card. If you do, search your library for a land or battle card, reveal it, put it into your hand, then shuffle.",
+      "colors": [
+        "G",
+        "R"
+      ],
+      "color_indicator": [
+        "G",
+        "R"
+      ],
+      "power": "3",
+      "toughness": "4",
+      "flavor_text": "Throughout Ergamon's wild Truga Jungle, predator-prey relationships stopped until every last invader was crushed to dust.",
+      "artist": "Manuel Casta\u00f1\u00f3n",
+      "artist_id": "35f11eeb-36ff-4059-bb70-d1274f5bd858",
+      "illustration_id": "f240db3f-43f5-4ae9-90ac-a01436b5409a",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "normal": "https://cards.scryfall.io/normal/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "large": "https://cards.scryfall.io/large/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "png": "https://cards.scryfall.io/png/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.png?1783916953",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.jpg?1783916953",
+        "thumb": "https://cards.scryfall.io/thumb/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "grid": "https://cards.scryfall.io/grid/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "display": "https://cards.scryfall.io/display/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "art": "https://cards.scryfall.io/art/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953",
+        "crop": "https://cards.scryfall.io/crop/back/b/3/b3e0fc49-f765-4bd1-a2b9-23e703388b50.webp?1783916953"
+      }
+    }
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "1728ad2d-c8a6-49e4-85bb-29934fa26208",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/1728ad2d-c8a6-49e4-85bb-29934fa26208"
+    },
+    {
+      "object": "related_card",
+      "id": "b3e0fc49-f765-4bd1-a2b9-23e703388b50",
+      "component": "combo_piece",
+      "name": "Invasion of Ergamon // Truga Cliffcharger",
+      "type_line": "Battle \u2014 Siege // Creature \u2014 Rhino",
+      "uri": "https://api.scryfall.com/cards/b3e0fc49-f765-4bd1-a2b9-23e703388b50"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b3e0fc49-f765-4bd1-a2b9-23e703388b50/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Afe84933e-d98f-4cbc-b272-387a80894e31&unique=prints",
+  "collector_number": "233",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Manuel Casta\u00f1\u00f3n",
+  "artist_ids": [
+    "35f11eeb-36ff-4059-bb70-d1274f5bd858"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 12371,
+  "penny_rank": 3619,
+  "prices": {
+    "usd": "0.16",
+    "usd_foil": "0.33",
+    "usd_etched": null,
+    "eur": "0.08",
+    "eur_foil": "0.24",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607294&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BErgamon%2B%252F%252F%2BTruga%2BCliffcharger",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BErgamon%2B%252F%252F%2BTruga%2BCliffcharger",
+    "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Ergamon"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490330%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704894&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110360?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

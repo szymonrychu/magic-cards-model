@@ -542,6 +542,8 @@ home of its own memory.
 
 - 2026-09-27: tmt integration - `combat.looks_like_unparsed_evasion_restriction` flagged Charging Rhino's enforced "can't be blocked by more than one creature" (CR 509.1b, `blocked_by_at_most_one_refusal`) as unread, leaving a false EvasionNotice; it now skips that line. The fail-closed evasion tests pick a *static* unread line via `gap_example` (activated/triggered "can't be blocked this turn" lines are not restrictions until they resolve).
 
+- 2026-09-27: battle protector (CR 310.9) is `CardState.protector`, reset only in `Game.enter_the_battlefield` (not `move_to`) so `combat.defending_player` still answers CR 508.5's "before it was removed from combat" after a battle leaves. Agent of Treachery's "gain control of target permanent" ETB is silent in the sweep, so the control-change scenario uses Shifting Loyalties instead.
+
 ## Regression-guard approvals
 
 Each line: a change to pre-existing test content, flagged by `scripts/regression_guard.py`, judged by an independent reviewer.

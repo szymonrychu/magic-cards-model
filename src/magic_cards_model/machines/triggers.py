@@ -7570,22 +7570,18 @@ def is_batched_attack_condition(condition: str) -> bool:
 
 
 def _defender_controller_of(game: "Game", attacker: CardState) -> str | None:
-    """Whoever controls what `attacker` is attacking - a player directly, or
-    a planeswalker's controller (CR 506.4a) - the same resolution
+    """The defending player for `attacker` (CR 508.5) - a player directly, a
+    planeswalker's controller, or a battle's protector - the same resolution
     `Game._emit_attack_event` already does for `GameEvent.defender_
     controller`, read here off `Game.combat` directly since a delayed or
     printed group condition is checked before any one attacker's own event
     exists yet."""
+    from .combat import defending_player
+
     attack = game.combat.attack_by(attacker.id)
     if attack is None:
         return None
-    if attack.defender.is_player:
-        return attack.defender.username
-    if attack.defender.card_id is not None:
-        defending_permanent = game.find_by_id(attack.defender.card_id)
-        if isinstance(defending_permanent, CardState):
-            return game.controller_of(defending_permanent).username
-    return None
+    return defending_player(game, attack.defender)
 
 
 def _tapped_batch_matching(game: "Game", description: str, controller: str) -> list[CardState]:

@@ -64,7 +64,7 @@ from .abilities import (
     layer_readable_sentences,
     unread_keyword_tokens,
 )
-from .decisions import Decision, DecisionKind
+from .decisions import Decision, DecisionKind, source_id_of
 from .designations import designation_holds, split_as_long_as
 from .triggers import ExtraTriggerEvent, GameEvent
 
@@ -73,6 +73,7 @@ ATTACKABLE_PERMANENT_TYPES = frozenset({Type.PLANESWALKER, Type.BATTLE})
 
 if TYPE_CHECKING:  # pragma: no cover - import cycle: Game builds on the machines
     from ..models.game import Game, Targetable
+    from .layers import ComputedBoard
 
 
 class Keyword(StrEnum):
@@ -1107,8 +1108,23 @@ def _defender_refusal(game: "Game", defender: TargetRef, active: str) -> str | N
     # planeswalker or battle after that starting point is read must be seen
     # too, the same reasoning `characteristics_of` already gets right for
     # every other computed read in this file.
-    if not set(game.characteristics_of(permanent).types) & ATTACKABLE_PERMANENT_TYPES:
+    types = set(game.characteristics_of(permanent).types)
+    if not types & ATTACKABLE_PERMANENT_TYPES:
         return f"{permanent.name} is not a player, planeswalker, or battle"
+    if Type.BATTLE in types:
+        # CR 310.9b: "A battle's protector can never attack it. A battle can
+        # be attacked by any attacking player for whom its protector is a
+        # defending player. Notably, a Siege battle can be attacked by its
+        # own controller." Who controls it is not the question.
+        protector = permanent.protector
+        if protector == active:
+            return (
+                f"{permanent.name} is protected by {active}, and a battle's "
+                "protector can never attack it (CR 310.9b)"
+            )
+        if protector is None or not game.is_in_game(protector):
+            return f"{permanent.name} has no protector to defend it (CR 310.9b)"
+        return None
     if game.controller_of(permanent).username == active:
         return f"{permanent.name} is not controlled by an opponent"
     return None
@@ -2266,8 +2282,14 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
 
 def defending_player(game: "Game", defender: TargetRef) -> str | None:
     """Who is defending against an attack on `defender` (CR 508.5): the player
-    themselves, or - when the attack names a planeswalker or a battle - that
-    permanent's controller.
+    themselves, the controller of a planeswalker, or the *protector* of a
+    battle - never the battle's controller (CR 310.9d), which for a Siege is
+    the one player who cannot be defending it (CR 310.12a).
+
+    `CardState.protector` is kept after the battle leaves the battlefield or
+    stops being a battle (CR 310.9g), which is CR 508.5's "the protector of
+    the battle that creature was attacking before it was removed from
+    combat".
 
     Takes the `TargetRef` directly rather than the whole `Attack`, so a
     triggered ability's own `GameEvent.defender` (CR 508.1a's same field,
@@ -2280,8 +2302,79 @@ def defending_player(game: "Game", defender: TargetRef) -> str | None:
         return defender.username
     permanent = game.resolve_target(defender)
     if isinstance(permanent, CardState):
+        if permanent.protector is not None:
+            return permanent.protector
         return game.controller_of(permanent).username
     return None
+
+
+def protector_candidates(
+    game: "Game", battle: CardState, board: "ComputedBoard | None" = None
+) -> list[str]:
+    """Who may be `battle`'s protector (CR 310.9a): for a Siege, its
+    controller's opponents (CR 310.12a); for a battle with no battle type,
+    only its controller. Siege is the only battle type (CR 205.3q). Players
+    who have left the game are no candidates."""
+    chars = board.of(battle) if board is not None else game.characteristics_of(battle)
+    controller = chars.controller or game.controller_of(battle).username
+    in_game = [player.username for player in game.players_in_game]
+    if "Siege" in chars.subtypes:
+        return [username for username in in_game if username != controller]
+    return [controller] if controller in in_game else []
+
+
+def choose_protector(
+    game: "Game", battle: CardState, board: "ComputedBoard | None" = None
+) -> str | None:
+    """`battle`'s controller chooses its protector from
+    `protector_candidates` (CR 310.9a, 310.11) - asked only when there is a
+    real choice. None when nobody can be chosen."""
+    candidates = protector_candidates(game, battle, board)
+    if len(candidates) <= 1:
+        return candidates[0] if candidates else None
+    return str(
+        game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_A_QUALITY,
+                player=game.controller_of(battle).username,
+                prompt=f"choose an opponent to protect {battle.name} (CR 310.12a)",
+                source=battle.name,
+                source_id=source_id_of(battle),
+                options=tuple(candidates),
+                quality="opponent",
+            )
+        )
+    )
+
+
+def battle_protector_state_based_actions(game: "Game", board: "ComputedBoard") -> list[CardState]:
+    """CR 704.5x and 704.5y (CR 310.11): give each battle that needs one a
+    new protector, chosen by its controller, and return the battles for
+    which nobody can be chosen - those go to their owners' graveyards.
+
+    704.5x covers a battle with no protector in the game, and only while no
+    creature is attacking it; 704.5y a protector who can't be its protector
+    (a Siege whose controller became its protector, CR 310.12a). `board` is
+    the caller's computed board (CR 613.5), read rather than recomputed."""
+    attacked = {
+        attack.defender.card_id for attack in game.combat.attacks if not attack.defender.is_player
+    }
+    leaving: list[CardState] = []
+    for battle in list(game.battlefield):
+        if Type.BATTLE not in board.of(battle).types:
+            continue
+        protector = battle.protector
+        if protector is None or not game.is_in_game(protector):
+            if battle.id in attacked:
+                continue  # CR 704.5x: not while it is being attacked
+        elif protector in protector_candidates(game, battle, board):
+            continue
+        chosen = choose_protector(game, battle, board)
+        if chosen is None:
+            leaving.append(battle)
+        else:
+            battle.protector = chosen
+    return leaving
 
 
 # -- combat damage ---------------------------------------------------------
