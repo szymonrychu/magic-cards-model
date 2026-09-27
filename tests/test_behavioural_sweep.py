@@ -1367,6 +1367,10 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         # An Infinity ability functions only while its source is harnessed
         # (The Mind Stone, The Soul Stone) - staged harnessed.
         scenario.game.harness(source)
+    if (getattr(ability, "ability_word", None) or "").lower() == "solved":
+        # A "Solved -" ability works only once its Case is solved (CR 702.169c,
+        # 702.169d) - staged solved, the designation CR 719.3b describes.
+        source.solved = True
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _board_threshold(scenario, source, getattr(ability, "intervening_if", None) or "")
