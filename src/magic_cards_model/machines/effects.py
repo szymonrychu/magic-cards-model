@@ -16903,53 +16903,6 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
     return effect
 
 
-#: "Remove `<n>` `<kind>` counter(s) from it." - Clockwork Steed's own
-#: end-of-combat trigger ("At end of combat, if this creature attacked or
-#: blocked this combat, remove a +1/+0 counter from it."): the intervening
-#: *if* is `machines/triggers.py`'s own condition to answer (CR 603.4, a
-#: separate workstream), already split off `TriggeredAbility.effect` before
-#: this text is ever seen here - only the bare "remove ... from it" sentence
-#: reaches this reader. "It" is CR 607.1's within-one-ability anaphora back
-#: to the object the ability's own condition already named ("this
-#: creature"), the identical reading `_parse_put_counter_on_self_then_if_
-#: count_clause`'s own docstring already gives "it" in a reflexive counter
-#: sentence; "this `<noun>`" (a card that spells the self-reference out
-#: instead) is accepted the same way `_REMOVE_TIME_COUNTER_SELF_RE` accepts
-#: "this card"/"this permanent".
-#:
-#: Any counter kind - `_PT_OR_NAMED_COUNTER_KIND` - not only Clockwork
-#: Steed's own "+1/+0". CR 609.3 ("If an effect attempts to do something
-#: impossible, it does only as much as possible") governs removing more than
-#: are actually there: fewer than `n` present is not an error, only fewer
-#: removed.
-_REMOVE_A_COUNTER_FROM_SELF_RE = re.compile(
-    rf"^remove {count_pattern('n')} (?P<kind>{_PT_OR_NAMED_COUNTER_KIND}) counters? from "
-    rf"(?:it|this \w+)\.?$",
-    re.IGNORECASE,
-)
-
-
-def _parse_remove_a_counter_from_self_clause(text: str) -> AbilityEffect | None:
-    """`_REMOVE_A_COUNTER_FROM_SELF_RE`'s shape; see the banner above."""
-    match = _REMOVE_A_COUNTER_FROM_SELF_RE.fullmatch(text.strip())
-    if match is None:
-        return None
-    count = parse_count(match.group("n"))
-    if count is None or count < 1:
-        return None
-    kind = _counter_kind(match.group("kind"))
-
-    def effect(game: "Game", ability: AbilityOnStack) -> None:
-        source = ability.source(game)
-        if source is None or source.zone is not Zone.BATTLEFIELD:
-            return
-        take = min(count, source.counter_count(kind))
-        if take > 0:
-            source.remove_counters(kind, take)
-
-    return effect
-
-
 #: Vampire Hexmage: "Remove all counters from target permanent." - and the
 #: same sentence narrowed to one kind ("Remove all +1/+1 counters from target
 #: creature."), or with CR 115.6's count words ahead of "target" (Marchesa,
@@ -30181,9 +30134,6 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
     if remove_time_counter_self is not None:
         return remove_time_counter_self
-    remove_a_counter_from_self = _parse_remove_a_counter_from_self_clause(effect_text)
-    if remove_a_counter_from_self is not None:
-        return remove_a_counter_from_self
     remove_all_counters_from_target = _parse_remove_all_counters_from_target_clause(effect_text)
     if remove_all_counters_from_target is not None:
         return remove_all_counters_from_target

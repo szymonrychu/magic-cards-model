@@ -22,7 +22,7 @@ session that wrote this file:
 """
 
 from magic_cards_model.machines.abilities import parse_abilities
-from magic_cards_model.machines.effects import _parse_remove_a_counter_from_self_clause
+from magic_cards_model.machines.effects import _parse_remove_n_counters_from_self_clause
 from magic_cards_model.machines.triggers import AbilityKind, AbilityOnStack
 from magic_cards_model.models import Zone
 from tests.cards import card
@@ -37,7 +37,7 @@ def test_clockwork_steeds_own_trigger_removes_one_counter():
     """Four +1/+0 counters on it, as it enters with (proven separately in
     `test_counters.py`/`test_up_to_x_counters_with_total_cap.py`) - the
     trigger takes exactly one off."""
-    effect = _parse_remove_a_counter_from_self_clause("remove a +1/+0 counter from it.")
+    effect = _parse_remove_n_counters_from_self_clause("remove a +1/+0 counter from it.")
     assert effect is not None
 
     scenario = Scenario().player("alice", battlefield=["Clockwork Steed"]).player("bob").build()
@@ -61,7 +61,7 @@ def test_clockwork_steeds_own_trigger_removes_one_counter():
 def test_removing_more_than_present_takes_only_what_is_there():
     """CR 609.3: no counters on it at all - "remove a counter" removes zero,
     never errors."""
-    effect = _parse_remove_a_counter_from_self_clause("remove a +1/+0 counter from it.")
+    effect = _parse_remove_n_counters_from_self_clause("remove a +1/+0 counter from it.")
     assert effect is not None
 
     scenario = Scenario().player("alice", battlefield=["Clockwork Steed"]).player("bob").build()
@@ -84,7 +84,7 @@ def test_the_reader_is_general_across_counter_kind_and_amount():
     """A made-up "remove 2 charge counters from it." - a different kind and a
     different fixed amount than Clockwork Steed's own "a +1/+0 counter" -
     proving the grammar rather than Steed's own sentence."""
-    effect = _parse_remove_a_counter_from_self_clause("remove 2 charge counters from it.")
+    effect = _parse_remove_n_counters_from_self_clause("remove 2 charge counters from it.")
     assert effect is not None
 
     scenario = Scenario().player("alice", battlefield=["Sol Ring"]).player("bob").build()
