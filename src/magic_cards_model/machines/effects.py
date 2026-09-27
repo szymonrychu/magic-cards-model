@@ -15567,6 +15567,70 @@ def _parse_put_counters_on_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "Put up to `<n>` `<kind>` counter(s) on this `<noun>`. This ability can't
+#: cause the total number of `<kind>` counter(s) on this `<noun>` to be
+#: greater than `<cap>`." - Clockwork Steed's own `{X}, {T}` ability (the
+#: trailing "Activate only during your upkeep." is a separate activation-
+#: timing restriction, already stripped by `_TRAILING_ACTIVATION_TIMING_
+#: RESTRICTION_RE` before `activated_effect_for` ever hands this text here).
+#: `<n>` reaches this reader as a real number - `activated_effect_for`
+#: substitutes the announced X (CR 107.3a) for a literal "X" before this
+#: dispatcher ever sees the text, the same substitution every other X-cost
+#: activated ability in this pool already goes through.
+#:
+#: Clockwork Beast/Clockwork Avian/Clockwork Swarm print the identical
+#: template with a different starting count and a different printed cap
+#: ("seven"), so both numbers are read generally rather than pinned to
+#: Steed's own "four" - none of the three is legal in Modern, Pioneer, or
+#: Standard (Scryfall legalities checked this session), so Clockwork Steed
+#: is this reader's only in-format proof; the generality is in the grammar
+#: itself (any counter kind, any cap) rather than a second pool card.
+#:
+#: "Up to N" (CR 608.2d) always permits choosing fewer, including none, and
+#: nothing on the card ever makes fewer counters better - the same "always
+#: take the maximum" reading `_parse_remove_up_to_n_counters_from_target_
+#: clause` already takes for "remove up to N counters", capped a second time
+#: by the printed total ceiling, whichever is smaller.
+#: Any "+X/+Y"/"-X/-Y"-shaped counter kind (CR 122.1a's own open-ended
+#: numbers, never just the ±1/±1 pair `_COUNTER_ON_SELF_RE`'s own `kind`
+#: group is fitted to) or a plain named kind ("charge").
+_PT_OR_NAMED_COUNTER_KIND = r"[+-]\d+/[+-]\d+|[a-z]+"
+
+_PUT_UP_TO_N_COUNTERS_ON_SELF_CAPPED_RE = re.compile(
+    rf"^put up to (?P<n>{COUNT}) (?P<kind>{_PT_OR_NAMED_COUNTER_KIND}) counters? on this \w+\.\s*"
+    rf"this ability can'?t cause the total number of "
+    rf"(?P<kind2>{_PT_OR_NAMED_COUNTER_KIND}) counters? "
+    rf"on this \w+ to be greater than (?P<cap>{COUNT})\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_up_to_n_counters_on_self_capped_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_UP_TO_N_COUNTERS_ON_SELF_CAPPED_RE`'s shape; see the banner
+    above."""
+    match = _PUT_UP_TO_N_COUNTERS_ON_SELF_CAPPED_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    limit = parse_count(match.group("n"))
+    cap = parse_count(match.group("cap"))
+    if limit is None or cap is None or limit < 0 or cap < 0:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    if kind != _counter_kind(match.group("kind2")):
+        return None  # the two sentences name different counter kinds
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        room = max(cap - source.counter_count(kind), 0)
+        amount = min(limit, room)
+        if amount > 0:
+            game.add_counters(source, kind, amount)
+
+    return effect
+
+
 #: "Put `<self>` into its owner's library `<ordinal>` from the top." -
 #: Borborygmos and Fblthp's own `{1}{U}` ability, self-referential the way
 #: `_COUNTER_ON_SELF_RE` is: `<self>` is whatever `_self_normalized_effect_
@@ -16835,6 +16899,53 @@ def _parse_remove_time_counter_from_self_clause(text: str) -> AbilityEffect | No
             return
         for _ in range(count):
             remove_suspend_time_counter(game, source)
+
+    return effect
+
+
+#: "Remove `<n>` `<kind>` counter(s) from it." - Clockwork Steed's own
+#: end-of-combat trigger ("At end of combat, if this creature attacked or
+#: blocked this combat, remove a +1/+0 counter from it."): the intervening
+#: *if* is `machines/triggers.py`'s own condition to answer (CR 603.4, a
+#: separate workstream), already split off `TriggeredAbility.effect` before
+#: this text is ever seen here - only the bare "remove ... from it" sentence
+#: reaches this reader. "It" is CR 607.1's within-one-ability anaphora back
+#: to the object the ability's own condition already named ("this
+#: creature"), the identical reading `_parse_put_counter_on_self_then_if_
+#: count_clause`'s own docstring already gives "it" in a reflexive counter
+#: sentence; "this `<noun>`" (a card that spells the self-reference out
+#: instead) is accepted the same way `_REMOVE_TIME_COUNTER_SELF_RE` accepts
+#: "this card"/"this permanent".
+#:
+#: Any counter kind - `_PT_OR_NAMED_COUNTER_KIND` - not only Clockwork
+#: Steed's own "+1/+0". CR 609.3 ("If an effect attempts to do something
+#: impossible, it does only as much as possible") governs removing more than
+#: are actually there: fewer than `n` present is not an error, only fewer
+#: removed.
+_REMOVE_A_COUNTER_FROM_SELF_RE = re.compile(
+    rf"^remove {count_pattern('n')} (?P<kind>{_PT_OR_NAMED_COUNTER_KIND}) counters? from "
+    rf"(?:it|this \w+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_remove_a_counter_from_self_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_A_COUNTER_FROM_SELF_RE`'s shape; see the banner above."""
+    match = _REMOVE_A_COUNTER_FROM_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None or count < 1:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        take = min(count, source.counter_count(kind))
+        if take > 0:
+            source.remove_counters(kind, take)
 
     return effect
 
@@ -25993,6 +26104,59 @@ def _parse_return_cards_from_your_graveyard_clause(
     return effect
 
 
+#: "Return a `<quality>` card at random from your graveyard to the
+#: battlefield." - Tomb Tyrant's own activated ability effect. Its own cost
+#: (sacrifice a creature) and its own "Activate only during your turn and
+#: only if there are at least three Zombie creature cards in your graveyard"
+#: restriction are a separate workstream's; only this bare effect sentence
+#: reaches this reader.
+#:
+#: "At random" carries no single dedicated CR paragraph of its own the way a
+#: random discard does (CR 701.9b) - CR 608.2c simply has the resolving
+#: ability follow this printed instruction, and "random" is read the plain,
+#: unbiased way `_discard_at_random` already reads the identical adjective
+#: on a different zone action: a `Random` seeded off `Game.shuffle_seed`/
+#: `Game.shuffles_performed` rather than a bare `Random()`, so a scenario
+#: asserting on which card came back stays deterministic, and the counter is
+#: advanced afterward so the next random draw anywhere in the game is not
+#: the same roll played twice.
+#:
+#: `quality` reuses `_quality_matcher` unchanged - any type/subtype phrase,
+#: not only "Zombie creature" - so a card printing "Return a Spirit creature
+#: card at random from your graveyard to the battlefield" reads for free.
+#: CR 609.3: a graveyard with no matching card returns nothing.
+_RETURN_A_CARD_AT_RANDOM_FROM_GRAVEYARD_RE = re.compile(
+    r"^return an? (?P<quality>[a-z ,]+?) cards? at random from your graveyard to "
+    r"the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_a_card_at_random_from_graveyard_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_RETURN_A_CARD_AT_RANDOM_FROM_GRAVEYARD_RE`'s shape; see the banner
+    above."""
+    match = _RETURN_A_CARD_AT_RANDOM_FROM_GRAVEYARD_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    matches = _quality_matcher(match.group("quality"))
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        player = game.controller_of(stack_object)
+        candidates = [state for state in player.cards_in(Zone.GRAVEYARD) if matches(state)]
+        if not candidates:
+            return
+        rng = Random(  # noqa: S311
+            f"{game.shuffle_seed}:{game.shuffles_performed}:return-at-random"
+        )
+        chosen = rng.choice(candidates)
+        game.shuffles_performed += 1
+        game.put_onto_battlefield(chosen, player.username)
+
+    return effect
+
+
 #: --- The "see the top N, then optionally move one of them" family ---------
 #:
 #: One printed shape, not one card. A player sees the top N cards of their own
@@ -29639,6 +29803,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if choose_target_owner_shuffles_it is not None:
         return choose_target_owner_shuffles_it
+    target_player_name_reveal_branch = _parse_target_player_name_reveal_branch_clause(effect_text)
+    if target_player_name_reveal_branch is not None:
+        return target_player_name_reveal_branch
+    each_player_name_reveal_branch = _parse_each_player_name_reveal_branch_clause(effect_text)
+    if each_player_name_reveal_branch is not None:
+        return each_player_name_reveal_branch
     damage_that_player = _parse_damage_that_player_clause(effect_text, for_spell=False)
     if damage_that_player is not None:
         return damage_that_player
@@ -29945,6 +30115,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     put_counters_on_self = _parse_put_counters_on_self_clause(effect_text)
     if put_counters_on_self is not None:
         return put_counters_on_self
+    put_up_to_n_counters_on_self_capped = _parse_put_up_to_n_counters_on_self_capped_clause(
+        effect_text
+    )
+    if put_up_to_n_counters_on_self_capped is not None:
+        return put_up_to_n_counters_on_self_capped
     put_counters_equal_to = _parse_put_counters_equal_to_clause(effect_text)
     if put_counters_equal_to is not None:
         return put_counters_equal_to
@@ -30006,6 +30181,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     remove_time_counter_self = _parse_remove_time_counter_from_self_clause(effect_text)
     if remove_time_counter_self is not None:
         return remove_time_counter_self
+    remove_a_counter_from_self = _parse_remove_a_counter_from_self_clause(effect_text)
+    if remove_a_counter_from_self is not None:
+        return remove_a_counter_from_self
     remove_all_counters_from_target = _parse_remove_all_counters_from_target_clause(effect_text)
     if remove_all_counters_from_target is not None:
         return remove_all_counters_from_target
@@ -56748,6 +56926,176 @@ def _parse_surgical_extraction_clause(text: str, *, for_spell: bool) -> Targeted
     return effect
 
 
+#: --- "Chooses a card name, then reveals the top card ... If that card has
+#: the chosen name, ..." (CR 608.2c, CR 701.20a, CR 201.4a) ---------------
+#:
+#: The shared core Vexing Arcanix and Conundrum Sphinx both print: ask
+#: someone to name a card, reveal a library's own top card, and branch on
+#: whether the two names match. One shared function rather than two copies
+#: of the same three steps, the same reason `_filtered_anthem_builder` is
+#: shared by every subtype-list lord rather than reimplemented per card.
+
+
+def _ask_name_reveal_top_and_branch(
+    game: "Game",
+    revealer: Player,
+    *,
+    chooser: Player,
+    source: str,
+    source_id: str | None,
+    on_match: Callable[[CardState], None],
+    on_miss: Callable[[CardState], None],
+) -> None:
+    """Ask `chooser` to name a card (CR 601.2c's own kind of resolution-time
+    choice, not tied to any `CardState.choice`, since nothing here re-reads
+    "the chosen name" later the way a static CR 614.1c "as this enters,
+    choose..." grant does), reveal `revealer`'s own top library card
+    (CR 701.20a), and run `on_match` when its printed name equals what was
+    chosen (CR 201.4a) or `on_miss` otherwise.
+
+    An empty library has no top card to reveal, so nothing happens at all
+    (CR 609.3, CR 101.3) - not even the naming question, which nothing could
+    ever be compared against.
+    """
+    if not revealer.library:
+        return
+    name = game.ask(
+        Decision(
+            kind=DecisionKind.CHOOSE_A_QUALITY,
+            player=chooser.username,
+            prompt="choose a card name",
+            source=source,
+            source_id=source_id,
+        )
+    )
+    assert isinstance(name, str)
+    top = revealer.library[0]
+    game.reveal(top, source=source)
+    if top.name == name:
+        on_match(top)
+    else:
+        on_miss(top)
+
+
+#: "Target player chooses a card name, then reveals the top card of their
+#: library. If that card has the chosen name, that player puts it into
+#: their hand. Otherwise, they put it into their graveyard and this artifact
+#: deals 2 damage to them." - Vexing Arcanix's whole `{3}, {T}` effect, read
+#: as one paragraph (CR 608.2c: one instruction, not several independent
+#: clauses - "that card"/"the chosen name"/"they" are all CR 400.7/CR 607.1
+#: anaphora back to what the first sentence just did).
+#:
+#: This used to fall through to `_parse_damage_that_player_clause` instead,
+#: whose `_DAMAGE_THAT_PLAYER_RE` opens with a bare `.*` - it matched the
+#: *tail* of this whole paragraph and reported the card `handled` while
+#: silently discarding the naming choice, the reveal, and the hand branch
+#: entirely. This reader is tried earlier in the dispatch chain so the
+#: correct, whole-paragraph reading wins first.
+#:
+#: The trailing "and `<source>` deals N damage to `<them>`" is optional and
+#: its subject/object phrasing is read the same subject-agnostic way
+#: `_DAMAGE_THAT_PLAYER_RE` already reads a trailing damage rider, not
+#: pinned to "this artifact"/"them" - Petra Sphinx's own identical template
+#: with no damage rider at all (not in Modern/Pioneer/Standard, so not a
+#: pool card) is what "optional" is for.
+_TARGET_PLAYER_NAME_REVEAL_BRANCH_RE = re.compile(
+    r"^target player chooses a card name, then reveals the top card of "
+    r"their library\.\s*"
+    r"if that card has the chosen name, that player puts it into their "
+    r"hand\.\s*"
+    r"otherwise, (?:they|that player) puts? it into their graveyard"
+    rf"(?: and .+? deals (?P<n>{COUNT}) damage to (?:them|that player))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_target_player_name_reveal_branch_clause(text: str) -> AbilityEffect | None:
+    """`_TARGET_PLAYER_NAME_REVEAL_BRANCH_RE`'s shape; see the banner above."""
+    match = _TARGET_PLAYER_NAME_REVEAL_BRANCH_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    damage = parse_count(match.group("n")) if match.group("n") is not None else 0
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        target_player = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if target_player is None:
+            return
+
+        def on_match(top: CardState) -> None:
+            target_player.move(top, Zone.HAND)
+
+        def on_miss(top: CardState) -> None:
+            game.put_into_graveyard(top)
+            if damage:
+                game.deal_damage(target_player, damage, source=ability.source_or_last_known(game))
+
+        _ask_name_reveal_top_and_branch(
+            game,
+            target_player,
+            chooser=target_player,
+            source=ability.source_name,
+            source_id=source_id_of(ability),
+            on_match=on_match,
+            on_miss=on_miss,
+        )
+
+    return effect
+
+
+#: "Each player chooses a card name. Then each player reveals the top card
+#: of their library. If the card a player revealed has the name they chose,
+#: that player puts it into their hand. If it doesn't, that player puts it
+#: on the bottom of their library." - Conundrum Sphinx's own attack trigger
+#: (the "Whenever this creature attacks" condition is a plain, already-read
+#: `TriggerEvent.ATTACKS`; only this effect sentence reaches this reader).
+#: The identical `_ask_name_reveal_top_and_branch` core as Vexing Arcanix's
+#: own reader, run once per player instead of once for a single target -
+#: CR 101.4's APNAP order for the naming choices (`_players_in_apnap_order`,
+#: already shared with every other simultaneous-choice reader in this
+#: module), each player naming and revealing only their own library, never
+#: another's (CR 400.7's "a player" here is each player in turn, not a
+#: single target the way Vexing Arcanix's "that player" is).
+_EACH_PLAYER_NAME_REVEAL_BRANCH_RE = re.compile(
+    r"^each player chooses a card name\.\s*"
+    r"then each player reveals the top card of their library\.\s*"
+    r"if the card a player revealed has the name they chose, that player "
+    r"puts it into their hand\.\s*"
+    r"if it doesn'?t, that player puts it on the bottom of their "
+    r"library\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_player_name_reveal_branch_clause(text: str) -> AbilityEffect | None:
+    """`_EACH_PLAYER_NAME_REVEAL_BRANCH_RE`'s shape; see the banner above."""
+    if _EACH_PLAYER_NAME_REVEAL_BRANCH_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for player in _players_in_apnap_order(game):
+
+            def on_match(top: CardState, player: Player = player) -> None:
+                player.move(top, Zone.HAND)
+
+            def on_miss(top: CardState, player: Player = player) -> None:
+                player.move(top, Zone.LIBRARY)
+
+            _ask_name_reveal_top_and_branch(
+                game,
+                player,
+                chooser=player,
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                on_match=on_match,
+                on_miss=on_miss,
+            )
+
+    return effect
+
+
 #: "Until end of turn, creatures you control gain "{1}: This creature fights
 #: target creature you don't control." Exile this Saga, then return it to
 #: the battlefield (front face up)." (Vorinclex // The Grand Evolution's own
@@ -58671,6 +59019,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     )
     if return_from_your_graveyard is not None:
         return return_from_your_graveyard
+    return_a_card_at_random_from_graveyard = _parse_return_a_card_at_random_from_graveyard_clause(
+        clause, for_spell=for_spell
+    )
+    if return_a_card_at_random_from_graveyard is not None:
+        return return_a_card_at_random_from_graveyard
     transform_all = _parse_transform_all_subtype_clause(clause, for_spell=for_spell)
     if transform_all is not None:
         return transform_all

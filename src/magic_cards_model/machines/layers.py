@@ -3063,26 +3063,65 @@ def _sublayers_of(layer: Layer) -> tuple[Sublayer | CopySublayer | None, ...]:
     return _SUBLAYERS_BY_LAYER.get(layer, (None,))
 
 
+#: A counter kind spelled as its own printed bonus - "+1/+1", "-1/-1", or
+#: Clockwork Steed's own asymmetric "+1/+0" (CR 122.1a: "A +X/+Y counter on a
+#: creature or on a creature card in a zone other than the battlefield, where
+#: X and Y are numbers, adds X to that object's power and Y to that object's
+#: toughness. Similarly, -X/-Y counters subtract from power and toughness.").
+#: Read off the kind's own name rather than a fixed pair of enum members -
+#: CR 122.1's kinds are an open set, and CR 122.1a's own rule is not limited
+#: to the ±1/±1 pair; a named kind with no numbers at all ("charge", "hone" -
+#: the latter has its own separate CR 122.1j effect, `_hone_counter_effects`,
+#: since its bonus lands on what the counter's *permanent* is attached to,
+#: never on itself) simply carries no bonus here.
+_PT_COUNTER_KIND_RE = re.compile(r"^([+-])(\d+)/([+-])(\d+)$")
+
+
+def _pt_counter_delta(kind: str) -> tuple[int, int] | None:
+    """`kind`'s own (power, toughness) bonus (CR 122.1a), or `None` when it is
+    not a "+X/+Y"/"-X/-Y"-shaped kind at all."""
+    match = _PT_COUNTER_KIND_RE.fullmatch(kind)
+    if match is None:
+        return None
+    power_sign, power_digits, toughness_sign, toughness_digits = match.groups()
+    power = int(power_digits) * (1 if power_sign == "+" else -1)
+    toughness = int(toughness_digits) * (1 if toughness_sign == "+" else -1)
+    return power, toughness
+
+
 def _counter_effects(board: Board) -> list[ContinuousEffect]:
-    """+1/+1 and -1/-1 counters, as the 7c effects CR 613.4c says they are.
+    """Every "+X/+Y"/"-X/-Y"-named counter kind, summed per permanent, as the
+    7c effects CR 613.4c/CR 122.1a say they are - +1/+1 and -1/-1 read the
+    same general way as any other such kind (`_pt_counter_delta`), rather
+    than as the two special-cased enum members CR 122.1 merely happens to
+    name as examples.
 
     They carry timestamp 0 because counters have no timestamp of their own; 7c
     is addition, so their order among the other 7c effects cannot matter.
     """
     effects: list[ContinuousEffect] = []
     for card_id, chars in board.items():
-        amount = chars.counters.get(Counter.PLUS_ONE, 0) - chars.counters.get(Counter.MINUS_ONE, 0)
-        if amount == 0:
+        power = 0
+        toughness = 0
+        for kind, count in chars.counters.items():
+            if not count:
+                continue
+            delta = _pt_counter_delta(kind)
+            if delta is None:
+                continue
+            power += delta[0] * count
+            toughness += delta[1] * count
+        if power == 0 and toughness == 0:
             continue
         effects.append(
             ContinuousEffect(
-                description=f"{chars.name}: {amount:+}/{amount:+} from counters",
+                description=f"{chars.name}: {power:+d}/{toughness:+d} from counters",
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
                 timestamp=0,
                 from_counters=True,
                 selector=_only(card_id),
-                modification=modify_power_toughness(amount, amount),
+                modification=modify_power_toughness(power, toughness),
             )
         )
     return effects
@@ -8908,15 +8947,32 @@ _SUBTYPE_ANTHEM_RE = re.compile(
 
 #: "Thopters you control have haste." (Saheeli, Jewel of Avishkar) - the same
 #: bare creature-type subject as `_SUBTYPE_ANTHEM_RE`, granting a keyword
-#: instead of (or, "Vigorbloom Vanguard" style, this shape stays keyword-only;
-#: the pump-and-keyword combination has no printed example yet) modifying
-#: power/toughness. Case-sensitive on the subtype for the same reason
-#: `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a creature type.
-#: Rith, Liberated Primeval's "Other Dragons you control have ward {2}." is
-#: the same subject with a costed keyword (`_KEYWORD_LIST_WITH_COSTS`).
+#: instead of modifying power/toughness. Case-sensitive on the subtype for the
+#: same reason `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a
+#: creature type. Rith, Liberated Primeval's "Other Dragons you control have
+#: ward {2}." is the same subject with a costed keyword
+#: (`_KEYWORD_LIST_WITH_COSTS`).
 _SUBTYPE_KEYWORD_GRANT_RE = re.compile(
     rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control "
     rf"(?:have|has) (?P<keywords>{_KEYWORD_LIST_WITH_COSTS})\.?$"
+)
+
+#: "Other Demons, Devils, Imps, and Tieflings you control get +1/+1 and have
+#: lifelink." (Raphael, Fiendish Savior) - `_SUBTYPE_ANTHEM_RE` and
+#: `_SUBTYPE_KEYWORD_GRANT_RE`'s two predicates on the same subtype-list
+#: subject in one sentence, the identical "and have" join
+#: `_ANTHEM_AND_KEYWORD_GRANT_RE` already reads for the bare "creatures you
+#: control" subject. `subtypes` is any length list (CR 205.3m), Oxford comma
+#: or not, "other" or not - Gisa, the Hellraiser's "Skeletons and Zombies you
+#: control get +1/+1 and have menace." is the same shape as a two-item list
+#: with no "other" and a different keyword, proving the reader is not fitted
+#: to Raphael's own four-item list. Sublayer 7c for the pump (CR 613.4c) and
+#: layer 6 for the keyword (CR 613.1f), one ability applying in two layers
+#: (CR 613.6), the same split `_filtered_anthem_builder` already builds.
+_SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
+    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$"
 )
 
 #: "Each other creature you control that's a Cat, Elemental, Nightmare,
@@ -14279,6 +14335,19 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")),
             int(match.group("toughness")),
             keywords=chosen_type_keywords,
+            line=sentence,
+        )
+    if match := _SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
+        subtypes = _subtype_list_words(match.group("subtypes"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if subtypes is None or keywords is None:
+            return None
+        return _filtered_anthem_builder(
+            subtypes,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            other=match.group("other") is not None,
             line=sentence,
         )
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):
