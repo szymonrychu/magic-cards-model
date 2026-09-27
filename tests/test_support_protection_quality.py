@@ -51,3 +51,11 @@ def test_colour_count_qualities_read():
     assert protection_quality_readable("multicolored")
     assert protection_quality_readable("monocolored")
     assert not protection_quality_readable("everything")
+
+
+def test_the_cast_this_turn_quality_reads():
+    """CR 400.7d's "permanents that were cast this turn" is a read quality
+    (`Game.was_cast_this_turn`) - `tests/scenarios/test_protection.py` plays
+    it - so a Protection keyword naming it is handled."""
+    assert protection_quality_readable("permanents that were cast this turn")
+    assert protection_quality_readable("permanent that was cast this turn")

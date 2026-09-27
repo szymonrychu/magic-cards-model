@@ -1615,6 +1615,7 @@ def protection_quality_readable(quality: str) -> bool:
         or wanted in _COLOR_WORDS
         or wanted in _COLOR_COUNT_QUALITIES
         or _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip()) is not None
+        or _CAST_THIS_TURN_QUALITY_RE.match(quality.strip()) is not None
     )
 
 
