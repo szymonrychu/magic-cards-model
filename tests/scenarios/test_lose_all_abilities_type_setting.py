@@ -100,7 +100,7 @@ def test_abigale_strips_printed_abilities_then_the_counters_grant_three_keywords
 
     _cast_abigale(scenario, angel)
 
-    chars = _chars(scenario, angel)
+    _chars(scenario, angel)
     assert not _has(scenario, angel, Keyword.VIGILANCE)
     assert _has(scenario, angel, Keyword.FLYING)
     assert _has(scenario, angel, Keyword.FIRST_STRIKE)
@@ -132,7 +132,7 @@ def test_abigale_loss_lasts_past_cleanup_and_after_abigale_leaves():
     scenario.game.destroy(abigale)
     _end_the_turn(scenario)
 
-    chars = _chars(scenario, angel)
+    _chars(scenario, angel)
     assert not _has(scenario, angel, Keyword.VIGILANCE)
     assert _has(scenario, angel, Keyword.FLYING)
 
@@ -157,7 +157,7 @@ def test_abigale_cannot_target_herself():
     abigale = scenario.creature(ABIGALE, "alice")
     scenario.pass_until_resolved()
 
-    chars = _chars(scenario, abigale)
+    _chars(scenario, abigale)
     assert _has(scenario, abigale, Keyword.FLYING)
     assert abigale.counters["flying"] == 0
 
