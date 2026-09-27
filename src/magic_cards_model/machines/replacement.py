@@ -272,6 +272,22 @@ class CopyException(EngineModel):
     #: `BecomeACopy.abilities` is ability text one line per ability, which is
     #: what every reader of the computed board already parses.
     added_abilities: tuple[str, ...] = ()
+    #: Supertypes gained on top of the copied ones - Moritte of the Frost's
+    #: "it's legendary and snow in addition to its other types" (CR 707.9b,
+    #: CR 205.1b's retaining form).
+    added_supertypes: tuple[Supertype, ...] = ()
+    #: CR 707.9f's gate: "Some exceptions to the copying process apply only if
+    #: the copy is or has certain characteristics" - Moritte's "if it's a
+    #: creature, ...". Judged on the copy as it would be without the gated
+    #: part (every other exception included). `None` when nothing is gated.
+    if_type: Type | None = None
+    #: The abilities gained only when `if_type` holds (CR 707.9a/707.9f).
+    if_type_abilities: tuple[str, ...] = ()
+    #: "it enters with two additional +1/+1 counters on it" - CR 707.9e's
+    #: exception that is an additional effect rather than a characteristic,
+    #: `(kind, amount)` pairs, placed as the copy enters, only when
+    #: `if_type` holds (or always, with no gate).
+    enters_with_counters: tuple[tuple[str, int], ...] = ()
 
 
 class ReplacementEffect(EngineModel):
@@ -567,6 +583,35 @@ _COPY_EXCEPT_NAME = re.compile(r"^(?:his|her|its|their) name is (?P<name>.+)$", 
 #: addition to its other types" - has no body to give one: CR 205.1b's
 #: retaining language names only card type/supertype/subtype, and nothing
 #: requires a creature's stats to come along with it.
+#: "it's legendary and snow in addition to its other types" (Moritte of the
+#: Frost) - supertypes gained on top of the copied ones (CR 707.9b, CR
+#: 205.1b), with no card type or subtype named.
+_COPY_EXCEPT_SUPERTYPES = re.compile(
+    r"^(?:he|she|it|they)(?:'s| is|'re| are) "
+    r"(?P<supertypes>(?:legendary|snow)(?: and (?:legendary|snow))*) in addition to "
+    r"(?:his|her|its|their) other types$",
+    re.IGNORECASE,
+)
+
+#: CR 707.9f's gated exception, split off the rest of the tail - "..., and,
+#: if it's a creature, it enters with two additional +1/+1 counters on it and
+#: has changeling" (Moritte of the Frost).
+_COPY_EXCEPT_IF_TYPE = re.compile(
+    r"^(?P<head>.+?),? and, if (?:he|she|it|they)(?:'s| is|'re| are) an? "
+    r"(?P<type>artifact|creature|enchantment|land|planeswalker), (?P<tail>.+)$",
+    re.IGNORECASE,
+)
+
+#: CR 707.9e's additional effect, as a gated exception prints it: "it enters
+#: with two additional +1/+1 counters on it".
+_COPY_EXCEPT_ENTERS_WITH_COUNTERS = re.compile(
+    rf"^(?:he|she|it|they) enters? with (?P<n>{COUNT}) additional "
+    r"(?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?:him|her|it|them)$",
+    re.IGNORECASE,
+)
+
+_SUPERTYPE_WORDS = {"legendary": Supertype.LEGENDARY, "snow": Supertype.SNOW}
+
 _COPY_EXCEPT_PT_AND_TYPES = re.compile(
     r"^(?:he|she|it|they)(?:'s| is|'re| are) an? (?:(?P<power>\d+)/(?P<toughness>\d+) )?"
     r"(?P<types>[A-Za-z][\w'-]*(?: [A-Za-z][\w'-]*)*) in addition to "
@@ -597,6 +642,37 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
     added_types: list[Type] = []
     added_subtypes: list[str] = []
     added_abilities: list[str] = []
+    added_supertypes: list[Supertype] = []
+    if_type: Type | None = None
+    if_type_abilities: list[str] = []
+    enters_with_counters: list[tuple[str, int]] = []
+
+    clause = clause.strip()
+    if gated := _COPY_EXCEPT_IF_TYPE.match(clause):
+        # CR 707.9f: the gated tail is read on its own; the head is read
+        # below exactly as an ungated tail would be.
+        if_type = _CARD_TYPE_WORDS.get(gated.group("type").lower())
+        clause = gated.group("head")
+        tail = gated.group("tail").strip().rstrip(".")
+        # "it enters with ... on it and has changeling": the second clause
+        # drops its pronoun, sharing the first one's subject.
+        for piece in re.split(r"\s+and\s+(?=has\b|have\b)", tail):
+            piece = piece.strip()
+            if match := _COPY_EXCEPT_ENTERS_WITH_COUNTERS.match(piece):
+                amount = parse_count(match.group("n"))
+                if amount is None:
+                    return None
+                enters_with_counters.append((match.group("kind").lower(), amount))
+                continue
+            if re.match(r"^(?:has|have) ", piece, re.IGNORECASE):
+                piece = f"it {piece}"
+            if match := _COPY_EXCEPT_HAS.match(piece):
+                granted = _granted_abilities(match.group("what"))
+                if granted is None:
+                    return None
+                if_type_abilities.extend(granted)
+                continue
+            return None
 
     for part in _split_exception_parts(clause.strip()):
         if match := _COPY_EXCEPT_NAME.match(part):
@@ -622,6 +698,11 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
                 return None
             added_abilities.extend(granted)
             continue
+        if match := _COPY_EXCEPT_SUPERTYPES.match(part):
+            added_supertypes.extend(
+                _SUPERTYPE_WORDS[word.lower()] for word in match.group("supertypes").split(" and ")
+            )
+            continue
         return None
 
     if (
@@ -630,6 +711,9 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         and not added_types
         and not added_subtypes
         and not added_abilities
+        and not added_supertypes
+        and not if_type_abilities
+        and not enters_with_counters
     ):
         return None
     return CopyException(
@@ -639,6 +723,10 @@ def _parse_copy_exception(clause: str | None) -> CopyException | None:
         added_types=tuple(added_types),
         added_subtypes=tuple(added_subtypes),
         added_abilities=tuple(added_abilities),
+        added_supertypes=tuple(added_supertypes),
+        if_type=if_type,
+        if_type_abilities=tuple(if_type_abilities),
+        enters_with_counters=tuple(enters_with_counters),
     )
 
 
@@ -699,7 +787,21 @@ def _granted_abilities(what: str) -> list[str] | None:
         if not quoted or re.sub(r"[\s,]|\band\b", "", leftover):
             return None
         return quoted
+    if what.lower() in _COPY_EXCEPTION_CDA_KEYWORDS:
+        # Omni-Changeling's "except it has changeling": CR 702.73a's
+        # characteristic-defining ability, gained as a copiable value (CR
+        # 707.9a) - so it defines the copy's creature types in layer 4 the
+        # way a printed changeling does (`machines/layers._changeling_
+        # effects` reads it off the board as layer 1 left it).
+        return [what.capitalize()]
     return split_and_validate_keywords(what)
+
+
+#: Keywords a copy exception may grant that are not combat keywords and so
+#: are not on `split_and_validate_keywords`' layer 6 whitelist: CR 702.73a's
+#: changeling, a characteristic-defining ability that only means something as
+#: a copiable value (CR 604.3a: one granted by a later effect is no CDA).
+_COPY_EXCEPTION_CDA_KEYWORDS = frozenset({"changeling"})
 
 
 _AS_ENTERS = re.compile(
@@ -5417,10 +5519,14 @@ def _choose_colors(count: int, card_name: str) -> Apply:
 #: the battlefield, which is CR 108.2/108.2b's own distinction ("a Magic card ... A
 #: token isn't a card"), so the wording is admitted per zone rather than
 #: interchangeably.
+#:
+#: Widened (ecl T5) to Moritte of the Frost's "a permanent you control" - the
+#: battlefield, narrowed to what the entering permanent's controller controls
+#: (CR 108.4's "you" is the controller of the replacement's source).
 _COPY_CANDIDATES_RE = re.compile(
-    r"^any (?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
+    r"^(?:any|an?) (?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
     r"(?P<filter>artifact|creature|enchantment|land|permanent|planeswalker)"
-    r"(?P<zone> on the battlefield| card in a graveyard)"
+    r"(?P<zone> on the battlefield| card in a graveyard| you control)"
     r"(?: with mana value (?P<bound>.+))?$",
     re.IGNORECASE,
 )
@@ -5552,11 +5658,13 @@ def _copy_candidates(game: "Game", phrase: str, entering: CardState) -> list[Car
     # unaffected by this - `_enters_as_copy` copies the chosen candidate's
     # copiable values, not its computed characteristics).
     board = game.computed_board()
+    yours = "you control" in match.group("zone").lower()
     return [
         candidate
         for candidate in game.battlefield
         if candidate.id != entering.id
         and admitted(board.of(candidate).types, board.of(candidate).mana_value)
+        and (not yours or board.of(candidate).controller == entering.controller)
     ]
 
 
@@ -5674,6 +5782,7 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             LayerContext,
             _become_a_copy_builder,
             copiable_characteristics,
+            printed_characteristics,
         )
 
         entering = event.card
@@ -5728,6 +5837,21 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             if chosen[0].zone is Zone.BATTLEFIELD
             else None
         )
+        # CR 707.9f: a gated exception ("if it's a creature, ...") applies
+        # only when the copy would have that type without it - every other
+        # exception taken into account.
+        copied_types = set(
+            (copiable if copiable is not None else printed_characteristics(chosen[0])).types
+        ) | set(exception.added_types)
+        gate_holds = exception.if_type is None or exception.if_type in copied_types
+        added_abilities = exception.added_abilities + (
+            exception.if_type_abilities if gate_holds else ()
+        )
+        if gate_holds:
+            # CR 707.9e: "it enters with ... additional counters" is an
+            # additional effect of the replacement, not a copiable value.
+            for kind, amount in exception.enters_with_counters:
+                event.counters[kind] = event.counters.get(kind, 0) + amount
         built_effects = _become_a_copy_builder(
             until_eot=False,
             name_override=exception.name,
@@ -5735,7 +5859,8 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             toughness_override=exception.toughness,
             added_types=exception.added_types,
             added_subtypes=exception.added_subtypes,
-            added_abilities=exception.added_abilities,
+            added_abilities=added_abilities,
+            added_supertypes=exception.added_supertypes,
             copiable_values=copiable,
         )(entering, game.continuous_effects.tick(), chosen, LayerContext())
         for built in built_effects:

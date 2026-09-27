@@ -4347,6 +4347,7 @@ def _become_a_copy_builder(
     added_subtypes: Sequence[str] = (),
     added_abilities: Sequence[str] = (),
     copiable_values: Characteristics | None = None,
+    added_supertypes: Sequence[Supertype] = (),
 ) -> EffectBuilder:
     """`_BECOME_A_COPY_RE`'s shape.
 
@@ -4428,7 +4429,12 @@ def _become_a_copy_builder(
         modification = BecomeACopy(
             name=name_override if name_override is not None else copied.name,
             mana_value=copied.mana_value,
-            supertypes=copied.supertypes,
+            # Moritte of the Frost's "legendary and snow in addition to its
+            # other types" (CR 707.9b, CR 205.1b).
+            supertypes=copied.supertypes
+            + tuple(
+                supertype for supertype in added_supertypes if supertype not in copied.supertypes
+            ),
             types=types,
             subtypes=subtypes,
             colors=copied.colors,
