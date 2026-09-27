@@ -742,6 +742,23 @@ class CountCountersOnIt(CountBase):
         return chars.counters.get(self.counter, 0)
 
 
+class CountCountersOnObject(CountBase):
+    """How many counters of one kind are on one named object - an
+    Equipment's or Aura's own counters scaling the bonus it gives the object
+    it is attached to (Chainsaw's "where X is the number of rev counters on
+    this Equipment", CR 122.1). Read off the board as it stands in the asking
+    sublayer, so a counter added or removed moves the count on the next
+    computation (CR 611.3a); an object no longer on the board counts 0."""
+
+    kind: Literal["counters_on_object"] = "counters_on_object"
+    object_id: UUID
+    counter: str
+
+    def __call__(self, chars: Characteristics, board: Board) -> int:
+        holder = board.get(self.object_id)
+        return holder.counters.get(self.counter, 0) if holder is not None else 0
+
+
 class CountControlledAndGraveyardCards(CountBase):
     """ "the number of `<X>` you control and each `<X>` card in your
     graveyard" - Moon-Vigil Adherents' own double count. A live board scan
@@ -777,6 +794,7 @@ Count = Annotated[
     FixedCount
     | CountPermanentsControlledByItsController
     | CountCountersOnIt
+    | CountCountersOnObject
     | CountControlledAndGraveyardCards
     | CountOtherCreaturesLikeThatOne
     | CountOtherCreaturesNamed
@@ -4353,6 +4371,61 @@ _ATTACHED_PUMP_PER_CONTROLLED_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Equipped creature gets +X/+0, where X is the number of rev counters on
+#: this Equipment." (Chainsaw) / "Equipped creature gets +X/+X, where X is
+#: the number of charge counters on this Equipment." (Opaline Bracers) - the
+#: attached creature's sublayer 7c bonus (CR 613.4c) scaled by the source's
+#: own counters of one kind (CR 122.1), recounted on every computation
+#: (CR 611.3a). Each box is "+X", "-X" or a bare "+0"/"-0"; any other fixed
+#: number beside an X has no printing and is not read.
+_ATTACHED_PUMP_PER_OWN_COUNTER_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature gets "
+    r"(?P<power>[+-](?:x|0))/(?P<toughness>[+-](?:x|0)), "
+    r"where x is the number of (?P<counter>[a-z0-9+/-]+) counters on this "
+    r"(?:equipment|aura|artifact|enchantment|permanent)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _attached_pump_per_own_counter_builder(
+    power: int, toughness: int, counter: str, *, subject: str, line: str
+) -> EffectBuilder:
+    """`_ATTACHED_PUMP_PER_OWN_COUNTER_RE`'s shape. `power`/`toughness` are
+    the per-counter multipliers (1, -1 or 0). An unattached source gives
+    nothing (CR 301.5a)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} creature gets {power:+d}/{toughness:+d} "
+                    f"for each {counter} counter on it"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=modify_power_toughness_per(
+                    CountCountersOnObject(object_id=source.id, counter=counter),
+                    power,
+                    toughness,
+                ),
+            )
+        ]
+
+    return builder
+
+
 #: "This creature gets +2/+2 for each Equipment attached to it." (Loxodon
 #: Punisher) and Winter Soldier, Icy Assassin's "Winter Soldier gets +2/+0
 #: for each Equipment attached to him." (a legend's own pronoun, CR 201.5's
@@ -5774,8 +5847,16 @@ def _animation_builder(
     duration: Duration,
     granted: str | None = None,
     granted_effects: EffectBuilder | None = None,
+    every_creature_type: bool = False,
 ) -> EffectBuilder:
     """`_ANIMATION_RE`'s shape.
+
+    `every_creature_type` is the keyword slot's "all creature types" item
+    (Mutavault's "a 2/2 creature with all creature types"): CR 205.3m's whole
+    list of creature types, added in layer 4 (CR 613.1d) after the new card
+    types, so the object is a creature by then and CR 205.3d lets it have
+    them - the same "every creature type" fact changeling states (CR
+    702.73a).
 
     `granted` is a quoted ability the animated object gains (CR 613.1f) -
     Great Hall of the Biblioplex's "with "Whenever you cast an instant or
@@ -5804,7 +5885,9 @@ def _animation_builder(
     Ward is granted as its own instance (`grant_ability_instance`, CR 702.21a
     has no redundancy clause), every other keyword through `grant_ability`.
     """
-    type_modifications = _animation_type_modifications(types, subtype, retained)
+    type_modifications: list[Modification] = _animation_type_modifications(types, subtype, retained)
+    if every_creature_type:
+        type_modifications.append(AddEveryCreatureType())
 
     def builder(
         source: CardState,
@@ -5901,6 +5984,15 @@ def _animation_builder(
     return builder
 
 
+#: The animation keyword slot's last item "all creature types" - Mutavault's
+#: "with all creature types", Soulstone Sanctuary's and Faceless Haven's "with
+#: vigilance and all creature types" (CR 205.3m) - which is a layer 4 type
+#: grant, not a keyword, so it is split off before the keyword validator.
+_ALL_CREATURE_TYPES_ITEM_RE = re.compile(
+    r"^(?:(?P<keywords>.+?),? and )?all creature types$", re.IGNORECASE
+)
+
+
 def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     """`_ANIMATION_RE`'s match turned into its builder, or `None`."""
     match = _ANIMATION_RE.fullmatch(sentence)
@@ -5915,6 +6007,12 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
         return None
     keywords: list[str] = []
     raw_keywords = match.group("keywords") or match.group("quoted_keywords")
+    every_creature_type = False
+    if raw_keywords is not None and (
+        every := _ALL_CREATURE_TYPES_ITEM_RE.fullmatch(raw_keywords.strip())
+    ):
+        every_creature_type = True
+        raw_keywords = every.group("keywords")
     if raw_keywords is not None:
         validated = _split_and_validate_keywords(raw_keywords)
         if validated is None:
@@ -5955,6 +6053,7 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
         duration=(Duration.UNTIL_END_OF_TURN if match.group("until_eot") else Duration.INDEFINITE),
         granted=granted,
         granted_effects=granted_effects,
+        every_creature_type=every_creature_type,
     )
 
 
@@ -6522,7 +6621,10 @@ _LEADING_THEN_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
 
 #: A folded "It's still a `<type>`" (CR 205.1b) at the very end of a
 #: duration-first sentence's remainder - see `_normalize_duration_first`.
-_TRAILING_RETENTION_RE = re.compile(r"\.\s+(?P<clause>[Ii]t's still an? [a-z]+)$")
+#: The period may sit inside a closing quote - Den of the Bugbear's granted
+#: `"Whenever this creature attacks, ... tapped and attacking." It's still a
+#: land.` - which `quote` keeps so the quoted ability stays whole.
+_TRAILING_RETENTION_RE = re.compile(r"\.(?P<quote>[\"”]?)\s+(?P<clause>[Ii]t's still an? [a-z]+)$")
 
 
 def _normalize_duration_first(sentence: str) -> str:
@@ -6546,7 +6648,9 @@ def _normalize_duration_first(sentence: str) -> str:
     # (Mishra's Factory) prints the two.
     retention = _TRAILING_RETENTION_RE.search(rest)
     if retention is not None:
-        body = rest[: retention.start()].rstrip().rstrip(".")
+        quote = retention.group("quote")
+        body = rest[: retention.start()].rstrip()
+        body = f"{body}.{quote}" if quote else body.rstrip(".")
         return f"{body} until end of turn. {retention.group('clause')}."
     return f"{rest} until end of turn."
 
@@ -8576,7 +8680,14 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
     # not just on the new "from <quality>" shape but on the plain
     # "trample and haste." case too. Non-greedy backtracks down to the
     # shortest match that still lets the trailing `\.?$` consume the period.
-    r"(?: and has (?P<keywords>[a-z].+?)|(?P<every> and is all creature types))?"
+    r"(?: and has (?P<keywords>[a-z].+?)|(?P<every> and is all creature types)"
+    # Meltstrider's Resolve / Wolfrider's Saddle: "gets +0/+2 and can't be
+    # blocked by more than one creature" - the blocker cap (CR 509.1b) with
+    # no "has" in front of it, read by the same keyword-list validator.
+    r"| and (?P<restriction>can't be blocked .+?)"
+    # Rope: "gets +1/+2, has reach, and can't be blocked by more than one
+    # creature" - the same two grants as a comma list.
+    r"|, has (?P<listed>[a-z][a-z ]*?),? and (?P<listed_restriction>can't be blocked .+?))?"
     r'|has "(?P<granted>.+)"'
     # CR 111.10j's Cursed Role: "Enchanted creature has base power and
     # toughness 1/1." - a *set* (sublayer 7b, CR 613.4b), not the `gets`
@@ -9248,7 +9359,20 @@ _TURN_FACT_CONDITION_PHRASES: dict[str, tuple[str, str]] = {
     ),
     # CR 701.21a, recorded by `Game.sacrifice` (Goblin Blast-Runner).
     "you sacrificed a permanent this turn": ("sacrificed_permanent", "you"),
+    # CR 119.3: life lost this turn, damage included (Essence Channeler's
+    # "As long as you've lost life this turn, this creature has flying and
+    # vigilance."), put on the context's ledger by `Game` off
+    # `Player.life_lost_this_turn` (`LOST_LIFE_TURN_FACT`).
+    "you've lost life this turn": ("lost_life", "you"),
+    "you have lost life this turn": ("lost_life", "you"),
+    "you lost life this turn": ("lost_life", "you"),
+    "an opponent lost life this turn": ("lost_life", "opponent"),
+    "an opponent has lost life this turn": ("lost_life", "opponent"),
 }
+
+#: The `turn_facts` key `Game` fills from `Player.life_lost_this_turn` for the
+#: lost-life phrases above - derived, never recorded by `record_turn_fact`.
+LOST_LIFE_TURN_FACT = "lost_life"
 
 #: A permanent's own conditional type change: "[During your turn,] [as long as
 #: `<condition>`,] `<this>` is a[n] [`<P/T>`] [`<Subtypes>`] `<types>` creature
@@ -9758,8 +9882,12 @@ def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
 #: control") is not read here: no real printing in this shape needs one, and
 #: guessing at the vocabulary check `count_expression`'s own subtype branch
 #: uses would be new, unverified scope.
+#: "This Vehicle's power is equal to the number of lands you control."
+#: (Lumbering Worldwagon) is the same CDA on a Vehicle's own self-reference; it
+#: only does anything while the Vehicle is a creature (CR 208.3a, CR 301.7a).
 _QUALIFIER_COUNT_CDA_RE = re.compile(
-    r"^this (?:creature|permanent|token)'s (?P<stats>power and toughness are each|power is) "
+    r"^this (?:creature|permanent|token|vehicle)'s "
+    r"(?P<stats>power and toughness are each|power is) "
     r"equal to the number of (?P<qualifier>[a-z]+) you control\.?$",
     re.IGNORECASE,
 )
@@ -12525,6 +12653,14 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     self_becomes_creature_with_pt = _parse_self_becomes_creature_with_pt_ability(sentence)
     if self_becomes_creature_with_pt is not None:
         return self_becomes_creature_with_pt
+    # `machines/animation.py`: "This Vehicle becomes an artifact creature until
+    # end of turn." - imported lazily for the same cycle reason as
+    # `machines/attacking_statics.py` above.
+    from .animation import parse_self_becomes_artifact_creature
+
+    self_becomes_artifact_creature = parse_self_becomes_artifact_creature(sentence)
+    if self_becomes_artifact_creature is not None:
+        return self_becomes_artifact_creature
     if match := _KEYWORD_GRANT_FOR_AS_LONG_RE.fullmatch(sentence):
         for_as_long_keywords = _split_and_validate_keywords(match.group("keywords"))
         if for_as_long_keywords is None:
@@ -12642,6 +12778,18 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             f"{match.group('other') or ''}{match.group('qualifier').lower()}",
             count,
+        )
+    if match := _ATTACHED_PUMP_PER_OWN_COUNTER_RE.fullmatch(sentence):
+
+        def per_counter(box: str) -> int:
+            return 0 if box[1:] == "0" else (1 if box[0] == "+" else -1)
+
+        return _attached_pump_per_own_counter_builder(
+            per_counter(match.group("power")),
+            per_counter(match.group("toughness")),
+            match.group("counter").lower(),
+            subject=match.group("attachment").lower(),
+            line=sentence,
         )
     if match := _ATTACHED_PUMP_PER_CONTROLLED_RE.fullmatch(sentence):
         attached_count = _controlled_count_factory(
@@ -13465,7 +13613,11 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
         )
     if match := _ATTACHED_CREATURE_STATIC_RE.fullmatch(sentence):
-        raw_keywords = match.group("keywords") or match.group("only_keywords")
+        raw_keywords = (
+            match.group("keywords") or match.group("only_keywords") or match.group("restriction")
+        )
+        if match.group("listed") is not None:
+            raw_keywords = f"{match.group('listed')} and {match.group('listed_restriction')}"
         keywords = []
         if raw_keywords is not None:
             validated = _split_and_validate_keywords(raw_keywords)

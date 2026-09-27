@@ -32,6 +32,7 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.keywords import ward_triggers
 from magic_cards_model.models import Color, Zone
 from magic_cards_model.models.card import Type
+from magic_cards_model.models.token import is_token
 from tests.scenarios.harness import Scenario
 
 
@@ -420,3 +421,238 @@ def test_mishras_factory_still_becomes_a_two_two_assembly_worker_artifact_creatu
     assert (computed.power, computed.toughness) == (2, 2)
     assert "Assembly-Worker" in computed.subtypes
     assert computed.colors == ()
+
+
+# -- "with all creature types": Mutavault, Soulstone Sanctuary, Faceless Haven -
+#
+# CR 205.3m names the creature types; "all creature types" gives the land every
+# one of them in layer 4 (CR 613.1d), the same "is every creature type" fact
+# changeling states as a characteristic-defining ability (CR 702.73a). The
+# land keeps its land type (CR 205.1b's "It's still a land."), and the P/T is
+# a layer 7b set (CR 613.4b). Faceless Haven (Pioneer/Modern, in no deck list)
+# is the second printing of the template, on a snow cost and a 4/3 body.
+
+
+def _manland_board(name: str, *lands: str) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", battlefield=[name, *lands], library=["Island"] * 5)
+        .player("bob", battlefield=["Mountain"], hand=["Lightning Bolt"], library=["Island"] * 5)
+    )
+
+
+def _animate(scenario, name: str, *lands: str):
+    manland = scenario.find(name, Zone.BATTLEFIELD, "alice")
+    scenario.activate(manland, *scenario.untapped_sources(*lands, username="alice"), index=1)
+    scenario.pass_until_resolved()
+    return manland
+
+
+def test_mutavault_becomes_a_two_two_creature_with_every_creature_type_that_is_still_a_land():
+    scenario = _manland_board("Mutavault", "Island").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vault = _animate(scenario, "Mutavault", "Island")
+
+    computed = scenario.game.computed_board().of(vault)
+    assert computed.is_creature and computed.is_land, "CR 205.1b: still a land"
+    assert (computed.power, computed.toughness) == (2, 2)
+    for creature_type in ("Goblin", "Elf", "Sliver", "Time Lord", "Assembly-Worker"):
+        assert creature_type in computed.subtypes, f"CR 205.3m: {creature_type}"
+    assert computed.colors == ()
+
+
+def test_mutavault_keeps_its_mana_ability_and_ends_at_cleanup():
+    """CR 613.1f adds nothing that removes the {T}: Add {C}; CR 514.2 ends it."""
+    scenario = _manland_board("Mutavault", "Island").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vault = _animate(scenario, "Mutavault", "Island")
+    assert scenario.game.computed_board().of(vault).has_ability("{T}: Add {C}.")
+
+    while scenario.game.turn.active_player == "alice":
+        scenario.advance()
+    computed = scenario.game.computed_board().of(vault)
+    assert not computed.is_creature
+    assert computed.power is None
+    assert "Goblin" not in computed.subtypes
+    assert computed.types == (Type.LAND,)
+
+
+def test_an_unanimated_mutavault_has_no_creature_types():
+    scenario = _manland_board("Mutavault", "Island").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vault = scenario.find("Mutavault", Zone.BATTLEFIELD, "alice")
+    computed = scenario.game.computed_board().of(vault)
+    assert not computed.is_creature
+    assert computed.subtypes == ()
+
+
+def test_an_animated_mutavault_dies_to_a_bolt_and_goes_to_the_graveyard():
+    """A 2/2 creature land takes lethal damage like any creature (CR 704.5g)."""
+    scenario = _manland_board("Mutavault", "Island").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    vault = _animate(scenario, "Mutavault", "Island")
+    scenario.pass_priority("alice")
+    scenario.cast_onto_stack(
+        "Lightning Bolt",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        username="bob",
+        targets=[vault],
+    )
+    scenario.pass_until_resolved()
+    assert vault.zone is Zone.GRAVEYARD
+
+
+def test_soulstone_sanctuary_has_no_duration_and_stays_a_creature_next_turn():
+    """CR 611.2a: no duration stated - the effect lasts until the end of the
+    game, so the cleanup step (CR 514.2) does not end it."""
+    scenario = _manland_board("Soulstone Sanctuary", *["Island"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sanctuary = _animate(scenario, "Soulstone Sanctuary", *["Island"] * 4)
+
+    computed = scenario.game.computed_board().of(sanctuary)
+    assert computed.is_creature and computed.is_land
+    assert (computed.power, computed.toughness) == (3, 3)
+    assert computed.has_ability("Vigilance")
+    assert "Goblin" in computed.subtypes
+
+    while scenario.game.turn.active_player == "alice":
+        scenario.advance()
+    while scenario.game.turn.active_player == "bob":
+        scenario.advance()
+    computed = scenario.game.computed_board().of(sanctuary)
+    assert computed.is_creature, "CR 611.2a: no duration, never ends"
+    assert (computed.power, computed.toughness) == (3, 3)
+    assert computed.has_ability("Vigilance")
+
+
+def test_soulstone_sanctuary_attacks_without_tapping():
+    """CR 702.20b: attacking does not tap a creature with vigilance."""
+    scenario = _manland_board("Soulstone Sanctuary", *["Island"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sanctuary = _animate(scenario, "Soulstone Sanctuary", *["Island"] * 4)
+    scenario.advance()  # beginning of combat
+    scenario.advance()  # declare attackers
+    scenario.attack_with(sanctuary)
+    assert not sanctuary.tapped
+
+
+def test_faceless_haven_is_the_same_template_on_a_snow_cost():
+    """Second printing: "{S}{S}{S}: This land becomes a 4/3 creature with
+    vigilance and all creature types until end of turn. It's still a land." """
+    scenario = _manland_board("Faceless Haven", *["Snow-Covered Island"] * 3).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    haven = _animate(scenario, "Faceless Haven", *["Snow-Covered Island"] * 3)
+
+    computed = scenario.game.computed_board().of(haven)
+    assert computed.is_creature and computed.is_land
+    assert (computed.power, computed.toughness) == (4, 3)
+    assert computed.has_ability("Vigilance")
+    assert "Sliver" in computed.subtypes and "Time Lord" in computed.subtypes
+
+    while scenario.game.turn.active_player == "alice":
+        scenario.advance()
+    assert not scenario.game.computed_board().of(haven).is_creature, "CR 514.2"
+
+
+def test_the_listed_manlands_classify_as_handled():
+    from magic_cards_model.support import HANDLED, classify_clauses
+    from tests.cards import card
+
+    for name in (
+        "Mutavault",
+        "Soulstone Sanctuary",
+        "Faceless Haven",
+        "Den of the Bugbear",
+        "Hive of the Eye Tyrant",
+    ):
+        clauses = [c for c in classify_clauses(card(name)) if c.text]
+        assert {c.category for c in clauses} == {HANDLED}, name
+
+
+# -- a quoted granted attack trigger: Den of the Bugbear, Hive of the Eye Tyrant -
+#
+# "Until end of turn, this land becomes a 3/2 red Goblin creature with
+# "Whenever this creature attacks, create a 1/1 red Goblin creature token
+# that's tapped and attacking." It's still a land." - the quoted ability is
+# added in layer 6 (CR 613.1f) and triggers like a printed one (CR 603.2).
+# Hive of the Eye Tyrant is the second printing: "3/3 black Beholder creature
+# with menace and "Whenever this creature attacks, exile target card from
+# defending player's graveyard."".
+
+
+def test_den_becomes_a_three_two_red_goblin_with_the_quoted_trigger():
+    scenario = _manland_board(
+        "Den of the Bugbear", "Mountain", "Island", "Island", "Island"
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    den = _animate(scenario, "Den of the Bugbear", "Mountain", "Island", "Island", "Island")
+
+    computed = scenario.game.computed_board().of(den)
+    assert computed.is_creature and computed.is_land
+    assert (computed.power, computed.toughness) == (3, 2)
+    assert computed.colors == (Color.RED,)
+    assert "Goblin" in computed.subtypes
+    assert any(a.startswith("Whenever this creature attacks") for a in computed.abilities)
+
+
+def test_den_attacking_makes_a_goblin_token_tapped_and_attacking():
+    """CR 603.2 + CR 508.4: the token enters attacking, never declared."""
+    scenario = _manland_board(
+        "Den of the Bugbear", "Mountain", "Island", "Island", "Island"
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    den = _animate(scenario, "Den of the Bugbear", "Mountain", "Island", "Island", "Island")
+    scenario.advance()  # beginning of combat
+    scenario.advance()  # declare attackers
+    scenario.attack_with(den)
+    scenario.pass_until_resolved()
+
+    tokens = [
+        permanent
+        for permanent in scenario.game.battlefield
+        if is_token(permanent) and permanent.name.startswith("Goblin")
+    ]
+    assert len(tokens) == 1
+    (token,) = tokens
+    assert token.tapped
+    assert scenario.game.is_attacking(token)
+    assert scenario.game.is_attacking(den)
+
+
+def test_an_unanimated_den_has_no_attack_trigger_and_is_not_red():
+    scenario = _manland_board("Den of the Bugbear", "Mountain").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    den = scenario.find("Den of the Bugbear", Zone.BATTLEFIELD, "alice")
+    computed = scenario.game.computed_board().of(den)
+    assert not computed.is_creature
+    assert computed.colors == ()
+    assert not any(a.startswith("Whenever this creature attacks") for a in computed.abilities)
+
+
+def test_den_loses_the_trigger_at_cleanup():
+    scenario = _manland_board(
+        "Den of the Bugbear", "Mountain", "Island", "Island", "Island"
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    den = _animate(scenario, "Den of the Bugbear", "Mountain", "Island", "Island", "Island")
+    while scenario.game.turn.active_player == "alice":
+        scenario.advance()
+    computed = scenario.game.computed_board().of(den)
+    assert not computed.is_creature
+    assert not any(a.startswith("Whenever this creature attacks") for a in computed.abilities)
+
+
+def test_hive_becomes_a_three_three_black_beholder_with_menace_and_its_trigger():
+    scenario = _manland_board(
+        "Hive of the Eye Tyrant", "Swamp", "Island", "Island", "Island"
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    hive = _animate(scenario, "Hive of the Eye Tyrant", "Swamp", "Island", "Island", "Island")
+
+    computed = scenario.game.computed_board().of(hive)
+    assert computed.is_creature and computed.is_land
+    assert (computed.power, computed.toughness) == (3, 3)
+    assert computed.colors == (Color.BLACK,)
+    assert "Beholder" in computed.subtypes
+    assert computed.has_ability("Menace")
+    assert any(a.startswith("Whenever this creature attacks") for a in computed.abilities)

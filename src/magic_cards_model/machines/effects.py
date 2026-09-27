@@ -2613,8 +2613,14 @@ def _parse_scry_or_untap_if_not_starting_player_clauses(
 # `_mass_pump_until_eot_builder` build the effect once handed the concrete,
 # already-resolved group, and everything below computes that group and (when
 # the card prints one) the "where X is ..." magnitude.
+#: "Other creatures get -2/-2 until end of turn." (Harvester of Misery) /
+#: "all other creatures get -2/-2 until end of turn." (Shefet Archfiend) -
+#: every creature but the source, whoever controls it (`_MASS_OTHER_
+#: CREATURES_RE`), a whole-board subject like "all creatures".
+_MASS_OTHER_CREATURES_RE = re.compile(r"^(?:all )?other creatures (?=get |gain )", re.IGNORECASE)
 _MASS_SUBJECT_RE = re.compile(
-    r"^(?:(?:other )?creatures (?:you control|your opponents control)"
+    r"^(?:(?:all )?other creatures (?=get |gain )"
+    r"|(?:other )?creatures (?:you control|your opponents control)"
     r"|creature tokens (?:you control|your opponents control)|permanents you control"
     r"|all creatures|creatures that are (?:white|blue|black|red|green)\b)\b",
     re.IGNORECASE,
@@ -2669,7 +2675,10 @@ _MASS_POWER_FILTER_RE = re.compile(
 )
 #: The two whole-board subjects `_MASS_SUBJECT_RE` reads that also open
 #: sentences which are not a pump at all - see `_parse_mass_pump_clause`.
-_MASS_WHOLE_BOARD_SUBJECT_RE = re.compile(r"^(?:all creatures|creatures that are)\b", re.IGNORECASE)
+_MASS_WHOLE_BOARD_SUBJECT_RE = re.compile(
+    r"^(?:all creatures|creatures that are|(?:all )?other creatures (?=get |gain ))\b",
+    re.IGNORECASE,
+)
 #: "Creatures that are green and/or white" - Glistening Deluge's second
 #: sentence: every creature on the battlefield, narrowed by colour (CR 105.2:
 #: an object is one or more of the five colours, so "and/or" admits a
@@ -2836,6 +2845,16 @@ def _mass_creature_group_targets(
             for permanent in game.battlefield
             if base_selector(board.of(permanent), board.characteristics)
             and (board.of(permanent).power or 0) >= minimum_power
+        ]
+    if _MASS_OTHER_CREATURES_RE.match(text.strip()) is not None:
+        # Harvester of Misery's "other creatures" / Shefet Archfiend's "all
+        # other creatures": every creature on the battlefield but the source,
+        # fixed now (CR 611.2c).
+        board = game.computed_board()
+        return [
+            permanent
+            for permanent in game.battlefield
+            if board.of(permanent).is_creature and permanent.id != source_id
         ]
     opening = text.strip().lower()
     # Ravenous Robots: "Creature tokens you control gain haste until end of
@@ -3025,7 +3044,12 @@ def _mass_pump_parseable(literal: str) -> str:
     power_filter_match = _MASS_POWER_FILTER_RE.match(literal.strip())
     color_filter_match = _MASS_COLOR_FILTER_RE.match(literal.strip())
     each_match = _MASS_EACH_SUBJECT_RE.match(literal.strip())
-    if each_match is not None:
+    other_match = _MASS_OTHER_CREATURES_RE.match(literal.strip())
+    if other_match is not None:
+        # "(All) other creatures get ..." - `targets` already excludes the
+        # source, so the layer parser only needs the whole-board shape.
+        parseable = "all creatures " + literal.strip()[other_match.end() :]
+    elif each_match is not None:
         # The group (and its "other") is already `targets`; the layer parser
         # only needs the plural group shape.
         parseable = (
@@ -27541,6 +27565,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     becomes = becomes_ability_effect(effect_text)
     if becomes is not None:
         return becomes
+    from .lose_abilities_destroy import lose_abilities_then_destroy_ability_effect
+
+    lose_then_destroy = lose_abilities_then_destroy_ability_effect(effect_text)
+    if lose_then_destroy is not None:
+        return lose_then_destroy
     choose_card_name = _parse_choose_card_name_for_source_clause(effect_text)
     if choose_card_name is not None:
         return choose_card_name
@@ -31562,6 +31591,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     becomes = becomes_spell_effect(whole)
     if becomes is not None:
         return becomes
+    from .lose_abilities_destroy import lose_abilities_then_destroy_spell_effect
+
+    lose_then_destroy = lose_abilities_then_destroy_spell_effect(whole)
+    if lose_then_destroy is not None:
+        return lose_then_destroy
     c02_t6 = _c02_t6_spell_effect(whole)
     if c02_t6 is not None:
         return c02_t6

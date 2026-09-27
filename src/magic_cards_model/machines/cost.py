@@ -5393,8 +5393,11 @@ _PHRASE_DISCARD = re.compile(
 #: `CostComponent._why_not_tap` enforces it either way.
 #: "Tap another untapped creature you control" (Tyvar, the Pummeler) reads
 #: "another" the same way: one, and never the ability's own source.
+#: "Tap two other untapped artifacts you control" (Bladewheel Chariot) reads
+#: "other" after a count the same way: never the ability's own source.
 _PHRASE_TAP = re.compile(
-    rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?:untapped )?(?P<quality>[\w ,]+?) "
+    rf"^tap (?:(?P<another>another)|{_COST_COUNT}) (?P<other>other )?(?:untapped )?"
+    r"(?P<quality>[\w ,]+?) "
     r"you control$",
     re.IGNORECASE,
 )
@@ -5980,7 +5983,7 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         requirement = _requirement(tap.group("quality"))
         if read is None or requirement is None:
             return None
-        requirement.excludes_source = another
+        requirement.excludes_source = another or tap.group("other") is not None
         component = tap_cost(payer=payer, description=text)
         component.required = read[0]
         component.requirement = requirement
