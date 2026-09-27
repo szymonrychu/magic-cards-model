@@ -201,3 +201,92 @@ def test_glamdring_mills_six_and_takes_every_instant_and_sorcery():
     for card_state in (bears, mystic, forest, extra_mountain):
         assert card_state.zone is Zone.GRAVEYARD
     assert alice.library == []
+
+
+# --------------------------------------------------------------------------
+# R0a-T7: Cache Grab - "Mill four cards. You may put a permanent card from
+# among the cards milled this way into your hand. If you control a Squirrel
+# or returned a Squirrel card to your hand this way, create a Food token."
+# --------------------------------------------------------------------------
+
+
+def test_cache_grab_returns_a_squirrel_and_creates_a_food_token():
+    """The returned card itself carries the named subtype - CR 205.3's
+    creature type read off the card just taken, not off the board."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Cache Grab"],
+            battlefield=["Forest", "Forest"],
+            library=["Squirrelanoids", "Lightning Bolt", "Opt", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    squirrel, bolt, opt, island = alice.library
+    scenario.will_choose_cards(squirrel, source="Cache Grab")
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    scenario.cast_and_resolve("Cache Grab", *sources)
+
+    assert squirrel.zone is Zone.HAND
+    for card_state in (bolt, opt, island):
+        assert card_state.zone is Zone.GRAVEYARD
+    foods = [state for state in scenario.game.battlefield if "Food" in state.name and state.token]
+    assert len(foods) == 1
+
+
+def test_cache_grab_returns_a_non_squirrel_permanent_with_no_squirrel_around():
+    """Neither half of the rider holds: no Food token."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Cache Grab"],
+            battlefield=["Forest", "Forest"],
+            library=["Grizzly Bears", "Lightning Bolt", "Opt", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bears, bolt, opt, island = alice.library
+    scenario.will_choose_cards(bears, source="Cache Grab")
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    scenario.cast_and_resolve("Cache Grab", *sources)
+
+    assert bears.zone is Zone.HAND
+    foods = [state for state in scenario.game.battlefield if "Food" in state.name and state.token]
+    assert foods == []
+
+
+def test_cache_grab_creates_a_food_token_when_you_already_control_a_squirrel():
+    """ "you control a Squirrel" is checked independently of what (if
+    anything) this resolution returns to hand."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Cache Grab"],
+            battlefield=["Forest", "Forest", "Squirrelanoids"],
+            library=["Grizzly Bears", "Lightning Bolt", "Opt", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    alice = scenario.player("alice")
+    bears, bolt, opt, island = alice.library
+    scenario.will_choose_cards(bears, source="Cache Grab")
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    scenario.cast_and_resolve("Cache Grab", *sources)
+
+    assert bears.zone is Zone.HAND
+    foods = [state for state in scenario.game.battlefield if "Food" in state.name and state.token]
+    assert len(foods) == 1

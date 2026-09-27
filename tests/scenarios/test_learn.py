@@ -21,6 +21,8 @@ Every CR number above was read in full with `mise run rules:find` in the
 session that wrote this file.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Game, Zone
 from tests.scenarios.harness import Scenario
@@ -263,3 +265,102 @@ def test_igneous_inspiration_learns_a_lesson_off_pool():
     assert scenario.player("bob").life == 17
     assert lesson.zone is Zone.HAND
     assert known(scenario.game, "bob") == [("Environmental Sciences", Zone.HAND, None, True)]
+
+
+# --------------------------------------------------------------------------
+# R0a-T7: Academic Dispute - "Target creature blocks this turn if able. You
+# may have it gain reach until end of turn.\nLearn." - a general CR 509.1c
+# block requirement (no named attacker) beside the optional reach grant and
+# an unrelated Learn already read above.
+# --------------------------------------------------------------------------
+
+
+def test_academic_dispute_forces_the_targeted_creature_to_block_if_able():
+    """CR 509.1c: with no requirement, a defending player may simply not
+    block; once Academic Dispute grants "This creature blocks each combat if
+    able," declining to block at all is illegal, and the requirement is
+    satisfied by blocking the (only) attacker, with no attacker named on the
+    granted line at all."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Hill Giant", "Forest", "Forest"], library=["Forest"] * 10)
+        .player(
+            "bob",
+            hand=["Academic Dispute"],
+            battlefield=["Grizzly Bears", "Mountain"],
+            library=["Forest"] * 10,
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    giant = scenario.creature("Hill Giant", "alice")
+    giant.summoning_sick = False
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(giant)
+    scenario.pass_priority("alice")
+    scenario.will_take_the_may(False, username="bob", source="Academic Dispute")
+
+    scenario.cast_and_resolve(
+        "Academic Dispute",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        targets=[bears],
+        username="bob",
+    )
+
+    assert scenario.game.characteristics_of(bears).abilities == (
+        "This creature blocks each combat if able.",
+    )
+    assert scenario.game.mode_notices == []
+
+    with pytest.raises(ValueError, match=r"CR 509\.1c"):
+        scenario.no_blocks()
+
+    scenario.block(giant, bears)
+    assert scenario.blockers() == [bears]
+
+
+def test_academic_dispute_may_grant_reach_and_still_learns():
+    """The optional "You may have it gain reach until end of turn." (CR
+    608.2d) and "Learn." (CR 701.48a, already read by `machines/keywords.py`)
+    - a flying attacker the targeted creature could not otherwise block."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice", battlefield=["Aether Swooper", "Forest", "Forest"], library=["Forest"] * 10
+        )
+        .player(
+            "bob",
+            hand=["Academic Dispute", "Opt"],
+            battlefield=["Grizzly Bears", "Mountain"],
+            library=["Forest"] * 10,
+        )
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    spirit = scenario.creature("Aether Swooper", "alice")
+    spirit.summoning_sick = False
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.attack_with(spirit)
+    scenario.pass_priority("alice")
+    scenario.will_take_the_may(True, username="bob", source="Academic Dispute")
+    scenario.will_take_the_may(True, username="bob", source="Academic Dispute")
+    scenario.will_choose_cards(
+        scenario.find("Opt", Zone.HAND, "bob"), username="bob", source="Academic Dispute"
+    )
+
+    scenario.cast_and_resolve(
+        "Academic Dispute",
+        *scenario.untapped_sources("Mountain", username="bob"),
+        targets=[bears],
+        username="bob",
+    )
+
+    assert set(scenario.game.characteristics_of(bears).abilities) == {
+        "This creature blocks each combat if able.",
+        "Reach",
+    }
+    assert bears.zone is Zone.GRAVEYARD or bears.zone is Zone.BATTLEFIELD
+    assert scenario.game.mode_notices == []
+
+    scenario.block(spirit, bears)
+    assert scenario.blockers() == [bears]

@@ -246,3 +246,152 @@ def test_collected_company_s_creatures_enter_simultaneously_and_see_each_other()
     scenario.pass_until_resolved()
 
     assert scenario.player("alice").life == 22
+
+
+# --------------------------------------------------------------------------
+# R0a-T7: United Battlefront - the identical `_merge_look_top_put_onto_
+# battlefield_clauses` reader, with a compound "noncreature, nonland
+# permanent" quality (CR 205.2a's negation, more than one word deep) that
+# used to send `_put_description` to `None` (`machines/effects.py`'s own
+# `_parse_card_group_qualifier` widening).
+# --------------------------------------------------------------------------
+
+BATTLEFRONT = "United Battlefront"
+
+
+def _battlefront(library: list[str]) -> PlayedScenario:
+    scenario = (
+        Scenario()
+        .player("alice", hand=[BATTLEFRONT], battlefield=["Plains"] * 4, library=library)
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_battlefront(scenario: PlayedScenario) -> None:
+    plains = scenario.untapped_sources(*(["Plains"] * 4))
+    scenario.cast_and_resolve(BATTLEFRONT, *plains)
+
+
+def test_united_battlefront_puts_up_to_two_noncreature_nonland_permanents():
+    """ "noncreature, nonland permanent cards with mana value 3 or less" -
+    Grizzly Bears (a creature) and Forest (a land) are excluded outright;
+    Bonesplitter and Prophetic Prism (both artifacts, mana value 1 and 2)
+    qualify; Serra Angel's mana value 5 is over the ceiling even though it
+    would otherwise be creature-excluded anyway."""
+    scenario = _battlefront(
+        [
+            "Grizzly Bears",
+            "Forest",
+            "Bonesplitter",
+            "Prophetic Prism",
+            "Serra Angel",
+            "Opt",
+            "Island",
+        ]
+    )
+    bonesplitter = _card(scenario, "Bonesplitter")
+    prism = _card(scenario, "Prophetic Prism")
+    scenario.will_choose_cards(bonesplitter, prism, username="alice", source=BATTLEFRONT)
+
+    _cast_battlefront(scenario)
+
+    assert bonesplitter.zone is Zone.BATTLEFIELD
+    assert prism.zone is Zone.BATTLEFIELD
+    assert _offered(scenario, BATTLEFRONT) == ["Bonesplitter", "Prophetic Prism"]
+
+
+def test_united_battlefront_excludes_creatures_and_lands_even_when_cheap():
+    """A one-mana-value creature and land are never offered, however cheap -
+    the exclusion is on card type, not on cost."""
+    scenario = _battlefront(
+        ["Llanowar Elves", "Forest", "Opt", "Craw Wurm", "Island", "Island", "Island"]
+    )
+
+    _cast_battlefront(scenario)
+
+    assert _offered(scenario, BATTLEFRONT) is None
+    assert all(state.zone is not Zone.BATTLEFIELD for state in scenario.player("alice").library)
+
+
+# --------------------------------------------------------------------------
+# R0a-T7: Break Out - reveal one creature card, a mana-value-gated choice
+# between the battlefield (with haste) and the hand, the rest to the bottom
+# (`machines/spell_texts_r0a.py`'s `parse_look_top_reveal_conditional_
+# battlefield_clause`)
+# --------------------------------------------------------------------------
+
+BREAK_OUT = "Break Out"
+
+
+def _break_out(library: list[str]) -> PlayedScenario:
+    scenario = (
+        Scenario()
+        .player("alice", hand=[BREAK_OUT], battlefield=["Mountain", "Forest"], library=library)
+        .player("bob", library=["Island"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_break_out(scenario: PlayedScenario) -> None:
+    sources = scenario.untapped_sources("Mountain", "Forest")
+    scenario.cast_and_resolve(BREAK_OUT, *sources)
+
+
+def test_break_out_puts_a_cheap_creature_onto_the_battlefield_with_haste():
+    """ "If that card has mana value 2 or less, you may put it onto the
+    battlefield and it gains haste until end of turn." - Llanowar Elves
+    (mana value 1) revealed, put onto the battlefield, and able to attack
+    the same turn (CR 702.10a)."""
+    scenario = _break_out(
+        ["Llanowar Elves", "Opt", "Island", "Forest", "Serra Angel", "Grizzly Bears"]
+    )
+    elves = _card(scenario, "Llanowar Elves")
+    scenario.will_choose_cards(elves, username="alice", source=BREAK_OUT)
+    scenario.will_take_the_may(True, username="alice", source=BREAK_OUT)
+
+    _cast_break_out(scenario)
+
+    assert elves.zone is Zone.BATTLEFIELD and elves.controller == "alice"
+    assert "Haste" in scenario.game.characteristics_of(elves).abilities
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(elves)
+    assert scenario.attackers() == [elves]
+
+
+def test_break_out_declining_the_battlefield_puts_it_into_hand_instead():
+    """CR 608.2d: declining the "you may" for a card that does qualify still
+    leaves the fallback - "put it into your hand" - which is not itself
+    optional."""
+    scenario = _break_out(
+        ["Llanowar Elves", "Opt", "Island", "Forest", "Serra Angel", "Grizzly Bears"]
+    )
+    elves = _card(scenario, "Llanowar Elves")
+    scenario.will_choose_cards(elves, username="alice", source=BREAK_OUT)
+    scenario.will_take_the_may(False, username="alice", source=BREAK_OUT)
+
+    _cast_break_out(scenario)
+
+    assert elves.zone is Zone.HAND
+
+
+def test_break_out_puts_an_expensive_revealed_creature_into_hand():
+    """Serra Angel's mana value 5 is over the ceiling: no battlefield
+    question is even asked (CR 608.2d never offers an impossible choice),
+    and it goes straight to hand."""
+    scenario = _break_out(["Serra Angel", "Opt", "Island", "Forest", "Craw Wurm", "Grizzly Bears"])
+    angel = _card(scenario, "Serra Angel")
+    scenario.will_choose_cards(angel, username="alice", source=BREAK_OUT)
+
+    _cast_break_out(scenario)
+
+    assert angel.zone is Zone.HAND
+    assert not any(
+        question.kind is DecisionKind.MAY and question.source == BREAK_OUT
+        for question in scenario.questions_asked()
+    )

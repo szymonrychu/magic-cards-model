@@ -59,8 +59,11 @@ if TYPE_CHECKING:
 #: condition is read in (for "other", "you own", "that spell could target").
 ObjectTest = Callable[["ConditionContext", "CardState", "Characteristics"], bool]
 
-#: CR 700.12's batch of creature types.
-_OUTLAW_TYPES = frozenset({"assassin", "mercenary", "pirate", "rogue", "warlock"})
+#: CR 700.12's batch of creature types. Public - `machines/targeting.py`'s
+#: "target non-outlaw creature" (Shoot the Sheriff) reuses the identical
+#: vocabulary rather than a second copy of CR 700.12's five names.
+OUTLAW_TYPES = frozenset({"assassin", "mercenary", "pirate", "rogue", "warlock"})
+_OUTLAW_TYPES = OUTLAW_TYPES
 
 
 @dataclass(frozen=True)

@@ -3532,6 +3532,93 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
     return effect
 
 
+#: R0a-T7: Frontline Rush's own second mode, "Target creature gets +X/+X
+#: until end of turn, where X is the number of creatures you control." - the
+#: spell-side twin of `_parse_where_x_is_continuous_effect` immediately
+#: above, scoped to a *targeted* subject rather than the self/mass one that
+#: function's own `_mass_creature_group_targets`/`_source_characteristic_
+#: expr`/`_event_subject_characteristic_expr` branches read (all three are
+#: `AbilityOnStack`-only - an `AbilityOnStack`'s own `.source`/`.controller`/
+#: `.event`, none of which a resolving spell's `CardState` carries). Nothing
+#: in this pool prints a *mass*-subject "where X is ..." pump on a spell (or
+#: a modal spell's own mode - `resolve_modal_spell` swaps `spell.targets` to
+#: the chosen mode's own slice before running this, so `game.
+#: resolve_card_targets` already reads the right target), so this half only
+#: ever needs the single-target branch: `profile_for_text(literal)` reads
+#: whether the substituted sentence targets at all, and `game.
+#: resolve_card_targets(spell)` is the identical CR 608.2b recheck `create_
+#: continuous_effect`/`_create_continuous_effect_for_mode_text` already give
+#: every other spell-side layer effect.
+def _parse_where_x_is_continuous_effect_for_spell(effect_text: str) -> Effect | None:
+    """The spell-side twin of `_parse_where_x_is_continuous_effect` - see the
+    banner above."""
+    text = effect_text.strip()
+    match = _WHERE_X_IS_INLINE_RE.search(text)
+    if match is None:
+        return None
+    template = (text[: match.start()] + text[match.end() :]).strip()
+    magnitude_expr = count_expression(match.group("expr"))
+    if magnitude_expr is None:
+        return None
+    if not _X_TOKEN_RE.search(template):
+        return None
+    if parsed_layer_effects(_X_TOKEN_RE.sub("1", template)) is None:
+        return None
+    sentences = _plain_resolution_sentences(template)
+    pump_index = next((i for i, s in enumerate(sentences) if _X_TOKEN_RE.search(s)), None)
+    if pump_index is None:
+        return None
+    pump_sentence = sentences[pump_index]
+    remainder_sentences = [s for i, s in enumerate(sentences) if i != pump_index]
+    pump_first = pump_index == 0 or not remainder_sentences
+    remainder_text = " ".join(remainder_sentences)
+    remainder_effect = parse_mixed_effect_for_spell(remainder_text) if remainder_text else None
+
+    def run_pump(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell)
+        magnitude = magnitude_expr(game, controller.username)
+        literal = _X_TOKEN_RE.sub(str(magnitude), pump_sentence)
+        builder = parsed_layer_effects(literal)
+        if builder is None:
+            continuous_effects(game).layer_notices.append(
+                LayerNotice(source_id=spell.id, source_name=spell.card.name, text=literal)
+            )
+            return
+        profile = profile_for_text(literal)
+        requires_target = profile.understood and bool(profile.requirements)
+        targets = game.resolve_card_targets(spell) if requires_target else [spell]
+        if not targets:
+            # CR 115.6: "up to one target" legally choosing zero, or every
+            # chosen target since gone illegal (CR 608.2b) - nothing to affect.
+            return
+        store = continuous_effects(game)
+        timestamp = store.tick()
+        context = layer_context_for(game, controller)
+        for built in builder(spell, timestamp, targets, context):
+            if built.holds(game):
+                store.add(built)
+
+    def run_remainder(game: "Game", spell: CardState) -> None:
+        if remainder_effect is not None:
+            remainder_effect(game, spell)
+        elif remainder_text:
+            game.layer_remainder_notices.append(
+                LayerRemainderNotice(
+                    source_id=spell.id, source_name=spell.card.name, text=remainder_text
+                )
+            )
+
+    def effect(game: "Game", spell: CardState) -> None:
+        if pump_first:
+            run_pump(game, spell)
+            run_remainder(game, spell)
+        else:
+            run_remainder(game, spell)
+            run_pump(game, spell)
+
+    return effect
+
+
 #: Threaten's whole effect: "Untap target creature and gain control of it
 #: until end of turn. That creature gains haste until end of turn."
 #:
@@ -17088,8 +17175,17 @@ _COUNTER_TARGET_ABILITY_RE = re.compile(
 #: already loops over every target `Game.resolve_targets` still finds legal
 #: (CR 608.2b), so
 #: the only thing the singular pattern was missing was the printed plural.
+#:
+#: R0a-T7's own third destination - a bare "to your hand" (Get Out's "Return
+#: one or two target creatures and/or enchantments you own to your hand.") -
+#: is the identical move: CR 401 always returns a card to *its own* owner,
+#: and "you own" is the targeting requirement's own restriction
+#: (`owned_by_caster`), so every target this reaches is already the caster's
+#: - "to your hand" and "to its owner's hand" describe the same destination
+#: for such a target, and `return_ability_targets_to_hand`'s `Game.
+#: return_to_hand` needs no new branch to reach it.
 _RETURN_TARGET_RE = re.compile(
-    r"return (?P<phrase>.*target.+?) to (?:its owner'?s hand|their owners'? hands)",
+    r"return (?P<phrase>.*target.+?) to (?:its owner'?s hand|their owners'? hands|your hand)",
     re.IGNORECASE,
 )
 #: "Put target card from your graveyard on the bottom of your library."
@@ -21907,6 +22003,16 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     layer_mode = _compose_layer_effect_with_remainder_for_mode(text)
     if layer_mode is not None:
         return layer_mode
+    # Frontline Rush's own second mode: "Target creature gets +X/+X until
+    # end of turn, where X is the number of creatures you control." - a
+    # self-defined X (CR 107.3c) the layer composer just above cannot read
+    # (its own `genuine_resolution_layer_text` has no notion of a literal
+    # "X"), tried ahead of the ordinary per-clause fallback for the same
+    # reason `layer_mode` is: a bare "gets +X/+X" sentinel would otherwise
+    # build off the whole card's text, not this mode's own.
+    where_x_targeted = _parse_where_x_is_continuous_effect_for_spell(text)
+    if where_x_targeted is not None:
+        return where_x_targeted
     return parse_mixed_effect_for_spell(text)
 
 
@@ -57106,6 +57212,53 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
         # the clause splitter would cut, and "countered this way" points back
         # across the period (`machines/stack_sweeps.py`).
         return [mass_stack]
+
+    # R0a-T7 (`machines/spell_texts_r0a.py`): every one of these carries a
+    # bare "and"/an anaphor across a sentence boundary the ordinary split
+    # would cut - see that module's own docstring for why each is tried
+    # whole rather than per clause.
+    from . import spell_texts_r0a
+
+    same_name_destroy = spell_texts_r0a.parse_destroy_target_and_same_name_permanents_clause(
+        text, for_spell=for_spell
+    )
+    if same_name_destroy is not None:
+        return [same_name_destroy]
+    same_name_return = spell_texts_r0a.parse_return_target_and_same_name_permanents_to_hands_clause(
+        text, for_spell=for_spell
+    )
+    if same_name_return is not None:
+        return [same_name_return]
+    blocks_if_able = spell_texts_r0a.parse_target_blocks_if_able_then_may_gain_keyword_clause(
+        text, for_spell=for_spell
+    )
+    if blocks_if_able is not None:
+        return [blocks_if_able]
+    token_with_quoted_ability = spell_texts_r0a.parse_token_with_quoted_ability_then_rest_clause(
+        text, for_spell=for_spell
+    )
+    if token_with_quoted_ability is not None:
+        return [token_with_quoted_ability]
+    look_top_reveal_conditional = (
+        spell_texts_r0a.parse_look_top_reveal_conditional_battlefield_clause(
+            text, for_spell=for_spell
+        )
+    )
+    if look_top_reveal_conditional is not None:
+        return [look_top_reveal_conditional]
+    return_distinct_mv = spell_texts_r0a.parse_return_from_graveyard_to_battlefield_distinct_clause(
+        text, for_spell=for_spell
+    )
+    if return_distinct_mv is not None:
+        return [return_distinct_mv]
+    exiles_creature_and_graveyard = (
+        spell_texts_r0a.parse_target_player_exiles_creature_and_graveyard_clause(
+            text, for_spell=for_spell
+        )
+    )
+    if exiles_creature_and_graveyard is not None:
+        return [exiles_creature_and_graveyard]
+
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
@@ -60596,9 +60749,25 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
         text = negated.group("rest").strip()
 
     lowered = re.sub(r"\s+cards?$", "", text.strip().lower()).strip()
-    nonland = lowered.startswith("nonland ")
-    if nonland:
-        lowered = lowered.removeprefix("nonland ").strip()
+    # R0a-T7: United Battlefront's own "noncreature, nonland permanent
+    # cards" - CR 205.2a's negation, printed as a run of one or more
+    # "non<type>" words rather than just the single "nonland " this reader
+    # used to special-case (Ajani, Outland Chaperone's own "nonland
+    # permanent"). Generalised to any number of them, each a card type this
+    # module already knows how to name (`_singular_card_type`), so a comma
+    # (or none, for exactly one) joins them the same way CR 205.2a's own
+    # multi-word negation always reads: every named type excluded, not any
+    # one of them.
+    excluded_card_types: set[Type] = set()
+    while True:
+        prefix = re.match(r"non([a-z]+),?\s+", lowered)
+        if prefix is None:
+            break
+        excluded_type = _singular_card_type(prefix.group(1))
+        if excluded_type is None:
+            break
+        excluded_card_types.add(excluded_type)
+        lowered = lowered[prefix.end() :].strip()
     # A bare printed subtype names a card group as well as a card type does -
     # Fell Gravship's "a creature or Spacecraft card" (CR 205.3). Only a
     # single word the subtype vocabulary knows, never a guess.
@@ -60621,7 +60790,7 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
     else:
         card_type = _singular_card_type(lowered)
         if card_type is None:
-            if nonland or " " in lowered:
+            if excluded_card_types or " " in lowered:
                 return None
             required_subtype = _singular_subtype_for_count_expression(lowered)
             if required_subtype is None:
@@ -60632,7 +60801,7 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
 
     def matches(state: CardState) -> bool:
         card = state.card
-        if nonland and Type.LAND in card.types:
+        if excluded_card_types and excluded_card_types & set(card.types):
             return False
         if required_subtype is not None:
             if required_subtype not in {subtype.lower() for subtype in state.subtypes}:
@@ -63470,9 +63639,25 @@ _MILL_THEN_MAY_TAKE_FROM_MILLED_RE = re.compile(
     # Vivien on the Hunt's own "put any number of creature cards milled this
     # way into your hand" carries no "from among" at all - "milled this way"
     # is its own complete CR 400.7 anaphor, read the same as the other two.
-    r"(?:from among (?:the milled cards|those cards|them)|milled this way) "
+    # Cache Grab's own "from among the cards milled this way" (R0a-T7) fuses
+    # the "from among" prefix with that participial phrasing rather than
+    # either of the other two nouns.
+    r"(?:from among (?:the milled cards|the cards milled this way|those cards|them)"
+    r"|milled this way) "
     r"(?P<dest>into your hand|to your hand|onto the battlefield(?: under your control)?)"
-    r"\.(?:\s*you gain (?P<life>\d+) life\.?)?$",
+    r"\.(?:\s*you gain (?P<life>\d+) life\.?)?"
+    # Cache Grab's own rider: "If you control a Squirrel or returned a
+    # Squirrel card to your hand this way, create a Food token." - a
+    # resolution-time condition (CR 608.2c, checked once the mill and the
+    # put/return above have already happened) on either half of the same
+    # instruction: the controller's *current* board, or which subtype the
+    # card just taken carried. Generalised on the subtype word (`\1` backref
+    # ties the two halves to the same one, CR 205.3m's own creature types
+    # never differing between them on one printed card) and on the
+    # consequence, read the ordinary way through `parse_mixed_effect[_for_
+    # spell]` rather than pinned to Cache Grab's own "create a Food token."
+    rf"(?:\s*if you control an? (?P<subtype>[a-z]+) or returned an? (?P=subtype) card"
+    rf"(?: to your hand)? this way, (?P<consequence>.+?)\.?)?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -63548,6 +63733,14 @@ def _mill_then_may_take_from_milled_runner(
         # move as "put a card ... into your hand" - only the verb differs.
         destination = "into your hand"
     life = int(match.group("life")) if match.group("life") else 0
+    condition_subtype = match.group("subtype")
+    consequence_text = (match.group("consequence") or "").strip()
+    consequence_for_spell = (
+        parse_mixed_effect_for_spell(consequence_text) if consequence_text else None
+    )
+    consequence_for_ability = parse_mixed_effect(consequence_text) if consequence_text else None
+    if consequence_text and consequence_for_spell is None and consequence_for_ability is None:
+        return None
     if take_all:
         take_noun = "all cards"
     elif quantity.source is QuantitySource.ANY_NUMBER:
@@ -63557,7 +63750,13 @@ def _mill_then_may_take_from_milled_runner(
     else:
         take_noun = f"up to {quantity.amount} cards"
 
-    def run(game: "Game", controller: Player, source_name: str, source_id: str | None) -> None:
+    def run(
+        game: "Game",
+        controller: Player,
+        source_name: str,
+        source_id: str | None,
+        stack_object: "StackObject | None" = None,
+    ) -> None:
         milled = [
             state
             for player in (game.players_in_game if each_player else [controller])
@@ -63651,6 +63850,33 @@ def _mill_then_may_take_from_milled_runner(
                 game.put_onto_battlefield(state, controller.username)
         if life:
             game.gain_life(controller, life)
+        if condition_subtype and stack_object is not None:
+            # Cache Grab's own rider (CR 608.2c, checked once the put/return
+            # above has already happened): "you control a `<subtype>`" reads
+            # the controller's current board; "returned a `<subtype>` card
+            # to your hand this way" reads which of the cards this
+            # resolution just moved to hand carried it - CR 400.7 already
+            # keeps `chosen` as the same objects `controller.move` just
+            # mutated in place, so `state.zone` is HAND by now.
+            subtype_lower = condition_subtype.lower()
+            controls_subtype = any(
+                subtype_lower
+                in {each.lower() for each in game.characteristics_of(permanent).subtypes}
+                for permanent in game.permanents_controlled_by(controller.username)
+            )
+            returned_subtype = any(
+                subtype_lower in {each.lower() for each in state.subtypes}
+                for state in chosen
+                if state.zone is Zone.HAND
+            )
+            if controls_subtype or returned_subtype:
+                consequence = (
+                    consequence_for_spell
+                    if isinstance(stack_object, CardState)
+                    else consequence_for_ability
+                )
+                if consequence is not None:
+                    consequence(game, stack_object)
 
     return run
 
@@ -63662,7 +63888,7 @@ def _parse_mill_then_may_take_from_milled(text: str) -> Effect | None:
         return None
 
     def effect(game: "Game", spell: CardState) -> None:
-        run(game, game.controller_of(spell), spell.name, source_id_of(spell))
+        run(game, game.controller_of(spell), spell.name, source_id_of(spell), spell)
 
     return effect
 
@@ -63675,7 +63901,13 @@ def _parse_mill_then_may_take_from_milled_ability(text: str) -> AbilityEffect | 
         return None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        run(game, game.player(ability.controller), ability.source_name, source_id_of(ability))
+        run(
+            game,
+            game.player(ability.controller),
+            ability.source_name,
+            source_id_of(ability),
+            ability,
+        )
 
     return effect
 

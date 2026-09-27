@@ -3006,20 +3006,29 @@ def unobeyed_attack_requirement(
 #: ("Target creature blocks this creature this turn if able." - Sisters of
 #: Stone Death, Tangle Angler): "This creature blocks <attacker> each combat
 #: if able." Only a block on an attacker with that name obeys it.
+#:
+#: The attacker name is optional (R0a-T7): Academic Dispute's own "Target
+#: creature blocks this turn if able." names no attacker at all, granted as
+#: "This creature blocks each combat if able." by `effects._parse_target_
+#: blocks_if_able_then_may_gain_keyword_clause` - CR 509.1c's general
+#: requirement, obeyed by blocking *any* legal attacker, not one named
+#: object. `attacker` is `None` for that unnamed shape.
 _BLOCKS_NAMED_EACH_COMBAT_RE = re.compile(
-    r"^(?:this creature|this permanent) blocks (?P<attacker>.+?) each combat if able\.?$",
+    r"^(?:this creature|this permanent) blocks(?: (?P<attacker>.+?))? each combat if able\.?$",
     re.IGNORECASE,
 )
 
 
-def _own_block_requirements(game: "Game", creature: CardState) -> list[str]:
+def _own_block_requirements(game: "Game", creature: CardState) -> list[str | None]:
     """The attacker name each block requirement line on `creature`'s computed
-    board (CR 613.5) names - one entry per requirement (CR 509.1c)."""
-    names: list[str] = []
+    board (CR 613.5) names - one entry per requirement (CR 509.1c). `None`
+    for an unnamed requirement, obeyed by blocking any legal attacker."""
+    names: list[str | None] = []
     for line in game.characteristics_of(creature).abilities:
         match = _BLOCKS_NAMED_EACH_COMBAT_RE.fullmatch(line.strip())
         if match is not None:
-            names.append(match.group("attacker").lower())
+            attacker = match.group("attacker")
+            names.append(attacker.lower() if attacker is not None else None)
     return names
 
 
@@ -3027,11 +3036,14 @@ def _block_requirements_obeyed(
     game: "Game", creature: CardState, attacker: CardState | None
 ) -> int:
     """How many of `creature`'s block requirements blocking `attacker`
-    (`None`: not blocking) obeys."""
+    (`None`: not blocking) obeys. An unnamed requirement (`None`) is obeyed
+    by blocking any legal attacker at all."""
     if attacker is None:
         return 0
     return sum(
-        1 for name in _own_block_requirements(game, creature) if name == attacker.name.lower()
+        1
+        for name in _own_block_requirements(game, creature)
+        if name is None or name == attacker.name.lower()
     )
 
 
