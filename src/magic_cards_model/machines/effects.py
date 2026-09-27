@@ -50536,7 +50536,9 @@ def _read_token_copy_except(
 #: types", "[it ]has `<keywords>`" (The Cloning of Shredder's "except it isn't
 #: legendary and is a Mutant in addition to its other types", Ember Island
 #: Production's "except it's not legendary and it's a 4/4 Hero in addition
-#: to its other types").
+#: to its other types"). Mirror Room's "except it's a Reflection in addition
+#: to its other creature types" is the same CR 205.1b exception worded for the
+#: one kind of subtype it adds.
 _EXCEPT_NOT_LEGENDARY_PART_RE = re.compile(
     r"^(?:it |they )?(?:isn['’]t|is not|aren['’]t|are not|['’]s not|['’]re not|it['’]s not|"
     r"they['’]re not) legendary$",
@@ -50544,7 +50546,7 @@ _EXCEPT_NOT_LEGENDARY_PART_RE = re.compile(
 )
 _EXCEPT_SUBTYPE_PART_RE = re.compile(
     r"^(?:it['’]?s|is|it is) an? (?:(?P<power>\d+)/(?P<toughness>\d+) )?"
-    r"(?P<subtype>[A-Z][a-z]+) in addition to its other types$"
+    r"(?P<subtype>[A-Z][a-z]+) in addition to its other (?:creature )?types$"
 )
 _EXCEPT_HAS_PART_RE = re.compile(r"^(?:it )?has (?P<keywords>[a-z][a-z ]*)$", re.IGNORECASE)
 

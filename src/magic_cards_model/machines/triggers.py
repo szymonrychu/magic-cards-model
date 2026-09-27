@@ -8221,8 +8221,9 @@ _ENTERING_CAUSE_RE = re.compile(
 #: its enduring-story gate), "... of a Shaman or another Wizard you control
 #: ..." (Harmonic Prodigy), "... of a legendary creature you control ..."
 #: (Annie Joins Up), "... of another Elemental you control triggers, it
-#: triggers ..." (Twinflame Travelers), and "... of equipped creature ..."
-#: (Wizard's Staff, CR 301.5a's "equipped creature").
+#: triggers ..." (Twinflame Travelers), "... of a permanent you control ..."
+#: (Fractured Realm - "permanent" is a word every permanent has), and "... of
+#: equipped creature ..." (Wizard's Staff, CR 301.5a's "equipped creature").
 _TYPED_ADDITIONAL_TRIGGER_RE = re.compile(
     r"^if a triggered ability of (?P<whose>.+?) triggers, "
     r"(?:that ability|it) triggers an additional time\.?$",
@@ -8258,7 +8259,7 @@ def _typed_whose(whose: str) -> _TypedWhose | None:
     text = text[: -len(" you control")].strip()
     card_types = {card_type.value.lower() for card_type in Type}
     supertypes = {supertype.value.lower() for supertype in Supertype}
-    subtypes = {subtype.lower() for subtype in subtype_vocabulary()}
+    subtypes = {subtype.lower() for subtype in subtype_vocabulary()} | {"permanent"}
     alternatives: list[tuple[bool, tuple[str, ...]]] = []
     for part in re.split(r",\s*(?:or\s+)?|\s+or\s+", text):
         match = _TYPED_WHOSE_ALTERNATIVE_RE.match(part.strip())
@@ -8317,6 +8318,9 @@ def _typed_source_matches(
             | {supertype.value.lower() for supertype in source.card.supertypes}
             | {subtype.lower() for subtype in source.subtypes}
         )
+    # Only a permanent's ability is ever multiplied (`additional_trigger_times`
+    # returns early off the battlefield), so "a permanent you control" is met.
+    have.add("permanent")
     return any(
         (not another or source.id != multiplier.id) and set(words) <= have
         for another, words in whose.alternatives
