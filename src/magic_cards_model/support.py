@@ -62,9 +62,11 @@ from magic_cards_model.machines.casting import (
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
     reads_granted_zone_keyword_line,
+    reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
     reads_or_pay_additional_cost_line,
     reads_play_cards_exiled_with_line,
+    reads_printed_self_zone_cast_line,
     reads_printed_zone_permission_line,
     reads_static_zone_cast_permission_line,
     reads_using_keyword_permission_line,
@@ -1940,6 +1942,15 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 611.3d / CR 601.3: `casting._grant_on_a_card_in_a_zone` grants
         # the keyword where the card lies and `_rezoned_by_using` opens that
         # zone to it (Ninja Teen's level 3; Iroh, Grand Lotus's flashback).
+        return HANDLED
+    if reads_linked_exile_static_cast_line(printing, text) or reads_printed_self_zone_cast_line(
+        text
+    ):
+        # CR 601.3 / CR 607.2a: `casting._linked_exile_static_cast_option`
+        # casts out of the permanent's own pile (Maralen, Fae Ascendant;
+        # Dawnhand Dissident; Rona, Disciple of Gix), and `casting._printed_
+        # self_zone_cast_with_additional_cost` the card itself from its zone
+        # for an additional cost (Quilled Greatwurm).
         return HANDLED
     if reads_play_cards_exiled_with_line(printing, text):
         # CR 601.3 / CR 607.2a: `casting.linked_exile_play_source` opens the

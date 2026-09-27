@@ -19826,6 +19826,7 @@ class Game(EngineModel):
         until_next_end_step_of: str | None = None,
         pays_life_for_mana_value: bool = False,
         choice_group: UUID | None = None,
+        while_controlling: str | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -19903,6 +19904,7 @@ class Game(EngineModel):
                 until_next_end_step_of=until_next_end_step_of,
                 pays_life_for_mana_value=pays_life_for_mana_value,
                 choice_group=choice_group,
+                while_controlling=while_controlling,
             )
             self.play_permissions.append(permission)
             return permission
@@ -23748,6 +23750,15 @@ class Game(EngineModel):
         key = self._activation_handoff_key(permanent, index)
         self.announced_reveal_counts.pop(key, None)
         for component in total.components:
+            if component.from_among and not component.cards:
+                # "Remove N counters from among creatures you control"
+                # (Hopeful Initiate): the permanents that give them, taken in
+                # battlefield order until the total is met (`cost.fill_from_
+                # among`'s documented default).
+                from ..machines.cost import fill_from_among
+
+                fill_from_among(component, self, controller, None)
+                continue
             if (
                 component.kind in (ComponentKind.PLACE_COUNTERS, ComponentKind.REMOVE_COUNTERS)
                 and not component.cards

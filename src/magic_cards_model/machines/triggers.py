@@ -1747,7 +1747,19 @@ def _required_tapped_subtype(condition: str) -> str | None:
     return match.group("subtype") if match else None
 
 
-def _required_entering_subtype(condition: str) -> str | None:
+#: "another Elf or Faerie you control enters" (Maralen, Fae Ascendant's other
+#: half once `_self_or_other_enters_match` has split the self off) - the
+#: single-subtype `_ENTERING_SUBTYPE` widened to a comma/or list of singular
+#: subtypes, read by `_parse_subtype_list` the way The Great Goblin's own
+#: dying list is; any one of them is enough (CR 205.3m).
+_ENTERING_SUBTYPE_LIST = re.compile(
+    r"^(?:an?|one or more|another) (?:nontoken )?"
+    r"(?P<subtypes>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*,?\s+or\s+[A-Z][A-Za-z]*) "
+    r"(?:you control |an opponent controls )?enters?\b"
+)
+
+
+def _required_entering_subtype(condition: str) -> str | tuple[str, ...] | None:
     """The subtype an ENTERS_THE_BATTLEFIELD condition demands, or `None`.
 
     Split from `_required_subtype` because that one reads only the "other ...
@@ -1765,6 +1777,9 @@ def _required_entering_subtype(condition: str) -> str | None:
     entering. `BASIC_LAND_TYPES` (CR 305.6) is what tells "Plains" apart
     from an ordinary pluralizable subtype rather than a hardcoded name.
     """
+    listed = _ENTERING_SUBTYPE_LIST.match(condition.strip())
+    if listed is not None:
+        return _parse_subtype_list(listed.group("subtypes"))
     match = _ENTERING_SUBTYPE.match(condition.strip())
     if match is None:
         return None

@@ -2700,6 +2700,12 @@ class CostComponent(EngineModel):
     graveyard exile), which links nothing and changes nothing about how they
     pay."""
 
+    from_among: bool = False
+    """`ComponentKind.REMOVE_COUNTERS` only: "Remove N counters from among
+    creatures you control" (Dawnhand Dissident's cast permission, Quilled
+    Greatwurm, Hopeful Initiate) - `amount` is the total taken across every
+    chosen permanent (`cards`), not a count taken from each (CR 118.3: the
+    counters have to be there, summed over the chosen permanents)."""
     variable_count: bool = False
     """The printed count is CR 107.3a's X or "one or more", so the number is
     whatever the payer announced or chose rather than one the text fixes. For
@@ -2975,6 +2981,20 @@ class CostComponent(EngineModel):
         resource a cost spends, counters included, and the whole cost is
         checked before anything is spent.
         """
+        if self.from_among:
+            total = 0
+            for card in self.cards:
+                if card.zone is not Zone.BATTLEFIELD:
+                    return (
+                        f"{card.name} is not on the battlefield, so its counters cannot be removed"
+                    )
+                total += _removable_counters(card, self.counter_kind)
+            if total < self.amount:
+                return (
+                    f"the chosen permanents have {total} counter(s) between them, not the "
+                    f"{self.amount} this cost removes from among them (CR 118.3)"
+                )
+            return self._why_not_controlled()
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
                 return f"{card.name} is not on the battlefield, so its counters cannot be removed"
@@ -3281,13 +3301,21 @@ class CostComponent(EngineModel):
             # ability's effect resolves - Walking Ballista's damage and its
             # cost are two different things, and the counter is already gone
             # even if the ability is later countered on the stack.
+            left = self.amount
             for card in self.cards:
                 self._remember_counters(card)
+                take = (
+                    min(left, _removable_counters(card, self.counter_kind))
+                    if self.from_among
+                    else self.amount
+                )
+                left -= take
                 if self.counter_kind == ANY_COUNTER_KIND:
-                    for kind, count in any_counters_to_remove(card, self.amount):
+                    for kind, count in any_counters_to_remove(card, take):
                         card.remove_counters(kind, count)
                     continue
-                card.remove_counters(self.counter_kind, self.amount)
+                if take:
+                    card.remove_counters(self.counter_kind, take)
         elif self.kind is ComponentKind.PLACE_COUNTERS:
             # Same timing as above, the other direction (Devoted Druid): the
             # counter lands on the permanent as the cost is paid, so a
@@ -3888,6 +3916,44 @@ ANY_COUNTER_KIND = "any"
 #: permanent), then every other kind alphabetically - a documented default,
 #: the same way `decisions.default_answer` documents its own.
 _ANY_COUNTER_PREFERENCE = (Counter.MINUS_ONE.value,)
+
+
+def _removable_counters(card: CardState, counter_kind: str) -> int:
+    """How many counters of `counter_kind` (any kind, for `ANY_COUNTER_KIND`)
+    `card` has to give."""
+    if counter_kind == ANY_COUNTER_KIND:
+        return sum(count for _kind, count in card.counters.items())
+    return card.counter_count(counter_kind)
+
+
+def fill_from_among(
+    component: "CostComponent", game: Any, payer: str, chosen: list[CardState] | None
+) -> None:
+    """Choose the permanents a `from_among` counter-removal cost takes its
+    counters from (CR 601.2b's choice, CR 601.2h's payment): the ones the
+    payer named, in order, or - named none - every permanent the payer
+    controls that meets the requirement and has such a counter, in
+    battlefield order, until the total is reached."""
+    if not component.from_among or component.cards:
+        return
+    if chosen:
+        component.cards = list(chosen)
+    elif game is not None:
+        picked: list[CardState] = []
+        total = 0
+        for permanent in game.permanents_controlled_by(payer):
+            if total >= component.amount:
+                break
+            if component.requirement is not None and (
+                component.requirement.why_not(permanent, game, payer) is not None
+            ):
+                continue
+            have = _removable_counters(permanent, component.counter_kind)
+            if have:
+                picked.append(permanent)
+                total += have
+        component.cards = picked
+    component.required = len(component.cards)
 
 
 def any_counters_to_remove(card: CardState, amount: int) -> list[tuple[str, int]]:
@@ -5151,6 +5217,16 @@ _PHRASE_PLACE_COUNTERS = re.compile(
 )
 #: "Remove a counter from this creature" (Glen Elendra Guardian) - no kind
 #: named, so any counter pays it (`ANY_COUNTER_KIND`).
+#: "Remove three counters from among creatures you control" (Dawnhand
+#: Dissident's and Quilled Greatwurm's own "by removing ..."), "Remove two
+#: +1/+1 counters from among creatures you control" (Hopeful Initiate) -
+#: CR 118.3's counters, summed across the permanents chosen
+#: (`CostComponent.from_among`).
+_PHRASE_REMOVE_COUNTERS_FROM_AMONG = re.compile(
+    rf"^remov(?:e|ing) {_COST_COUNT} (?:(?P<kind>[\w+/−-]+) )?counters? from among "
+    r"(?P<group>[a-z ]+?)s you control$",
+    re.IGNORECASE,
+)
 _PHRASE_REMOVE_ANY_COUNTERS = re.compile(
     rf"^remove {_COST_COUNT} counters? from {_COUNTER_SELF_SUBJECT}$", re.IGNORECASE
 )
@@ -5389,6 +5465,26 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         kind = _counter_kind_word(place.group("kind"))
         return place_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
 
+    from_among = _PHRASE_REMOVE_COUNTERS_FROM_AMONG.match(text)
+    if from_among is not None:
+        read = _cost_count(from_among.group("count"))
+        if read is None or read[1]:
+            return None
+        kind_word = from_among.group("kind")
+        requirement = _requirement(from_among.group("group"))
+        if requirement is None:
+            return None
+        component = remove_counters_cost(
+            None,
+            read[0],
+            counter_kind=_counter_kind_word(kind_word) if kind_word else ANY_COUNTER_KIND,
+            payer=payer,
+            description=text,
+        )
+        component.from_among = True
+        component.required = 0
+        component.requirement = requirement
+        return component
     remove_any = _PHRASE_REMOVE_ANY_COUNTERS.match(text)
     if remove_any is not None:
         read = _cost_count(remove_any.group("count"))

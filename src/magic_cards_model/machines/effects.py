@@ -53071,6 +53071,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     this_turn_spell_grant = _parse_this_turn_spell_grant_clause(clause, for_spell=for_spell)
     if this_turn_spell_grant is not None:
         return this_turn_spell_grant
+    exile_other_tops = _parse_exile_top_of_other_libraries_clause(clause)
+    if exile_other_tops is not None:
+        return exile_other_tops
     each_player_exiles = _parse_each_player_exiles_until_clause(clause, for_spell=for_spell)
     if each_player_exiles is not None:
         return each_player_exiles
@@ -62318,6 +62321,24 @@ def _parse_exile_top_of_other_libraries_antecedent(
     return exile_tops, not targeted or count_word is not None
 
 
+def _parse_exile_top_of_other_libraries_clause(clause: str) -> TargetedClause | None:
+    """`_EXILE_TOP_OF_OTHER_LIBRARIES_RE` standing alone - Maralen, Fae
+    Ascendant's "exile the top two cards of target opponent's library." and
+    Ashiok, Nightmare Weaver's "+2: Exile the top three cards of target
+    opponent's library." (CR 406.2). Whatever the cards are for is the
+    object's other, linked ability's business (CR 607.2a,
+    `link_cards_exiled_during`)."""
+    antecedent = _parse_exile_top_of_other_libraries_antecedent(clause.strip().rstrip("."))
+    if antecedent is None:
+        return None
+    exile_tops, _ = antecedent
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        exile_tops(game, stack_object)
+
+    return effect
+
+
 #: Exile the top `<n>` cards of a library face down, then a play permission
 #: that lasts "for as long as they remain exiled" - Flameshape's "Look at the
 #: top two cards of your library and exile them face down. For as long as
@@ -62718,6 +62739,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     from .cast_copies import cast_copy_ability_effect
     from .control_change import control_change_ability_effect
     from .copy_effects import copy_ability_effect
+    from .hand_reveal_exile import parse_reveal_some_then_choose_one
     from .resolving_exile import resolving_exile_ability_effect
 
     for reader in (
@@ -62728,6 +62750,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
         copy_ability_effect,
         cast_copy_ability_effect,
         resolving_exile_ability_effect,
+        parse_reveal_some_then_choose_one,
         control_change_ability_effect,
     ):
         effect = reader(effect_text)
