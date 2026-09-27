@@ -2978,6 +2978,14 @@ class CostComponent(EngineModel):
         for card in self.cards:
             if card.zone is not Zone.BATTLEFIELD:
                 return f"{card.name} is not on the battlefield, so its counters cannot be removed"
+            if self.counter_kind == ANY_COUNTER_KIND:
+                have = sum(count for _kind, count in card.counters.items())
+                if have < self.amount:
+                    return (
+                        f"{card.name} has {have} counter(s), not the {self.amount} its "
+                        "cost removes (CR 118.3)"
+                    )
+                continue
             if not card.can_remove_counters(self.counter_kind, self.amount):
                 have = card.counter_count(self.counter_kind)
                 return (
@@ -3275,6 +3283,10 @@ class CostComponent(EngineModel):
             # even if the ability is later countered on the stack.
             for card in self.cards:
                 self._remember_counters(card)
+                if self.counter_kind == ANY_COUNTER_KIND:
+                    for kind, count in any_counters_to_remove(card, self.amount):
+                        card.remove_counters(kind, count)
+                    continue
                 card.remove_counters(self.counter_kind, self.amount)
         elif self.kind is ComponentKind.PLACE_COUNTERS:
             # Same timing as above, the other direction (Devoted Druid): the
@@ -3864,6 +3876,38 @@ def loyalty_cost(
         payer=payer,
         description=description,
     )
+
+
+#: `CostComponent.counter_kind` for a cost that names no kind - Glen Elendra
+#: Guardian's "Remove a counter from this creature" (CR 122.1: any counter
+#: of any kind pays it).
+ANY_COUNTER_KIND = "any"
+
+#: The order `any_counters_to_remove` takes kinds in when the payer has not
+#: said which: -1/-1 first (the one whose removal only ever helps the
+#: permanent), then every other kind alphabetically - a documented default,
+#: the same way `decisions.default_answer` documents its own.
+_ANY_COUNTER_PREFERENCE = (Counter.MINUS_ONE.value,)
+
+
+def any_counters_to_remove(card: CardState, amount: int) -> list[tuple[str, int]]:
+    """`(kind, count)` pairs taking `amount` counters of any kind off `card`
+    - see `_ANY_COUNTER_PREFERENCE` for the order. Fewer than `amount` when
+    the card has fewer; `_why_not_remove_counters` refuses that first."""
+    present = dict(card.counters.items())
+    order = [kind for kind in _ANY_COUNTER_PREFERENCE if present.get(kind)] + sorted(
+        kind for kind in present if kind not in _ANY_COUNTER_PREFERENCE
+    )
+    removals: list[tuple[str, int]] = []
+    left = amount
+    for kind in order:
+        if left <= 0:
+            break
+        take = min(left, present[kind])
+        if take > 0:
+            removals.append((kind, take))
+            left -= take
+    return removals
 
 
 def remove_counters_cost(
@@ -5105,6 +5149,11 @@ _PHRASE_PLACE_COUNTERS = re.compile(
     rf"^put {count_pattern('count')} (?P<kind>[\w+/−-]+) counters? on {_COUNTER_SELF_SUBJECT}$",
     re.IGNORECASE,
 )
+#: "Remove a counter from this creature" (Glen Elendra Guardian) - no kind
+#: named, so any counter pays it (`ANY_COUNTER_KIND`).
+_PHRASE_REMOVE_ANY_COUNTERS = re.compile(
+    rf"^remove {_COST_COUNT} counters? from {_COUNTER_SELF_SUBJECT}$", re.IGNORECASE
+)
 _PHRASE_REMOVE_COUNTERS = re.compile(
     rf"^remove (?:(?P<any_number>any number of)|{_COST_COUNT}) (?P<kind>[\w+/−-]+) counters? "
     # "from a creature you control" (Ray Fillet, Man Ray; Korozda Gorgon):
@@ -5340,6 +5389,14 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         kind = _counter_kind_word(place.group("kind"))
         return place_counters_cost(None, count, counter_kind=kind, payer=payer, description=text)
 
+    remove_any = _PHRASE_REMOVE_ANY_COUNTERS.match(text)
+    if remove_any is not None:
+        read = _cost_count(remove_any.group("count"))
+        if read is None or read[1]:
+            return None
+        return remove_counters_cost(
+            None, read[0], counter_kind=ANY_COUNTER_KIND, payer=payer, description=text
+        )
     remove_counters = _PHRASE_REMOVE_COUNTERS.match(text)
     if remove_counters is not None and remove_counters.group("any_number") is not None:
         # "Remove any number of `<kind>` counters from `<this>`" (The

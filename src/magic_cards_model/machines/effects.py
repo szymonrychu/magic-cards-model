@@ -20735,6 +20735,10 @@ def _referent_gain_life(
     player.gain_life(max(power, 0))
 
 
+#: "manifests dread" as the referent player's own verb (CR 701.62a).
+_REFERENT_MANIFEST_DREAD_RE = re.compile(r"^manifests dread\.?$", re.IGNORECASE)
+
+
 def _parse_referent_clause(rest: str) -> ReferentClause | None:
     """ "<rest>" is the tail of "its controller"/"that player" with the
     subject already stripped off by `_ANAPHORIC_SUBJECT_RE` - read as a life
@@ -20784,6 +20788,16 @@ def _parse_referent_clause(rest: str) -> ReferentClause | None:
             game.draw_cards(player, amount)
 
         return draw_effect
+
+    if _REFERENT_MANIFEST_DREAD_RE.fullmatch(rest):
+        # CR 701.62a, performed by the referent player (Fear of Impostors'
+        # "Its controller manifests dread.").
+        def manifest_dread_effect(
+            game: "Game", player: Player, power: int | None, source: str, source_id: str | None
+        ) -> None:
+            manifest_dread(game, player.username, source, source_id=source_id)
+
+        return manifest_dread_effect
 
     if match := _REFERENT_SEARCH_RE.fullmatch(rest):
         run = _search_and_place_for(match, optional=True)
@@ -33808,9 +33822,14 @@ def _parse_counter_then_referent_pair(
     say so (Strix Serenade 2024-06-07, Swan Song 2013-09-15, Punish Ignorance
     2008-10-01). A target already gone from the stack is CR 608.2b's illegal
     target: no counter and no second sentence.
+
+    Widened (ecl T7) to an *ability* with the same pair - Glen Elendra
+    Guardian's "{1}{U}, Remove a counter from this creature: Counter target
+    noncreature spell. Its controller draws a card." and Fear of Impostors'
+    enters trigger "counter target spell. Its controller manifests dread." -
+    the same CR 701.6a verb and CR 400.7 anaphora, named by the ability's
+    source rather than by a spell's own name.
     """
-    if not for_spell:
-        return None
     if not _COUNTER_TARGET_SPELL_RE.fullmatch(first.strip()):
         return None
     subject_match = _ANAPHORIC_SUBJECT_RE.fullmatch(second.strip())
@@ -33820,7 +33839,8 @@ def _parse_counter_then_referent_pair(
     if second_clause is None:
         return None
 
-    def effect(game: "Game", spell: CardState) -> None:
+    def effect(game: "Game", spell: "StackObject") -> None:
+        name = spell.name if for_spell else spell.source_name  # type: ignore[union-attr]
         for reference in spell.targets:
             if not reference.is_card:
                 continue
@@ -33829,7 +33849,7 @@ def _parse_counter_then_referent_pair(
                 continue
             referent = game.controller_of(target)
             game.counter(target)
-            second_clause(game, referent, None, spell.name, source_id_of(spell))
+            second_clause(game, referent, None, name, source_id_of(spell))
 
     return effect
 
@@ -54142,6 +54162,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
     if copy_target_spell_whole is not None:
         return [copy_target_spell_whole]
+    from .stack_sweeps import parse_mass_stack_whole_text
+
+    mass_stack = parse_mass_stack_whole_text(text, for_spell=for_spell)
+    if mass_stack is not None:
+        # Read whole: "counter all spells ... and all abilities ..." and
+        # "exile all other spells and counter all abilities" carry an "and"
+        # the clause splitter would cut, and "countered this way" points back
+        # across the period (`machines/stack_sweeps.py`).
+        return [mass_stack]
     whole_text_effect = _parse_choose_name_search_and_exile_whole_text(text, for_spell=for_spell)
     if whole_text_effect is not None:
         return [whole_text_effect]
