@@ -112,7 +112,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "known_carries", "permanents_left_battlefield_this_turn", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "known_carries", "permanents_left_battlefield_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {
       "Thopter Assembly@alice#1": {

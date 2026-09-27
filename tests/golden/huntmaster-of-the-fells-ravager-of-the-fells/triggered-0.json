@@ -52,7 +52,7 @@
       }
     },
     "decisions": [],
-    "fields_changed": ["continuous_effects", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_facts", "turn_history"],
+    "fields_changed": ["continuous_effects", "life_gained_amount_this_turn", "life_gained_this_turn", "turn_counts", "turn_facts", "turn_history"],
     "notices": {},
     "objects": {},
     "players": {
