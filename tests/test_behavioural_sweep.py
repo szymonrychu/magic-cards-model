@@ -3834,7 +3834,8 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
     DriverGap(
         kind="deals_damage",
         event="a creature of the controller's with a counter on it dealing combat damage",
-        precondition=r"creature you control with an? (?:\+1/\+1 )?counter on it deals combat damage",
+        precondition=r"creature you control with an? (?:\+1/\+1 )?counter on it deals combat "
+        r"damage",
     ),
     DriverGap(
         kind="leaves_the_battlefield",
