@@ -1872,3 +1872,295 @@ def test_generate_all_keeps_and_recovers_notes_for_pruned_set(tmp_path: Path):
     assert plan_notes is not None
     assert "marked" in plan_notes
     assert "Do not lose this human note." in plan_notes
+
+
+# ---------------------------------------------------------------------------
+# Round 0 (metagame.json + deck-dir cards, filtered to not-full)
+# ---------------------------------------------------------------------------
+
+
+def test_cards_from_metagame_flattens_pulls_by_card_name():
+    metagame = {
+        "formats": {
+            "modern": {
+                "a1": {"cards": {"Lightning Bolt": 0.9}},
+                "a2": {"cards": {"Lightning Bolt": 0.5, "Mountain": 1.0}},
+            },
+            "pioneer": {"b1": {"cards": {"Mountain": 0.8}}},
+        }
+    }
+    pulls = cc.cards_from_metagame(metagame)
+    assert set(pulls["Lightning Bolt"]) == {("modern", "a1", 0.9), ("modern", "a2", 0.5)}
+    assert set(pulls["Mountain"]) == {("modern", "a2", 1.0), ("pioneer", "b1", 0.8)}
+
+
+def test_cards_from_metagame_empty_formats_is_empty():
+    assert cc.cards_from_metagame({"formats": {}}) == {}
+    assert cc.cards_from_metagame({}) == {}
+
+
+def test_build_round0_rows_filters_out_full_cards():
+    classifications = {
+        "Full Card": cc.ClassificationResult(
+            name="Full Card",
+            status="handled",
+            clause_kind="",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+        "Silent Card": cc.ClassificationResult(
+            name="Silent Card",
+            status="silent",
+            clause_kind="keyword",
+            clause_text="Frobnicate",
+            reason="no machine executes this keyword",
+            error=False,
+        ),
+    }
+    tested = {"Full Card": True, "Silent Card": False}
+    metagame = {"formats": {"modern": {"burn": {"cards": {"Full Card": 0.9, "Silent Card": 0.4}}}}}
+    rows, unresolved = cc.build_round0_rows(
+        metagame=metagame,
+        decks_dirs=[],
+        classifications_by_name=classifications,
+        tested_by_name=tested,
+    )
+    assert [r.name for r in rows] == ["Silent Card"]
+    assert unresolved == []
+
+
+def test_build_round0_rows_sorts_most_played_first():
+    classifications = {
+        "Low Card": cc.ClassificationResult(
+            name="Low Card", status="silent", clause_kind="", clause_text="", reason="", error=False
+        ),
+        "High Card": cc.ClassificationResult(
+            name="High Card",
+            status="silent",
+            clause_kind="",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+    }
+    tested = {"Low Card": False, "High Card": False}
+    metagame = {"formats": {"modern": {"a": {"cards": {"Low Card": 0.25, "High Card": 0.8}}}}}
+    rows, _ = cc.build_round0_rows(
+        metagame=metagame,
+        decks_dirs=[],
+        classifications_by_name=classifications,
+        tested_by_name=tested,
+    )
+    assert [r.name for r in rows] == ["High Card", "Low Card"]
+
+
+def test_build_round0_rows_deck_dir_only_card_sorts_last_and_is_marked(tmp_path: Path):
+    decks_dir = tmp_path / "decks"
+    decks_dir.mkdir()
+    (decks_dir / "some.txt").write_text("1 Deck Only Card\n")
+    classifications = {
+        "Deck Only Card": cc.ClassificationResult(
+            name="Deck Only Card",
+            status="notice",
+            clause_kind="",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+        "Metagame Card": cc.ClassificationResult(
+            name="Metagame Card",
+            status="silent",
+            clause_kind="",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+    }
+    tested = {"Deck Only Card": False, "Metagame Card": False}
+    metagame = {"formats": {"modern": {"a": {"cards": {"Metagame Card": 0.25}}}}}
+    rows, _ = cc.build_round0_rows(
+        metagame=metagame,
+        decks_dirs=[decks_dir],
+        classifications_by_name=classifications,
+        tested_by_name=tested,
+    )
+    assert [r.name for r in rows] == ["Metagame Card", "Deck Only Card"]
+    deck_only_row = rows[1]
+    assert deck_only_row.from_deck_file
+    assert deck_only_row.pulls == ()
+
+
+def test_build_round0_rows_merges_deck_file_front_face_with_metagame_full_name(tmp_path: Path):
+    """A deck file naming an MDFC by its front face only must merge with
+    the same card's metagame.json entry (already the full `"A // B"`
+    engine name) into one row, not two."""
+    decks_dir = tmp_path / "decks"
+    decks_dir.mkdir()
+    (decks_dir / "some.txt").write_text("1 Fable of the Mirror-Breaker\n")
+    full_name = "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki"
+    classifications = {
+        full_name: cc.ClassificationResult(
+            name=full_name,
+            status="unaudited",
+            clause_kind="",
+            clause_text="",
+            reason="",
+            error=False,
+        ),
+    }
+    tested = {full_name: False}
+    metagame = {"formats": {"modern": {"a": {"cards": {full_name: 0.4}}}}}
+    rows, unresolved = cc.build_round0_rows(
+        metagame=metagame,
+        decks_dirs=[decks_dir],
+        classifications_by_name=classifications,
+        tested_by_name=tested,
+    )
+    assert len(rows) == 1
+    assert rows[0].name == full_name
+    assert rows[0].from_deck_file
+    assert rows[0].pulls == (("modern", "a", 0.4),)
+    assert unresolved == []
+
+
+def test_build_round0_rows_reports_unresolved_cards_without_dropping():
+    metagame = {"formats": {"modern": {"a": {"cards": {"Totally Unknown Card": 0.5}}}}}
+    rows, unresolved = cc.build_round0_rows(
+        metagame=metagame, decks_dirs=[], classifications_by_name={}, tested_by_name={}
+    )
+    assert rows == []
+    assert unresolved == ["Totally Unknown Card"]
+
+
+def test_render_round0_status_md_contains_sections_and_pulls():
+    rows = [
+        cc.Round0Row(
+            name="Silent Card",
+            bucket="not_working",
+            status="silent",
+            pulls=(("modern", "burn", 0.4),),
+            from_deck_file=False,
+            max_rate=0.4,
+        ),
+        cc.Round0Row(
+            name="Deck Only Card",
+            bucket="not_working",
+            status="notice",
+            pulls=(),
+            from_deck_file=True,
+            max_rate=0.0,
+        ),
+    ]
+    md = cc.render_round0_status_md(rows)
+    assert "# Round 0" in md
+    assert "Cards not full: 2" in md
+    assert "## Coverage" in md
+    assert "## Cards" in md
+    assert "Silent Card" in md
+    assert "modern/burn" in md
+    assert "0.40" in md
+    assert "Deck Only Card" in md
+    assert "deck file" in md
+
+
+def test_render_round0_status_md_empty_is_reported():
+    md = cc.render_round0_status_md([])
+    assert "Cards not full: 0" in md
+    assert "None" in md
+
+
+def test_render_plan_md_round0_row_links_to_its_status_md():
+    rows = [
+        cc.PlanRow(
+            number=1,
+            code="one",
+            name="One",
+            release_date="2020-01-01",
+            total=10,
+            tested=5,
+            works=5,
+            partial=0,
+            not_working=0,
+            state="todo",
+        ),
+    ]
+    md = cc.render_plan_md(
+        rows=rows,
+        round0_cards=["Some Card"],
+        missing_mechanics=[],
+        existing_notes=None,
+        existing_done=None,
+    )
+    campaign = cc.extract_section(md, "Campaign order")
+    assert campaign is not None
+    assert "000-metagame/status.md" in campaign
+    assert "(1 cards not full)" in campaign
+    assert "in-progress" in campaign
+
+
+def test_generate_all_writes_round0_status_md_filtered_to_not_full(tmp_path: Path):
+    oracle_cards = [
+        make_card(
+            "Tested Card",
+            set_code="new",
+            set_name="New Set",
+            released_at="2020-01-01",
+            legal_modern="legal",
+        ),
+        make_card(
+            "Silent Card",
+            set_code="new",
+            set_name="New Set",
+            released_at="2020-01-01",
+            legal_modern="legal",
+            keywords=["Frobnicate"],
+            oracle_text="Frobnicate",
+        ),
+    ]
+    bulk_path = tmp_path / "oracle-cards.json"
+    bulk_path.write_text(json.dumps(oracle_cards))
+
+    out_dir = tmp_path / "docs" / "card_coverage"
+    out_dir.mkdir(parents=True)
+    printings_dir = tmp_path / "printings"
+    printings_dir.mkdir()
+    (printings_dir / "tested_card.json").write_text(json.dumps({"name": "Tested Card"}))
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    golden_dir = tests_dir / "golden"
+    golden_dir.mkdir()
+
+    metagame = {
+        "formats": {
+            "modern": {
+                "burn": {
+                    "deck_count_reported": 40,
+                    "decks_enumerated": 38,
+                    "cards": {"Tested Card": 0.9, "Silent Card": 0.5},
+                },
+            },
+            "pioneer": {},
+            "standard": {},
+        }
+    }
+    (out_dir / "metagame.json").write_text(json.dumps(metagame))
+
+    cc.generate_all(
+        bulk_path=bulk_path,
+        out_dir=out_dir,
+        printings_dir=printings_dir,
+        tests_dir=tests_dir,
+        golden_dir=golden_dir,
+        decks_dirs=[],
+        workers=1,
+    )
+    round0_status = out_dir / "000-metagame" / "status.md"
+    assert round0_status.exists()
+    text = round0_status.read_text()
+    assert "Silent Card" in text
+    assert "Tested Card" not in text
+
+    plan_text = (out_dir / "plan.md").read_text()
+    assert "000-metagame/status.md" in plan_text
+    assert "(1 cards not full)" in plan_text

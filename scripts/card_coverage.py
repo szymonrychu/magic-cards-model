@@ -352,7 +352,7 @@ def read_existing_numbers(out_dir: Path) -> dict[str, int]:
     if not out_dir.exists():
         return numbers
     for child in out_dir.iterdir():
-        if not child.is_dir():
+        if not child.is_dir() or child.name == ROUND0_DIR_NAME:
             continue
         match = _DIR_RE.match(child.name)
         if match:
@@ -386,6 +386,10 @@ def find_orphaned_set_dirs(out_dir: Path, modern_codes: set[str]) -> dict[str, P
         return orphans
     for child in out_dir.iterdir():
         if not child.is_dir():
+            continue
+        if child.name == ROUND0_DIR_NAME:
+            # Round 0's own directory (000-metagame) - never a numbered
+            # expansion, never subject to set-orphan pruning.
             continue
         match = _DIR_RE.match(child.name)
         if not match:
@@ -968,8 +972,8 @@ def render_plan_md(
     round0_state = "in-progress" if round0_cards else "done"
     round0_count = len(round0_cards)
     lines.append(
-        f"| Round 0 | metagame decks ({round0_count} cards not full) "
-        f"| - | {round0_count} | - | - | {round0_state} |"
+        f"| Round 0 | [metagame decks]({ROUND0_DIR_NAME}/status.md) "
+        f"({round0_count} cards not full) | - | {round0_count} | - | - | {round0_state} |"
     )
     for row in newest_first:
         dir_name = format_expansion_dir(row.number, row.code)
@@ -1048,6 +1052,175 @@ def cards_from_deck_dirs(decks_dirs: Iterable[Path]) -> set[str]:
         for path in directory.glob("*.txt"):
             names.update(parse_deck_file(path))
     return names
+
+
+#: `docs/card_coverage/metagame.json`'s own default location and directory
+#: name (`scripts/fetch_metagame.py` writes it; `generate_all` reads it and
+#: writes `docs/card_coverage/000-metagame/status.md` alongside it).
+DEFAULT_METAGAME_FILENAME = "metagame.json"
+ROUND0_DIR_NAME = "000-metagame"
+
+
+def load_metagame(path: Path) -> dict:
+    """The parsed `metagame.json`, or an empty-formats shape if the file is
+    missing or unreadable - `fetch_metagame.py` may not have been run yet in
+    a fresh checkout, and Round 0 must still degrade to "deck-dir cards
+    only" rather than crashing the whole coverage run."""
+    if not path.exists():
+        return {"formats": {}}
+    try:
+        return json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {"formats": {}}
+
+
+def cards_from_metagame(metagame: dict) -> dict[str, list[tuple[str, str, float]]]:
+    """Every card `metagame.json` pulled in, flattened to
+    `name -> [(format, archetype, rate), ...]` - one entry per
+    (format, archetype) whose `cards` mapping named that card, so a card
+    pulled in by several archetypes (or several formats) carries every rate
+    that pulled it in, not just one."""
+    pulls: dict[str, list[tuple[str, str, float]]] = {}
+    for fmt, archetypes in (metagame.get("formats") or {}).items():
+        for archetype_name, data in archetypes.items():
+            for name, rate in (data.get("cards") or {}).items():
+                pulls.setdefault(name, []).append((fmt, archetype_name, rate))
+    return pulls
+
+
+@dataclass(frozen=True)
+class Round0Row:
+    """One Round 0 card: its resolved engine name, its bucket/status
+    against the classification pool already computed for the whole
+    Modern/Pioneer/Standard-legal card set, every `(format, archetype,
+    rate)` that pulled it into Round 0 (empty if it came only from a
+    deck-dir file), and `max_rate` - the sort key, highest rate first."""
+
+    name: str
+    bucket: str
+    status: str
+    pulls: tuple[tuple[str, str, float], ...]
+    from_deck_file: bool
+    max_rate: float
+
+
+def _resolve_round0_name(
+    name: str, *, classifications_by_name: dict, front_index: dict[str, str]
+) -> str:
+    if name in classifications_by_name:
+        return name
+    return front_index.get(name, name)
+
+
+def build_round0_rows(
+    *,
+    metagame: dict,
+    decks_dirs: Iterable[Path],
+    classifications_by_name: dict[str, ClassificationResult],
+    tested_by_name: dict[str, bool],
+) -> tuple[list[Round0Row], list[str]]:
+    """Round 0 = the union of every card `metagame.json` pulled in
+    (`cards_from_metagame`) and every card named in a deck-dir file
+    (`cards_from_deck_dirs`), classified against the classification pool
+    already computed for the whole target-format-legal card set, filtered
+    to cards that are NOT `full` (handled + tested), sorted most-played
+    first (`max_rate` descending, then name).
+
+    A raw name (a deck file's own front-face-only spelling of a split/MDFC
+    card, say) is resolved to the engine's own name the same way
+    `TestedIndex` does - `front_name` - before being merged; two spellings
+    of the same card become one row, not two. A name that resolves to
+    nothing in the classification pool at all is returned in the second
+    element (`unresolved`, sorted) for the caller to report on stderr,
+    never silently dropped.
+    """
+    pulls_by_name = cards_from_metagame(metagame)
+    deck_names = cards_from_deck_dirs(decks_dirs)
+
+    front_index: dict[str, str] = {}
+    for full_name in classifications_by_name:
+        front = front_name(full_name)
+        if front != full_name:
+            front_index.setdefault(front, full_name)
+
+    resolved_pulls: dict[str, list[tuple[str, str, float]]] = {}
+    for name, pulls in pulls_by_name.items():
+        resolved = _resolve_round0_name(
+            name, classifications_by_name=classifications_by_name, front_index=front_index
+        )
+        resolved_pulls.setdefault(resolved, []).extend(pulls)
+
+    deck_only: set[str] = set()
+    for name in deck_names:
+        resolved = _resolve_round0_name(
+            name, classifications_by_name=classifications_by_name, front_index=front_index
+        )
+        resolved_pulls.setdefault(resolved, resolved_pulls.get(resolved, []))
+        deck_only.add(resolved)
+
+    rows: list[Round0Row] = []
+    unresolved: list[str] = []
+    for resolved_name in set(resolved_pulls) | deck_only:
+        result = classifications_by_name.get(resolved_name)
+        if result is None:
+            unresolved.append(resolved_name)
+            continue
+        bucket = bucket_of(result.status, tested_by_name.get(resolved_name, False))
+        if bucket == "full":
+            continue
+        pulls = tuple(
+            sorted(set(resolved_pulls.get(resolved_name, [])), key=lambda p: (-p[2], p[0], p[1]))
+        )
+        rows.append(
+            Round0Row(
+                name=resolved_name,
+                bucket=bucket,
+                status=result.status,
+                pulls=pulls,
+                from_deck_file=resolved_name in deck_only,
+                max_rate=pulls[0][2] if pulls else 0.0,
+            )
+        )
+    rows.sort(key=lambda r: (-r.max_rate, r.name))
+    return rows, sorted(unresolved)
+
+
+def render_round0_status_md(rows: list[Round0Row]) -> str:
+    """Round 0's own `status.md`
+    (`docs/card_coverage/000-metagame/status.md`), in the same style as a
+    per-expansion one: a coverage table by bucket, then one row per card
+    (already filtered to not-full, already sorted most-played first by the
+    caller) naming which format/archetype pulled it in and at what rate, or
+    "deck file" when a deck-dir file is its only source."""
+    bucket_counts: dict[Bucket, int] = {}
+    for row in rows:
+        bucket_counts[row.bucket] = bucket_counts.get(row.bucket, 0) + 1
+
+    lines: list[str] = []
+    lines.append("# Round 0 - metagame decks")
+    lines.append("")
+    lines.append(f"- Cards not full: {len(rows)}")
+    lines.append("")
+    lines.append("## Coverage")
+    lines.append("")
+    lines.append(_format_bucket_table(bucket_counts, len(rows)))
+    lines.append("")
+    lines.append("## Cards")
+    lines.append("")
+    if rows:
+        lines.append("| Card | Status | Bucket | Pulled in by |")
+        lines.append("|---|---|---|---|")
+        for row in rows:
+            pulled_in_by = ", ".join(
+                f"{fmt}/{archetype} {rate:.2f}" for fmt, archetype, rate in row.pulls
+            )
+            if row.from_deck_file:
+                pulled_in_by = f"{pulled_in_by}, deck file" if pulled_in_by else "deck file"
+            lines.append(f"| {row.name} | {row.status} | {row.bucket} | {pulled_in_by} |")
+    else:
+        lines.append("None - every Round 0 card is fully supported.")
+    lines.append("")
+    return "\n".join(lines) + "\n"
 
 
 # ---------------------------------------------------------------------------
@@ -1129,6 +1302,7 @@ class GenerateResult:
     card_count: int
     pruned_codes: tuple[str, ...] = ()
     recovered_notes_codes: tuple[str, ...] = ()
+    round0_not_full: int = 0
 
 
 def _classifications_and_tested_for_meta(
@@ -1201,6 +1375,7 @@ def generate_all(
     decks_dirs: Iterable[Path],
     workers: int = 1,
     default_bulk_path: Path | None = None,
+    metagame_path: Path | None = None,
 ) -> GenerateResult:
     """The full run: every Modern-legal expansion's `status.md` plus
     `plan.md`, from a cached bulk-data JSON file already on disk.
@@ -1212,6 +1387,10 @@ def generate_all(
     reprinted card is attributed to whatever set `oracle-cards` happened to
     pick as its "most recognizable" printing (usually the newest), which is
     almost never the set it was first printed in.
+
+    `metagame_path` (default `out_dir / DEFAULT_METAGAME_FILENAME`) is
+    `docs/card_coverage/metagame.json` (`scripts/fetch_metagame.py`'s own
+    output) - Round 0's other input alongside `decks_dirs`.
     """
     raw_cards = load_bulk_json(bulk_path)
     if default_bulk_path is not None:
@@ -1263,9 +1442,17 @@ def generate_all(
         code: {} for code in ordered_codes
     }
     tested_by_set: dict[str, dict[str, bool]] = {code: {} for code in ordered_codes}
+    # Also kept flat by name, across every set - Round 0 (metagame.json +
+    # deck-dir cards) needs to look a card's bucket up without caring which
+    # set it belongs to.
+    classifications_by_name: dict[str, ClassificationResult] = {}
+    tested_by_name: dict[str, bool] = {}
     for code, raw, result in zip(card_set_codes, all_target_cards, all_results, strict=True):
         classifications_by_set[code][result.name] = result
-        tested_by_set[code][raw["name"]] = tested_index.is_tested(raw["name"])
+        is_tested = tested_index.is_tested(raw["name"])
+        tested_by_set[code][raw["name"]] = is_tested
+        classifications_by_name[result.name] = result
+        tested_by_name[result.name] = is_tested
 
     rows: list[PlanRow] = []
     all_cluster_entries: list[tuple[str, str, str, str, str, str]] = []
@@ -1309,7 +1496,26 @@ def generate_all(
 
     missing_mechanics = cluster_missing_mechanics(all_cluster_entries)
 
-    round0_cards = sorted(cards_from_deck_dirs(decks_dirs))
+    resolved_metagame_path = (
+        metagame_path if metagame_path is not None else out_dir / DEFAULT_METAGAME_FILENAME
+    )
+    metagame = load_metagame(resolved_metagame_path)
+    round0_rows, round0_unresolved = build_round0_rows(
+        metagame=metagame,
+        decks_dirs=decks_dirs,
+        classifications_by_name=classifications_by_name,
+        tested_by_name=tested_by_name,
+    )
+    for name in round0_unresolved:
+        print(
+            f"WARNING: Round 0 card {name!r} not found in the target-format card pool",
+            file=sys.stderr,
+        )
+    round0_dir = out_dir / ROUND0_DIR_NAME
+    round0_dir.mkdir(parents=True, exist_ok=True)
+    (round0_dir / "status.md").write_text(render_round0_status_md(round0_rows))
+
+    round0_cards = [row.name for row in round0_rows]
     plan_text = render_plan_md(
         rows=rows,
         round0_cards=round0_cards,
@@ -1325,6 +1531,7 @@ def generate_all(
         card_count=total_card_count,
         pruned_codes=tuple(pruned_codes),
         recovered_notes_codes=tuple(code for code, _notes in recovered_notes),
+        round0_not_full=len(round0_rows),
     )
 
 
@@ -1424,6 +1631,7 @@ def main(argv: list[str] | None = None) -> int:
         workers=args.workers,
     )
     print(f"{result.set_count} expansions, {result.card_count} cards in scope")
+    print(f"Round 0: {result.round0_not_full} cards not full")
     if result.pruned_codes:
         print(
             f"pruned {len(result.pruned_codes)} orphaned set dirs: {', '.join(result.pruned_codes)}"
