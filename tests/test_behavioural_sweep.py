@@ -106,6 +106,7 @@ from magic_cards_model.machines.cost import ComponentKind, cost_component_for_ph
 from magic_cards_model.machines.counter_effects import singular_subtype
 from magic_cards_model.machines.decisions import Decision, DecisionKind, ScriptedAnswer
 from magic_cards_model.machines.effects import transform_permanent
+from magic_cards_model.machines.enlist import eligible_enlist_creatures
 from magic_cards_model.machines.keywords import (
     craft_abilities,
     craft_activation,
@@ -123,6 +124,7 @@ from magic_cards_model.machines.layers import (
     set_controller,
 )
 from magic_cards_model.machines.legal_actions import legal_actions
+from magic_cards_model.machines.speed import effective_speed, increase_speed
 from magic_cards_model.machines.targeting import (
     CombatState,
     ControllerRestriction,
@@ -263,6 +265,9 @@ class Material(NamedTuple):
     zone: Zone
     tapped: bool = False
     entered: bool = False
+    #: A counter kind put on it once staged, for "target creature with a
+    #: stun counter on it" (CR 122.1).
+    counter: str | None = None
 
 
 @dataclass
@@ -353,7 +358,8 @@ def _board(
     tapped_material: list[tuple[str, str]] = []
     tokens: list[tuple[str, str]] = []
     entering: list[tuple[str, str]] = []
-    for name, owner, zone, tapped, entered in _STAGING.material:
+    countered: list[tuple[str, str, str]] = []
+    for name, owner, zone, tapped, entered, counter in _STAGING.material:
         if zone is Zone.STACK:
             # Cast from the owner's hand by `_stack_material` once the board
             # is built - so it has to be in that hand first.
@@ -369,6 +375,8 @@ def _board(
         extra[owner][zone.value].append(name)
         if tapped:
             tapped_material.append((name, owner))
+        if counter is not None and zone is Zone.BATTLEFIELD:
+            countered.append((name, owner, counter))
     if variant == BUSY:
         # An enchantment, a 4-power creature, five more Mountains and three
         # snow lands, for "if you control an enchantment", "while you control
@@ -416,6 +424,10 @@ def _board(
         and step in (Step.PRECOMBAT_MAIN, Step.POSTCOMBAT_MAIN),
         "war_turn": variant == WAR and busy and step is Step.PRECOMBAT_MAIN and active == ALICE,
     }
+    if countered:
+        # Only when there is one, so every board recorded before it stays
+        # byte-identical.
+        _STAGING.board["counters"] = [list(entry) for entry in countered]
     return build_recorded(_STAGING.board, _STAGING.case, before)
 
 
@@ -466,6 +478,8 @@ def build_recorded(
     # untapped again before anything asked about it.
     for name, owner in board["tapped"]:
         _last(played, name, Zone.BATTLEFIELD, owner).tapped = True
+    for name, owner, kind in board.get("counters", []):
+        played.game.add_counters(_last(played, name, Zone.BATTLEFIELD, owner), kind, 1)
     if step is not None:
         for name, owner in board["entering"]:
             state = _last(played, name, Zone.HAND, owner)
@@ -1077,7 +1091,9 @@ def _find_material(requirement: TargetRequirement) -> Material | None:
                 tried += 1
                 if tried > 40:
                     return None
-                candidate = Material(card.name, owner, zone, tapped, entered)
+                candidate = Material(
+                    card.name, owner, zone, tapped, entered, requirement.required_counter_kind
+                )
                 saved = _STAGING.material
                 _STAGING.material = (candidate,)
                 try:
@@ -1288,7 +1304,7 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
 
 def _stack_material(scenario: PlayedScenario) -> None:
     """A spell for a "target spell" requirement to aim at (CR 115.1)."""
-    for name, owner, zone, _, _ in _STAGING.material:
+    for name, owner, zone, *_ in _STAGING.material:
         if zone is Zone.STACK:
             with contextlib.suppress(_Unavailable):
                 _cast(scenario, name, owner)
@@ -1371,6 +1387,12 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         # A "Solved -" ability works only once its Case is solved (CR 702.169c,
         # 702.169d) - staged solved, the designation CR 719.3b describes.
         source.solved = True
+    if (getattr(ability, "ability_word", None) or "").lower() == "max speed":
+        # "Max speed - [Ability]" exists only while its controller's speed is
+        # 4 (CR 702.178a, 702.179e) - the controller's speed is increased to
+        # it (CR 702.179c).
+        player = scenario.game.player(source.controller)
+        increase_speed(player, by=4 - effective_speed(player))
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _board_threshold(scenario, source, getattr(ability, "intervening_if", None) or "")
@@ -3677,6 +3699,143 @@ def _qualified(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
             yield activate_with
 
 
+def _committing_crime(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """CR 700.13: the controller commits a crime as they cast a spell that
+    targets an opponent - a Lightning Bolt from the stock hand, at bob."""
+
+    def crime() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability)
+        _cast(scenario, "Lightning Bolt", prefer=BOB)
+        return scenario, source_id
+
+    yield crime
+
+
+#: A real library search (CR 701.23a) any player can make: a fetchland.
+_SEARCHER = "Wooded Foothills"
+
+
+def _searching(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """A player searches their library (CR 701.23a) by activating a
+    fetchland - the opponent for "an opponent searches", else either."""
+    players = [BOB] if "opponent" in ability.condition.lower() else [ALICE, BOB]
+    for player in players:
+
+        def search(player: str = player) -> tuple[PlayedScenario, Any]:
+            if player == ALICE:
+                scenario, source_id = _home(case, ability, battlefield=(_SEARCHER,))
+            else:
+                scenario, source_id = _home(case, ability, bob_battlefield=(_SEARCHER,))
+            fetch = _staged(scenario, _SEARCHER, player)
+            if scenario.priority_holder != player:
+                scenario.pass_priority(scenario.priority_holder)
+            try:
+                scenario.activate(fetch, username=player, sacrificing=[fetch], auto=True)
+            except (ValueError, AssertionError) as error:
+                raise _Unavailable(f"fetching: {error}") from error
+            return scenario, source_id
+
+        yield search
+
+
+def _unlocking(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "When you unlock this door": the Room's half the ability is printed on
+    is cast, so the permanent enters with that half unlocked (CR 709.5d),
+    which is when the door-unlock trigger fires (CR 709.5h)."""
+    face = getattr(ability, "face", None)
+    if not face:
+        return
+
+    def unlock(face: str = face) -> tuple[PlayedScenario, Any]:
+        scenario = _board(hand=(case.card,))
+        _cast(scenario, case.card, announce=lambda casting: casting.cast_as_split_half(face))
+        return scenario, None
+
+    yield unlock
+
+
+def _to_graveyard(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """ "When [this] is put into a graveyard from anywhere" (CR 603.6c): the
+    source goes to the graveyard - destroyed from the battlefield, then
+    discarded from the hand."""
+    card = case.printing
+    if set(card.types) & _PERMANENT_TYPES:
+
+        def destroyed() -> tuple[PlayedScenario, Any]:
+            scenario = _board(battlefield=(case.card,))
+            source = _source(scenario, case, ability)
+            scenario.game.destroy(source)
+            return scenario, None
+
+        yield destroyed
+
+    def discarded() -> tuple[PlayedScenario, Any]:
+        scenario = _board(hand=(case.card,))
+        scenario.game.discard_cards(ALICE, [_last(scenario, case.card, Zone.HAND, ALICE)])
+        return scenario, None
+
+    yield discarded
+
+
+def _enlisting(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """The source attacks and enlists another creature its controller could
+    have attacked with (CR 702.154a)."""
+
+    def enlist() -> tuple[PlayedScenario, Any]:
+        scenario, source_id = _home(case, ability, step=Step.DECLARE_ATTACKERS)
+        game = scenario.game
+        source = game.find_by_id(source_id)
+        eligible = eligible_enlist_creatures(game, source, set())
+        if not eligible:
+            raise _Unavailable("nothing to enlist")
+        try:
+            game.declare_attackers([(source, BOB)], enlist_choices={source.id: eligible[0]})
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        return scenario, source_id
+
+    yield enlist
+
+
+def _animation_index(scenario: PlayedScenario, source: CardState) -> int | None:
+    """The source's own activated ability that makes it a creature ("this
+    land becomes a 2/3 ... creature"), read off the engine's parsed
+    abilities, or None."""
+    for index, activated in enumerate(scenario.game.activated_abilities(source)):
+        effect = (activated.effect or "").lower()
+        if re.search(r"\bbecomes? an? [^.]*\bcreature\b", effect):
+            return index
+    return None
+
+
+def _animated_attack(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
+    """A noncreature permanent that makes itself a creature (a manland) is
+    animated by its own ability, then attacks."""
+    card = case.printing
+    if _is(card, Type.CREATURE) or not set(card.types) & _PERMANENT_TYPES:
+        return
+
+    def animated() -> tuple[PlayedScenario, Any]:
+        scenario = _board(battlefield=(case.card,), step=Step.PRECOMBAT_MAIN, busy=False)
+        source = _source(scenario, case, ability)
+        game = scenario.game
+        index = _animation_index(scenario, source)
+        if index is None:
+            raise _Unavailable("no ability makes it a creature")
+        try:
+            scenario.activate(source, index=index, auto=True)
+            while game.stack:
+                game.resolve_top()
+            scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
+            game.sync_priority_with_step()
+            scenario.attack_with(source, defending=BOB)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(str(error)) from error
+        return scenario, source.id
+
+    yield animated
+
+
 def _attempts(case: Case) -> Iterator[Attempt]:
     ability = _trigger_ability(case.printing, case.text)
     if ability.event_qualifier:
@@ -3760,6 +3919,21 @@ def _attempts(case: Case) -> Iterator[Attempt]:
     # happen on their own there, and so does anything an attempt above
     # started (an attack that tapped the source untaps next turn).
     yield from _turns(case, ability)
+    # Drivers added after the ones above run last, so every case that
+    # already executes keeps its recorded attempt index (its golden recipe).
+    for kind in kinds:
+        if kind == "crime_committed":
+            yield from _committing_crime(case, ability)
+        elif kind == "searches_library":
+            yield from _searching(case, ability)
+        elif kind == "door_unlocked":
+            yield from _unlocking(case, ability)
+        elif kind == "put_into_graveyard":
+            yield from _to_graveyard(case, ability)
+        elif kind == "enlists":
+            yield from _enlisting(case, ability)
+        elif kind == "attacks":
+            yield from _animated_attack(case, ability)
 
 
 #: Attempts whose event happens later in the turn (or in the next ones), so
@@ -4824,40 +4998,85 @@ def _off_zone_pieces(ability: ActivatedAbility) -> list[tuple[str, Any]]:
 def _off_zone_choices(
     scenario: PlayedScenario, state: CardState, ability: ActivatedAbility
 ) -> dict[str, list[CardState]]:
-    """The objects an off-battlefield sacrifice/discard cost is paid with,
-    accepted by the cost's own `CardRequirement.why_not`, lands last."""
+    """The objects an off-battlefield sacrifice/discard/exile cost is paid
+    with - as many as the cost counts ("Exile three artifact cards from your
+    graveyard", CR 118.3) - accepted by the cost's own
+    `CardRequirement.why_not`, lands last."""
     game = scenario.game
     chosen: dict[str, list[CardState]] = {}
     for keyword, component in _off_zone_pieces(ability):
-        requirement = getattr(component, "requirement", None)
-        if keyword == "sacrificing":
-            pool = game.permanents_controlled_by(ALICE)
-        elif keyword == "exiling":
-            pool = list(game.player(ALICE).cards_in(getattr(component, "zone", Zone.GRAVEYARD)))
-        else:
-            pool = list(game.player(ALICE).hand)
-        for candidate in sorted(pool, key=lambda c: c.card.is_land):
-            if candidate is not state and (
-                requirement is None or requirement.why_not(candidate, game, ALICE) is None
-            ):
-                chosen[keyword] = [candidate]
-                break
+        wanted = max(1, getattr(component, "required", 1) or 1)
+        found = [
+            candidate
+            for candidate in sorted(_off_zone_pool(game, keyword, component), key=_land_last)
+            if candidate is not state and _pays(component, candidate, game)
+        ]
+        if found:
+            chosen[keyword] = found[:wanted]
     return chosen
+
+
+def _land_last(candidate: CardState) -> bool:
+    return candidate.card.is_land
+
+
+def _off_zone_pool(game: Any, keyword: str, component: Any) -> list[CardState]:
+    """Where an off-battlefield cost piece's objects come from."""
+    if keyword == "sacrificing":
+        return list(game.permanents_controlled_by(ALICE))
+    if keyword == "exiling":
+        return list(game.player(ALICE).cards_in(getattr(component, "zone", Zone.GRAVEYARD)))
+    return list(game.player(ALICE).hand)
+
+
+def _pays(component: Any, candidate: CardState, game: Any) -> bool:
+    requirement = getattr(component, "requirement", None)
+    return requirement is None or requirement.why_not(candidate, game, ALICE) is None
 
 
 def _off_zone_cost_material(case: Case) -> tuple[Material, ...]:
     """A predefined token (CR 111.10) for an off-battlefield "Sacrifice a
-    Food" cost the stock board cannot pay."""
+    Food" cost the stock board cannot pay, and real printings for a counted
+    cost the stock board holds too few of ("Exile three artifact cards from
+    your graveyard", CR 118.3) - the shortfall judged by the cost's own
+    `CardRequirement.why_not` on the stock board."""
     ability = _activated_ability(case.printing, case.text)
-    material = []
+    material: list[Material] = []
     for keyword, component in _off_zone_pieces(ability):
         requirement = getattr(component, "requirement", None)
-        if keyword != "sacrificing" or requirement is None:
+        if keyword == "sacrificing" and requirement is not None:
+            tokens = [
+                Material(token, ALICE, Zone.BATTLEFIELD)
+                for token in PREDEFINED
+                if token.lower() in _subtype_stems(requirement.subtypes)
+            ]
+            if tokens:
+                material += tokens
+                continue
+        wanted = getattr(component, "required", 1) or 1
+        if wanted <= 1:
             continue
-        for token in PREDEFINED:
-            if token.lower() in _subtype_stems(requirement.subtypes):
-                material.append(Material(token, ALICE, Zone.BATTLEFIELD))
+        have = _off_zone_stock_count(case, keyword, component)
+        found = _cost_card(component) if have < wanted else None
+        if found is not None:
+            material += [found] * (wanted - have)
     return tuple(material)
+
+
+def _off_zone_stock_count(case: Case, keyword: str, component: Any) -> int:
+    """How many objects on the stock board (the source aside) pay this cost
+    piece."""
+    saved = _STAGING.variant, _STAGING.material
+    _STAGING.variant, _STAGING.material = QUIET, ()
+    try:
+        game = _board().game
+    finally:
+        _STAGING.variant, _STAGING.material = saved
+    return sum(
+        1
+        for candidate in _off_zone_pool(game, keyword, component)
+        if not _named(candidate, case.card) and _pays(component, candidate, game)
+    )
 
 
 @pytest.mark.parametrize("case", _params(activation_cases()))

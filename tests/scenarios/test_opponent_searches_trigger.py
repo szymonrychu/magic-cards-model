@@ -90,11 +90,9 @@ def test_ob_nixilis_makes_the_searcher_sacrifice_a_creature():
     searcher (bob), not Ob Nixilis's own controller (alice), and the event
     fires off an activated ability's own search, not only a spell's.
 
-    The sentence's second clause ("... and loses 10 life") resolves "that
-    player" to the wrong player - a pre-existing `machines/effects.py`
-    compound-clause defect unrelated to the trigger this file covers (see
-    `MEMORY.md`'s dated line), so this proof stops at the clause the new
-    event actually gates.
+    The sentence's second clause ("... and loses 10 life") is proven in
+    `test_that_player_shared_subject.py`, which covers the shared "that
+    player" subject; this proof stops at the clause the new event gates.
     """
     scenario = (
         Scenario()

@@ -57577,8 +57577,16 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
 #: shaped like this the true subject is read directly off the sentence and
 #: carried to every item in its list - the blind "you" retry is never
 #: reached for these sentences at all.
+#:
+#: "that player" is the player a triggered ability's own event named
+#: (`GameEvent.player`, the same referent `_parse_that_player_clause` reads)
+#: - Ob Nixilis, Unshackled's "that player sacrifices a creature of their
+#: choice and loses 10 life", Sword of Feast and Famine's "that player
+#: discards a card and you untap all lands you control". Ability-only: a
+#: resolving spell has no event to read it against.
 _SHARED_SUBJECT_RE = re.compile(
-    r"^(?P<subject>target opponent|target player|each opponent|each player|you)\s+(?P<rest>.+)$",
+    r"^(?P<subject>target opponent|target player|each opponent|each player|that player|you)"
+    r"\s+(?P<rest>.+)$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -57683,6 +57691,25 @@ def _shared_subject_group_effect(
             run_for_player(game, player, source, source_id_of(stack_object))
 
         return you_effect
+
+    if subject == "that player":
+        if for_spell:
+            return None
+
+        def that_player_effect(game: "Game", stack_object: "StackObject") -> None:
+            if not isinstance(stack_object, AbilityOnStack):
+                return
+            event = stack_object.event
+            if event is None or event.player is None:
+                return
+            run_for_player(
+                game,
+                game.player(event.player),
+                stack_object.source_name,
+                source_id_of(stack_object),
+            )
+
+        return that_player_effect
 
     if subject in ("target opponent", "target player"):
         if not _targets_understood(subject, allow_player_targets=True):
