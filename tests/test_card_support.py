@@ -11,6 +11,7 @@ wins), a multi-face card, and cards whose only rules are keywords.
 
 import json
 import re
+import sys
 import time
 import uuid
 
@@ -285,6 +286,25 @@ def _reference_workload_seconds() -> float:
 _COLD_BUDGET_UNITS = 11.0
 
 
+def _clear_engine_caches() -> int:
+    """Clear every `functools` cache in the engine's own modules - the
+    per-text memos the classification path fills (`_strip_non_effect_
+    preamble`, `_effect_sentences_memo`, `spell_keyword_grant`,
+    `static_zone_cast_permission`, ...) and the pool indexes the support
+    oracle builds (`_cards_by_subtype`, ...) - so a "cold" pass is genuinely
+    cold, not warmed by whichever tests ran first in this process. How many
+    were cleared, so the test can tell the walk found them."""
+    cleared = 0
+    for name, module in list(sys.modules.items()):
+        if not name.startswith("magic_cards_model") or module is None:
+            continue
+        for value in list(vars(module).values()):
+            if callable(getattr(value, "cache_clear", None)) and hasattr(value, "cache_info"):
+                value.cache_clear()
+                cleared += 1
+    return cleared
+
+
 def test_the_full_pool_classifies_within_budget():
     """The whole printings pool (one Card per printing) classifies from a
     cold cache within `_COLD_BUDGET_UNITS` reference workloads of CPU time,
@@ -292,6 +312,7 @@ def test_the_full_pool_classifies_within_budget():
     printings = list({id(c): c for c in pool().values()}.values())
     reference = _reference_workload_seconds()
     clear_card_support_cache()
+    assert _clear_engine_caches() >= 20
     start = time.process_time()
     for printing in printings:
         card_support(printing)
