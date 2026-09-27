@@ -5180,6 +5180,21 @@ def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
     return ManaCost.try_parse(match.group("amount"))
 
 
+def per_object_sacrifice_reduction_of_sentence(sentence: str) -> ManaCost | None:
+    """`per_object_sacrifice_cost_reduction`'s amount when `sentence` is
+    wholly that reduction sentence, else None."""
+    match = _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE.fullmatch(sentence.strip())
+    return None if match is None else ManaCost.try_parse(match.group("amount"))
+
+
+def alternative_cost_phrase_of_line(text: str) -> str | None:
+    """The cost of a line that is wholly `alternative_cost_offers`'
+    unconditional "You may <cost> rather than pay this spell's mana cost."
+    (CR 118.9), else None."""
+    match = _ALTERNATIVE.fullmatch(text.strip())
+    return None if match is None else match.group("what")
+
+
 #: Omniscience: "You may cast spells from your hand without paying their mana
 #: costs." CR 118.9's *other* half - "a cost listed in a spell's text, **or
 #: applied to it from another effect**" - so this is read off a permanent on

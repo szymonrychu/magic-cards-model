@@ -61,6 +61,7 @@ from .cost import (
     TotalCost,
     additional_cost_phrases,
     alternative_cost_offers,
+    alternative_cost_phrase_of_line,
     announce_reveal,
     apply_modifications,
     behold_cost,
@@ -68,6 +69,7 @@ from .cost import (
     mana_value_cap_for,
     pay_life_cost,
     per_object_sacrifice_cost_reduction,
+    per_object_sacrifice_reduction_of_sentence,
     place_counters_cost,
     return_to_hand_cost,
     static_free_cast_grant,
@@ -8657,6 +8659,42 @@ def reads_or_pay_additional_cost_line(text: str) -> bool:
         and total_cost_for_phrase(or_pay.group("primary")) is not None
         and total_cost_for_phrase(or_pay.group("mana")) is not None
     )
+
+
+def reads_printed_alternative_cost_line(text: str) -> bool:
+    """Whether one printed line is wholly an unconditional CR 118.9 "You may
+    <cost> rather than pay this spell's mana cost." whose cost
+    `Casting.alternative_costs` can read (`_printed_alternative_total_cost`)
+    and so offers on a cast - `support.py`'s credit for it on a permanent
+    card (Salvage Titan)."""
+    phrase = alternative_cost_phrase_of_line(text)
+    return phrase is not None and _printed_alternative_total_cost(phrase, payer=None) is not None
+
+
+#: "As an additional cost to cast this spell, you may sacrifice any number of
+#: <quality>. This spell costs <amount> less to cast for each <noun>
+#: sacrificed this way." - one printed line, two sentences.
+_OPTIONAL_SACRIFICE_REDUCTION_LINE = re.compile(
+    r"^as an additional cost to cast this spell, (?P<what>[^.]+)\.\s+(?P<reduction>[^.]+\.)$",
+    re.IGNORECASE,
+)
+
+
+def reads_optional_sacrifice_reduction_line(text: str) -> bool:
+    """Whether one printed line is wholly a CR 118.8b optional "you may
+    sacrifice any number of <quality>" additional cost with its linked
+    per-object reduction that `Casting.sacrifice_for_cost_reduction` pays
+    and applies - `support.py`'s credit for it on a permanent card
+    (Rottenmouth Viper). CR 118.7a: the reduction applied there is generic
+    only, so a coloured amount is left unread."""
+    match = _OPTIONAL_SACRIFICE_REDUCTION_LINE.match(text.strip())
+    if match is None:
+        return False
+    sacrifice = _OPTIONAL_SACRIFICE_ANY_NUMBER.match(match.group("what"))
+    if sacrifice is None or cost_component_for_phrase(sacrifice.group("cost"), None) is None:
+        return False
+    amount = per_object_sacrifice_reduction_of_sentence(match.group("reduction"))
+    return amount is not None and amount == ManaCost(generic=amount.generic)
 
 
 def reads_printed_zone_permission_line(card: Card, text: str) -> bool:

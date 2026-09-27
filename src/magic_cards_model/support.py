@@ -65,8 +65,10 @@ from magic_cards_model.machines.casting import (
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
+    reads_optional_sacrifice_reduction_line,
     reads_or_pay_additional_cost_line,
     reads_play_cards_exiled_with_line,
+    reads_printed_alternative_cost_line,
     reads_printed_self_zone_cast_line,
     reads_printed_zone_permission_line,
     reads_static_zone_cast_permission_line,
@@ -2143,6 +2145,14 @@ def _static_ability_category(
         return HANDLED
     if reads_or_pay_additional_cost_line(text):
         # `casting.mandatory_additional_costs` charges either half.
+        return HANDLED
+    if reads_printed_alternative_cost_line(text):
+        # CR 118.9: `Casting.alternative_costs` offers the printed "You may
+        # <cost> rather than pay this spell's mana cost." (Salvage Titan).
+        return HANDLED
+    if reads_optional_sacrifice_reduction_line(text):
+        # CR 118.8b / CR 118.7a: `Casting.sacrifice_for_cost_reduction` pays
+        # it and applies the linked per-object reduction (Rottenmouth Viper).
         return HANDLED
     if static_free_cast_grant(text) is not None:
         # CR 118.9: "you may cast ... without paying its mana cost" off a

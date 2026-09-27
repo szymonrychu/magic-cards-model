@@ -276,3 +276,73 @@ def test_engine_version_names_the_package_and_schema():
 
     assert magic_cards_model.__version__ in ENGINE_VERSION
     assert str(Game.CURRENT_SCHEMA_VERSION) in ENGINE_VERSION
+
+
+# -- CR 118.9 / CR 118.8b cast-cost statics on a permanent card -------------
+#
+# A permanent card's own "You may <cost> rather than pay this spell's mana
+# cost." and "As an additional cost to cast this spell, you may sacrifice any
+# number of <quality>. This spell costs <amount> less to cast for each <noun>
+# sacrificed this way." are charged by `Casting.alternative_costs` /
+# `Casting.sacrifice_for_cost_reduction`; each is credited only when that
+# machinery can read the whole line.
+
+
+@pytest.mark.parametrize(
+    ("name", "start"),
+    [
+        ("Salvage Titan", "You may sacrifice three artifacts rather than pay"),
+        ("Rottenmouth Viper", "As an additional cost to cast this spell, you may sacrifice"),
+    ],
+)
+def test_a_cast_cost_static_the_casting_machinery_charges_is_handled(name, start):
+    clauses = [c for c in card_support(card(name)).clauses if c.text.startswith(start)]
+    assert clauses, (name, start)
+    assert all(c.outcome == "handled" for c in clauses), clauses
+
+
+def test_cast_cost_line_readers_credit_the_template_and_not_a_near_miss():
+    from magic_cards_model.machines.casting import (
+        reads_optional_sacrifice_reduction_line,
+        reads_printed_alternative_cost_line,
+    )
+
+    assert reads_printed_alternative_cost_line(
+        "You may sacrifice three artifacts rather than pay this spell's mana cost."
+    )
+    # Same template, a different payable cost - credited identically.
+    assert reads_printed_alternative_cost_line(
+        "You may sacrifice two creatures rather than pay this spell's mana cost."
+    )
+    # A cost `total_cost_for_phrase` cannot read, and an unread tail.
+    assert not reads_printed_alternative_cost_line(
+        "You may sacrifice three artifacts with different names rather than pay "
+        "this spell's mana cost."
+    )
+    assert not reads_printed_alternative_cost_line(
+        "You may sacrifice three artifacts rather than pay this spell's mana cost. "
+        "If you do, draw a card."
+    )
+
+    viper = (
+        "As an additional cost to cast this spell, you may sacrifice any number of "
+        "nonland permanents. This spell costs {1} less to cast for each permanent "
+        "sacrificed this way."
+    )
+    assert reads_optional_sacrifice_reduction_line(viper)
+    assert reads_optional_sacrifice_reduction_line(
+        viper.replace("nonland permanents", "artifacts")
+        .replace("permanent sacrificed", "artifact sacrificed")
+        .replace("{1}", "{2}")
+    )
+    # No linked reduction: `sacrifice_for_cost_reduction` refuses to pay it.
+    assert not reads_optional_sacrifice_reduction_line(
+        "As an additional cost to cast this spell, you may sacrifice any number of "
+        "nonland permanents."
+    )
+    # A coloured amount CR 118.7a's generic-only reduction cannot apply.
+    assert not reads_optional_sacrifice_reduction_line(viper.replace("{1}", "{G}"))
+    # A quality `cost_component_for_phrase` cannot read.
+    assert not reads_optional_sacrifice_reduction_line(
+        viper.replace("nonland permanents", "nonland permanents with different names")
+    )
