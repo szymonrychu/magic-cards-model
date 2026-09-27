@@ -395,3 +395,247 @@ def test_damage_from_the_same_card_once_it_has_resolved_is_not_prevented():
     scenario.game.deal_damage(emrakul, 3, source=bolt)
 
     assert emrakul.damage == 3
+
+
+# -- protection from permanents that were cast this turn (Emrakul, the
+# World Anew's other protection quality) -----------------------------------
+#
+# CR 400.7d: "An ability of a permanent can reference information about the
+# spell that became that permanent as it resolved" - the rules precedent for
+# tracking this fact at all. CR 400.7's own "new object" rule is what makes a
+# flickered or reanimated permanent stop counting, whatever turn any of that
+# happened on - a token (CR 111.1) or a permanent an effect merely puts onto
+# the battlefield (reanimation) was never cast at all. `Game.was_cast_this_
+# turn` answers all of this off `Game.cast_record_of` (re-keyed onto the
+# permanent as it resolves, left behind by any *later* zone change) and
+# `Game.spells_cast_this_turn` (reset every turn).
+
+
+def _next_turn(scenario: Scenario) -> None:
+    turns = scenario.turn.turns_taken
+    while scenario.turn.turns_taken == turns:
+        scenario.advance()
+        while not scenario.game.stack_is_empty:
+            scenario.resolve_top()
+
+
+def test_a_creature_cast_this_turn_was_cast_this_turn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest")
+
+    bears = scenario.cast_and_resolve("Grizzly Bears", *sources)
+
+    assert scenario.game.was_cast_this_turn(bears) is True
+
+
+def test_the_same_creature_no_longer_counts_once_the_turn_changes():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest")
+    bears = scenario.cast_and_resolve("Grizzly Bears", *sources)
+    assert scenario.game.was_cast_this_turn(bears) is True
+
+    _next_turn(scenario)
+
+    assert scenario.game.was_cast_this_turn(bears) is False
+
+
+def test_a_permanent_already_on_the_battlefield_was_never_cast():
+    """The plain baseline every other scenario in this file already relies
+    on: a permanent staged directly onto the battlefield - exactly how a
+    token or a reanimated creature (put onto the battlefield by an effect,
+    never cast) enters - carries no cast record and no `spells_cast_this_
+    turn` entry at all."""
+    scenario = Scenario().player("alice", battlefield=["Grizzly Bears"]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    assert scenario.game.was_cast_this_turn(bears) is False
+
+
+def test_a_created_token_is_not_cast_either():
+    """CR 111.1: "A token is a marker used to represent any permanent that
+    isn't represented by a card" - Raise the Alarm's own two Soldiers enter
+    without ever being cast (only the sorcery that creates them is)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Raise the Alarm"], battlefield=["Plains", "Plains"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Plains", "Plains")
+
+    scenario.cast_and_resolve("Raise the Alarm", *sources)
+    soldiers = [
+        state
+        for state in scenario.game.battlefield
+        if state.name == "Soldier Token" and state.controller == "alice"
+    ]
+
+    assert len(soldiers) == 2
+    assert all(scenario.game.was_cast_this_turn(soldier) is False for soldier in soldiers)
+
+
+def test_a_flickered_permanent_is_a_new_object_and_no_longer_counts():
+    """CR 400.7: the permanent Ephemerate returns is a new object, even
+    though it re-enters in the very turn it was cast."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Grizzly Bears", "Ephemerate"],
+            battlefield=["Forest", "Forest", "Plains"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (forest1, forest2) = scenario.untapped_sources("Forest", "Forest")
+    bears = scenario.cast_and_resolve("Grizzly Bears", forest1, forest2)
+    assert scenario.game.was_cast_this_turn(bears) is True
+
+    (plains,) = scenario.untapped_sources("Plains")
+    scenario.cast_and_resolve("Ephemerate", plains, targets=[bears])
+
+    assert scenario.game.was_cast_this_turn(bears) is False
+
+
+def test_damage_from_a_permanent_cast_this_turn_is_prevented():
+    """CR 702.16e, the same untargeted-damage shape the "protection from
+    spells" section above already exercises."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", library=["Island"], battlefield=["Emrakul, the World Anew"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "alice")
+    sources = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_and_resolve("Grizzly Bears", *sources, username="bob")
+
+    scenario.game.deal_damage(emrakul, 3, source=bears)
+
+    assert emrakul.damage == 0
+
+
+def test_damage_from_the_same_creature_next_turn_is_not_prevented():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", library=["Island"], battlefield=["Emrakul, the World Anew"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "alice")
+    sources = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_and_resolve("Grizzly Bears", *sources, username="bob")
+
+    _next_turn(scenario)
+
+    scenario.game.deal_damage(emrakul, 3, source=bears)
+
+    assert emrakul.damage == 3
+
+
+def test_protection_quality_against_reads_cast_this_turn_for_blocking_and_attachment():
+    """CR 702.16f (blocking) and CR 702.16c/d (enchanting, equipping) all
+    share `Game.protection_quality_against` with the damage half (CR
+    702.16e) - proven directly against a real cast creature, since all four
+    ask the identical question of the identical live `CardState` source
+    rather than growing four separate readings of the same fact."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("alice", library=["Island"], battlefield=["Emrakul, the World Anew"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "alice")
+    sources = scenario.untapped_sources("Forest", "Forest", username="bob")
+    bears = scenario.cast_and_resolve("Grizzly Bears", *sources, username="bob")
+
+    assert scenario.game.protection_quality_against(emrakul, bears) is not None
+
+    _next_turn(scenario)
+
+    assert scenario.game.protection_quality_against(emrakul, bears) is None
+
+
+def test_a_permanent_cast_this_turn_cannot_target_it_with_an_ability():
+    """CR 702.16b's ability half: an activated ability's source carries
+    this quality exactly when the permanent bearing it does - Icy
+    Manipulator is an artifact, so CR 302.6's summoning sickness (creatures
+    only) never stops it activating the very turn it is cast."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "bob",
+            hand=["Icy Manipulator"],
+            battlefield=["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"],
+        )
+        .player("alice", library=["Island"], battlefield=["Emrakul, the World Anew"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "alice")
+    sources = scenario.untapped_sources(
+        "Mountain", "Mountain", "Mountain", "Mountain", username="bob"
+    )
+    icy = scenario.cast_and_resolve("Icy Manipulator", *sources, username="bob")
+    assert scenario.game.was_cast_this_turn(icy) is True
+
+    (last_mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    ability = scenario.activate(icy, last_mountain, username="bob", targets=[emrakul])
+
+    assert ability is not None
+    assert scenario.game.why_cannot_target(ability, emrakul) is not None
+
+
+def test_the_same_permanent_can_target_it_once_it_is_no_longer_cast_this_turn():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "bob",
+            hand=["Icy Manipulator"],
+            battlefield=["Mountain", "Mountain", "Mountain", "Mountain", "Mountain"],
+        )
+        .player("alice", library=["Island"], battlefield=["Emrakul, the World Anew"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "alice")
+    sources = scenario.untapped_sources(
+        "Mountain", "Mountain", "Mountain", "Mountain", username="bob"
+    )
+    icy = scenario.cast_and_resolve("Icy Manipulator", *sources, username="bob")
+
+    _next_turn(scenario)
+    _next_turn(scenario)
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    (mountain,) = scenario.untapped_sources("Mountain", username="bob")
+    ability = scenario.activate(icy, mountain, username="bob", targets=[emrakul])
+
+    assert ability is not None
+    assert scenario.game.why_cannot_target(ability, emrakul) is None

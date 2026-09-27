@@ -1587,6 +1587,23 @@ def _is_spell_quality(quality: str) -> bool:
     return quality.strip().lower() in ("spell", "spells")
 
 
+#: "permanents that were cast this turn" (Emrakul, the World Anew) / the
+#: singular "permanent that was cast this turn" no printing uses yet - read
+#: by the words rather than by the card, so a future printing that phrases
+#: the singular still matches. Not a card type (CR 205.2a never lists
+#: "permanent"), a colour, or CR 112.1's "spell" - its own temporal fact,
+#: answered by `Game.was_cast_this_turn`.
+_CAST_THIS_TURN_QUALITY_RE = re.compile(
+    r"^permanents? that (?:were|was) cast this turn$", re.IGNORECASE
+)
+
+
+def _is_cast_this_turn_quality(quality: str) -> bool:
+    """Whether a protection quality names CR 400.7d's own provenance fact,
+    narrowed to the current turn - `_CAST_THIS_TURN_QUALITY_RE`'s shape."""
+    return _CAST_THIS_TURN_QUALITY_RE.fullmatch(quality.strip()) is not None
+
+
 def _activation_condition(instructions: str) -> str | None:
     """The condition of an "Activate only if <condition>" restriction (CR
     602.5b), without a trailing "and only as a sorcery"-style second
@@ -7014,6 +7031,45 @@ class Game(EngineModel):
             return None
         return self.cast_records.get(state.zone_change_stamp)
 
+    def was_cast_this_turn(self, permanent: CardState) -> bool:
+        """Whether `permanent` became a permanent this turn by resolving a
+        spell that was cast for it (CR 702.16a's "permanents that were cast
+        this turn", CR 400.7d's own provenance link, narrowed to the current
+        turn) - Emrakul, the World Anew's own second protection quality.
+
+        Two questions, both already answered elsewhere, combined:
+
+        - **Still the object that was cast, with no zone change since**
+          (CR 400.7's "new object" rule) - `cast_record_of` already refuses
+          this the moment any further move re-keys `zone_change_stamp`: a
+          permanent destroyed and later reanimated, or exiled and returned
+          (a flicker), is "a new object with no memory ... of its previous
+          existence" the instant it leaves, so its cast record from before
+          that move is unreachable off the object it becomes, whatever
+          turn any of that happened on.
+        - **This turn**, not some earlier one still undisturbed on the
+          battlefield - `spells_cast_this_turn` is reset at the start of
+          every turn (`Game.spells_cast_this_turn`'s own docstring), so a
+          permanent's card id appearing there at all already means it was
+          cast since this turn began; compared by `id` rather than object
+          identity, since a decoded `Game`'s own copies of the same logical
+          card are separate Python objects even when they share nothing but
+          a field value.
+
+        `permanent` also has to actually be a permanent right now (CR
+        110.1: on the battlefield) - a card back in hand or in a graveyard
+        is not one, whatever its history.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if self.cast_record_of(permanent) is None:
+            return False
+        return any(
+            cast_state.id == permanent.id
+            for casters in self.spells_cast_this_turn.values()
+            for cast_state in casters
+        )
+
     def cast_record_as_last_known(self, stamp: UUID) -> "CastRecord | None":
         """The record of the object that had `stamp`, for an ability that
         remembers which object its source was (`AbilityOnStack.source_stamp`).
@@ -9818,6 +9874,7 @@ class Game(EngineModel):
                     source_card,
                     source_controller=owner,
                     is_spell=isinstance(subject, CardState),
+                    source_state=None if isinstance(subject, CardState) else subject.source(self),
                 )
                 is not None
             ):
@@ -16130,6 +16187,7 @@ class Game(EngineModel):
                 source_card,
                 source_controller=self.controller_of(spell).username,
                 is_spell=isinstance(spell, CardState),
+                source_state=None if isinstance(spell, CardState) else spell.source(self),
             )
             is not None
         ):
@@ -16538,6 +16596,7 @@ class Game(EngineModel):
         *,
         source_controller: str | None = None,
         is_spell: bool = False,
+        source_state: CardState | None = None,
     ) -> str | None:
         """Why protection stops this source touching this target, or None (CR 702.16b).
 
@@ -16561,6 +16620,13 @@ class Game(EngineModel):
         already knows (it is what tells `source` apart from an ability's own
         source card in the first place) and passes through.
 
+        `source_state` is the live `CardState` behind an ability's source
+        permanent, for "permanents that were cast this turn" (Emrakul's other
+        quality) - a bare `Card` cannot answer whether *this* object was cast
+        this turn, only `Game.was_cast_this_turn` can, and it needs the live
+        object. `None` for a spell (never a permanent, CR 110.1) and for any
+        caller that has not looked one up.
+
         A quality this engine cannot read is not enforced - see
         `docs/engine-coverage.md`.
 
@@ -16576,7 +16642,9 @@ class Game(EngineModel):
         for quality in self._effective_protection_qualities(target):
             if self._player_quality_protects(
                 target, quality, source_controller
-            ) or self.source_has_quality_of_card(source, quality, is_spell=is_spell):
+            ) or self.source_has_quality_of_card(
+                source, quality, is_spell=is_spell, source_state=source_state
+            ):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
@@ -16967,13 +17035,18 @@ class Game(EngineModel):
         return qualities
 
     def source_has_quality_of_card(
-        self, source: "Card", quality: str, *, is_spell: bool = False
+        self,
+        source: "Card",
+        quality: str,
+        *,
+        is_spell: bool = False,
+        source_state: CardState | None = None,
     ) -> bool:
         """`source_has_quality` for a bare `Card` rather than a `CardState`.
 
         The targeting half of CR 702.16b is asked about the *card* behind a
         spell or an ability's source, while the damage half (CR 702.16e) is
-        asked about a `CardState`. Both read the same three flavours of
+        asked about a `CardState`. Both read the same four flavours of
         quality, so the reading lives in one place and this is the adapter.
 
         `is_spell` is CR 112.1's own "spell" quality: "a card on the stack" -
@@ -16981,10 +17054,22 @@ class Game(EngineModel):
         any zone), never true of a bare `Card`, so it has to be told by the
         caller, which already knows whether the source it read this `Card`
         off was a spell or an ability (`_source_card_of`).
+
+        `source_state` is the live `CardState` behind an *ability's* source
+        permanent, when the caller has one - needed for "permanents that were
+        cast this turn" (`Game.was_cast_this_turn`), which asks a question a
+        bare `Card` has no way to answer (it is not "on the battlefield" or
+        "off the battlefield", it is not anything - CR 110.1's permanent is a
+        live object, not a print). Never given for a spell: CR 110.1 makes a
+        spell on the stack never a permanent in the first place, so this
+        quality is always false for one regardless of what card it prints,
+        the same way it is always false for a bare `is_spell=True` here.
         """
         wanted = quality.strip().lower()
         if _is_spell_quality(wanted):
             return is_spell
+        if _is_cast_this_turn_quality(wanted):
+            return source_state is not None and self.was_cast_this_turn(source_state)
         card_type = _card_type_named(wanted)
         if card_type is not None:
             return card_type in source.types
@@ -17061,6 +17146,7 @@ class Game(EngineModel):
             source,
             source_controller=self.controller_of(spell).username,
             is_spell=isinstance(spell, CardState),
+            source_state=None if isinstance(spell, CardState) else spell.source(self),
         )
 
     def spell_fizzles(self, spell: StackObject) -> bool:
@@ -17477,8 +17563,9 @@ class Game(EngineModel):
         and to any sources not on the battlefield that are of that card type,
         subtype, or supertype. This is an exception to rule 109.2."
 
-        Colours, card types, and CR 112.1's "spell" are read; anything else
-        returns False rather than being guessed at, and is listed in
+        Colours, card types, CR 112.1's "spell" and CR 400.7d's "permanents
+        that were cast this turn" are read; anything else returns False
+        rather than being guessed at, and is listed in
         `docs/engine-coverage.md`.
 
         A permanent's own types and colours are the ones asked about - CR
@@ -17498,11 +17585,19 @@ class Game(EngineModel):
         second clause never reaches it: a source only carries this quality
         while `source.zone` genuinely `is Zone.STACK` right now - never for
         one sitting in a hand or graveyard the way a card-type quality would
-        still read there.
+        still read there. Neither is "permanents that were cast this turn" -
+        `Game.was_cast_this_turn` is the one place that fact is answered,
+        used identically here (CR 702.16e's damage), by `protection_quality_
+        against` (CR 702.16c/d/f: enchanting, equipping, blocking - all three
+        share this method) and by `source_has_quality_of_card`'s targeting
+        half (CR 702.16b), which threads the live source state through
+        because a bare `Card` alone cannot answer it.
         """
         wanted = quality.strip().lower()
         if _is_spell_quality(wanted):
             return source.zone is Zone.STACK
+        if _is_cast_this_turn_quality(wanted):
+            return self.was_cast_this_turn(source)
         types, colors = source.types, source.colors
         if source.zone is Zone.BATTLEFIELD:
             chars = self.characteristics_of(source)
