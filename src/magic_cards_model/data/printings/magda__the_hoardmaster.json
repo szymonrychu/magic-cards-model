@@ -1,0 +1,166 @@
+{
+  "object": "card",
+  "id": "4443d112-209b-49ec-bc40-3a11dcdb092e",
+  "oracle_id": "7fd2beb8-f823-4723-beec-e59b62127490",
+  "multiverse_ids": [
+    655074
+  ],
+  "mtgo_id": 124177,
+  "arena_id": 90479,
+  "tcgplayer_id": 544268,
+  "cardmarket_id": 763567,
+  "name": "Magda, the Hoardmaster",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/4443d112-209b-49ec-bc40-3a11dcdb092e",
+  "scryfall_uri": "https://scryfall.com/card/otj/133/magda-the-hoardmaster?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:39Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.jpg?1783911819",
+    "normal": "https://cards.scryfall.io/normal/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.jpg?1783911819",
+    "large": "https://cards.scryfall.io/large/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.jpg?1783911819",
+    "png": "https://cards.scryfall.io/png/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.png?1783911819",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.jpg?1783911819",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.jpg?1783911819",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.webp?1783911819",
+    "grid": "https://cards.scryfall.io/grid/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.webp?1783911819",
+    "display": "https://cards.scryfall.io/display/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.webp?1783911819",
+    "art": "https://cards.scryfall.io/art/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.webp?1783911819",
+    "crop": "https://cards.scryfall.io/crop/front/4/4/4443d112-209b-49ec-bc40-3a11dcdb092e.webp?1783911819"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Dwarf Berserker",
+  "oracle_text": "Whenever you commit a crime, create a tapped Treasure token. This ability triggers only once each turn. (Targeting opponents, anything they control, and/or cards in their graveyards is a crime.)\nSacrifice three Treasures: Create a 4/4 red Scorpion Dragon creature token with flying and haste. Activate only as a sorcery.",
+  "power": "2",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Treasure"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7ec6f053-96f7-4e57-b2eb-4e7699a40a4f",
+      "component": "token",
+      "name": "Treasure",
+      "type_line": "Token Artifact \u2014 Treasure",
+      "uri": "https://api.scryfall.com/cards/7ec6f053-96f7-4e57-b2eb-4e7699a40a4f"
+    },
+    {
+      "object": "related_card",
+      "id": "2834e84e-e932-4052-9dad-2e1c8e76fbbc",
+      "component": "combo_piece",
+      "name": "Magda, the Hoardmaster",
+      "type_line": "Legendary Creature \u2014 Dwarf Berserker",
+      "uri": "https://api.scryfall.com/cards/2834e84e-e932-4052-9dad-2e1c8e76fbbc"
+    },
+    {
+      "object": "related_card",
+      "id": "334178bb-970b-4f5a-af9b-1729eab65808",
+      "component": "token",
+      "name": "Scorpion Dragon",
+      "type_line": "Token Creature \u2014 Scorpion Dragon",
+      "uri": "https://api.scryfall.com/cards/334178bb-970b-4f5a-af9b-1729eab65808"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4443d112-209b-49ec-bc40-3a11dcdb092e/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7fd2beb8-f823-4723-beec-e59b62127490&unique=prints",
+  "collector_number": "133",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Diego Gisbert",
+  "artist_ids": [
+    "3f4e975d-092c-40e4-b850-2d582bf4b5cb"
+  ],
+  "illustration_id": "f3fdd025-e907-43ac-a8f9-457b08c5183d",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 2001,
+  "penny_rank": 2436,
+  "prices": {
+    "usd": "2.71",
+    "usd_foil": "2.58",
+    "usd_etched": null,
+    "eur": "0.86",
+    "eur_foil": "0.84",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655074&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMagda%252C%2Bthe%2BHoardmaster",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMagda%252C%2Bthe%2BHoardmaster",
+    "edhrec": "https://edhrec.com/route/?cc=Magda%2C+the+Hoardmaster"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544268%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=763567&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124177?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

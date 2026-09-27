@@ -658,18 +658,30 @@ def _parse_switch_power_toughness_then_draw_clause(text: str) -> Effect | None:
     return sequence(create_continuous_effect, draw_cards(count))
 
 
-def _effect_condition_is_readable(condition: str) -> bool:
+def _effect_condition_is_readable(condition: str, *, allow_anaphor: bool = False) -> bool:
     """`condition_is_readable` for a resolving effect's own "if" (CR 608.2c):
     a clause the shared condition readers claim only through an anaphor
-    ("if it's a creature", "if that creature is a Bear") is not read here -
-    the anaphor names an object an earlier instruction chose (a target, a
-    revealed card), which `Game.condition_holds` has no way to know
-    (`machines/conditions/objects.names_an_anaphor`)."""
+    ("if it's a creature", "if that creature is a Bear") is refused unless
+    `allow_anaphor` says the caller can actually resolve it.
+
+    A spell's resolving effect has no such anaphor to offer - the object an
+    anaphor there would name is whatever an *earlier instruction of that
+    same effect* chose (a target, a revealed card), which `Game.
+    condition_holds` has no way to know (`machines/conditions/objects.
+    names_an_anaphor`) - so `allow_anaphor` stays `False` there. A
+    *triggered* ability's own rider is different: CR 603.2's trigger event
+    is already carried on `AbilityOnStack.event`, and `Game.condition_
+    holds`'s own `event`/`ability` parameters exist for exactly this -
+    Aunt May's own "Whenever another creature you control enters, you gain
+    1 life. If it's a Spider, put a +1/+1 counter on it." reads "it" as the
+    creature that entered, the trigger's own subject, not a spell's."""
     from ..models.game import builtin_condition_readable, condition_is_readable
     from .conditions.objects import names_an_anaphor
 
     if not condition_is_readable(condition):
         return False
+    if allow_anaphor:
+        return True
     return builtin_condition_readable(condition.strip().rstrip(".").strip()) or not (
         names_an_anaphor(condition)
     )
@@ -1442,6 +1454,15 @@ _COUNT_CARDS_DISCARDED_THIS_TURN_RE = re.compile(
 _COUNT_CARDS_DRAWN_THIS_TURN_RE = re.compile(
     r"^(?:the number of )?cards? you(?:'ve| have)? drawn this turn$", re.IGNORECASE
 )
+#: "the number of permanents you've sacrificed this turn" - Obsessive
+#: Pursuit's own X (CR 701.21a), read off `Game.turn_history`'s "sacrificed"
+#: entries the same way `machines/conditions/history._sacrificed` already
+#: counts them for its own boolean "you've sacrificed a `<quality>` this
+#: turn" - the identical fact, unfiltered, as a count instead of a threshold
+#: check.
+_COUNT_PERMANENTS_SACRIFICED_THIS_TURN_RE = re.compile(
+    r"^(?:the number of )?permanents? you(?:'ve| have)? sacrificed this turn$", re.IGNORECASE
+)
 #: "the number of differently named `<qualifier>` you control" - Emil,
 #: Vastlands Roamer's own "the number of differently named lands you
 #: control", generalised over the qualifier rather than fixed to lands.
@@ -1758,6 +1779,17 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return game.cards_drawn_this_turn.get(controller, 0)
 
         return cards_drawn_this_turn
+
+    if _COUNT_PERMANENTS_SACRIFICED_THIS_TURN_RE.fullmatch(stripped):
+
+        def permanents_sacrificed_this_turn(game: "Game", controller: str) -> int:
+            return sum(
+                1
+                for entry in game.turn_history
+                if entry.kind == "sacrificed" and entry.player == controller
+            )
+
+        return permanents_sacrificed_this_turn
 
     if match := _DIFFERENTLY_NAMED_QUALIFIER_RE.fullmatch(stripped):
         # "the number of differently named `<qualifier>` you control" - Emil,
@@ -14782,6 +14814,46 @@ def _parse_untap_self_clause(text: str) -> AbilityEffect | None:
     return effect
 
 
+#: "you lose that much life. Then if your life total is less than or equal
+#: to half your starting life total, untap this permanent and transform it."
+#: - Cecil, Dark Knight's own "Darkness" ability-word trigger ("Whenever
+#: Cecil deals damage, ..."; the ability word is already gone and the card's
+#: own name already normalized to "this permanent" by the time this reads
+#: it - see `trigger_effect_for`'s own fallback). "That much" is the damage
+#: `TriggerEvent.DEALS_DAMAGE` carries as `GameEvent.amount` (CR 120.1); the
+#: comparison is the resolving player's current life against half their own
+#: `Player.starting_life` (CR 103.4/119.1), computed fresh after the loss so
+#: the loss itself can cross the threshold; the transform is CR 701.27a's
+#: ordinary self one, refused once the source has already left (CR 113.7a).
+_DEALS_DAMAGE_LOSE_LIFE_THEN_TRANSFORM_IF_LOW_RE = re.compile(
+    r"^you lose that much life\.\s*then if your life total is less than or equal to half your "
+    r"starting life total, untap this (?:permanent|creature) and transform it\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_deals_damage_lose_life_then_transform_if_low_clause(text: str) -> AbilityEffect | None:
+    """`_DEALS_DAMAGE_LOSE_LIFE_THEN_TRANSFORM_IF_LOW_RE`'s shape."""
+    if _DEALS_DAMAGE_LOSE_LIFE_THEN_TRANSFORM_IF_LOW_RE.fullmatch(text.strip()) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        amount = event.amount if event is not None else None
+        if amount is None or amount <= 0:
+            return
+        player = game.controller_of(ability)
+        game.lose_life(player, amount)
+        if player.life > player.starting_life / 2:
+            return
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.untap()
+            source.transform()
+
+    return effect
+
+
 #: CR 722.3a/722.3b, the self-referential shape most prepare creatures print:
 #: "At the beginning of your upkeep, if this creature isn't prepared, **it
 #: becomes prepared**." (Woodwork Prodigy, Stingerquill Voxmancer, Paradox
@@ -24149,6 +24221,134 @@ def _parse_each_other_attacking_creature_pump_trigger(text: str) -> AbilityEffec
     return effect
 
 
+#: "other attacking creatures gain `<keyword(s)>` until end of turn." - Cecil,
+#: Redeemed Paladin's own "Protect" attack trigger, the keyword-grant twin of
+#: `_EACH_OTHER_ATTACKING_CREATURE_PUMP_RE`'s +N/+N (CR 611.2c, computed once
+#: at resolution, the same fixed set every mass grant here uses).
+_OTHER_ATTACKING_CREATURES_GRANT_RE = re.compile(
+    r"^other attacking creatures gain (?P<keywords>[a-z][a-z ,]*?) until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_other_attacking_creatures_grant_trigger(text: str) -> AbilityEffect | None:
+    """`_OTHER_ATTACKING_CREATURES_GRANT_RE`'s shape."""
+    match = _OTHER_ATTACKING_CREATURES_GRANT_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    keywords = _split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None:
+            return
+        store = game.continuous_effects
+        timestamp = store.tick()
+        for creature in game.attacking_creatures():
+            if creature.id == source.id:
+                continue
+            for keyword in keywords:
+                store.add(
+                    ContinuousEffect(
+                        description=f"{source.name}: {creature.name} gains {keyword}",
+                        layer=Layer.ABILITY,
+                        timestamp=timestamp,
+                        duration=Duration.UNTIL_END_OF_TURN,
+                        selector=_only(creature.id),
+                        modification=grant_ability(keyword),
+                    )
+                )
+
+    return effect
+
+
+#: "put x `<kind>` counters on target `<phrase>`, where x is `<expr>`[. If x
+#: is `<threshold>` or more, that creature gains `<keyword(s)>` until end of
+#: turn.]" - Proft's Eidetic Memory's own X ("the number of cards you've
+#: drawn this turn minus one", no rider) and Obsessive Pursuit's identical
+#: shape with the optional threshold rider. `_COUNTER_TARGET_RE`/`_PUT_
+#: COUNTERS_ON_TARGET_BY_THAT_SPELLS_MANA_VALUE_RE` read a fixed count or
+#: one specific X definition; this is the general "where X is `<count_
+#: expression term>`" tail neither already covers, reusing the identical
+#: `amount_expression` a spell's own "counters equal to X" clause already
+#: evaluates.
+_PUT_COUNTERS_ON_TARGET_WHERE_X_IS_RE = re.compile(
+    r"^put x (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on (?P<phrase>.*target.+?),\s*"
+    r"where x is (?P<expr>.+?)\."
+    r"(?:\s*if x is (?:"
+    r"(?P<cmp>at least|exactly|more than|less than) (?P<threshold1>[a-z0-9]+)"
+    r"|(?P<threshold2>[a-z0-9]+) or (?P<cmp2>more|fewer|less|greater)"
+    r"),\s*that creature gains (?P<keywords>[a-z][a-z ,]*?) until end of turn\.)?\s*$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_put_counters_on_target_where_x_is_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_COUNTERS_ON_TARGET_WHERE_X_IS_RE`'s shape - see its own docstring."""
+    match = _PUT_COUNTERS_ON_TARGET_WHERE_X_IS_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+    kind = _counter_kind(match.group("kind"))
+    reader = amount_expression(match.group("expr"))
+    if reader is None:
+        return None
+    threshold_test = None
+    keywords: list[str] = []
+    threshold_word = match.group("threshold1") or match.group("threshold2")
+    if threshold_word is not None:
+        threshold = parse_count(threshold_word)
+        if threshold is None:
+            return None
+        cmp = match.group("cmp")
+        cmp2 = match.group("cmp2")
+        if cmp == "at least" or cmp2 in ("more", "greater"):
+            threshold_test = lambda value, threshold=threshold: value >= threshold  # noqa: E731
+        elif cmp == "exactly":
+            threshold_test = lambda value, threshold=threshold: value == threshold  # noqa: E731
+        elif cmp == "more than":
+            threshold_test = lambda value, threshold=threshold: value > threshold  # noqa: E731
+        else:  # "less than", or "or fewer"/"or less"
+            threshold_test = lambda value, threshold=threshold: value < threshold  # noqa: E731
+        keywords_read = _split_and_validate_keywords(match.group("keywords"))
+        if keywords_read is None:
+            return None
+        keywords = keywords_read
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability).username
+        targets = [
+            target
+            for target in game.resolve_targets(ability)
+            if isinstance(target, CardState) and target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        x = reader(game, controller, targets[0], ability.x_value)
+        for target in targets:
+            if x > 0:
+                game.add_counters(target, kind, x)
+            if threshold_test is not None and threshold_test(x):
+                store = game.continuous_effects
+                timestamp = store.tick()
+                for keyword in keywords:
+                    store.add(
+                        ContinuousEffect(
+                            description=f"{target.name} gains {keyword}",
+                            layer=Layer.ABILITY,
+                            timestamp=timestamp,
+                            duration=Duration.UNTIL_END_OF_TURN,
+                            selector=_only(target.id),
+                            modification=grant_ability(keyword),
+                        )
+                    )
+
+    return effect
+
+
 #: "Sacrifice this <type> unless you pay {E}[{E}...]." (Static Prison) - a
 #: fixed-amount CR 107.14/118.3 energy cost that averts the sacrifice rather
 #: than causing a bonus. Only the self-referential "this <type>" subject is
@@ -27541,6 +27741,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     becomes = becomes_ability_effect(effect_text)
     if becomes is not None:
         return becomes
+    leading_then_if_otherwise = _parse_leading_then_if_otherwise_clause(
+        effect_text, for_spell=False
+    )
+    if leading_then_if_otherwise is not None:
+        return leading_then_if_otherwise
+    counters_then_draw_half = _parse_put_n_counters_on_self_then_draw_half_n_clause(effect_text)
+    if counters_then_draw_half is not None:
+        return counters_then_draw_half
     choose_card_name = _parse_choose_card_name_for_source_clause(effect_text)
     if choose_card_name is not None:
         return choose_card_name
@@ -27864,6 +28072,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     reflexive_pay_mana = _parse_reflexive_pay_mana_clause(effect_text)
     if reflexive_pay_mana is not None:
         return reflexive_pay_mana
+    reflexive_pay_mana_and_life = _parse_reflexive_pay_mana_and_life_clause(effect_text)
+    if reflexive_pay_mana_and_life is not None:
+        return reflexive_pay_mana_and_life
+    reflexive_pay_life = _parse_reflexive_pay_life_clause(effect_text)
+    if reflexive_pay_life is not None:
+        return reflexive_pay_life
     reflexive_may_tap_self = _parse_reflexive_may_tap_self_clause(effect_text)
     if reflexive_may_tap_self is not None:
         return reflexive_may_tap_self
@@ -28013,6 +28227,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     each_other_attacking_pump = _parse_each_other_attacking_creature_pump_trigger(effect_text)
     if each_other_attacking_pump is not None:
         return each_other_attacking_pump
+    other_attacking_grant = _parse_other_attacking_creatures_grant_trigger(effect_text)
+    if other_attacking_grant is not None:
+        return other_attacking_grant
+    counters_on_target_where_x_is = _parse_put_counters_on_target_where_x_is_clause(effect_text)
+    if counters_on_target_where_x_is is not None:
+        return counters_on_target_where_x_is
     may_then_if_you_do_layer = _parse_may_then_if_you_do_layer_clause(effect_text)
     if may_then_if_you_do_layer is not None:
         return may_then_if_you_do_layer
@@ -28131,6 +28351,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     untap_self = _parse_untap_self_clause(effect_text)
     if untap_self is not None:
         return untap_self
+    deals_damage_lose_life_then_transform = (
+        _parse_deals_damage_lose_life_then_transform_if_low_clause(effect_text)
+    )
+    if deals_damage_lose_life_then_transform is not None:
+        return deals_damage_lose_life_then_transform
     untap_trigger_subject = _parse_untap_trigger_subject_clause(effect_text)
     if untap_trigger_subject is not None:
         return untap_trigger_subject
@@ -38458,6 +38683,100 @@ def _parse_reflexive_pay_mana_clause(text: str) -> AbilityEffect | None:
         source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
         paid = game.may_pay_mana_cost(
             player, cost, source=source_name, source_id=source_id_of(source_id)
+        )
+        if not paid:
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexivePayManaConsequence(),
+        )
+
+    return effect
+
+
+#: "you may pay `<N>` life. When you do, `<consequence>`." - Ambulatory
+#: Edifice's own ETB trigger, the pure-life twin of `_REFLEXIVE_MAY_PAY_
+#: MANA_RE`. CR 603.12, CR 119.4.
+_REFLEXIVE_MAY_PAY_LIFE_RE = re.compile(
+    rf"^you may pay (?P<life>{COUNT}) life\.\s*when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_pay_life_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MAY_PAY_LIFE_RE`'s shape - `Game.may_pay_life` asks CR
+    119.4's payment question and pays it in full or not at all, the same
+    "cost stays paid, consequence conditional" shape `_parse_reflexive_pay_
+    mana_clause` already reads for mana."""
+    match = _REFLEXIVE_MAY_PAY_LIFE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    life = parse_count(match.group("life"))
+    if life is None:
+        return None
+    consequence_text = _reflexive_consequence_text(match.group("consequence"))
+    if reflexive_pay_consequence_effect(consequence_text) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = game.may_pay_life(
+            player, life, source=source_name, source_id=source_id_of(source_id)
+        )
+        if not paid:
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=player.username,
+            source_id=ability.source_id,
+            source_name=source_name,
+            callback=ReflexivePayManaConsequence(),
+        )
+
+    return effect
+
+
+#: "you may pay `<mana>` and `<N>` life. When you do, `<consequence>`." -
+#: Zoraline, Cosmos Caller's own "Whenever Zoraline enters or attacks, you
+#: may pay {W}{B} and 2 life. When you do, ..." - the combined mana-and-life
+#: twin of `_REFLEXIVE_MAY_PAY_MANA_RE`/`_REFLEXIVE_MAY_PAY_LIFE_RE`, neither
+#: of which reads a compound cost. CR 603.12, CR 118.3, CR 119.4: one CR
+#: 608.2d question for the whole cost (`Game.may_pay_unless_cost`, the same
+#: single-decision shape a mixed "unless" cost already asks, rather than two
+#: separate mana/life questions), paid atomically or not at all.
+_REFLEXIVE_MAY_PAY_MANA_AND_LIFE_RE = re.compile(
+    rf"^you may pay (?P<mana>(?:\{{[^}}]+\}})+) and (?P<life>{COUNT}) life\.\s*"
+    r"when you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_reflexive_pay_mana_and_life_clause(text: str) -> AbilityEffect | None:
+    """`_REFLEXIVE_MAY_PAY_MANA_AND_LIFE_RE`'s shape - see its own docstring."""
+    match = _REFLEXIVE_MAY_PAY_MANA_AND_LIFE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    mana = ManaCost.try_parse(match.group("mana"))
+    life = parse_count(match.group("life"))
+    if mana is None or life is None:
+        return None
+    consequence_text = _reflexive_consequence_text(match.group("consequence"))
+    if reflexive_pay_consequence_effect(consequence_text) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = game.may_pay_mana_and_life(
+            player,
+            mana,
+            life,
+            source=source_name,
+            source_id=source_id_of(source_id),
         )
         if not paid:
             return
@@ -53532,6 +53851,52 @@ def _parse_dead_object_to_library_clause(clause: str, *, for_spell: bool) -> Tar
     return effect
 
 
+#: "its owner shuffles their graveyard into their library" - Emrakul, the
+#: Aeons Torn's own dies-from-anywhere trigger (CR 603.10a). Distinct from
+#: `_DEAD_OBJECT_TO_LIBRARY_RE`'s "shuffle it into its owner's library"
+#: (Purity, Dread, Kozilek's own "Butcher of Truth" printing), which shuffles
+#: only the dead object itself back in: this shuffles the *whole* graveyard
+#: the object just joined, itself included, back into that same player's
+#: library.
+_OWNER_SHUFFLES_GRAVEYARD_INTO_LIBRARY_RE = re.compile(
+    r"^its owner shuffles (?:their|his or her) graveyard into (?:their|his or her) library$",
+    re.IGNORECASE,
+)
+
+
+def _parse_owner_shuffles_graveyard_into_library_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_OWNER_SHUFFLES_GRAVEYARD_INTO_LIBRARY_RE`'s shape - "its owner" is
+    the dead self's own owner (CR 108.3), read off the object by id alone
+    the same way `_parse_dead_object_to_library_clause`'s own shuffle branch
+    does (CR 701.24c: the shuffle happens even once the object itself can no
+    longer be found, since a card leaving its own graveyard in response,
+    Tormod's Crypt among them, never stops that graveyard's *other* cards
+    from being shuffled)."""
+    if for_spell:
+        return None
+    if not _OWNER_SHUFFLES_GRAVEYARD_INTO_LIBRARY_RE.fullmatch(clause.strip()):
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        object_id = _dead_self_object_id(ability)
+        if object_id is None:
+            return
+        raw = game.find_by_id(object_id)
+        owner_name = raw.owner if isinstance(raw, CardState) else None
+        if owner_name is None:
+            return
+        owner = game.player(owner_name)
+        for state in list(owner.graveyard):
+            owner.add(state, Zone.LIBRARY)
+        game.shuffle_library(owner)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Wave W1 (revisited): "choose a card name"/"the same name as that card",
 # then search a graveyard, a hand, and a library for cards with that name and
@@ -54208,7 +54573,7 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             return None
         condition_text = trailing.group("condition").strip()
         consequence_text = trailing.group("consequence").strip()
-    if not _effect_condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text, allow_anaphor=not for_spell):
         return None
     consequence = (
         parse_mixed_effect_for_spell(consequence_text)
@@ -54221,7 +54586,23 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
     def effect(game: "Game", stack_object: "StackObject") -> None:
         controller = game.controller_of(stack_object)
         source = stack_object.source(game) if is_ability(stack_object) else stack_object
-        held = game.condition_holds(controller.username, condition_text, source)
+        if for_spell:
+            held = game.condition_holds(controller.username, condition_text, source)
+        else:
+            # A triggered ability: thread its own trigger event through, the
+            # same way `intervening_if_answer` already does for the
+            # intervening "if" this is not - CR 603.2's event, not the
+            # source's own state, is what an anaphoric "it"/"that creature"
+            # here means (`_effect_condition_is_readable`'s own docstring).
+            assert isinstance(stack_object, AbilityOnStack)
+            held = game.condition_holds(
+                controller.username,
+                condition_text,
+                source,
+                ability=stack_object.ability,
+                event=stack_object.event,
+                source_stamp=stack_object.source_stamp,
+            )
         if held is None:
             notice = ConditionalClauseNotice(
                 source_id=source_id_of(stack_object),
@@ -54235,6 +54616,134 @@ def _parse_condition_clause(clause: str, *, for_spell: bool) -> TargetedClause |
             return
         if held:
             consequence(game, stack_object)
+
+    return effect
+
+
+#: "[`<leading clause(s)>`. ]If `<condition>`, `<consequence>`. Otherwise,
+#: `<otherwise>`." - Unholy Annex's own end-step trigger ("draw a card. If
+#: you control a Demon, each opponent loses 2 life and you gain 2 life.
+#: Otherwise, you lose 2 life."). `_parse_condition_clause` above reads a
+#: bare "if X, Y"/"Y if X" as one clause; CR 608.2c's "otherwise" branch is
+#: the *second* sentence of the same instruction, which `split_effect_
+#: clauses`'s ordinary per-period split would cut away from the "if" that
+#: governs it, leaving "Otherwise, `<otherwise>`" a fragment no per-clause
+#: reader could ever read alone. Read here as one whole-text shape instead,
+#: the same "read together, not each alone" reasoning every other entry
+#: tried "ahead of everything else" in this ladder already has.
+_LEADING_THEN_IF_OTHERWISE_RE = re.compile(
+    r"^(?:(?P<leading>.+?)\.\s*)?if (?P<condition>.+?),\s*(?P<consequence>.+?)\.\s*"
+    r"otherwise,\s*(?P<otherwise>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_leading_then_if_otherwise_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
+    """`_LEADING_THEN_IF_OTHERWISE_RE`'s shape - see its own docstring.
+
+    `leading`, when printed, is any ordinary clause(s) `parse_mixed_effect`/
+    `parse_mixed_effect_for_spell` already read ("draw a card"), run first
+    and unconditionally - CR 608.2c's own instruction order. The condition
+    is read the identical way `_parse_condition_clause` already does,
+    anaphora and all (a triggered ability's own trigger event threaded
+    through `Game.condition_holds`), and an unreadable one - by the same
+    `_effect_condition_is_readable` gate - leaves the *whole* clause unread
+    rather than guessed at.
+    """
+    match = _LEADING_THEN_IF_OTHERWISE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text, allow_anaphor=not for_spell):
+        return None
+    parser = parse_mixed_effect_for_spell if for_spell else parse_mixed_effect
+    leading_text = match.group("leading")
+    leading_effect = parser(leading_text.strip()) if leading_text else None
+    if leading_text and leading_effect is None:
+        return None
+    consequence = parser(match.group("consequence").strip())
+    if consequence is None:
+        return None
+    otherwise = parser(match.group("otherwise").strip())
+    if otherwise is None:
+        return None
+    stripped = text.strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if leading_effect is not None:
+            leading_effect(game, stack_object)
+        controller = game.controller_of(stack_object)
+        source = stack_object.source(game) if is_ability(stack_object) else stack_object
+        if for_spell:
+            held = game.condition_holds(controller.username, condition_text, source)
+        else:
+            assert isinstance(stack_object, AbilityOnStack)
+            held = game.condition_holds(
+                controller.username,
+                condition_text,
+                source,
+                ability=stack_object.ability,
+                event=stack_object.event,
+                source_stamp=stack_object.source_stamp,
+            )
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=source_id_of(stack_object),
+                source_name=(
+                    stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+                ),
+                text=stripped,
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            return
+        if held:
+            consequence(game, stack_object)
+        else:
+            otherwise(game, stack_object)
+
+    return effect
+
+
+#: "put `<n>` `<kind>` counters on him/her/it/this `<noun>`. Then draw half
+#: `<n>` cards, rounded up/down." - Wan Shi Tong, Librarian's own ETB
+#: trigger for its `{X}{U}{U}` cost's X (CR 107.3m: `Game._etb_x_effect_text`
+#: already substitutes a literal number for a bare "X" here before this is
+#: ever reached, off the cast record's own announced X; `n` still accepts a
+#: literal "x" too, for a caller that reaches this with `ability.x_value`
+#: unsubstituted). CR 122.6/CR 121.2: the counters and the draw are one CR
+#: 608.2c instruction in the ability's own printed order, not two
+#: independent clauses `split_effect_clauses`'s ordinary period-split could
+#: read apart - "draw half `<n>` cards" names no target of its own to
+#: dispatch through the ordinary player-clause reader alone.
+_PUT_N_COUNTERS_ON_SELF_THEN_DRAW_HALF_N_RE = re.compile(
+    r"^put (?P<n>x|\d+) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on "
+    r"(?:him|her|it|this \w+)\.\s*then draw half (?P<n2>x|\d+) cards?, "
+    r"rounded (?P<round>up|down)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_put_n_counters_on_self_then_draw_half_n_clause(text: str) -> AbilityEffect | None:
+    """`_PUT_N_COUNTERS_ON_SELF_THEN_DRAW_HALF_N_RE`'s shape - see its own
+    docstring."""
+    match = _PUT_N_COUNTERS_ON_SELF_THEN_DRAW_HALF_N_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+    round_up = match.group("round") == "up"
+    n_word = match.group("n")
+    n2_word = match.group("n2")
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        n = ability.x_value if n_word.lower() == "x" or n2_word.lower() == "x" else int(n_word)
+        source = ability.source(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD and n > 0:
+            game.add_counters(source, kind, n)
+        player = game.controller_of(ability)
+        draw = halve(n, round_up=round_up)
+        if draw > 0:
+            game.draw_cards(player, draw)
 
     return effect
 
@@ -55650,6 +56159,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     dead_object_to_library = _parse_dead_object_to_library_clause(clause, for_spell=for_spell)
     if dead_object_to_library is not None:
         return dead_object_to_library
+    owner_shuffles_graveyard = _parse_owner_shuffles_graveyard_into_library_clause(
+        clause, for_spell=for_spell
+    )
+    if owner_shuffles_graveyard is not None:
+        return owner_shuffles_graveyard
     sacrifice_self = _parse_sacrifice_self_clause(clause, for_spell=for_spell)
     if sacrifice_self is not None:
         return sacrifice_self

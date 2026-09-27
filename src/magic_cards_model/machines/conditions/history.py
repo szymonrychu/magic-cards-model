@@ -366,6 +366,21 @@ def end_turn(game: "Game", previous_turns_taken: int, previous_active_player: st
         game.dealt_combat_damage_since_their_turn.discard(previous_active_player)
 
 
+def _commit_crime(game: "Game", controller: str) -> None:
+    """CR 700.13's crime, both halves of what a card watching it needs: the
+    turn-scoped fact an intervening "if" reads ("you've committed a crime
+    this turn") and the `GameEvent` a "Whenever you commit a crime" trigger
+    watches (`ExtraTriggerEvent.CRIME_COMMITTED`) - Magda, the Hoardmaster's
+    and Forsaken Miner's identical condition. One event per crime-committing
+    action, never per qualifying target: CR 700.13 is about the act of
+    casting/activating/triggering with a qualifying target, not a count of
+    how many targets qualified."""
+    from ..triggers import ExtraTriggerEvent, GameEvent
+
+    game.record_turn_fact(COMMITTED_CRIME, controller)
+    game.emit(GameEvent(event=ExtraTriggerEvent.CRIME_COMMITTED, player=controller))
+
+
 def record_crime(game: "Game", controller: str | None, targets: "list[TargetRef]") -> None:
     """CR 700.13: `controller` commits a crime if any of `targets` is an
     opponent, a permanent, spell or ability an opponent controls, or a card in
@@ -375,7 +390,7 @@ def record_crime(game: "Game", controller: str | None, targets: "list[TargetRef]
     for target in targets:
         if target.username is not None:
             if target.username != controller:
-                game.record_turn_fact(COMMITTED_CRIME, controller)
+                _commit_crime(game, controller)
                 return
             continue
         if target.card_id is None:
@@ -395,7 +410,7 @@ def record_crime(game: "Game", controller: str | None, targets: "list[TargetRef]
         else:
             continue
         if whose is not None and whose != controller:
-            game.record_turn_fact(COMMITTED_CRIME, controller)
+            _commit_crime(game, controller)
             return
 
 
@@ -1078,11 +1093,14 @@ def _discarded(context: "ConditionContext", match: re.Match[str]) -> bool:
 
 
 def _drew(context: "ConditionContext", match: re.Match[str]) -> bool:
-    """ "you drew two or more cards this turn" (CR 121.2), off
-    `Game.cards_drawn_this_turn`."""
-    needed = _count(match.group("count"))
-    if needed is None:
+    """ "you drew two or more cards this turn" (CR 121.2), "you've drawn more
+    than one card this turn" (Proft's Eidetic Memory's own intervening if) -
+    off `Game.cards_drawn_this_turn`."""
+    more_than = match.group("more_than")
+    threshold = _count(more_than) if more_than is not None else _count(match.group("count"))
+    if threshold is None:
         return False
+    needed = threshold + 1 if more_than is not None else threshold
     counts = context.game.cards_drawn_this_turn
     return any(counts.get(player, 0) >= needed for player in _players(context, match.group("who")))
 
@@ -1426,8 +1444,8 @@ READERS: tuple[ConditionReader, ...] = (
     # H4
     ConditionReader(
         re.compile(
-            rf"{_WHO} (?P<verbs>(?:gained|lost)(?: (?:and|or) (?:gained|lost))?) "
-            rf"{_N_OR_MORE}life {_WHEN}"
+            rf"{_WHO}(?:'ve| have| has)? "
+            rf"(?P<verbs>(?:gained|lost)(?: (?:and|or) (?:gained|lost))?) {_N_OR_MORE}life {_WHEN}"
         ),
         _life_this_turn,
     ),
@@ -1493,7 +1511,8 @@ READERS: tuple[ConditionReader, ...] = (
     ),
     ConditionReader(
         re.compile(
-            rf"{_WHO}(?:'ve| have| has)? (?:drew|drawn) (?P<count>{COUNT}) or more cards this turn"
+            rf"{_WHO}(?:'ve| have| has)? (?:drew|drawn) "
+            rf"(?:(?P<count>{COUNT}) or more|more than (?P<more_than>{COUNT})) cards? this turn"
         ),
         _drew,
     ),

@@ -1553,3 +1553,24 @@ def test_a_snapshot_written_before_ecl_t8_zone_resets_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `CardState` gained `unlocked_doors` (CR
+#: 709.5c's Room designations - Unholy Annex // Ritual Chamber) - R0a-T6.
+_SCHEMA_VERSION_BEFORE_ROOM_UNLOCKED_DOORS = 95
+
+
+def test_a_snapshot_written_before_room_unlocked_doors_is_refused() -> None:
+    """A version-95 dump has no `unlocked_doors` on its card states: decoded
+    as current, a Room permanent would read as having neither door
+    unlocked, and "when you unlock this door" would never trigger again for
+    a game resumed from that snapshot. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ROOM_UNLOCKED_DOORS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ROOM_UNLOCKED_DOORS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ROOM_UNLOCKED_DOORS}",
+    ):
+        Game.model_validate(dumped)

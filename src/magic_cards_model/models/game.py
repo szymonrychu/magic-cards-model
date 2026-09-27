@@ -4134,7 +4134,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 95
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 96
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4256,6 +4256,8 @@ class Game(EngineModel):
     #: (Morningtide's Light's own "Until your next turn, prevent all damage
     #: that would be dealt to you.", CR 611.2a, ecl T8; renumbered from 92 at
     #: integration).
+    #: 96: `CardState` gained `unlocked_doors` (CR 709.5c's Room designations,
+    #: R0a-T6).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -11714,6 +11716,28 @@ class Game(EngineModel):
             card_state.bind_to_game(self)
             self.battlefield.append(card_state)
 
+            if was_cast and "Room" in card_state.subtypes:
+                # CR 709.5d: "A permanent with a shared type line is given
+                # the '[left/right] half unlocked' designation as it enters
+                # the battlefield if its [that] half was cast as a spell."
+                # `face_played` still names the cast half here - `move_to`
+                # above never clears it (see its own docstring) - except
+                # when the front half was cast with no explicit choice
+                # (CR 709.3's choice is still made, just left at its own
+                # default), where `Casting.cast` sets it back to `None`
+                # unconditionally; the front face's own name is that
+                # default (`test_split_cards.py`'s own "no face chosen
+                # already reads as its front half"). Done only now, once
+                # the permanent is actually on `self.battlefield` - `Game.
+                # emit`'s own `sources` is read straight off that list, so
+                # a door unlocked before this point would never be asked
+                # about the very event it just caused.
+                front_face = card_state.card.front_face
+                cast_face = card_state.face_played or (
+                    front_face.name if front_face is not None else card_state.card.name
+                )
+                self.unlock_door(card_state, cast_face, controller=controller)
+
             if attach_to is not None:
                 card_state.attach_to(attach_to)  # CR 608.3c, 701.3a
 
@@ -13036,6 +13060,57 @@ class Game(EngineModel):
             spend=spend,
         )
 
+    def may_pay_mana_and_life(
+        self,
+        player: Player | str,
+        cost: ManaCost,
+        life: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+        spend: ManaSpend | None = None,
+        prompt: str | None = None,
+    ) -> bool:
+        """ "You may pay `<mana>` and `<N>` life." (CR 603.12/118.12, CR
+        119.4) - Zoraline, Cosmos Caller's own "you may pay {W}{B} and 2
+        life", the combined-cost twin of `may_pay_mana_cost`: one CR 608.2d
+        question for the whole thing, mana tapped from untapped sources the
+        same way that one taps them (CR 605.3a), paid together with the life
+        or not at all. `may_pay_unless_cost` is the wrong tool for this -
+        it reads mana `payable` off the floating pool alone, which is right
+        for a cost paid as part of announcing a spell or ability but wrong
+        here: a reflexive mid-resolution "you may pay" has no floating mana
+        yet and has to be offered the untapped sources it can still tap,
+        exactly as `may_pay_mana_cost` already is.
+
+        Returns whether the whole cost was paid, and pays it.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        sources = self._mana_sources_while_resolving(player)
+        mana_payable = (
+            plan_mana_payment(cost, sources, game=self, payer=player.username, spend=spend)
+            is not None
+        )
+        payable = mana_payable and (life <= 0 or player.life >= life)
+        full_prompt = prompt or f"pay {cost} and {life} life"
+        answer = self.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=player.username,
+                prompt=full_prompt,
+                source=source,
+                source_id=source_id,
+                affirmative_is_legal=payable,
+            )
+        )
+        if not answer:
+            return False
+        self._pay_mana_while_resolving(player, cost, sources, prompt=full_prompt, spend=spend)
+        if life > 0:
+            self.lose_life(player, life)
+        return True
+
     def _may_pay_mana_while_resolving(
         self,
         player: Player,
@@ -13890,6 +13965,18 @@ class Game(EngineModel):
                 and search_prohibition_source(self, caused_by) is not None
             ):
                 return []
+
+            if zone is Zone.LIBRARY:
+                # CR 701.23a: this is the one function every library search in
+                # the engine goes through, so it is the one place to raise
+                # "Whenever an opponent searches their library, ..." (Wan Shi
+                # Tong, Librarian; Ob Nixilis, Unshackled) - fired for the
+                # search itself, before the find is even chosen, the same way
+                # `Game.ring_tempts` raises its own event for an action rather
+                # than for its outcome.
+                self.emit(
+                    GameEvent(event=ExtraTriggerEvent.SEARCHES_LIBRARY, player=player.username)
+                )
 
             candidates = [state for state in player.cards_in(zone) if matches(state)]
             limit = min(count, len(candidates))
@@ -20095,6 +20182,46 @@ class Game(EngineModel):
         self.play_permissions = [
             permission for permission in self.play_permissions if permission.card_id != copy_id
         ]
+
+    def unlock_door(
+        self, permanent: CardState, door_name: str | None, *, controller: str | None = None
+    ) -> bool:
+        """CR 709.5f: give `permanent` the appropriate unlocked designation
+        for the door named `door_name` (a face's own printed name).
+
+        The one door-unlocking function every route runs through: `Game.
+        enter_the_battlefield`'s own CR 709.5d (the half that was cast), CR
+        709.5e's special action (`legal_actions.py`'s own enumeration, paid
+        through `machines/cost.py`), and any future "unlock [it/the other
+        door]" resolution effect (CR 709.5f) alike - so CR 709.5h's own
+        trigger ("Whenever a player unlocks this door") fires the same way
+        regardless of which of those caused it.
+
+        CR 709.5c: "Otherwise, that half is said to be 'locked.'" Giving an
+        already-unlocked door the designation again is a no-op - the
+        permanent does not have two copies of the designation to have one
+        taken away later, and CR 709.5h's trigger is for a door that is
+        *given* the designation, not one that already had it.
+
+        Returns whether the designation was actually given (False for a
+        non-Room permanent, an unrecognised door name, one already
+        unlocked, or a permanent not on the battlefield)."""
+        if permanent.zone is not Zone.BATTLEFIELD or door_name is None:
+            return False
+        if "Room" not in permanent.subtypes:
+            return False
+        if door_name in permanent.unlocked_doors:
+            return False
+        permanent.unlocked_doors = (*permanent.unlocked_doors, door_name)
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.DOOR_UNLOCKED,
+                subject_id=permanent.id,
+                subject_name=door_name,
+                player=controller or permanent.controller,
+            )
+        )
+        return True
 
     def become_monstrous(self, permanent: CardState, amount: int) -> bool:
         """CR 701.37a: "Monstrosity N" means "If this permanent isn't
