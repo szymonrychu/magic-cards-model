@@ -26847,7 +26847,9 @@ def _parse_then_exile_self_and_return_clause(text: str) -> AbilityEffect | None:
 
 #: "<discard or mill>. If you discarded a <quality> card this way, <effect>." /
 #: "... If at least one <quality> card is milled this way, <effect>." - an
-#: instruction gated on what the sentence before it moved:
+#: instruction gated on what the sentence before it moved, with an optional
+#: "Otherwise, <effect>." else-branch (CR 608.2c: later text modifying the
+#: meaning of earlier text) for when it did not:
 #:
 #:   Vohar, Vodalian Desecrator    "Draw a card, then discard a card. If you
 #:                                 discarded an instant or sorcery card this
@@ -26856,16 +26858,28 @@ def _parse_then_exile_self_and_return_clause(text: str) -> AbilityEffect | None:
 #:   Liliana, Untouched by Death   "Mill three cards. If at least one Zombie
 #:                                 card is milled this way, each opponent loses
 #:                                 2 life and you gain 2 life."
+#:   Lorehold Excavation           "At the beginning of your end step, mill a
+#:                                 card. If a land card was milled this way,
+#:                                 you gain 1 life. Otherwise, this enchantment
+#:                                 deals 1 damage to each opponent."
 #:
 #: "This way" is anaphora for the cards the first sentence itself moved (CR
 #: 701.17c: a milled card is found in the zone it moved to), so the reader
 #: watches the controller's graveyard and exile across that one sentence
-#: rather than trusting a count.
+#: rather than trusting a count. `rest` is non-greedy specifically so it stops
+#: before a trailing "Otherwise, ..." sentence rather than swallowing it -
+#: without that, `rest` and `otherwise` are handed to `_ability_effect_or_
+#: notice` as one ordinary multi-sentence clause, whose bare-period split
+#: quietly drops whichever half no per-clause parser reads instead of
+#: refusing the whole paragraph, so the else-branch never runs and never even
+#: shows as a notice (found on Lorehold Excavation by `support.ignored_
+#: rider`'s ablation probe).
 _THEN_IF_MOVED_THIS_WAY_RE = re.compile(
     r"^(?P<prefix>.+?\.)\s*if (?:you (?P<verb_you>discarded|milled) (?:an?|one or more) "
     r"(?P<quality_you>[a-z ,'-]+?) cards? this way"
     r"|(?:at least one|an?|one or more) (?P<quality>[a-z ,'-]+?) cards? "
-    r"(?:is|was|are|were) (?P<verb>discarded|milled) this way), (?P<rest>.+)$",
+    r"(?:is|was|are|were) (?P<verb>discarded|milled) this way), (?P<rest>.+?)\."
+    r"(?:\s*otherwise,\s*(?P<otherwise>.+?)\.?)?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -26891,10 +26905,11 @@ def _moved_quality_understood(quality: str) -> bool:
 
 def _parse_then_if_moved_this_way_clause(text: str) -> AbilityEffect | None:
     """`_THEN_IF_MOVED_THIS_WAY_RE`'s shape - the first sentence runs, then
-    the rest runs once if any card it moved to the controller's graveyard (or
+    exactly one of `rest` / an optional "Otherwise, ..." branch runs,
+    depending on whether any card it moved to the controller's graveyard (or
     exile, where a replacement sent it) matches the quality (CR 608.2c). A
     leading sentence that is not a discard or a mill, a quality this engine
-    cannot check, or an unreadable rest leaves the whole paragraph unread."""
+    cannot check, or an unreadable branch leaves the whole paragraph unread."""
     match = _THEN_IF_MOVED_THIS_WAY_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
@@ -26911,10 +26926,12 @@ def _parse_then_if_moved_this_way_clause(text: str) -> AbilityEffect | None:
         return None
     leading = _ability_effect_or_notice(prefix_text)
     rest = _ability_effect_or_notice(match.group("rest").strip())
-    if leading is None or rest is None:
+    otherwise_text = match.group("otherwise")
+    otherwise = _ability_effect_or_notice(otherwise_text.strip()) if otherwise_text else None
+    if leading is None or rest is None or (otherwise_text is not None and otherwise is None):
         return None
-    for part in (leading, rest):
-        if getattr(part, "__name__", "").endswith("notice_only"):
+    for part in (leading, rest, otherwise):
+        if part is not None and getattr(part, "__name__", "").endswith("notice_only"):
             return part
     matches = _quality_matcher(quality)
 
@@ -26938,6 +26955,8 @@ def _parse_then_if_moved_this_way_clause(text: str) -> AbilityEffect | None:
         ]
         if any(matches(card) for card in moved):
             rest(game, ability)
+        elif otherwise is not None:
+            otherwise(game, ability)
 
     return effect
 

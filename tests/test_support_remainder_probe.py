@@ -244,10 +244,19 @@ def _ablation_hits():
     return hits
 
 
-def test_the_ablation_probe_finds_an_ignored_rider_on_two_printings():
+def test_the_ablation_probe_finds_an_ignored_rider_in_the_pool():
+    """The floor was 2 (Lorehold Excavation and Hidden Blade) until this
+    session fixed Lorehold Excavation's own swallowed "Otherwise" branch
+    (`_parse_then_if_moved_this_way_clause`); Hidden Blade's separate,
+    unrelated "attach it to target creature. If that creature is an
+    Assassin, it gains deathtouch until end of turn." swallow
+    (`_attach_self_to_target_effect`'s target-description regex matching past
+    its own sentence boundary) is untouched and still real, so the floor
+    drops to 1 rather than 0 - still chosen from the pool by what the probe
+    says, never by name."""
     hits = _ablation_hits()
     names = {printing.name for printing, _, _ in hits}
-    assert len(names) >= 2, hits
+    assert len(names) >= 1, hits
     for printing, _, rider in hits:
         assert any(
             clause.outcome == "notice" and clause.reason == _REMAINDER + rider
