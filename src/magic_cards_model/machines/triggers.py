@@ -381,6 +381,21 @@ class GameEvent(EngineModel):
     """The printing of the subject, kept so a cast trigger can ask what kind of
     spell it was after the card has moved on."""
 
+    subject_stamp: UUID | None = None
+    """The subject's own `CardState.zone_change_stamp` at the moment of the
+    event - CAST_SPELL's own (`Game._put_on_stack`), so `_cast_trigger_x_
+    value`/`_cast_trigger_mana_spent_x_value` can read `Game.cast_record_as_
+    last_known` off it once the cast spell has left the stack (CR 608.2h): a
+    countered spell moves to its owner's graveyard (CR 701.6a), which stamps
+    a new `zone_change_stamp` and makes `Game.cast_record_of` - keyed by the
+    *current* stamp - find nothing, even though the Oracle ruling for these
+    cast triggers (Hydroid Krasis, Genesis Hydra, Old Stickfingers,
+    Geometer's Arthropod) is that the trigger still resolves with the cast
+    X. `subject_id` alone is not enough: `Game.find_by_id` still finds the
+    same card object after it moves, so a caller that read `cast_record_of`
+    off it directly (rather than through this stamp) got `None` back with no
+    signal anything was wrong."""
+
     subject_types: tuple[Type, ...] | None = None
     """The subject's card types *as they actually are* right now (CR 712.8f,
     712.8a, 712.12), not the raw printing's front-face-only types.
