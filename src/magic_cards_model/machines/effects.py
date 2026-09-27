@@ -12596,6 +12596,18 @@ _CARD_TYPE_PAIR_AND_RE = re.compile(
 )
 
 
+#: A sentence that opens "[Then ]if `<condition>`," and whose consequence
+#: runs to the sentence's end with no further comma (a comma would mean a
+#: compound condition or a list this does not judge) - see
+#: `split_effect_clauses`. CR 118.12's "if you do/don't" riders are left to
+#: the optional-action readers that already pair them with their "you may".
+_IF_SENTENCE_CONSEQUENCE_RE = re.compile(
+    r"(?P<head>(?:^|(?<=\.\s))(?:then\s+)?if (?!(?:you|they|a player|that player) "
+    r"(?:do|does|don't|doesn't)\b)[^,.]+,\s*)(?P<consequence>[^.,]*)(?=\.|$)",
+    re.IGNORECASE,
+)
+
+
 def split_effect_clauses(text: str) -> list[str]:
     """Break an effect into the clauses CR 608.2c executes in order.
 
@@ -12665,6 +12677,15 @@ def split_effect_clauses(text: str) -> list[str]:
     )
     masked = _LOSE_ALL_AND_BASE_PT_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
+    )
+    # "Then if it has two or more velocity counters on it, sacrifice it and
+    # draw two cards." (Daredevil Dragster): the condition governs the whole
+    # consequence, both halves of its "and" (CR 608.2c) - kept one clause so
+    # `_parse_condition_clause` reads it whole, never split into a
+    # conditional sacrifice and an unconditional draw.
+    masked = _IF_SENTENCE_CONSEQUENCE_RE.sub(
+        lambda m: m.group("head") + m.group("consequence").replace(" and ", _AND_SENTINEL),
+        masked,
     )
     split = (
         re.sub(
@@ -16745,15 +16766,33 @@ def _parse_counter_on_it_trigger_subject_clause(clause: str) -> TargetedClause |
         if not isinstance(stack_object, AbilityOnStack):
             return
         event = stack_object.event
-        if event is None or event.subject_id is None:
+        if event is not None and event.subject_id is not None:
+            subject = game.find_by_id(event.subject_id)
+        elif _names_its_source(stack_object):
+            # "At end of combat, if this Vehicle attacked or blocked this
+            # combat, put a velocity counter on it." (Daredevil Dragster): a
+            # step trigger has no event subject, so "it" is the only object
+            # the ability has named - its own source (CR 608.2c).
+            subject = stack_object.source(game)
+        else:
             return
-        subject = game.find_by_id(event.subject_id)
         if not isinstance(subject, CardState) or subject.zone is not Zone.BATTLEFIELD:
             return
         if amount > 0:
             game.add_counters(subject, kind, amount)
 
     return effect
+
+
+def _names_its_source(ability: AbilityOnStack) -> bool:
+    """Whether a triggered ability's own trigger condition or intervening
+    "if" names its source by a self-reference ("this Vehicle", "this
+    creature") - the antecedent a later bare "it" then refers to."""
+    printed = ability.ability
+    if not isinstance(printed, TriggeredAbility):
+        return False
+    words = f"{printed.condition or ''} {printed.intervening_if or ''}".lower()
+    return re.search(r"\bthis [a-z]+\b", words) is not None
 
 
 #: "If that land is a `<basic land type>`, add `<mana>`." - Koth, the
