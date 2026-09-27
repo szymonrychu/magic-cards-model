@@ -194,3 +194,38 @@ def test_suncleanser_takes_an_opponents_poison_and_blocks_more_while_it_remains(
     scenario.game.put_into_graveyard(suncleanser)
     scenario.game.add_player_counters("bob", Counter.POISON, 1)
     assert bob.counter_count(Counter.POISON) == 1, "CR 611.2b: the duration ended"
+
+
+def _suncleansed_bob():
+    scenario = Scenario().player("alice", hand=[SUNCLEANSER]).player("bob").build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_mode(LOSES_ALL, username="alice")
+    scenario.will_choose_targets("bob", username="alice")
+    suncleanser = scenario.put_onto_battlefield(SUNCLEANSER, "alice")
+    scenario.pass_until_resolved()
+    return scenario, suncleanser
+
+
+def test_suncleansers_player_prohibition_survives_a_save_and_load():
+    """The recorded "can't get counters" is game state: a decoded game still
+    refuses bob's counters while the same Suncleanser remains."""
+    from magic_cards_model.models.game import Game
+
+    scenario, _ = _suncleansed_bob()
+    decoded = Game.model_validate(scenario.game.model_dump(mode="json"))
+
+    decoded.add_player_counters("bob", Counter.POISON, 1)
+    assert decoded.player("bob").counter_count(Counter.POISON) == 0
+
+
+def test_suncleansers_player_prohibition_is_dropped_once_its_duration_ends():
+    """CR 611.2b: the "for as long as" duration ended with Suncleanser leaving
+    the battlefield, so the recorded effect is gone from the game too - not
+    kept inert in every later snapshot."""
+    scenario, suncleanser = _suncleansed_bob()
+    assert scenario.game.casting_rule_effects
+
+    scenario.game.put_into_graveyard(suncleanser)
+    scenario.game.check_state_based_actions()
+
+    assert scenario.game.casting_rule_effects == []

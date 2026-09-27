@@ -162,3 +162,35 @@ def test_elite_spellbinder_shares_the_identical_template():
     permission = next(p for p in scenario.game.play_permissions if p.card_id == bolt.id)
     assert permission.player == "bob"
     assert str(permission.cost_increase) == "{2}"
+
+
+def test_the_cost_increase_permission_survives_a_save_and_load():
+    """The recorded "costs {2} more" rides the play permission through a
+    dump and decode of the game."""
+    from magic_cards_model.models.game import Game
+
+    scenario = (
+        Scenario()
+        .player("alice", hand=[SPELLBINDER], battlefield=["Plains", "Plains", "Plains"])
+        .player("bob", hand=["Lightning Bolt", "Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    lands = scenario.untapped_sources("Plains", "Plains", "Plains")
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    casting = scenario.cast(SPELLBINDER)
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *lands)
+    scenario.put_on_stack(casting)
+    scenario.choose_trigger_targets(SPELLBINDER, ["bob"])
+    scenario.will_take_the_may(True, username="alice", source=SPELLBINDER)
+    scenario.will_choose_cards(bolt, username="alice", source=SPELLBINDER)
+    scenario.resolve_top()
+    scenario.game.put_triggers_on_stack()
+    scenario.pass_until_resolved()
+
+    decoded = Game.model_validate(scenario.game.model_dump(mode="json"))
+
+    permission = next(p for p in decoded.play_permissions if p.card_id == bolt.id)
+    assert permission.player == "bob"
+    assert str(permission.cost_increase) == "{2}"

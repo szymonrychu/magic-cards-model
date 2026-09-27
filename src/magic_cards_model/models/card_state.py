@@ -3214,7 +3214,7 @@ class CardState(EngineModel):
         """
         counters: dict[str, int] = {}
         if self.is_planeswalker:
-            printed = _as_number(self._printed_loyalty)
+            printed = self.printed_loyalty
             if printed:
                 counters[str(Counter.LOYALTY)] = printed
         if self.is_saga and self.chapter_numbers:
@@ -3231,6 +3231,11 @@ class CardState(EngineModel):
         effects could apply."""
         for kind, amount in self.intrinsic_entering_counters().items():
             self.counters.add(kind, amount)
+
+    @property
+    def printed_loyalty(self) -> int | None:
+        """The loyalty number printed on the face that is up (CR 209.1), or None."""
+        return _as_number(self._printed_loyalty)
 
     @property
     def printed_defense(self) -> int | None:

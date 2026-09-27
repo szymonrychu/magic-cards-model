@@ -6221,12 +6221,20 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             # additional effect of the replacement, not a copiable value.
             for kind, amount in exception.enters_with_counters:
                 event.counters[kind] = event.counters.get(kind, 0) + amount
-        defense = copiable.defense if copiable is not None else chosen[0].printed_defense
-        if Type.BATTLE in copied_types and defense:
-            # CR 310.4b: a battle's "enters with a number of defense counters
-            # on it equal to its printed defense number" is an intrinsic
-            # ability, so a permanent entering as a copy of one has it too.
-            event.counters[Counter.DEFENSE] = event.counters.get(Counter.DEFENSE, 0) + defense
+        # CR 306.5b / CR 714.3a / CR 310.4b: a planeswalker's loyalty, a
+        # Saga's lore counter and a battle's defense are intrinsic "enters
+        # with" abilities of what is copied, read off its copiable values
+        # (CR 707.2) - never the copier's own printing, which
+        # `Game.enter_the_battlefield` leaves unread for a copy.
+        values = copiable if copiable is not None else printed_characteristics(chosen[0])
+        copied_subtypes = set(values.subtypes) | set(exception.added_subtypes)
+        for kind, amount in (
+            (Counter.LOYALTY, values.loyalty if Type.PLANESWALKER in copied_types else None),
+            (Counter.LORE, 1 if "Saga" in copied_subtypes else None),
+            (Counter.DEFENSE, values.defense if Type.BATTLE in copied_types else None),
+        ):
+            if amount:
+                event.counters[kind] = event.counters.get(kind, 0) + amount
         built_effects = _become_a_copy_builder(
             until_eot=False,
             name_override=exception.name,

@@ -296,6 +296,11 @@ class Characteristics(EngineModel):
     #: counters (CR 310.4b). On the battlefield a battle's defense is its
     #: counters (CR 310.4c), read off the permanent, not this.
     defense: int | None = None
+    #: The printed loyalty number (CR 209.1) - a copiable value (CR 707.2),
+    #: which is what a permanent entering as a copy of a planeswalker enters
+    #: with in loyalty counters (CR 306.5b). On the battlefield a
+    #: planeswalker's loyalty is its counters (CR 306.5c), not this.
+    loyalty: int | None = None
     #: Counters on the permanent. Not a characteristic - it is state the layer
     #: system reads (CR 613.4c) - but it has to travel with the object.
     counters: dict[str, int] = Field(default_factory=dict)
@@ -2053,10 +2058,12 @@ class BecomeACopy(ModificationBase):
     power: int | None = None
     toughness: int | None = None
     defense: int | None = None
+    loyalty: int | None = None
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
         return chars.with_(
             defense=self.defense,
+            loyalty=self.loyalty,
             name=self.name,
             mana_value=self.mana_value,
             supertypes=self.supertypes,
@@ -2541,6 +2548,7 @@ def printed_characteristics(
         power=power,
         toughness=toughness,
         defense=state.printed_defense,
+        loyalty=state.printed_loyalty,
         counters=on_the_permanent,
         is_token=state.token,
         zone_change_stamp=state.zone_change_stamp,
@@ -4860,6 +4868,7 @@ def _become_a_copy_builder(
             power=power_override if power_override is not None else copied.power,
             toughness=toughness_override if toughness_override is not None else copied.toughness,
             defense=copied.defense,
+            loyalty=copied.loyalty,
         )
 
         return [

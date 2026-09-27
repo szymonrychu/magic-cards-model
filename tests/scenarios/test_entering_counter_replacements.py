@@ -228,13 +228,29 @@ def test_winding_constrictor_reaches_only_artifacts_and_creatures():
     assert hydra.counter_count(Counter.PLUS_ONE) == 5
 
 
-def test_plus_one_then_doubling_in_the_order_the_controller_picks():
-    """CR 616.1: alice orders them. Doubling Season first then Doc Samson is
-    3 -> 6 -> 7; the reverse is 3 -> 4 -> 8. The harness's default order is
-    whichever the controller is asked about first, so assert it is one of
-    the two legal results and never the unmodified or singly-modified one."""
-    _, walker = _enter(WALKER, alice=[SAMSON, DOUBLING])
-    assert walker.counter_count(Counter.LOYALTY) in (7, 8)
+def _enter_ordering(first: str) -> int:
+    """Liliana enters under Doc Samson and Doubling Season, alice answering
+    CR 616.1's order question with `first`; returns her loyalty."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=[WALKER], battlefield=[SAMSON, DOUBLING])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_mode(first, username="alice")
+    return scenario.put_onto_battlefield(WALKER, "alice").counter_count(Counter.LOYALTY)
+
+
+def test_doubling_first_then_plus_one_when_the_controller_picks_doubling():
+    """CR 616.1: alice orders them. Doubling Season first, then Doc Samson:
+    3 -> 6 -> 7."""
+    assert _enter_ordering(DOUBLING) == 7
+
+
+def test_plus_one_first_then_doubling_when_the_controller_picks_samson():
+    """The reverse order: Doc Samson first, then Doubling Season: 3 -> 4 -> 8."""
+    assert _enter_ordering(SAMSON) == 8
 
 
 # -- Solemnity ----------------------------------------------------------------

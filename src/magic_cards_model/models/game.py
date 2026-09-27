@@ -11814,8 +11814,12 @@ class Game(EngineModel):
             stamp_on_the_stack = card_state.zone_change_stamp
             card_state.move_to(Zone.BATTLEFIELD, place_intrinsic_counters=False)
             # CR 306.5b / CR 310.4b / CR 714.3a: read off the face now up,
-            # before anything else changes what the object is.
-            intrinsic_counters = card_state.intrinsic_entering_counters()
+            # before anything else changes what the object is. A permanent
+            # entering as a copy has the copied object's instead (CR 707.2),
+            # which `_enters_as_copy` already put on the event.
+            intrinsic_counters = (
+                card_state.intrinsic_entering_counters() if event.entering_as_copy is None else {}
+            )
             if was_cast:
                 # CR 400.7d: the permanent may read the spell it was, so the
                 # record follows this one move and no later one.
@@ -18555,11 +18559,35 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             return self._check_state_based_actions_impl()
 
+    def _drop_ended_while_source_rules(self) -> None:
+        """CR 611.2b: a recorded "for as long as this remains on the
+        battlefield" rule ends when that object leaves (CR 400.7: a return is
+        a new object). `player_counters_prohibited` already stops reading an
+        ended one; this drops it from the game so it is not carried in every
+        later snapshot. Every point state-based actions are checked is a point
+        the game looks, the same way daybound is caught below."""
+
+        def running(effect: CastingRuleEffect) -> bool:
+            if effect.while_source_id is None:
+                return True
+            source = self.find_by_id(effect.while_source_id)
+            return (
+                source is not None
+                and source.zone is Zone.BATTLEFIELD
+                and source.zone_change_stamp == effect.while_source_stamp
+            )
+
+        if any(not running(effect) for effect in self.casting_rule_effects):
+            self.casting_rule_effects = [
+                effect for effect in self.casting_rule_effects if running(effect)
+            ]
+
     def _check_state_based_actions_impl(self) -> list[CardState]:
         """The rest of `check_state_based_actions` - see its own docstring
         for why it is split out."""
         if self.is_over:
             return []
+        self._drop_ended_while_source_rules()
         # CR 702.145c/d/f/g are not state-based actions - each "happens
         # immediately" any time its condition is true - but every point the
         # game checks state-based actions is a point it looks, so a permanent
