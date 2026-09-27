@@ -65156,6 +65156,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     from .copy_effects import copy_ability_effect
     from .hand_reveal_exile import parse_reveal_some_then_choose_one
     from .resolving_exile import resolving_exile_ability_effect
+    from .sieges import exile_then_cast_transformed_effect
 
     for reader in (
         _parse_if_self_isnt_a_creature_clause,
@@ -65167,6 +65168,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
         resolving_exile_ability_effect,
         parse_reveal_some_then_choose_one,
         control_change_ability_effect,
+        exile_then_cast_transformed_effect,
     ):
         effect = reader(effect_text)
         if effect is not None:

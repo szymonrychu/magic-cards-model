@@ -6213,6 +6213,19 @@ _BOARD_WIDE_TYPE_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "As long as this creature is on the battlefield, it's a land in addition
+#: to its other types." (Awakened Skyclave) and the same self type grant
+#: printed without the battlefield clause. A static ability functions only
+#: on the battlefield (CR 113.6), so "as long as this ... is on the
+#: battlefield" states no further condition. Layer 4 (CR 613.1d), additive by
+#: CR 205.1b. Every word must be a CR 205.2a card type or a CR 205.3 subtype.
+_SELF_TYPE_GRANT_RE = re.compile(
+    r"^(?:as long as this [a-z]+ is on the battlefield, )?"
+    r"(?:it's|it is|this [a-z]+ is) (?:also )?an? (?P<words>[a-z][a-z -]*?) "
+    r"in addition to its other types\.?$",
+    re.IGNORECASE,
+)
+
 #: The five basic land types as a sentence spells them, singular or plural, to
 #: the stored subtype - `add_subtype`/`set_basic_land_type` both want "Island",
 #: never "Islands" (CR 205.3i's land types are stored singular).
@@ -6323,6 +6336,58 @@ def _each_land_is_builder(subtype: str, line: str) -> EffectBuilder:
         ]
 
     return builder
+
+
+def _self_type_grant_builder(
+    types: tuple[Type, ...], subtypes: tuple[str, ...], line: str
+) -> EffectBuilder:
+    """`_SELF_TYPE_GRANT_RE`'s shape: the source itself gains each card type
+    and subtype named, keeping every other (CR 205.1b), in layer 4
+    (CR 613.1d)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        modifications = [add_type(each) for each in types] + [
+            add_subtype(each) for each in subtypes
+        ]
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: is also {' '.join([*subtypes, *types])}",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                order=order,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=modification,
+            )
+            for order, modification in enumerate(modifications)
+        ]
+
+    return builder
+
+
+def _self_type_grant(sentence: str) -> EffectBuilder | None:
+    """`_SELF_TYPE_GRANT_RE` read, or `None` when a word is neither a card
+    type nor a subtype."""
+    match = _SELF_TYPE_GRANT_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    types: list[Type] = []
+    subtypes: list[str] = []
+    for word in match.group("words").split():
+        card_type = _card_type_word(word)
+        if card_type is not None:
+            types.append(card_type)
+        elif word.lower() in subtype_vocabulary():
+            subtypes.append(word)
+        else:
+            return None
+    return _self_type_grant_builder(tuple(types), tuple(subtypes), sentence)
 
 
 def _board_wide_type_grant_builder(
@@ -13248,6 +13313,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
     if match := _EACH_LAND_IS_RE.fullmatch(sentence):
         subtype = _BASIC_LAND_TYPE_WORDS[match.group("subtype").lower()]
         return _each_land_is_builder(subtype, sentence)
+    if (self_type_grant := _self_type_grant(sentence)) is not None:
+        return self_type_grant
     if match := _BOARD_WIDE_TYPE_GRANT_RE.fullmatch(sentence):
         subject = _card_type_word(match.group("subject"))
         granted = _card_type_word(match.group("granted"))

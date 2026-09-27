@@ -4258,7 +4258,9 @@ class Game(EngineModel):
     #: integration).
     #: 96: `CardState` gained `protector` (CR 310.9); a creature attacking a
     #: battle is now defended by its protector, not its controller (CR
-    #: 310.9d, 508.5), and CR 704.5x/704.5y run as state-based actions.
+    #: 310.9d, 508.5), and CR 704.5x/704.5y run as state-based actions. Also
+    #: battles' defense counters (CR 310.4b), CR 704.5v/w, the Siege defeat
+    #: trigger (CR 310.12b) and `Casting.transformed` (CR 712.11a).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6930,7 +6932,11 @@ class Game(EngineModel):
 
         card_state.controller = controller
         stamp_before = card_state.zone_change_stamp
+        # CR 712.11a: a spell announced transformed is already on the stack
+        # back face up, and stays that way.
+        cast_transformed = card_state.zone is Zone.STACK and card_state.transformed
         card_state.move_to(Zone.STACK)
+        card_state.transformed = cast_transformed
         self._carry_cast_record(card_state, stamp_before)
         if card_state not in self.stack:
             self.stack.append(card_state)
@@ -7517,6 +7523,8 @@ class Game(EngineModel):
                 spell,
                 spell.controller or self.active_player.username,
                 tapped=sneak_defender is not None,
+                # CR 712.13: "the same face up that was face up on the stack".
+                transformed=spell.transformed,
                 was_cast=True,
                 attach_to=attachment,
             )
@@ -8134,6 +8142,7 @@ class Game(EngineModel):
         play: bool = False,
         alternative_cost: TotalCost | None = None,
         pays_mana_cost: bool = False,
+        transformed: bool = False,
     ) -> CardState | None:
         """A resolving "you may cast/play <card> without paying its mana cost"
         (CR 608.2d, CR 608.2g): one `MAY`, legal only when the cast or play is
@@ -8177,6 +8186,7 @@ class Game(EngineModel):
             mana_value_below=mana_value_below,
             alternative_cost=alternative_cost,
             pays_mana_cost=pays_mana_cost,
+            transformed=transformed,
         )
 
     def _can_play_land_during_resolution(self, username: str) -> bool:
@@ -8233,6 +8243,7 @@ class Game(EngineModel):
         alternative_cost: TotalCost | None = None,
         pays_mana_cost: bool = False,
         exile_instead_of_graveyard: bool = False,
+        transformed: bool = False,
     ) -> CardState | None:
         """CR 608.2g: cast `card` without paying its mana cost while the
         resolving spell or ability that allows it is still resolving - the one
@@ -8273,6 +8284,9 @@ class Game(EngineModel):
         sources the same way a resolution cast's other owed mana is
         (`_pay_resolution_cast_mana`), an X in it chosen by the caster (CR
         107.3a).
+
+        `transformed` casts a nonmodal double-faced card with its back face up
+        (CR 712.11a, 712.8c) - a Siege's "cast it transformed" (CR 310.12b).
 
         Returns `None`, with the card back where it was, when the cast is not
         legal: no option qualifies, a mandatory announcement has no legal
@@ -8330,6 +8344,8 @@ class Game(EngineModel):
             with self._id_allocator_scope():
                 casting = Casting(spell=card, caster=caster, origin_zone=card.zone, game=self)
                 casting.use_permission()
+                if transformed:
+                    casting.cast_transformed()
                 if alternative_cost is not None:
                     casting.use_triggered_alternative_cost(keyword or "", alternative_cost)
                     x_value = self._announce_alternative_cost_x(card, caster, alternative_cost)
@@ -11482,6 +11498,23 @@ class Game(EngineModel):
         own write half."""
         counts = self.turn_counts.setdefault(fact, {})
         counts[player] = counts.get(player, 0) + amount
+
+    def note_last_counter_removed(self, permanent: CardState, kind: str) -> None:
+        """`permanent`'s last `kind` counter was just removed: raise
+        `ExtraTriggerEvent.LAST_COUNTER_REMOVED` - CR 310.12b's Siege defeat
+        trigger, "When the last defense counter is removed from this
+        permanent". `CardState.remove_counters` calls this for every removal
+        that empties a kind, whatever did the removing."""
+        self.emit(
+            GameEvent(
+                event=ExtraTriggerEvent.LAST_COUNTER_REMOVED,
+                subject_id=permanent.id,
+                subject_name=permanent.name,
+                subject_card=permanent.card,
+                player=permanent.controller or permanent.owner,
+                counter_kind=kind,
+            )
+        )
 
     def turn_count(self, fact: str, player: str, *, last_turn: bool = False) -> int:
         """How many times `fact` has happened for `player` this turn, or last
@@ -16663,12 +16696,12 @@ class Game(EngineModel):
           bookkeeping the rules never asked for, and it is exactly what hid the
           missing CR 120.3c - a planeswalker attacked for lethal came out of
           combat with `damage=9` and its nine loyalty counters intact.
+        - **CR 120.3h** - "Damage dealt to a battle causes that many defense
+          counters to be removed from that battle." Removing the last one is
+          what raises a Siege's defeat trigger (CR 310.12b).
 
-        Anything that is neither takes the damage and nothing happens, which is
-        CR 120.3's own answer: no listed result applies to it. Damage to a
-        battle (CR 120.3h, defense counters) is the one result still missing,
-        because the battle card type is not modelled at all - see
-        `docs/engine-coverage.md`.
+        Anything that is none of these takes the damage and nothing happens,
+        which is CR 120.3's own answer: no listed result applies to it.
 
         Which types those are is CR 613.5's question, so it is asked of the
         computed board rather than the printing: an animated planeswalker is a
@@ -16680,6 +16713,13 @@ class Game(EngineModel):
             if permanent.zone is Zone.BATTLEFIELD
             else permanent.types
         )
+        if Type.BATTLE in types:
+            # CR 120.3h: "Damage dealt to a battle causes that many defense
+            # counters to be removed from that battle" - clamped to what is
+            # there, the same as loyalty below.
+            present = permanent.counter_count(Counter.DEFENSE)
+            if present > 0:
+                permanent.remove_counters(Counter.DEFENSE, min(amount, present))
         if Type.PLANESWALKER in types:
             # CR 120.3c removes "that many" counters, and there may not be that
             # many: `Counters.remove` refuses to take more than are present
@@ -18902,6 +18942,12 @@ class Game(EngineModel):
         # CR 704.5s, CR 714.4: a Saga whose lore counters reached its final
         # chapter number, once nothing left to run off it is still triggered.
         leaving += [state for state in self._sagas_to_put_into_graveyard() if state not in leaving]
+        # CR 704.5v / 704.5w: a battle with defense 0.
+        leaving += [
+            state
+            for state in self._defeated_battles_to_put_into_graveyard(board)
+            if state not in leaving
+        ]
         # CR 704.5x / 704.5y: a battle without a legal protector gets one, or
         # goes to its owner's graveyard when nobody can be chosen.
         leaving += [
@@ -18997,6 +19043,29 @@ class Game(EngineModel):
             roles.sort(key=lambda role: stamps.get(role.id, 0))
             doomed.extend(roles[:-1])  # every one but the most recent timestamp
         return doomed
+
+    def _defeated_battles_to_put_into_graveyard(self, board: ComputedBoard) -> list[CardState]:
+        """CR 704.5v: "If a Siege battle has defense 0 and it isn't the source
+        of an ability that has triggered but not yet left the stack, it's put
+        into its owner's graveyard." CR 704.5w: a non-Siege battle with
+        defense 0 is, with no exception. Defense on the battlefield is the
+        number of defense counters (CR 310.4c). "Triggered but not yet left
+        the stack" is read the way `_sagas_to_put_into_graveyard` reads it:
+        still pending (CR 603.3) or an `AbilityOnStack`."""
+        still_owed = {
+            item.source_id
+            for item in (*self.pending_triggers, *self.abilities_on_stack)
+            if isinstance(item.ability, TriggeredAbility)
+        }
+        defeated: list[CardState] = []
+        for permanent in self.battlefield:
+            chars = board.of(permanent)
+            if Type.BATTLE not in chars.types or permanent.counter_count(Counter.DEFENSE) > 0:
+                continue
+            if "Siege" in chars.subtypes and permanent.id in still_owed:
+                continue
+            defeated.append(permanent)
+        return defeated
 
     def _sagas_to_put_into_graveyard(self) -> list[CardState]:
         """CR 704.5s, CR 714.4: every Saga whose lore counters have reached

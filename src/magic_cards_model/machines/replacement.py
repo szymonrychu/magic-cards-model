@@ -6048,6 +6048,12 @@ def _enters_as_copy(effect: ReplacementEffect, card_name: str) -> Apply:
             # additional effect of the replacement, not a copiable value.
             for kind, amount in exception.enters_with_counters:
                 event.counters[kind] = event.counters.get(kind, 0) + amount
+        defense = chosen[0].printed_defense
+        if Type.BATTLE in copied_types and defense:
+            # CR 310.4b: a battle's "enters with a number of defense counters
+            # on it equal to its printed defense number" is an intrinsic
+            # ability, so a permanent entering as a copy of one has it too.
+            event.counters[Counter.DEFENSE] = event.counters.get(Counter.DEFENSE, 0) + defense
         built_effects = _become_a_copy_builder(
             until_eot=False,
             name_override=exception.name,

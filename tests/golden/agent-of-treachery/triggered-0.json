@@ -1,11 +1,11 @@
 {
-  "ability": "At the beginning of your end step, if you control three or more permanents you don't own, draw three cards.",
+  "ability": "When this creature enters, gain control of target permanent.",
   "action": {
     "controller": "alice",
     "modes": [],
     "on_stack": true,
     "source": "Agent of Treachery@alice#1",
-    "targets": [],
+    "targets": ["Plains@alice#1"],
     "x": 0
   },
   "board": {
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Agent of Treachery"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Agent of Treachery"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,7 +26,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": null,
+    "step": "precombat_main",
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
@@ -36,30 +36,22 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": ["continuous_effects"],
     "notices": {},
-    "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "hand"]
-      },
-      "Grizzly Bears@alice#3": {
-        "zone": ["library", "hand"]
-      },
-      "Island@alice#5": {
-        "zone": ["library", "hand"]
-      }
-    },
+    "objects": {},
     "players": {},
     "stack": []
   },
   "family": "triggered",
   "format": 1,
-  "kind": "beginning_of_step",
+  "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "staged",
+    "attempt": "put",
     "index": 0,
-    "params": {},
+    "params": {
+      "tapped": false
+    },
     "variant": "quiet"
   }
 }

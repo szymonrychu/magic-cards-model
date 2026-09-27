@@ -179,6 +179,14 @@ class ExtraTriggerEvent(StrEnum):
     #: and Greater Gargadon's printed "Sacrifice an artifact, creature, or
     #: land: Remove a time counter from this card" - raise it alike.
     LAST_TIME_COUNTER_REMOVED = "last_time_counter_removed"
+    #: "When the last `<kind>` counter is removed from this permanent" for
+    #: any other counter kind - a Siege's intrinsic defeat trigger (CR
+    #: 310.12b) is the one that needs it. Raised by `CardState.remove_counters`
+    #: itself (through `Game.note_last_counter_removed`) whenever a removal
+    #: takes a permanent's count of a kind from above zero to zero, whatever
+    #: removed them - damage to a battle (CR 120.3h), a cost, an effect -
+    #: with `GameEvent.counter_kind` naming the kind.
+    LAST_COUNTER_REMOVED = "last_counter_removed"
     #: CR 502.3: "the active player determines which permanents they control
     #: will untap. Then they untap them all simultaneously." The Millennium
     #: Calendar's "Whenever you untap one or more permanents during your untap
@@ -3778,6 +3786,13 @@ _LAST_TIME_COUNTER_CONDITION = re.compile(
     r"^the last time counter is removed from this (?:card|permanent)$"
 )
 
+#: "When the last `<kind>` counter is removed from this permanent" for every
+#: kind but time (read above) - CR 310.12b's Siege defeat trigger, "When the
+#: last defense counter is removed from this permanent".
+_LAST_COUNTER_CONDITION = re.compile(
+    r"^the last (?P<kind>(?!time )[a-z0-9+/-]+) counter is removed from this permanent$"
+)
+
 #: CR 702.94a's second ability, as `machines/keywords._miracle_ability` writes
 #: it out: "you reveal this card this way". Miracle prints it as one word, so
 #: this condition only ever arrives from that expansion.
@@ -4105,6 +4120,8 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.MANA_ADDED})
     if _LAST_TIME_COUNTER_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED})
+    if _LAST_COUNTER_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.LAST_COUNTER_REMOVED})
     if _REVEALED_THIS_WAY_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.REVEALED_FOR_MIRACLE})
     if _UNTAPPED_DURING_UNTAP_STEP_CONDITION.match(lowered):
@@ -4470,6 +4487,14 @@ def _unread_condition_matches(
         return (
             event.event is ExtraTriggerEvent.LAST_TIME_COUNTER_REMOVED
             and event.subject_id == source.id
+        )
+
+    if last_counter := _LAST_COUNTER_CONDITION.match(condition):
+        # The source's own count of that kind just reached zero.
+        return (
+            event.event is ExtraTriggerEvent.LAST_COUNTER_REMOVED
+            and event.subject_id == source.id
+            and event.counter_kind == last_counter.group("kind")
         )
 
     if _REVEALED_THIS_WAY_CONDITION.match(condition):
@@ -6596,6 +6621,7 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     # imports this module for `AbilityOnStack`; the cycle is real and only
     # resolvable at call time.
     from .keywords import keyword_triggered_abilities
+    from .sieges import siege_triggered_abilities
 
     printed = [
         ability
@@ -6644,7 +6670,7 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
                                         expanded.extend(
                                             _expand_transforms_and_first_main(transforms_split)
                                         )
-    return expanded + keyword_triggered_abilities(card)
+    return expanded + keyword_triggered_abilities(card) + siege_triggered_abilities(card)
 
 
 #: "Whenever this creature attacks or blocks, ..." - Elder Gargaroth's own
@@ -7387,7 +7413,13 @@ def triggered_abilities_on(game: "Game", source: CardState) -> list[TriggeredAbi
     # away, which is every ordinary permanent.
     rewritten = rewritten_ability_lines(game, source)
     if rewritten is not None:
-        granted = granted_triggered_abilities_of(rewritten)
+        from .sieges import copied_siege_triggered_abilities
+
+        # CR 310.12b: a Siege's defeat trigger is intrinsic, not printed text,
+        # so it never appears among the copied lines.
+        granted = granted_triggered_abilities_of(rewritten) + copied_siege_triggered_abilities(
+            game, source
+        )
     else:
         # CR 613.1f / CR 613.5: a layer 6 grant ("Other creatures you
         # control are ... and have '...'") can add a triggered ability

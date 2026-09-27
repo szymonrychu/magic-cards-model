@@ -543,6 +543,7 @@ home of its own memory.
 - 2026-09-27: tmt integration - `combat.looks_like_unparsed_evasion_restriction` flagged Charging Rhino's enforced "can't be blocked by more than one creature" (CR 509.1b, `blocked_by_at_most_one_refusal`) as unread, leaving a false EvasionNotice; it now skips that line. The fail-closed evasion tests pick a *static* unread line via `gap_example` (activated/triggered "can't be blocked this turn" lines are not restrictions until they resolve).
 
 - 2026-09-27: battle protector (CR 310.9) is `CardState.protector`, reset only in `Game.enter_the_battlefield` (not `move_to`) so `combat.defending_player` still answers CR 508.5's "before it was removed from combat" after a battle leaves. Agent of Treachery's "gain control of target permanent" ETB is silent in the sweep, so the control-change scenario uses Shifting Loyalties instead.
+- 2026-09-27: battle defense and Siege defeat landed on the same branch. The defeat trigger fires off a generic `LAST_COUNTER_REMOVED` raised inside `CardState.remove_counters` (every removal site, not just damage); `Game.put_on_stack` re-moves the spell to the stack, which used to reset `transformed` - it now keeps a back-face-up spell back face up. Agent of Treachery / Keiga's untimed "gain control of target X." is `control_change._parse_gain_control_indefinitely_clause`. Awakened Skyclave's self type grant has no other in-format card with the same template; proven on it alone.
 
 ## Regression-guard approvals
 

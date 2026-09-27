@@ -245,6 +245,8 @@ class Counter(StrEnum):
     CHARGE = "charge"
     #: CR 702.24a: cumulative upkeep puts one on each upkeep and counts them.
     AGE = "age"
+    #: CR 310.4c: a battle's defense on the battlefield is the number of these.
+    DEFENSE = "defense"
 
 
 #: A counter kind: one of the named ones, or any string a card invents.
@@ -2878,6 +2880,7 @@ class CardState(EngineModel):
             self.summoning_sick = True
             self._enter_with_loyalty()
             self._enter_with_lore_counter()
+            self._enter_with_defense()
         else:
             self.tapped = False
             self.transformed = False
@@ -2921,8 +2924,13 @@ class CardState(EngineModel):
 
     def remove_counters(self, kind: CounterKind, amount: int = 1) -> int:
         """Take counters off, returning what is left. Raises if there are too few."""
+        before = self.counters[kind]
         left = self.counters.remove(kind, amount)
         self._note_counters_removed(kind, amount)
+        if before > 0 and left == 0 and self.zone is Zone.BATTLEFIELD:
+            note_last = getattr(self._board_source, "note_last_counter_removed", None)
+            if note_last is not None:
+                note_last(self, str(kind))
         return left
 
     def _note_counters_removed(self, kind: CounterKind, amount: int) -> None:
@@ -3199,6 +3207,26 @@ class CardState(EngineModel):
         if printed is not None:
             self.counters.add(Counter.LOYALTY, printed)
 
+    @property
+    def printed_defense(self) -> int | None:
+        """The defense printed on the face that is up (CR 310.4a), or None."""
+        up_face = self.up_face
+        printed = up_face.defense if up_face is not None else self.card.defense
+        return _as_number(printed)
+
+    def _enter_with_defense(self) -> None:
+        """CR 310.4b: "A battle has the intrinsic ability 'This permanent
+        enters with a number of defense counters on it equal to its printed
+        defense number.'" Read off the printed face that is up, so a Siege
+        cast transformed (a creature) enters with none. A permanent entering
+        as a copy of a battle gets its counters from the copy replacement
+        instead (`machines/replacement._enters_as_copy`)."""
+        if Type.BATTLE not in self.types:
+            return
+        printed = self.printed_defense
+        if printed:
+            self.counters.add(Counter.DEFENSE, printed)
+
     def _enter_with_lore_counter(self) -> None:
         """CR 714.3a: "Each Saga without read ahead has the intrinsic ability
         'This Saga enters with a lore counter on it.'"
@@ -3317,6 +3345,7 @@ class CardState(EngineModel):
         if state.zone is Zone.BATTLEFIELD and not state.counters:
             state._enter_with_loyalty()
             state._enter_with_lore_counter()
+            state._enter_with_defense()
         return state
 
 

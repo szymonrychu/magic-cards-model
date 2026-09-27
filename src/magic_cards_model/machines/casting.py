@@ -4065,6 +4065,10 @@ class Casting(EngineModel):
     (CR 601.2b) - once CR 601.2h's return has moved it, it is out of combat
     (CR 506.4) and `Combat.attack_by` has nothing left to say. Copied onto
     `CastRecord.sneak_defender` as the spell becomes cast."""
+    transformed: bool = False
+    """True once `cast_transformed` has announced a nonmodal double-faced
+    card cast "transformed" (CR 712.11a): the spell is put on the stack with
+    its back face up and has only that face's characteristics (CR 712.8c)."""
     fuse: bool = False
     """True once `cast_fused` has announced both halves of a split card with
     fuse as one spell (CR 702.102a). `self.face` still names the left half
@@ -4422,6 +4426,9 @@ class Casting(EngineModel):
                 self.announced_library_index = library.index(self.spell)
         self._lift_out_of_every_zone()
         self.spell.move_to(Zone.STACK)
+        # CR 712.11a: `move_to` turns a card leaving for the stack front face
+        # up; one cast transformed goes there back face up.
+        self.spell.transformed = self.transformed
         game.stack.append(self.spell)
 
     def _lift_out_of_every_zone(self) -> None:
@@ -4559,6 +4566,20 @@ class Casting(EngineModel):
             if face.name == self.face:
                 return face
         raise ValueError(f"{self.spell.name} has no face called {self.face}")
+
+    def cast_transformed(self) -> CastingStep:
+        """CR 712.11a: "If a double-faced card ... is cast as a spell
+        'transformed' ..., it's put on the stack with its back face up."
+        CR 712.8c: it then has only its back face's characteristics, its mana
+        value still calculated from the front face's mana cost. Only an
+        effect that says so casts a card this way (a Siege's defeat trigger,
+        CR 310.12b), so this is announced before CR 601.2a's move."""
+        if self.spell.card.back_face is None:
+            raise ValueError(f"{self.spell.name} has no back face to cast transformed (CR 712.11a)")
+        self.transformed = True
+        if self.spell.zone is Zone.STACK:
+            self.spell.transformed = True
+        return self.step
 
     def cast_as_adventure(self) -> CastingStep:
         """CR 715.3: cast the Adventure half of an adventurer card.
@@ -7495,6 +7516,8 @@ class Casting(EngineModel):
             # to move it in; this is the no-game path, where `Casting` is driven
             # as a pure announcement machine and the card is moved at the end.
             self.spell.move_to(Zone.STACK)
+        if self.transformed:
+            self.spell.transformed = True  # CR 712.11a
         # The spell carries its targets with it, so resolution knows what it hits.
         self.spell.targets = list(self.targets)
         # CR 601.2d: the announced division, if any, travels with the spell

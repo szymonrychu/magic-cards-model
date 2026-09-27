@@ -206,6 +206,63 @@ def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | 
     return effect
 
 
+#: "Gain control of target `<object>`." with no duration - Agent of
+#: Treachery's "When this creature enters, gain control of target
+#: permanent.", Keiga, the Tide Star's "When Keiga dies, gain control of
+#: target creature.". CR 611.2a: "If no duration is stated, it lasts until
+#: the end of the game." Layer 2 (CR 613.1b), keyed to each target as it is
+#: now (CR 400.7).
+_GAIN_CONTROL_INDEFINITELY_RE = re.compile(
+    r"^(?:you )?gain control of (?P<phrase>(?:up to (?:one|two|three|\d+) )?target [^.]+?)\.?$",
+    re.IGNORECASE,
+)
+
+#: A duration or condition inside the target phrase belongs to another
+#: reader, and a spell (Commandeer, CR 115.1) is not a permanent to control.
+_NOT_INDEFINITE_RE = re.compile(
+    r"\b(?:until|for as long as|during|if|this turn|spells?)\b", re.IGNORECASE
+)
+
+
+def _parse_gain_control_indefinitely_clause(effect_text: str) -> AbilityEffect | None:
+    """`_GAIN_CONTROL_INDEFINITELY_RE`'s shape, or `None`."""
+    from .effects import _targets_understood
+
+    match = _GAIN_CONTROL_INDEFINITELY_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None or _NOT_INDEFINITE_RE.search(match.group("phrase")):
+        return None
+    if not _targets_understood(match.group("phrase"), count_agnostic=True):
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        targets = [
+            target
+            for target in game.resolve_card_targets(ability)
+            if target.zone is Zone.BATTLEFIELD
+        ]
+        if not targets:
+            return
+        store = game.continuous_effects
+        timestamp = store.tick()
+        for target in targets:
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{ability.source_name}: {ability.controller} gains control of "
+                        f"{target.name}"
+                    ),
+                    layer=Layer.CONTROL,
+                    timestamp=timestamp,
+                    duration=Duration.INDEFINITE,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=set_controller(ability.controller),
+                ),
+                game=game,
+            )
+
+    return effect
+
+
 #: "Gain control of target creature until end of turn. If you control a[n]
 #: `<quality>` with greater mana value than that creature, gain control of
 #: that creature until the end of your next turn instead.[ Untap that
@@ -311,7 +368,11 @@ def _parse_gain_control_longer_if_clause(effect_text: str) -> Effect | None:
 
 def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     """A control change or rider on an activated or triggered ability."""
-    for reader in (_parse_tap_then_lock_clause, _parse_gain_control_for_as_long_clause):
+    for reader in (
+        _parse_tap_then_lock_clause,
+        _parse_gain_control_for_as_long_clause,
+        _parse_gain_control_indefinitely_clause,
+    ):
         effect = reader(effect_text)
         if effect is not None:
             return effect
