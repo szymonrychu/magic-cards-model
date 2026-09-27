@@ -546,6 +546,24 @@ home of its own memory.
 
 Each line: a change to pre-existing test content, flagged by `scripts/regression_guard.py`, judged by an independent reviewer.
 
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/falkenrath-pit-fighter/activated-0.json: APPROVE - filler churn only (Alley Assailant, a new Vampire Rogue, now pays "Sacrifice a Vampire"); draw-two delta unchanged.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/grave-scrabbler/triggered-0.json: APPROVE - option repr gained the new additional_cost/enters_with_counters fields; behaviour unchanged.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/latchkey-faerie/triggered-0.json: APPROVE - repr-only (new fields).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/leonardo-leader-in-blue/triggered-0.json: APPROVE - repr-only (new fields).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/nashi-moons-legacy/triggered-0.json: APPROVE - filler churn: Azure Beastbinder (Rat Rogue) fits "legendary or Rat card", {1}{U} paid correctly.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/nashi-moons-legacy/triggered-0.no-targets.json: APPROVE - same filler swap in the graveyard only.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/pucas-eye/activated-0.json: APPROVE - filler churn (black for black); five colours still present, draw delta unchanged.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/rafter-demon/triggered-0.json: APPROVE - repr-only (new fields).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/reckless-bushwhacker/triggered-0.json: APPROVE - repr-only (new fields).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/spiders-man-heroic-horde/triggered-0.json: APPROVE - repr-only (new fields).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/tyrant-of-valakut/triggered-0.json: APPROVE - repr-only (new fields).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/golden/{invasion-tactics,jacob-frye x2,the-thing-ben-grimm}: REJECTED first (T2's "deals?" widening turned batched "one or more X deal combat damage" into per-creature triggers, CR 603.2c); fixed in abilities._trigger_event, goldens now byte-identical to base - APPROVE on re-review.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/test_behavioural_sweep.py KNOWN_ENGINE_GAPS Sunstar Chaplain removed: APPROVE - new chosen-permanent remove-counter cost reader enforces CR 118.3; 7 scenario tests incl. Korozda Gorgon.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/test_behavioural_sweep.py SWEEP_DRIVER_GAPS counter-qualified deals_damage/leaves: APPROVE - genuine harness limit (stock board has no countered creature); scenario tests for Venus, Yathan Tombguard, The Ooze pass.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/test_behavioural_sweep.py face-up retry and remove-counter priming: APPROVE - harness-only; engine still charges the full disguise cost (CR 702.168d).
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/scenarios/test_counter_placed_and_attacked_triggers.py putter: APPROVE - T2 reader now checks the putter (CR 122.6a); test names alice as putter explicitly.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/scenarios/judge/test_judge_warp_from_exile.py Syncopate: APPROVE - T5 catch-all counter reader no longer reads an "unless" cost as unconditional; test restored green unchanged.
+- 2026-09-27 tmt integration (engine, base 6fd302a2) tests/scenarios/test_evasion_restrictions.py fail-closed tests: REJECTED first (gap_example picked Charging Rhino, whose CR 509.1b line is enforced); detector fixed and predicate limited to static lines, now Juggernaut (truly unread, honest notice) - APPROVE on re-review; new April O'Neil enforcement test correct.
 - 2026-09-26 sos integration (engine) tests/golden/baron-helmut-zemo/activated-0.json: APPROVE - only the exiled filler changed (Griselbrand 4 B symbols -> Pox Plague 5 B symbols); with Doomsday Excruciator (6) and Divinity of Pride (5 hybrid W/B) the total is 16, still >= fifteen, all black cards; stack and the "cast the copy without paying its mana cost" may prompts are renamed consistently, result otherwise identical.
 - 2026-09-26 sos integration (engine) tests/golden/baxter-building/activated-0.json: APPROVE - filler Abhorrent Oculus 5/5 -> Aberrant Manawurm 2/5 still satisfies "a creature with toughness 4 or greater"; result unchanged.
 - 2026-09-26 sos integration (engine) tests/golden/catapult-fodder-catapult-captain/triggered-0.json: APPROVE - filler 2x Abzan Falconer 2/3 -> 2x Aberrant Manawurm 2/5; with Catapult Fodder itself that is still three creatures with toughness greater than power, so the transform intervening-if holds; result unchanged.
