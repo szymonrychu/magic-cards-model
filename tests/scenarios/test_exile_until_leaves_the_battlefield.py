@@ -49,6 +49,8 @@ this wave still does not reverse, and the double-leave/`expected_stamp`
 guard that stops a second, wrong return.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
@@ -353,6 +355,96 @@ def test_the_mass_exile_cards_are_credited():
     from tests.cards import card
 
     for name in ("Pinnacle Starcage", "Aligned Hedron Network", "Consulate Crackdown"):
+        support = str(card_support(card(name)))
+        assert "'silent'" not in support, name
+        assert "'notice'" not in support, name
+
+
+# -- R0a-T5: a card exiled from a hand "until this creature leaves the
+# battlefield" returns to its owner's hand (CR 610.3's previous zone) --------
+#
+# Deep-Cavern Bat: "When this creature enters, look at target opponent's hand.
+# You may exile a nonland card from it until this creature leaves the
+# battlefield." Kitesail Freebooter (Modern/Pioneer legal, in no deck) is the
+# second printing: "target opponent reveals their hand. You choose a
+# noncreature, nonland card from it. Exile that card until this creature
+# leaves the battlefield." - mandatory, and a narrower quality.
+
+
+def _bat_board(creature: str = "Deep-Cavern Bat"):
+    return (
+        Scenario()
+        .player("alice", hand=[creature], battlefield=["Swamp", "Swamp", "Island"])
+        .player("bob", hand=["Lightning Bolt", "Grizzly Bears", "Mountain"])
+    )
+
+
+def _cast_bat(scenario, creature: str = "Deep-Cavern Bat"):
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.will_choose_targets("bob", source=creature)
+    sources = (
+        scenario.untapped_sources("Swamp", "Swamp")
+        if creature == "Deep-Cavern Bat"
+        else scenario.untapped_sources("Swamp", "Island")
+    )
+    bat = scenario.cast_and_resolve(creature, *sources)
+    scenario.pass_until_resolved()
+    return bat
+
+
+def test_the_bat_exiles_a_chosen_nonland_card_and_it_returns_to_hand():
+    scenario = _bat_board().build()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, username="bob")
+    scenario.will_take_the_may(True, source="Deep-Cavern Bat")
+    scenario.will_choose_cards(bolt, source="Deep-Cavern Bat")
+
+    bat = _cast_bat(scenario)
+    assert bolt.zone is Zone.EXILE
+
+    scenario.game.destroy(bat)
+    scenario.pass_until_resolved()
+
+    assert bolt.zone is Zone.HAND
+    assert bolt in scenario.player("bob").hand
+
+
+def test_the_bat_may_decline():
+    scenario = _bat_board().build()
+    scenario.will_take_the_may(False, source="Deep-Cavern Bat")
+
+    _cast_bat(scenario)
+
+    assert len(scenario.player("bob").hand) == 3
+
+
+def test_a_land_cannot_be_chosen():
+    scenario = _bat_board().build()
+    mountain = scenario.find("Mountain", Zone.HAND, username="bob")
+    scenario.will_take_the_may(True, source="Deep-Cavern Bat")
+    scenario.will_choose_cards(mountain, source="Deep-Cavern Bat")
+
+    with pytest.raises(ValueError):
+        _cast_bat(scenario)
+
+
+def test_kitesail_freebooter_takes_a_noncreature_nonland_card():
+    scenario = _bat_board("Kitesail Freebooter").build()
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, username="bob")
+    scenario.will_choose_cards(bolt, source="Kitesail Freebooter")
+
+    freebooter = _cast_bat(scenario, "Kitesail Freebooter")
+    assert bolt.zone is Zone.EXILE
+
+    scenario.game.exile_permanent(freebooter)
+    scenario.pass_until_resolved()
+    assert bolt.zone is Zone.HAND
+
+
+def test_the_hand_exile_cards_are_credited():
+    from magic_cards_model.support import card_support
+    from tests.cards import card
+
+    for name in ("Deep-Cavern Bat", "Kitesail Freebooter"):
         support = str(card_support(card(name)))
         assert "'silent'" not in support, name
         assert "'notice'" not in support, name

@@ -66,7 +66,7 @@ def test_an_opponents_dying_creature_is_exiled_with_a_void_counter():
 
 
 def test_milled_cards_from_the_library_are_exiled_with_void_counters():
-    """"from anywhere" - the library included."""
+    """ "from anywhere" - the library included."""
     scenario = _board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -79,7 +79,7 @@ def test_milled_cards_from_the_library_are_exiled_with_void_counters():
 
 
 def test_its_controllers_own_cards_go_to_the_graveyard():
-    """"an opponent's graveyard" - alice's own cards are untouched."""
+    """ "an opponent's graveyard" - alice's own cards are untouched."""
     scenario = _board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -169,7 +169,7 @@ def test_a_card_without_a_void_counter_cannot_be_chosen():
 
 
 def test_a_void_land_can_be_played_as_the_land_drop():
-    """"You may play it" - CR 601.1a's wider verb reaches a land."""
+    """ "You may play it" - CR 601.1a's wider verb reaches a land."""
     scenario = (
         Scenario()
         .player(
@@ -199,7 +199,7 @@ def test_a_void_land_can_be_played_as_the_land_drop():
 
 
 def test_the_permission_ends_with_the_turn():
-    """"this turn" - CR 514.2 ends it at cleanup."""
+    """ "this turn" - CR 514.2 ends it at cleanup."""
     scenario = _board().build()
     bolt = _exile_bolt_with_void(scenario)
     walker = scenario.creature(VOIDWALKER, "alice")

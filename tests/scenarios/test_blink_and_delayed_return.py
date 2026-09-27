@@ -514,7 +514,7 @@ def test_aetherling_the_second_printing_flickers_for_mana():
 
 
 def test_argent_sphinx_returns_under_its_activators_control():
-    """"under your control" - CR 610.3c's "unless otherwise specified"."""
+    """ "under your control" - CR 610.3c's "unless otherwise specified"."""
     from magic_cards_model.machines import Step
     from magic_cards_model.models import Zone
     from tests.scenarios.harness import Scenario

@@ -73,7 +73,7 @@ def test_the_counters_kill_a_small_creature_through_state_based_actions():
 
 
 def test_damage_to_a_player_is_untouched():
-    """"to a creature" - the player takes the 3 damage."""
+    """ "to a creature" - the player takes the 3 damage."""
     scenario = _board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
@@ -88,7 +88,7 @@ def test_damage_to_a_player_is_untouched():
 
 
 def test_damage_to_your_own_creature_is_untouched():
-    """"a creature an opponent controls" - alice's own Dreadmaw takes damage."""
+    """ "a creature an opponent controls" - alice's own Dreadmaw takes damage."""
     scenario = _board().build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     mine = scenario.creature("Colossal Dreadmaw", "alice")
@@ -103,7 +103,7 @@ def test_damage_to_your_own_creature_is_untouched():
 
 
 def test_an_opponents_source_is_untouched():
-    """"a source you control" - noncombat damage from bob's source to alice's
+    """ "a source you control" - noncombat damage from bob's source to alice's
     creature is marked as damage."""
     scenario = _board(alice_hand=()).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -117,7 +117,7 @@ def test_an_opponents_source_is_untouched():
 
 
 def test_combat_damage_is_untouched():
-    """"noncombat damage" - Soul-Scar Mage's own combat damage is marked."""
+    """ "noncombat damage" - Soul-Scar Mage's own combat damage is marked."""
     scenario = _board(alice_hand=()).build()
     mage = scenario.creature("Soul-Scar Mage", "alice")
     bears = scenario.creature("Grizzly Bears", "bob")
@@ -143,7 +143,7 @@ def test_the_line_is_credited_as_handled():
 
 @pytest.mark.parametrize("amount", [1, 3])
 def test_the_counter_count_is_that_many(amount: int):
-    """"that many" - the amount of damage that would have been dealt."""
+    """ "that many" - the amount of damage that would have been dealt."""
     scenario = _board(alice_hand=()).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     dreadmaw = scenario.creature("Colossal Dreadmaw", "bob")

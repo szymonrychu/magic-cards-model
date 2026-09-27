@@ -530,7 +530,7 @@ def parse_choose_exiled_with_counter_play_clause(text: str) -> Any:
 #: the self-zone permission payload is performed; any other payload fails
 #: closed with a notice.
 _GRAVEYARD_CARDS_GAIN_QUOTED_RE = re.compile(
-    r'^(?P<lead>until end of turn, )?(?:each )?(?P<quality>[a-z][a-z ]*?) cards? in your '
+    r"^(?P<lead>until end of turn, )?(?:each )?(?P<quality>[a-z][a-z ]*?) cards? in your "
     r'graveyard gains? "(?P<payload>[^"]+)"(?P<trail> until end of turn)?\.?$',
     re.IGNORECASE,
 )

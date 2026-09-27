@@ -197,7 +197,7 @@ _EXILE_ALL_UNTIL_LEAVES_RE = re.compile(
 )
 
 
-def _group_predicate(group: str) -> "Callable[[Game, CardState, str], bool] | None":
+def _group_predicate(group: str) -> Callable[[Game, CardState, str], bool] | None:
     """The mass group as a predicate on the computed board (CR 613.5), read at
     resolution (CR 611.2c's "determined when that effect begins")."""
     from .effects import _parse_damage_group_phrase
@@ -213,7 +213,7 @@ def _group_predicate(group: str) -> "Callable[[Game, CardState, str], bool] | No
         if first is None or second is None:
             return None
 
-        def base(game: "Game", permanent: CardState, controller: str) -> bool:
+        def base(game: Game, permanent: CardState, controller: str) -> bool:
             return first(game, permanent, controller) or second(game, permanent, controller)
 
     else:
@@ -227,7 +227,7 @@ def _group_predicate(group: str) -> "Callable[[Game, CardState, str], bool] | No
     bound = int(stat.group("n"))
     at_least = stat.group("cmp").lower() == "greater"
 
-    def predicate(game: "Game", permanent: CardState, controller: str) -> bool:
+    def predicate(game: Game, permanent: CardState, controller: str) -> bool:
         if not base(game, permanent, controller):
             return False
         computed = game.characteristics_of(permanent)

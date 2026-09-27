@@ -141,3 +141,85 @@ def parse_reveal_some_then_choose_one(text: str) -> Any:
         )
 
     return effect
+
+
+# --------------------------------------------------------------------------
+# R0a-T5: look at / reveal a hand, exile a card from it "until this creature
+# leaves the battlefield" (CR 610.3) - Deep-Cavern Bat, Kitesail Freebooter
+# --------------------------------------------------------------------------
+
+_HAND_EXILE_UNTIL_LEAVES_RE = re.compile(
+    r"^(?:look at target (?:opponent|player)'s hand|target (?:opponent|player) reveals their "
+    r"hand)\.\s*you (?P<may>may )?(?P<verb>exile|choose) an? (?P<quality>[a-z, ]+?) card from it"
+    r"(?P<then>\.\s*exile that card)? until this (?:creature|artifact|enchantment|permanent) "
+    r"leaves the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def parse_hand_exile_until_leaves_clause(text: str) -> Any:
+    """`_HAND_EXILE_UNTIL_LEAVES_RE`'s effect: the targeted player's hand is
+    seen (CR 701.20a for "reveals"; "look at" shows it only to the
+    controller), the controller chooses a card of that quality - optionally
+    for "you may" - and it is exiled until the source leaves the battlefield,
+    then returned to its owner's hand (CR 610.3's "previous zone"). CR 610.3b:
+    if the source already left before this resolved, nothing is exiled."""
+    from .effects import _nonland_or_typed_card_matcher
+
+    match = _HAND_EXILE_UNTIL_LEAVES_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    if (match.group("verb").lower() == "choose") != (match.group("then") is not None):
+        return None
+    permits = _nonland_or_typed_card_matcher(match.group("quality").strip())
+    if permits is None:
+        return None
+    optional = match.group("may") is not None
+
+    def effect(game: "Game", ability: Any) -> None:
+        from ..models.zone import Zone
+        from .effects import _watch_for_departure_and_return_exiled_card
+
+        players = [target for target in game.resolve_targets(ability) if isinstance(target, Player)]
+        source = ability.source(game)
+        if not players or source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        victim = players[0]
+        candidates = [card for card in victim.hand if permits(card)]
+        if not candidates:
+            return
+        if optional and not game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=ability.controller,
+                prompt=f"exile a card from {victim.username}'s hand",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                affirmative_is_legal=True,
+            )
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=ability.controller,
+                prompt=f"choose a card from {victim.username}'s hand to exile",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+            )
+        )
+        by_id = {card.id: card for card in candidates}
+        for chosen_id in chosen_ids or ():
+            card = by_id.get(chosen_id)
+            if card is None or card.zone is not Zone.HAND:
+                continue
+            victim.cards_in(Zone.HAND).remove(card)
+            card.move_to(Zone.EXILE)
+            game.exile.append(card)
+            _watch_for_departure_and_return_exiled_card(
+                game, source, card, ability.controller, return_zone=Zone.HAND
+            )
+
+    return effect

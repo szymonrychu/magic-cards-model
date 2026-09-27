@@ -85,7 +85,7 @@ def test_four_life_is_not_enough():
 
 
 def test_the_solve_trigger_is_only_at_your_own_end_step():
-    """"your end step" - bob's end step does not solve alice's Case even
+    """ "your end step" - bob's end step does not solve alice's Case even
     with the condition true then (life gained on bob's turn)."""
     scenario = _feast_board().build()
     case = scenario.find(FEAST, Zone.BATTLEFIELD)

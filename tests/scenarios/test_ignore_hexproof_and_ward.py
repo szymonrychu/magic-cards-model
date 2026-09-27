@@ -88,7 +88,7 @@ def test_hexproof_from_a_quality_is_ignored_too():
 
 
 def test_it_does_not_help_the_opponent_target_its_controllers_creatures():
-    """"Creatures *your opponents* control": alice's own hexproof creature is
+    """ "Creatures *your opponents* control": alice's own hexproof creature is
     still hexproof to bob."""
     scenario = (
         Scenario()
@@ -130,7 +130,7 @@ def test_without_it_ward_triggers():
 
 
 def test_ward_of_an_opponents_creature_does_not_trigger():
-    """"Ward abilities of those creatures don't trigger." - the Bolt resolves
+    """ "Ward abilities of those creatures don't trigger." - the Bolt resolves
     with nothing paid."""
     scenario = _board("Nowhere to Run", ["Sunset Saboteur"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
@@ -145,7 +145,7 @@ def test_ward_of_an_opponents_creature_does_not_trigger():
 
 
 def test_ward_of_the_controllers_own_creature_still_triggers_for_the_opponent():
-    """"Those creatures" are the opponents' creatures only: bob targeting
+    """ "Those creatures" are the opponents' creatures only: bob targeting
     alice's warded creature still meets ward."""
     scenario = (
         Scenario()
@@ -184,7 +184,7 @@ def test_the_enters_trigger_can_target_a_hexproof_creature():
 
 
 def test_glaring_spotlight_lets_its_controller_target_hexproof_creatures():
-    """The second printing: "... spells and abilities you control ...". """
+    """The second printing: "... spells and abilities you control ..."."""
     scenario = _board("Glaring Spotlight", ["Striped Riverwinder"]).build()
     scenario.start_at(Step.PRECOMBAT_MAIN)
     riverwinder = scenario.creature("Striped Riverwinder", "bob")
