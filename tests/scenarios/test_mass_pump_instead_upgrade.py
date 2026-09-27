@@ -25,7 +25,9 @@ Rules verified with `mise run rules:find` (on-disk CR effective 2026-09-25):
   worked example (Comprehensive Rules, quoted in `test_layer_effect_instead_
   counter_upgrade.py`) is the identical "later text modifies earlier text"
   reading applied here to a bigger pump rather than a counter.
-- **CR 702.131b/c** - ascend, and the city's blessing designation.
+- **CR 702.131a/c** - ascend on an instant or sorcery spell (Pride of
+  Conquerors is an instant, never CR 702.131b's permanent-static form), and
+  the city's blessing designation.
 - **CR 611.2/611.2a** - the pump itself, a continuous effect lasting until
   end of turn.
 - **CR 702.33d** - a spell whose kicker cost was declared "has been kicked".
