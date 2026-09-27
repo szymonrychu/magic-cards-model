@@ -1527,3 +1527,29 @@ def test_a_snapshot_written_before_conspire_and_while_controlling_is_refused() -
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_CONSPIRE_AND_WHILE_CONTROLLING}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `machines/delayed.ReturnSubjectToBattlefieldUnderOwner`/
+#: `ReturnEachExiledToBattlefieldUnderOwner` gained `tapped` and
+#: `PreventionShield` gained `until_next_turn_of` (Morningtide's Light's own
+#: "return those cards to the battlefield tapped ..." and "Until your next
+#: turn, prevent all damage that would be dealt to you.", CR 611.2a) - ecl T8.
+_SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS = 94
+
+
+def test_a_snapshot_written_before_ecl_t8_zone_resets_is_refused() -> None:
+    """A version-94 dump's own `PreventionShield` (if any) has no
+    `until_next_turn_of`: decoded as current, one created for Morningtide's
+    Light's own "until your next turn" duration would default to `None` and
+    never expire on `begin_turn_for` at all, silently outliving the turn it
+    was supposed to end on. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS
+    dumped = _a_played_game().model_dump(mode="json")
+    assert dumped["prevention_shields"] == []
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ECL_T8_ZONE_RESETS}",
+    ):
+        Game.model_validate(dumped)

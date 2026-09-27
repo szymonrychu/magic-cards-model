@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "5edfb119-abc9-4d4d-bc46-33cce1a0922d",
+  "oracle_id": "f6f927f3-dc3f-446c-aa7b-81048eb73243",
+  "multiverse_ids": [
+    555363
+  ],
+  "mtgo_id": 98543,
+  "arena_id": 80313,
+  "tcgplayer_id": 268431,
+  "cardmarket_id": 651372,
+  "name": "Vivien on the Hunt",
+  "lang": "en",
+  "released_at": "2022-04-29",
+  "uri": "https://api.scryfall.com/cards/5edfb119-abc9-4d4d-bc46-33cce1a0922d",
+  "scryfall_uri": "https://scryfall.com/card/snc/162/vivien-on-the-hunt?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T06:11:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.jpg?1783923096",
+    "normal": "https://cards.scryfall.io/normal/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.jpg?1783923096",
+    "large": "https://cards.scryfall.io/large/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.jpg?1783923096",
+    "png": "https://cards.scryfall.io/png/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.png?1783923096",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.jpg?1783923096",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.jpg?1783923096",
+    "thumb": "https://cards.scryfall.io/thumb/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.webp?1783923096",
+    "grid": "https://cards.scryfall.io/grid/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.webp?1783923096",
+    "display": "https://cards.scryfall.io/display/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.webp?1783923096",
+    "art": "https://cards.scryfall.io/art/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.webp?1783923096",
+    "crop": "https://cards.scryfall.io/crop/front/5/e/5edfb119-abc9-4d4d-bc46-33cce1a0922d.webp?1783923096"
+  },
+  "mana_cost": "{4}{G}{G}",
+  "cmc": 6.0,
+  "type_line": "Legendary Planeswalker \u2014 Vivien",
+  "oracle_text": "+2: You may sacrifice a creature. If you do, search your library for a creature card with mana value equal to 1 plus the sacrificed creature's mana value, put it onto the battlefield, then shuffle.\n+1: Mill five cards, then put any number of creature cards milled this way into your hand.\n\u22121: Create a 4/4 green Rhino Warrior creature token.",
+  "loyalty": "4",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Mill"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "230419f9-a9f7-441d-bad7-0ed867326aa1",
+      "component": "token",
+      "name": "Rhino Warrior",
+      "type_line": "Token Creature \u2014 Rhino Warrior",
+      "uri": "https://api.scryfall.com/cards/230419f9-a9f7-441d-bad7-0ed867326aa1"
+    },
+    {
+      "object": "related_card",
+      "id": "ac63c976-a6cd-42b4-b799-8624a9da4d32",
+      "component": "combo_piece",
+      "name": "Vivien on the Hunt",
+      "type_line": "Legendary Planeswalker \u2014 Vivien",
+      "uri": "https://api.scryfall.com/cards/ac63c976-a6cd-42b4-b799-8624a9da4d32"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "df837242-8c15-42e4-b049-c933a02dc501",
+  "set": "snc",
+  "set_name": "Streets of New Capenna",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/df837242-8c15-42e4-b049-c933a02dc501",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Asnc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/snc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/5edfb119-abc9-4d4d-bc46-33cce1a0922d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af6f927f3-dc3f-446c-aa7b-81048eb73243&unique=prints",
+  "collector_number": "162",
+  "digital": false,
+  "rarity": "mythic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jake Murray",
+  "artist_ids": [
+    "be53e4e1-ab31-494a-b154-e00ee97eb463"
+  ],
+  "illustration_id": "32c62b8a-6b8e-425c-990f-5a2c5ad84cf0",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 8362,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/articles/archive/card-image-gallery/streets-of-new-capenna",
+    "previewed_at": "2022-04-08"
+  },
+  "prices": {
+    "usd": "0.56",
+    "usd_foil": "0.79",
+    "usd_etched": null,
+    "eur": "0.93",
+    "eur_foil": "1.48",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=555363&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVivien%2Bon%2Bthe%2BHunt",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVivien%2Bon%2Bthe%2BHunt",
+    "edhrec": "https://edhrec.com/route/?cc=Vivien+on+the+Hunt"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F268431%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=651372&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/98543?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

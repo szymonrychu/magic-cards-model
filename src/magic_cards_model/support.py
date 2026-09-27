@@ -124,6 +124,7 @@ from magic_cards_model.machines.effects import (
     create_continuous_effect,
     create_continuous_effect_of_ability,
     effect_for,
+    effect_text_with_named_token_reminder,
     modal_trigger_profile,
     mode_effect_body,
     parse_clause_effect,
@@ -3338,8 +3339,19 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
             x_candidates = _etb_x_candidates(printing, ability)
             other_face = _other_face(printing, ability)
             dispatch_name = other_face or printing.name
+            # ecl-T8: "create a tapped Mutavault token. (It's a land with
+            # '...' and '...')." - the reminder text carries the token's
+            # whole CR 111.4 definition, so it is put back for dispatch here
+            # exactly the way `Game._etb_x_effect_text` puts it back for a
+            # real resolution (`effect_text_with_named_token_reminder`'s own
+            # docstring).
+            dispatch_effect_text = effect_text_with_named_token_reminder(
+                ability.effect, ability.reminder
+            )
             trigger_effects = [
-                trigger_effect_for(dispatch_name, ability.event, ability.effect, x_value=x_value)
+                trigger_effect_for(
+                    dispatch_name, ability.event, dispatch_effect_text, x_value=x_value
+                )
                 for x_value in x_candidates
             ]
             effect = trigger_effects[0]

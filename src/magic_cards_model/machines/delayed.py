@@ -320,11 +320,17 @@ class ReturnSubjectToBattlefieldUnderOwner(DelayedEffectSpecBase):
         "return_subject_to_battlefield_under_owner"
     )
 
+    #: ecl-T8: Morningtide's Light's own "return those cards to the
+    #: battlefield tapped under their owners' control" - the identical
+    #: "tapped" rider `ReturnSubjectFromGraveyardToBattlefield` already
+    #: carries for its own graveyard-return shape.
+    tapped: bool = False
+
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         permanent = trigger.still_affects(game)
         if permanent is None or permanent.owner is None:
             return
-        game.put_onto_battlefield(permanent, permanent.owner, tapped=False)
+        game.put_onto_battlefield(permanent, permanent.owner, tapped=self.tapped)
 
 
 class ReturnSubjectToHand(DelayedEffectSpecBase):
@@ -802,6 +808,26 @@ class CreateAttackingTokens(DelayedEffectSpecBase):
                     expected_stamp=token.zone_change_stamp,
                 )
             )
+
+
+class CreateTokensForController(DelayedEffectSpecBase):
+    """ecl-T8: Scarblade's Malice's own "When that creature dies this turn,
+    create a 2/2 black and green Elf creature token." - a plain CR 701.7a
+    token creation with no rider, fired by a one-shot `TriggerEvent.DIES`
+    delayed trigger (`expires_end_of_turn=True`, `subject_id` the targeted
+    creature) rather than a step. `count`/`definition` are this effect's own
+    data; `trigger.controller` is CR 603.7d/e's creating spell's own
+    controller, who creates the token (CR 111.2) even though the creature
+    that died may have belonged to someone else by then.
+    """
+
+    kind: Literal["create_tokens_for_controller"] = "create_tokens_for_controller"
+
+    count: int
+    definition: TokenDefinition
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        create_tokens(game, self.definition, trigger.controller, self.count)
 
 
 class CreateTokenCopyOfControlledToken(DelayedEffectSpecBase):
@@ -1836,6 +1862,11 @@ class ReturnEachExiledToBattlefieldUnderOwner(DelayedEffectSpecBase):
 
     subjects: tuple[tuple[UUID, UUID], ...]
 
+    #: ecl-T8: Morningtide's Light's own "return those cards to the
+    #: battlefield tapped under their owners' control" - the multi-target
+    #: twin of `ReturnSubjectToBattlefieldUnderOwner.tapped`.
+    tapped: bool = False
+
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         found: list[CardState] = []
         for subject_id, stamp in self.subjects:
@@ -1848,7 +1879,7 @@ class ReturnEachExiledToBattlefieldUnderOwner(DelayedEffectSpecBase):
         with game.entering_together():
             for card_state in found:
                 assert card_state.owner is not None
-                game.put_onto_battlefield(card_state, card_state.owner, tapped=False)
+                game.put_onto_battlefield(card_state, card_state.owner, tapped=self.tapped)
 
 
 class ReturnSubjectFromGraveyardToBattlefield(DelayedEffectSpecBase):
@@ -1925,6 +1956,7 @@ DelayedEffectSpec = Annotated[
     | StaticPrisonReturn
     | ReturnExiledCardAndAddCounters
     | CreateAttackingTokens
+    | CreateTokensForController
     | CreateTokenCopyOfControlledToken
     | PayOrLoseTheGame
     | CombatDamageToPlayerDraw
