@@ -4481,6 +4481,12 @@ class Game(EngineModel):
     #: 100: `Game` gained `nontoken_creatures_died_under_control_this_turn`
     #: (ec7-cast-optional: Vile Redeemer's own cast-trigger "for each
     #: nontoken creature that died under your control this turn").
+    #: The 96 -> 100 window also changed, under the bumps above rather than
+    #: a version of its own: `machines/layers`
+    #: `QualifiedCreatures`/`CreatureQualifiers` gained `colorless`; the
+    #: `turn_history` event kinds gained "blocked" and "fought"; generic P/T
+    #: counters joined `_counter_effects`; and protection gained CR 112.1's
+    #: "spell" quality.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

@@ -1613,6 +1613,27 @@ def test_a_snapshot_written_before_entering_counter_replacements_is_refused() ->
     with pytest.raises(
         SchemaVersionMismatch,
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS}",
+
+
+#: The version stamped before `AbilityOnStack` gained `mana_spent` and
+#: `treasure_mana_spent` (CR 601.2h via CR 602.2b, ec7-instead).
+_SCHEMA_VERSION_BEFORE_ABILITY_MANA_SPENT = 96
+
+
+def test_a_snapshot_written_before_ability_mana_spent_is_refused() -> None:
+    """A version-96 dump's activated abilities on the stack carry no record
+    of what paid their cost: decoded as current, each would default to
+    nothing spent, and Paragon of Modernity's "If `<mana condition>`, put a
+    +1/+1 counter on it instead" would silently take the ordinary branch for
+    an activation that really was paid that way. Refused instead."""
+    assert {"mana_spent", "treasure_mana_spent"} <= set(AbilityOnStack.model_fields)
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ABILITY_MANA_SPENT
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ABILITY_MANA_SPENT
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ABILITY_MANA_SPENT}",
     ):
         Game.model_validate(dumped)
 
@@ -1633,6 +1654,28 @@ def test_a_snapshot_written_before_group_evasion_grants_is_refused() -> None:
     with pytest.raises(
         SchemaVersionMismatch,
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_GROUP_EVASION_GRANTS}",
+
+
+#: The version stamped before `Game` gained `monarch` and `TriggeredAbility`
+#: gained `monarch_inherent` (CR 725, ec7-monarch).
+_SCHEMA_VERSION_BEFORE_MONARCH = 97
+
+
+def test_a_snapshot_written_before_the_monarch_is_refused() -> None:
+    """A version-97 dump has no monarch: decoded as current it would default
+    to nobody, and a game where a player really was the monarch would stop
+    drawing them the end-step card (CR 725.2) with no signal. Refused
+    instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_MONARCH
+    dumped = _a_played_game().model_dump(mode="json")
+    assert "monarch" in dumped
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_MONARCH
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_MONARCH}",
+    ):
+        Game.model_validate(dumped)
 
 
 #: The version stamped before `GraveyardArrival` gained `card_types`
