@@ -668,6 +668,32 @@ class TargetRequirement(EngineModel):
     no opponent has one. Enforced in `TargetingProfile.check` when a `game`
     is given, since which opponents have a legal choice is game state."""
 
+    distinct_from_prior_requirement: bool = False
+    """CR 115.3/115.4's paired "any target"/"any other target" idiom (Boulder
+    Dash, Arc Trail: "deals 2 damage to any target and 1 damage to any other
+    target") - a restriction *between* this requirement and the one printed
+    immediately before it in the same `TargetingProfile.requirements`, so it
+    cannot be answered by `rejects`, which only ever sees one requirement's
+    own target at a time. `TargetingProfile._check_distinct_from_prior`
+    enforces it once every target has been placed into a requirement's slot
+    (`_fill_slots`), next to `_check_one_per_opponent`/
+    `_check_prior_target_player`, the announcement's other across-requirement
+    checks.
+
+    Set only when this exact bare "any other target" shape follows a bare
+    "any target" earlier in the same text (`_parse`'s own `_ANY_TARGET`/
+    `_ANY_OTHER_TARGET` reading) - never for a solitary "any other target"
+    with nothing before it to be distinct from. Iron Fist, Living Weapon; Red
+    Hulk; and Screaming Nemesis each print exactly one "any other target" and
+    nothing else in the same ability, and there the word "other" means
+    something else entirely: "other than this ability's own source"
+    (`excludes_source`, whose own docstring reads that word the plain-English
+    way). The two meanings share a word but never a card - a card would need
+    to both name an earlier plain "any target" and mean "excludes its own
+    source" by the later "other" for them to conflict, and CR 115.4's own
+    "any target"/"any other target" pairing is always about the two targets
+    differing from *each other*, not about either one dodging the source."""
+
     required_keyword: str | None = None
     """"with flying" in "target creature you don't control with flying"
     (Kraul Harpooner) - a trailing keyword-ability clause, read off the same
@@ -1818,9 +1844,10 @@ class TargetingProfile(EngineModel):
         # selection time - so this bound is skipped and left to
         # `check_division`'s own resolved-amount call once X is known.
 
-        self._fill_slots(targets, caster, game, source_id)
+        taken = self._fill_slots(targets, caster, game, source_id)
         self._check_one_per_opponent(targets, caster, game, source_id)
         self._check_prior_target_player(targets, caster, game, source_id)
+        self._check_distinct_from_prior(taken)
 
     def prior_target_player(
         self,
@@ -1914,6 +1941,33 @@ class TargetingProfile(EngineModel):
                     f"from (CR 601.2c)"
                 )
 
+    def _check_distinct_from_prior(self, taken: dict[int, set[TargetRef]]) -> None:
+        """`TargetRequirement.distinct_from_prior_requirement`: CR 115.3/
+        115.4's paired "any target"/"any other target" idiom (Boulder Dash,
+        Arc Trail) refuses an announcement that names the same object for
+        both halves, rather than letting it through to resolve with both
+        amounts stacked onto that one object.
+
+        `taken` is `_fill_slots`'s own bookkeeping, already keyed by
+        `id(requirement)` exactly the way this needs it - the requirement
+        marked `distinct_from_prior_requirement` and the requirement printed
+        immediately before it in `self.requirements` must not have been
+        filled by the same `TargetRef`. A `TargetRef` a target could not be
+        coerced to (see `_why_not`) is never recorded in `taken` at all, so
+        this fails open for those exactly as every other cross-requirement
+        check here does."""
+        for position, requirement in enumerate(self.requirements):
+            if not requirement.distinct_from_prior_requirement or position == 0:
+                continue
+            prior = self.requirements[position - 1]
+            overlap = taken.get(id(requirement), set()) & taken.get(id(prior), set())
+            if overlap:
+                raise ValueError(
+                    f"{requirement.phrase} needs a target other than the one chosen for "
+                    f"{prior.phrase}, and the same object was named for both (CR 115.3, "
+                    "CR 115.4)"
+                )
+
     def _check_protection(self, targets: list[Any], game: Any) -> None:
         """CR 702.16b, at announcement (CR 601.2c) rather than only at the
         CR 608.2b recheck.
@@ -2002,8 +2056,14 @@ class TargetingProfile(EngineModel):
 
     def _fill_slots(
         self, targets: list[Any], caster: str, game: Any = None, source_id: UUID | None = None
-    ) -> None:
-        """Match each chosen target to a requirement it satisfies (CR 601.2c)."""
+    ) -> dict[int, set[TargetRef]]:
+        """Match each chosen target to a requirement it satisfies (CR 601.2c).
+
+        Returns `taken`, keyed by `id(requirement)` exactly as `_why_not`
+        keys it - which `TargetRef`s ended up filling each requirement's own
+        slots. `_check_distinct_from_prior` is the one caller that needs it
+        after the fact; every other requirement-local check here already had
+        it in scope while `_fill_slots` was still running."""
         slots = [
             requirement
             for requirement in self.requirements
@@ -2058,6 +2118,7 @@ class TargetingProfile(EngineModel):
                     f"{filled.get(id(requirement), 0)} chosen where it requires "
                     f"{requirement.minimum} (CR 601.2c)"
                 )
+        return taken
 
     @staticmethod
     def _why_not(
@@ -2258,6 +2319,16 @@ _TRIGGER = re.compile(r"^(?:when|whenever|at )", re.IGNORECASE)
 #: here.
 _QUOTED_SPAN = re.compile(r'["“].*?["”]', re.DOTALL)
 _ANY_TARGET = re.compile(r"\bany target\b", re.IGNORECASE)
+#: Boulder Dash/Arc Trail's own second half: "1 damage to any other target."
+#: Never matched by `_ANY_TARGET` itself - "other" sits between "any" and
+#: "target", so the two are disjoint matches on the same text, not one
+#: pattern's alternation. Peeled off in `_parse`, but *only* when a bare
+#: `_ANY_TARGET` also matched earlier in the same text (CR 115.4's paired
+#: idiom) - a solitary "any other target" with nothing before it (Iron Fist,
+#: Living Weapon; Red Hulk; Screaming Nemesis) is left for the generic
+#: `_TARGET_WORD` scan below, which reads its "other" as `excludes_source`
+#: exactly as it always did.
+_ANY_OTHER_TARGET = re.compile(r"\bany other target\b", re.IGNORECASE)
 #: The plural matters: CR 115.4's damage wording is "among one or two targets",
 #: with no noun after it at all.
 _TARGET_WORD = re.compile(r"\btargets?\b", re.IGNORECASE)
@@ -3276,6 +3347,28 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
         for _ in range(any_targets)
     )
     text = _ANY_TARGET.sub(_PLACEHOLDER, text)
+    if any_targets:
+        # CR 115.4's paired idiom (Boulder Dash, Arc Trail): a plain "any
+        # target" already matched above, so a further "any other target" in
+        # this same text is the same bare shape again, naming a *different*
+        # object than what "any target" already named - not, as a solitary
+        # "any other target" always means elsewhere (`_ANY_OTHER_TARGET`'s
+        # own docstring), a source exclusion. Read here, ahead of the
+        # generic `_TARGET_WORD` scan below, so it never falls into
+        # `_read_phrase`'s `excludes_source` reading - the wrong mechanism
+        # for a spell, which is never a legal target of its own damage to
+        # begin with.
+        other_targets = len(_ANY_OTHER_TARGET.findall(text))
+        requirements.extend(
+            TargetRequirement(
+                phrase="any other target",
+                card_types=ANY_TARGET_TYPES,
+                allows_players=True,
+                distinct_from_prior_requirement=True,
+            )
+            for _ in range(other_targets)
+        )
+        text = _ANY_OTHER_TARGET.sub(_PLACEHOLDER, text)
     promised_spans = [match.span() for match in _GIFT_PROMISED_INSTEAD_CLAUSE.finditer(text)]
 
     scan = list(_TARGET_WORD.finditer(text))
