@@ -1615,3 +1615,23 @@ def test_a_snapshot_written_before_entering_counter_replacements_is_refused() ->
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `layers.CreaturesControlledByQuality` existed.
+_SCHEMA_VERSION_BEFORE_GROUP_EVASION_GRANTS = 97
+
+
+def test_a_snapshot_written_before_group_evasion_grants_is_refused() -> None:
+    """A version-97 dump predates the `CreaturesControlledByQuality` selector
+    kind a group "can't be blocked" grant (CR 509.1b) is stored under, so a
+    continuous effect written by an older engine for the same printing would
+    carry a different selector shape. Refused instead of decoded as current."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_GROUP_EVASION_GRANTS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_GROUP_EVASION_GRANTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_GROUP_EVASION_GRANTS}",
+    ):
+        Game.model_validate(dumped)
