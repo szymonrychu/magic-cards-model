@@ -967,6 +967,19 @@ class CardState(EngineModel):
     the game"). A completed dungeon is kept outside the game (CR 400.11a) with
     this count, so "you've completed a dungeon" and "you haven't completed
     Tomb of Annihilation" have something to read after it has gone."""
+    unlocked_doors: tuple[str, ...] = ()
+    """CR 709.5c's "unlocked designations" of a Room permanent with a shared
+    type line (Unholy Annex // Ritual Chamber) - each door (a half, CR
+    709.5j) that has one, named by that face's own printed name. A door not
+    in this tuple is "locked" (CR 709.5c). Set to the cast face as the
+    permanent enters (CR 709.5d, `Game.enter_the_battlefield`, off `face_
+    played` while it is still the incarnation that was cast), and by `Game.
+    unlock_door` afterwards (CR 709.5e's special action, CR 709.5f's
+    "unlock" instruction) - both append-only; nothing in this pool locks a
+    door back (CR 709.5g), so there is no remover yet. Empty for every card
+    that is not a Room, and for a Room that entered without being cast at
+    all (CR 709.5d's own "if it's entering the battlefield and neither half
+    was cast as a spell, it enters with neither unlocked designation")."""
     last_known_spell: SpellSnapshot | None = None
     """This card as it last left the stack (`SpellSnapshot`), taken by
     `move_to` and overwritten only by its next departure from the stack."""
@@ -1778,6 +1791,28 @@ class CardState(EngineModel):
             for face in self.card.card_faces or []:
                 if face.name == self.face_played:
                     return face
+        if self.card.layout is Layout.SPLIT and "Room" in self.card.subtypes:
+            # CR 709.5's own permanent split card (a Room, "Unholy Annex //
+            # Ritual Chamber"): unlike an ordinary split card - never itself
+            # a permanent in this pool, and whose own `.name` off the stack
+            # is deliberately kept reading the front face alone (this
+            # property's own docstring: an earlier attempt at CR 709.4's
+            # full combining default was reverted for breaking that
+            # encoding) - a *permanent* split card has abilities on both
+            # doors that need to be seen regardless of which was cast.
+            # `None` here falls through to this object's own top-level
+            # fields, Scryfall's combined "Front // Back" values for a
+            # split card's `name`/`type_line` - CR 709.4's real default,
+            # scoped to Rooms only so it never touches the ordinary split-
+            # card behaviour above. Without this, `machines/triggers.
+            # triggered_abilities_on`'s `up_face_name` filter (built for a
+            # transform/MDFC's single active face) silently dropped every
+            # ability printed on the door that was not the object's front
+            # face, whichever half was actually cast. CR 709.5c's own
+            # further narrowing - a *locked* door's name/mana cost/text
+            # genuinely hidden, not just combined - is not modelled yet
+            # (`docs/engine-coverage.md`).
+            return None
         return self.card.front_face
 
     @property

@@ -1,0 +1,142 @@
+{
+  "object": "card",
+  "id": "6f7c63ae-5df3-410f-8643-b8c69133ca9d",
+  "oracle_id": "9b0af3ad-1b4d-4480-af91-fe9baee5d1c5",
+  "multiverse_ids": [],
+  "resource_id": "8B3CB63352A3232C3962EBE1FC4825FED2C88C95937E2FD80BA59926F8E5B233",
+  "mtgo_id": 142651,
+  "arena_id": 96593,
+  "tcgplayer_id": 641728,
+  "cardmarket_id": 833837,
+  "name": "Haliya, Guided by Light",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/6f7c63ae-5df3-410f-8643-b8c69133ca9d",
+  "scryfall_uri": "https://scryfall.com/card/eoe/19/haliya-guided-by-light?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:26:36Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.jpg?1783905996",
+    "normal": "https://cards.scryfall.io/normal/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.jpg?1783905996",
+    "large": "https://cards.scryfall.io/large/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.jpg?1783905996",
+    "png": "https://cards.scryfall.io/png/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.png?1783905996",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.jpg?1783905996",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.jpg?1783905996",
+    "thumb": "https://cards.scryfall.io/thumb/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.webp?1783905996",
+    "grid": "https://cards.scryfall.io/grid/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.webp?1783905996",
+    "display": "https://cards.scryfall.io/display/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.webp?1783905996",
+    "art": "https://cards.scryfall.io/art/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.webp?1783905996",
+    "crop": "https://cards.scryfall.io/crop/front/6/f/6f7c63ae-5df3-410f-8643-b8c69133ca9d.webp?1783905996"
+  },
+  "mana_cost": "{2}{W}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Soldier",
+  "oracle_text": "Whenever Haliya or another creature or artifact you control enters, you gain 1 life.\nAt the beginning of your end step, draw a card if you've gained 3 or more life this turn.\nWarp {W} (You may cast this card from your hand for its warp cost. Exile this creature at the beginning of the next end step, then you may cast it from exile on a later turn.)",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [
+    "Warp"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set": "eoe",
+  "set_name": "Edge of Eternities",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/6f7c63ae-5df3-410f-8643-b8c69133ca9d/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9b0af3ad-1b4d-4480-af91-fe9baee5d1c5&unique=prints",
+  "collector_number": "19",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Kieran Yanner",
+  "artist_ids": [
+    "aa7e89ed-d294-4633-9057-ce04dacfcfa4"
+  ],
+  "illustration_id": "86ce275f-7e0e-4b1f-bdf4-3c62361374f8",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1510,
+  "preview": {
+    "source": "Wizards of the Coast",
+    "source_uri": "https://magic.wizards.com/en/products/edge-of-eternities/card-image-gallery",
+    "previewed_at": "2025-07-08"
+  },
+  "prices": {
+    "usd": "2.62",
+    "usd_foil": "3.61",
+    "usd_etched": null,
+    "eur": "3.68",
+    "eur_foil": "4.31",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DHaliya%252C%2BGuided%2Bby%2BLight",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DHaliya%252C%2BGuided%2Bby%2BLight",
+    "edhrec": "https://edhrec.com/route/?cc=Haliya%2C+Guided+by+Light"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F641728%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=833837&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/142651?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

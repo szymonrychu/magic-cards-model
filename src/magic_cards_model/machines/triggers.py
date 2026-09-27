@@ -310,6 +310,42 @@ class ExtraTriggerEvent(StrEnum):
     #: this event is being matched. **Emitted by:** `Game.
     #: announce_batched_events`, off `Game.graveyard_arrivals_this_turn`.
     PUT_INTO_GRAVEYARD = "put_into_graveyard"
+    #: CR 700.13: "A player commits a crime as that player casts a spell,
+    #: activates an ability, or puts a triggered ability on the stack and
+    #: that spell or ability targets at least one opponent; at least one
+    #: permanent, spell, or ability an opponent controls; and/or at least one
+    #: card in an opponent's graveyard." Magda, the Hoardmaster's "Whenever
+    #: you commit a crime, ..." and Forsaken Miner's identical condition.
+    #: `GameEvent.player` is the player who committed it. `machines/
+    #: conditions/history.record_crime` already stamps the turn-scoped fact
+    #: an intervening "if" reads ("you've committed a crime this turn"); this
+    #: is the same action's own event, for a trigger to watch. **Emitted
+    #: by:** `machines/conditions/history.record_crime`, the instant it finds
+    #: a qualifying target - once per crime-committing action, never once per
+    #: qualifying target (CR 700.13 is about the action, not the count).
+    CRIME_COMMITTED = "crime_committed"
+    #: CR 701.23a: "To search for a card in a zone, look at all cards in that
+    #: zone, either mentally or by looking at each card." Wan Shi Tong,
+    #: Librarian's "Whenever an opponent searches their library, ..." and Ob
+    #: Nixilis, Unshackled's identical condition. `GameEvent.player` is the
+    #: player who searched. **Emitted by:** `Game.search_library`, once per
+    #: search (CR 701.23a's own "look at all cards in that zone" is one
+    #: action, regardless of how many finds it allows).
+    SEARCHES_LIBRARY = "searches_library"
+    #: CR 709.5h: "Some abilities trigger when a player unlocks a particular
+    #: half of a permanent. These abilities trigger when that permanent is
+    #: given the appropriate unlocked designation, regardless of whether it
+    #: was given that designation while entering the battlefield or after
+    #: entering the battlefield." Ritual Chamber's "When you unlock this
+    #: door, ..." and Central Elevator // Promising Stairs' identical
+    #: condition on its own "Central Elevator" door. `GameEvent.subject_id`
+    #: is the permanent, `GameEvent.subject_name` the door's own face name
+    #: (`BaseAbility.face`, matched against the printed ability's own face so
+    #: only the door that was actually unlocked triggers), `GameEvent.player`
+    #: who unlocked it. **Emitted by:** `Game.enter_the_battlefield` (CR
+    #: 709.5d's cast-half unlock) and `Game.unlock_door` (CR 709.5e's special
+    #: action and CR 709.5f's "unlock" instruction alike).
+    DOOR_UNLOCKED = "door_unlocked"
 
 
 class GameEvent(EngineModel):
@@ -3975,6 +4011,34 @@ _CLASS_BECOMES_LEVEL_CONDITION = re.compile(r"^(?P<subject>.+?) becomes level (?
 _RING_TEMPTS_YOU_CONDITION = re.compile(r"^the ring tempts you$", re.IGNORECASE)
 #: CR 701.54e's "your Ring-bearer" as a trigger condition's subject.
 _RING_BEARER_SUBJECT = re.compile(r"^your ring-bearer (?P<rest>.+)$", re.IGNORECASE)
+#: CR 700.13: "you commit a crime" - Magda, the Hoardmaster's and Forsaken
+#: Miner's identical condition, always "you" (CR 700.13 is a self-designation
+#: - a player commits a crime, never "an opponent commits a crime").
+_CRIME_COMMITTED_CONDITION = re.compile(r"^you(?:'ve| have)? commits? a crime$", re.IGNORECASE)
+#: CR 701.23a: "an opponent searches their library" - Wan Shi Tong,
+#: Librarian's and Ob Nixilis, Unshackled's identical condition. "You search
+#: your library" is the same event from the controller's own side, kept for
+#: generality even though nothing in the pool prints it yet.
+_SEARCHES_LIBRARY_CONDITION = re.compile(
+    r"^(?P<who>you|an opponent|a player) search(?:es)? (?:your|their) library$", re.IGNORECASE
+)
+#: CR 603.6c: "an ability that triggers when a card is put into a certain
+#: zone 'from anywhere' is never treated as a leaves-the-battlefield
+#: ability" - so, unlike `DIES`'s battlefield-only CR 700.4 move, this is not
+#: one of CR 603.10a's own enumerated look-back exceptions either; CR
+#: 603.10's own intro answers it instead ("objects that exist immediately
+#: after an event are checked" by default), which is exactly the graveyard
+#: card as it now sits. Emrakul, the Aeons Torn's and Purity's identical
+#: condition, self-referential to the ability's own source, from *any*
+#: origin zone.
+_SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION = re.compile(
+    r"^(?P<subject>.+?) is put into a graveyard from anywhere$", re.IGNORECASE
+)
+#: CR 709.5h/709.5j: "you unlock this door" - Ritual Chamber's and Central
+#: Elevator // Promising Stairs' identical condition, self-referential to
+#: the ability's own printed face (`BaseAbility.face`), never to the
+#: permanent's other door.
+_DOOR_UNLOCKED_CONDITION = re.compile(r"^you unlock this door$", re.IGNORECASE)
 
 #: CR 702.29c's "When you cycle this card" (Vizier of Tumbling Sands,
 #: Windcaller Aven, Choking Tethers), and the non-self "you cycle a card" /
@@ -4156,6 +4220,14 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.ABILITY_ACTIVATED})
     if _RING_TEMPTS_YOU_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.RING_TEMPTS_YOU})
+    if _CRIME_COMMITTED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.CRIME_COMMITTED})
+    if _SEARCHES_LIBRARY_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.SEARCHES_LIBRARY})
+    if _DOOR_UNLOCKED_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.DOOR_UNLOCKED})
+    if _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.PUT_INTO_GRAVEYARD})
     bending = _bending_events_named(lowered)
     if bending:
         return bending
@@ -4229,6 +4301,19 @@ def _unread_condition_matches(
             if _types_match(tuple(card.types), match.group("types")):
                 return True
         return False
+
+    match = _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(condition)
+    if match is not None and mine:
+        # CR 603.2/603.10: the source's own arrival at a graveyard, from any
+        # zone (not only the battlefield, unlike `DIES`) - checked against
+        # the object as it exists right now (CR 603.10's own default, since
+        # this shape is not one of 603.10a's enumerated look-back
+        # exceptions), which is exactly the graveyard card `game.
+        # graveyard_batch` - the live batch this event is being matched
+        # against - already names by id.
+        if event.event is not ExtraTriggerEvent.PUT_INTO_GRAVEYARD:
+            return False
+        return any(arrival.card_id == source.id for arrival in game.graveyard_batch)
 
     match = _NTH_COUNTER_PUT_CONDITION.match(condition)
     if match is not None:
@@ -4585,6 +4670,32 @@ def _unread_condition_matches(
         # controller has to be the player tempted.
         return event.event is ExtraTriggerEvent.RING_TEMPTS_YOU and event.player == controller
 
+    if _CRIME_COMMITTED_CONDITION.match(condition):
+        # CR 700.13: "you commit a crime" - always the ability's own
+        # controller, never an opponent's crime.
+        return event.event is ExtraTriggerEvent.CRIME_COMMITTED and event.player == controller
+
+    match = _SEARCHES_LIBRARY_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.SEARCHES_LIBRARY or event.player is None:
+            return False
+        who = match.group("who")
+        if who == "you":
+            return event.player == controller
+        if who == "an opponent":
+            return event.player != controller
+        return True  # "a player" - anyone.
+
+    if _DOOR_UNLOCKED_CONDITION.match(condition):
+        # CR 709.5h: the permanent this ability is printed on, and only the
+        # door it is printed on (`BaseAbility.face`) - Ritual Chamber's own
+        # "you unlock this door" never fires for Unholy Annex's door.
+        return (
+            event.event is ExtraTriggerEvent.DOOR_UNLOCKED
+            and event.subject_id == source.id
+            and event.subject_name == ability.face
+        )
+
     bending_events = _bending_events_named(condition)
     if bending_events:
         # CR 701.67c: "whenever a player waterbends" - "you", so the event's
@@ -4829,6 +4940,23 @@ def zones_ability_functions_in(
         # left unread: the source returned by the same event is in a hand
         # already. `_returned_to_hand_matches` hears it only then.
         return frozenset({Zone.BATTLEFIELD, Zone.HAND})
+
+    if (
+        ability.event is None
+        and _SELF_PUT_INTO_GRAVEYARD_FROM_ANYWHERE_CONDITION.match(lowered) is not None
+    ):
+        # CR 113.6k: "A trigger condition that can't trigger from the
+        # battlefield functions in all zones it can trigger from" - "is put
+        # into a graveyard from anywhere" (Emrakul, the Aeons Torn; Purity)
+        # can occur from whichever zone the source was in before the move -
+        # the battlefield (a death), the library (milled), the hand
+        # (discarded), exile - and is asked again from the graveyard it
+        # just arrived in either way, the identical widening `_LOOK_BACK_
+        # EVENTS` gives every other zone-change look-back, generalised over
+        # every origin the way "anywhere" prints.
+        return frozenset(
+            {Zone.BATTLEFIELD, Zone.GRAVEYARD, Zone.LIBRARY, Zone.HAND, Zone.EXILE, Zone.STACK}
+        )
 
     # CR 113.6m: "An ability whose cost or effect specifies that it moves the
     # object it's on out of a particular zone functions only in that zone,
@@ -7822,12 +7950,32 @@ def discard_occurrences(ability: TriggeredAbility, source: CardState, event: Gam
 
 
 def _event_for(
-    game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent
+    game: "Game", ability: TriggeredAbility, controller: str, event: GameEvent, source: CardState
 ) -> GameEvent:
     """The event this ability carries onto the stack: `event` itself, or -
     for a batched "one or more `<description>` attack" trigger - a copy
     whose `amount` is how many attackers fit the description, the count
-    this ability's own "that many" reads (CR 603.2c)."""
+    this ability's own "that many" reads (CR 603.2c); or, for a
+    self-referential "`<name>` is put into a graveyard from anywhere"
+    (Emrakul, the Aeons Torn; Purity), a copy stamped with `source`'s own
+    identity and current `zone_change_stamp` - `PUT_INTO_GRAVEYARD`'s shared
+    batch event otherwise carries neither, which is fine for a batched "one
+    or more ... cards" condition (read straight off `Game.graveyard_batch`)
+    but leaves a consequence that finds the object by its event
+    (`machines/effects._dead_self_found`, CR 400.7e/608.2h) with nothing to
+    find: `source` here is already that object's current (graveyard)
+    incarnation, found the same way `Game.emit` widened its own `sources`
+    to offer every graveyard card in the first place."""
+    if event.event is ExtraTriggerEvent.PUT_INTO_GRAVEYARD and event.subject_id is None:
+        arrival = next((a for a in game.graveyard_batch if a.card_id == source.id), None)
+        if arrival is not None:
+            return event.model_copy(
+                update={
+                    "subject_id": source.id,
+                    "zone_change_stamp": source.zone_change_stamp,
+                    "player": arrival.player,
+                }
+            )
     if ability.event is not TriggerEvent.ATTACKS or event.subject_id is not None:
         return event
     batch = batched_attackers(game, ability.condition, controller)
@@ -7869,7 +8017,7 @@ def triggers_for(game: "Game", event: GameEvent, sources: list[CardState]) -> li
             controller=controller,
             source_stamp=source.zone_change_stamp,
             source_times_transformed=source.times_transformed,
-            event=_event_for(game, ability, controller, event),
+            event=_event_for(game, ability, controller, event, source),
         )
         triggered.append(on_stack)
         # CR 603.2c: one discard instruction of several cards is several
