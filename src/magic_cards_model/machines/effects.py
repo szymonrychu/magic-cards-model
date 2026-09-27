@@ -13704,6 +13704,84 @@ def _parse_event_player_gets_that_many_poison_clause(
     return effect
 
 
+#: "you and that player each gain that much life" - Angel of Destiny's own
+#: "Whenever a creature you control deals combat damage to a player, you and
+#: that player each gain that much life." The same `TriggerEvent.DEALS_
+#: DAMAGE` shape `_EVENT_PLAYER_GETS_THAT_MANY_POISON_RE` above already reads
+#: ("that player" is `GameEvent.player`, CR 120.2a's damaged player; "that
+#: much" is `GameEvent.amount`, read through `_that_many_or_notice`), with
+#: "you" - the resolving ability's own controller (CR 109.5) - gaining
+#: alongside rather than instead.
+_YOU_AND_EVENT_PLAYER_GAIN_THAT_MUCH_LIFE_RE = re.compile(
+    r"^you and that player each gain that much life\.?$", re.IGNORECASE
+)
+
+
+def _parse_you_and_event_player_gain_that_much_life_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_YOU_AND_EVENT_PLAYER_GAIN_THAT_MUCH_LIFE_RE`'s shape. Ability-only:
+    "that player" and "that much" both point at a triggering event a spell
+    never has."""
+    if for_spell or _YOU_AND_EVENT_PLAYER_GAIN_THAT_MUCH_LIFE_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack) or stack_object.event is None:
+            return
+        other = stack_object.event.player
+        amount = _that_many_or_notice(
+            game,
+            clause,
+            source_id=stack_object.source_id,
+            source_name=stack_object.source_name,
+            stack_object=stack_object,
+        )
+        if amount is None or amount <= 0:
+            return
+        game.gain_life(stack_object.controller, amount)
+        if other is not None:
+            game.gain_life(other, amount)
+
+    return effect
+
+
+#: "each player this creature attacked this turn loses the game" - Angel of
+#: Destiny's own end-step trigger, its leading "if you have at least 15 life
+#: more than your starting life total" already split off and checked by
+#: `machines.triggers.intervening_if_holds` before this clause is ever read
+#: (the same order `_YOU_WIN_THE_GAME_RE`'s own docstring describes).
+#: CR 104.3e's "an effect may state that a player loses the game"
+#: (`Game.player_loses_the_game`, `_parse_if_condition_you_win_the_game_
+#: clause`'s winning twin) applied to every player `Game.
+#: attacked_players_this_turn` recorded for this permanent's own id - CR
+#: 508.1a's historical fact, not this combat's live attacking status, since
+#: an end-step trigger reads it well after combat has ended.
+_EACH_PLAYER_THIS_CREATURE_ATTACKED_LOSES_RE = re.compile(
+    r"^each player this (?:creature|permanent) attacked this turn loses the game\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_player_this_creature_attacked_loses_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_EACH_PLAYER_THIS_CREATURE_ATTACKED_LOSES_RE`'s shape. Ability-only:
+    "this creature" and the per-turn attack record it reads have no spell
+    equivalent."""
+    if for_spell or _EACH_PLAYER_THIS_CREATURE_ATTACKED_LOSES_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack) or stack_object.source_id is None:
+            return
+        attacked = game.attacked_players_this_turn.get(stack_object.source_id, ())
+        for username in list(attacked):
+            game.player_loses_the_game(username)
+
+    return effect
+
+
 #: Pyxis of Pandemonium's "Each player turns face up all cards they own exiled
 #: with this artifact, then puts all permanent cards among them onto the
 #: battlefield." CR 406.3's face-down pile, CR 607.2a-linked to the object,
@@ -29083,6 +29161,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         # draw half needs the activation's own cost-sacrificed card, which no
         # per-clause parser below has access to.
         return draw_equal_to_sacrificed_then_discard
+    gain_life_equal_to_sacrificed = _parse_gain_life_equal_to_sacrificed_creature_clause(
+        effect_text
+    )
+    if gain_life_equal_to_sacrificed is not None:
+        return gain_life_equal_to_sacrificed
     may_transform_self_if_you_do = _parse_may_transform_self_if_you_do_clause(effect_text)
     if may_transform_self_if_you_do is not None:
         return may_transform_self_if_you_do
@@ -29941,6 +30024,28 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     linked_exile_return_pair = _parse_linked_exile_return_pair_clause(effect_text)
     if linked_exile_return_pair is not None:
         return linked_exile_return_pair
+    if_condition_exile_self_and_each = _parse_if_condition_exile_self_and_each_clause(
+        effect_text, for_spell=False
+    )
+    if if_condition_exile_self_and_each is not None:
+        # Read whole, ahead of `parse_mixed_effect`'s per-clause split:
+        # `split_effect_clauses` cuts on a bare " and " regardless of the
+        # comma already separating the leading "if" from the effect, and
+        # slices "each artifact and creature your opponents control" into
+        # three fragments none of which reads as a known clause on its own
+        # (the same reason `_parse_draw_equal_to_sacrificed_creature_power_
+        # then_discard_clause` above is read whole too).
+        return if_condition_exile_self_and_each
+    you_and_event_player_gain = _parse_you_and_event_player_gain_that_much_life_clause(
+        effect_text, for_spell=False
+    )
+    if you_and_event_player_gain is not None:
+        # Read whole, ahead of the splitter: "you and that player each gain
+        # that much life" has a bare " and " of its own that `split_effect_
+        # clauses` cuts clean through, leaving "you" on one side and "that
+        # player each gain that much life" on the other, neither of which is
+        # a clause any per-clause parser reads.
+        return you_and_event_player_gain
     parsed = parse_mixed_effect(effect_text)
     if parsed is not None:
         return parsed
@@ -30538,15 +30643,36 @@ def _parse_mass_mv_comparison(
     return at_least
 
 
+#: A trailing controller restriction on a mass destroy/exile qualifier -
+#: Ajani, Strength of the Pride's own "exile this permanent and each artifact
+#: and creature your opponents control." CR 205.2a's type-and-restriction
+#: reading (`_parse_mass_type_qualifier`) explicitly refuses a controller
+#: word rather than guessing at it (see that function's own docstring), so
+#: it is stripped here, ahead of every other suffix `_parse_mass_destroy_
+#: predicate` already reads, and checked against the resolving ability's own
+#: source controller instead - the same "you"/"your opponents" pair
+#: `_CHOSEN_NAME_GROUP_LOSES_RE`'s `scope` group already reads for a group
+#: static, generalised for a mass destroy/exile sweep too.
+_MASS_CONTROLLER_SCOPE_RE = re.compile(
+    r"^(?P<inner>.+?)\s+(?P<scope>you control|your opponents control)$", re.IGNORECASE
+)
+
+
 def _parse_mass_destroy_predicate(
     rest: str,
 ) -> Callable[["Game", CardState, CardState | None], bool] | None:
     """The whole description behind `_DESTROY_EACH_RE`'s `rest` group - a
-    type qualifier, an optional absence-of-counter restriction, and an
-    optional mana-value comparison, ANDed together - as a predicate over
-    (game, candidate permanent, this clause's own source).
+    type qualifier, an optional controller restriction, an optional
+    absence-of-counter restriction, and an optional mana-value comparison,
+    ANDed together - as a predicate over (game, candidate permanent, this
+    clause's own source).
     """
     text = rest.strip()
+    controller_scope: str | None = None
+    scope_match = _MASS_CONTROLLER_SCOPE_RE.fullmatch(text)
+    if scope_match is not None:
+        controller_scope = scope_match.group("scope").lower()
+        text = scope_match.group("inner").strip()
     entered_this_turn = False
     entered_match = _MASS_ENTERED_THIS_TURN_RE.fullmatch(text)
     if entered_match is not None:
@@ -30589,6 +30715,14 @@ def _parse_mass_destroy_predicate(
         return None
 
     def predicate(game: "Game", permanent: CardState, source: CardState | None) -> bool:
+        if controller_scope is not None:
+            if source is None:
+                return False
+            is_yours = permanent.controller == source.controller
+            if controller_scope == "you control" and not is_yours:
+                return False
+            if controller_scope == "your opponents control" and is_yours:
+                return False
         if token_wanted is not None and is_token(permanent) is not token_wanted:
             return False
         chars = game.characteristics_of(permanent)
@@ -30867,6 +31001,65 @@ def _parse_exile_each_clause(sentence: str) -> TargetedClause | None:
         source = stack_object if isinstance(stack_object, CardState) else stack_object.source(game)
         count = _exile_matching(game, predicate, source)
         game.record_count(count)
+
+    return effect
+
+
+#: "If `<condition>`, exile this permanent and each `<qualifier>`." - Ajani,
+#: Strength of the Pride's own 0 loyalty ability, "If you have at least 15
+#: life more than your starting life total, exile Ajani and each artifact and
+#: creature your opponents control." (its own name already rewritten to
+#: "this permanent" by `self_normalized_effect_text`). The leading "if" is a
+#: loyalty ability's own plain conditional instruction (CR 606.2, CR 608.2c),
+#: not a triggered ability's intervening *if* (CR 603.4) - there is no
+#: trigger event here to recheck - so it is read the same way `_IF_CONDITION_
+#: YOU_WIN_THE_GAME_RE` already reads one: `_effect_condition_is_readable`/
+#: `Game.condition_holds`, never a second condition grammar. The group half
+#: reuses `_parse_mass_destroy_predicate`'s qualifier grammar - including the
+#: controller restriction `_MASS_CONTROLLER_SCOPE_RE` reads - so "your
+#: opponents control" is never a second copy of `_EXILE_EACH_RE`'s own
+#: reading. CR 608.2f/603.2c: the source's own exile and the group sweep are
+#: one `Game.exile_cards` batch, not two separate moves.
+_IF_CONDITION_EXILE_SELF_AND_EACH_RE = re.compile(
+    r"^if (?P<condition>.+?), exile this permanent and each (?P<rest>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_if_condition_exile_self_and_each_clause(
+    sentence: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_IF_CONDITION_EXILE_SELF_AND_EACH_RE`'s shape. Ability-only: "this
+    permanent" names the resolving ability's own source (CR 700.7), which a
+    spell not yet on the battlefield has none of."""
+    if for_spell:
+        return None
+    match = _IF_CONDITION_EXILE_SELF_AND_EACH_RE.fullmatch(sentence.strip())
+    if match is None or not _effect_condition_is_readable(match.group("condition")):
+        return None
+    predicate = _parse_mass_destroy_predicate(match.group("rest"))
+    if predicate is None:
+        return None
+    condition_text = match.group("condition").strip()
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        controller = game.controller_of(stack_object)
+        source = stack_object.source_or_last_known(game)
+        if not game.condition_holds(controller.username, condition_text, source):
+            return
+        candidates = [
+            permanent for permanent in list(game.battlefield) if predicate(game, permanent, source)
+        ]
+        if (
+            source is not None
+            and source.zone is Zone.BATTLEFIELD
+            and all(permanent.id != source.id for permanent in candidates)
+        ):
+            candidates.append(source)
+        exiled = game.exile_cards(candidates)
+        game.record_count(len(exiled))
 
     return effect
 
@@ -57966,6 +58159,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     poison_that_many = _parse_event_player_gets_that_many_poison_clause(clause, for_spell=for_spell)
     if poison_that_many is not None:
         return poison_that_many
+    each_player_attacked_loses = _parse_each_player_this_creature_attacked_loses_clause(
+        clause, for_spell=for_spell
+    )
+    if each_player_attacked_loses is not None:
+        return each_player_attacked_loses
     draw_the_difference = _parse_draw_the_difference_clause(clause, for_spell=for_spell)
     if draw_the_difference is not None:
         return draw_the_difference
@@ -66449,6 +66647,50 @@ def _parse_draw_equal_to_sacrificed_creature_power_then_discard_clause(
     return effect
 
 
+#: "You gain life equal to the sacrificed creature's toughness." - Ayli,
+#: Eternal Pilgrim's own "{1}, Sacrifice another creature:" ability, and
+#: Temple of Aclazotz's (Arguel's Blood Fast's transformed back)
+#: "{T}, Sacrifice a creature:" ability, word for word. The identical CR
+#: 602.2b timing `_DRAW_EQUAL_TO_SACRIFICED_CREATURE_POWER_THEN_DISCARD_RE`
+#: above already documents: the creature paid as the activation's own cost is
+#: gone (CR 400.7) before this ability is even on the stack, so its power/
+#: toughness is the printed one on `AbilityOnStack.cost_sacrificed_card_ids`'s
+#: own recorded card, never a live `Game.power_of`/`toughness_of` (there is no
+#: permanent left to compute layers for). `attribute` is read generically -
+#: power or toughness - rather than pinned to Ayli's own "toughness", so a
+#: future card printing the identical shape off "power" instead reads for
+#: free too.
+_GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE = re.compile(
+    r"^you gain life equal to the sacrificed creature'?s (?P<attribute>power|toughness)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_life_equal_to_sacrificed_creature_clause(text: str) -> AbilityEffect | None:
+    """`_GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE`'s shape."""
+    match = _GAIN_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    attribute = match.group("attribute").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        total = 0
+        for card_id in ability.cost_sacrificed_card_ids:
+            sacrificed = game.find_by_id(card_id)
+            if sacrificed is None:
+                continue
+            printed = (
+                sacrificed.card.toughness if attribute == "toughness" else sacrificed.card.power
+            )
+            if printed is not None and printed.lstrip("-").isdigit():
+                total += int(printed)
+        if total > 0:
+            game.gain_life(controller.username, total)
+
+    return effect
+
+
 # --------------------------------------------------------------------------
 # Looking at the top N and taking some of them (CR 701.20e)
 # --------------------------------------------------------------------------
@@ -69950,16 +70192,21 @@ def _parse_put_two_card_groups_and_or_from_hand_clause(text: str) -> AbilityEffe
 
 
 #: "Whenever another creature you control dies, you gain life equal to its
-#: toughness." - South Wind Avatar's own dies trigger. "Its" is CR 400.7
-#: anaphora to the dying creature the condition already matched (CR 603.10a's
-#: own look-back, CR 700.4), read off `AbilityOnStack.event` the same way
-#: `event_subject_power` already reads a dying creature's power for Gruff
-#: Triplets' own dies trigger - `CardState.toughness` already falls back to
-#: `last_known_toughness` (CR 608.2h) the moment the object leaves the
-#: battlefield, so nothing further is needed to read it once it is in a
-#: graveyard.
+#: toughness." - South Wind Avatar's own dies trigger - and Righteous
+#: Valkyrie's own "Whenever another Angel or Cleric you control enters, you
+#: gain life equal to that creature's toughness." Both are CR 400.7 anaphora
+#: back to the very object the trigger condition already matched (CR
+#: 603.10a's own look-back, CR 700.4) - "it" when the object left the
+#: battlefield and the pronoun is all that is left to call it (South Wind
+#: Avatar's own dies trigger), "that creature" when it has not (Righteous
+#: Valkyrie's own enters trigger, where the object is still there to be named
+#: directly) - read off `AbilityOnStack.event` the same way `event_subject_
+#: power` already reads a dying creature's power for Gruff Triplets' own
+#: dies trigger. `CardState.toughness` already falls back to `last_known_
+#: toughness` (CR 608.2h) the moment the object leaves the battlefield, so
+#: nothing further is needed to read either phrasing once resolution asks.
 _GAIN_LIFE_EQUAL_TO_EVENT_SUBJECT_TOUGHNESS_RE = re.compile(
-    r"^you gain life equal to its toughness\.?$", re.IGNORECASE
+    r"^you gain life equal to (?:its|that creature'?s) toughness\.?$", re.IGNORECASE
 )
 
 
