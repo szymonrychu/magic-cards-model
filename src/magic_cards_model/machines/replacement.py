@@ -3079,6 +3079,68 @@ def _compile_prevent_damage_and_mill(effect: ReplacementEffect) -> CardReplaceme
     return CardReplacement(label=effect.text, applies=applies, apply=apply, prevention=True)
 
 
+# -- "If [noncombat |combat ]damage would be dealt to you, prevent that damage[.
+#    You gain life equal to the damage prevented this way.]" --
+
+#: The event half: damage aimed at the effect's own controller, optionally
+#: narrowed to combat (CR 120.2a) or noncombat (CR 120.2b) damage.
+_DAMAGE_TO_YOU_EVENT_RE = re.compile(
+    r"^(?:(?P<combat>(?P<non>non)?combat) )?damage would be dealt to you$", re.IGNORECASE
+)
+#: CR 615.5's optional additional effect, the sentence after the prevention on
+#: the same printed line (Purity). Any other trailing sentence - Immortal
+#: Coil's "Exile a card from your graveyard for each 1 damage prevented this
+#: way." - is an unread rider, so the line fails closed rather than being
+#: performed with its rider silently dropped.
+_GAIN_LIFE_EQUAL_TO_PREVENTED_RE = re.compile(
+    r"^you gain life equal to the damage prevented this way\.?$", re.IGNORECASE
+)
+
+
+def _compile_prevent_damage_to_you(effect: ReplacementEffect) -> CardReplacement | None:
+    """A permanent's static "If [non]combat damage would be dealt to you,
+    prevent that damage." with, optionally, CR 615.5's "You gain life equal
+    to the damage prevented this way." (CR 615.1a, CR 604.2).
+
+    Under damage that can't be prevented (CR 615.12) `applicable_effects`
+    wraps this in `_prevents_nothing`; the rider then gains nothing, because
+    nothing was prevented this way.
+    """
+    if effect.kind is not ReplacementKind.PREVENT_IF_WOULD:
+        return None
+    if (effect.replacement or "").strip().rstrip(".").lower() != "prevent that damage":
+        return None
+    event_match = _DAMAGE_TO_YOU_EVENT_RE.fullmatch((effect.event or "").strip())
+    if event_match is None:
+        return None
+    raw = effect.raw.strip()
+    text = effect.text.strip()
+    if not raw.startswith(text):
+        return None
+    rider = raw[len(text) :].strip()
+    gains_life = bool(rider)
+    if gains_life and _GAIN_LIFE_EQUAL_TO_PREVENTED_RE.fullmatch(rider) is None:
+        return None
+    combat_word = (event_match.group("combat") or "").lower()
+
+    def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+        if event.kind is not EventKind.DAMAGE or event.amount <= 0 or event.player is None:
+            return False
+        if combat_word == "noncombat" and event.combat:
+            return False
+        if combat_word == "combat" and not event.combat:
+            return False
+        return event.player.username == game.controller_of(source).username
+
+    def apply(game: "Game", source: CardState | None, event: ReplaceableEvent) -> None:
+        prevented = 0 if game.damage_cant_be_prevented(event) is not None else event.amount
+        event.amount = 0
+        if gains_life and prevented > 0 and source is not None:
+            game.gain_life(game.controller_of(source).username, prevented)
+
+    return CardReplacement(label=raw, applies=applies, apply=apply, prevention=True)
+
+
 # -- "prevent all combat damage that would be dealt to and dealt by this creature" --
 
 _SELF_PREVENT_COMBAT_RE = re.compile(
@@ -4416,6 +4478,7 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     compile_damage_plus_source_characteristic,
     compile_heal_other_damage,
     _compile_prevent_damage_and_mill,
+    _compile_prevent_damage_to_you,
     _compile_self_prevent_combat_damage,
     _compile_prevent_all_to_group,
     _compile_life_gain_doubler,
@@ -4778,6 +4841,9 @@ _AUDITED_STATIC_COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement |
     _compile_draw_doubler_except_draw_step,
     # R0a-T5: proven by `test_noncombat_damage_as_minus_counters.py`.
     _compile_damage_as_counters,
+    # Proven by `test_static_prevent_damage_to_you.py` (Purity, with its CR
+    # 615.5 life-gain rider).
+    _compile_prevent_damage_to_you,
 )
 
 
