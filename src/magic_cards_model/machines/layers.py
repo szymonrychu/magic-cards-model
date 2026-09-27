@@ -7769,6 +7769,19 @@ _ATTACHED_CREATURE_CANT_BE_BLOCKED_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Uneasy Alliance: "Enchanted creature can't attack or block." - CR 508.1c's
+#: and CR 509.1b's restrictions granted together in layer 6 (CR 613.1f), the
+#: identical family `_ATTACHED_CREATURE_CANT_BE_BLOCKED_RE` above already
+#: grants (CR 509.1a alone); read the same self-referential way once granted -
+#: `combat._self_attack_restriction_sentence` already accepts "This creature
+#: can't attack or block." for the attack half, and this task widens
+#: `combat._self_block_restriction_sentences`/`_parse_self_block_restriction`
+#: to read the identical text for the block half too.
+_ATTACHED_CREATURE_CANT_ATTACK_OR_BLOCK_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature can'?t attack or block\.?$",
+    re.IGNORECASE,
+)
+
 #: "Enchanted permanent is a Construct creature with base power and
 #: toughness 5/5 in addition to its other types." (Puppet Crafting);
 #: "Enchanted artifact is a creature with base power and toughness 5/5 in
@@ -11962,6 +11975,14 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             0,
             0,
             [f"This creature can't be blocked{match.group('condition') or ''}."],
+            subject=match.group("attachment").lower(),
+            line=sentence,
+        )
+    if match := _ATTACHED_CREATURE_CANT_ATTACK_OR_BLOCK_RE.fullmatch(sentence):
+        return _attached_creature_static_builder(
+            0,
+            0,
+            ["This creature can't attack or block."],
             subject=match.group("attachment").lower(),
             line=sentence,
         )

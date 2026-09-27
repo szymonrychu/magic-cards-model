@@ -560,9 +560,12 @@ def attack_refusal(game: "Game", creature: CardState, defender: TargetRef) -> st
         # text the way the defender check above is.
         return f"{creature.name} can't attack this turn (CR 508.1c)"
 
+    from .combat_statics import power_threshold_restriction_refusal
+
     return (
         self_card_count_restriction_refusal(game, creature, "attack")
         or self_control_count_restriction_refusal(game, creature, "attack")
+        or power_threshold_restriction_refusal(game, creature, "attack")
         or _defender_refusal(game, defender, active)
         or group_attack_restriction_refusal(game, creature, defender)
     )
@@ -1333,6 +1336,28 @@ _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE = re.compile(
     r"can't be blocked by creatures with power (?P<power>\d+) or less\.?$", re.IGNORECASE
 )
 
+#: April O'Neil, Kunoichi Trainee: "April O'Neil can't be blocked by
+#: creatures with power 3 or greater." - the mirror direction of Questing
+#: Beast's "or less" (`_CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE`), read the same
+#: way: a printed number compared against the *blocker's* computed power
+#: (CR 613.5), never the attacker's own.
+_CANT_BE_BLOCKED_BY_POWER_OR_GREATER_RE = re.compile(
+    r"can't be blocked by creatures with power (?P<power>\d+) or greater\.?$", re.IGNORECASE
+)
+
+#: Fugitive Droid: "This creature can't be blocked if an artifact entered
+#: the battlefield under your control this turn." - CR 509.1a's restriction
+#: with an arbitrary printed condition rather than a power comparison of its
+#: own. The condition itself is read the same generic way every other
+#: condition-gated reader in the pool already asks `Game.condition_holds` -
+#: `machines/conditions/history._counted_entered` already claims "an
+#: artifact entered the battlefield under your control this turn" for an
+#: intervening "if"/"as long as"/modal condition, so this is not a new
+#: condition reader, only a new *place* that hands a tail to the existing one.
+_CANT_BE_BLOCKED_IF_CONDITION_RE = re.compile(
+    r"can't be blocked if (?P<condition>.+?)\.?$", re.IGNORECASE
+)
+
 #: "can't be blocked by creatures with greater power" - a comparison against
 #: the attacker's own power rather than a printed number. The Ring grants it
 #: to its controller's Ring-bearer (CR 701.54c); CR 509.1a is the block it
@@ -1558,7 +1583,26 @@ def evasion_restriction_refusal(
                     f"{threshold} or less, and {blocker.name} has power {blocker_power} "
                     "(CR 509.1a)"
                 )
-        elif _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence):
+            continue
+        if match := _CANT_BE_BLOCKED_BY_POWER_OR_GREATER_RE.search(sentence):
+            threshold = int(match.group("power"))
+            blocker_power = game.power_of(blocker)
+            if blocker_power is not None and blocker_power >= threshold:
+                return (
+                    f"{attacker.name} can't be blocked by creatures with power "
+                    f"{threshold} or greater, and {blocker.name} has power {blocker_power} "
+                    "(CR 509.1a)"
+                )
+            continue
+        if match := _CANT_BE_BLOCKED_IF_CONDITION_RE.search(sentence):
+            condition = match.group("condition")
+            held = game.condition_holds(
+                game.controller_of(attacker).username or "", condition, attacker
+            )
+            if held:
+                return f'{attacker.name} can\'t be blocked: "{sentence}" (CR 509.1a)'
+            continue
+        if _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence):
             if is_token(blocker):
                 return (
                     f"{attacker.name} can't be blocked by tokens, and {blocker.name} "
@@ -1656,7 +1700,15 @@ def is_blocked_by_at_most_one_line(line: str, name: str) -> bool:
     if match is None:
         return False
     subject = (match.group("subject") or "").strip().lower()
-    return subject in ("", "this creature", "this permanent", name.lower())
+    # `name` is the full printed name ("Rocksteady, Crash Courser"), but a
+    # legendary's own printed line self-references by its short form
+    # ("Rocksteady can't be blocked ..." - CR 201.5c), the same vocabulary
+    # every other self-reference in this module reads
+    # (`_self_reference_names`) - a bare string-equality check against the
+    # full name alone missed every comma-shortened legendary self-reference.
+    accepted = {"", "this creature", "this permanent"}
+    accepted.update(candidate.lower() for candidate in _self_reference_names(name))
+    return subject in accepted
 
 
 def looks_like_unparsed_evasion_restriction(
@@ -1683,15 +1735,20 @@ def looks_like_unparsed_evasion_restriction(
             if block_exception_keyword(exception.group("keyword")) is None:
                 return True
             continue
-        if (
-            _CANT_BE_BLOCKED_RE.search(sentence) is None
-            and _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE.search(sentence) is None
-            and _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE.search(sentence) is None
-            and _CANT_BE_BLOCKED_BY_GREATER_POWER_RE.search(sentence) is None
-            and _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence) is None
-        ):
+        if not _reads_evasion_sentence(sentence):
             return True
     return False
+
+
+def _condition_tail_is_readable(condition: str) -> bool:
+    """Whether `Game.condition_is_readable` claims `condition` - a text-only
+    check, no game needed, the same way every other static-line classifier in
+    this module answers `scripts/sweep_pool.py`'s question. Imported at call
+    time: `models.game` imports this module (for `Attack`, combat refusals),
+    so the two cannot import each other at module scope."""
+    from ..models.game import condition_is_readable
+
+    return condition_is_readable(condition)
 
 
 def _reads_evasion_sentence(sentence: str) -> bool:
@@ -1704,15 +1761,25 @@ def _reads_evasion_sentence(sentence: str) -> bool:
     exception = _CANT_BE_BLOCKED_EXCEPT_BY_KEYWORD_RE.search(sentence)
     if exception is not None:
         return block_exception_keyword(exception.group("keyword")) is not None
-    return any(
+    if any(
         shape.search(sentence) is not None
         for shape in (
             _CANT_BE_BLOCKED_RE,
             _CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_RE,
             _CANT_BE_BLOCKED_BY_POWER_OR_LESS_RE,
+            _CANT_BE_BLOCKED_BY_POWER_OR_GREATER_RE,
             _CANT_BE_BLOCKED_BY_GREATER_POWER_RE,
             _CANT_BE_BLOCKED_BY_TOKENS_RE,
         )
+    ):
+        return True
+    # Fugitive Droid's shape is tried last: it is the most general ("if
+    # `<anything>`"), so a sentence one of the more specific shapes above
+    # already reads (the power-comparison "if"/"as long as" shapes) is never
+    # reached here - `any()` above already returned `True` for it.
+    condition_match = _CANT_BE_BLOCKED_IF_CONDITION_RE.search(sentence)
+    return condition_match is not None and _condition_tail_is_readable(
+        condition_match.group("condition")
     )
 
 
@@ -1755,6 +1822,17 @@ def reads_self_combat_restriction_line(line: str, name: str) -> bool:
 _CANT_BLOCK_AND_CANT_BE_BLOCKED_RE = re.compile(
     r"can't block and can't be blocked\.?$", re.IGNORECASE
 )
+
+#: Uneasy Alliance's own grant, once on the enchanted creature's computed
+#: abilities: "This creature can't attack or block." - CR 508.1c's and CR
+#: 509.1b's restrictions from one sentence (CR 613.6): the attack half is
+#: already read by `_self_attack_restriction_sentence`'s own "(?: or
+#: block)?" tail; this is the block half, previously unread at all - nothing
+#: here matched the literal substring "can't block" that `_self_block_
+#: restriction_sentences`'s own subject filter and every `_parse_self_block_
+#: restriction` shape were keyed on, so a creature printed with only this
+#: combined restriction could still legally block.
+_CANT_ATTACK_OR_BLOCK_RE = re.compile(r"can't attack or block\.?$", re.IGNORECASE)
 
 #: Felhide Brawler, Howlpack Wolf, Marauding Boneslasher: "can't block unless
 #: you control another <type>[ or <type>]." - a real, repeated template
@@ -1851,7 +1929,7 @@ def _parse_self_block_restriction(sentence: str) -> "_SelfBlockRestriction | Non
     """
     text = sentence.strip()
 
-    if _CANT_BLOCK_AND_CANT_BE_BLOCKED_RE.search(text):
+    if _CANT_BLOCK_AND_CANT_BE_BLOCKED_RE.search(text) or _CANT_ATTACK_OR_BLOCK_RE.search(text):
         return _SelfBlockRestriction(sentence=text, kind="unconditional")
 
     if match := _CANT_BLOCK_OR_BE_BLOCKED_BY_RE.search(text):
@@ -1897,7 +1975,8 @@ def _self_block_restriction_sentences(state: CardState, game: "Game | None" = No
     this is read, at declaration, not of anything special here)."""
     subjects = _self_reference_alternatives(state)
     subject = re.compile(
-        rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b.*can't block\b",
+        rf"^(?:{'|'.join(re.escape(name) for name in subjects)})\b.*"
+        r"can't (?:block|attack or block)\b",
         re.IGNORECASE,
     )
     sentences = _computed_ability_sentences(state, game)
@@ -2021,10 +2100,15 @@ def block_refusal(game: "Game", blocker: CardState, attack: Attack) -> str | Non
     if group_restriction is not None:
         return group_restriction
 
+    from .combat_statics import power_threshold_restriction_refusal
+
     self_restriction = self_block_restriction_refusal(
         game, blocker, attacker
     ) or self_card_count_restriction_refusal(game, blocker, "block")
     self_restriction = self_restriction or self_control_count_restriction_refusal(
+        game, blocker, "block"
+    )
+    self_restriction = self_restriction or power_threshold_restriction_refusal(
         game, blocker, "block"
     )
     if self_restriction is not None:
@@ -2116,6 +2200,11 @@ def declaration_refusal(game: "Game", declared: dict[UUID, list[CardState]]) -> 
         cap_refusal = blocked_by_at_most_one_refusal(game, attacker, len(blockers))
         if cap_refusal is not None:
             return cap_refusal
+        from .combat_statics import group_blocked_by_at_most_one_refusal
+
+        group_cap_refusal = group_blocked_by_at_most_one_refusal(game, attacker, len(blockers))
+        if group_cap_refusal is not None:
+            return group_cap_refusal
 
     for blocker in all_blockers:
         refusal = self_block_alone_refusal(game, blocker, len(all_blockers))
@@ -2149,6 +2238,12 @@ def declare_blockers(game: "Game", blocks: list[tuple[CardState, CardState]]) ->
     unobeyed = unobeyed_block_requirement(game, declared)
     if unobeyed is not None:
         raise ValueError(unobeyed)
+
+    from .combat_statics import unobeyed_must_be_blocked_requirement
+
+    unobeyed_must_be_blocked = unobeyed_must_be_blocked_requirement(game, declared)
+    if unobeyed_must_be_blocked is not None:
+        raise ValueError(unobeyed_must_be_blocked)
 
     for attack in combat.attacks:
         chosen = declared[attack.attacker_id]
@@ -2945,4 +3040,13 @@ def required_block_declaration(game: "Game", username: str) -> list[tuple[UUID, 
                 declared = trial
                 pairs.append((creature.id, best.id))
                 changed = True
+
+    from .combat_statics import required_must_be_blocked_declaration
+
+    pairs.extend(
+        (blocker_id, attacker_id)
+        for blocker_id, attacker_id in required_must_be_blocked_declaration(
+            game, username, declared
+        )
+    )
     return pairs

@@ -580,6 +580,27 @@ class TargetRequirement(EngineModel):
     count fails open, the same as every other restriction this parser cannot
     evaluate."""
 
+    must_target_you: bool = False
+    """"target spell ... that targets you[ or ...]" (Siren Stormtamer) - one
+    disjunct of a "that targets `<description>`" clause on a "target spell"
+    requirement: satisfied when one of the *candidate spell's own* targets is
+    this requirement's own caster (CR 109.5's "you", read at `rejects`-time
+    against whoever is asking). `must_target_types`/`must_target_you_control`
+    are its sibling disjuncts; any one of the three that is set and satisfied
+    is enough (CR 115.1's compound-noun "or" reading, applied here to a
+    compound *description* rather than to a compound noun)."""
+    must_target_types: SortedFrozenSet[Type] = frozenset()
+    """Card types a "target spell that targets an `<type>`[ or `<type>`]
+    [you control]" clause's own type list names - Fugitive Droid's "an
+    artifact or creature you control." Checked against the candidate spell's
+    own targets' computed types (CR 613.5), never against the spell itself.
+    Empty means this gate is not printed at all."""
+    must_target_you_control: bool = False
+    """Whether `must_target_types`' own targets must be permanents this
+    requirement's caster controls, as every real printing of this clause
+    prints ("... you control") - CR 109.5's "you" read against the
+    requirement's own caster, not the candidate spell's controller."""
+
     distinct_controllers: bool = False
     """"Choose two target creatures controlled by different players" (Run Away
     Together) - a restriction *across* this requirement's targets rather than
@@ -791,6 +812,9 @@ class TargetRequirement(EngineModel):
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
+        must_target = self._rejects_must_target(target, game, caster)
+        if must_target is not None:
+            return must_target
         if self.ability_source_types:
             source_types = _ability_source_types(target, game)
             if source_types is not None and not (source_types & self.ability_source_types):
@@ -999,7 +1023,60 @@ class TargetRequirement(EngineModel):
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
+        must_target = self._rejects_must_target(target, game, caster)
+        if must_target is not None:
+            return must_target
         return self._rejects_controller(target, caster)
+
+    def _rejects_must_target(self, target: Any, game: Any, caster: str) -> str | None:
+        """ "target spell that targets `<description>`" (Fugitive Droid's "an
+        artifact or creature you control"; Siren Stormtamer's "you or a
+        creature you control") - whether the *candidate spell's own* targets
+        (CR 601.2c) satisfy at least one of `must_target_you`/`must_target_
+        types` (with `must_target_you_control`). `game` is needed to read a
+        targeted permanent's own computed types (CR 613.5); without one this
+        fails open, the same as every other restriction this parser cannot
+        evaluate without it.
+        """
+        if not (self.must_target_you or self.must_target_types):
+            return None
+        found_targets = getattr(target, "targets", None)
+        if not found_targets:
+            return (
+                f"{self.phrase} needs a target that itself targets "
+                f"{'you' if self.must_target_you else 'a matching object'}, and "
+                f"{getattr(target, 'name', target)} has no targets"
+            )
+        for ref in found_targets:
+            if self.must_target_you and getattr(ref, "is_player", False):
+                if ref.username == caster:
+                    return None
+                continue
+            if not self.must_target_types or getattr(ref, "is_player", False):
+                continue
+            card_id = getattr(ref, "card_id", None)
+            if card_id is None or game is None:
+                continue
+            candidate = game.find_by_id(card_id)
+            if not isinstance(candidate, CardState) or candidate.zone is not Zone.BATTLEFIELD:
+                continue
+            if self.must_target_you_control and game.controller_of(candidate).username != caster:
+                continue
+            characteristics = game.characteristics_of(candidate)
+            if set(characteristics.types) & self.must_target_types:
+                return None
+        wanted_types = (
+            with_indefinite_article(
+                " or ".join(sorted(kind.value for kind in self.must_target_types))
+            )
+            if self.must_target_types
+            else ""
+        )
+        return (
+            f"{self.phrase} needs a target that itself targets "
+            f"{'you or ' if self.must_target_you else ''}{wanted_types}"
+            f", and {getattr(target, 'name', target)} does not"
+        )
 
     def _rejects_target_count(self, target: Any) -> str | None:
         """CR 115.9a: how many targets the *targeted* object itself has.
@@ -2157,6 +2234,20 @@ _RETARGETING = re.compile(
     r"\bchoose\s+new\s+targets?\b|\bchange\s+(?:a|any|the)\s+targets?\b", re.IGNORECASE
 )
 
+#: "target spell **that targets** an artifact or creature you control"
+#: (Fugitive Droid) - CR 601.2c's own noun-phrase "target" and, inside the
+#: very same phrase, a *second* use of the word describing a property of
+#: that spell's own targets, not a second targeting requirement of this
+#: ability's own. `_TARGET_WORD`'s bare `\btargets?\b` scan cannot tell the
+#: two apart on sight (the same ambiguity `_RETARGETING`'s own docstring
+#: describes for "change/choose new target(s)"), so the word is swapped for
+#: `_THAT_TARGETS_MARKER` before the scan ever runs - unlike `_RETARGETING`,
+#: which drops its whole phrase because it carries no restriction to keep,
+#: this keeps the phrase's own description in place (`_SPELL_TARGETS_GATE_
+#: RE` reads the marker in `that`'s place) so `_read_phrase` still sees it.
+_THAT_TARGETS_VERB_RE = re.compile(r"\bthat targets\b", re.IGNORECASE)
+_THAT_TARGETS_MARKER = "\x02"
+
 #: "This spell costs {N} less to cast if it targets a `<color>` spell."
 #: (Mystical Dispute) - CR 601.2f's self-referential cost reduction, read for
 #: real by `Game.cost_reduction_for`/`_COSTS_LESS_IF_TARGETS_COLOR_SPELL_RE`
@@ -2251,6 +2342,53 @@ _SINGLE_TARGET_RESTRICTION = re.compile(r"\bwith a single target\b", re.IGNORECA
 #: ability could never be chosen.
 _SPELL_OR_ABILITY = re.compile(r"^\s*spell or ability\b", re.IGNORECASE)
 _SINGLE_TARGET_PLACEHOLDER = "\x01"
+
+#: "target spell that targets `<description>`" (Fugitive Droid: "an artifact
+#: or creature you control"; Siren Stormtamer: "you or a creature you
+#: control") - CR 601.2c's ordinary "target spell", further restricted by a
+#: property of *that spell's own targets* rather than of the spell itself.
+#: `_read_phrase`'s ordinary noun-phrase grammar has nothing to say about the
+#: word "targets" appearing a second time inside the same phrase (it is not a
+#: card type, a colour, or any other adjective a "target ..." phrase already
+#: reads), so this is its own shape, read before the generic chain the same
+#: way `_SPELL_OR_ABILITY` is.
+_SPELL_TARGETS_GATE_RE = re.compile(
+    rf"^\s*spell(?P<or_ability> or ability)? that {_THAT_TARGETS_MARKER}"
+    r" (?P<clause>[a-z].*?)\.?$",
+    re.IGNORECASE,
+)
+#: "you" alone (Siren Stormtamer's own first disjunct, "targets you or a
+#: creature you control").
+_TARGETS_YOU_RE = re.compile(r"^you$", re.IGNORECASE)
+#: "you or a `<type>`[ or `<type>`] you control" - CR 115.1's "or" tried
+#: before the plain type-list shape below, which would otherwise read
+#: "you" itself as an unrecognised leading type word and fail the whole
+#: clause.
+_TARGETS_YOU_OR_TYPES_RE = re.compile(
+    r"^you or (?P<types>(?:an? )?[a-z]+(?:\s+or\s+(?:an? )?[a-z]+)*) you control$",
+    re.IGNORECASE,
+)
+#: "a `<type>`[ or `<type>`] you control" (Fugitive Droid's own "an artifact
+#: or creature you control", no "you" disjunct at all).
+_TARGETS_TYPES_YOU_CONTROL_RE = re.compile(
+    r"^(?P<types>(?:an? )?[a-z]+(?:\s+or\s+(?:an? )?[a-z]+)*) you control$", re.IGNORECASE
+)
+
+
+def _read_must_target_types(text: str) -> "SortedFrozenSet[Type] | None":
+    """ "`<type>`[ or `<type>`]" - CR 300.1's card types this parser knows,
+    read the same closed `_TYPE_NOUNS` vocabulary every other type-list
+    reader in this module already uses. `None` when any word is not one of
+    them - the fail-closed signal for the clause that named it."""
+    words = [
+        re.sub(r"^an?\s+", "", part.strip(), flags=re.IGNORECASE).lower()
+        for part in re.split(r"\s+or\s+", text.strip())
+        if part.strip()
+    ]
+    if not words or any(word not in _TYPE_NOUNS for word in words):
+        return None
+    return frozenset(_TYPE_NOUNS[word] for word in words)
+
 
 #: CR 601.2d's two templates, the amount and what is being divided.
 _DIVIDED = re.compile(
@@ -3078,6 +3216,7 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
     text = _spell_text(oracle_text) if spell_only else oracle_text
     text = _QUOTED_SPAN.sub("", text)
     text = _RETARGETING.sub("", text)
+    text = _THAT_TARGETS_VERB_RE.sub(f"that {_THAT_TARGETS_MARKER}", text)
     text = _SELF_COST_REDUCTION_LINE.sub("", text)
     text = _COST_INCREASE_PER_TARGET_LINE.sub("", text)
     text = _COPY_TARGETS_DECLARATION.sub("", text)
@@ -3600,6 +3739,49 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
     reader knows has been taken off - the ordinary target scan tolerates a
     trailing tail it does not read, `permanent_description` must not.
     """
+    spell_targets_gate = _SPELL_TARGETS_GATE_RE.match(suffix)
+    if spell_targets_gate is not None:
+        # Checked ahead of `_SPELL_OR_ABILITY` below: that pattern's own
+        # `.match` (a prefix test, not a full match) would otherwise claim
+        # "spell or ability that targets `<description>`" too, recurse on
+        # the bare "spell" base, and silently drop the "that targets
+        # `<description>`" tail - an unreadable restriction that quietly let
+        # every spell through, exactly the wrong-object bug this module's
+        # own `required_colors` docstring warns against.
+        base = _read_phrase(prefix, " spell", strict=strict)
+        if base is None or not base.allows_cards:
+            return None
+        clause = spell_targets_gate.group("clause").strip()
+        you_or_types = _TARGETS_YOU_OR_TYPES_RE.fullmatch(clause)
+        you_only = _TARGETS_YOU_RE.fullmatch(clause)
+        types_only = _TARGETS_TYPES_YOU_CONTROL_RE.fullmatch(clause)
+        if you_or_types is not None:
+            types = _read_must_target_types(you_or_types.group("types"))
+            if types is None:
+                return None
+            update: dict[str, object] = {
+                "must_target_you": True,
+                "must_target_types": types,
+                "must_target_you_control": True,
+            }
+        elif you_only is not None:
+            update = {"must_target_you": True}
+        elif types_only is not None:
+            types = _read_must_target_types(types_only.group("types"))
+            if types is None:
+                return None
+            update = {"must_target_types": types, "must_target_you_control": True}
+        else:
+            return None
+        phrase = f"{base.phrase} that targets {clause}"
+        if spell_targets_gate.group("or_ability") is not None:
+            base = base.model_copy(
+                update={"phrase": phrase.replace("spell", "spell or ability", 1)}
+            )
+            update["allows_abilities"] = True
+        else:
+            base = base.model_copy(update={"phrase": phrase})
+        return base.model_copy(update=update)
     spell_or_ability = _SPELL_OR_ABILITY.match(suffix)
     if spell_or_ability is not None:
         # CR 115.2(b)/CR 113.1c: "target spell or ability" reaches both kinds

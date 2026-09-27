@@ -6313,7 +6313,9 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
     ]
     expanded: list[TriggeredAbility] = []
     for ability in printed:
-        for split in _expand_attacks_or_blocks(ability):
+        for split in _expand_attacks_or_blocks(
+            ability, card.name, legendary=Supertype.LEGENDARY in card.supertypes
+        ):
             for enters_split in _expand_enters_or_attacks(
                 split, card.name, legendary=Supertype.LEGENDARY in card.supertypes
             ):
@@ -6340,8 +6342,22 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
 #: different self-reference noun (CR 700.7).
 _ATTACKS_OR_BLOCKS_RE = re.compile(r"^this (?P<kind>[a-z]+) attacks or blocks$", re.IGNORECASE)
 
+#: Bebop & Rocksteady: "Whenever Bebop & Rocksteady attack or block, ..." -
+#: `_ATTACKS_OR_BLOCKS_RE`'s identical compound condition, but self-referenced
+#: by a comma-joined legendary's own printed name (CR 201.5c) rather than
+#: "this creature", and with the *plural* verb form ("attack or block", no
+#: trailing "s") WotC's own templating gives an "&"-joined name (Raph & Leo,
+#: Sibling Rivals' own "Raph & Leo attack" is the identical singular-event
+#: precedent, already read by `_trigger_event`'s bare `\battacks?\b`). Tried
+#: only when `_ATTACKS_OR_BLOCKS_RE` itself declines, so a genuine "this
+#: creature attacks or blocks" is never re-read through the self-reference
+#: path by mistake.
+_SELF_ATTACKS_OR_BLOCKS_RE = re.compile(r"^attack(?:s)? or block(?:s)?$", re.IGNORECASE)
 
-def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbility]:
+
+def _expand_attacks_or_blocks(
+    ability: TriggeredAbility, card_name: str | None = None, *, legendary: bool = True
+) -> list[TriggeredAbility]:
     """One ability whose condition is `_ATTACKS_OR_BLOCKS_RE`'s shape becomes
     two: the same printed effect, once watching CR 508.1's attack and once
     watching CR 509.1's block, each a `TriggeredAbility` in its own right so
@@ -6351,10 +6367,22 @@ def _expand_attacks_or_blocks(ability: TriggeredAbility) -> list[TriggeredAbilit
 
     Every other printed ability passes through unchanged, singleton-wrapped.
     """
-    match = _ATTACKS_OR_BLOCKS_RE.match(ability.condition.strip())
+    condition = ability.condition.strip()
+    match = _ATTACKS_OR_BLOCKS_RE.match(condition)
+    kind = match.group("kind").lower() if match is not None else "creature"
+    if match is None and card_name is not None:
+        # CR 201.5c: "Bebop & Rocksteady attack or block" names itself - strip
+        # the self-reference the same way `_expand_enters_or_attacks` already
+        # does for "Eluge enters or attacks", then read what is left as the
+        # plural-verb compound `_ATTACKS_OR_BLOCKS_RE` itself never matches.
+        for name in self_reference_names(card_name, legendary=legendary):
+            pattern = self_reference_pattern(name)
+            stripped = re.sub(pattern, "", condition, count=1).strip()
+            if stripped != condition and _SELF_ATTACKS_OR_BLOCKS_RE.fullmatch(stripped):
+                match = True  # sentinel: matched via self-reference, not `_ATTACKS_OR_BLOCKS_RE`
+                break
     if match is None:
         return [ability]
-    kind = match.group("kind").lower()
     return [
         ability.model_copy(
             update={"condition": f"this {kind} attacks", "event": TriggerEvent.ATTACKS}
