@@ -90,6 +90,7 @@ from .objects_as_costs import power_of
 from .spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
 from .targeting import (
     TargetingProfile,
+    face_spell_profile,
     kicked_instead_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
@@ -4829,7 +4830,9 @@ class Casting(EngineModel):
                 face = self.chosen_face
                 if face is not None:
                     return self._with_bestowed_target(
-                        profile_for_text(substitute_x(face.oracle_text or "", self.x_value or None))
+                        face_spell_profile(
+                            face, substitute_x(face.oracle_text or "", self.x_value or None)
+                        )
                     )
             if self.spell.prepare_spell_face:
                 # CR 722.3c again: `self.spell.oracle_text` already reads

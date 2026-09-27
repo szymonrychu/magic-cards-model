@@ -284,6 +284,7 @@ from ..machines.targeting import (
     RetargetScope,
     TargetingProfile,
     TargetRequirement,
+    face_spell_profile,
     kicked_instead_target_text,
     profile_for_modes,
     profile_for_modes_with_owners,
@@ -16127,7 +16128,7 @@ class Game(EngineModel):
             return profile
         face = face_being_cast(state.card, spell_face)
         if face is not None:
-            return profile_for_text(substitute_x(face.oracle_text or "", x_value))
+            return face_spell_profile(face, substitute_x(face.oracle_text or "", x_value))
         if modal is None and x_value is not None and state.card.oracle_text:
             return spell_profile_for_text(substitute_x(state.card.oracle_text, x_value), state.card)
         return targeting_profile(state.card)
@@ -16288,7 +16289,7 @@ class Game(EngineModel):
             Layout.SPLIT,
             Layout.ADVENTURE,
         ):
-            return profile_for_text(spell.oracle_text)
+            return face_spell_profile(spell.up_face, spell.oracle_text)
         if record is not None and "{X}" in (spell.mana_cost or ""):
             return profile_for_text(substitute_x(spell.oracle_text, record.x_value))
         return targeting_profile(spell.card)

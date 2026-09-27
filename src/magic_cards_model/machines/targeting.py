@@ -3370,6 +3370,25 @@ def _read_revolt_mana_value_override(text: str) -> int | None:
     return None if match is None else int(match.group("n"))
 
 
+def face_spell_profile(face: Any, text: str) -> TargetingProfile:
+    """What a named face being cast (a split half, CR 709.3; an Adventure,
+    CR 715.3) may target, read off `text` - that face's own words, X already
+    substituted.
+
+    An instant or sorcery face reads its text whole (`profile_for_text`),
+    the way every such spell always has. A permanent face - a Room half, an
+    enchantment spell - reads only its spell lines (`spell_profile_for_text`):
+    a permanent spell is targeted only as an Aura (CR 115.1b), and a
+    triggered ability printed on it ("When you unlock this door, this Room
+    deals 4 damage to target creature ...") chooses its own targets when it
+    is put on the stack (CR 603.3d), never as the spell is cast (CR 601.2c).
+    """
+    type_line = (getattr(face, "type_line", None) or "").lower()
+    if "instant" in type_line or "sorcery" in type_line:
+        return profile_for_text(text)
+    return spell_profile_for_text(text)
+
+
 def spell_profile_for_text(text: str, card: Card | None = None) -> TargetingProfile:
     """What a *spell* whose text has already been rewritten may target.
 

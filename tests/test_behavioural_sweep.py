@@ -1289,9 +1289,23 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
                 if name is not None:
                     material.append(Material(name, ALICE, Zone.BATTLEFIELD))
             return tuple(material) if material and confirmed(tuple(material)) else ()
-        names = [
+        passing = [
             name for name in _board_candidates() if _passes(game, source, test, card_state(name))
-        ][:6]
+        ]
+        names = passing[:6]
+        if " with different " in _clause(condition):
+            # "N or more Demons with different names" (CR 201.2b): one copy
+            # each of distinct printings, grown until the engine's own
+            # grouped count holds.
+            for count in range(1, min(len(passing), 10) + 1):
+                material = tuple(
+                    Material(name, ALICE, Zone.BATTLEFIELD) for name in passing[:count]
+                )
+                try:
+                    if confirmed(material):
+                        return material
+                except (_Unavailable, ValueError, KeyError):
+                    break
         for name in [*names, *PREDEFINED]:
             for copies in (1, 2, 3):
                 material = tuple(Material(name, ALICE, Zone.BATTLEFIELD) for _ in range(copies))
@@ -1659,6 +1673,10 @@ _HAND_CONDITION = re.compile(
     rf"(?P<who>{_SUBJECT}) (?:has|have) (?P<quantity>{_QUANTITY}) cards? in "
     r"(?:(?:your|their) )?hand"
 )
+_LIBRARY_CONDITION = re.compile(
+    rf"(?P<who>{_SUBJECT}) (?:has|have) (?P<quantity>{_QUANTITY}) cards? in "
+    r"(?:(?:your|their) )?library"
+)
 _LIFE_CONDITION = re.compile(
     rf"(?P<who>{_SUBJECT}) (?:has|have) (?P<quantity>{_QUANTITY}) life(?! (?:more|less|fewer))"
 )
@@ -1687,6 +1705,28 @@ def _hand_of_size(scenario: PlayedScenario, username: str, size: int) -> None:
         game.draw_cards(username, size - len(hand))
 
 
+def _library_of_size(scenario: PlayedScenario, username: str, test: Callable[[int], bool]) -> None:
+    """A library grown (basic lands put on its bottom) or exiled
+    from down to the nearest size a library-count condition allows - Battle
+    of Wits' "200 or more cards in your library"."""
+    game = scenario.game
+    library = game.player(username).library
+    size = len(library)
+    if test(size):
+        return
+    wanted = min((n for n in range(301) if test(n)), key=lambda n: abs(n - size), default=None)
+    if wanted is None:
+        return
+    if wanted < size:
+        game.exile_cards(library[wanted:])
+        return
+    for _ in range(wanted - size):
+        state = card_state("Forest", controller=username, owner=username)
+        state.bind_to_game(game)
+        library.append(state)
+    game.player(username).note_library_changed()
+
+
 def _player_state_threshold(scenario: PlayedScenario, condition: str | None) -> None:
     """A hand, life or poison condition (CR 402.1, 103.4, 122.1f) the stock
     board does not meet is made true on it, read off the condition's own
@@ -1709,6 +1749,12 @@ def _player_state_threshold(scenario: PlayedScenario, condition: str | None) -> 
             sizes = [n for n in range(12) if test(n)]
             if sizes:
                 _hand_of_size(scenario, username, min(sizes, key=lambda n: (abs(n - held), n)))
+    for match in _LIBRARY_CONDITION.finditer(lowered):
+        test = _quantity_test(match.group("quantity"))
+        if test is None:
+            continue
+        for username in _players_named(match.group("who")):
+            _library_of_size(scenario, username, test)
     comparison = re.search(
         rf"(?P<who>{_SUBJECT}) (?:has|have) more cards in hand than "
         rf"(?P<other>{_SUBJECT}|each other player)",
@@ -3755,7 +3801,9 @@ def _searching(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 def _unlocking(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
     """ "When you unlock this door": the Room's half the ability is printed on
     is cast, so the permanent enters with that half unlocked (CR 709.5d),
-    which is when the door-unlock trigger fires (CR 709.5h)."""
+    which is when the door-unlock trigger fires (CR 709.5h); then, on a Room
+    already on the battlefield with neither door unlocked, that door's unlock
+    cost is paid as the CR 709.5e special action."""
     face = getattr(ability, "face", None)
     if not face:
         return
@@ -3766,6 +3814,21 @@ def _unlocking(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         return scenario, None
 
     yield unlock
+
+    def unlock_cost(face: str = face) -> tuple[PlayedScenario, Any]:
+        scenario = _board(battlefield=(case.card,))
+        game = scenario.game
+        room = _last(scenario, case.card, Zone.BATTLEFIELD, ALICE)
+        try:
+            payment = game.begin_unlocking_door(ALICE, room, face)
+            payment.auto_tap(game.permanents_controlled_by(ALICE))
+            payment.pay()
+            game.finish_unlocking_door(ALICE, room, face)
+        except (ValueError, AssertionError) as error:
+            raise _Unavailable(f"unlocking {face}: {error}") from error
+        return scenario, room.id
+
+    yield unlock_cost
 
 
 def _to_graveyard(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
