@@ -3340,6 +3340,11 @@ class Game(EngineModel):
     """The `LEAVES_BATTLEFIELD_TO_HAND` events being raised right now as one
     event (`returned_to_hand_batch`). Empty outside `_announce_returns`. Not
     persisted: read only while those events are being raised."""
+    _entry_batch: tuple[tuple[UUID, Zone | None], ...] = PrivateAttr(default=())
+    """While `entering_together` announces its permanents, every one of them
+    with the zone it came from - written onto each enters event as
+    `GameEvent.entered_together` (CR 603.6a). Not persisted: it opens and
+    closes within one announcement loop."""
     _entering_together: list[CardState] | None = PrivateAttr(default=None)
     #: The zone each permanent entered from, held only between
     #: `enter_the_battlefield` and the enters event it raises (`_enters_event`
@@ -11563,6 +11568,8 @@ class Game(EngineModel):
             origin = self._entry_origins.pop(card_state.id, None)
             if origin is not None:
                 event = event.model_copy(update={"origin_zone": origin})
+            if self._entry_batch:
+                event = event.model_copy(update={"entered_together": self._entry_batch})
             self.emit(event)
             # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
             # before this point) is not routed through `add_counters` - the same
@@ -11591,9 +11598,16 @@ class Game(EngineModel):
             yield
         finally:
             entered, self._entering_together = self._entering_together, None
-        for card_state in entered:
-            if card_state.zone is Zone.BATTLEFIELD:
+        arrived = [card_state for card_state in entered if card_state.zone is Zone.BATTLEFIELD]
+        batch = tuple(
+            (card_state.id, self._entry_origins.get(card_state.id)) for card_state in arrived
+        )
+        self._entry_batch = batch if len(batch) > 1 else ()
+        try:
+            for card_state in arrived:
                 self._announce_entry(card_state)
+        finally:
+            self._entry_batch = ()
 
     def put_onto_battlefield(
         self,

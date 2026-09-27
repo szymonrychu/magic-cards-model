@@ -30883,9 +30883,10 @@ def _parse_x_life_return_types_mv_x_clause(effect_text: str) -> Effect | None:
             for state in list(controller.graveyard)
             if matches(state) and state.mana_value == x_value
         ]
-        for state in chosen:
-            if state.zone is Zone.GRAVEYARD:
-                game.put_onto_battlefield(state, controller.username)
+        with game.entering_together():  # CR 603.6a: one instruction, one event
+            for state in chosen:
+                if state.zone is Zone.GRAVEYARD:
+                    game.put_onto_battlefield(state, controller.username)
 
     return effect
 

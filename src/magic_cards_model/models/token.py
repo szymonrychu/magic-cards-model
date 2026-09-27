@@ -719,15 +719,40 @@ def create_tokens(
             if creation.copy_of is not None
             else (creation.definition or definition).to_card()
         )
+        # CR 603.6a: "Each time an event puts one or more permanents onto the
+        # battlefield, all permanents on the battlefield (including the
+        # newcomers) are checked for any enters-the-battlefield triggers that
+        # match the event" - every token one instruction creates enters in
+        # one event, so a "one or more tokens ... enter" trigger (Kambal,
+        # Profiteering Mayor) sees all of them as "them". The riders below
+        # (attach, counters, attacking) happen once they are all there.
+        arrived: list[TokenState] = []
+        additions: list[TokenState] = []
+        with game.entering_together():
+            for _ in range(count):
+                token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=owner)
+                # `zone=Zone.STACK` is only where it is *before* it exists: nothing
+                # holds it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)`
+                # at once. It is never a token in a zone other than the battlefield
+                # for the purposes of CR 111.7, because no state-based action is
+                # checked in between (CR 704.3 checks only when a player would get
+                # priority).
+                game.put_onto_battlefield(token, controller, tapped=tapped)
+                arrived.append(token)
+            for extra in extra_definitions:
+                # A different token with its own stated characteristics (CR
+                # 111.3), so none of this call's `tapped`/`attacking`/`counters`/
+                # `attached_to` applies to it: those describe how *these* tokens
+                # were asked for, and the addition was asked for by somebody
+                # else's card.
+                addition = TokenState(
+                    card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
+                )
+                game.put_onto_battlefield(addition, controller)
+                additions.append(addition)
+
         created: list[TokenState] = []
-        for _ in range(count):
-            token = TokenState(card=card, zone=Zone.STACK, controller=controller, owner=owner)
-            # `zone=Zone.STACK` is only where it is *before* it exists: nothing holds
-            # it, and `enter_the_battlefield` calls `move_to(BATTLEFIELD)` at once.
-            # It is never a token in a zone other than the battlefield for the
-            # purposes of CR 111.7, because no state-based action is checked in
-            # between (CR 704.3 checks only when a player would get priority).
-            game.put_onto_battlefield(token, controller, tapped=tapped)
+        for token in arrived:
             if token.zone is not Zone.BATTLEFIELD:
                 # A replacement effect sent it elsewhere (CR 614.6). CR 111.7 will
                 # have it cease to exist; it is not attacking and takes no counters.
@@ -742,18 +767,7 @@ def create_tokens(
                 if defender is not None:
                     _put_onto_the_battlefield_attacking(game, token, defender)
             created.append(token)
-
-        for extra in extra_definitions:
-            # A different token with its own stated characteristics (CR 111.3), so
-            # none of this call's `tapped`/`attacking`/`counters`/`attached_to`
-            # applies to it: those describe how *these* tokens were asked for, and
-            # the addition was asked for by somebody else's card.
-            addition = TokenState(
-                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
-            )
-            game.put_onto_battlefield(addition, controller)
-            created.append(addition)
-        return created
+        return created + additions
 
 
 def create_predefined_tokens(
@@ -1067,16 +1081,19 @@ def token_copy_of(
             copiable = copiable.model_copy(update={"id": new_card_id, **update})
 
         created: list[TokenState] = []
-        for _ in range(count):
-            copy = TokenState(card=copiable, zone=Zone.STACK, controller=controller, owner=owner)
-            game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
-            created.append(copy)
-        for extra in extra_definitions:
-            addition = TokenState(
-                card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
-            )
-            game.put_onto_battlefield(addition, controller)
-            created.append(addition)
+        with game.entering_together():  # CR 603.6a: one instruction, one enters event
+            for _ in range(count):
+                copy = TokenState(
+                    card=copiable, zone=Zone.STACK, controller=controller, owner=owner
+                )
+                game.put_onto_battlefield(copy, controller, tapped=bool(options.get("tapped")))
+                created.append(copy)
+            for extra in extra_definitions:
+                addition = TokenState(
+                    card=extra.to_card(), zone=Zone.STACK, controller=controller, owner=owner
+                )
+                game.put_onto_battlefield(addition, controller)
+                created.append(addition)
         return created
 
 

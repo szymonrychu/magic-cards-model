@@ -1,0 +1,163 @@
+{
+  "object": "card",
+  "id": "d53a775d-5898-41a8-b404-9b7d4721c6ba",
+  "oracle_id": "619e0686-e88c-4238-8364-75395e733533",
+  "multiverse_ids": [
+    655152
+  ],
+  "mtgo_id": 124333,
+  "arena_id": 90557,
+  "tcgplayer_id": 544486,
+  "cardmarket_id": 764276,
+  "name": "Kambal, Profiteering Mayor",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/d53a775d-5898-41a8-b404-9b7d4721c6ba",
+  "scryfall_uri": "https://scryfall.com/card/otj/211/kambal-profiteering-mayor?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:13Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.jpg?1783911793",
+    "normal": "https://cards.scryfall.io/normal/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.jpg?1783911793",
+    "large": "https://cards.scryfall.io/large/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.jpg?1783911793",
+    "png": "https://cards.scryfall.io/png/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.png?1783911793",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.jpg?1783911793",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.jpg?1783911793",
+    "thumb": "https://cards.scryfall.io/thumb/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.webp?1783911793",
+    "grid": "https://cards.scryfall.io/grid/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.webp?1783911793",
+    "display": "https://cards.scryfall.io/display/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.webp?1783911793",
+    "art": "https://cards.scryfall.io/art/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.webp?1783911793",
+    "crop": "https://cards.scryfall.io/crop/front/d/5/d53a775d-5898-41a8-b404-9b7d4721c6ba.webp?1783911793"
+  },
+  "mana_cost": "{1}{W}{B}",
+  "cmc": 3.0,
+  "type_line": "Legendary Creature \u2014 Human Advisor",
+  "oracle_text": "Whenever one or more tokens your opponents control enter, for each of them, create a tapped token that's a copy of it. This ability triggers only once each turn.\nWhenever one or more tokens you control enter, each opponent loses 1 life and you gain 1 life.",
+  "power": "2",
+  "toughness": "4",
+  "colors": [
+    "B",
+    "W"
+  ],
+  "color_identity": [
+    "B",
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "8cfd5a0f-8859-4272-a08f-13b788422f4c",
+      "component": "combo_piece",
+      "name": "Kambal, Profiteering Mayor",
+      "type_line": "Legendary Creature \u2014 Human Advisor",
+      "uri": "https://api.scryfall.com/cards/8cfd5a0f-8859-4272-a08f-13b788422f4c"
+    },
+    {
+      "object": "related_card",
+      "id": "e85f57c5-923a-4824-969e-53feddd78c3b",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/e85f57c5-923a-4824-969e-53feddd78c3b"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/d53a775d-5898-41a8-b404-9b7d4721c6ba/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A619e0686-e88c-4238-8364-75395e733533&unique=prints",
+  "collector_number": "211",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Andreas Zafiratos",
+  "artist_ids": [
+    "e2f13a9a-57c5-40de-81d4-3b0723899cdf"
+  ],
+  "illustration_id": "9485b577-19cd-4d73-a471-5f20477d9316",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 1172,
+  "penny_rank": 5864,
+  "preview": {
+    "source": "Yuuki Ichikawa",
+    "source_uri": "https://twitter.com/serra2020/status/1773336491843895492",
+    "previewed_at": "2024-03-28"
+  },
+  "prices": {
+    "usd": "5.92",
+    "usd_foil": "6.06",
+    "usd_etched": null,
+    "eur": "4.65",
+    "eur_foil": "5.95",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655152&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKambal%252C%2BProfiteering%2BMayor",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKambal%252C%2BProfiteering%2BMayor",
+    "edhrec": "https://edhrec.com/route/?cc=Kambal%2C+Profiteering+Mayor"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544486%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=764276&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124333?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

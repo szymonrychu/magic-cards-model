@@ -598,6 +598,19 @@ class GameEvent(EngineModel):
     existed (an older decoded game), which is read the same "nothing found"
     way rather than crashing."""
 
+    entered_together: tuple[tuple[UUID, Zone | None], ...] = ()
+    """For a `TriggerEvent.ENTERS_THE_BATTLEFIELD` event raised inside
+    `Game.entering_together` with more than one permanent in it, every
+    permanent that entered in that one event, each with the zone it came
+    from - CR 603.6a: "Each time an event puts one or more permanents onto
+    the battlefield, all permanents on the battlefield (including the
+    newcomers) are checked for any enters-the-battlefield triggers that match
+    the event." A "one or more ... enter" trigger's "them" (Twilight
+    Diviner's "a copy of one of them", Kambal, Profiteering Mayor's "for each
+    of them") is read off this: the members that match the ability's own
+    condition. Empty when the permanent entered on its own - then "them" is
+    `subject_id` alone."""
+
 
 class TargetingNoticeKind(StrEnum):
     """Why a triggered ability went on the stack with no targets chosen."""
