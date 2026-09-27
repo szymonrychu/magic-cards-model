@@ -3670,16 +3670,20 @@ def behold_cost(
     payer: str | None = None,
     required: int | None = None,
     description: str = "",
+    exile_after: bool = False,
 ) -> CostComponent:
     """Behold a quality as a cost (CR 701.4a, CR 118.1): reveal a card from
     the payer's hand, or choose a permanent they control on the battlefield.
-    `CostComponent._why_not_behold` is the check."""
+    `CostComponent._why_not_behold` is the check. `exile_after` is CR
+    118.8/601.2f's "behold a [quality] and exile it" (Champion of the Weird),
+    the second verb `pay` applies once the object is beheld."""
     return CostComponent(
         kind=ComponentKind.BEHOLD,
         cards=list(cards),
         required=len(cards) if required is None else required,
         payer=payer,
         description=description,
+        exile_after=exile_after,
     )
 
 
@@ -5596,9 +5600,13 @@ def cost_component_for_phrase(phrase: str, payer: str | None = None) -> CostComp
         behold_requirement = _requirement(behold.group("quality"))
         if behold_requirement is None:
             return None
-        component = behold_cost(payer=payer, required=1, description=text)
+        component = behold_cost(
+            payer=payer,
+            required=1,
+            description=text,
+            exile_after=behold.group("exile") is not None,
+        )
         component.requirement = behold_requirement
-        component.exile_after = behold.group("exile") is not None
         return component
 
     behold_n = _PHRASE_BEHOLD_N.match(text)

@@ -1,0 +1,178 @@
+{
+  "object": "card",
+  "id": "70adc870-f0db-4d4b-863b-673c2c258751",
+  "oracle_id": "9cc91ac5-6f2b-4fc0-b810-cdc92eebe6de",
+  "multiverse_ids": [],
+  "resource_id": "942E175A49745963299AC3B57E26AADC89E33C0E7ADAA9416791955BABF7C007",
+  "mtgo_id": 146537,
+  "arena_id": 98394,
+  "tcgplayer_id": 656570,
+  "cardmarket_id": 862569,
+  "name": "Sygg, Wanderwine Wisdom // Sygg, Wanderbrine Shield",
+  "lang": "en",
+  "released_at": "2026-01-23",
+  "uri": "https://api.scryfall.com/cards/70adc870-f0db-4d4b-863b-673c2c258751",
+  "scryfall_uri": "https://scryfall.com/card/ecl/76/sygg-wanderwine-wisdom-sygg-wanderbrine-shield?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:01:23Z",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Merfolk Wizard // Legendary Creature \u2014 Merfolk Rogue",
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Sygg, Wanderwine Wisdom",
+      "mana_cost": "{1}{U}",
+      "type_line": "Legendary Creature \u2014 Merfolk Wizard",
+      "oracle_text": "Sygg can't be blocked.\nWhenever this creature enters or transforms into Sygg, Wanderwine Wisdom, target creature gains \"Whenever this creature deals combat damage to a player or planeswalker, draw a card\" until end of turn.\nAt the beginning of your first main phase, you may pay {W}. If you do, transform Sygg.",
+      "colors": [
+        "U"
+      ],
+      "power": "2",
+      "toughness": "2",
+      "artist": "Justin Gerard",
+      "artist_id": "7548479e-1d37-42e1-ade0-9d88748f2f47",
+      "illustration_id": "0d52277b-7f39-481c-b55e-69140c709e4f",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "normal": "https://cards.scryfall.io/normal/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "large": "https://cards.scryfall.io/large/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "png": "https://cards.scryfall.io/png/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.png?1783904483",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "thumb": "https://cards.scryfall.io/thumb/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "grid": "https://cards.scryfall.io/grid/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "display": "https://cards.scryfall.io/display/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "art": "https://cards.scryfall.io/art/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "crop": "https://cards.scryfall.io/crop/front/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Sygg, Wanderbrine Shield",
+      "mana_cost": "",
+      "type_line": "Legendary Creature \u2014 Merfolk Rogue",
+      "oracle_text": "Sygg can't be blocked.\nWhenever this creature transforms into Sygg, Wanderbrine Shield, target creature you control gains protection from each color until your next turn.\nAt the beginning of your first main phase, you may pay {U}. If you do, transform Sygg.",
+      "colors": [
+        "W"
+      ],
+      "color_indicator": [
+        "W"
+      ],
+      "power": "2",
+      "toughness": "2",
+      "artist": "Justin Gerard",
+      "artist_id": "7548479e-1d37-42e1-ade0-9d88748f2f47",
+      "illustration_id": "99cad805-3f8d-4088-94c0-8e31e8867f1e",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "normal": "https://cards.scryfall.io/normal/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "large": "https://cards.scryfall.io/large/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "png": "https://cards.scryfall.io/png/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.png?1783904483",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.jpg?1783904483",
+        "thumb": "https://cards.scryfall.io/thumb/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "grid": "https://cards.scryfall.io/grid/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "display": "https://cards.scryfall.io/display/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "art": "https://cards.scryfall.io/art/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483",
+        "crop": "https://cards.scryfall.io/crop/back/7/0/70adc870-f0db-4d4b-863b-673c2c258751.webp?1783904483"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "5d293ad8-a749-4725-bd5c-c4e1db828bd0",
+  "set": "ecl",
+  "set_name": "Lorwyn Eclipsed",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/5d293ad8-a749-4725-bd5c-c4e1db828bd0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aecl&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ecl?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/70adc870-f0db-4d4b-863b-673c2c258751/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A9cc91ac5-6f2b-4fc0-b810-cdc92eebe6de&unique=prints",
+  "collector_number": "76",
+  "digital": false,
+  "rarity": "rare",
+  "artist": "Justin Gerard",
+  "artist_ids": [
+    "7548479e-1d37-42e1-ade0-9d88748f2f47"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 11603,
+  "penny_rank": 1673,
+  "prices": {
+    "usd": "0.29",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.30",
+    "eur_foil": "0.41",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSygg%252C%2BWanderwine%2BWisdom%2B%252F%252F%2BSygg%252C%2BWanderbrine%2BShield",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSygg%252C%2BWanderwine%2BWisdom%2B%252F%252F%2BSygg%252C%2BWanderbrine%2BShield",
+    "edhrec": "https://edhrec.com/route/?cc=Sygg%2C+Wanderwine+Wisdom"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F656570%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=862569&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/146537?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

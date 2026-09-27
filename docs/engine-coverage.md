@@ -6518,3 +6518,81 @@ file below is touched additively.
 no row above is keyed to a card name in `EFFECTS`/`TRIGGER_EFFECTS`/
 `ACTIVATED_EFFECTS`, and every reader reads the printed shape, not the
 reported card's identity.
+## 270-ecl T2: Blight as an effect (every position), opponent blights, the blighted-creature reference, and the enters-or-transforms-into/transforms-and-first-main-phase DFC triggers
+
+CR 701.68's Blight keyword action, read for the first time as ordinary
+*effect* text rather than as the cost `machines/cost.py` already reads
+(Sting-Slinger's "Blight 1:", Requiting Hex's "you may blight 1" additional
+cost - both untouched). New `machines/blight_effects.py` owns every position:
+
+- Forced "blight N." (Shadow Urchin's own attack trigger) and its spell twin
+  (the tail of Dose of Dawnglow's "Then if it isn't your main phase, blight
+  2.").
+- The general CR 118.12 "you may `<action>`. If you [do|don't], `<conse-
+  quence>`." shape (`parse_may_action_then_branch_clause`) - one reader for
+  every position blight prints this way (Blighted Blackthorn, Boggart
+  Mischief, Sourbread Auntie, Dream Seizer, Scuzzback Scrounger, Gutsplitter
+  Gang, Chaos Spewer's "pay `{2}`, else blight" reversal), plus any other
+  card sharing the shape (Mardu Woe-Reaper, no blight in sight) - deliber-
+  ately tried only as the *last* resort in both `_ability_effect_or_notice`
+  and `_parse_mixed_clause`'s own dispatch chains, after every narrower "may
+  ... if you do/don't" reader, so it only ever runs on a shape none of those
+  already read.
+- The CR 603.12 reflexive "you may blight N. When you do, `<consequence>`."
+  twin (Warren Torchmaster).
+- CR 701.68c's "the blighted creature" reference (Grub, Notorious Auntie's
+  own attack trigger), reusing the landed copy-token-with-exceptions reader
+  (`effects._read_token_copy_except`) and CR 508.4's put-onto-the-battlefield-
+  attacking primitives.
+- "each opponent blights N" (High Perfect Morcant) and "target opponent
+  blights N" (Champion of the Weird's own activated ability - its cost,
+  "Pay 1 life, Blight 2:", is `machines/cost.py`'s existing life-payment and
+  blight-as-a-cost reading).
+- A targeted grant of a quoted *triggered* ability (Sygg, Wanderwine Wisdom)
+  and CR 702.16h's "protection from each color" (Sygg, Wanderbrine Shield),
+  both hand-built `ContinuousEffect`s through `layers.grant_ability` - the
+  same escape hatch Iron Fist's and Ms. Marvel's own granted-quoted-ability
+  readers already use, since `LAYER_EFFECTS` has no row for either shape.
+
+The enters-or-transforms-into trigger (CR 701.27e, CR 712.18: transforming is
+not a new object) and its rarer "transforms into `<face>` and at the
+beginning of your first main phase" combined-event twin needed two condition/
+effect-splitter fixes in `machines/abilities._parse_triggered`
+(`_enters_or_transforms_into_face_boundary`, `_transforms_into_face_and_
+first_main_boundary`) - several ecl legends print a face name with its own
+internal comma ("Ashling, Rekindled"), which the plain top-level split cut
+through - and one new `triggers._expand_transforms_and_first_main`, wired
+into `triggered_abilities_of`/`granted_triggered_abilities_of` the same way
+every other compound-condition `_expand_*` splitter already is. Proven on
+Ashling, Rekindled // Ashling, Rimebound; Brigid, Clachan's Heart // Brigid,
+Doun's Mind; Grub, Storied Matriarch // Grub, Notorious Auntie; Sygg,
+Wanderwine Wisdom // Sygg, Wanderbrine Shield; Trystan, Callous Cultivator //
+Trystan, Penitent Culler; and Brutal Cathar // Moonrage Brute (Modern/
+Pioneer-legal, outside this pool, a face with no internal comma).
+
+The mana-value spend restriction Ashling, Rimebound's own combined trigger
+prints ("Spend this mana only to cast spells with mana value 4 or greater",
+no card-type qualifier at all) needed no new code - `models/mana.SpendClause.
+min_mana_value` and `machines/cost._SPEND_CAST_CLAUSE` already read an
+untyped restriction correctly; proven for real (not only parsed) here and on
+a second printing, Troyan, Gutsy Explorer (Modern/Pioneer/Standard).
+
+`tests/scenarios/test_blight_positions.py`, `test_opponent_blights.py`,
+`test_blighted_creature_copy.py`, `test_enters_or_transforms_into.py`,
+`test_spend_restricted_mana_mv.py`.
+
+Champion of the Weird's own casting cost, "As an additional cost to cast this
+spell, behold a Goblin and exile it." (CR 118.8/601.2f's one object, two
+verbs), is closed here too: `_PHRASE_BEHOLD` now reads an optional trailing
+"and exile it" and `CostComponent.exile_after` makes `pay`/`unpay` move the
+beheld object through `Game.exile_cards` exactly like an ordinary `EXILE`
+component, whichever zone it was beheld from (hand or battlefield).
+`total_cost_for_phrase` tries a comma-free phrase whole before falling back to
+its "and"-splitting path, so "behold a Goblin and exile it" is read as one
+component rather than split into an unreadable "behold a Goblin" plus "exile
+it" - the general fix for any single-component cost whose own text contains
+an internal "and" (Champion of the Clachan's "behold a Kithkin and exile it"
+shares the shape). `test_opponent_blights.py`'s
+`test_casting_champion_of_the_weird_pays_behold_and_exile` and
+`test_casting_champion_of_the_weird_beholds_a_battlefield_goblin` prove it
+end-to-end, both hand and battlefield beholding.
