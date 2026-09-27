@@ -343,7 +343,7 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
-from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
+from .token import TokenDefinition, TokenState, is_token, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -3605,6 +3605,23 @@ class Game(EngineModel):
     same choice `permanents_sacrificed_this_turn` makes. Cleared when a new
     turn begins."""
 
+    nontoken_creatures_died_under_control_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many nontoken creatures have died under each player's control this
+    turn, keyed by that controller.
+
+    Vile Redeemer's own cast trigger: "create a 1/1 colorless Eldrazi Scion
+    creature token for each nontoken creature that died under your control
+    this turn." CR 700.4's "dies" (put into a graveyard from the battlefield)
+    is the same event `creatures_died_this_turn` already counts, but that
+    field is global and counts every creature whoever controlled it; this is
+    the per-controller, nontoken-only twin (CR 111.1's "token" - a permanent
+    represented by something other than a card - excluded the same way
+    `count_expression`'s own "nontoken `<qualifier>` you control" branch
+    already excludes one). Counted in `put_into_graveyard` next to
+    `creatures_died_this_turn`, by the controller the creature had while
+    still on the battlefield (CR 603.10a's look-back). Cleared when a new
+    turn begins."""
+
     open_payment_pools: dict[str, ManaPool] = Field(default_factory=dict)
     """The working mana pool of each player's currently open `CostPayment`.
 
@@ -4239,7 +4256,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 99
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 100
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4401,6 +4418,9 @@ class Game(EngineModel):
     #: and Macabre Reconstruction's "a creature card was put into your
     #: graveyard from anywhere this turn", EC7; renumbered from 96
     #: at integration).
+    #: 100: `Game` gained `nontoken_creatures_died_under_control_this_turn`
+    #: (ec7-cast-optional: Vile Redeemer's own cast-trigger "for each
+    #: nontoken creature that died under your control this turn").
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -18073,6 +18093,17 @@ class Game(EngineModel):
                 assert left_battlefield_chars is not None
                 if Type.CREATURE in left_battlefield_chars.types:
                     self.creatures_died_this_turn += 1
+                    if not is_token(card_state):
+                        died_controller = left_battlefield_chars.controller or card_state.controller
+                        if died_controller is not None:
+                            self.nontoken_creatures_died_under_control_this_turn[
+                                died_controller
+                            ] = (
+                                self.nontoken_creatures_died_under_control_this_turn.get(
+                                    died_controller, 0
+                                )
+                                + 1
+                            )
                 self.emit(
                     GameEvent(
                         event=TriggerEvent.DIES,
@@ -26087,6 +26118,7 @@ class Game(EngineModel):
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
+            self.nontoken_creatures_died_under_control_this_turn = {}
             self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}
             self.cards_drawn_in_own_draw_step = {}

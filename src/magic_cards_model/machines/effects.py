@@ -1492,6 +1492,19 @@ _AMOUNT_OF_LIFE_GAINED_THIS_TURN_RE = re.compile(
 _COUNT_CARDS_DISCARDED_THIS_TURN_RE = re.compile(
     r"^(?:the number of )?cards? you(?:'ve| have)? discarded this turn$", re.IGNORECASE
 )
+#: "`<nontoken >`creature that died under your control this turn" - Vile
+#: Redeemer's own cast trigger ("for each nontoken creature that died under
+#: your control this turn"). CR 700.4: "dies" is put into a graveyard from
+#: the battlefield; `Game.nontoken_creatures_died_under_control_this_turn` is
+#: the per-controller, nontoken-only running total (the plain, non-nontoken
+#: form is left for a future card to add, since nothing in the pool prints it
+#: yet - a bare "creature that died under your control this turn" would
+#: return `None` here rather than double-counting against the nontoken
+#: total).
+_COUNT_NONTOKEN_CREATURES_DIED_UNDER_CONTROL_RE = re.compile(
+    r"^(?:the number of )?nontoken creatures? that died under your control this turn$",
+    re.IGNORECASE,
+)
 #: "the number of cards you've drawn this turn" - Fractal Anomaly's own X.
 #: `Game.cards_drawn_this_turn` is EC4's own per-player running total,
 #: already read by `machines/conditions/history._drew`'s "you drew two or
@@ -1851,6 +1864,13 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             return game.cards_discarded_this_turn.get(controller, 0)
 
         return cards_discarded_this_turn
+
+    if _COUNT_NONTOKEN_CREATURES_DIED_UNDER_CONTROL_RE.fullmatch(stripped):
+
+        def nontoken_creatures_died_under_control(game: "Game", controller: str) -> int:
+            return game.nontoken_creatures_died_under_control_this_turn.get(controller, 0)
+
+        return nontoken_creatures_died_under_control
 
     if _COUNT_CARDS_IN_YOUR_GRAVEYARD_UNFILTERED_RE.fullmatch(stripped):
 
@@ -3877,9 +3897,18 @@ _UNTAP_AND_GAIN_CONTROL_RE = re.compile(
 #: Crew) and triggered ones (Conquering Manticore) alike. `parsed_layer_effects`
 #: read only the first sentence of it and skipped the other two without a
 #: notice, so the stolen creature stayed tapped and never gained haste.
+#:
+#: Eldrazi Obligator prints the identical three instructions inside one
+#: comma-joined sentence rather than Act of Treason's three full stops -
+#: "gain control of target creature until end of turn, untap that creature,
+#: and it gains haste until end of turn." (it is the *consequence* half of
+#: its own "you may pay `{1}{C}`. If you do, ..." cast trigger, CR 118.12,
+#: read by `pay_consequence_effect` below) - so each separator between the
+#: three clauses accepts either punctuation: a full stop, or a comma with an
+#: optional "and".
 _GAIN_CONTROL_THEN_UNTAP_RE = re.compile(
-    r"^gain control of (?P<phrase>target [^.]*?) until end of turn\.\s*"
-    r"untap (?:it|that (?:creature|permanent|artifact))\.\s*"
+    r"^gain control of (?P<phrase>target [^.,]*?) until end of turn(?:\.\s*|,\s*)"
+    r"untap (?:it|that (?:creature|permanent|artifact))(?:\.\s*|,\s*(?:and\s+)?)"
     r"(?:it|that (?:creature|permanent|artifact)) gains (?P<keywords>[a-z][a-z, ]*?) "
     r"until end of turn\.?$",
     re.IGNORECASE,
@@ -18199,12 +18228,31 @@ _PUT_TARGET_FROM_GRAVEYARD_TOP_OF_LIBRARY_RE = re.compile(
 
 
 def put_ability_targets_on_top_of_owners_library(game: "Game", stack_object: "StackObject") -> None:
-    """`_PUT_TARGET_FROM_GRAVEYARD_TOP_OF_LIBRARY_RE`'s effect."""
+    """`_PUT_TARGET_FROM_GRAVEYARD_TOP_OF_LIBRARY_RE`'s effect - reused as-is
+    for `_PUT_TARGET_PERMANENT_TOP_OF_OWNERS_LIBRARY_RE`'s battlefield twin
+    below: `Game.put_cards_into_library` is already zone-agnostic (it raises
+    CR 603.6c's own battlefield-departure event itself when a target leaves
+    the battlefield on the way), so nothing here needs to change for a
+    target coming off the battlefield rather than out of a graveyard."""
     targets = [
         target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
     ]
     if targets:
         game.put_cards_into_library(targets, to_bottom=False)
+
+
+#: "Put target nonland permanent on top of its owner's library." - Lashweed
+#: Lurker's own cast trigger (wrapped in "you may", CR 118.12/608.2d, read by
+#: `_YOU_MAY_RE`'s generic optional-targeted-clause wrap before this is ever
+#: tried). The battlefield twin of `_PUT_TARGET_FROM_GRAVEYARD_TOP_OF_
+#: LIBRARY_RE`: no "from ... graveyard" origin phrase at all, since the
+#: target here is still on the battlefield (CR 401.1's library placement
+#: applies the identical way regardless of which zone the card is leaving,
+#: `put_ability_targets_on_top_of_owners_library`'s own docstring).
+_PUT_TARGET_PERMANENT_TOP_OF_OWNERS_LIBRARY_RE = re.compile(
+    r"put (?P<phrase>target [^.]*?) on top of (?:its owner'?s|your|their) library\.?$",
+    re.IGNORECASE,
+)
 
 
 #: "Return target card from your graveyard to your hand." (Eternal Witness,
@@ -21418,6 +21466,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return None
         return put_ability_targets_on_top_of_owners_library
 
+    if match := _PUT_TARGET_PERMANENT_TOP_OF_OWNERS_LIBRARY_RE.fullmatch(clause):
+        if not _targets_understood(match.group("phrase"), count_agnostic=True):
+            return None
+        return put_ability_targets_on_top_of_owners_library
+
     if match := _RETURN_FROM_YOUR_GRAVEYARD_TO_HAND_RE.fullmatch(clause):
         if not _targets_understood(
             match.group("phrase"), count_agnostic=True, battlefield_only=False
@@ -22645,8 +22698,18 @@ def _parse_variable_count_token_clause(clause: str, *, for_spell: bool) -> Targe
 #: curly double quotes). `head` keeps the token noun and any "with <keywords>"
 #: tail already printed on it, so the quoted ability can be folded in beside
 #: them.
+#:
+#: Vile Redeemer's own cast trigger prints a "for each `<count>`" multiplier
+#: (CR 608.2c) *before* the sentence break: "create a 1/1 ... token for each
+#: nontoken creature that died under your control this turn. Those tokens
+#: have "..."." - `each` captures that tail separately from `tail`'s "with
+#: `<keywords>`" so `fold` can put it back *after* the folded-in quoted
+#: ability, where `_TOKEN_FOR_EACH_TAIL_RE`'s own `$`-anchored search
+#: (`_parse_token_clause`) still finds it at the true end of the rewritten
+#: sentence.
 _TOKEN_FOLLOWING_GRANT_RE = re.compile(
-    r"(?P<noun>\btokens?\b)(?:\s+with\s+(?P<tail>[^.\"“”]+?))?\.\s+"
+    r"(?P<noun>\btokens?\b)(?:\s+with\s+(?P<tail>[^.\"“”]+?))?"
+    r"(?:\s+for each\s+(?P<each>[^.\"“”]+?))?\.\s+"
     r"(?:it has|they have|those tokens have|each of them has)\s+"
     r"(?P<quoted>[\"“][^\"“”]+[\"”])\.?",
     re.IGNORECASE,
@@ -22661,14 +22724,18 @@ def _fold_following_token_grant(text: str) -> str:
 
     A token that already carries a "with <keywords>" tail keeps it, the quoted
     ability joined after an "and" - the "reach and "<ability>"" shape
-    `_parse_token_tail` already reads (Wrenn and Seven). Text without the
-    shape comes back unchanged.
+    `_parse_token_tail` already reads (Wrenn and Seven). A "for each `<count>`"
+    multiplier printed ahead of the sentence break is kept too, moved after the
+    folded-in ability so it stays the rewritten sentence's own trailing clause
+    (see the banner above). Text without the shape comes back unchanged.
     """
 
     def fold(match: re.Match[str]) -> str:
         tail = match.group("tail")
+        each = match.group("each")
         with_part = f"{tail.strip()} and " if tail else ""
-        return f"{match.group('noun')} with {with_part}{match.group('quoted')}"
+        each_suffix = f" for each {each.strip()}" if each else ""
+        return f"{match.group('noun')} with {with_part}{match.group('quoted')}{each_suffix}"
 
     return _TOKEN_FOLLOWING_GRANT_RE.sub(fold, text)
 
@@ -30080,6 +30147,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     may_pay_life_if_you_do = _parse_may_pay_life_if_you_do_clause(effect_text)
     if may_pay_life_if_you_do is not None:
         return may_pay_life_if_you_do
+    may_exile_hand_if_you_do = _parse_may_exile_hand_if_you_do_clause(effect_text)
+    if may_exile_hand_if_you_do is not None:
+        return may_exile_hand_if_you_do
     reflexive_mandatory_token = _parse_reflexive_mandatory_token_clause(effect_text)
     if reflexive_mandatory_token is not None:
         return reflexive_mandatory_token
@@ -40741,11 +40811,26 @@ def _layer_consequence(text: str) -> AbilityEffect | None:
 def pay_consequence_effect(text: str) -> AbilityEffect | None:
     """The consequence of a paid "you may pay `<cost>`. If you do, ..." (CR
     118.12), run on the same ability that paid: an ordinary clause sequence
-    (`parse_mixed_effect`), or one of `_layer_consequence`'s one-shot
-    continuous effects. `None` when none of them reads it."""
+    (`parse_mixed_effect`), the whole-text control-steal shape
+    (`_parse_untap_and_gain_control_ability` - Eldrazi Obligator's own "gain
+    control of target creature until end of turn, untap that creature, and
+    it gains haste until end of turn.", which needs its three clauses read
+    together rather than split at `parse_mixed_effect`'s own clause
+    boundaries), the whole-text token-creation shape (`_parse_whole_text_
+    token_clause` - Vile Redeemer's own "create ... token for each ....
+    Those tokens have "...".", the following-sentence grant `_parse_mixed_
+    clauses`'s per-clause split would otherwise strand on its own unreadable
+    sentence), or one of `_layer_consequence`'s one-shot continuous effects.
+    `None` when none of them reads it."""
     copy_that_spell = _parse_copy_that_spell_clause(text, for_spell=False)
     if copy_that_spell is not None:
         return copy_that_spell
+    control_steal = _parse_untap_and_gain_control_ability(text)
+    if control_steal is not None:
+        return control_steal
+    whole_text_token = _parse_whole_text_token_clause(text)
+    if whole_text_token is not None:
+        return whole_text_token
     return parse_mixed_effect(text) or _layer_consequence(text)
 
 
@@ -41425,6 +41510,50 @@ def _parse_may_pay_life_if_you_do_clause(text: str) -> AbilityEffect | None:
         )
         if paid:
             consequence(game, ability)
+
+    return effect
+
+
+#: "you may exile your hand. If you do, `<consequence>`." - Herigast,
+#: Erupting Nullkite's own cast trigger ("When you cast this spell, you may
+#: exile your hand. If you do, draw three cards."). CR 118.12's "[A player]
+#: may [do something]. If [that player] does, [effect]" reads exiling the
+#: whole hand as the cost paid during this same resolution (CR 701.13a is
+#: the exile keyword action; CR 608.2c moves the hand as one instruction,
+#: `Game.exile_cards`'s own batch), never a discard's own graveyard
+#: destination - the mana/life/energy "if you do" twins above pay a
+#: resource, this one pays an action, but CR 118.12 reads all of them the
+#: same way. `pay_consequence_effect` is shared with every other twin.
+_MAY_EXILE_HAND_IF_YOU_DO_RE = re.compile(
+    r"^you may exile your hand\.\s*if you do,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_may_exile_hand_if_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_EXILE_HAND_IF_YOU_DO_RE`'s shape, or `None`."""
+    match = _MAY_EXILE_HAND_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+    if match is None:
+        return None
+    consequence = pay_consequence_effect(match.group("consequence").strip())
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        player = game.controller_of(ability)
+        _source_id, source_name = _permanent_id_and_name(ability, for_spell=False)
+        paid = game.may(
+            player,
+            "exile your hand",
+            source=source_name,
+            source_id=source_id_of(ability),
+        )
+        if not paid:
+            return
+        hand = list(player.hand)
+        if hand:
+            game.exile_cards(hand)
+        consequence(game, ability)
 
     return effect
 
@@ -63908,6 +64037,22 @@ def _parse_card_group_qualifier(phrase: str) -> Callable[[CardState], bool] | No
     below is what splits it before each half reaches this.
     """
     text = phrase.strip()
+    named = re.fullmatch(r"cards? named (?P<name>.+)", text, re.IGNORECASE)
+    if named is not None:
+        # CR 201.2a: "Two or more objects have the same name if they have at
+        # least one name in common." Demigod of Revenge's own cast trigger
+        # ("return all cards named Demigod of Revenge from your graveyard to
+        # the battlefield.") is the reported shape, but the name compared
+        # here is read straight off whatever `phrase` itself prints, not a
+        # literal fitted to that one card - a future "cards named `<Y>`" on
+        # any other printing reads the identical way for whatever `<Y>` it
+        # names, self-referential or not.
+        name = named.group("name").strip()
+
+        def matches_name(state: CardState) -> bool:
+            return state.name == name
+
+        return matches_name
     if re.fullmatch(r"historic(?: cards?)?", text, re.IGNORECASE):
         # CR 700.6 (Ballad of the Black Flag's "a historic card from among
         # them") - the same `_historic` the search-quality reader uses.

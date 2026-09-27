@@ -1,0 +1,159 @@
+{
+  "object": "card",
+  "id": "f48b0613-127a-4338-aea4-ad0b8aa96d77",
+  "oracle_id": "a7a88bcc-eac2-4f74-804f-b49d16560184",
+  "multiverse_ids": [
+    407635
+  ],
+  "mtgo_id": 59559,
+  "mtgo_foil_id": 59560,
+  "tcgplayer_id": 110814,
+  "cardmarket_id": 287227,
+  "name": "Vile Redeemer",
+  "lang": "en",
+  "released_at": "2016-01-22",
+  "uri": "https://api.scryfall.com/cards/f48b0613-127a-4338-aea4-ad0b8aa96d77",
+  "scryfall_uri": "https://scryfall.com/card/ogw/125/vile-redeemer?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:18:23Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.jpg?1783937903",
+    "normal": "https://cards.scryfall.io/normal/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.jpg?1783937903",
+    "large": "https://cards.scryfall.io/large/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.jpg?1783937903",
+    "png": "https://cards.scryfall.io/png/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.png?1783937903",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.jpg?1783937903",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.jpg?1783937903",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.webp?1783937903",
+    "grid": "https://cards.scryfall.io/grid/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.webp?1783937903",
+    "display": "https://cards.scryfall.io/display/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.webp?1783937903",
+    "art": "https://cards.scryfall.io/art/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.webp?1783937903",
+    "crop": "https://cards.scryfall.io/crop/front/f/4/f48b0613-127a-4338-aea4-ad0b8aa96d77.webp?1783937903"
+  },
+  "mana_cost": "{2}{G}",
+  "cmc": 3.0,
+  "type_line": "Creature \u2014 Eldrazi",
+  "oracle_text": "Devoid (This card has no color.)\nFlash\nWhen you cast this spell, you may pay {C}. If you do, create a 1/1 colorless Eldrazi Scion creature token for each nontoken creature that died under your control this turn. Those tokens have \"Sacrifice this token: Add {C}.\"",
+  "power": "3",
+  "toughness": "3",
+  "colors": [],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [
+    "Devoid",
+    "Flash"
+  ],
+  "produced_mana": [
+    "C"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "20b7443e-7eb2-4fcb-8114-23bad3b3bf51",
+      "component": "token",
+      "name": "Eldrazi Scion",
+      "type_line": "Token Creature \u2014 Eldrazi Scion",
+      "uri": "https://api.scryfall.com/cards/20b7443e-7eb2-4fcb-8114-23bad3b3bf51"
+    },
+    {
+      "object": "related_card",
+      "id": "f48b0613-127a-4338-aea4-ad0b8aa96d77",
+      "component": "combo_piece",
+      "name": "Vile Redeemer",
+      "type_line": "Creature \u2014 Eldrazi",
+      "uri": "https://api.scryfall.com/cards/f48b0613-127a-4338-aea4-ad0b8aa96d77"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "cd51d245-8f95-45b0-ab5f-e2b3a3eb5dfe",
+  "set": "ogw",
+  "set_name": "Oath of the Gatewatch",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/cd51d245-8f95-45b0-ab5f-e2b3a3eb5dfe",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aogw&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ogw?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f48b0613-127a-4338-aea4-ad0b8aa96d77/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aa7a88bcc-eac2-4f74-804f-b49d16560184&unique=prints",
+  "collector_number": "125",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason Rainville",
+  "artist_ids": [
+    "6ed7e669-579b-443d-b223-e5cbcb2a7483"
+  ],
+  "illustration_id": "34a63e9d-d378-49b3-8ebb-ed0f64b57868",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "devoid"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 10839,
+  "penny_rank": 12186,
+  "prices": {
+    "usd": "0.30",
+    "usd_foil": "0.79",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.57",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=407635&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DVile%2BRedeemer",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DVile%2BRedeemer",
+    "edhrec": "https://edhrec.com/route/?cc=Vile+Redeemer"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F110814%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=287227&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/59559?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
