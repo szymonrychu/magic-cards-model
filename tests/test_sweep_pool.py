@@ -1725,3 +1725,26 @@ def test_the_card_report_prints_card_supports_clauses():
             continue
         assert f"    {clause.outcome:<17} [{clause.source}] {clause.text[:60]}" in output
     assert f"outcome (worst clause): {support.effect_outcome}" in output
+
+
+def test_no_abandoned_proof_candidate_printings_pollute_the_pool():
+    """ecl-T3 review finding: while searching for a second printing to prove
+    a reader on, an agent fetches several candidates with
+    `scripts/add_card.py` and keeps only the one actually used in a scenario -
+    but a candidate that loses out (Suncleanser, Decimator Beetle and
+    Cauldron Haze here, plus Tam, Mindful First-Year, which turned out not to
+    carry the needed shape at all) is still real Scryfall json sitting in
+    `src/magic_cards_model/data/printings/`, so `sweep_pool.py`'s pool-wide
+    walk (`tests.cards.pool`, a bare glob of that directory) counts its own
+    unhandled clauses as new silent/notice regressions on a card no test
+    exercises and no task claims. COMMON ACCEPTANCE (i): no card outside a
+    task becomes silent or notice. A losing candidate search is recorded in
+    `MEMORY.md`, not kept as a live pool entry."""
+    abandoned = {
+        "Suncleanser",
+        "Decimator Beetle",
+        "Cauldron Haze",
+        "Tam, Mindful First-Year",
+    }
+    present = abandoned & set(pool())
+    assert not present, f"abandoned proof-candidate printings still in the pool: {sorted(present)}"

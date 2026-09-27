@@ -91,7 +91,13 @@ from ..data.creature_types import creature_types
 from ..data.subtypes import canonical_subtype, subtype_vocabulary
 from ..ids import new_id
 from ..models.card import Color, Layout, Supertype, Type, has_changeling, with_every_creature_type
-from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState, ChoiceKind, Counter
+from ..models.card_state import (
+    CANT_BECOME_UNTAPPED_TEXT,
+    CANT_HAVE_COUNTERS_TEXT,
+    CardState,
+    ChoiceKind,
+    Counter,
+)
 from ..models.zone import Zone
 from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
@@ -4668,6 +4674,21 @@ _INDEFINITE_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: `_INDEFINITE_KEYWORD_GRANT_RE`'s singular-noun twin - Eirdu, Carrier of
+#: Dawn's own "Each other nontoken creature you control has persist.": CR
+#: 700.7's plain-English "each ... creature ... has" is the identical group
+#: this template always was, spelled with a singular noun and CR 611.2c's
+#: "each" instead of the plural "creatures", so it reuses `_indefinite_
+#: keyword_grant_builder` (and `qualifiers_from_subject`) rather than a
+#: second copy of either - the affected set "each other creature you
+#: control" and "other creatures you control" pick out is the same set
+#: either way.
+_EACH_INDEFINITE_KEYWORD_GRANT_RE = re.compile(
+    rf"^{_EACH_QUALIFIED_CREATURE_SUBJECT} "
+    rf"(?:have|has) (?P<keywords>{_KEYWORD_LIST_WITH_COSTS})\.?$",
+    re.IGNORECASE,
+)
+
 #: "During your turn, `<type> and <type>` you control have `<keyword(s)>`."
 #: (Sorin, Vengeful Bloodlord: "During your turn, creatures and planeswalkers
 #: you control have lifelink.") - `_QUALIFIED_CREATURE_SUBJECT`'s own noun
@@ -7023,8 +7044,17 @@ def _indefinite_keyword_grant_builder(
 
     A static ability's effect (CR 611.3), so - like `_anthem_builder` - it is
     timestamped off the source permanent (CR 613.7a) and stops the moment the
-    source loses the ability (CR 613.6): `source_ability` is the exact printed
-    sentence, matching what layer 6 removal matches on.
+    source loses the ability (CR 613.6): `source_ability` has to be the exact
+    line `Characteristics.abilities` stores, matching what layer 6 removal
+    (`_still_exists`) matches on - `_source_line_for` recovers it when `line`
+    reached here with its own reminder text (CR 207.2a) already stripped by
+    `layer_readable_sentences`, the same gap Territorial Kavu's domain line
+    exposes for `_attached_doesnt_untap_builder`'s own callers. Isilu, Carrier
+    of Twilight's "Each other nontoken creature you control has persist."
+    (`_EACH_INDEFINITE_KEYWORD_GRANT_RE`) is this builder's own case of it:
+    persist's reminder text is folded into the granting sentence itself
+    rather than sitting on a separate keyword line, so without this the
+    grant would parse but never survive `_still_exists`'s very next check.
     """
 
     def builder(
@@ -7035,13 +7065,14 @@ def _indefinite_keyword_grant_builder(
     ) -> list[ContinuousEffect]:
         selector, subject = _creature_group(source, other=other, whose=whose, qualifiers=qualifiers)
         gate = qualifiers.gate_words if qualifiers is not None else ""
+        source_ability = _source_line_for(source, line)
         return [
             ContinuousEffect(
                 description=f"{source.name}: {gate}{subject} have {ability}",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
                 source_id=source.id,
-                source_ability=line,
+                source_ability=source_ability,
                 selector=selector,
                 modification=grant_ability(ability),
             )
@@ -8035,6 +8066,129 @@ _ATTACHED_DOESNT_UNTAP_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "can't have counters put on it", optionally paired with "can't become
+#: untapped" in either order joined by "and" - Melira's Keepers' and
+#: Tatterkite's own plain "This creature can't have counters put on it.",
+#: and Blossombind's Aura "Enchanted creature can't become untapped and
+#: can't have counters put on it." Neither half is a keyword
+#: (`_ATTACHED_DOESNT_UNTAP_RE`/`_SELF_DOESNT_UNTAP_RE` already read the
+#: untap restriction alone, with no counters clause), so this is its own
+#: pair of shapes rather than a widening of those two - but the counters
+#: half is mandatory in both regexes below, which is what keeps this from
+#: ever matching (and so duplicating) a bare "can't become untapped" line
+#: those two already own.
+_CANT_BECOME_UNTAPPED_CLAUSE = r"can'?t become untapped"
+_CANT_HAVE_COUNTERS_CLAUSE = r"can'?t have counters put on it"
+_SELF_CANT_HAVE_COUNTERS_RE = re.compile(
+    r"^this (?:creature|artifact|permanent|token) "
+    rf"(?:(?P<untap_first>{_CANT_BECOME_UNTAPPED_CLAUSE}) and )?"
+    rf"{_CANT_HAVE_COUNTERS_CLAUSE}"
+    rf"(?: and (?P<untap_second>{_CANT_BECOME_UNTAPPED_CLAUSE}))?\.?$",
+    re.IGNORECASE,
+)
+_ATTACHED_CANT_HAVE_COUNTERS_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) (?P<subject>creature|permanent|artifact) "
+    rf"(?:(?P<untap_first>{_CANT_BECOME_UNTAPPED_CLAUSE}) and )?"
+    rf"{_CANT_HAVE_COUNTERS_CLAUSE}"
+    rf"(?: and (?P<untap_second>{_CANT_BECOME_UNTAPPED_CLAUSE}))?\.?$",
+    re.IGNORECASE,
+)
+
+
+def _cant_have_counters_effects(
+    *,
+    selector: Selector,
+    subject_words: str,
+    also_cant_become_untapped: bool,
+    source: CardState,
+    timestamp: int,
+    line: str,
+) -> list[ContinuousEffect]:
+    """The `ContinuousEffect`s `_self_cant_have_counters_builder` and
+    `_attached_cant_have_counters_builder` share: CR 122.6's counter
+    prohibition (`CANT_HAVE_COUNTERS_TEXT`, read by `Game.add_counters`),
+    plus CR 502.1's untap prohibition (`CANT_BECOME_UNTAPPED_TEXT`, read by
+    `CardState.untap`) when the sentence also prints it - both layer 6 (CR
+    613.1f), both timestamped and keyed to the same printed line as every
+    other static ability here.
+    """
+    effects = [
+        ContinuousEffect(
+            description=f"{source.name}: {subject_words} can't have counters put on it",
+            layer=Layer.ABILITY,
+            timestamp=timestamp,
+            source_id=source.id,
+            source_ability=_source_line_for(source, line),
+            selector=selector,
+            modification=grant_ability(CANT_HAVE_COUNTERS_TEXT),
+        )
+    ]
+    if also_cant_become_untapped:
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {subject_words} can't become untapped",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(CANT_BECOME_UNTAPPED_TEXT),
+            )
+        )
+    return effects
+
+
+def _self_cant_have_counters_builder(
+    *, also_cant_become_untapped: bool, line: str
+) -> EffectBuilder:
+    """`_SELF_CANT_HAVE_COUNTERS_RE`'s shape: Melira's Keepers, Tatterkite."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        return _cant_have_counters_effects(
+            selector=_only(source.id),
+            subject_words="this permanent",
+            also_cant_become_untapped=also_cant_become_untapped,
+            source=source,
+            timestamp=timestamp,
+            line=line,
+        )
+
+    return builder
+
+
+def _attached_cant_have_counters_builder(
+    *, subject: str, also_cant_become_untapped: bool, line: str
+) -> EffectBuilder:
+    """`_ATTACHED_CANT_HAVE_COUNTERS_RE`'s shape: Blossombind's own combined
+    line - CR 613.1f for both grants, landing on whatever `attached_to`
+    points at, the same as `_attached_doesnt_untap_builder`."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        return _cant_have_counters_effects(
+            selector=_only(attached),
+            subject_words=f"{subject} creature",
+            also_cant_become_untapped=also_cant_become_untapped,
+            source=source,
+            timestamp=timestamp,
+            line=line,
+        )
+
+    return builder
+
+
 #: "Other creatures are Food artifacts in addition to their other types and
 #: have "{2}, {T}, Sacrifice this permanent: You gain 3 life."" (Ygra, Eater of
 #: All, read out of the pool fixture) - a board-wide type grant that reaches
@@ -9018,7 +9172,9 @@ DOESNT_UNTAP_TEXT = "Doesn't untap during its controller's untap step."
 
 #: The layer-6 lines that stand for an effect on the object rather than an
 #: ability of it - kept by `LoseAllAbilities`.
-RULE_EFFECT_TEXTS: frozenset[str] = frozenset({DOESNT_UNTAP_TEXT, CANT_BECOME_UNTAPPED_TEXT})
+RULE_EFFECT_TEXTS: frozenset[str] = frozenset(
+    {DOESNT_UNTAP_TEXT, CANT_BECOME_UNTAPPED_TEXT, CANT_HAVE_COUNTERS_TEXT}
+)
 
 #: Canonical granted-ability text for "<Type>s entering [the battlefield]
 #: don't cause abilities to trigger" - Torpor Orb's "Creatures entering
@@ -11129,7 +11285,14 @@ def _permanents_with_counters_ward_builder(cost: str, *, line: str) -> EffectBui
 #: Exile's "Creatures you control have prowess."): the granted "Prowess" line
 #: is expanded into its trigger by `machines/keywords.
 #: granted_keyword_triggered_abilities`, the way a granted "Ward {1}" is.
-_GRANTABLE_TRIGGERED_KEYWORDS = frozenset({"prowess"})
+#: CR 702.79a's persist joins it the same way - Eirdu, Carrier of Dawn's own
+#: "Each other nontoken creature you control has persist." and Rhys, the
+#: Evermore's temporary "gains persist until end of turn" both reach the
+#: identical `_TRIGGER_EXPANSIONS["persist"]` builder once the granted
+#: "Persist" line is on the computed board, which is what `machines/
+#: keywords.persist_return`'s own `keyword_confirmed` escape hatch is for -
+#: see that function's docstring.
+_GRANTABLE_TRIGGERED_KEYWORDS = frozenset({"prowess", "persist"})
 _KNOWN_KEYWORDS = (
     frozenset(keyword.value for keyword in Keyword)
     | KEYWORDS_OUTSIDE_COMBAT
@@ -11702,6 +11865,17 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             during_your_turn=match.group("your_turn") is not None,
         )
     if match := _INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if keywords is None:
+            return None
+        return _indefinite_keyword_grant_builder(
+            keywords,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match),
+        )
+    if match := _EACH_INDEFINITE_KEYWORD_GRANT_RE.fullmatch(sentence):
         keywords = _split_and_validate_keywords(match.group("keywords"))
         if keywords is None:
             return None
@@ -12413,6 +12587,19 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _self_legend_rule_exempt_builder(until_end_of_turn=True, line=sentence)
     if _LEGEND_RULE_EXEMPT_RE.fullmatch(sentence):
         return _self_legend_rule_exempt_builder(until_end_of_turn=False, line=sentence)
+    if match := _SELF_CANT_HAVE_COUNTERS_RE.fullmatch(sentence):
+        return _self_cant_have_counters_builder(
+            also_cant_become_untapped=match.group("untap_first") is not None
+            or match.group("untap_second") is not None,
+            line=sentence,
+        )
+    if match := _ATTACHED_CANT_HAVE_COUNTERS_RE.fullmatch(sentence):
+        return _attached_cant_have_counters_builder(
+            subject=match.group("attachment").lower(),
+            also_cant_become_untapped=match.group("untap_first") is not None
+            or match.group("untap_second") is not None,
+            line=sentence,
+        )
     if _SELF_DOESNT_UNTAP_RE.fullmatch(sentence):
         return _self_doesnt_untap_builder(line=sentence)
     if (unless := split_unless(sentence)) is not None and _SELF_DOESNT_UNTAP_RE.fullmatch(

@@ -53550,6 +53550,27 @@ def _merge_may_exile_from_graveyard_if_you_do_clauses(
     return 2, effect
 
 
+def _parse_minus_counters_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
+    """`machines/minus_counters.parse_resolution_text`, tried as one more
+    entry in `_parse_mixed_clause`'s own dispatch chain below.
+
+    `_ability_effect_or_notice` already tries `machines/counter_effects.
+    parse_resolution_text` (which chains to this same module) against the
+    *whole*, unsplit text of an ordinary ability or non-modal spell - which
+    is how Darkness Descends' own "Put two -1/-1 counters on each creature."
+    and Rhys, the Evermore's activated ability already reach it. A modal
+    spell's own chosen mode never goes through that whole-text path at all
+    (`parse_mode_effect` falls back to `parse_mixed_effect_for_spell`
+    instead, CR 700.2a's own mode being read as one card's worth of
+    CR 608.2c instructions on its own) - Perfect Intimidation's own "Target
+    opponent exiles two cards from their hand." bullet is what this call
+    reaches that the whole-text path cannot.
+    """
+    from .minus_counters import parse_resolution_text as _parse_minus_counters_text
+
+    return _parse_minus_counters_text(clause, for_spell=for_spell)
+
+
 def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | None:
     """One clause of a mixed effect: the targeted shape first, then a token
     creation, then a search, then the imprint shape, then a delayed-trigger
@@ -54231,6 +54252,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         that_player = _parse_that_player_clause(clause, for_spell=for_spell)
         if that_player is not None:
             return that_player
+    minus_counters_clause = _parse_minus_counters_mixed_clause(clause, for_spell=for_spell)
+    if minus_counters_clause is not None:
+        return minus_counters_clause
     player_clause = _parse_optional_player_clause(clause)
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over

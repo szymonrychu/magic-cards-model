@@ -6965,9 +6965,37 @@ def added_ability_lines(game: "Game", permanent: CardState) -> tuple[str, ...]:
     A line the permanent already carries in `granted_ability_texts` is left out,
     since those are folded in by the callers themselves and would otherwise be
     counted twice.
+
+    CR 603.10a: off the battlefield, this reads `CardState.abilities_as_it_
+    left` instead of the (now unrelated) live computed board - the identical
+    look-back snapshot `_had_as_it_left` already filters a *printed*
+    leaves-the-battlefield trigger against. Without this, a keyword a static
+    ability *grants* to another permanent (Isilu, Carrier of Twilight's own
+    "has persist") could never produce a leaves-the-battlefield trigger at
+    all: `triggered_abilities_on` builds its own candidate list from this
+    function's return, and CR 400.7 has already made the departing object a
+    new one with an empty `computed_characteristics` (`None`) by the time
+    that candidate list is asked for - not just an object CR 603.4 has to
+    look back from, but one this function used to see as having gained
+    nothing, ever.
     """
     if permanent.zone is not Zone.BATTLEFIELD:
-        return ()
+        lines = permanent.abilities_as_it_left
+        if lines is None:
+            return ()
+        printed = {
+            line.strip() for line in (permanent.oracle_text or "").splitlines() if line.strip()
+        }
+        granted = set(permanent.granted_ability_texts)
+        # A grant `machines/layers._sync_stored_grant_ability_texts` had
+        # already reconciled onto `granted_ability_texts` before this
+        # permanent left - Rhys, the Evermore's own stored, one-shot "gains
+        # persist until end of turn" - is `triggered_abilities_on`'s own
+        # `source.granted_as_it_left` already, read at its own call site
+        # just above this one; counted here too it would double the
+        # ability the permanent's dies trigger produces.
+        already_covered = granted | set(permanent.granted_as_it_left)
+        return tuple(line for line in lines if line not in printed and line not in already_covered)
     try:
         computed = game.characteristics_of(permanent)
     except KeyError:

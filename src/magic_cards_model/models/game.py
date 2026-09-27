@@ -14699,9 +14699,22 @@ class Game(EngineModel):
         as it arrives.
 
         `putter` is who puts them; unnamed, `_counter_putter` answers it.
+
+        CR 101.2: a "can't" effect takes precedence over the rule or effect
+        that would otherwise apply, and CR 614.17a says such an effect must
+        already exist before the event it blocks - checked here, ahead of
+        replacement effects, so a permanent an effect says "can't have
+        counters put on it" (`CardState.cant_have_counters_put_on_it`) simply
+        never receives any, on the battlefield or as it enters (CR 122.6):
+        no event, no replacement to apply, no counter. This is the one place
+        every route to putting counters on a permanent already passes
+        through - `proliferate`, every `AddCounters`/`_counter_gain` effect
+        - so gating it here covers all of them at once.
         """
         with self._id_allocator_scope():
             if amount <= 0:
+                return permanent.counter_count(kind)
+            if permanent.cant_have_counters_put_on_it:
                 return permanent.counter_count(kind)
 
             event = ReplaceableEvent(

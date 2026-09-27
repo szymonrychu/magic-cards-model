@@ -391,6 +391,63 @@ def has_convoke(card: Card) -> bool:
     return _has(card, "convoke")
 
 
+#: "`<quality>` spells you cast have convoke." (Eirdu, Carrier of Dawn's own
+#: "Creature spells you cast have convoke.") - `machines/spell_grants.py`'s
+#: own `_SPELLS_YOU_CAST_HAVE_RE` shape, reused read-only rather than
+#: duplicated: that module's own docstring says outright that convoke is
+#: "not a grant it reads at all" (`SPELL_GRANT_KEYWORDS` only ever lists a
+#: keyword some *other* machine already executes, and until now nothing
+#: executed a granted convoke), so this is a new, narrow reader for the one
+#: keyword that module deliberately excludes - kept in its own function here
+#: rather than widening `SPELL_GRANT_KEYWORDS` itself.
+def has_convoke_now(spell: CardState) -> bool:
+    """CR 702.51a: whether `spell`, on the stack, has convoke - printed
+    (`has_convoke`) or granted by a static ability of a permanent its
+    controller controls right now (CR 611.3a: continuous, never locked in).
+
+    `spell._board_source` is the bound `Game` (the same private back-
+    reference `CardState.untap`/`tap` already read for their own game-facing
+    notes), so this needs no new parameter threaded through `convoke`'s own
+    signature - every existing caller of that function is unaffected.
+    """
+    if has_convoke(spell.card):
+        return True
+    if spell.zone is not Zone.STACK:
+        return False
+    game = getattr(spell, "_board_source", None)
+    if game is None:
+        return False
+    controller = game.controller_of(spell).username
+    from .spell_grants import (
+        _SPELLS_YOU_CAST_HAVE_RE,
+        _TRAILING_REMINDER_RE,
+        _normalized_quality,
+        _object_has_quality,
+    )
+
+    record = game.cast_record_of(spell)
+    origin_zone = record.origin_zone if record is not None else None
+    board = game.computed_board()
+    for permanent in game.permanents_controlled_by(controller):
+        for line in board.of(permanent).abilities:
+            stripped = _TRAILING_REMINDER_RE.sub("", line.strip()).strip()
+            match = _SPELLS_YOU_CAST_HAVE_RE.fullmatch(stripped)
+            if match is None or match.group("keyword").strip().lower() != "convoke":
+                continue
+            zone_word = match.groupdict().get("zone")
+            if zone_word is not None and (
+                origin_zone is None or _ZONE_WORDS_FOR_CONVOKE[zone_word.lower()] != origin_zone
+            ):
+                continue
+            quality = _normalized_quality(match.group("what"))
+            if _object_has_quality(spell, quality):
+                return True
+    return False
+
+
+_ZONE_WORDS_FOR_CONVOKE = {"hand": Zone.HAND, "graveyard": Zone.GRAVEYARD}
+
+
 def has_delve(card: Card) -> bool:
     """CR 702.66c: multiple instances of delve are redundant."""
     return _has(card, "delve")
@@ -480,7 +537,7 @@ def convoke(
     offers it against a generic one. The creature is tapped when the payment is
     paid, not now, and untapped again if the payment is cancelled (CR 733.1).
     """
-    if not has_convoke(spell.card):
+    if not has_convoke_now(spell):
         raise ValueError(f"{spell.name} does not have convoke ({CONVOKE_RULE})")
     return _substitute(payment, convoke_offer(), creature, color)
 
