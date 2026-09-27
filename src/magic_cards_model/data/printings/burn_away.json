@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "b09c774a-0ea0-4bb8-9195-ea2d83461e75",
+  "oracle_id": "65dcad6b-9a87-4313-bc71-682e1de262d0",
+  "multiverse_ids": [
+    416908
+  ],
+  "tcgplayer_id": 121789,
+  "cardmarket_id": 291881,
+  "name": "Burn Away",
+  "lang": "en",
+  "released_at": "2016-08-26",
+  "uri": "https://api.scryfall.com/cards/b09c774a-0ea0-4bb8-9195-ea2d83461e75",
+  "scryfall_uri": "https://scryfall.com/card/cn2/151/burn-away?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:08:26Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.jpg?1783937306",
+    "normal": "https://cards.scryfall.io/normal/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.jpg?1783937306",
+    "large": "https://cards.scryfall.io/large/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.jpg?1783937306",
+    "png": "https://cards.scryfall.io/png/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.png?1783937306",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.jpg?1783937306",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.jpg?1783937306",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.webp?1783937306",
+    "grid": "https://cards.scryfall.io/grid/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.webp?1783937306",
+    "display": "https://cards.scryfall.io/display/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.webp?1783937306",
+    "art": "https://cards.scryfall.io/art/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.webp?1783937306",
+    "crop": "https://cards.scryfall.io/crop/front/b/0/b09c774a-0ea0-4bb8-9195-ea2d83461e75.webp?1783937306"
+  },
+  "mana_cost": "{4}{R}",
+  "cmc": 5.0,
+  "type_line": "Instant",
+  "oracle_text": "Burn Away deals 6 damage to target creature. When that creature dies this turn, exile its controller's graveyard.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "ad1b8847-1905-4080-9e26-80691ea7c1ef",
+  "set": "cn2",
+  "set_name": "Conspiracy: Take the Crown",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/ad1b8847-1905-4080-9e26-80691ea7c1ef",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Acn2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/cn2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b09c774a-0ea0-4bb8-9195-ea2d83461e75/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A65dcad6b-9a87-4313-bc71-682e1de262d0&unique=prints",
+  "collector_number": "151",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "\"Your corruption will burn, serpent, until there is nothing left to defile.\"\n\u2014Asmala, bloodfire mystic",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Vincent Proce",
+  "artist_ids": [
+    "d82b1138-76d3-49f7-9d8c-bc2e2d3e0b0a"
+  ],
+  "illustration_id": "8cac421a-0c09-48d6-9d3e-01d1019b8ae2",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 21783,
+  "penny_rank": 11899,
+  "prices": {
+    "usd": "0.15",
+    "usd_foil": "0.50",
+    "usd_etched": null,
+    "eur": "0.11",
+    "eur_foil": "0.23",
+    "tix": null
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=416908&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBurn%2BAway",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBurn%2BAway",
+    "edhrec": "https://edhrec.com/route/?cc=Burn+Away"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F121789%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=291881&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Burn+Away&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

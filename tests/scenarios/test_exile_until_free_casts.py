@@ -30,6 +30,7 @@ import pytest
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 _HARVEST_LANDS = ["Island", "Island", "Island", "Swamp", "Swamp", "Swamp", "Swamp"]
@@ -255,3 +256,124 @@ def test_breaching_dragonstorm_casts_a_fitting_spell_on_entering():
         scenario.resolve_top()
 
     assert scenario.player("bob").life == 17
+
+
+# -- End-Blaze Epiphany ------------------------------------------------------
+#
+# "End-Blaze Epiphany deals X damage to target creature. When that creature
+# dies this turn, exile a number of cards from the top of your library equal
+# to its power, then choose a card exiled this way. Until the end of your
+# next turn, you may play that card." CR 603.7: the second sentence creates
+# a delayed triggered ability; CR 603.10a: a dies trigger looks back, so
+# "its power" is the creature's power as it last existed on the battlefield
+# (CR 608.2h). CR 611.2a: "until the end of your next turn". Proof printing
+# for the delayed "when that creature dies this turn" pair: Burn Away
+# ("Burn Away deals 6 damage to target creature. When that creature dies
+# this turn, exile its controller's graveyard.").
+
+
+def _end_blaze_board(*, target="Hill Giant", lands=4, library=None, bob_graveyard=()):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["End-Blaze Epiphany"],
+            battlefield=["Mountain"] * lands,
+            library=list(library or ["Island", "Lightning Bolt", "Grizzly Bears", "Opt"]),
+        )
+        .player("bob", battlefield=[target], graveyard=list(bob_graveyard))
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+def _cast_free_from_exile(scenario, name, targets=None):
+    return _cast_free(scenario, name, targets=targets)
+
+
+def _cast_end_blaze(scenario, x_value, target_name="Hill Giant"):
+    target = scenario.creature(target_name, "bob")
+    card = scenario.find("End-Blaze Epiphany", Zone.HAND, "alice")
+    mountains = scenario.untapped_sources(*(["Mountain"] * (x_value + 1)), username="alice")
+    scenario.game.cast(card, "alice", x_value=x_value, targets=[target], mana_sources=mountains)
+    scenario.resolve_top()
+    scenario.state_based_actions()
+    return target
+
+
+def test_end_blaze_exiles_cards_equal_to_the_dead_creatures_power_and_one_is_playable():
+    scenario = _end_blaze_board(lands=5)
+    lightning = scenario.player("alice").library[1]
+    scenario.will_choose_cards(lightning, username="alice")
+    giant = _cast_end_blaze(scenario, 3)
+    assert giant.zone is Zone.GRAVEYARD
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert sorted(c.name for c in scenario.game.exile) == [
+        "Grizzly Bears",
+        "Island",
+        "Lightning Bolt",
+    ]
+    assert [c.name for c in scenario.player("alice").library] == ["Opt"]
+    _cast_free_from_exile(scenario, "Lightning Bolt", targets=["bob"])
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 17
+
+
+def test_its_power_is_the_power_the_creature_last_had():
+    """CR 603.10a: the creature's power as it last existed counts - three
+    +1/+1 counters make the 3/3 Hill Giant a 6/6, and six cards are
+    exiled."""
+    scenario = _end_blaze_board(lands=7, library=["Island"] * 7)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.game.add_counters(giant, Counter.PLUS_ONE, 3)
+    scenario.will_choose_cards(scenario.player("alice").library[0], username="alice")
+    _cast_end_blaze(scenario, 6)
+    assert giant.zone is Zone.GRAVEYARD
+    while scenario.game.stack:
+        scenario.resolve_top()
+    assert len(scenario.game.exile) == 6
+
+
+def test_a_creature_that_survives_triggers_nothing():
+    scenario = _end_blaze_board()
+    giant = _cast_end_blaze(scenario, 1)
+    assert giant.zone is Zone.BATTLEFIELD
+    assert scenario.stack_names() == []
+    assert scenario.game.exile == []
+
+
+def test_the_chosen_card_stays_playable_through_the_next_turn_only():
+    scenario = _end_blaze_board(library=["Island", "Opt", "Opt"])
+    island = scenario.player("alice").library[0]
+    scenario.will_choose_cards(island, username="alice")
+    _cast_end_blaze(scenario, 3)
+    while scenario.game.stack:
+        scenario.resolve_top()
+    permissions = [p for p in scenario.game.play_permissions if p.names(island)]
+    assert len(permissions) == 1
+    assert permissions[0].expires_end_of_next_turn
+    assert permissions[0].action.value == "play"
+
+
+def test_burn_away_exiles_the_dead_creatures_controllers_graveyard():
+    """The proof printing: the same "When that creature dies this turn"
+    pair with a different consequence, "its controller" being the dead
+    creature's controller."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Burn Away"], battlefield=["Mountain"] * 5, graveyard=["Opt"])
+        .player("bob", battlefield=["Hill Giant"], graveyard=["Lightning Bolt", "Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    giant = scenario.creature("Hill Giant", "bob")
+    scenario.cast_and_resolve("Burn Away", auto=True, targets=[giant])
+    scenario.state_based_actions()
+    while scenario.game.stack:
+        scenario.resolve_top()
+
+    assert scenario.player("bob").graveyard == []
+    assert [c.name for c in scenario.player("alice").graveyard] == ["Opt", "Burn Away"]

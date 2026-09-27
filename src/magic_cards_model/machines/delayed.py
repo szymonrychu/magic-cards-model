@@ -1884,6 +1884,26 @@ class ReturnSubjectFromGraveyardToBattlefield(DelayedEffectSpecBase):
 #: callable object rather than a `DELAYED_EFFECTS.get` lookup that could miss.
 #: An unrecognised `kind` refuses at decode (`pydantic.ValidationError`)
 #: instead of resolving to nothing; see this module's own docstring.
+class ThatCreatureDiesConsequence(DelayedEffectSpecBase):
+    """ "When that creature dies this turn, `<consequence>`." (End-Blaze
+    Epiphany, Burn Away) - CR 603.7's delayed triggered ability, watching the
+    one creature the creating spell named (`DelayedTrigger.subject_id`) and
+    ending with the turn (CR 603.7b's stated duration). `trigger.text` is the
+    consequence, read back at resolution by `machines/dies_this_turn.
+    dies_consequence_effect` - its "its power"/"its controller" are CR
+    603.10a's look back at the creature as it last existed, off the DIES
+    event the ability carries."""
+
+    kind: Literal["that_creature_dies_consequence"] = "that_creature_dies_consequence"
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        from .dies_this_turn import dies_consequence_effect
+
+        effect = dies_consequence_effect(trigger.text)
+        if effect is not None:
+            effect(game, ability)
+
+
 DelayedEffectSpec = Annotated[
     ExileWarped
     | GrantExtraTurn
@@ -1931,7 +1951,8 @@ DelayedEffectSpec = Annotated[
     | ReturnSubjectFromGraveyardToBattlefield
     | ReturnEachExiledToBattlefieldUnderOwner
     | PayOrElseReturnExiledCard
-    | DiscardCardsAtRandomForController,
+    | DiscardCardsAtRandomForController
+    | ThatCreatureDiesConsequence,
     Field(discriminator="kind"),
 ]
 

@@ -54205,9 +54205,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
     copy_target_spell_whole = _parse_copy_target_spell_clause(text, for_spell=for_spell)
     if copy_target_spell_whole is not None:
         return [copy_target_spell_whole]
+    from .dies_this_turn import parse_then_when_that_creature_dies_this_turn
     from .exile_until_casts import exile_until_casts_whole_text
     from .stack_sweeps import parse_mass_stack_whole_text
 
+    dies_this_turn = parse_then_when_that_creature_dies_this_turn(text, for_spell=for_spell)
+    if dies_this_turn is not None:
+        # Read whole: "that creature" and "its power" point back across the
+        # period at the first sentence's target (`machines/dies_this_turn.py`).
+        return [dies_this_turn]
     exile_until_casts = exile_until_casts_whole_text(text, for_spell=for_spell)
     if exile_until_casts is not None:
         # Read whole: "exiled this way"/"that card" point back across the
