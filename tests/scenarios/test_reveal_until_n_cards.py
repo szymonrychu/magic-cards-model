@@ -9,11 +9,13 @@ was found), and Sanar's own "for each of those colors, you may exile a card
 of that color ..., then shuffle. You may cast the exiled cards this turn" (a
 per-color choice, an ordinary CR 701.24a shuffle rather than a "bottom in a
 random order", and CR 601.3's cast permission on top). One reveal-and-count
-core, two genuinely different consumers, is the generality this file proves;
-see `MEMORY.md` for why a third, off-pool printing (Old Stickfingers, whose
-own "When you cast this spell, ..." wrapper needs CR 601.2i's cast-trigger
-recognition - a separate, unbuilt subsystem this task does not own) could
-not be added on top.
+core, two genuinely different consumers, is the generality this file proves
+on the two listed cards; the core itself is proven again off-pool below on
+Skyserpent Seeker's own literal-count "put those `<kind>` cards onto the
+battlefield[ tapped]" shape (`_merge_reveal_until_n_kind_put_onto_battlefield_
+clauses`) - substituted for Old Stickfingers, whose own "When you cast this
+spell, ..." wrapper needs CR 601.2i's cast-trigger recognition, a separate
+subsystem out of scope here; see `MEMORY.md` for the dated substitution.
 
 Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file:
@@ -35,6 +37,7 @@ that wrote this file:
 
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 _WHITE = "Savannah Lions"
@@ -152,3 +155,57 @@ def test_sanar_reveals_until_x_nonland_cards_and_may_exile_one_per_color():
     assert guide.zone is Zone.LIBRARY
     assert mountain_in_library.zone is Zone.LIBRARY
     assert len(scenario.player("alice").library) == 2
+
+
+# -- Off-pool proof: Skyserpent Seeker's literal-count reveal-until-N -----------
+
+
+def test_skyserpent_seeker_reveals_until_two_land_cards_and_puts_them_down_tapped():
+    """Off-pool proof (not a listed card, not in any deck) that `_reveal_
+    until_n_of_kind`'s count generalisation - built for Aurora Awakener's and
+    Sanar's own resolution-time X - is not hardcoded to either card: Exhaust -
+    {4}: Reveal cards from the top of your library until you reveal two land
+    cards. Put those land cards onto the battlefield tapped and the rest on
+    the bottom of your library in a random order. Put a +1/+1 counter on this
+    creature. (CR 702.177a's exhaust cost is a separate, already-tested
+    mechanic - `test_exhaust.py` - this test is about the reveal.)
+
+    Lightning Bolt (not a land) is revealed and set aside, then Forest and
+    Swamp stop the reveal at two land cards found - both go onto the
+    battlefield tapped (CR 401.4's ordinary battlefield-entry-tapped rule,
+    read the same as `_PUT_REVEALED_CARD_RE`'s own "onto the battlefield
+    tapped" case), a mandatory placement (no `CHOOSE_CARDS` decision, unlike
+    Aurora Awakener's own "any number" choice), while Lightning Bolt goes to
+    the bottom in a random order (`_shuffle_remainder_to_bottom`, the same
+    helper Aurora Awakener's own reader calls).
+    """
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[],
+            library=["Lightning Bolt", "Forest", "Swamp", "Island"],
+            battlefield=["Skyserpent Seeker"] + ["Mountain"] * 4,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    seeker = scenario.creature("Skyserpent Seeker", "alice")
+    bolt = scenario.find("Lightning Bolt", Zone.LIBRARY)
+    forest = scenario.find("Forest", Zone.LIBRARY)
+    swamp = scenario.find("Swamp", Zone.LIBRARY)
+    sources = scenario.untapped_sources(*["Mountain"] * 4)
+
+    scenario.activate(seeker, *sources)
+    scenario.pass_until_resolved()
+
+    assert forest.zone is Zone.BATTLEFIELD
+    assert swamp.zone is Zone.BATTLEFIELD
+    assert scenario.game.controller_of(forest).username == "alice"
+    assert scenario.game.controller_of(swamp).username == "alice"
+    assert forest.tapped
+    assert swamp.tapped
+    assert bolt.zone is Zone.LIBRARY
+    library_names = {state.name for state in scenario.player("alice").library}
+    assert library_names == {"Lightning Bolt", "Island"}
+    assert seeker.counters[Counter.PLUS_ONE] == 1

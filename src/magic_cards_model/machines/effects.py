@@ -17633,6 +17633,82 @@ def _shuffle_remainder_to_bottom(
         controller.move(state, Zone.LIBRARY)
 
 
+#: Skyserpent Seeker: "Exhaust - {4}: Reveal cards from the top of your
+#: library until you reveal two land cards. Put those land cards onto the
+#: battlefield tapped and the rest on the bottom of your library in a random
+#: order." `_REVEAL_UNTIL_KIND_RE`'s own fixed "a `<kind>` card" (one)
+#: widened to any literal `COUNT` two or greater via `_reveal_until_n_of_kind`
+#: - the same resolution-time-count generalisation Aurora Awakener's and
+#: Sanar's own variable X built - proven here on a real, off-pool,
+#: Modern/Pioneer/Standard-legal printing that carries neither card's own
+#: template, only the shared reveal-and-count core and `_shuffle_remainder_
+#: to_bottom` (Aurora Awakener's own tail helper). A literal singular "a
+#: `<kind>` card" stays `_REVEAL_UNTIL_KIND_RE`'s own case - English never
+#: pluralises "cards" for a count of one, so the two patterns never compete
+#: for the same sentence. See the dated MEMORY.md line for why Old
+#: Stickfingers, this family's first-tried off-pool candidate, was replaced
+#: with this one instead.
+_REVEAL_UNTIL_N_KIND_RE = re.compile(
+    rf"^reveal cards from the top of your library until you reveal "
+    rf"(?P<count>{COUNT}) (?P<kind>[a-z]+) cards$",
+    re.IGNORECASE,
+)
+#: "Put those `<kind>` cards onto the battlefield[ tapped]" - the plural,
+#: mandatory-placement sibling of `_PUT_REVEALED_CARD_RE`'s own singular
+#: "put that card `<dest>`", split off the clause after it by the same bare-
+#: "and" `_CLAUSE_SEPARATOR` cut documented on `_PUT_REVEALED_CARD_RE`.
+_PUT_REVEALED_CARDS_ONTO_BATTLEFIELD_RE = re.compile(
+    r"^put those (?P<kind>[a-z]+) cards onto the battlefield(?P<tapped> tapped)?$",
+    re.IGNORECASE,
+)
+
+
+def _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """`_REVEAL_UNTIL_N_KIND_RE` immediately followed by
+    `_PUT_REVEALED_CARDS_ONTO_BATTLEFIELD_RE` and `_PUT_REVEALED_CARD_REST_
+    RANDOM_RE` - a three-clause merge for the same reason `_merge_reveal_
+    until_kind_then_put_clauses` is one: the cards that stopped the reveal
+    are live objects only the caller resolving this ability holds, and "the
+    rest" is everything else that same reveal showed.
+    """
+    if index + 2 >= len(clauses):
+        return None
+    reveal_match = _REVEAL_UNTIL_N_KIND_RE.fullmatch(clauses[index].strip().rstrip("."))
+    if reveal_match is None:
+        return None
+    put_match = _PUT_REVEALED_CARDS_ONTO_BATTLEFIELD_RE.fullmatch(
+        clauses[index + 1].strip().rstrip(".")
+    )
+    if put_match is None:
+        return None
+    kind_word = reveal_match.group("kind").lower()
+    if put_match.group("kind").lower() != kind_word:
+        return None
+    if _PUT_REVEALED_CARD_REST_RANDOM_RE.fullmatch(clauses[index + 2].strip().rstrip(".")) is None:
+        return None
+    predicate = _SELECT_FROM_TOP_KINDS.get(kind_word)
+    if predicate is None:
+        return None
+    count = parse_count(reveal_match.group("count"))
+    if count is None:
+        return None
+    tapped = put_match.group("tapped") is not None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        source = stack_object.name if for_spell else stack_object.source_name  # type: ignore[union-attr]
+        matches, remainder = _reveal_until_n_of_kind(
+            game, controller, predicate, count, source=source
+        )
+        for state in matches:
+            game.put_onto_battlefield(state, controller.username, tapped=tapped)
+        _shuffle_remainder_to_bottom(game, controller, remainder)
+
+    return 3, effect
+
+
 #: Aurora Awakener: "reveal cards from the top of your library until you
 #: reveal X `<kind>` cards, where X is `<expr>`. Put any number of those
 #: `<kind>` cards onto the battlefield, then put the rest of the revealed
@@ -55071,6 +55147,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             index += consumed
             continue
         merged = _merge_reveal_until_kind_then_put_clauses(clauses, index, for_spell=for_spell)
+        if merged is not None:
+            consumed, effect = merged
+            parsed.append(effect)
+            index += consumed
+            continue
+        merged = _merge_reveal_until_n_kind_put_onto_battlefield_clauses(
+            clauses, index, for_spell=for_spell
+        )
         if merged is not None:
             consumed, effect = merged
             parsed.append(effect)
