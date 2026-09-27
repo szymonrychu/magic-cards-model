@@ -6882,3 +6882,91 @@ Schema 96: `CardState.solved` (CR 719.3b). All ability readers are registered in
 | Speed (CR 702.179a-f): `Player.speed`/`speed_increased_on_turn`, `players_starting_their_engines`/`start_engines` as a state-based action read in each CR 704.3 round, the once-per-turn "opponents lose life during your turn" inherent trigger hooked into `Game.emit`'s `LOSES_LIFE` handling | new `machines/speed.py` | Perilous Snare ("Start your engines!") | - | `test_speed.py` |
 | Max speed (CR 702.178a): "Max speed — [Ability]" gated on the activator's own speed, via `ActivatedAbility.ability_word` rather than a layer-6 grant | `Game.why_cannot_activate`'s new `ability_word == "Max speed"` check | Perilous Snare | Endrider Catalyzer (a mana ability, not a counter-placement one) | `test_speed.py` |
 | Enlist (CR 702.154a-d): the CR 508.1g optional attack cost (tap an eligible creature, +X/+0 until end of turn) and its CR 702.154b linked "enlists a creature" trigger event | new `machines/enlist.py`; `Game.declare_attacker`/`declare_attackers` gained `enlisting`/`enlist_choices`; `triggers.ExtraTriggerEvent.ENLISTS` and its condition matcher | Guardian of New Benalia (also its own "Whenever this creature enlists a creature, scry 2.") | Argivian Cavalier (plain Enlist, no linked trigger; Effie, Fast Learner - the planner's own candidate - is not legal in Modern/Pioneer/Standard) | `test_enlist.py` |
+## EC7-rv-rules: cast-trigger X after countering, name-then-reveal ordering, an attach-fails rider, an "up to N" real choice, and card-name validation
+
+An independent rules-defect review of this branch. Every fix generalises the
+mechanic; three of the readers involved are proven, and remain, on a single
+in-format printing each - documented here per this project's own "narrow,
+documented exception" rule rather than left silently asserted.
+
+- **Cast-trigger X survives the spell being countered in response.**
+  `machines/triggers.GameEvent` gained `subject_stamp` (schema 101): the
+  cast spell's own `zone_change_stamp` at the moment its `CAST_SPELL` event
+  was raised. `effects._cast_trigger_record` (read by `_cast_trigger_x_
+  value`/`_cast_trigger_mana_spent_x_value`) now finds the spell by id,
+  answers directly while it is still on the stack, and otherwise reads
+  `CardState.last_known_spell.cast_record` - the copy `Game.forget_cast_
+  record` preserves there before dropping the live `Game.cast_records`
+  entry (CR 608.2h) - falling back to `subject_stamp` only when neither is
+  available. Fixes Hydroid Krasis, Genesis Hydra, Old Stickfingers, and
+  Geometer's Arthropod alike: `test_cast_trigger_half_x_life_and_draw.py`'s
+  `test_countered_in_response_still_gains_life_and_draws_with_the_cast_x`,
+  `test_cast_trigger_library_digs.py`'s `test_genesis_hydra_countered_in_
+  response_still_digs_with_the_cast_x`.
+- **Genesis Hydra's "shuffle the rest" still shuffles at X=0** (Oracle
+  ruling: a library is shuffled even when the rest is zero cards, CR
+  701.24d) - `effects._parse_cast_trigger_reveal_top_x_put_one_permanent_
+  clause` no longer returns before the shuffle tail runs.
+  `test_genesis_hydra_x_zero_reveals_nothing_but_still_shuffles`.
+- **Conundrum Sphinx's "each player" naming is APNAP-simultaneous, not
+  name-then-reveal per player** (CR 101.4) - `effects._parse_each_player_
+  name_reveal_branch_clause` now asks every player to name a card, in a
+  whole first pass, before revealing or branching for any of them, and the
+  miss branch is read generically (Vexing Arcanix's own "puts it into
+  their graveyard" alternative to Conundrum Sphinx's "puts it on the
+  bottom of their library", proved directly - no second real printing of
+  the *group* shape exists; Petra Sphinx is the closest cousin and is not
+  legal in Modern, Pioneer, or Standard).
+  `test_choose_name_reveal_top_and_branch.py`'s `test_every_player_names_
+  before_any_reveal`, `test_generalises_off_a_differently_worded_miss_
+  branch`.
+- **A chosen card name must be a real card (CR 201.4)** - `Game.ask`'s
+  `CHOOSE_A_QUALITY` branch now checks `ChoiceKind.CARD_NAME` answers
+  against `data.printing_pool.resolve_printing`, this engine's own bundled
+  Scryfall printings (not the full CR 108.1 Oracle card reference, which
+  this engine does not ship - a real card this pool has simply never
+  bundled reads the same as an invented one, a known and accepted
+  limitation of using the pool as the validation source). Applies to every
+  "choose a card name" question in the engine, not only Vexing Arcanix and
+  Conundrum Sphinx (`_ask_name_reveal_top_and_branch` and the pre-existing
+  "as this enters, choose a card name" grants - Runed Halo, Pithing Needle,
+  Disruptor Flute - now go through the identical check).
+  `test_an_invalid_name_is_refused`, `test_a_real_but_unbundled_card_name_
+  is_also_refused`.
+- **Hidden Blade's rider still applies when the attach itself fails**
+  (CR 608.2c/608.2b: "that creature" is the target already announced going
+  on the stack, CR 603.3d, independent of whether the attach later
+  succeeds) - `effects._parse_attach_self_then_conditional_rider_clause`
+  resolves the target directly off `Game.resolve_targets` rather than only
+  through `_attach_self_to_announced_target`'s own all-or-nothing loop,
+  which used to return `None` outright - skipping the rider along with the
+  attach - the moment the Equipment's own source was gone.
+  `test_attach_conditional_rider.py`'s `test_the_rider_still_applies_when_
+  the_equipment_is_destroyed_before_its_trigger_resolves`.
+- **Clockwork Steed's "up to X" is a real choice, not always the maximum**
+  (Clockwork Steed's own 2008-10-01 Scryfall ruling: "you can choose to put
+  fewer than X ... counters on it") - a new `DecisionKind.CHOOSE_AN_AMOUNT`
+  (`Game.choose_an_amount`), the non-payment generalisation of `PAY_ENERGY_
+  AMOUNT`/`PAY_LIFE_AMOUNT`'s own "an int from 0 up to a ceiling" shape,
+  asked by `effects._parse_put_up_to_n_counters_on_self_capped_clause`
+  instead of defaulting to the smaller of the printed "up to N" and the
+  room left under the printed total cap. Clockwork Beast/Avian/Swarm print
+  the identical template with a different starting count and cap - none of
+  the four is legal in Modern, Pioneer, or Standard, so Clockwork Steed
+  stays this reader's only in-format proof; the generality is in the
+  grammar (any counter kind, any cap), not a hardcode.
+  `test_up_to_x_counters_with_total_cap.py`.
+- **Documented one-card shapes** (no second Modern/Pioneer/Standard-legal
+  printing found on Scryfall this session, and the reader's own generality
+  is in its grammar, not in a second proof): Kozilek, the Broken Reality's
+  "up to two target players each manifest two cards from their hands. For
+  each card manifested this way, you draw a card." (`effects._MANIFEST_
+  FROM_HAND_THEN_DRAW_RE`/`_parse_manifest_from_hand_then_draw_clause`,
+  both counts read through the open-ended `COUNT` pattern rather than
+  pinned to "two"/"two") and Banish into Fable's "copy it if you control an
+  artifact, then copy it if you control an enchantment" two-condition
+  shape (`cast_copies._COPY_IT_IF_CONTROL_TWICE_RE`/`parse_copy_it_if_
+  control_twice_clause`, both quality words open-ended through `permanent_
+  description` rather than pinned to "artifact"/"enchantment"; Mentor's
+  Guidance prints a related but genuinely different single-condition,
+  multi-type-list "or" shape the regex correctly does not match).
