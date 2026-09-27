@@ -411,6 +411,28 @@ def test_a_white_permanent_the_opponent_controls_does_not_count():
     assert bears.counters["lifelink"] == 0, "a white permanent *you* control"
 
 
+def test_agent_of_treachery_steals_any_permanent_with_no_rider():
+    """Agent of Treachery: "When this creature enters, gain control of target
+    permanent." - the same untimed reader with neither rider and a
+    noncreature target, and the steal outlives the Agent (CR 611.2a)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Agent of Treachery"], library=["Island"] * 5)
+        .player("bob", battlefield=["Forest"], library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    forest = scenario.find("Forest", Zone.BATTLEFIELD, "bob")
+    scenario.choose_trigger_targets("Agent of Treachery", [forest])
+    agent = scenario.put_onto_battlefield("Agent of Treachery", "alice")
+    scenario.pass_until_resolved()
+
+    assert _controller(scenario, forest) == "alice"
+    scenario.game.destroy(agent)
+    _next_turn(scenario)
+    assert _controller(scenario, forest) == "alice"
+
+
 # -- Captivating Vampire (off-set proof) ----------------------------------------------
 #
 # "Other Vampire creatures you control get +1/+1. Tap five untapped Vampires

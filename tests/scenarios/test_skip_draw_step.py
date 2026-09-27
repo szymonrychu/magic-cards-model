@@ -115,6 +115,19 @@ def test_a_second_printing_psychic_possession_skips_its_controllers_draw():
     assert len(scenario.player("bob").hand) == before
 
 
+def test_dragon_appeasement_skips_its_controllers_draw_too():
+    """Dragon Appeasement prints the same "Skip your draw step." - a third
+    printing the static reader now credits, proven on the board as well."""
+    scenario = _board(skipper="Dragon Appeasement").build()
+    _next_turn(scenario)
+    before = len(scenario.player("bob").hand)
+
+    reached = scenario.advance()
+
+    assert reached is Step.PRECOMBAT_MAIN
+    assert len(scenario.player("bob").hand) == before
+
+
 def test_other_draws_are_untouched():
     """Only the step is skipped; a draw from any other source still happens
     (CR 614.10 replaces the step, not every draw)."""
