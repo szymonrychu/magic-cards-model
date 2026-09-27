@@ -37,6 +37,7 @@ from .layers import (
     EffectBuilder,
     Layer,
     LayerContext,
+    TappedCreaturesControlledBy,
     _source_line_for,
     _split_and_validate_keywords,
     grant_ability,
@@ -131,3 +132,77 @@ def parse_attacking_group_keyword_grant(sentence: str) -> EffectBuilder | None:
             return None
         return _attacking_group_keyword_grant_builder(keywords, subtypes=subtypes, line=sentence)
     return None
+
+
+# --------------------------------------------------------------------------
+# Tapped-status group keyword grants (CR 110.5) - the tapped/untapped twin of
+# this module's own attacking-status grant just above.
+# --------------------------------------------------------------------------
+#
+# "Other tapped creatures you control have indestructible." (Adept
+# Watershaper) is CR 110.5's physical tapped status, not a characteristic
+# `Characteristics` carries any more than CR 508.1k's attacking status is -
+# `TappedCreaturesControlledBy` (`machines/layers.py`) reads a snapshot of
+# tapped ids off `LayerContext.tapped_ids` the identical way `AttackingGroup
+# ControlledBy` reads `LayerContext.attacking`, rebuilt on every CR 613.5
+# computation so a creature stops being selected the instant it untaps.
+
+#: "Other tapped creatures you control have indestructible[, deathtouch,
+#: ...]." - the generic "creatures" subject, every one of the controller's
+#: own tapped creatures except the source itself. "Other" is not optional
+#: here (unlike the attacking-status sibling's plain "attacking creatures"):
+#: every printing of this template excludes the source, since the source
+#: itself is usually the thing being kept safe from the group's own effect
+#: (Adept Watershaper wants indestructible on its *teammates*, not on
+#: itself, which never taps to earn it).
+_TAPPED_CREATURES_KEYWORD_GRANT_RE = re.compile(
+    r"^other tapped creatures you control (?:have|has) "
+    r"(?P<keywords>[a-z][a-z ,{}0-9]*?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _tapped_group_keyword_grant_builder(keywords: list[str], *, line: str) -> EffectBuilder:
+    """One `ContinuousEffect` per granted keyword, selecting the controller's
+    own currently-tapped creatures (the source excluded) fresh at every
+    computation - see this module's own docstring for why the selector, not
+    this builder, is what re-reads tap status."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector = TappedCreaturesControlledBy(
+            username=source.controller,
+            tapped_ids=tuple(sorted(context.tapped_ids, key=str)),
+            excludes_self=True,
+            source_id=source.id,
+        )
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: other tapped creatures you control have {keyword}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=selector,
+                modification=grant_ability(keyword),
+            )
+            for keyword in keywords
+        ]
+
+    return builder
+
+
+def parse_tapped_group_keyword_grant(sentence: str) -> EffectBuilder | None:
+    """`_TAPPED_CREATURES_KEYWORD_GRANT_RE`'s shape, or `None`. Tried by
+    `machines/layers._parse_layer_sentence`."""
+    match = _TAPPED_CREATURES_KEYWORD_GRANT_RE.fullmatch(sentence)
+    if match is None:
+        return None
+    keywords = _split_and_validate_keywords(match.group("keywords"))
+    if keywords is None:
+        return None
+    return _tapped_group_keyword_grant_builder(keywords, line=sentence)

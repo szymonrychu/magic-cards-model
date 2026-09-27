@@ -1,0 +1,132 @@
+{
+  "object": "card",
+  "id": "4330d8ce-3b82-4297-ad5f-c63b54b6665a",
+  "oracle_id": "c262e015-f379-484f-894f-1a1deb3c75cc",
+  "multiverse_ids": [
+    667665
+  ],
+  "mtgo_id": 128116,
+  "tcgplayer_id": 556334,
+  "cardmarket_id": 775465,
+  "name": "Smoke Bomb",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/4330d8ce-3b82-4297-ad5f-c63b54b6665a",
+  "scryfall_uri": "https://scryfall.com/card/acr/75/smoke-bomb?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:49:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.jpg?1783910965",
+    "normal": "https://cards.scryfall.io/normal/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.jpg?1783910965",
+    "large": "https://cards.scryfall.io/large/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.jpg?1783910965",
+    "png": "https://cards.scryfall.io/png/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.png?1783910965",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.jpg?1783910965",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.jpg?1783910965",
+    "thumb": "https://cards.scryfall.io/thumb/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.webp?1783910965",
+    "grid": "https://cards.scryfall.io/grid/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.webp?1783910965",
+    "display": "https://cards.scryfall.io/display/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.webp?1783910965",
+    "art": "https://cards.scryfall.io/art/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.webp?1783910965",
+    "crop": "https://cards.scryfall.io/crop/front/4/3/4330d8ce-3b82-4297-ad5f-c63b54b6665a.webp?1783910965"
+  },
+  "mana_cost": "{3}",
+  "cmc": 3.0,
+  "type_line": "Artifact",
+  "oracle_text": "Flash\nAll creatures have shroud. (They can't be the targets of spells or abilities.)\nAt the beginning of your upkeep, sacrifice this artifact. When you do, target creature you control can't be blocked this turn.",
+  "colors": [],
+  "color_identity": [],
+  "keywords": [
+    "Flash"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/4330d8ce-3b82-4297-ad5f-c63b54b6665a/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac262e015-f379-484f-894f-1a1deb3c75cc&unique=prints",
+  "collector_number": "75",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "When the sun removes all shadows, the Assassins create their own.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Borja Pindado",
+  "artist_ids": [
+    "1624a1a8-3492-4c0b-9abc-83dcf2653111"
+  ],
+  "illustration_id": "1b769ef7-c22e-4193-88ff-255687aee9ab",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 4768,
+  "prices": {
+    "usd": "0.32",
+    "usd_foil": "0.35",
+    "usd_etched": null,
+    "eur": "0.27",
+    "eur_foil": "0.21",
+    "tix": "1.32"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=667665&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSmoke%2BBomb",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSmoke%2BBomb",
+    "edhrec": "https://edhrec.com/route/?cc=Smoke+Bomb"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F556334%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775465&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/128116?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

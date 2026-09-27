@@ -113,19 +113,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 7899,
-  "penny_rank": 6733,
+  "edhrec_rank": 7895,
+  "penny_rank": 6742,
   "preview": {
     "source": "Naver Cafe",
     "source_uri": "https://cafe.naver.com/mtgkr?iframe_url_utf8=%2FArticleRead.nhn%253Fclubid%3D30250607%2526articleid%3D7264%2526",
     "previewed_at": "2021-11-02"
   },
   "prices": {
-    "usd": "0.29",
-    "usd_foil": "0.41",
+    "usd": "0.27",
+    "usd_foil": "0.43",
     "usd_etched": null,
-    "eur": "0.20",
-    "eur_foil": "0.24",
+    "eur": "0.17",
+    "eur_foil": "0.29",
     "tix": "0.03"
   },
   "related_uris": {
