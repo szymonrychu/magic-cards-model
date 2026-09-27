@@ -10635,6 +10635,30 @@ class Game(EngineModel):
             r.distinct_controllers or r.share_a_card_type or r.total_mana_value_at_most is not None
             for r in profile.requirements
         )
+        if any(r.distinct_controllers for r in profile.requirements):
+            # "controlled by different players" (Kitsune, Dragon's Daughter's
+            # exchange): each controller's first candidate leads, so the
+            # default answer is a legal pair; with fewer controllers than
+            # targets required there is no legal choice at all, and CR
+            # 603.3d (via CR 601.2c) removes the ability from the stack.
+            firsts_by_controller: dict[str, Targetable | AbilityOnStack] = {}
+            for candidate in candidates:
+                if isinstance(candidate, CardState) and candidate.zone is Zone.BATTLEFIELD:
+                    firsts_by_controller.setdefault(
+                        self.controller_of(candidate).username, candidate
+                    )
+            if len(firsts_by_controller) < profile.min_targets:
+                self.targeting_notices.append(
+                    TargetingNotice(
+                        kind=TargetingNoticeKind.NO_LEGAL_TARGET,
+                        source_id=source_id,
+                        source_name=source_name,
+                        text=text,
+                    )
+                )
+                return None
+            leading_pair = list(firsts_by_controller.values())
+            candidates = leading_pair + [c for c in candidates if c not in leading_pair]
         if any(r.one_per_opponent for r in profile.requirements):
             # CR 601.2c: one target per opponent with a legal choice. Each
             # controller's first candidate leads, so the default answer (the

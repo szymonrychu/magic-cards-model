@@ -3681,6 +3681,19 @@ _PUMP_AND_QUOTED_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: `_PUMP_AND_QUOTED_GRANT_RE` without the pump - Pain 101's "Until end of
+#: turn, target creature gains deathtouch and "When this creature dies,
+#: return it to the battlefield tapped under its owner's control."" and
+#: Infuse with Vitality's identical grant: keywords and a quoted ability,
+#: each its own layer 6 grant (CR 613.1f, CR 113.10), with no 7c effect at
+#: all. `_normalize_duration_first` has already moved the duration to the
+#: end.
+_KEYWORDS_AND_QUOTED_GRANT_RE = re.compile(
+    rf"^{_SUBJECT} gains (?P<keywords>[a-z][a-z ,]*?),? and "
+    r'"(?P<granted>[^"]+)" until end of turn\.?$',
+    re.IGNORECASE,
+)
+
 #: "that creature's power" - Xenagos, God of Revels' own X definition, read
 #: per target off `CardState.power` (CR 613.5's computed value) at the
 #: moment this ability resolves (CR 611.2c fixes the magnitude then, so this
@@ -3999,6 +4012,16 @@ _SELF_PUMP_PER_CONTROLLED_PERMANENT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Equipped creature gets +1/+0 for each artifact you control." (Improvised
+#: Arsenal, Cranial Plating) - `_SELF_PUMP_PER_CONTROLLED_PERMANENT_RE`'s
+#: live count applied to the attached creature instead of the source
+#: (CR 301.5a / CR 303.4b).
+_ATTACHED_PUMP_PER_CONTROLLED_RE = re.compile(
+    r"^(?P<attachment>equipped|enchanted) creature gets (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) "
+    r"for each (?P<other>other )?(?P<qualifier>[a-z]+) you control\.?$",
+    re.IGNORECASE,
+)
+
 #: "This creature gets +2/+2 for each Equipment attached to it." (Loxodon
 #: Punisher) and Winter Soldier, Icy Assassin's "Winter Soldier gets +2/+0
 #: for each Equipment attached to him." (a legend's own pronoun, CR 201.5's
@@ -4089,6 +4112,52 @@ def _self_pump_per_controlled_permanent_builder(
                 timestamp=timestamp,
                 source_id=source.id,
                 selector=_only(source.id),
+                modification=modify_power_toughness_per(count(source.controller), power, toughness),
+            )
+        ]
+
+    return builder
+
+
+def _attached_pump_per_controlled_builder(
+    power: int,
+    toughness: int,
+    qualifier: str,
+    count: ControlledCountFactory,
+    *,
+    subject: str,
+    line: str,
+) -> EffectBuilder:
+    """`_ATTACHED_PUMP_PER_CONTROLLED_RE`'s shape - Improvised Arsenal,
+    Cranial Plating.
+
+    Sublayer 7c (CR 613.4c) through the live `modify_power_toughness_per`
+    count, recounted on every board computation (CR 611.3a, CR 613.5).
+    "You" is the source's own controller (CR 109.5) - an Equipment's
+    controller, whoever controls the creature it is attached to. An
+    unattached source produces nothing (CR 301.5a)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} creature gets {power:+d}/{toughness:+d} "
+                    f"for each {qualifier} controlled"
+                ),
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.MODIFY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
                 modification=modify_power_toughness_per(count(source.controller), power, toughness),
             )
         ]
@@ -5088,6 +5157,41 @@ def _fold_retention_clauses(sentences: list[str]) -> list[str]:
     return folded
 
 
+#: "Enchanted creature is a Turtle with base power and toughness 0/1." - the
+#: sentence an attached-creature pronoun rider ("It can't attack and loses
+#: all abilities.") qualifies. Retro-Mutation and Spider-Man No More print
+#: the rider as its own sentence; Lignify folds "and loses all abilities"
+#: into the first.
+_ATTACHED_IS_A_SUBTYPE_LEAD_RE = re.compile(r"^(?:enchanted|equipped) creature is an? [A-Z]", re.I)
+
+#: The rider sentence itself - "It can't attack and loses all abilities." /
+#: "It has defender and loses all other abilities." "It" is the attached
+#: creature the sentence before named (CR 608.2c's later-text-refers-back
+#: reading, applied to one static ability's two sentences).
+_ATTACHED_PRONOUN_RIDER_RE = re.compile(
+    r"^It (?:can'?t (?:attack|block)|has |loses all )", re.IGNORECASE
+)
+
+
+def _fold_attached_pronoun_riders(sentences: list[str]) -> list[str]:
+    """Join a bare "It `<rider>`." onto the "Enchanted creature is a
+    `<Subtype>` ..." sentence before it, so `_ATTACHED_CREATURE_IS_SUBTYPE_RE`
+    reads the whole static ability as one - the same reason
+    `_fold_retention_clauses` exists: half of it read alone would be worse
+    than none."""
+    folded: list[str] = []
+    for sentence in sentences:
+        if (
+            folded
+            and _ATTACHED_PRONOUN_RIDER_RE.match(sentence.strip())
+            and _ATTACHED_IS_A_SUBTYPE_LEAD_RE.match(folded[-1].strip())
+        ):
+            folded[-1] = f"{folded[-1].rstrip()} {sentence.strip()}"
+            continue
+        folded.append(sentence)
+    return folded
+
+
 #: A permanent becoming a creature with a stated P/T - the "animation"
 #: template, one shape whoever the subject is and however long it lasts:
 #:
@@ -6017,9 +6121,11 @@ def _effect_sentences_uncached(
     never be treated as this permanent's *static* (CR 611.3) contribution,
     whether or not it happens to parse.
     """
-    return _fold_retention_clauses(
-        layer_readable_sentences(
-            oracle_text, static_only=static_only, card_name=card_name, legendary=legendary
+    return _fold_attached_pronoun_riders(
+        _fold_retention_clauses(
+            layer_readable_sentences(
+                oracle_text, static_only=static_only, card_name=card_name, legendary=legendary
+            )
         )
     )
 
@@ -7773,6 +7879,56 @@ _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE = re.compile(
     r"(?P<power>\d+)/(?P<toughness>\d+)(?P<in_addition> in addition to its other types)?\.?$"
 )
 
+#: "Enchanted creature is a Turtle with base power and toughness 0/1. It
+#: can't attack and loses all abilities." (Retro-Mutation); "Enchanted
+#: creature is a Citizen with base power and toughness 1/1. It has defender
+#: and loses all other abilities." (Spider-Man No More); "Enchanted creature
+#: is a Treefolk with base power and toughness 0/4 and loses all abilities."
+#: (Lignify). `_fold_attached_pronoun_riders` has already joined the "It
+#: ..." sentence on. No card type is named, so this is CR 205.1a's subtype
+#: *set*: the creature types are replaced (the reminder text's "It also
+#: loses all other creature types"), the card types kept.
+_ATTACHED_CREATURE_IS_SUBTYPE_RE = re.compile(
+    r"^(?P<attachment>[Ee]nchanted|[Ee]quipped) creature is an? "
+    r"(?P<subtypes>[A-Z][a-z]+(?: [A-Z][a-z]+)*) with base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+)"
+    r"(?: and (?P<loses>loses all abilities))?\.?"
+    r"(?: It (?P<rider>[^.]+))?\.?$"
+)
+
+#: One part of `_ATTACHED_CREATURE_IS_SUBTYPE_RE`'s rider: CR 508.1c/509.1b's
+#: "can't attack [or block]" / "can't block".
+_RIDER_RESTRICTION_RE = re.compile(r"^can'?t (?P<what>attack or block|attack|block)$")
+
+
+def _attached_rider_parts(rider: str) -> tuple[bool, bool, list[str], list[str]] | None:
+    """`(loses_all, loses_other, keywords, restrictions)` for the "It ..."
+    rider, or `None` when a part is not one this reads - a half-read rider
+    fails the whole sentence rather than dropping the rest."""
+    loses_all = loses_other = False
+    keywords: list[str] = []
+    restrictions: list[str] = []
+    in_has = False
+    for part in (p.strip() for p in re.split(r",\s*(?:and\s+)?|\s+and\s+", rider) if p.strip()):
+        lowered = part.lower()
+        if lowered == "loses all abilities":
+            loses_all, in_has = True, False
+        elif lowered == "loses all other abilities":
+            loses_other, in_has = True, False
+        elif restriction := _RIDER_RESTRICTION_RE.fullmatch(lowered):
+            restrictions.append(f"This creature can't {restriction.group('what')}.")
+            in_has = False
+        elif lowered.startswith("has ") or in_has:
+            validated = _split_and_validate_keywords(lowered.removeprefix("has "))
+            if validated is None:
+                return None
+            keywords.extend(validated)
+            in_has = True
+        else:
+            return None
+    return loses_all, loses_other, keywords, restrictions
+
+
 #: "Enchanted creature gets +2/+2, has first strike and vigilance, and is a
 #: legendary Soldier in addition to its other types." (Super-Soldier Serum);
 #: "Equipped creature gets +1/+0, has flying, and is a Bird in addition to its
@@ -9384,6 +9540,42 @@ def _sync_stored_grant_ability_texts(
             permanent.granted_ability_texts = updated
 
 
+def _ungrant_ended_stored_texts(
+    ended: Sequence[ContinuousEffect], remaining: Sequence[ContinuousEffect], game: Game
+) -> None:
+    """Take a stored grant's quoted line back off `CardState.
+    granted_ability_texts` once the grant itself has ended (CR 514.2).
+
+    `_sync_stored_grant_ability_texts` only reconciles texts some *running*
+    stored grant still names, so a line whose last grant has just been
+    dropped was left behind - Pain 101's granted "When this creature dies,
+    return it ..." kept triggering on a later turn although the computed
+    board no longer had it. Each ended grant's text comes off the permanent
+    it named unless a remaining stored grant still gives it that same line;
+    a printed static grant of the same line is put back by the next
+    `sync_granted_ability_texts` sweep."""
+    still = {
+        (getattr(effect.selector, "card_id", None), effect.modification.text)
+        for effect in remaining
+        if effect.modification.kind in ("grant_ability", "grant_ability_instance")
+    }
+    for effect in ended:
+        modification = effect.modification
+        if modification.kind not in ("grant_ability", "grant_ability_instance"):
+            continue
+        card_id = getattr(effect.selector, "card_id", None)
+        if card_id is None or (card_id, modification.text) in still:
+            continue
+        permanent = game.find_by_id(card_id)
+        if (
+            isinstance(permanent, CardState)
+            and modification.text in permanent.granted_ability_texts
+        ):
+            permanent.granted_ability_texts = tuple(
+                text for text in permanent.granted_ability_texts if text != modification.text
+            )
+
+
 def _attached_creature_loses_and_becomes_builder(
     subtype: str,
     types: list[Type],
@@ -9476,6 +9668,104 @@ def _attached_creature_loses_and_becomes_builder(
                     modification=set_colors(color),
                 )
             )
+        return effects
+
+    return builder
+
+
+def _attached_creature_is_subtype_builder(
+    subtypes: tuple[str, ...],
+    power: int,
+    toughness: int,
+    *,
+    subject: str,
+    line: str,
+    loses_all: bool,
+    keywords: list[str],
+    restrictions: list[str],
+) -> EffectBuilder:
+    """`_ATTACHED_CREATURE_IS_SUBTYPE_RE`'s shape - Retro-Mutation,
+    Spider-Man No More, Lignify.
+
+    One static ability in up to three layers (CR 613.6), on the Aura's own
+    timestamp:
+
+    - Layer 4 (CR 613.1d): the creature types become exactly `subtypes`
+      (CR 205.1a - `SetCreatureTypes`), the card types untouched.
+    - Layer 6 (CR 613.1f): "loses all [other] abilities" first, then the
+      rider's grants - a keyword ("It has defender") and CR 508.1c's
+      restriction ("It can't attack"), carried as the self sentence
+      `machines/combat.py` enforces. Emitted after the removal so the Aura's
+      own removal never strips its own grant ("all *other* abilities"; and
+      the restriction is an effect of the Aura, not one of the creature's
+      abilities). `ContinuousEffect.order` keeps them in that order.
+    - Sublayer 7b (CR 613.4b): the base power and toughness is set, so a
+      counter or a pump still applies on top in 7c (CR 613.4c).
+
+    An Aura attached to nothing produces nothing (CR 303.4b).
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        if attached is None:
+            return []
+        selector = _only(attached)
+        ability = _source_line_for(source, line)
+        named = " ".join(subtypes)
+        effects = [
+            ContinuousEffect(
+                description=(
+                    f"{source.name}: {subject} creature is {with_indefinite_article(named)}"
+                ),
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=SetCreatureTypes(subtypes=subtypes),
+            )
+        ]
+        if loses_all:
+            effects.append(
+                ContinuousEffect(
+                    description=f"{source.name}: {subject} creature loses all abilities",
+                    layer=Layer.ABILITY,
+                    timestamp=timestamp,
+                    source_id=source.id,
+                    source_ability=ability,
+                    selector=selector,
+                    modification=lose_all_abilities,
+                )
+            )
+        effects.extend(
+            ContinuousEffect(
+                description=f"{source.name}: {subject} creature has {granted}",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=grant_ability(granted),
+            )
+            for granted in (*keywords, *restrictions)
+        )
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {subject} creature has base P/T {power}/{toughness}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=ability,
+                selector=selector,
+                modification=set_power_toughness(power, toughness),
+            )
+        )
         return effects
 
     return builder
@@ -11195,6 +11485,11 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             [*granted_keywords, match.group("granted").strip()],
         )
+    if match := _KEYWORDS_AND_QUOTED_GRANT_RE.fullmatch(sentence):
+        quoted_keywords = _split_and_validate_keywords(match.group("keywords"))
+        if quoted_keywords is None:
+            return None
+        return _keyword_grant_builder([*quoted_keywords, match.group("granted").strip()])
     if match := _SELF_PUMP_PER_GRAVEYARD_CARD_RE.fullmatch(sentence):
         words = re.split(r",\s*|\s+and\s+", match.group("qualifier"))
         card_types = [_card_type_word(word) for word in words]
@@ -11232,6 +11527,20 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             f"{match.group('other') or ''}{match.group('qualifier').lower()}",
             count,
+        )
+    if match := _ATTACHED_PUMP_PER_CONTROLLED_RE.fullmatch(sentence):
+        attached_count = _controlled_count_factory(
+            match.group("qualifier"), excludes_self=match.group("other") is not None
+        )
+        if attached_count is None:
+            return None
+        return _attached_pump_per_controlled_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            f"{match.group('other') or ''}{match.group('qualifier').lower()}",
+            attached_count,
+            subject=match.group("attachment").lower(),
+            line=sentence,
         )
     if match := _SELF_PUMP_PER_ATTACHED_RE.fullmatch(sentence):
         attached_subtype = _singular_subtype_word(match.group("qualifier"))
@@ -11985,6 +12294,22 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             color=_COLOR_WORDS[color.lower()] if color else None,
             in_addition=match.group("in_addition") is not None,
+        )
+    if match := _ATTACHED_CREATURE_IS_SUBTYPE_RE.fullmatch(sentence):
+        rider = match.group("rider")
+        parts = _attached_rider_parts(rider) if rider else (False, False, [], [])
+        if parts is None:
+            return None
+        rider_loses_all, loses_other, rider_keywords, restrictions = parts
+        return _attached_creature_is_subtype_builder(
+            tuple(match.group("subtypes").split()),
+            int(match.group("power")),
+            int(match.group("toughness")),
+            subject=match.group("attachment").lower(),
+            line=sentence,
+            loses_all=match.group("loses") is not None or rider_loses_all or loses_other,
+            keywords=rider_keywords,
+            restrictions=restrictions,
         )
     if match := _ATTACHED_CREATURE_PUMP_KEYWORDS_AND_TYPE_RE.fullmatch(sentence):
         pump_keywords: list[str] = []
@@ -13968,6 +14293,7 @@ class ContinuousEffects(EngineModel):
         gone = {effect.id for effect in ended}
         self.effects = [effect for effect in self.effects if effect.id not in gone]
         if game is not None:
+            _ungrant_ended_stored_texts(ended, self.effects, game)
             # CR 702.171a/b: a permanent "becomes saddled until end of turn" -
             # a designation, not a characteristic, so no stored effect carries
             # it, but it ends in the same CR 514.2 sentence.
