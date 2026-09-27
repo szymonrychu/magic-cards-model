@@ -1898,6 +1898,12 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
     if decision.kind in (DecisionKind.SCRY, DecisionKind.SURVEIL):
         return [build(decision_candidates=decision.cards, x_range=(0, len(decision.cards)))]
 
+    if decision.kind is DecisionKind.DREDGE:
+        # CR 702.52a: decline (draw normally), or replace with exactly one of
+        # the offered dredge cards - never asked with none offered, so the
+        # upper bound is always 1.
+        return [build(decision_candidates=decision.cards, x_range=(0, 1))]
+
     return []  # pragma: no cover - _DECISION_ANSWER_KINDS below makes this unreachable
 
 
@@ -1925,6 +1931,7 @@ _DECISION_ANSWER_KINDS = frozenset(
         DecisionKind.ORDER_TRIGGERS,
         DecisionKind.SCRY,
         DecisionKind.SURVEIL,
+        DecisionKind.DREDGE,
     }
 )
 assert set(DecisionKind) == _DECISION_ANSWER_KINDS, (
