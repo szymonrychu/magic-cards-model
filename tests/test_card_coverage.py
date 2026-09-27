@@ -1314,6 +1314,69 @@ def test_parse_deck_file_ignores_blank_and_comment_lines(tmp_path: Path):
     assert names == {"Sol Ring"}
 
 
+def test_cards_from_deck_dirs_flat_layout_is_not_recursive(tmp_path: Path):
+    """The existing convention (the api repo's own decks/ dir): decklists
+    directly inside the configured directory, nothing nested. A nested
+    .txt elsewhere must never be picked up when the flat glob already
+    found files."""
+    decks_dir = tmp_path / "decks"
+    decks_dir.mkdir()
+    (decks_dir / "burn.txt").write_text("4 Lightning Bolt\n")
+    nested = decks_dir / "notes"
+    nested.mkdir()
+    (nested / "decklist.txt").write_text("4 Should Not Be Picked Up\n")
+    names = cc.cards_from_deck_dirs([decks_dir])
+    assert names == {"Lightning Bolt"}
+
+
+def test_cards_from_deck_dirs_falls_back_to_recursive_decklist_txt_when_flat_is_empty(
+    tmp_path: Path,
+):
+    """mtg-decks's own layout: nothing directly inside the configured
+    directory, one `<archetype>/decklist.txt` per archetype nested one
+    level down. Falls back to a recursive search, but only for files
+    literally named `decklist.txt` - a sibling `.md`/`.json` note file
+    (mtg-decks keeps plenty, e.g. NOTES.md, archetype.json) must never be
+    read as a decklist."""
+    decks_dir = tmp_path / "decks"
+    decks_dir.mkdir()
+    archetype_a = decks_dir / "burn"
+    archetype_a.mkdir()
+    (archetype_a / "decklist.txt").write_text("4 Lightning Bolt\n")
+    (archetype_a / "NOTES.md").write_text("4 Should Not Be Picked Up\n")
+    archetype_b = decks_dir / "affinity"
+    archetype_b.mkdir()
+    (archetype_b / "decklist.txt").write_text("4 Mishra's Bauble\n")
+    plays = archetype_b / "plays"
+    plays.mkdir()
+    (plays / "some-play.txt").write_text("Also Should Not Be Picked Up\n")
+    names = cc.cards_from_deck_dirs([decks_dir])
+    assert names == {"Lightning Bolt", "Mishra's Bauble"}
+
+
+def test_cards_from_deck_dirs_warns_on_a_missing_directory_instead_of_silently_skipping(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    missing = tmp_path / "does-not-exist"
+    names = cc.cards_from_deck_dirs([missing])
+    assert names == set()
+    err = capsys.readouterr().err
+    assert str(missing) in err
+    assert "WARNING" in err
+
+
+def test_cards_from_deck_dirs_still_reads_a_dir_that_does_exist_alongside_a_missing_one(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
+    present = tmp_path / "present"
+    present.mkdir()
+    (present / "deck.txt").write_text("1 Sol Ring\n")
+    missing = tmp_path / "does-not-exist"
+    names = cc.cards_from_deck_dirs([missing, present])
+    assert names == {"Sol Ring"}
+    assert "WARNING" in capsys.readouterr().err
+
+
 # ---------------------------------------------------------------------------
 # Bulk-data fetching (network faked)
 # ---------------------------------------------------------------------------

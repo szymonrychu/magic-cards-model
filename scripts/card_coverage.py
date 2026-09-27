@@ -57,7 +57,7 @@ DEFAULT_TESTS_DIR = Path("tests")
 DEFAULT_GOLDEN_DIR = Path("tests/golden")
 DEFAULT_DECKS_DIRS = [
     Path("../magic-cards-model-api/decks"),
-    Path("../../mtg-decks"),
+    Path("../../../mtg-decks/decks"),
 ]
 
 #: A set/printing this tooling never counts a card into. `layout` catches
@@ -1045,11 +1045,29 @@ def parse_deck_file(path: Path) -> set[str]:
 
 
 def cards_from_deck_dirs(decks_dirs: Iterable[Path]) -> set[str]:
+    """Every card name found in `*.txt` decklists under each directory in
+    `decks_dirs`. Each directory is searched flat first (`*.txt` directly
+    inside it) - the layout the api repo's own decks/ dir uses. Only when
+    that comes up empty does it fall back to a recursive search for files
+    literally named `decklist.txt` - mtg-decks's own layout, nothing at the
+    top level, one `<archetype>/decklist.txt` per archetype nested one
+    level down, alongside plenty of non-decklist `.txt`/`.md`/`.json` notes
+    (NOTES.md, archetype.json, a `plays/` subtree...) that a generic
+    recursive `*.txt` would also have picked up.
+
+    A directory that does not exist at all is reported on stderr rather
+    than silently skipped - a missing decks dir contributing zero cards to
+    Round 0 is exactly the silent-undercount shape this project's other
+    tooling is written not to allow."""
     names: set[str] = set()
     for directory in decks_dirs:
         if not directory.exists():
+            print(f"WARNING: deck dir {directory} does not exist, skipping it", file=sys.stderr)
             continue
-        for path in directory.glob("*.txt"):
+        paths = list(directory.glob("*.txt"))
+        if not paths:
+            paths = list(directory.rglob("decklist.txt"))
+        for path in paths:
             names.update(parse_deck_file(path))
     return names
 
