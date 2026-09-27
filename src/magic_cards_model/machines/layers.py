@@ -1891,6 +1891,24 @@ class SetTypesAndSubtypes(ModificationBase):
         return chars.with_(types=self.types, subtypes=self.subtypes)
 
 
+class GrantHexproofFromItsColors(ModificationBase):
+    """Layer 6 (CR 613.1f): "hexproof from each of its colors" (Tam, Mindful
+    First-Year) - CR 702.11g's shorthand for one "Hexproof from <colour>"
+    per colour the object has, read off the colours layer 5 has already left
+    it with (CR 613.1e applies first), so a colour an earlier layer changed
+    counts and a colorless object gets nothing (CR 105.2c)."""
+
+    kind: Literal["grant_hexproof_from_its_colors"] = "grant_hexproof_from_its_colors"
+
+    def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
+        abilities = chars.abilities
+        for word, color in _COLOR_WORDS.items():
+            line = f"Hexproof from {word}"
+            if color in chars.colors and line not in abilities:
+                abilities = abilities + (line,)
+        return chars if abilities == chars.abilities else chars.with_(abilities=abilities)
+
+
 class AddTypesAndSubtype(ModificationBase):
     """Layer 4 (CR 613.1d): gain each card type and the creature type named,
     keeping everything already there (CR 205.1b).
@@ -1993,7 +2011,8 @@ Modification = Annotated[
     | BecomeACopy
     | SetTypesAndSubtypes
     | SetCreatureTypes
-    | AddTypesAndSubtype,
+    | AddTypesAndSubtype
+    | GrantHexproofFromItsColors,
     Field(discriminator="kind"),
 ]
 
@@ -5106,9 +5125,14 @@ _GAIN_CONTROL_UNTIL_EOT_RE = re.compile(
 #: what the card states and Purelace states none: a colour laced on is
 #: permanent. "becomes `<colour>` until end of turn" is admitted in the same
 #: shape rather than as a second one, since the two differ only in `Duration`.
+#:
+#: Widened (ecl T5) to "all colors" - Tam, Mindful First-Year's "{T}: Target
+#: creature you control becomes all colors until end of turn." and
+#: Scrapbasket's "{1}: This creature becomes all colors until end of turn." -
+#: every one of CR 105.1's five colours, set together in layer 5.
 _BECOMES_COLOR_RE = re.compile(
     r"^(?:target spell or permanent|target permanent|target spell"
-    rf"|{_SUBJECT}) becomes (?P<color>white|blue|black|red|green)"
+    rf"|{_SUBJECT}) becomes (?P<color>white|blue|black|red|green|all colors)"
     r"(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
@@ -7077,6 +7101,88 @@ def qualifiers_from_subject(
     )
 
 
+#: "Each other creature you control has hexproof from each of its colors."
+#: (Tam, Mindful First-Year) - a static group grant (CR 611.3) whose quality
+#: is each affected creature's *own* colours (CR 702.11g), so the
+#: modification reads them per creature (`GrantHexproofFromItsColors`).
+_HEXPROOF_FROM_EACH_OF_ITS_COLORS_RE = re.compile(
+    r"^(?:each )?(?P<other>other )?creatures? (?P<whose>you control|your opponents control) "
+    r"(?:has|have) hexproof from each of (?:its|their) colors\.?$",
+    re.IGNORECASE,
+)
+
+#: "Enchanted land is the chosen color." (Shimmerwilds Growth) - the colour
+#: the Aura's own "As this Aura enters, choose a color" recorded (CR
+#: 614.12a, `chosen_color_of`), set on what it is attached to in layer 5 (CR
+#: 613.1e, CR 105.3: it replaces every other colour).
+_ATTACHED_IS_THE_CHOSEN_COLOR_RE = re.compile(
+    r"^(?P<attachment>enchanted|equipped) (?:land|creature|permanent|artifact) "
+    r"is the chosen colou?r\.?$",
+    re.IGNORECASE,
+)
+
+
+def _hexproof_from_each_of_its_colors_builder(
+    *, other: bool, whose: str, line: str
+) -> EffectBuilder:
+    """`_HEXPROOF_FROM_EACH_OF_ITS_COLORS_RE`'s shape: layer 6 (CR 613.1f),
+    timestamped with the source (CR 613.7a) and gone with its ability (CR
+    613.6), each creature in the group gaining one hexproof per colour of its
+    own (CR 702.11g) - read when layer 6 applies, after layer 5."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector, subject = _creature_group(source, other=other, whose=whose)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} have hexproof from each of their colors",
+                layer=Layer.ABILITY,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=line,
+                selector=selector,
+                modification=GrantHexproofFromItsColors(),
+            )
+        ]
+
+    return builder
+
+
+def _attached_is_the_chosen_color_builder(*, subject: str, line: str) -> EffectBuilder:
+    """`_ATTACHED_IS_THE_CHOSEN_COLOR_RE`'s shape: the attached permanent is
+    exactly the source's chosen colour (layer 5). No colour chosen - an Aura
+    that somehow never made the choice - sets nothing (the card's own
+    ruling for its mana ability reads the same way)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        attached = source.attached_to
+        color = chosen_color_of(source)
+        if attached is None or color is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {subject} permanent is {color.value}",
+                layer=Layer.COLOR,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(attached),
+                modification=set_colors(color),
+            )
+        ]
+
+    return builder
+
+
 def _indefinite_keyword_grant_builder(
     abilities: list[str],
     *,
@@ -7627,7 +7733,7 @@ def _gain_control_until_eot_builder() -> EffectBuilder:
     return builder
 
 
-def _becomes_color_builder(color: Color, *, until_eot: bool) -> EffectBuilder:
+def _becomes_color_builder(*colors: Color, until_eot: bool) -> EffectBuilder:
     """ "[Subject] becomes `<colour>`." - Purelace's "Target spell or permanent
     becomes white." (confirmed with `resolve_cards`).
 
@@ -7663,14 +7769,15 @@ def _becomes_color_builder(color: Color, *, until_eot: bool) -> EffectBuilder:
         targets: Sequence[CardState],
         context: LayerContext,
     ) -> list[ContinuousEffect]:
+        named = "".join(color.value for color in colors)
         return [
             ContinuousEffect(
-                description=f"{source.name}: {target.name} becomes {color.value}",
+                description=f"{source.name}: {target.name} becomes {named}",
                 layer=Layer.COLOR,
                 timestamp=timestamp,
                 duration=Duration.UNTIL_END_OF_TURN if until_eot else Duration.INDEFINITE,
                 selector=_only(target.id),
-                modification=set_colors(color),
+                modification=set_colors(*colors),
             )
             for target in targets
         ]
@@ -11916,8 +12023,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
     if _GAIN_CONTROL_UNTIL_EOT_RE.fullmatch(sentence):
         return _gain_control_until_eot_builder()
     if match := _BECOMES_COLOR_RE.fullmatch(sentence):
+        color_word = match.group("color").lower()
         return _becomes_color_builder(
-            _COLOR_WORDS[match.group("color").lower()],
+            *(
+                tuple(_COLOR_WORDS.values())
+                if color_word == "all colors"
+                else (_COLOR_WORDS[color_word],)
+            ),
             until_eot=bool(match.group("until_eot")),
         )
     if match := _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE.fullmatch(sentence):
@@ -12339,6 +12451,16 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _all_activated_abilities_builder(all_activated, line=sentence)
     if _SELF_PROTECTION_FROM_CHOSEN_COLOR_RE.fullmatch(sentence):
         return _self_protection_from_chosen_color_builder(line=sentence)
+    if match := _HEXPROOF_FROM_EACH_OF_ITS_COLORS_RE.fullmatch(sentence):
+        return _hexproof_from_each_of_its_colors_builder(
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+        )
+    if match := _ATTACHED_IS_THE_CHOSEN_COLOR_RE.fullmatch(sentence):
+        return _attached_is_the_chosen_color_builder(
+            subject=match.group("attachment").lower(), line=sentence
+        )
     if match := _EACH_ANTHEM_PER_OTHER_CREATURE_RE.fullmatch(sentence):
         if match.group("whose").lower() != "you control":
             return None

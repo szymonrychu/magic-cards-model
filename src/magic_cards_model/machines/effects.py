@@ -1198,9 +1198,17 @@ def _parse_protection_from_chosen_color_clause(text: str) -> AbilityEffect | Non
 #: hexproof from that color" rider (CR 702.11d's "hexproof from [quality]")
 #: granted in layer 6 (CR 613.1f). The duration prints either first or last,
 #: never both.
+#:
+#: Widened (ecl T5) to Puca's Eye's "choose a color. This artifact becomes
+#: the chosen color." - the choice spelled as its own sentence (CR 608.2d
+#: still: made as the ability resolves), any "this <permanent type>" as the
+#: subject, and no duration at all, which CR 611.2a reads as until the end of
+#: the game. Without the "choose a color." sentence a durationless form is
+#: never read here: "the chosen color" would then name some other choice.
 _BECOMES_CHOSEN_COLOR_RE = re.compile(
-    r"^(?P<lead>until end of turn,\s*)?"
-    r"(?P<subject>this (?:creature|permanent)|target [^.]+?) becomes the color of your choice"
+    r"^(?P<lead>until end of turn,\s*)?(?P<choose>choose a colou?r\.\s*)?"
+    r"(?P<subject>this (?:creature|permanent|artifact|enchantment|land)|target [^.]+?) "
+    r"becomes the (?:colou?r of your choice|(?P<chosen>chosen colou?r))"
     r"(?: and gains (?P<keyword>hexproof) from that color)?"
     r"(?P<trail> until end of turn)?\.?$",
     re.IGNORECASE,
@@ -1216,8 +1224,17 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
     text. The colour and the grant share one timestamp and last until
     cleanup (CR 514.2), each keyed to the object as it is now (CR 400.7)."""
     match = _BECOMES_CHOSEN_COLOR_RE.fullmatch(" ".join(text.strip().split()))
-    if match is None or (match.group("lead") is None) == (match.group("trail") is None):
+    if match is None:
         return None
+    lead, trail = match.group("lead") is not None, match.group("trail") is not None
+    if lead and trail:
+        return None
+    chooses = match.group("choose") is not None
+    if (match.group("chosen") is not None) != chooses:
+        return None
+    if not (lead or trail) and not chooses:
+        return None
+    duration = Duration.UNTIL_END_OF_TURN if lead or trail else Duration.INDEFINITE
     subject = match.group("subject")
     targeted = subject.lower().startswith("target ")
     if targeted and not _targets_understood(subject, count_agnostic=False):
@@ -1253,7 +1270,7 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
                     description=f"{source_name}: {permanent.name} becomes {color.value}",
                     layer=Layer.COLOR,
                     timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
+                    duration=duration,
                     selector=selector,
                     modification=set_colors(color),
                 )
@@ -1265,7 +1282,7 @@ def _parse_becomes_chosen_color_clause(text: str) -> AbilityEffect | None:
                         description=f"{source_name}: {permanent.name} gains {granted}",
                         layer=Layer.ABILITY,
                         timestamp=timestamp,
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=duration,
                         selector=selector,
                         modification=grant_ability(granted),
                     )
@@ -9577,12 +9594,24 @@ _GAIN_LIFE_EQUAL_TO_LIFE_LOST_THIS_TURN_RE = re.compile(
 #: carrying at least one counter of that kind (CR 122.1) - Armorcraft Judge's
 #: "for each creature you control with a +1/+1 counter on it", Eluge, the
 #: Shoreless Sea's "for each land you control with a flood counter on it".
+#: A colour adjective in front of the noun (CR 105.1, CR 105.2c) - Breaker of
+#: Creation's "for each colorless permanent you control".
 _QUALIFIER_YOU_CONTROL_RE = re.compile(
-    rf"^(?P<other>other )?(?P<qualifier>[a-z]+) you control"
+    rf"^(?P<other>other )?(?:(?P<color>colorless|white|blue|black|red|green) )?"
+    rf"(?P<qualifier>[a-z]+) you control"
     rf"(?: with (?P<attr>power|toughness|mana value) (?P<n>{COUNT}) or (?P<dir>greater|less)"
     r"| with (?:an?|one or more) (?P<counter>\+1/\+1|-1/-1|[a-z]+) counters? on (?:it|them))?$",
     re.IGNORECASE,
 )
+
+
+_COLOR_WORDS_FOR_COUNT: dict[str, Color] = {
+    "white": Color.WHITE,
+    "blue": Color.BLUE,
+    "black": Color.BLACK,
+    "red": Color.RED,
+    "green": Color.GREEN,
+}
 
 
 def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None], int] | None:
@@ -9613,6 +9642,7 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
     bound = parse_count(match.group("n")) if match.group("n") else None
     greater = match.group("dir") == "greater" if match.group("dir") else None
     counter = _counter_kind(match.group("counter")) if match.group("counter") else None
+    color_word = (match.group("color") or "").lower()
 
     def count(game: "Game", controller: str, source_id: str | None) -> int:
         board = game.computed_board()
@@ -9620,6 +9650,14 @@ def _for_each_qualifier_count(phrase: str) -> Callable[["Game", str, str | None]
         for permanent in game.battlefield:
             chars = board.of(permanent)
             if chars.controller != controller:
+                continue
+            if color_word == "colorless" and chars.colors:
+                continue  # CR 105.2c: colorless is having no colour at all
+            if (
+                color_word
+                and color_word != "colorless"
+                and (_COLOR_WORDS_FOR_COUNT[color_word] not in chars.colors)
+            ):
                 continue
             if other and source_id is not None and str(permanent.id) == source_id:
                 continue

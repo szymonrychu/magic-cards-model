@@ -229,6 +229,39 @@ def _if_self_is_a_type_then_becomes(text: str) -> StackEffect | None:
     return effect
 
 
+#: Puca's Eye's "draw a card, then choose a color. This artifact becomes the
+#: chosen color." - two instructions in order (CR 608.2c): whatever comes
+#: before ", then", read the ordinary way, then the colour choice and the
+#: colour it sets (`machines/effects._parse_becomes_chosen_color_clause`).
+_THEN_CHOOSE_A_COLOR_RE = re.compile(
+    r"^(?P<first>[^.]+?),? then (?P<rest>choose a colou?r\. .+)$", re.IGNORECASE
+)
+
+
+def _then_choose_a_color(text: str) -> StackEffect | None:
+    from .effects import _ability_effect_or_notice, _parse_becomes_chosen_color_clause
+
+    match = _THEN_CHOOSE_A_COLOR_RE.fullmatch(" ".join(text.split()))
+    if match is None:
+        return None
+    rest = _parse_becomes_chosen_color_clause(match.group("rest"))
+    if rest is None:
+        return None
+    first = _ability_effect_or_notice(f"{match.group('first')}.")
+    if first is None or getattr(first, "__name__", "").endswith("notice_only"):
+        return None
+
+    def effect(game: Game, stack_object: StackObject) -> None:
+        from .triggers import AbilityOnStack
+
+        if not isinstance(stack_object, AbilityOnStack):
+            return
+        first(game, stack_object)
+        rest(game, stack_object)
+
+    return effect
+
+
 # ---------------------------------------------------------------------------
 # Entry points
 # ---------------------------------------------------------------------------
@@ -255,6 +288,7 @@ _ABILITY_READERS: tuple[Callable[[str], StackEffect | None], ...] = (
     _mass_lose_all_abilities_whole,
     _choose_target_then_that,
     _if_self_is_a_type_then_becomes,
+    _then_choose_a_color,
 )
 _SPELL_READERS: tuple[Callable[[str], StackEffect | None], ...] = (
     _mass_lose_all_abilities_whole_spell,
