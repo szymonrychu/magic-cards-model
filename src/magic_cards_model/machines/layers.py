@@ -4037,7 +4037,7 @@ _TARGETED_LOSES_ALL_ABILITIES_RE = re.compile(
 
 #: "This creature can't be blocked this turn." (Matterbending Mage's own
 #: {X}-cast trigger, Snooping Page's Repartee trigger) or the targeted
-#: "Target creature can't be blocked this turn." - CR 509.1a's restriction,
+#: "Target creature can't be blocked this turn." - CR 509.1b's restriction,
 #: granted for the stated duration rather than printed permanently the way
 #: `_CANT_BE_BLOCKED_ITEM_RE`'s indefinite "has hexproof and can't be
 #: blocked." already is. `_SUBJECT` is the shared "this creature"/"target
@@ -6915,7 +6915,7 @@ def _targeted_loses_all_abilities_builder(*, until_eot: bool = True) -> EffectBu
 
 def _cant_be_blocked_until_eot_builder() -> EffectBuilder:
     """ "[This creature/Target creature] can't be blocked this turn." - CR
-    509.1a, layer 6 (CR 613.1f), one target's incarnation at a time, expiring
+    509.1b, layer 6 (CR 613.1f), one target's incarnation at a time, expiring
     at cleanup (CR 514.2) like any other "until end of turn" grant. The
     granted text itself is the plain, undated restriction -
     `machines/combat.py`'s evasion reader already recognises it - so the only
@@ -12645,7 +12645,7 @@ _COSTED_KEYWORD_ITEM_RE = re.compile(
     r"^(?P<keyword>ward) (?P<cost>(?:\{[^}]+\})+)(?:,\s*|,?\s+and\s+|$)", re.IGNORECASE
 )
 
-#: "can't be blocked[ by `<quality>`]" (CR 509.1a) as one item of an "and"/
+#: "can't be blocked[ by `<quality>`]" (CR 509.1b) as one item of an "and"/
 #: comma-joined keyword-and-ability list - My Precious's own "Equipped
 #: creature has hexproof and can't be blocked.", Slippery Scoundrel's "this
 #: creature has hexproof and can't be blocked." Not itself a CR 702 keyword

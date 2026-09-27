@@ -3237,12 +3237,12 @@ class Game(EngineModel):
 
     evasion_notices: list[EvasionNotice] = Field(default_factory=list)
     """One entry per attacker whose own "can't be blocked" restriction text
-    (CR 509.1a) `combat.block_refusal` could read as an attempt at the shape
-    but not fully parse - a plain "can't be blocked" and "can't be blocked by
-    creatures with power N or less" are the only two read; anything else
-    fails closed here instead of a block silently going through unrestricted,
-    the same unreadable-is-not-the-same-as-no-effect record every other
-    notice list here keeps."""
+    (CR 509.1b) `combat.block_refusal` could read as an attempt at the shape
+    but not fully parse - see `combat.evasion_restriction_refusal`'s own
+    docstring for the shapes read; anything outside them fails closed here
+    instead of a block silently going through unrestricted, the same
+    unreadable-is-not-the-same-as-no-effect record every other notice list
+    here keeps."""
 
     keyword_line_notices: list[KeywordLineNotice] = Field(default_factory=list)
     """One entry per computed ability line (CR 613.5) that is part CR 702

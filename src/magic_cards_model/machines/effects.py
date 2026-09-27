@@ -20005,7 +20005,7 @@ def _optional_targeted_clause(
     return effect
 
 
-#: "`<target phrase>` can't be blocked this turn." (CR 509.1a) - Eardrum
+#: "`<target phrase>` can't be blocked this turn." (CR 509.1b) - Eardrum
 #: Rattler's own "Another target creature you control with power 2 or less
 #: can't be blocked this turn.": a direct grant with no antecedent, unlike
 #: `_RIDER_CANT_BE_BLOCKED_RE`'s anaphoric "It can't be blocked this turn."
@@ -20017,8 +20017,9 @@ def _optional_targeted_clause(
 #: Young Avenger's own rider) grants the exception verbatim onto the target -
 #: `machines/combat.py`'s `evasion_restriction_refusal` reads a "can't be
 #: blocked except by creatures with `<keyword>`" sentence for exactly this
-#: shape (CR 509.1a with CR 509.1b's own "unless" folded on), refusing a
-#: blocker without the named keyword and letting one with it through.
+#: shape (CR 509.1b's restriction with its own "unless" shape folded on),
+#: refusing a blocker without the named keyword and letting one with it
+#: through.
 _TARGET_CANT_BE_BLOCKED_RE = re.compile(
     r"^(?P<phrase>(?:another )?target .+) can'?t be blocked this turn"
     r"(?: except by creatures with (?P<exception_keyword>[a-z][a-z ]*?))?\.?$",
@@ -20106,7 +20107,7 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
             return move_counter
 
     if match := _TARGET_CANT_BE_BLOCKED_RE.fullmatch(clause):
-        # CR 509.1a's evasion restriction, granted directly rather than as
+        # CR 509.1b's evasion restriction, granted directly rather than as
         # the anaphoric rider `_RIDER_CANT_BE_BLOCKED_RE` reads after a
         # different antecedent - Eardrum Rattler's whole activated ability
         # is this one sentence, with no antecedent in front of it at all.
@@ -34063,7 +34064,7 @@ _RIDER_BECOMES_IN_ADDITION_SUBJECT_RE = re.compile(
 #: a layer 6 ability (CR 613.1f) whose text is the self-referential sentence
 #: `machines/combat._evasion_restriction_sentences` already reads off the
 #: computed board ("this creature can't be blocked"), so the restriction is
-#: enforced by the existing CR 509.1a machinery rather than a second copy of
+#: enforced by the existing CR 509.1b machinery rather than a second copy of
 #: it. "This turn" is `Duration.UNTIL_END_OF_TURN` (CR 611.2a).
 _RIDER_CANT_BE_BLOCKED_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} can'?t be blocked this turn$", re.IGNORECASE
@@ -66718,7 +66719,7 @@ def _parse_target_fights_other_target_clause(
 #: vigilance until end of turn and can't be blocked this turn. Draw a card.",
 #: Break Through the Line's "Target creature with power 2 or less gains haste
 #: until end of turn and can't be blocked this turn." One subject, two
-#: predicates: a layer 6 keyword grant (CR 613.1f) and CR 509.1a's evasion
+#: predicates: a layer 6 keyword grant (CR 613.1f) and CR 509.1b's evasion
 #: restriction granted as the self-referential sentence `machines/combat.py`
 #: enforces, both ending at cleanup (CR 514.2, CR 611.2a).
 _GAINS_AND_CANT_BE_BLOCKED_THIS_TURN_RE = re.compile(

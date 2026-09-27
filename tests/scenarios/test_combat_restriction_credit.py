@@ -65,14 +65,16 @@ def test_a_restriction_on_other_creatures_is_not_credited() -> None:
     assert not reads_self_combat_restriction_line(
         "As long as you control a Swamp, this creature can't be blocked.", "Some Zombie"
     )
-    # "Vampires or Zombies" - a disjunction of two qualities (Blazing Torch's
-    # real template, granted rather than self-printed) - is still outside
-    # `_parse_creature_description`'s closed grammar even after this task
-    # widened it to a single subtype/colour/type/keyword quality (Juggernaut,
-    # Vine Mare, Audacious Infiltrator, Skyscythe Engulfer): a bare "or" is
-    # not one of the shapes read, so the line stays uncredited on purpose.
+    # "black and/or red creatures" (Sacred Knight's real template) - an
+    # elided-noun list joined by "and/or" rather than a bare "or" - is still
+    # outside `_parse_creature_description`'s closed grammar even after
+    # fix-cant-be-blocked-by widened it to a single subtype/colour/type/
+    # keyword/toughness quality plus a plain "or" disjunction (Blazing
+    # Torch's "Vampires or Zombies", now read): "and/or" is a different
+    # connective, and the elided noun on every alternative but the last is a
+    # different grammar again, so the line stays uncredited on purpose.
     assert not reads_self_combat_restriction_line(
-        "This creature can't be blocked by Vampires or Zombies.", "Some Zombie"
+        "This creature can't be blocked by black and/or red creatures.", "Some Zombie"
     )
     assert not reads_self_combat_restriction_line(
         "This creature can't block unless you pay {2}.", "Some Zombie"

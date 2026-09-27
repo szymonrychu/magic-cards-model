@@ -35,6 +35,21 @@ Shapes read (`combat.evasion_restriction_refusal`):
   rather than printed on the attacker itself - read the same way once granted
   (CR 613.1f), which is also this file's proof that two independent
   restrictions on one attacker are each enforced on their own.
+- **Blazing Torch**: "... by Vampires or Zombies." - a disjunction of two
+  bare creature types, each read by the identical single-description grammar
+  and satisfied when either matches.
+- **Arctic Foxes**: "... by creatures with power 2 or greater as long as
+  defending player controls a snow land." - the quality comparison further
+  gated by an external board condition, both read independently and both
+  required.
+
+Every printing in `src/magic_cards_model/data/printings` carrying "can't be
+blocked by" now reads `handled` (`scripts/sweep_pool.py --card`) except
+**Sacred Knight**'s "black and/or red creatures" - an elided-noun list ("black
+[creatures] and/or red creatures") joined by "and/or" rather than a bare
+"or", which is a different connective this task did not widen to; it is
+`gap_example`'s own dynamically-chosen stand-in for the fail-closed path
+below, never named directly by a test.
 
 The fail-closed path is exercised on a printing chosen by `gap_example`:
 `combat.looks_like_unparsed_evasion_restriction` catches a sentence outside
@@ -154,9 +169,13 @@ def _unparsed_evasion_example() -> Card:
     """A real attacker whose "can't be blocked ..." sentence this parser does
     not read yet - chosen, never named (`gap_example`). Past waves closed
     this gap for whichever printing stood here before: April O'Neil, Kunoichi
-    Trainee ("power 3 or greater", 271-tmt) and, this wave, every plain
-    subtype/colour/type/keyword/toughness quality (Juggernaut's "Walls",
-    Arctic Foxes' condition-gated power comparison is one still-open shape).
+    Trainee ("power 3 or greater", 271-tmt), then every plain subtype/colour/
+    type/keyword/toughness quality plus a disjunction and a condition-gated
+    quality (Juggernaut's "Walls", Blazing Torch's "Vampires or Zombies",
+    Arctic Foxes' condition-gated power comparison, fix-cant-be-blocked-by).
+    Sacred Knight's "black and/or red creatures" - an "and/or" elided-noun
+    list, a different connective from the plain "or" disjunction above -
+    stands here now; read it too and something else will stand here next.
     """
     return gap_example(
         "an unread static can't-be-blocked restriction",
@@ -667,4 +686,102 @@ def test_two_independent_restrictions_are_each_enforced_on_their_own():
         scenario.block(juggernaut, wurm)
     scenario.block(juggernaut, memnite)
     assert scenario.game.is_blocked(juggernaut)
+    assert scenario.game.evasion_notices == []
+
+
+# -- a disjunction of two qualities: Blazing Torch ---------------------------
+
+
+def test_blazing_torch_grants_a_disjunctive_restriction_through_an_equipment():
+    """Blazing Torch: "Equipped creature can't be blocked by Vampires or
+    Zombies." - a disjunction of two bare creature types (CR 205.3m), each
+    read by the identical single-description grammar and satisfied when
+    either alternative matches."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Grizzly Bears", "Blazing Torch", "Mountain"])
+        .player("bob", battlefield=["Carrion Feeder", "Falkenrath Pit Fighter", "Llanowar Elves"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "alice")
+    torch = scenario.find("Blazing Torch", Zone.BATTLEFIELD, "alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    activation = equip_activation(scenario.game, torch, bears, "alice")
+    payment = activation.begin_paying()
+    payment.tap_for_mana(mountain, mana_from(mountain))
+    payment.pay()
+    activation.activate()
+    scenario.pass_until_resolved()
+
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    zombie = scenario.creature("Carrion Feeder", "bob")
+    vampire = scenario.creature("Falkenrath Pit Fighter", "bob")
+    elves = scenario.creature("Llanowar Elves", "bob")
+
+    assert not scenario.game.can_block(zombie, bears)
+    with pytest.raises(ValueError, match="Vampires or Zombies"):
+        scenario.block(bears, zombie)
+    assert not scenario.game.can_block(vampire, bears)
+    with pytest.raises(ValueError, match="Vampires or Zombies"):
+        scenario.block(bears, vampire)
+    scenario.block(bears, elves)
+    assert scenario.game.is_blocked(bears)
+    assert scenario.game.evasion_notices == []
+
+
+# -- a quality further gated by a board condition: Arctic Foxes -------------
+
+
+def test_arctic_foxes_condition_gated_quality_is_enforced():
+    """Arctic Foxes: "can't be blocked by creatures with power 2 or greater
+    as long as defending player controls a snow land." - both the blocker's
+    power and the board condition are read, and both are required (CR
+    509.1b; "defending player controls a snow land" is read through the
+    pre-existing `Game.condition_holds`/`condition_is_readable` registry,
+    not a new condition reader)."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Arctic Foxes"])
+        .player("bob", battlefield=["Snow-Covered Forest", "Wurmcoil Engine", "Memnite"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    foxes = scenario.creature("Arctic Foxes")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    memnite = scenario.creature("Memnite", "bob")
+    scenario.attack_with(foxes)
+
+    assert not scenario.game.can_block(wurm, foxes)
+    with pytest.raises(ValueError, match="power 2 or greater"):
+        scenario.block(foxes, wurm)
+    scenario.block(foxes, memnite)
+    assert scenario.game.is_blocked(foxes)
+    assert scenario.game.evasion_notices == []
+
+
+def test_arctic_foxes_restriction_is_lifted_without_a_snow_land():
+    """The same quality comparison, with the board condition false: CR
+    509.1b's restriction never applies, so every blocker is legal and no
+    `EvasionNotice` is recorded either - the condition is read, not merely
+    assumed true."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Arctic Foxes"])
+        .player("bob", battlefield=["Forest", "Wurmcoil Engine"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    foxes = scenario.creature("Arctic Foxes")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+    scenario.attack_with(foxes)
+
+    assert scenario.game.can_block(wurm, foxes)
+    scenario.block(foxes, wurm)
+    assert scenario.game.is_blocked(foxes)
     assert scenario.game.evasion_notices == []

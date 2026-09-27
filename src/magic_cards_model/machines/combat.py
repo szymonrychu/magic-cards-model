@@ -1553,14 +1553,62 @@ class _CreatureDescriptionMatcher:
         return True
 
 
-def _parse_creature_description(description: str) -> "_CreatureDescriptionMatcher | None":
+@dataclass(frozen=True)
+class _CreatureDescriptionAlternatives:
+    """ "`<a>` or `<b>`" - Blazing Torch's "Vampires or Zombies": the whole
+    description is satisfied when *either* alternative's own closed grammar
+    matches. CR 509.1b names no boolean combinator of its own; this reads
+    the disjunction the same plain-English way `_parse_type_list` already
+    reads "Wolf or Werewolf" for CR 508.1c/509.1b's group restrictions."""
+
+    alternatives: tuple["_CreatureDescriptionMatcher", ...]
+
+    def matches(self, game: "Game", candidate: CardState) -> bool:
+        return any(alternative.matches(game, candidate) for alternative in self.alternatives)
+
+
+def _parse_creature_description(
+    description: str,
+) -> "_CreatureDescriptionMatcher | _CreatureDescriptionAlternatives | None":
+    """`_parse_single_creature_description`, widened to a disjunction of two
+    or more descriptions joined by "or" (Blazing Torch's "Vampires or
+    Zombies") when the whole text is not itself one description.
+
+    The whole-text reading is tried first and, when it succeeds, returned
+    as-is: "creatures with power 2 or less" is one description whose own
+    grammar happens to contain the word "or" (Questing Beast), not two
+    descriptions "creatures with power 2" and "less" - splitting blind on
+    every "or" before trying the whole text would misread it. Only a text
+    the whole-text grammar cannot place is then tried as a disjunction, each
+    side read by the identical single-description grammar; if any side does
+    not parse, the whole thing fails closed rather than matching on the
+    sides that do.
+    """
+    whole = _parse_single_creature_description(description)
+    if whole is not None:
+        return whole
+    parts = [part.strip() for part in re.split(r"\s+or\s+", description.strip(), flags=re.I)]
+    parts = [part for part in parts if part]
+    if len(parts) < 2:
+        return None
+    matchers: list[_CreatureDescriptionMatcher] = []
+    for part in parts:
+        matcher = _parse_single_creature_description(part)
+        if matcher is None:
+            return None
+        matchers.append(matcher)
+    return _CreatureDescriptionAlternatives(alternatives=tuple(matchers))
+
+
+def _parse_single_creature_description(description: str) -> "_CreatureDescriptionMatcher | None":
     """Read a creature description - "artifact creatures", "non-Spirit
     creatures", "creatures with power 2 or greater", "creatures with flying",
     "black creatures", or a bare creature type ("Walls") - into a matcher, or
     None when it is not this closed grammar. That None is the fail-closed
     signal for whichever "can't be blocked ..."/"can't block ..." sentence it
-    came from: a description this cannot judge is never silently treated as
-    "matches nothing"."""
+    came from (or for `_parse_creature_description`'s own disjunction, one
+    side of an "or"): a description this cannot judge is never silently
+    treated as "matches nothing"."""
     text = description.strip()
     match = _CREATURE_DESCRIPTION_RE.fullmatch(text)
     if match is None:
@@ -1634,18 +1682,37 @@ def _parse_creature_description(description: str) -> "_CreatureDescriptionMatche
 #: 105.1); Audacious Infiltrator: "... by artifact creatures." (a card type,
 #: CR 509.1b's own reminder text: "an evasion ability ... restricts what can
 #: block it"); Skyscythe Engulfer: "... by creatures with flying." (a
-#: keyword, CR 702). One general "by `<description>`" shape, read the same
-#: way `_CANT_BLOCK_OR_BE_BLOCKED_BY_RE`'s compound already reads its own
-#: evasion half - `_parse_creature_description` is the single grammar behind
-#: both. Tried only after every narrower "by ..." shape above (tokens, a bare
-#: power comparison, "greater power") has already had its turn, so this is a
-#: fallback for the *quality* comparisons those do not cover, never a second
-#: reading of the ones they do; a description outside the closed grammar
-#: (Blazing Torch's "Vampires or Zombies", Arctic Foxes' condition-gated
-#: power comparison) is left for `looks_like_unparsed_evasion_restriction`'s
-#: fail-closed notice.
+#: keyword, CR 702); Blazing Torch: "... by Vampires or Zombies." (a
+#: disjunction, `_parse_creature_description`'s own widening). One general
+#: "by `<description>`" shape, read the same way `_CANT_BLOCK_OR_BE_BLOCKED_
+#: BY_RE`'s compound already reads its own evasion half -
+#: `_parse_creature_description` is the single grammar behind both. Tried
+#: only after every narrower "by ..." shape above (tokens, a bare power
+#: comparison, "greater power") and `_CANT_BE_BLOCKED_BY_DESCRIPTION_WHILE_
+#: CONDITION_RE` below have already had their turn, so this is a fallback for
+#: the unconditional quality comparisons those do not cover, never a second
+#: reading of the ones they do; a description outside the closed grammar (a
+#: disjunction with a side this cannot place, or any other shape) is left
+#: for `looks_like_unparsed_evasion_restriction`'s fail-closed notice.
 _CANT_BE_BLOCKED_BY_DESCRIPTION_RE = re.compile(
     r"can't be blocked by (?P<description>.+?)\.?$", re.IGNORECASE
+)
+
+#: Arctic Foxes: "This creature can't be blocked by creatures with power 2 or
+#: greater as long as defending player controls a snow land." - CR 509.1b's
+#: quality comparison with an external condition folded onto it (rather than
+#: the *attacker's own* power the way `_CANT_BE_BLOCKED_WHILE_POWER_AT_MOST_
+#: RE` reads, or an unqualified condition the way `_CANT_BE_BLOCKED_IF_
+#: CONDITION_RE` reads with no "by" at all): both the blocker's quality and
+#: the board condition must hold. The condition itself is read through the
+#: same `Game.condition_holds`/`condition_is_readable` registry every other
+#: condition-gated reader in the pool already asks - "defending player
+#: controls a snow land" is already one of `machines/conditions/board.py`'s
+#: own "`<who>` controls `<amount>` `<quality>`" templates, so this widens
+#: no condition grammar, only the *place* a tail like it can be handed to.
+_CANT_BE_BLOCKED_BY_DESCRIPTION_WHILE_CONDITION_RE = re.compile(
+    r"can't be blocked by (?P<description>.+?) (?:if|as long as) (?P<condition>.+?)\.?$",
+    re.IGNORECASE,
 )
 
 
@@ -1664,10 +1731,12 @@ def evasion_restriction_refusal(
     `Keyword`: unlike flying or menace, this restriction has no keyword name of
     its own, so nothing in this module's vocabulary can name it. The plain
     shape, the power/toughness-qualified shapes, the general "by
-    `<description>`" shape (a subtype, card type, colour, or keyword quality -
-    `_parse_creature_description`), and the "can't block or be blocked by
-    <description>" compound's evasion half are read; a sentence that looks
-    like an attempt at another shape is caught by
+    `<description>`" shape (a subtype, card type, colour, a keyword quality,
+    or a disjunction of two such qualities - `_parse_creature_description`),
+    that same quality further gated by an external board condition (Arctic
+    Foxes' "... as long as defending player controls a snow land"), and the
+    "can't block or be blocked by <description>" compound's evasion half are
+    read; a sentence that looks like an attempt at another shape is caught by
     `looks_like_unparsed_evasion_restriction` instead of silently doing
     nothing.
     """
@@ -1746,6 +1815,20 @@ def evasion_restriction_refusal(
             )
             if held:
                 return f'{attacker.name} can\'t be blocked: "{sentence}" (CR 509.1b)'
+            continue
+        if match := _CANT_BE_BLOCKED_BY_DESCRIPTION_WHILE_CONDITION_RE.search(sentence):
+            description = match.group("description")
+            condition = match.group("condition")
+            matcher = _parse_creature_description(description)
+            if matcher is not None and matcher.matches(game, blocker):
+                held = game.condition_holds(
+                    game.controller_of(attacker).username or "", condition, attacker
+                )
+                if held:
+                    return (
+                        f"{attacker.name} can't be blocked by {description} while "
+                        f'{condition}: "{sentence}" (CR 509.1b)'
+                    )
             continue
         if _CANT_BE_BLOCKED_BY_TOKENS_RE.search(sentence):
             if is_token(blocker):
@@ -1929,6 +2012,15 @@ def _reads_evasion_sentence(sentence: str) -> bool:
         )
     ):
         return True
+    # Arctic Foxes' quality-plus-condition compound - tried before the
+    # general "by `<description>`" shape below, which would otherwise try
+    # (and fail) to read the whole "`<description>` while `<condition>`"
+    # tail as one plain description.
+    while_condition_match = _CANT_BE_BLOCKED_BY_DESCRIPTION_WHILE_CONDITION_RE.search(sentence)
+    if while_condition_match is not None:
+        return _parse_creature_description(
+            while_condition_match.group("description")
+        ) is not None and _condition_tail_is_readable(while_condition_match.group("condition"))
     # The general "by `<description>`" shape (Juggernaut's "Walls", Vine
     # Mare's "black creatures", Skyscythe Engulfer's "creatures with
     # flying") - tried after every narrower "by ..." shape in the tuple

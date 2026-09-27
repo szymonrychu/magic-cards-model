@@ -113,11 +113,11 @@
   "booster": true,
   "story_spotlight": false,
   "prices": {
-    "usd": "1.97",
-    "usd_foil": "0.91",
+    "usd": "0.88",
+    "usd_foil": "0.99",
     "usd_etched": null,
     "eur": "0.69",
-    "eur_foil": "1.06",
+    "eur_foil": "1.11",
     "tix": "0.03"
   },
   "related_uris": {
