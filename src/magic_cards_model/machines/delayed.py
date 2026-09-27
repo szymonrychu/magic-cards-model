@@ -443,6 +443,33 @@ class ParadigmCopyAndCast(DelayedEffectSpecBase):
             game.exile.remove(copy)
 
 
+class DiscardCardsAtRandomForController(DelayedEffectSpecBase):
+    """ "At the beginning of your next upkeep, discard `<n>` cards at
+    random." - Casey Jones, Vigilante's own delayed half (TMT). Like
+    `DrawACardForController`, no object is named at all: the discard is the
+    creating ability's own controller's (CR 121.2's twin, CR 701.9's
+    discard), on their own behalf, and `count` carries the printed number so
+    a future different-count printing of the same shape reads the same way
+    rather than needing a new `kind`.
+
+    `machines/effects._discard_at_random` is CR 701.9b's random discard - no
+    decision asked of anybody, since there is no "which card" question for a
+    random discard the way there is for a chosen one.
+    """
+
+    kind: Literal["discard_cards_at_random_for_controller"] = (
+        "discard_cards_at_random_for_controller"
+    )
+    count: int
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        from .effects import _discard_at_random
+
+        _discard_at_random(game, game.player(trigger.controller), self.count, trigger.source_name)
+
+
 class DrawACardForController(DelayedEffectSpecBase):
     """ "Draw a card at the beginning of the next turn's upkeep" - Mishra's
     Bauble's second half. No object is named at all (CR 603.7c has nothing to
@@ -862,6 +889,41 @@ class PayOrLoseTheGame(DelayedEffectSpecBase):
         ):
             return
         game.player_loses_the_game(trigger.controller)
+
+
+class PayOrElseReturnExiledCard(DelayedEffectSpecBase):
+    """Koya, Death from Above's own delayed half (TMT): "At the beginning of
+    the next end step, you may pay `<cost>`. If you don't, return that card
+    to the battlefield under its owner's control." CR 118.12's "unless" shape
+    read the same direction `PayOrLoseTheGame` already reads it, except the
+    consequence of *not* paying is CR 610.3's own return rather than a loss.
+
+    `subject_id`/`expected_zone`/`expected_stamp` name the exiled card the
+    antecedent "exile up to one other target creature" clause actually
+    exiled (CR 400.7's own incarnation guard, the same `still_affects` check
+    `DestroySubject` and every other blink-return spec here already share) -
+    not this trigger's event subject, since the beginning-of-step event
+    names no object of its own.
+    """
+
+    kind: Literal["pay_or_else_return_exiled_card"] = "pay_or_else_return_exiled_card"
+
+    cost: ManaCost
+
+    def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
+        if not game.is_in_game(trigger.controller):
+            return
+        if game.may_pay_mana_cost(
+            trigger.controller,
+            self.cost,
+            source=trigger.source_name,
+            source_id=source_id_of(ability),
+        ):
+            return
+        card = trigger.still_affects(game)
+        if card is None or card.owner is None:
+            return
+        game.put_onto_battlefield(card, card.owner)
 
 
 class CombatDamageToPlayerDraw(DelayedEffectSpecBase):
@@ -1867,7 +1929,9 @@ DelayedEffectSpec = Annotated[
     | CreatedTriggeredAbility
     | ActOnEachSubject
     | ReturnSubjectFromGraveyardToBattlefield
-    | ReturnEachExiledToBattlefieldUnderOwner,
+    | ReturnEachExiledToBattlefieldUnderOwner
+    | PayOrElseReturnExiledCard
+    | DiscardCardsAtRandomForController,
     Field(discriminator="kind"),
 ]
 

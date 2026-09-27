@@ -6098,3 +6098,42 @@ needed `_TOKEN_KEYWORDS` widened in `machines/effects.py` (its "if you
 control no creatures with decayed" condition was already read generally by
 `conditions/board.py::quality`'s "with `<keyword>`" suffix - `KEYWORD_
 ABILITY_NAMES` already had decayed). `tests/scenarios/test_decayed.py`.
+
+## 271-tmt T7: end-step/attack flicker of new objects, an optional-payment
+## delayed return, exile-until-an-Aura-leaves, a linked-exile land, a
+## reflexive dies-exile, a next-upkeep delayed random discard, an
+## entered-this-turn mass bounce, and same-name mass reanimation
+
+Teenage Mutant Ninja Turtles' own T7 round: nine cards, none of them reusing
+a card-specific hardcode. `machines/linked_exile.py` is new - CR 607.2a's
+return half, generic over which permanent type names itself and whether "a"
+or "each" linked card of the given description comes back. Two `DelayedEffectSpec`
+kinds are new (`PayOrElseReturnExiledCard`, `DiscardCardsAtRandomForController`),
+both thin wrappers around already-proven primitives (`may_pay_mana_cost`,
+`_discard_at_random`) - see `MEMORY.md` for why neither needed a
+`Game.schema_version` bump. `models/token._put_onto_the_battlefield_
+attacking`'s parameter widened from `TokenState` to `CardState`: CR 508.4's
+own "put onto the battlefield attacking" is not token-specific, and a real
+card returning already attacking (The Neutrinos) is the identical event a
+token created attacking already was.
+
+| Mechanic | Reader | Reported card | Off-pool proof | Test |
+|---|---|---|---|---|
+| "At the beginning of your end step, exile up to one target `<X>` and up to one target `<Y>`. Then return them to the battlefield under their owners' control." - two independent CR 115.6 "up to one" targets of different descriptions, exiled and returned together as new objects (CR 400.7) | `effects._parse_exile_several_up_to_one_targets_then_return_clause` | Don & Leo, Problem Solvers | - (a Scryfall full-text oracle search for this exact compound-target shape returns Don & Leo alone; Displace's own single "up to two" requirement proves the shared return-together machinery instead) | `test_flicker_and_delayed_returns_tmt.py` |
+| "Whenever `<this>` attack, exile up to one target creature you own, then return it to the battlefield under your control tapped and attacking." - CR 508.4: never declared, so declaration-time restrictions (including summoning sickness) do not apply; defaults to joining the source's own current attack | `effects._parse_exile_target_then_return_tapped_and_attacking_clause`, `models.token._put_onto_the_battlefield_attacking` (widened) | The Neutrinos | - (only printing of this exact exile-then-return-attacking shape; Grim Reaper, Lethal Legionnaire's own reflexive reanimation already proves the shared "tapped and attacking" primitive) | `test_flicker_and_delayed_returns_tmt.py` |
+| "When `<this>` enters, exile up to one other target creature. At the beginning of the next end step, you may pay `<cost>`. If you don't, return that card to the battlefield under its owner's control." - CR 118.12's "unless" shape read the direction `PayOrLoseTheGame` already reads it, except not paying returns the card instead of losing the game | `effects._parse_exile_then_pay_or_else_return_clause`, `delayed.PayOrElseReturnExiledCard` | Koya, Death from Above | - (no second printing shares this exact optional-payment-gated delayed return; the shared CR 118.12/`may_pay_mana_cost` machinery is already proven by Summoner's Pact) | `test_flicker_and_delayed_returns_tmt.py` |
+| "When this Aura enters, exile target creature an opponent controls until this Aura leaves the battlefield." - the pre-existing exile-until-leaves reader's type alternation gained "aura" (CR 303.4's subtype, not a CR 205.2a card type, is how every such Aura names itself) | `effects._EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_RE` (widened) | Dimensional Exile | Hardlight Containment (enchants an artifact, with an unrelated granted-ward rider) | `test_exile_until_aura_leaves.py` |
+| "`{1}, {T}`: Exile target creature you own. / `{2}, {T}`, Sacrifice this land: Return a creature card exiled with this land to the battlefield under your control. Return each other card exiled with this land to its owner's hand." - CR 607.2a's link needed no new code; the return pair does | `machines/linked_exile.py` (new) | Northampton Farm | Endless Sands ("each" instead of "a", "its owner's control", no second sweep-to-hand sentence at all) | `test_linked_exile_land.py` |
+| "When this creature dies, you may exile it. When you do, put target creature card from your graveyard on top of your library." - CR 603.12's reflexive wrapper around a new plain building block, "put target `<X>` card from your graveyard on top of your library" | `effects._parse_reflexive_may_exile_dead_self_clause`, `effects._PUT_TARGET_FROM_GRAVEYARD_TOP_OF_LIBRARY_RE` (new) | Paramecia Coloniex | Golgari Thug (the unconditional, non-reflexive half alone) | `test_reflexive_dies_exile.py` |
+| "Draw `<n>` cards. At the beginning of your next upkeep, discard `<n>` cards at random." - the delayed half wraps the already-proven `_discard_at_random` (CR 701.9b) in a new `DelayedEffectSpec` kind | `effects._parse_draw_then_delayed_discard_at_random_clause`, `delayed.DiscardCardsAtRandomForController` | Casey Jones, Vigilante | - (no second printing shares this exact "draw N. At the beginning of your next upkeep, discard N at random" template) | `test_delayed_upkeep_discard.py` |
+| "When `<this>` enters, return each other nonland permanent that entered this turn to its owner's hand." - a new *mass*, untargeted "entered this turn" subject (`CardState.turn_entered` against the live turn number), where only a *targeted* restriction read this phrase before | `effects._parse_mass_return_entered_this_turn_clause` | Renet, Temporal Apprentice | - (no second printing shares this exact mass "entered this turn" bounce) | `test_entered_this_turn_bounce.py` |
+| "`{T}`, Sacrifice three Rats: Return target creature card and all other cards with the same name as that card from your graveyard to the battlefield tapped." - CR 201.2a's same-name grouping, generalised over destination (battlefield tapped, or hand) and over what resolves it (an activated ability, or a spell) | `effects._parse_return_target_and_same_name_from_graveyard_clause` (dual `for_spell`), `effects._PUT_TARGET_FROM_GRAVEYARD_TOP_OF_LIBRARY_RE`'s own sibling shape | Rat King, Verminister | Echoing Return (a sorcery, to hand rather than tapped onto the battlefield) | `test_same_name_reanimation.py` |
+
+"Sacrifice three Rats" needed no new cost-side code: `machines/cost.py`'s
+existing "Sacrifice `<count>` `<capitalised subtype>`" reader already covers
+a printed count ahead of a subtype noun (its own comment already cites
+"Sacrifice three" against Ward as the precedent) -
+`test_same_name_reanimation.py`'s own cost-boundary cases
+(`test_paying_the_cost_requires_exactly_three_rats`, `test_paying_the_cost_
+sacrifices_exactly_three_rats_not_more`) are the proof that premise holds for
+this printing rather than an assumption carried over from the sweep.
