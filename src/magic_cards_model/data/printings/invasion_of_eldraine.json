@@ -1,0 +1,182 @@
+{
+  "object": "card",
+  "id": "92f5b177-b0c6-4573-b860-f75dad1941bd",
+  "oracle_id": "329fcb1e-7066-46c5-ba27-20ed2b18c1ba",
+  "multiverse_ids": [
+    607145,
+    607146
+  ],
+  "mtgo_id": 110062,
+  "arena_id": 84381,
+  "tcgplayer_id": 490766,
+  "cardmarket_id": 704369,
+  "name": "Invasion of Eldraine // Prickle Faeries",
+  "lang": "en",
+  "released_at": "2023-04-21",
+  "uri": "https://api.scryfall.com/cards/92f5b177-b0c6-4573-b860-f75dad1941bd",
+  "scryfall_uri": "https://scryfall.com/card/mom/113/invasion-of-eldraine-prickle-faeries?utm_source=api",
+  "layout": "transform",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:30:11Z",
+  "cmc": 4.0,
+  "type_line": "Battle \u2014 Siege // Creature \u2014 Faerie",
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [
+    "Flying",
+    "Transform"
+  ],
+  "card_faces": [
+    {
+      "object": "card_face",
+      "name": "Invasion of Eldraine",
+      "mana_cost": "{3}{B}",
+      "type_line": "Battle \u2014 Siege",
+      "oracle_text": "(As a Siege enters, choose an opponent to protect it. You and others can attack it. When it's defeated, exile it, then cast it transformed.)\nWhen this Siege enters, target opponent discards two cards.",
+      "colors": [
+        "B"
+      ],
+      "defense": "4",
+      "artist": "Cristi Balanescu",
+      "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
+      "illustration_id": "85d2bd7f-c8f7-4802-803b-b33c294a8f7a",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "normal": "https://cards.scryfall.io/normal/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "large": "https://cards.scryfall.io/large/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "png": "https://cards.scryfall.io/png/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.png?1783917011",
+        "art_crop": "https://cards.scryfall.io/art_crop/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "border_crop": "https://cards.scryfall.io/border_crop/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "thumb": "https://cards.scryfall.io/thumb/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "grid": "https://cards.scryfall.io/grid/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "display": "https://cards.scryfall.io/display/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "art": "https://cards.scryfall.io/art/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "crop": "https://cards.scryfall.io/crop/front/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011"
+      }
+    },
+    {
+      "object": "card_face",
+      "name": "Prickle Faeries",
+      "mana_cost": "",
+      "type_line": "Creature \u2014 Faerie",
+      "oracle_text": "Flying\nAt the beginning of each opponent's upkeep, if that player has two or fewer cards in hand, this creature deals 2 damage to them.",
+      "colors": [
+        "B"
+      ],
+      "color_indicator": [
+        "B"
+      ],
+      "power": "2",
+      "toughness": "2",
+      "flavor_text": "When the courts fell, Eldraine's fae turned from their usual pranks to deadlier tricks.",
+      "artist": "Cristi Balanescu",
+      "artist_id": "c09ede88-a1b5-4a18-9895-dc8a965d28a5",
+      "illustration_id": "3cb097e3-b427-4e97-a051-2030a93db977",
+      "image_uris": {
+        "small": "https://cards.scryfall.io/small/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "normal": "https://cards.scryfall.io/normal/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "large": "https://cards.scryfall.io/large/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "png": "https://cards.scryfall.io/png/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.png?1783917011",
+        "art_crop": "https://cards.scryfall.io/art_crop/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "border_crop": "https://cards.scryfall.io/border_crop/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.jpg?1783917011",
+        "thumb": "https://cards.scryfall.io/thumb/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "grid": "https://cards.scryfall.io/grid/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "display": "https://cards.scryfall.io/display/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "art": "https://cards.scryfall.io/art/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011",
+        "crop": "https://cards.scryfall.io/crop/back/9/2/92f5b177-b0c6-4573-b860-f75dad1941bd.webp?1783917011"
+      }
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set": "mom",
+  "set_name": "March of the Machine",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/392f7315-dc53-40a3-a2cc-5482dbd498b3",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amom&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mom?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/92f5b177-b0c6-4573-b860-f75dad1941bd/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A329fcb1e-7066-46c5-ba27-20ed2b18c1ba&unique=prints",
+  "collector_number": "113",
+  "digital": false,
+  "rarity": "uncommon",
+  "artist": "Cristi Balanescu",
+  "artist_ids": [
+    "c09ede88-a1b5-4a18-9895-dc8a965d28a5"
+  ],
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 16072,
+  "penny_rank": 9746,
+  "preview": {
+    "source": "CoolStuffInc",
+    "source_uri": "https://twitter.com/CoolStuffInc/status/1642905042821709825",
+    "previewed_at": "2023-04-03"
+  },
+  "prices": {
+    "usd": "0.26",
+    "usd_foil": "0.28",
+    "usd_etched": null,
+    "eur": "0.07",
+    "eur_foil": "0.14",
+    "tix": "0.03"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=607145&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BEldraine%2B%252F%252F%2BPrickle%2BFaeries",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DInvasion%2Bof%2BEldraine%2B%252F%252F%2BPrickle%2BFaeries",
+    "edhrec": "https://edhrec.com/route/?cc=Invasion+of+Eldraine"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F490766%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=704369&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/110062?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

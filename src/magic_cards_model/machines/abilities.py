@@ -3806,7 +3806,10 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # "cycles or discards another card" (Curator of Mysteries, Archfiend of
     # Ifnir): cycling's cost is itself a discard (CR 702.29a), so the one
     # discard event is the whole condition and a cycled card counts once.
-    if re.search(r"\bdiscards? (?:a card|another card|one or more cards|this card)\b", lowered):
+    if re.search(
+        r"\bdiscards? (?:a card|another card|one or more cards|this card|an? [a-z]+ card)\b",
+        lowered,
+    ):
         return TriggerEvent.DISCARDS_A_CARD
     # CR 701.22a/701.25a, watched together - see `TriggerEvent.SCRY_OR_
     # SURVEIL`'s own docstring. Checked ahead of nothing in particular; the

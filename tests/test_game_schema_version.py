@@ -1595,12 +1595,34 @@ def test_a_battle_protector_survives_a_dump_and_reload() -> None:
     assert siege.protector == "bob"
 
 
+#: The version stamped before entering loyalty/defense/lore counters went
+#: through counter replacements, and `CounterAmountReplacement` /
+#: `CastingRuleEffect` gained their putter, player, halving and
+#: "for as long as" fields.
+_SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS = 96
+
+
+def test_a_snapshot_written_before_entering_counter_replacements_is_refused() -> None:
+    """A version-96 game with Doubling Season out would put a planeswalker's
+    loyalty on undoubled (CR 306.5b, CR 122.6) where this build doubles it -
+    the same state resolving differently, so it is refused."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_ENTERING_COUNTER_REPLACEMENTS}",
+    ):
+        Game.model_validate(dumped)
+
+
 #: The version stamped before `CardState` gained `solved` (CR 719.3b, R0a-T5).
-_SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED = 96
+_SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED = 97
 
 
 def test_a_snapshot_written_before_the_solved_designation_is_refused() -> None:
-    """A version-96 dump has no `CardState.solved`: decoded as current, a Case
+    """A version-97 dump has no `CardState.solved`: decoded as current, a Case
     would read unsolved forever (CR 719.3b). Refused instead."""
     assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_R0A_T5_SOLVED
     dumped = _a_played_game().model_dump(mode="json")
@@ -1615,11 +1637,11 @@ def test_a_snapshot_written_before_the_solved_designation_is_refused() -> None:
 
 #: The version stamped before `CardState` gained `unlocked_doors` (CR
 #: 709.5c's Room designations - Unholy Annex // Ritual Chamber) - R0a-T6.
-_SCHEMA_VERSION_BEFORE_ROOM_UNLOCKED_DOORS = 97
+_SCHEMA_VERSION_BEFORE_ROOM_UNLOCKED_DOORS = 98
 
 
 def test_a_snapshot_written_before_room_unlocked_doors_is_refused() -> None:
-    """A version-97 dump has no `unlocked_doors` on its card states: decoded
+    """A version-98 dump has no `unlocked_doors` on its card states: decoded
     as current, a Room permanent would read as having neither door
     unlocked, and "when you unlock this door" would never trigger again for
     a game resumed from that snapshot. Refused instead."""
@@ -1637,11 +1659,11 @@ def test_a_snapshot_written_before_room_unlocked_doors_is_refused() -> None:
 #: The version stamped before `models/player.Player` gained `speed` and
 #: `speed_increased_on_turn` (CR 702.179a-f: Speed, and Perilous Snare's
 #: "Start your engines!") - R0a T8.
-_SCHEMA_VERSION_BEFORE_SPEED = 98
+_SCHEMA_VERSION_BEFORE_SPEED = 99
 
 
 def test_a_snapshot_written_before_speed_is_refused() -> None:
-    """A version-98 dump's own players have no `speed` field at all: decoded
+    """A version-99 dump's own players have no `speed` field at all: decoded
     as current, `Player.speed` would default to `None` regardless of
     whatever speed the player actually had, and `speed_increased_on_turn`
     likewise - a mid-game snapshot would silently lose whether "Start your

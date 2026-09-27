@@ -496,6 +496,7 @@ def _become_a_copy(
                 power=power,
                 toughness=toughness,
                 defense=copied.defense,
+                loyalty=copied.loyalty,
             ),
         ),
         game,

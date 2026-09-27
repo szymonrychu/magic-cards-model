@@ -2346,6 +2346,16 @@ class PlayPermission(EngineModel):
     source_name: str = ""
     """The card whose ability handed this out, for the error message."""
     rule: str = "CR 601.3"
+    cost_increase: ManaCost | None = None
+    """"A spell cast this way costs {N} more to cast." - Elite Spellbinder's
+    and Invasion of Gobakhan's own rider on this exact permission shape (CR
+    601.2f's cost increase, CR 118.7), scoped to *this one grant* rather than
+    a board-wide static (`Game.static_cost_modifiers_for`, which nothing
+    permanent-specific like this belongs in): the exiled card costs more
+    only when cast under this permission, not from any other zone it might
+    somehow also be legally cast from. Read by `Casting.total_cost`, folded
+    into its `increases` the same way `cost_increases` already is, only when
+    `permission_used` is this grant."""
     any_type_mana: bool = False
     """"... and mana of any type can be spent to cast it/that spell/them" -
     Null Summoner's, Hostage Taker's, Gonti, Lord of Luxury's, and roughly
@@ -4880,6 +4890,23 @@ class Casting(EngineModel):
                 return self._with_bestowed_target(
                     profile_for_text(teamwork_alternative[1 if self.teamwork_paid else 0])
                 )
+            if self.spell.transformed and self.spell.card.back_face is not None:
+                # CR 712.11a/712.11c: cast transformed, only the back face's
+                # own characteristics are evaluated - a Siege's own CR
+                # 310.12b cast (`Game.cast_during_resolution(transformed=
+                # True)`). `targeting_profile(Card)` is cached off `front_
+                # oracle_text` alone and has no notion of a *runtime*
+                # `CardState.transformed` flag to read instead, so a
+                # back face with its own target requirement (Awaken the
+                # Maelstrom's "target player"/"target permanent") was
+                # always announced with zero targets, and both of its
+                # targeted clauses silently resolved to nothing - the same
+                # family of defect `targeting_profile`'s own docstring
+                # already fixed for a transform/modal DFC's blank top-level
+                # `oracle_text` field, one layer further in.
+                return self._with_bestowed_target(
+                    profile_for_text(self.spell.card.back_face.oracle_text or "")
+                )
             return self._with_bestowed_target(targeting_profile(self.spell.card))
         return self._with_bestowed_target(
             profile_for_modes(self.spell.card, self.chosen_mode_objects, self.x_value)
@@ -6935,6 +6962,11 @@ class Casting(EngineModel):
             *self.cost_increases,
             *(extra.mana for extra in extras),
             self._own_cost_increase_for_targets(),
+            *(
+                [self.permission_used.cost_increase]
+                if self.permission_used is not None and self.permission_used.cost_increase
+                else []
+            ),
         ]
         reductions = list(self.cost_reductions)
         floor: int | None = None

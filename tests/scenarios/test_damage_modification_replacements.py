@@ -15,11 +15,27 @@ CR 614.2, CR 616.1).
   Fighter) - damage already marked (CR 120.3e) is removed as the new damage
   is dealt; damage dealt simultaneously with it (CR 510.2's one combat
   damage event) is not "already dealt" and stays.
+- "If a noncreature source you control would deal damage to a creature,
+  battle, or opponent, it deals that much damage plus 2 instead." (Invasion
+  of Regatha // Disciples of the Inferno, the same template's "quality" read
+  as CR 205.2a's plain negation of a card type - `Game._negated_card_type_
+  named` - rather than a color the way Torbran's "red source" is) and its own
+  recipient list ("a creature, battle, or opponent", `_DAMAGE_RECIPIENTS` in
+  `machines/replacement.py`) parsed off the correct comma-split (see that
+  module's `_try_source_damage_plus_recipient_list`'s own docstring for why
+  the ordinary `_IF_WOULD` splitter misreads this specific sentence's
+  internal Oxford-comma recipient list).
+
+CR numbers verified this session with `mise run rules:find`:
+
+- **CR 609.7b** - a source's properties are checked as damage would be dealt.
+- **CR 702.16a** - a quality can be "any characteristic value or information".
 """
 
 import pytest
 
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.effects import transform_permanent
 from magic_cards_model.models import Zone
 from magic_cards_model.support import card_support
 from tests.cards import card
@@ -244,8 +260,100 @@ def test_damage_from_an_earlier_step_is_healed_by_a_later_hit():
 
 @pytest.mark.parametrize(
     "name",
-    ["Hawkeye, Young Avenger", "Wolverine, Fierce Fighter", "Torbran, Thane of Red Fell"],
+    [
+        "Hawkeye, Young Avenger",
+        "Wolverine, Fierce Fighter",
+        "Torbran, Thane of Red Fell",
+        "Invasion of Regatha",
+    ],
 )
 def test_every_clause_is_handled(name):
     for clause in card_support(card(name)).clauses:
         assert clause.outcome == "handled", (name, clause.text, clause.outcome)
+
+
+# -- Invasion of Regatha // Disciples of the Inferno --------------------------------
+
+
+def _disciples_of_the_inferno(scenario):
+    """Stages Disciples of the Inferno face up directly (`transform_permanent`,
+    the same staging technique `test_transforms_into_trigger.py` and its
+    siblings already use), sidestepping the Siege's own front-face "another
+    target battle or opponent" ETB trigger entirely - a different, already-
+    `handled` clause this file is not about. `Invasion of Regatha` is already
+    on the battlefield (a battle enters with its printed defense, CR 310.4b -
+    irrelevant here), so this only flips its face."""
+    siege = scenario.creature("Invasion of Regatha", "alice")
+    transform_permanent(scenario.game, siege)
+    assert siege.name == "Disciples of the Inferno"
+    return siege
+
+
+def test_disciples_adds_two_to_noncreature_damage_to_an_opponent():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Invasion of Regatha", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _disciples_of_the_inferno(scenario)
+    mountain = scenario.creature("Mountain", "alice")
+
+    scenario.game.deal_damage(scenario.player("bob"), 3, source=mountain)
+
+    assert scenario.player("bob").life == 20 - 3 - 2
+
+
+def test_disciples_adds_two_to_noncreature_damage_to_a_creature():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Invasion of Regatha", "Mountain"])
+        .player("bob", battlefield=["Hill Giant"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _disciples_of_the_inferno(scenario)
+    mountain = scenario.creature("Mountain", "alice")
+    giant = scenario.creature("Hill Giant", "bob")
+
+    scenario.game.deal_damage(giant, 1, source=mountain)
+
+    assert giant.damage == 1 + 2
+
+
+def test_disciples_does_not_boost_damage_from_a_creature_source():
+    """The source is "a noncreature source" (CR 205.2a's negation of Type.
+    CREATURE): Disciples' own combat damage, dealt by a creature, is
+    unaffected - a creature never doubles its own bite."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Invasion of Regatha", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _disciples_of_the_inferno(scenario)
+    bears = scenario.creature("Grizzly Bears", "alice")
+
+    scenario.game.deal_damage(scenario.player("bob"), 2, source=bears)
+
+    assert scenario.player("bob").life == 20 - 2
+
+
+def test_disciples_adds_two_to_noncreature_damage_to_a_battle():
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Invasion of Regatha", "Invasion of Zendikar", "Mountain"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    _disciples_of_the_inferno(scenario)
+    mountain = scenario.creature("Mountain", "alice")
+    zendikar = scenario.creature("Invasion of Zendikar", "alice")
+    starting_defense = zendikar.counter_count("defense")
+
+    scenario.game.deal_damage(zendikar, 1, source=mountain)
+
+    assert zendikar.counter_count("defense") == starting_defense - (1 + 2)

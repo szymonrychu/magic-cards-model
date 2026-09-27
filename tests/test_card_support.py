@@ -133,6 +133,34 @@ def test_a_multi_face_card_judges_each_castable_face():
     assert support.status == "handled"
 
 
+def test_a_transformed_battles_back_face_qualifier_cda_is_handled():
+    """A battle's back face names itself in its own printed static line
+    ("`<Name>`'s power [and toughness are each/is] equal to the number of
+    `<type>` you control", CR 201.5/604.3a/208.2a) - a shape `machines/
+    layers.py::_QUALIFIER_COUNT_CDA_RE` already reads generally once its own
+    name is rewritten to "this permanent's ...". Judging it with the
+    printing's combined "Front // Back" name (`Card.name`) instead of the
+    back face's own never rewrites it at all, since `self_reference_names`
+    only offers the combined string and the face before "//" as CR 201.5
+    self-reference candidates for that name - so every one of these read
+    `silent`/`unaudited` for a reason that had nothing to do with whether the
+    engine reads the line. Three real printings, one qualifier each (lands,
+    creatures, and the "power is" - not "power and toughness are" - shape on
+    a self-counting artifact), so this is the shape, not one card."""
+    for front_name, self_reference in (
+        ("Invasion of Lorwyn", "Winnowing Forces's power"),
+        ("Invasion of Xerex", "Vertex Paladin's power"),
+        ("Invasion of Kaladesh", "Aetherwing's power"),
+    ):
+        support = card_support(card(front_name))
+        statics = [c for c in support.clauses if c.kind == "static" and self_reference in c.text]
+        assert statics, f"{front_name}: no static clause carries {self_reference!r}"
+        assert all(c.status == "handled" for c in statics), (front_name, statics)
+    assert card_support(card("Invasion of Lorwyn")).status == "handled"
+    assert card_support(card("Invasion of Xerex")).status == "handled"
+    assert card_support(card("Invasion of Kaladesh")).status == "handled"
+
+
 def test_a_keyword_only_card_is_handled_through_its_keywords():
     """Colossal Dreadmaw's only rule is trample, read by combat."""
     printing = card("Colossal Dreadmaw")

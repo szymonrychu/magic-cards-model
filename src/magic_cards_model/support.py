@@ -149,7 +149,10 @@ from magic_cards_model.machines.layers import (
 )
 from magic_cards_model.machines.map_tokens import credits_explore_via_created_token
 from magic_cards_model.machines.modes import modal_profile, substitute_x
-from magic_cards_model.machines.objects_as_costs import has_improvise
+from magic_cards_model.machines.objects_as_costs import (
+    granted_convoke_line_is_readable,
+    has_improvise,
+)
 from magic_cards_model.machines.opening_hand import OpeningHandAction, read_opening_hand_line
 from magic_cards_model.machines.replacement import (
     ENTERS_KINDS,
@@ -189,6 +192,9 @@ from magic_cards_model.machines.triggers import (
     _POWER_OR_TOUGHNESS_QUALIFIER as _CONDITION_POWER_OR_TOUGHNESS_QUALIFIER_RE,
 )
 from magic_cards_model.machines.triggers import (
+    _required_attacking_subtype as _condition_required_attacking_subtype,
+)
+from magic_cards_model.machines.triggers import (
     _required_entering_subtype as _condition_required_entering_subtype,
 )
 from magic_cards_model.machines.triggers import (
@@ -204,6 +210,8 @@ from magic_cards_model.models.card import (
     Legality,
     Supertype,
     Type,
+    subtypes_of,
+    supertypes_of,
     types_of,
 )
 from magic_cards_model.models.card_state import Choice, ChoiceKind, Counters, TargetRef
@@ -1861,7 +1869,9 @@ def _enters_as_copy_line_category(printing: Card, text: str) -> str | None:
     return HANDLED
 
 
-def _static_ability_category(printing: Card, text: str) -> str:
+def _static_ability_category(
+    printing: Card, text: str, *, card_name: str | None = None, legendary: bool | None = None
+) -> str:
     """One static line of a permanent (CR 604.2, CR 113.3d), judged the way
     the battlefield sweep judges it - per line, not per card.
 
@@ -1888,14 +1898,30 @@ def _static_ability_category(printing: Card, text: str) -> str:
     name-keyed row cannot be attributed to a particular line, so it credits
     every static line on that card. This plan's Task 1.3 moves those rows to
     text shapes, which removes the ambiguity at the source.
+
+    `card_name`/`legendary` let a caller judging one *face's* own static
+    line (a transformed battle's back face, CR 712.8d) override the
+    printing's own combined name/front-face supertypes with that face's -
+    `self_reference_names(printing.name, ...)` never offers a back face's
+    own name as a CR 201.5 self-reference candidate (only the combined
+    string and the face before "//"), so "Winnowing Forces's power ... are
+    each equal to the number of lands you control." was never rewritten to
+    "this permanent's ..." and every qualifier-count CDA on a transformed
+    back face missed `_QUALIFIER_COUNT_CDA_RE` for a reason that has nothing
+    to do with whether `machines/layers.py` itself reads the line - it does,
+    the same way it reads every other card sharing this template, once asked
+    under the right name. Both default to the printing's own front-face
+    values, so every other caller (never checking a back face) is unaffected.
     """
+    effective_name = card_name if card_name is not None else printing.name
     # `legendary=` as the battlefield sweep passes it (`effects_for`): only a
     # legend's first-word short name is a CR 201.5 self-reference, so a
     # nonlegendary Noggle the Mind's own "is a colorless Noggle" must not be
     # read as "is a colorless this permanent".
-    legendary = Supertype.LEGENDARY in printing.supertypes
+    if legendary is None:
+        legendary = Supertype.LEGENDARY in printing.supertypes
     if printing.name in LAYER_EFFECTS or parsed_layer_effects(
-        text, card_name=printing.name, legendary=legendary
+        text, card_name=effective_name, legendary=legendary
     ):
         return HANDLED
     if cost_modifier_effect(text) is not None:
@@ -1924,7 +1950,7 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 508.1h: `Game._pay_attack_costs` charges it on every declaration
         # (`combat.total_attack_cost`), gated on a designation or not.
         return HANDLED
-    if reads_self_combat_restriction_line(text, printing.name):
+    if reads_self_combat_restriction_line(text, effective_name):
         # CR 509.1a / 509.1b: `combat.evasion_restriction_refusal` and
         # `combat.self_block_restriction_refusal` refuse the block.
         return HANDLED
@@ -1940,23 +1966,18 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 603.2d: `triggers.additional_trigger_times` multiplies what an
         # entrance the cause names makes trigger.
         return HANDLED
-    opening_hand = read_opening_hand_line(printing.name, text)
+    opening_hand = read_opening_hand_line(effective_name, text)
     if opening_hand is not None:
         # CR 103.6a/103.6b: `Game.take_opening_hand_actions` offers what reads
         # as an action and refuses, with an `OpeningHandNotice`, what does not.
         return HANDLED if isinstance(opening_hand, OpeningHandAction) else NOTICE
     if looks_like_unparsed_layer_effect(
-        text, static_only=True, card_name=printing.name, legendary=legendary
+        text, static_only=True, card_name=effective_name, legendary=legendary
     ):
         return NOTICE
     if looks_like_unparsed_cost_modifier(text):
         return NOTICE
-    if (
-        off_battlefield_characteristics(
-            text, printing.name, Supertype.LEGENDARY in printing.supertypes
-        )
-        is not None
-    ):
+    if off_battlefield_characteristics(text, effective_name, legendary) is not None:
         # CR 113.6c: "As long as `<this>` isn't on the battlefield, it's a
         # ..." - `CardState.types`/`.subtypes`/`.power`/`.toughness` apply it
         # in every zone but the battlefield (Grist, the Hunger Tide).
@@ -1971,13 +1992,13 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # `Game.player_has_shroud` read "You have hexproof." / "You have
         # shroud." off the battlefield on every targeting check.
         return HANDLED
-    if is_attack_requirement_line(text, printing.name):
+    if is_attack_requirement_line(text, effective_name):
         # CR 508.1d: `Game.declare_attackers` enforces it.
         return HANDLED
     if is_group_attack_restriction_line(text):
         # CR 508.1c: `combat.group_attack_restriction_refusal` enforces it.
         return HANDLED
-    if is_blocked_by_at_most_one_line(text, printing.name):
+    if is_blocked_by_at_most_one_line(text, effective_name):
         # CR 509.1b: `combat.declaration_refusal` (via `blocked_by_at_most_
         # one_refusal`) enforces it.
         return HANDLED
@@ -1987,13 +2008,13 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # shape - "`<Type>`s you control"/"Each creature you control with
         # `<description>` can't be blocked by more than one creature."
         return HANDLED
-    if is_power_threshold_restriction_line(text, printing.name):
+    if is_power_threshold_restriction_line(text, effective_name):
         # CR 508.1c / 509.1b: `combat.attack_refusal`/`block_refusal` (via
         # `combat_statics.power_threshold_restriction_refusal`) refuse the
         # attack or block while the creature's own computed power misses its
         # printed threshold.
         return HANDLED
-    if is_must_be_blocked_line(text, printing.name):
+    if is_must_be_blocked_line(text, effective_name):
         # CR 509.1c: `combat.declare_blockers` (via `combat_statics.
         # unobeyed_must_be_blocked_requirement`) refuses a declaration that
         # leaves this attacker unblocked while a legal blocker exists.
@@ -2031,7 +2052,7 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # linked pile to casts (`granted_cast_options`) and to the land drop
         # (`Game.play_land`, `legal_actions`) - The Temporal Anchor.
         return HANDLED
-    if keyword_machine.as_enters_day_night(text, printing.name) is not None:
+    if keyword_machine.as_enters_day_night(text, effective_name) is not None:
         # CR 731.1: "If it's neither day nor night, it becomes day as this
         # creature enters" - `keywords.apply_as_enters_day_night`, run by
         # `Game.enter_the_battlefield`.
@@ -2039,9 +2060,7 @@ def _static_ability_category(printing: Card, text: str) -> str:
     self_enters = _self_enters_line_category(printing, text)
     if self_enters is not None:
         return self_enters
-    if reads_activation_rule_line(
-        text, printing.name, legendary=Supertype.LEGENDARY in printing.supertypes
-    ):
+    if reads_activation_rule_line(text, effective_name, legendary=legendary):
         # CR 602.5 (`Game.activation_prohibition`), CR 609.4 (`Game.
         # activation_haste_permission`), CR 606.3 (`Game._loyalty_instant_
         # speed_permitted`) and CR 609.4b (`Game.spends_mana_as_any_color`)
@@ -2102,7 +2121,7 @@ def _static_ability_category(printing: Card, text: str) -> str:
         # CR 614.1a/701.50a: `connive._replacement_draws` reads it off the
         # battlefield on every connive (Leader, Super-Genius).
         return HANDLED
-    if Game.reads_enforced_static_line(text, printing.name):
+    if Game.reads_enforced_static_line(text, effective_name):
         # `Game`'s own battlefield readers: look at the top card any time,
         # play lands from the top, a granted improvise, The Scarlet Witch's
         # power-scaled reduction, the power-up discount and extra activation,
@@ -2141,6 +2160,13 @@ def _static_ability_category(printing: Card, text: str) -> str:
     if r0a_t5_static_line(printing, text):
         # R0a-T5: skip-your-draw-step (CR 614.10), hexproof/ward ignored
         # (CR 702.11e, 702.21a) - each proven by a scenario.
+        return HANDLED
+    if granted_convoke_line_is_readable(text):
+        # CR 604.2 / CR 702.51a: "<quality> spells you cast have convoke" -
+        # `machines/spell_grants.py`'s own `SPELL_GRANT_KEYWORDS` deliberately
+        # excludes convoke (it is a cost-payment method, not a triggered-
+        # ability expansion), so `objects_as_costs.has_convoke_now` reads the
+        # identical grant itself, live, at a real cast.
         return HANDLED
     return STATIC_UNAUDITED
 
@@ -2512,7 +2538,13 @@ def _probe_cards(printing: Card, condition: str, *, entering: bool) -> list[Card
     raw_subtype = (
         _condition_required_entering_subtype(condition)
         if entering
+        # `_required_subtype` reads "other <X>s you control"/dying shapes;
+        # "a Dragon you control attacks" (Defiant Thundermaw's own back
+        # face) is a distinct ATTACKS-verb shape only `_required_attacking_
+        # subtype` reads, tried second since the two never both match one
+        # condition string.
         else _condition_required_subtype(condition)
+        or _condition_required_attacking_subtype(condition)
     )
     # `_required_entering_subtype` still returns one bare subtype string (no
     # pool printing lists more than one entering subtype yet); `_required_
@@ -2959,12 +2991,29 @@ def _etb_x_candidates(printing: Card, ability: TriggeredAbility) -> tuple[int | 
     announces_x` an additional-cost phrase can also satisfy, because CR
     107.3m is scoped to "a value of X chosen for any of its costs" -
     exactly what a bare `{X}` in the mana cost already answers.
+
+    `source.mana_cost` (`CardState`'s own property) reads the *up face's*
+    mana cost - `Card.front_face`'s for a permanent that has not
+    transformed, which is every real ETB trigger this reads (CR 712.8a: a
+    double-faced permanent has only its front face's characteristics until
+    it turns over, and a back face never prints a mana cost to have `{X}`
+    in regardless). `printing.mana_cost` alone is the wrong field to ask:
+    Scryfall leaves a transform or battle card's own top-level `mana_cost`
+    null and puts each face's cost on `card_faces` instead (`Card.front_
+    face`'s own docstring) - Invasion of New Phyrexia's front face prints
+    `{X}{W}{U}`, but `printing.mana_cost` alone reads `None`, so this used
+    to probe no X value at all for a Siege's own "create X ... tokens" ETB
+    trigger and scored it SILENT for a measurement gap, not an engine one -
+    the same class of bug the Murktide Regent comment above already
+    documents for `ability.event is None`.
     """
+    front = printing.front_face
+    mana_cost = (front.mana_cost if front is not None else None) or printing.mana_cost
     if (
         ability.event is TriggerEvent.ENTERS_THE_BATTLEFIELD
         and ability.effect
         and re.search(r"\bX\b", ability.effect)
-        and "{X}" in (printing.mana_cost or "")
+        and "{X}" in (mana_cost or "")
     ):
         return _X_PROBE_VALUES
     return (None,)
@@ -3101,6 +3150,38 @@ def _spell_faces(printing: Card) -> list[SpellFace]:
             )
             for face in faces
         ]
+    if (
+        printing.layout is Layout.TRANSFORM
+        and faces
+        and Type.BATTLE in types_of(faces[0].type_line or "")
+        and "Siege" in subtypes_of(faces[0].type_line or "")
+        and len(faces) > 1
+    ):
+        # CR 310.12b: a Siege's own intrinsic trigger exiles it and casts it
+        # transformed - the back face becomes a real, independently cast
+        # spell (`machines/sieges.exile_then_cast_transformed_effect`), which
+        # `models/game.py::_resolve_top` reads off `effect_for` exactly like
+        # any other non-permanent spell once `CardState.transformed` is set.
+        # Before this branch, `_spell_faces` returned only the front Siege
+        # (a permanent, dropped by the `face.is_permanent` skip below) and
+        # never asked `effect_for` about the back face's own resolution text
+        # at all - a non-permanent back face (Awaken the Maelstrom, Valor's
+        # Reach Tag Team) fell through to `parse_abilities`' bare
+        # `AbilityKind.STATIC` reading of the same text and was scored as an
+        # unaudited static ability of the creature front, the identical
+        # classifier artifact CR 712.11b's own `spell_only_face_names` already
+        # exists to close for a modal DFC/Adventure's non-permanent face. The
+        # front is still returned too - permanent, so the loop below skips it,
+        # exactly as it always did for a Siege with no back-face gap at all.
+        return [
+            SpellFace(
+                face.name,
+                face.oracle_text or "",
+                face.mana_cost,
+                bool(set(types_of(face.type_line or "")) & _PERMANENT_TYPES),
+            )
+            for face in faces
+        ]
     front = printing.front_face
     name = front.name if front is not None else printing.name
     mana_cost = front.mana_cost if front is not None else printing.mana_cost
@@ -3148,6 +3229,21 @@ def _other_face(printing: Card, ability: object) -> str | None:
     if not face or front is None or face == front.name or face == printing.name:
         return None
     return face
+
+
+def _face_type_line(printing: Card, face_name: str) -> str:
+    """`face_name`'s own `type_line` off `printing.card_faces` - CR 712.8d's
+    "only that face's characteristics" applies to supertypes too, so a back
+    face's own legendary status (or lack of it) for `_static_ability_
+    category`'s `legendary=` must come from *that* face, never
+    `printing.supertypes` (the front face's own, per that property's
+    docstring). `""` when no face named `face_name` exists, the same "cannot
+    stage it" fallback `_static_ability_category`'s other callers already
+    give an unreadable shape."""
+    for face in printing.card_faces or []:
+        if face.name == face_name:
+            return face.type_line or ""
+    return ""
 
 
 def classify_clauses(printing: Card) -> list[ClauseOutcome]:
@@ -3228,7 +3324,8 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
     # docstring for the classifier artifact this closes).
     spell_only_face_names = (
         {face.name for face in _spell_faces(printing) if not face.is_permanent}
-        if is_permanent and printing.layout in (Layout.MODAL_DFC, Layout.ADVENTURE)
+        if is_permanent
+        and printing.layout in (Layout.MODAL_DFC, Layout.ADVENTURE, Layout.TRANSFORM)
         else set()
     )
 
@@ -3464,9 +3561,19 @@ def classify_clauses(printing: Card) -> list[ClauseOutcome]:
                 continue  # CR 722.4 - see this function's own docstring above.
             if ability.face in spell_only_face_names:
                 continue  # CR 712.11b - see `spell_only_face_names` above.
+            other_face = _other_face(printing, ability)
+            face_legendary = (
+                Supertype.LEGENDARY in supertypes_of(_face_type_line(printing, other_face))
+                if other_face is not None
+                else None
+            )
             clauses.append(
                 ClauseOutcome(
-                    _static_ability_category(printing, ability.text), ability.text, "static"
+                    _static_ability_category(
+                        printing, ability.text, card_name=other_face, legendary=face_legendary
+                    ),
+                    ability.text,
+                    "static",
                 )
             )
 

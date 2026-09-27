@@ -1565,6 +1565,19 @@ def _card_type_named(quality: str) -> Type | None:
         return None
 
 
+def _negated_card_type_named(quality: str) -> Type | None:
+    """The card type a "non`<type>`" quality names, or `None` for anything
+    else - Invasion of Regatha // Disciples of the Inferno's "a noncreature
+    source you control", the identical "non" + CR 205.2a card-type-word
+    negation `machines/casting_restrictions.py::_matches_type_filter` already
+    reads for "noncreature spells" (Soulless Jailer), asked here of a damage
+    source's own quality (CR 609.7b/702.16a) instead of a spell's card types."""
+    word = quality.strip().lower()
+    if not word.startswith("non"):
+        return None
+    return _card_type_named(word.removeprefix("non"))
+
+
 def _activation_condition(instructions: str) -> str | None:
     """The condition of an "Activate only if <condition>" restriction (CR
     602.5b), without a trailing "and only as a sorcery"-style second
@@ -1750,6 +1763,14 @@ _DRAW_OR_LIFE_GAIN_PROHIBITION_RE = re.compile(
 #: `_LOOKS_LIKE_LIFE_GAIN_PROHIBITION_RE` does for its own twin.
 _LOOKS_LIKE_DRAW_PROHIBITION_RE = re.compile(r"\bcan't draw cards\b", re.IGNORECASE)
 
+#: Solemnity's "Players can't get counters." - CR 122.6's counters given to a
+#: player (poison, energy, experience ...) never arrive while it is on the
+#: battlefield (CR 604.2, CR 611.3a), read by `Game.player_counters_prohibited`
+#: from `add_player_counters`, the one door every player counter uses.
+_PLAYER_COUNTERS_PROHIBITION_RE = re.compile(
+    r"^(?:players|each player) can'?t get counters\.?$", re.IGNORECASE
+)
+
 #: Leyline of Punishment's, Sunspine Lynx's "Damage can't be prevented." and
 #: Frenzied Baloth's "Combat damage can't be prevented." - CR 615.12, read by
 #: `Game.damage_cant_be_prevented` while the permanent is on the battlefield.
@@ -1770,6 +1791,7 @@ def is_player_rules_static_line(text: str) -> bool:
         or _DRAW_PROHIBITION_RE.match(line)
         or _DRAW_OR_LIFE_GAIN_PROHIBITION_RE.match(line)
         or _DAMAGE_CANT_BE_PREVENTED_RE.fullmatch(line)
+        or _PLAYER_COUNTERS_PROHIBITION_RE.match(line)
     )
 
 
@@ -4169,7 +4191,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 99
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 100
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4296,11 +4318,20 @@ class Game(EngineModel):
     #: 310.9d, 508.5), and CR 704.5x/704.5y run as state-based actions. Also
     #: battles' defense counters (CR 310.4b), CR 704.5v/w, the Siege defeat
     #: trigger (CR 310.12b) and `Casting.transformed` (CR 712.11a).
-    #: 97: `CardState` gained `solved` (CR 719.3b's Case designation, R0a-T5;
+    #: 97 (fix-enters-with-counters): a permanent's intrinsic entering
+    #: loyalty/defense/lore counters go through `Game.add_counters` (CR 122.6),
+    #: so counter replacements and Solemnity now apply to them;
+    #: `CounterAmountReplacement` gained `opponent_puts`/`players`/`divisor`/
+    #: `round_up`; `CastingRuleEffect` gained `while_source_id`/
+    #: `while_source_stamp`; `machines/layers.Selector` gained
+    #: `permanents_of_types` and `other_transformed_permanents_controlled_by`;
+    #: `machines/casting.PlayPermission` gained `cost_increase`; and every
+    #: battle card's previously unread clauses now resolve.
+    #: 98: `CardState` gained `solved` (CR 719.3b's Case designation, R0a-T5;
     #: renumbered from 96 at the R0a integration).
-    #: 98: `CardState` gained `unlocked_doors` (CR 709.5c's Room designations,
+    #: 99: `CardState` gained `unlocked_doors` (CR 709.5c's Room designations,
     #: R0a-T6; renumbered from 96 at the R0a integration).
-    #: 99: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
+    #: 100: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
     #: Start your engines! speed, R0a-T8; renumbered from 96 at the R0a
     #: integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
@@ -5208,10 +5239,10 @@ class Game(EngineModel):
     turn not yet announced and raise them all again as one batch - the
     second.
 
-    Bumped 96 -> 97 (R0a-T5, renumbered from 95 -> 96 at the R0a
+    Bumped 97 -> 98 (R0a-T5, renumbered from 95 -> 96 at the R0a
     integration): `CardState` gained `solved` (CR 719.3b's Case
     designation) - a field added to a persisted model, the bump rule's first
-    bullet. A version-96 Case would decode unsolved forever and its "Solved"
+    bullet. A version-97 Case would decode unsolved forever and its "Solved"
     abilities would never be available. Refused instead.
     """
 
@@ -11699,6 +11730,36 @@ class Game(EngineModel):
             1 for spell in cast if Type.INSTANT in spell.types or Type.SORCERY in spell.types
         )
 
+    def _entering_counters(
+        self, card_state: CardState, intrinsic: dict[str, int], event: ReplaceableEvent
+    ) -> dict[str, int]:
+        """Every counter `card_state` enters with, summed by kind: its own
+        intrinsic ones (CR 306.5b, CR 310.4b, CR 714.3a), whatever "enters
+        with" replacements added to the event (CR 614.1c), Ral, Monsoon
+        Mage's additional loyalty, less compleated's reduction.
+
+        All of them are one entering event (CR 614.1c), and putting them on
+        is the event contained within it (CR 616.1g) that CR 122.6 makes
+        "counters being put on" the object - so each kind is put on once,
+        through `add_counters`, where Doubling Season, Vorinclex and "that
+        many plus one" apply to the whole count and Solemnity stops it.
+
+        CR 702.150a (compleated) is "enters the battlefield with that many
+        loyalty counters minus two for each": it modifies the entering event
+        itself, so the reduction comes off before any counter-placing
+        replacement sees the count, and never below zero (CR 107.1b).
+        """
+        counters = dict(intrinsic)
+        for kind, amount in event.counters.items():
+            counters[kind] = counters.get(kind, 0) + amount
+        loyalty = str(Counter.LOYALTY)
+        extra_loyalty = self._additional_entering_loyalty(card_state)
+        if extra_loyalty:
+            counters[loyalty] = counters.get(loyalty, 0) + extra_loyalty
+        if event.loyalty_reduction and loyalty in counters:
+            counters[loyalty] = max(counters[loyalty] - event.loyalty_reduction, 0)
+        return {kind: amount for kind, amount in counters.items() if amount > 0}
+
     def enter_the_battlefield(
         self,
         card_state: CardState,
@@ -11829,7 +11890,14 @@ class Game(EngineModel):
             transformed = transformed or enters_transformed_at_night(self, card_state)
             card_state.transformed = transformed and card_state.card.back_face is not None
             stamp_on_the_stack = card_state.zone_change_stamp
-            card_state.move_to(Zone.BATTLEFIELD)
+            card_state.move_to(Zone.BATTLEFIELD, place_intrinsic_counters=False)
+            # CR 306.5b / CR 310.4b / CR 714.3a: read off the face now up,
+            # before anything else changes what the object is. A permanent
+            # entering as a copy has the copied object's instead (CR 707.2),
+            # which `_enters_as_copy` already put on the event.
+            intrinsic_counters = (
+                card_state.intrinsic_entering_counters() if event.entering_as_copy is None else {}
+            )
             if was_cast:
                 # CR 400.7d: the permanent may read the spell it was, so the
                 # record follows this one move and no later one.
@@ -11908,7 +11976,9 @@ class Game(EngineModel):
             # correctly newer than that spell's effect (CR 613.7b).
             self.continuous_effects.note(self.battlefield)
 
-            for kind, amount in event.counters.items():
+            for kind, amount in self._entering_counters(
+                card_state, intrinsic_counters, event
+            ).items():
                 # CR 122.6a: no effect here names a putter, so it is the
                 # entering object's controller.
                 self.add_counters(card_state, kind, amount, putter=card_state.controller)
@@ -11934,26 +12004,6 @@ class Game(EngineModel):
                         modification=grant_ability("Haste"),
                     )
                 )
-
-            if event.loyalty_reduction:
-                # CR 702.150a (compleated): "minus two for each" of the
-                # Phyrexian symbols paid with life, off whatever CR 306.5b's
-                # intrinsic entering loyalty (plus `event.counters` above)
-                # just placed. Clamped to what is actually there rather than
-                # handed straight to `remove_counters` - CR 122's counters
-                # are a count, never negative, and Nissa, Ascended Animist's
-                # own two-symbol printing is the proof this can be asked to
-                # remove more than a smaller-loyalty walker would ever carry.
-                # A planeswalker taken to 0 this way still leaves normally
-                # (CR 704.5i) at the state-based check this same resolution
-                # already runs.
-                to_remove = min(event.loyalty_reduction, card_state.counter_count(Counter.LOYALTY))
-                if to_remove:
-                    card_state.remove_counters(Counter.LOYALTY, to_remove)
-
-            extra_loyalty = self._additional_entering_loyalty(card_state)
-            if extra_loyalty:
-                self.add_counters(card_state, Counter.LOYALTY, extra_loyalty)
 
             # CR 614.1c: "If it's neither day nor night, it becomes day as this
             # creature enters" - then CR 702.145d/g's "any time" checks, which
@@ -12001,12 +12051,6 @@ class Game(EngineModel):
             if self._entry_batch:
                 event = event.model_copy(update={"entered_together": self._entry_batch})
             self.emit(event)
-            # CR 714.3a's own intrinsic lore counter (`CardState.move_to`, applied
-            # before this point) is not routed through `add_counters` - the same
-            # direct-write choice `_enter_with_loyalty` already makes for a
-            # planeswalker's own entering loyalty - so it needs its own emission
-            # for CR 107.15a's chapter I to trigger the moment the Saga arrives.
-            self._emit_lore_counters_added(card_state, card_state.lore_counters)
 
     @contextmanager
     def entering_together(self) -> Iterator[None]:
@@ -15332,6 +15376,43 @@ class Game(EngineModel):
                     if count > 0:
                         self.add_player_counters(player, kind, 1)
 
+    def player_counters_prohibited(self, username: str) -> str | None:
+        """Why `username` can't get counters right now, or None - Solemnity's
+        "Players can't get counters." on the battlefield, or Suncleanser's
+        recorded "That player can't get counters for as long as this creature
+        remains on the battlefield." (CR 101.2: a "can't" beats whatever would
+        put them; CR 614.17a: it must already exist). Rescanned every call,
+        as `life_gain_prohibited` is (CR 611.3a)."""
+        for source in list(self.battlefield):
+            for line in parse_abilities(source.card):
+                if line.kind is not AbilityKind.STATIC:
+                    continue
+                text = (line.text or "").strip()
+                if not _PLAYER_COUNTERS_PROHIBITION_RE.match(text):
+                    continue
+                if self._still_has_static_line(source, text):
+                    return f"players can't get counters: {source.name} says so (CR 101.2)"
+        for effect in self.casting_rule_effects:
+            if (
+                effect.kind != CastingRuleKind.PLAYER_CANT_GET_COUNTERS
+                or effect.restricted_player != username
+            ):
+                continue
+            source = (
+                self.find_by_id(effect.while_source_id)
+                if effect.while_source_id is not None
+                else None
+            )
+            if (
+                source is not None
+                and source.zone is Zone.BATTLEFIELD
+                and source.zone_change_stamp == effect.while_source_stamp
+            ):
+                return (
+                    f"{username} can't get counters while {effect.source_name} remains (CR 611.2b)"
+                )
+        return None
+
     def add_player_counters(self, player: "Player | str", kind: str, amount: int = 1) -> int:
         """Give a player counters, replacement effects included (CR 122.1,
         122.6).
@@ -15349,7 +15430,7 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             if isinstance(player, str):
                 player = self.player(player)
-            if amount <= 0:
+            if amount <= 0 or self.player_counters_prohibited(player.username) is not None:
                 return player.counter_count(kind)
 
             event = ReplaceableEvent(
@@ -16763,6 +16844,9 @@ class Game(EngineModel):
         card_type = _card_type_named(wanted)
         if card_type is not None:
             return card_type in source.types
+        negated = _negated_card_type_named(wanted)
+        if negated is not None:
+            return negated not in source.types
         color = _COLOR_WORDS.get(wanted)
         if color is not None:
             return color in source.colors
@@ -17255,6 +17339,13 @@ class Game(EngineModel):
         printed `CardState` for anything else, which is CR 702.16a's own
         second clause: "any sources not on the battlefield that are of that
         card type" reads the printed characteristics by name.
+
+        A "non`<type>`" quality (Disciples of the Inferno's "a noncreature
+        source you control") is CR 205.2a's plain negation of a card type,
+        the identical reading `machines/casting_restrictions.py::_matches_
+        type_filter` already gives "noncreature spells" - checked only once
+        the bare card-type name comes back unrecognised, so it never shadows
+        a real (if oddly spelled) positive quality.
         """
         wanted = quality.strip().lower()
         types, colors = source.types, source.colors
@@ -17264,6 +17355,9 @@ class Game(EngineModel):
         card_type = _card_type_named(wanted)
         if card_type is not None:
             return card_type in types
+        negated = _negated_card_type_named(wanted)
+        if negated is not None:
+            return negated not in types
         color = _COLOR_WORDS.get(wanted)
         if color is not None:
             return color in colors
@@ -18634,11 +18728,35 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             return self._check_state_based_actions_impl()
 
+    def _drop_ended_while_source_rules(self) -> None:
+        """CR 611.2b: a recorded "for as long as this remains on the
+        battlefield" rule ends when that object leaves (CR 400.7: a return is
+        a new object). `player_counters_prohibited` already stops reading an
+        ended one; this drops it from the game so it is not carried in every
+        later snapshot. Every point state-based actions are checked is a point
+        the game looks, the same way daybound is caught below."""
+
+        def running(effect: CastingRuleEffect) -> bool:
+            if effect.while_source_id is None:
+                return True
+            source = self.find_by_id(effect.while_source_id)
+            return (
+                source is not None
+                and source.zone is Zone.BATTLEFIELD
+                and source.zone_change_stamp == effect.while_source_stamp
+            )
+
+        if any(not running(effect) for effect in self.casting_rule_effects):
+            self.casting_rule_effects = [
+                effect for effect in self.casting_rule_effects if running(effect)
+            ]
+
     def _check_state_based_actions_impl(self) -> list[CardState]:
         """The rest of `check_state_based_actions` - see its own docstring
         for why it is split out."""
         if self.is_over:
             return []
+        self._drop_ended_while_source_rules()
         # CR 702.145c/d/f/g are not state-based actions - each "happens
         # immediately" any time its condition is true - but every point the
         # game checks state-based actions is a point it looks, so a permanent
@@ -20609,6 +20727,7 @@ class Game(EngineModel):
         pays_life_for_mana_value: bool = False,
         choice_group: UUID | None = None,
         while_controlling: str | None = None,
+        cost_increase: ManaCost | None = None,
     ) -> PlayPermission:
         """CR 601.3: let `player` play this one card out of `zone`, for a turn.
 
@@ -20687,6 +20806,7 @@ class Game(EngineModel):
                 pays_life_for_mana_value=pays_life_for_mana_value,
                 choice_group=choice_group,
                 while_controlling=while_controlling,
+                cost_increase=cost_increase,
             )
             self.play_permissions.append(permission)
             return permission

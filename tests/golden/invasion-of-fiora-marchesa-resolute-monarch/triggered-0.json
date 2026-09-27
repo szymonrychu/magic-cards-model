@@ -1,10 +1,10 @@
 {
-  "ability": "At the beginning of your upkeep, if you haven't been dealt combat damage since your last turn, you draw a card and you lose 1 life.",
+  "ability": "When this Siege enters, choose one or both — • Destroy all legendary creatures. • Destroy all nonlegendary creatures.",
   "action": {
     "controller": "alice",
-    "modes": [],
+    "modes": [1],
     "on_stack": true,
-    "source": "Marchesa, Resolute Monarch@alice#1",
+    "source": "Invasion of Fiora@alice#1",
     "targets": [],
     "x": 0
   },
@@ -14,9 +14,9 @@
     "order": ["alice", "bob"],
     "players": {
       "alice": {
-        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Invasion of Fiora // Marchesa, Resolute Monarch"],
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator"],
         "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
-        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt", "Invasion of Fiora // Marchesa, Resolute Monarch"],
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       },
       "bob": {
@@ -26,7 +26,7 @@
         "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
       }
     },
-    "step": null,
+    "step": "precombat_main",
     "tapped": [],
     "tokens": [],
     "variant": "quiet",
@@ -36,28 +36,22 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": [],
     "notices": {},
-    "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "hand"]
-      }
-    },
-    "players": {
-      "alice": {
-        "life": [20, 19]
-      }
-    },
+    "objects": {},
+    "players": {},
     "stack": []
   },
   "family": "triggered",
   "format": 1,
-  "kind": "beginning_of_step",
+  "kind": "enters_the_battlefield",
   "number": 0,
   "recipe": {
-    "attempt": "staged",
+    "attempt": "put",
     "index": 0,
-    "params": {},
+    "params": {
+      "tapped": false
+    },
     "variant": "quiet"
   }
 }

@@ -2844,11 +2844,18 @@ class CardState(EngineModel):
         """See `_abilities_as_it_left`."""
         return self._abilities_as_it_left
 
-    def move_to(self, zone: Zone) -> None:
+    def move_to(self, zone: Zone, *, place_intrinsic_counters: bool = True) -> None:
         """Move to another zone, resetting the state a card loses on the way.
 
         A card leaving the battlefield becomes a new object, so it arrives
         untapped and face up.
+
+        `place_intrinsic_counters=False` is `Game.enter_the_battlefield`'s
+        route: the intrinsic entering counters (`intrinsic_entering_counters`)
+        are replacement effects (CR 614.1c) whose counters are put on through
+        `Game.add_counters` instead (CR 122.6, CR 616.1g), so Doubling Season,
+        Vorinclex and Solemnity see them. Every other caller has no `Game`
+        to ask and writes them directly.
 
         Counters go either way (CR 122.2): "counters on an object are not
         retained if that object moves from one zone to another. The counters
@@ -2988,9 +2995,8 @@ class CardState(EngineModel):
             # It has only just arrived, so it has not been here since the turn
             # began (CR 302.6).
             self.summoning_sick = True
-            self._enter_with_loyalty()
-            self._enter_with_lore_counter()
-            self._enter_with_defense()
+            if place_intrinsic_counters:
+                self._enter_with_intrinsic_counters()
         else:
             self.tapped = False
             self.transformed = False
@@ -3090,7 +3096,7 @@ class CardState(EngineModel):
         of the printing everywhere else. A permanent a layer-4 effect made a
         planeswalker (or made not one) has to answer this the same way
         everything else that reads `is_planeswalker` does - `loyalty`,
-        `has_zero_loyalty`, `_enter_with_loyalty` just below all gate on it.
+        `has_zero_loyalty`, `intrinsic_entering_counters` below all gate on it.
         """
         computed = self.computed_characteristics
         types = self.types if computed is None else computed.types
@@ -3304,18 +3310,42 @@ class CardState(EngineModel):
             return False
         return self.counters[Counter.LOYALTY] <= 0
 
-    def _enter_with_loyalty(self) -> None:
-        """CR 306.5b: a planeswalker enters with its printed loyalty in counters.
+    def intrinsic_entering_counters(self) -> dict[str, int]:
+        """The counters this permanent's intrinsic "enters with" abilities put
+        on it as it enters, by kind: CR 306.5b's printed loyalty for a
+        planeswalker, CR 714.3a's one lore counter for a Saga, and CR 310.4b's
+        printed defense for a battle - each read off the face that is up.
 
-        An intrinsic ability creating a replacement effect, which is why it is
-        applied as the permanent arrives rather than afterwards. Nothing models
-        replacement effects yet (CR 614), so it is done here.
+        Each is a replacement effect (CR 614.1c) and the counters it gives are
+        counters put on the object (CR 122.6), so `Game.enter_the_battlefield`
+        places these through `Game.add_counters` like any other "enters with"
+        counters. Only a `CardState` built in place with no game to ask
+        (`_enter_with_intrinsic_counters`) writes them directly.
         """
-        if not self.is_planeswalker:
-            return
-        printed = _as_number(self._printed_loyalty)
-        if printed is not None:
-            self.counters.add(Counter.LOYALTY, printed)
+        counters: dict[str, int] = {}
+        if self.is_planeswalker:
+            printed = self.printed_loyalty
+            if printed:
+                counters[str(Counter.LOYALTY)] = printed
+        if self.is_saga and self.chapter_numbers:
+            counters[str(Counter.LORE)] = 1
+        if Type.BATTLE in self.types:
+            defense = self.printed_defense
+            if defense:
+                counters[str(Counter.DEFENSE)] = defense
+        return counters
+
+    def _enter_with_intrinsic_counters(self) -> None:
+        """`intrinsic_entering_counters`, written straight onto the object -
+        for a move or a construction with no `Game` whose replacement
+        effects could apply."""
+        for kind, amount in self.intrinsic_entering_counters().items():
+            self.counters.add(kind, amount)
+
+    @property
+    def printed_loyalty(self) -> int | None:
+        """The loyalty number printed on the face that is up (CR 209.1), or None."""
+        return _as_number(self._printed_loyalty)
 
     @property
     def printed_defense(self) -> int | None:
@@ -3323,34 +3353,6 @@ class CardState(EngineModel):
         up_face = self.up_face
         printed = up_face.defense if up_face is not None else self.card.defense
         return _as_number(printed)
-
-    def _enter_with_defense(self) -> None:
-        """CR 310.4b: "A battle has the intrinsic ability 'This permanent
-        enters with a number of defense counters on it equal to its printed
-        defense number.'" Read off the printed face that is up, so a Siege
-        cast transformed (a creature) enters with none. A permanent entering
-        as a copy of a battle gets its counters from the copy replacement
-        instead (`machines/replacement._enters_as_copy`)."""
-        if Type.BATTLE not in self.types:
-            return
-        printed = self.printed_defense
-        if printed:
-            self.counters.add(Counter.DEFENSE, printed)
-
-    def _enter_with_lore_counter(self) -> None:
-        """CR 714.3a: "Each Saga without read ahead has the intrinsic ability
-        'This Saga enters with a lore counter on it.'"
-
-        Read ahead (CR 702.155a) is not printed on anything in the pool, so
-        this is the whole of CR 714.3's own entry replacement - one lore
-        counter, always, for a Saga with at least one chapter ability
-        (`chapter_numbers`, CR 714.3c's own gate). A Saga built straight onto
-        the battlefield gets the identical treatment through
-        `_sagas_start_with_lore`, the same split `_enter_with_loyalty` and
-        `_planeswalkers_start_loyal` already draw for loyalty.
-        """
-        if self.is_saga and self.chapter_numbers:
-            self.counters.add(Counter.LORE, 1)
 
     @model_validator(mode="wrap")
     @classmethod
@@ -3434,8 +3436,8 @@ class CardState(EngineModel):
         """A planeswalker or Saga *built* straight onto the battlefield gets
         the counters it would have entered with; one being *decoded* does not.
 
-        The same two intrinsic abilities as `_enter_with_loyalty` (CR 306.5b)
-        and `_enter_with_lore_counter` (CR 714.3a), applied where a `CardState`
+        The intrinsic abilities of `intrinsic_entering_counters` (CR 306.5b,
+        CR 714.3a, CR 310.4b), applied where a `CardState`
         is constructed in place rather than moved onto the battlefield.
 
         The guard is what makes the engine able to decode any game state. "It
@@ -3453,9 +3455,7 @@ class CardState(EngineModel):
         if isinstance(data, Mapping) and "counters" in data:
             return state
         if state.zone is Zone.BATTLEFIELD and not state.counters:
-            state._enter_with_loyalty()
-            state._enter_with_lore_counter()
-            state._enter_with_defense()
+            state._enter_with_intrinsic_counters()
         return state
 
 
