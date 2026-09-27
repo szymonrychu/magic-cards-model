@@ -67,9 +67,16 @@ _QUANTITY = (
     rf"|at (?:least|most) {COUNT}|{COUNT} or (?:more|greater|fewer|less)|an?"
 )
 
-#: A graveyard card's quality: one word, or spell mastery's "instant and/or
-#: sorcery" (`_card_quality` reads both).
-_CARD_QUALITY = r"[\w-]+(?: and/or [\w-]+)?"
+#: A graveyard card's quality: one or more words ("Zombie creature", Tomb
+#: Tyrant's own "at least three Zombie creature cards in your graveyard"),
+#: or spell mastery's "instant and/or sorcery" (`_card_quality` reads both).
+#: A quality word is never one of the connective or counting words these
+#: templates print around it, so a multi-word quality cannot swallow "mana
+#: values among" (Sanguine Spy) or "instant card and a sorcery" (Flow State).
+_QUALITY_WORD = r"(?!(?:among|and|or|an?|cards?|in|with|mana|values?|different)\b)[\w-]+"
+_CARD_QUALITY = (
+    rf"{_QUALITY_WORD}(?: {_QUALITY_WORD})*(?: and/or {_QUALITY_WORD}(?: {_QUALITY_WORD})*)?"
+)
 
 _POSSESSIVE = r"(?:your|their|his or her) "
 

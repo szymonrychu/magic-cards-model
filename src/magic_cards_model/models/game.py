@@ -1654,20 +1654,32 @@ def _permanent_quality(phrase: str) -> Callable[[Characteristics], bool] | None:
 
 
 def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
-    """A graveyard card's one-word quality - "creature", "permanent" (CR
-    110.4a), a card type or subtype - or every card when the text prints
-    none. A "non" prefix negates it ("noncreature"), the same recursive
-    reading `_characteristic_word` gives a permanent's computed
-    characteristics. None when the word is not read."""
+    """A graveyard card's quality - "creature", "permanent" (CR 110.4a), a
+    card type or subtype, or a subtype qualifying a type ("Zombie creature",
+    Tomb Tyrant's own "at least three Zombie creature cards in your
+    graveyard") - or every card when the text prints none.
+
+    Multiple words each qualify the noun (every word ANDed), the same
+    qualifiers-then-noun reading `_permanent_quality` already gives a
+    permanent's computed characteristics - not a word list of this
+    function's own, just this same one-word reading run once per word. A
+    "non" prefix negates a single word ("noncreature"). None when any word
+    is not read."""
     if word is None:
         return lambda state: True
-    lowered = word.lower()
+    lowered = word.strip().lower()
     if " and/or " in lowered:
         # Spell mastery's "instant and/or sorcery" card: either quality.
         parts = [_card_quality(part.strip()) for part in lowered.split(" and/or ")]
         if any(part is None for part in parts):
             return None
         return lambda state: any(part(state) for part in parts)  # type: ignore[misc]
+    words = lowered.split()
+    if len(words) > 1:
+        tests = [_card_quality(each) for each in words]
+        if any(test is None for test in tests):
+            return None
+        return lambda state: all(test(state) for test in tests)  # type: ignore[misc]
     if lowered.startswith("non") and len(lowered) > 4:
         inner = _card_quality(lowered.removeprefix("non").lstrip("-"))
         if inner is None:
@@ -2700,6 +2712,20 @@ class GraveyardArrival(EngineModel):
     is the one that counts: a card that left the graveyard and came back is a
     new object (CR 400.7) whose own trip decides. `None` only on a ledger
     written before this field existed."""
+    card_types: tuple[Type, ...] = ()
+    """The card's own *printed* types (CR 613.5-free, front-face-safe - the
+    same source `is_permanent_card` already reads off `card_state.types`),
+    kept whole rather than reduced to one boolean. `is_permanent_card` only
+    answers CR 110.4a's own six-type question; a template naming one type in
+    particular - Raphael, Fiendish Savior's and Macabre Reconstruction's "a
+    **creature** card was put into your graveyard from anywhere this turn" -
+    needs the type itself, not a permanent/nonpermanent split, and needs it
+    for an arrival that skipped the battlefield exactly the way
+    `is_permanent_card` already does (a discard, a mill, a countered spell).
+    `()` only on a ledger written before this field existed, which reads as
+    "no printed types" - wrong for a real card, which is why every reader of
+    this field is an *additional* gate alongside `is_permanent_card`/
+    `permanent_types`, never the only one a card's identity depends on."""
 
 
 class CombatDamageToPlayer(EngineModel):
@@ -4213,7 +4239,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 97
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 99
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4365,12 +4391,16 @@ class Game(EngineModel):
     #: ability-side twin of `CastRecord`'s identical two fields) - Paragon of
     #: Modernity's and Jetmir's Fixer's own "If `<mana condition>`, put a
     #: +1/+1 counter on it instead" (ec7-instead).
-    #: 97: `Game` gained `monarch` (CR 725, the monarch designation), and
+    #: 98: `Game` gained `monarch` (CR 725, the monarch designation), and
     #: `machines/abilities.TriggeredAbility` gained `monarch_inherent`, the
     #: tag `machines/monarch.py`'s two synthetic, sourceless CR 725.2
     #: abilities carry so `Game._effect_of` can find their effect without a
     #: card name to key off of (ec7-monarch;
     #: renumbered from 96 at integration).
+    #: 99: `GraveyardArrival` gained `card_types` (Raphael, Fiendish Savior's
+    #: and Macabre Reconstruction's "a creature card was put into your
+    #: graveyard from anywhere this turn", EC7; renumbered from 96
+    #: at integration).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -18166,6 +18196,7 @@ class Game(EngineModel):
                 is_permanent_card=bool(_PERMANENT_TYPES.intersection(card_state.types)),
                 permanent_types=permanent_types,
                 card_id=card_state.id,
+                card_types=tuple(card_state.types),
             )
         )
 

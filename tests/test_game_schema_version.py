@@ -1633,6 +1633,32 @@ def test_a_snapshot_written_before_group_evasion_grants_is_refused() -> None:
     with pytest.raises(
         SchemaVersionMismatch,
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_GROUP_EVASION_GRANTS}",
+
+
+#: The version stamped before `GraveyardArrival` gained `card_types`
+#: (Raphael, Fiendish Savior's and Macabre Reconstruction's "a creature card
+#: was put into your graveyard from anywhere this turn", EC7).
+_SCHEMA_VERSION_BEFORE_GRAVEYARD_ARRIVAL_CARD_TYPES = 98
+
+
+def test_a_snapshot_written_before_graveyard_arrival_card_types_is_refused() -> None:
+    """A version-98 dump's own `GraveyardArrival` entries have no
+    `card_types`: decoded as current, each would default to `()`, which
+    reads as "no printed types" - a creature card that already reached a
+    graveyard this turn would silently stop counting for "a creature card
+    was put into your graveyard from anywhere this turn", the same way a
+    version-70 `is_permanent_card`-less dump would misstate CR 700.11's
+    Descend. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_GRAVEYARD_ARRIVAL_CARD_TYPES
+    dumped = _a_played_game().model_dump(mode="json")
+    # Giant Growth itself, resolved off the stack into the graveyard.
+    (arrival,) = dumped["graveyard_arrivals_this_turn"]
+    assert arrival["card_types"] == ["instant"]
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_GRAVEYARD_ARRIVAL_CARD_TYPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_GRAVEYARD_ARRIVAL_CARD_TYPES}",
     ):
         Game.model_validate(dumped)
 

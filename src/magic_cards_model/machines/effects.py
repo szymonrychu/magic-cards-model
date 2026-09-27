@@ -30192,6 +30192,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     )
     if remove_up_to_n_counters_from_target is not None:
         return remove_up_to_n_counters_from_target
+    remove_n_counters_from_self = _parse_remove_n_counters_from_self_clause(effect_text)
+    if remove_n_counters_from_self is not None:
+        return remove_n_counters_from_self
     put_its_counters_on_target = _parse_put_its_counters_on_target_clause(
         effect_text, for_spell=False
     )
@@ -35663,6 +35666,57 @@ _RIDER_REMOVE_ALL_COUNTERS_RE = re.compile(
     rf"^remove all (?:(?P<kind>\+1/\+1|-1/-1|[a-z]+) )?counters from {_OBJECT_ANAPHOR}$",
     re.IGNORECASE,
 )
+
+#: The self-reference a *standalone* clause (not a rider with an antecedent
+#: of its own) names when nothing else established a referent - CR 601.2c's
+#: ordinary anaphor resolution, the ability's own source: `_OBJECT_ANAPHOR`'s
+#: pronouns (Encumbered Reejerey's "remove a -1/-1 counter from **it**") or
+#: CR 700.7's own "this <noun>" (Bristlebane Battler's "... from **this
+#: creature**", Clockwork Steed's own intervening-if subject).
+_SELF_ANAPHOR = (
+    rf"(?:{_OBJECT_ANAPHOR}|this (?:creature|permanent|artifact|enchantment|land|token|card))"
+)
+
+#: "Remove a `<kind>` counter from it/this creature." - Clockwork Steed's own
+#: end-of-combat trigger ("... remove a +1/+0 counter from it"), Encumbered
+#: Reejerey's and Bristlebane Battler's identical -1/-1 shape: CR 122.5's
+#: counter removal, self-referential and for a specific count rather than
+#: `_RIDER_REMOVE_ALL_COUNTERS_RE`'s "all" - the same generalization
+#: `_parse_remove_time_counter_from_self_clause` already gives "remove N
+#: time counters from this card/permanent", widened here from that one
+#: counter kind to any named or P/T-shaped kind (the same
+#: `[+-]\d+/[+-]\d+|[a-z]+` alternation other counter-kind regexes in this
+#: file already read, never pinned to Clockwork Steed's own literal "+1/+0"
+#: or a fixed "+1/+1"/"-1/-1" pair) and from "this card"/"this permanent" to
+#: every self-reference `_SELF_ANAPHOR` reads, since nothing about the
+#: mechanic is specific to time counters or to that literal wording.
+_REMOVE_N_COUNTERS_FROM_SELF_RE = re.compile(
+    rf"^remove {count_pattern('n')} (?P<kind>[+-]\d+/[+-]\d+|[a-z]+) counters? from "
+    rf"{_SELF_ANAPHOR}\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_remove_n_counters_from_self_clause(text: str) -> AbilityEffect | None:
+    """`_REMOVE_N_COUNTERS_FROM_SELF_RE`'s shape; see the banner above."""
+    match = _REMOVE_N_COUNTERS_FROM_SELF_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    count = parse_count(match.group("n"))
+    if count is None:
+        return None
+    kind = _counter_kind(match.group("kind"))
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        present = source.counter_count(kind)
+        if present:
+            source.remove_counters(kind, min(count, present))
+
+    return effect
+
 
 #: "If it would die this turn, exile it instead." - Essence Burn's own
 #: rider (CR 614.1a); Combustion Technique's identical wording is the real,
@@ -42809,11 +42863,20 @@ def _fight(game: "Game", a: CardState, b: CardState) -> None:
     deals damage" - checked by every caller before this is reached, not
     re-checked here, the same division of labour `destroy_ability_targets`
     already draws between "is this still legal" and "do the thing".
+
+    Recorded on `Game.turn_history` (`conditions.history.record_fight`) for
+    every fight through this one function, regardless of which parser called
+    it - Boxing Ring's own "Activate only if you control a creature that
+    fought this turn" (CR 602.5b) reads that ledger generically, for any
+    quality, rather than this fight in particular.
     """
+    from .conditions.history import record_fight
+
     power_a = game.power_of(a) or 0
     power_b = game.power_of(b) or 0
     game.deal_damage(b, power_a, source=a)
     game.deal_damage(a, power_b, source=b)
+    record_fight(game, a, b)
 
 
 # --------------------------------------------------------------------------

@@ -639,14 +639,19 @@ def _is_enchanted(attached: list) -> bool:
 
 
 def _is_in_state(context: "ConditionContext", match: re.Match[str]) -> bool:
-    """ "<subject> is [not] attacking / blocking / tapped / untapped /
-    saddled / suspected / monstrous / renowned / equipped / enchanted /
-    enchanted or equipped", and "it was enchanted or equipped" looking back.
+    """ "<subject> is [not] attacking / blocking / blocked / unblocked /
+    tapped / untapped / saddled / suspected / monstrous / renowned /
+    equipped / enchanted / enchanted or equipped", and "it was enchanted or
+    equipped" looking back.
 
-    CR 506.4 (attacking and blocking), CR 701.26 (tapped), CR 702.171b
-    (saddled), CR 701.60b (suspected), CR 701.37b (monstrous), CR 702.112b
-    (renowned) - each a status or designation of the permanent, false off
-    the battlefield; CR 301.5 and CR 303.4 for equipped and enchanted."""
+    CR 506.4 (attacking and blocking), CR 509.1h ("blocked"/"unblocked" - an
+    attacking creature with a blocker declared for it stays blocked even
+    once every one of them leaves combat; Cinder Crawler's own "Activate
+    only if this creature is blocked", CR 602.5b), CR 701.26 (tapped), CR
+    702.171b (saddled), CR 701.60b (suspected), CR 701.37b (monstrous), CR
+    702.112b (renowned) - each a status or designation of the permanent,
+    false off the battlefield; CR 301.5 and CR 303.4 for equipped and
+    enchanted."""
     subject = _subject(context, match.group("subject"))
     if subject is None:
         return False
@@ -668,6 +673,10 @@ def _is_in_state(context: "ConditionContext", match: re.Match[str]) -> bool:
             answers.append(game.is_attacking(subject))
         elif word == "blocking":
             answers.append(game.is_blocking(subject))
+        elif word == "blocked":
+            answers.append(game.is_blocked(subject))
+        elif word == "unblocked":
+            answers.append(game.is_attacking(subject) and not game.is_blocked(subject))
         elif word == "tapped":
             answers.append(subject.tapped)
         elif word == "untapped":
@@ -869,8 +878,8 @@ def _dealt_combat_damage_to_this_turn(context: "ConditionContext", match: re.Mat
 
 
 _STATE_WORD = (
-    r"(?:attacking|blocking|tapped|untapped|saddled|suspected|monstrous|renowned|equipped"
-    r"|enchanted)"
+    r"(?:attacking|blocking|blocked|unblocked|tapped|untapped|saddled|suspected|monstrous"
+    r"|renowned|equipped|enchanted)"
 )
 
 
