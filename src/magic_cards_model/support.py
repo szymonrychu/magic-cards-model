@@ -64,6 +64,7 @@ from magic_cards_model.machines.casting import (
     keyword_cast_options,
     player_keyword_grant_of_line,
     reads_as_graveyard_cast_permission_line,
+    reads_granted_cast_spell_keyword_line,
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
@@ -2030,6 +2031,11 @@ def _static_ability_category(
         # CR 611.3d / CR 601.3: `casting._grant_on_a_card_in_a_zone` grants
         # the keyword where the card lies and `_rezoned_by_using` opens that
         # zone to it (Ninja Teen's level 3; Iroh, Grand Lotus's flashback).
+        return HANDLED
+    if reads_granted_cast_spell_keyword_line(text):
+        # CR 611.3d: `casting._grant_spell_you_cast_has_keyword` grants the
+        # keyword to every matching spell as it is cast, not to a card
+        # sitting in a zone (Herigast, Erupting Nullkite's emerge grant).
         return HANDLED
     if reads_linked_exile_static_cast_line(printing, text) or reads_printed_self_zone_cast_line(
         text

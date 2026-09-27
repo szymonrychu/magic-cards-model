@@ -1580,6 +1580,11 @@ def _negated_card_type_named(quality: str) -> Type | None:
     if not word.startswith("non"):
         return None
     return _card_type_named(word.removeprefix("non"))
+def _is_spell_quality(quality: str) -> bool:
+    """Whether a protection quality names CR 112.1's "spell" ("A spell is a
+    card on the stack"), singular or plural - never a CR 205.2a card type,
+    so it is checked ahead of `_card_type_named` rather than folded into it."""
+    return quality.strip().lower() in ("spell", "spells")
 
 
 def _activation_condition(instructions: str) -> str | None:
@@ -9808,7 +9813,13 @@ class Game(EngineModel):
         if not isinstance(thing, AbilityOnStack):
             if (
                 source_card is not None
-                and self.protection_refusal(thing, source_card, source_controller=owner) is not None
+                and self.protection_refusal(
+                    thing,
+                    source_card,
+                    source_controller=owner,
+                    is_spell=isinstance(subject, CardState),
+                )
+                is not None
             ):
                 return False
             if self.shroud_refusal(thing) is not None:
@@ -16115,7 +16126,10 @@ class Game(EngineModel):
         if (
             source_card is not None
             and self.protection_refusal(
-                thing, source_card, source_controller=self.controller_of(spell).username
+                thing,
+                source_card,
+                source_controller=self.controller_of(spell).username,
+                is_spell=isinstance(spell, CardState),
             )
             is not None
         ):
@@ -16523,6 +16537,7 @@ class Game(EngineModel):
         source: "Card",
         *,
         source_controller: str | None = None,
+        is_spell: bool = False,
     ) -> str | None:
         """Why protection stops this source touching this target, or None (CR 702.16b).
 
@@ -16540,6 +16555,12 @@ class Game(EngineModel):
         only its damage was prevented on resolution, which is CR 702.16e doing
         CR 702.16b's job.
 
+        `is_spell` is CR 112.1's "spell" quality (Emrakul, the World Anew's
+        own "protection from spells") - true exactly when `source` is the
+        card behind a spell rather than an ability's, which every caller
+        already knows (it is what tells `source` apart from an ability's own
+        source card in the first place) and passes through.
+
         A quality this engine cannot read is not enforced - see
         `docs/engine-coverage.md`.
 
@@ -16555,7 +16576,7 @@ class Game(EngineModel):
         for quality in self._effective_protection_qualities(target):
             if self._player_quality_protects(
                 target, quality, source_controller
-            ) or self.source_has_quality_of_card(source, quality):
+            ) or self.source_has_quality_of_card(source, quality, is_spell=is_spell):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
@@ -16945,15 +16966,25 @@ class Game(EngineModel):
                     qualities.append(chosen.value)
         return qualities
 
-    def source_has_quality_of_card(self, source: "Card", quality: str) -> bool:
+    def source_has_quality_of_card(
+        self, source: "Card", quality: str, *, is_spell: bool = False
+    ) -> bool:
         """`source_has_quality` for a bare `Card` rather than a `CardState`.
 
         The targeting half of CR 702.16b is asked about the *card* behind a
         spell or an ability's source, while the damage half (CR 702.16e) is
-        asked about a `CardState`. Both read the same two flavours of quality,
-        so the reading lives in one place and this is the adapter.
+        asked about a `CardState`. Both read the same three flavours of
+        quality, so the reading lives in one place and this is the adapter.
+
+        `is_spell` is CR 112.1's own "spell" quality: "a card on the stack" -
+        unlike a card type (CR 702.16a's own extension reaching a source in
+        any zone), never true of a bare `Card`, so it has to be told by the
+        caller, which already knows whether the source it read this `Card`
+        off was a spell or an ability (`_source_card_of`).
         """
         wanted = quality.strip().lower()
+        if _is_spell_quality(wanted):
+            return is_spell
         card_type = _card_type_named(wanted)
         if card_type is not None:
             return card_type in source.types
@@ -17026,7 +17057,10 @@ class Game(EngineModel):
         if source is None:
             return None
         return self.protection_refusal(
-            target, source, source_controller=self.controller_of(spell).username
+            target,
+            source,
+            source_controller=self.controller_of(spell).username,
+            is_spell=isinstance(spell, CardState),
         )
 
     def spell_fizzles(self, spell: StackObject) -> bool:
@@ -17443,8 +17477,9 @@ class Game(EngineModel):
         and to any sources not on the battlefield that are of that card type,
         subtype, or supertype. This is an exception to rule 109.2."
 
-        Colours and card types are read; anything else returns False rather than
-        being guessed at, and is listed in `docs/engine-coverage.md`.
+        Colours, card types, and CR 112.1's "spell" are read; anything else
+        returns False rather than being guessed at, and is listed in
+        `docs/engine-coverage.md`.
 
         A permanent's own types and colours are the ones asked about - CR
         613.5's computed board while `source` is still on the battlefield (a
@@ -17459,8 +17494,15 @@ class Game(EngineModel):
         type_filter` already gives "noncreature spells" - checked only once
         the bare card-type name comes back unrecognised, so it never shadows
         a real (if oddly spelled) positive quality.
+        "Spell" is not a card type at all (CR 205.2a never lists it), so that
+        second clause never reaches it: a source only carries this quality
+        while `source.zone` genuinely `is Zone.STACK` right now - never for
+        one sitting in a hand or graveyard the way a card-type quality would
+        still read there.
         """
         wanted = quality.strip().lower()
+        if _is_spell_quality(wanted):
+            return source.zone is Zone.STACK
         types, colors = source.types, source.colors
         if source.zone is Zone.BATTLEFIELD:
             chars = self.characteristics_of(source)

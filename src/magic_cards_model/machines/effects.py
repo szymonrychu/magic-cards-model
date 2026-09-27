@@ -32025,6 +32025,44 @@ def _parse_untap_all_you_control_clause(sentence: str) -> TargetedClause | None:
     return effect
 
 
+#: "Sacrifice all `<qualifier>` you control." - Emrakul, the World Anew's own
+#: leaves-the-battlefield trigger ("sacrifice all creatures you control"),
+#: Death Pit Offering's own enters-the-battlefield trigger, the identical
+#: sentence. `_UNTAP_ALL_YOU_CONTROL_RE`'s own shape, substituting CR
+#: 701.21a's sacrifice for an untap - same "you control" restriction, same
+#: `_parse_mass_type_qualifier` qualifier grammar.
+_SACRIFICE_ALL_YOU_CONTROL_RE = re.compile(
+    r"^sacrifice all (?P<qualifier>.+?) you control\.?$", re.IGNORECASE
+)
+
+
+def _parse_sacrifice_all_you_control_clause(sentence: str) -> TargetedClause | None:
+    """`_SACRIFICE_ALL_YOU_CONTROL_RE`'s shape - CR 701.21a: to sacrifice a
+    permanent is to move it, as its controller, from the battlefield directly
+    to its owner's graveyard - not targeted, so every matching permanent the
+    controller has right now goes simultaneously (CR 608.2f), with no
+    legality recheck to make and no choice to offer: "all" leaves nothing to
+    decide, unlike a counted "sacrifice a creature" cost."""
+    match = _SACRIFICE_ALL_YOU_CONTROL_RE.fullmatch(sentence.strip())
+    if match is None:
+        return None
+    type_matches = _parse_mass_type_qualifier(match.group("qualifier"))
+    if type_matches is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        controller = game.controller_of(stack_object)
+        for permanent in list(game.battlefield):
+            if permanent.zone is not Zone.BATTLEFIELD:
+                continue
+            if game.controller_of(permanent).username != controller.username:
+                continue
+            if type_matches(game.characteristics_of(permanent)):
+                game.sacrifice(permanent)
+
+    return effect
+
+
 #: "Tap all `<qualifier>` `<whose>`." - Suppression Ray's own first sentence
 #: and Dawnglare Invoker's whole activated ability ("tap all creatures target
 #: player controls"), Cryptic Command's third mode and Subjugator Angel's
@@ -60395,6 +60433,9 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     untap_all_you_control = _parse_untap_all_you_control_clause(clause)
     if untap_all_you_control is not None:
         return untap_all_you_control
+    sacrifice_all_you_control = _parse_sacrifice_all_you_control_clause(clause)
+    if sacrifice_all_you_control is not None:
+        return sacrifice_all_you_control
     tap_all_group = _parse_tap_all_group_clause(clause)
     if tap_all_group is not None:
         return tap_all_group

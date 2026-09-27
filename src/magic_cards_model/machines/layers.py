@@ -1089,6 +1089,11 @@ class QualifiedCreatures(SelectorBase):
     other: bool = False
     opponents: bool = False
     without_color: Color | None = None
+    colorless: bool = False
+    """ "colorless creatures" (CR 105.2c: "A colorless object has no color.") -
+    not `without_color`'s negation of one named colour, but a predicate on
+    there being no colour at all, so a creature with two colours is excluded
+    by it exactly as one with one colour is."""
     land: bool = False
     also_artifact: bool = False
     tokens: bool = False
@@ -1125,6 +1130,8 @@ class QualifiedCreatures(SelectorBase):
         if self.other and chars.card_id == self.source_id:
             return False
         if self.without_color is not None and self.without_color in chars.colors:
+            return False
+        if self.colorless and chars.colors:
             return False
         if self.land and not chars.is_land:
             return False
@@ -3506,6 +3513,7 @@ def qualified_creatures(
     other: bool = False,
     opponents: bool = False,
     without_color: Color | None = None,
+    colorless: bool = False,
     land: bool = False,
     also_artifact: bool = False,
     tokens: bool = False,
@@ -3516,10 +3524,10 @@ def qualified_creatures(
     of_chosen_color: bool = False,
     chosen_color: Color | None = None,
 ) -> Selector:
-    """ "[Other] [non<colour>] [[non]legendary] [nontoken] [land|artifact]
-    creature[ token]s [you control|your opponents control] [of the chosen
-    color]" - the anthem subject with the qualifiers the pool actually prints,
-    composed one predicate at a time.
+    """ "[Other] [non<colour>|colorless] [[non]legendary] [nontoken]
+    [land|artifact] creature[ token]s [you control|your opponents control]
+    [of the chosen color]" - the anthem subject with the qualifiers the pool
+    actually prints, composed one predicate at a time.
 
     Each qualifier is a plain question about the *computed* characteristics,
     which is what makes it correct rather than merely convenient:
@@ -3532,6 +3540,11 @@ def qualified_creatures(
       colourless creature is nonblack too, and a creature that *became* black
       in layer 5 (CR 613.1e) is excluded when layer 6 or layer 7 asks - the
       board this selector reads has already had layer 5 applied.
+    - `colorless` is the printed "colorless" (CR 105.2c: "A colorless object
+      has no color."), Kozilek, the Broken Reality's own "Other colorless
+      creatures you control" - a predicate on having *no* colour at all,
+      never the negation of one named colour the way `without_color` is, so
+      it is its own field rather than a `Color` value.
     - `land` is the "land creatures" of Aang, Destined Savior: both card types
       at once (CR 205.2b: "Some objects have more than one card type ... Such
       objects satisfy the criteria for any effect that applies to any of their
@@ -3566,6 +3579,7 @@ def qualified_creatures(
         other=other,
         opponents=opponents,
         without_color=without_color,
+        colorless=colorless,
         land=land,
         also_artifact=also_artifact,
         tokens=tokens,
@@ -5231,8 +5245,11 @@ _KEYWORD_GRANT_RE = re.compile(
 
 #: The qualifier words an anthem's subject may carry, ahead of the noun:
 #: "other" (the source itself excluded), a colour negation ("nonblack",
-#: CR 105.2), and "land" (both card types at once, CR 205.2b). The noun itself
-#: is either "creatures" or CR 111.1's "creature tokens". Every one of them is
+#: CR 105.2) or "colorless" (CR 105.2c: no colour at all, Kozilek, the Broken
+#: Reality's own "Other colorless creatures you control") - mutually
+#: exclusive, so only one of the two ever reads on a single subject - and
+#: "land" (both card types at once, CR 205.2b). The noun itself is either
+#: "creatures" or CR 111.1's "creature tokens". Every one of them is
 #: optional, so the plain "creatures you control" of Glorious Anthem reads
 #: through this fragment exactly as it did before it existed.
 #:
@@ -5243,7 +5260,7 @@ _KEYWORD_GRANT_RE = re.compile(
 #: otherwise need the qualifiers spelled out twice and kept in step by hand.
 _SUBJECT_QUALIFIERS = (
     r"(?P<other>other )?"
-    r"(?:non(?P<noncolor>white|blue|black|red|green) )?"
+    r"(?:(?:non(?P<noncolor>white|blue|black|red|green)|(?P<colorless>colorless)) )?"
     r"(?P<legendary>(?:non)?legendary )?"
     r"(?P<nontoken>nontoken )?"
     r"(?:(?P<land>land )|(?P<artifact>artifact ))?"
@@ -7046,7 +7063,8 @@ _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
 #: "Creatures you control of the chosen color get +1/+1." are excluded from
 #: resolution routing as the static abilities they are.
 _LOOKS_LIKE_ANTHEM_RE = re.compile(
-    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?(?:non(?:white|blue|black|red|green) )?"
+    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?"
+    r"(?:(?:non(?:white|blue|black|red|green)|colorless) )?"
     r"(?:(?:non)?legendary )?(?:nontoken )?(?:land |artifact )?"
     r"(?:creature tokens?|creatures?) (?:you control|your opponents control)"
     r"(?: of the chosen colou?r)? (?:get|gets|have|has)\b",
@@ -7921,6 +7939,7 @@ def _creature_group(
             other=other,
             opponents=opponents,
             without_color=qualifiers.without_color,
+            colorless=qualifiers.colorless,
             land=qualifiers.land,
             also_artifact=qualifiers.also_artifact,
             tokens=qualifiers.tokens,
@@ -8094,6 +8113,8 @@ class CreatureQualifiers(EngineModel):
 
     without_color: Color | None = None
     color_word: str | None = None
+    colorless: bool = False
+    """"colorless creatures" (CR 105.2c) - see `QualifiedCreatures.colorless`."""
     land: bool = False
     also_artifact: bool = False
     tokens: bool = False
@@ -8108,6 +8129,7 @@ class CreatureQualifiers(EngineModel):
     def is_empty(self) -> bool:
         return (
             self.without_color is None
+            and not self.colorless
             and not self.land
             and not self.also_artifact
             and not self.tokens
@@ -8122,6 +8144,8 @@ class CreatureQualifiers(EngineModel):
         prefix = ""
         if self.color_word is not None:
             prefix += f"non{self.color_word} "
+        if self.colorless:
+            prefix += "colorless "
         if self.legendary is not None:
             prefix += "legendary " if self.legendary else "nonlegendary "
         if self.nontoken:
@@ -8148,6 +8172,7 @@ def qualifiers_from_subject(
         update={
             "without_color": _COLOR_WORDS[color_word.lower()] if color_word else None,
             "color_word": color_word.lower() if color_word else None,
+            "colorless": match.group("colorless") is not None,
             "land": match.group("land") is not None,
             "also_artifact": match.group("artifact") is not None,
             "tokens": match.group("noun").lower() in ("creature tokens", "creature token"),

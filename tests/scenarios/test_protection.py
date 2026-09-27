@@ -302,3 +302,96 @@ def test_a_player_can_have_protection_too():
     assert scenario.game.protection_refusal(scenario.player("bob"), card("Shock")) is None, (
         "the chosen name is one name, not every red spell (CR 702.16a)"
     )
+
+
+# -- protection from spells (Emrakul, the World Anew) ----------------------
+#
+# CR 702.16a: the quality "can be any characteristic value or information" -
+# not only a colour or a card type. "Spell" is CR 112.1's own definition ("A
+# spell is a card on the stack"), never one of CR 205.2a's card types, so the
+# card-type extension that lets "protection from instants" reach a source
+# sitting anywhere (`Game.source_has_quality`'s own "any sources not on the
+# battlefield" clause) never applies here: a source only carries this quality
+# while it actually is a spell, on the stack, right now - never while it
+# sits in a hand or graveyard, and never for an ability, whose own source is
+# always a permanent rather than a spell (CR 702.16b's own second half:
+# "abilities from a source with the stated quality").
+
+
+def emrakul_world_anew_on_bobs_board() -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Lightning Bolt"],
+            battlefield=["Icy Manipulator", "Mountain", "Mountain"],
+        )
+        .player("bob", library=["Island"], battlefield=["Emrakul, the World Anew"])
+    )
+
+
+def test_the_spells_quality_is_read_off_the_oracle_text():
+    assert protection_qualities(card("Emrakul, the World Anew")) == [
+        "spells",
+        "permanents that were cast this turn",
+    ]
+
+
+def test_a_spell_that_targets_it_is_not_a_legal_target():
+    scenario = emrakul_world_anew_on_bobs_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "bob")
+
+    with pytest.raises(ValueError, match="protection from spells"):
+        scenario.cast("Lightning Bolt", username="alice", targets=[emrakul])
+
+
+def test_the_resolution_recheck_does_not_block_an_abilitys_target():
+    """Icy Manipulator's `{1}, {T}: Tap target artifact, creature, or land.`
+    comes from a permanent, never a spell - `Game._source_card_of` reads the
+    ability's *source* (Icy Manipulator itself), not any zone the ability
+    sits in, so "protection from spells" never reaches it."""
+    scenario = emrakul_world_anew_on_bobs_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "bob")
+    icy = scenario.find("Icy Manipulator", Zone.BATTLEFIELD, "alice")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+
+    ability = scenario.activate(icy, mountain, targets=[emrakul])
+
+    assert ability is not None
+    assert scenario.game.why_cannot_target(ability, emrakul) is None
+    scenario.resolve_top()
+    assert emrakul.tapped
+
+
+def test_damage_from_a_spell_still_on_the_stack_is_prevented():
+    """CR 702.16e - and, unlike "protection from instants", only while the
+    source genuinely is a spell right now."""
+    scenario = emrakul_world_anew_on_bobs_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    bolt = scenario.cast_onto_stack("Lightning Bolt", mountain, targets=["bob"])
+    assert bolt.zone is Zone.STACK
+
+    scenario.game.deal_damage(emrakul, 3, source=bolt)
+
+    assert emrakul.damage == 0
+
+
+def test_damage_from_the_same_card_once_it_has_resolved_is_not_prevented():
+    """The same card, in the graveyard once it resolves, is no longer a
+    spell and no longer carries the quality - "protection from spells" is
+    not "protection from spell cards."""
+    scenario = emrakul_world_anew_on_bobs_board().build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.creature("Emrakul, the World Anew", "bob")
+    (mountain,) = scenario.untapped_sources("Mountain", username="alice")
+    bolt = scenario.cast_and_resolve("Lightning Bolt", mountain, targets=["bob"])
+    assert bolt.zone is Zone.GRAVEYARD
+
+    scenario.game.deal_damage(emrakul, 3, source=bolt)
+
+    assert emrakul.damage == 3
