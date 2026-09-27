@@ -124,6 +124,7 @@ from magic_cards_model.machines.effects import (
     _parse_recruit_clause,
     _parse_referent_object_clause,
     _parse_where_x_is_continuous_effect,
+    _strip_leading_standalone_cast_trigger,
     activated_effect_for,
     create_continuous_effect,
     create_continuous_effect_of_ability,
@@ -3095,9 +3096,31 @@ def rider_sentences(text: str) -> list[str]:
     before it: it opens "If"/"Otherwise", or says "instead"/"unless" outside
     any quoted ability or reminder text (CR 608.2c's later text modifying
     earlier text). The first sentence is never a rider - there is nothing
-    before it to modify."""
+    before it to modify.
+
+    A sentence inside a leading `TriggerEvent.CAST_SPELL` paragraph
+    `_strip_leading_standalone_cast_trigger` would strip away wholesale is
+    never a candidate either, however it opens - Dash Hopes' and Temporal
+    Extortion's own "When you cast this spell, any player may pay ... . If a
+    player does, counter `<this spell>`." printed ahead of their real
+    resolution line. That "If a player does, ..." sentence is not a rider on
+    the spell's own resolution text at all (CR 601.2i: the whole paragraph
+    is a separate ability, read on its own by `[triggered]`'s clause); it
+    only *looks* like an untested rider to the plain "opens with If" check
+    below, and ablating it can never show a difference - the paragraph it
+    lives in is discarded either way, correctly, not because the engine
+    failed to read it. Only ever a no-op for the ordinary text `effect_for`
+    reads unchanged - that text never opens with a complete `TriggerEvent.
+    CAST_SPELL` sentence of its own - so no existing rider check anywhere
+    else in the pool is narrowed by this.
+    """
+
+    stripped = _strip_leading_standalone_cast_trigger(text)
+    removed_prefix = text[: len(text) - len(stripped)] if stripped != text else ""
     riders = []
     for sentence in _sentences(text)[1:]:
+        if removed_prefix and sentence in removed_prefix:
+            continue
         own = _UNQUOTED_RE.sub("", sentence).strip()
         if _RIDER_OPENING_RE.match(own) or _RIDER_WORD_RE.search(own):
             riders.append(sentence)

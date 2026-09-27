@@ -5327,6 +5327,60 @@ def _strip_trailing_standalone_triggered_ability(text: str) -> str:
     return "\n".join(lines)
 
 
+def _strip_leading_standalone_cast_trigger(text: str) -> str:
+    """A printed paragraph *before* the spell's own resolution text whose own
+    ability is a `TriggerEvent.CAST_SPELL` trigger - Dash Hopes' and Temporal
+    Extortion's own "When you cast this spell, any player may pay ... . If a
+    player does, counter `<this spell>`." printed ahead of their real
+    resolution line ("Counter target spell.").
+
+    CR 601.2i: "Any abilities that trigger when a spell is cast ... trigger at
+    this time" - the moment the spell becomes cast, which has already passed
+    by the time this spell resolves (CR 608). CR 603.3 puts it on the stack as
+    its own object, above the spell. So it is never part of what this spell's
+    own resolution does, the identical "second paragraph, different ability"
+    shape `_strip_trailing_standalone_triggered_ability` already strips for a
+    *trailing* paragraph - mirrored here for a *leading* one, which
+    `split_effect_clauses`'s own `\n+` separator would otherwise cut off as
+    its own clause, unread by any plain player-effect parser, and CR 608.2c's
+    no-half-effect rule would then fail the *whole* spell closed - including
+    the "Counter target spell." sentence the second paragraph alone reads
+    fine.
+
+    Narrowed to `TriggerEvent.CAST_SPELL` specifically, unlike the trailing
+    stripper's broader "any `TriggeredAbility`" shape: a genuinely
+    resolution-time instruction that *creates* a delayed trigger ("At the
+    beginning of the next end step, ...") also parses as a `TriggeredAbility`
+    on its own, and stripping that away would silently drop part of the
+    spell's own effect. A cast trigger cannot be that - CR 601.2i's moment has
+    already passed by the time this spell resolves, so a leading paragraph
+    that parses as one is unambiguously a separate ability, never resolution
+    text of this spell. Only *this spell's own* cast trigger ("When you cast
+    this spell, ...") is stripped: Dual Strike's "When you next cast an
+    instant or sorcery spell ..., copy that spell." also parses as a
+    CAST_SPELL trigger, but it is the resolution text that creates a delayed
+    triggered ability (CR 603.7a), never a separate printed ability.
+    """
+    lines = text.split("\n")
+    while len(lines) >= 2:
+        head = lines[0].strip()
+        if not head:
+            return "\n".join(lines[1:])
+        parsed = _parse_line(head, [], lines[0])
+        if not (
+            parsed
+            and all(
+                isinstance(ability, TriggeredAbility)
+                and ability.event is TriggerEvent.CAST_SPELL
+                and "this spell" in (ability.condition or "").lower()
+                for ability in parsed
+            )
+        ):
+            break
+        lines = lines[1:]
+    return "\n".join(lines)
+
+
 def _strip_trailing_standalone_activated_ability(text: str) -> str:
     """A printed paragraph after the first whose own ability is an activated
     ability that CR 113.6j/113.6m already say functions somewhere other than
@@ -5456,6 +5510,7 @@ def effect_for(
     effect_text = _strip_self_is_all_colors_sentence(card_name, effect_text)
     effect_text = _strip_self_shuffle_clause(card_name, effect_text)
     effect_text = _strip_trailing_flashback_line(effect_text)
+    effect_text = _strip_leading_standalone_cast_trigger(effect_text)
     effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
     effect_text = _strip_trailing_standalone_activated_ability(effect_text)
     effect_text = _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
@@ -9964,6 +10019,88 @@ def _parse_may_put_card_from_hand_clause(text: str, *, for_spell: bool) -> Targe
             for clause in otherwise:
                 clause(game, stack_object)
                 game.announce_batched_events()  # CR 603.2c: one event per instruction
+
+    return effect
+
+
+#: "Target `<opponent|player>` may put a[n] `<description>` card from
+#: `<their|his or her>` hand onto the battlefield[ tapped]." - Wumpus
+#: Aberration's own "target opponent may put a creature card from their hand
+#: onto the battlefield.", the *targeted* twin of `_MAY_PUT_CARD_FROM_HAND_
+#: RE`'s own "you may": there, CR 608.2d's choice is the resolving ability's
+#: controller; here it is CR 601.2c's own chosen target, read the same way
+#: `_TARGET_PLAYER_DISCARDS_RE`/`_TARGET_OPPONENT_SACRIFICE_GREATEST_MV_RE`
+#: already read "target opponent"/"target player" as a player target rather
+#: than an object one.
+_TARGET_PLAYER_MAY_PUT_CARD_FROM_HAND_RE = re.compile(
+    r"^target (?P<who>opponent|player) may put an? (?P<desc>[^.]+?) card"
+    r"(?: with mana value (?P<mv>\d+) or less)?"
+    r" from (?:their|his or her) hand onto the battlefield(?P<tapped> tapped)?\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_target_player_may_put_card_from_hand_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_TARGET_PLAYER_MAY_PUT_CARD_FROM_HAND_RE`'s shape. CR 608.2d: the
+    *target* chooses whether and which, only among cards that qualify - a
+    hand with none has nothing to choose, so the "may" is not asked at all.
+    CR 110.2a: it enters under the target's control, not this ability's
+    controller's.
+    """
+    match = _TARGET_PLAYER_MAY_PUT_CARD_FROM_HAND_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    if not _targets_understood(f"target {match.group('who')}", allow_player_targets=True):
+        return None
+    if not _search_quality_is_readable(match.group("desc")):
+        return None
+    matches = _quality_matcher(match.group("desc"))
+    cap = int(match.group("mv")) if match.group("mv") else None
+    tapped = match.group("tapped") is not None
+    phrase = f"{match.group('desc')} card" + (
+        f" with mana value {cap} or less" if cap is not None else ""
+    )
+
+    def qualifies(card: CardState) -> bool:
+        return matches(card) and (cap is None or card.mana_value <= cap)
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, Player)
+        ]
+        if not targets:
+            return
+        player = targets[0]
+        source = (
+            stack_object.name if isinstance(stack_object, CardState) else stack_object.source_name
+        )
+        source_id = source_id_of(stack_object)
+        candidates = [card for card in player.hand if qualifies(card)]
+        if not candidates or not game.may(
+            player,
+            f"put a {phrase} from your hand onto the battlefield",
+            source=source,
+            source_id=source_id,
+            cards=candidates,
+        ):
+            return
+        chosen_ids = game.ask(
+            Decision(
+                kind=DecisionKind.CHOOSE_CARDS,
+                player=player.username,
+                prompt=f"choose a {phrase} to put onto the battlefield",
+                source=source,
+                source_id=source_id,
+                amount=1,
+                cards=tuple(card.id for card in candidates),
+                default_cards=(candidates[0].id,),
+            )
+        )
+        assert isinstance(chosen_ids, tuple)
+        chosen = next(card for card in candidates if card.id == chosen_ids[0])
+        game.put_onto_battlefield(chosen, player.username, tapped=tapped)
 
     return effect
 
@@ -18126,6 +18263,23 @@ _COUNTER_UNLESS_PAYS_PHRASE_RE = re.compile(
     r"^counter (?P<phrase>target .+?) unless its controller pays \{(?P<n>\d+)\}\.?$",
     re.IGNORECASE,
 )
+#: "Counter target spell an opponent controls unless they pay {1}." -
+#: Hope-Ender Coatl's own cast trigger (CR 603.2, 601.2i): the ability-
+#: context twin of `_COUNTER_UNLESS_PAYS_PHRASE_RE`'s spell-context "unless
+#: its controller pays". CR 607.1's antecedent for "they" is the identical
+#: player either way - the *targeted* spell's controller, the same one
+#: `_counter_unless_pays_effect` already asks (its own docstring: "the
+#: targeted spell's controller ... not this counterspell's caster") - only
+#: the printed pronoun differs, answering back to "an opponent controls"
+#: rather than repeating "its controller". Nothing before this needed a
+#: *triggered* ability to ask an "unless" question of a targeted spell's
+#: controller (`_COUNTER_UNLESS_PAYS_PHRASE_RE` is `for_spell`-gated, a
+#: resolving spell's own row), so this is read for both `for_spell` values
+#: rather than narrowing either existing shape.
+_COUNTER_UNLESS_THEY_PAY_PHRASE_RE = re.compile(
+    r"^counter (?P<phrase>target .+?) unless they pay \{(?P<n>\d+)\}\.?$",
+    re.IGNORECASE,
+)
 #: "Counter target triggered ability or colorless spell." (Consign to
 #: Memory) and the like - a compound target rather than a single qualified
 #: noun, so `_COUNTER_TARGET_SPELL_RE` does not reach it. `counter_targets`
@@ -21360,6 +21514,11 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
         and _targets_understood(phrase_match.group("phrase"))
     ):
         return _counter_unless_pays_effect(int(phrase_match.group("n")))
+
+    if (
+        they_pay_match := _COUNTER_UNLESS_THEY_PAY_PHRASE_RE.fullmatch(clause)
+    ) and _targets_understood(they_pay_match.group("phrase"), battlefield_only=False):
+        return _counter_unless_pays_effect(int(they_pay_match.group("n")))
 
     counter_if_mana_value = _parse_counter_if_mana_value_clause(clause, for_spell=for_spell)
     if counter_if_mana_value is not None:
@@ -29926,6 +30085,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     create_named_token = _parse_create_named_permanent_token_clause(effect_text)
     if create_named_token is not None:
         return create_named_token
+    any_player_may_punisher = _parse_any_player_may_punisher_clause(effect_text)
+    if any_player_may_punisher is not None:
+        return any_player_may_punisher
     from .infusion import infusion_ability_effect
 
     infused = infusion_ability_effect(effect_text)
@@ -33126,6 +33288,180 @@ def _players_in_apnap_order(game: "Game") -> list[Player]:
     order = {username: index for index, username in enumerate(turn.players)}
     start = order.get(turn.players[turn.active_index % len(turn.players)], 0)
     return sorted(players, key=lambda p: (order.get(p.username, len(order)) - start) % len(order))
+
+
+#: "Any player may `<action>`. If a player does, counter this permanent."
+#: (CR 603.2, 601.2i, 113.6k - a `TriggerEvent.CAST_SPELL` trigger, printed
+#: before `_self_normalized_effect_text` rewrites "Dash Hopes"/"Temporal
+#: Extortion"/"Brain Gorgers"/"Phantasmagorian" to CR 700.7's own "this
+#: permanent") - the punisher template: Dash Hopes' "pay 5 life", Temporal
+#: Extortion's "pay half their life, rounded up", Brain Gorgers' "sacrifice a
+#: creature of their choice", Phantasmagorian's "discard three cards".
+#:
+#: The Oracle rulings for these cards (all four print the identical two
+#: rulings, verified against Scryfall's own rulings text this session) say
+#: the offer is CR 101.4's APNAP order - the active player first, then each
+#: other player in turn order - and, unlike a plain "unless" cost
+#: (`_counter_unless_pays_effect`), **every remaining player still gets the
+#: option even after an earlier one has already paid**: "As soon as any
+#: player performs the action, the spell is countered, but the remaining
+#: players still get the option. If all players decline, the spell remains
+#: on the stack." So this asks every player in turn, never stopping early,
+#: and counters (CR 701.6a) the moment the first one pays - a later "yes"
+#: still pays its own cost (CR 608.2d: a real, asked choice), it just finds
+#: nothing left on the stack to counter (Hope-Ender Coatl's own ruling: the
+#: trigger "will still resolve as normal" even once its spell is already
+#: gone).
+_ANY_PLAYER_MAY_PUNISHER_RE = re.compile(
+    r"^any player may (?P<action>.+?)\.\s*if a player does,\s*"
+    r"counter (?:this permanent|this spell)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+#: "pay `<n>` life" - Dash Hopes.
+_PUNISHER_PAY_LIFE_RE = re.compile(r"^pay (?P<n>\d+) life$", re.IGNORECASE)
+#: "pay half `<their|his|her|your>` life, rounded `<up|down>`" - Temporal
+#: Extortion. CR 107.1a: the card states the rounding direction itself, and
+#: `halve` (`machines/numbers.py`) is the identical reader `_parse_half_life_
+#: loss_clause` already uses for "loses half their life, rounded up" - the
+#: same fraction, read for a payment offer rather than an unconditional loss.
+#: Always payable (CR 119.4b: "players can always pay 0 life", and half of
+#: any life total rounded up is never more than that total), so unlike a flat
+#: `_PUNISHER_PAY_LIFE_RE` amount this one never has a player who "cannot
+#: perform the action".
+_PUNISHER_PAY_HALF_LIFE_RE = re.compile(
+    r"^pay half (?:their|his|her|your) life,\s*rounded (?P<direction>up|down)$", re.IGNORECASE
+)
+#: "sacrifice a[n] `<description>` of `<their|his|her|your>` choice" - Brain
+#: Gorgers' own "a creature of their choice" (CR 701.21a's own chooser
+#: language), read the same `permanent_description` any other sacrifice-of-
+#: choice clause in this file already does.
+_PUNISHER_SACRIFICE_RE = re.compile(
+    r"^sacrifice an? (?P<description>[a-z][a-z' ]*?) of (?:their|his|her|your) choice$",
+    re.IGNORECASE,
+)
+#: "discard `<n>` cards" - Phantasmagorian.
+_PUNISHER_DISCARD_RE = re.compile(rf"^discard (?P<n>{COUNT}) cards?$", re.IGNORECASE)
+
+
+def _parse_punisher_action(
+    action_text: str,
+) -> Callable[["Game", Player, str, str | None], bool] | None:
+    """One player's own half of `_ANY_PLAYER_MAY_PUNISHER_RE`'s "any player
+    may `<action>`" - a function of `(game, player, source, source_id)` that
+    asks *this* player CR 608.2d's choice and returns whether they actually
+    performed it, or `None` when `action_text` is not a shape this reads.
+
+    Every verb reuses the identical reader this file already has for the
+    same action elsewhere - `Game.may_pay_life` (CR 119.4, CR 608.2d;
+    `halve` for the half-life shape), `_sacrifice_of_choice_clause_effect`
+    (CR 701.21a), `_discard_cards` (CR 701.9a/701.9b) - rather than a new
+    per-verb reader: only the *outer* MAY/ability-to-choose-at-all wrapper
+    and the reversed consequence (paying causes the counter here, rather
+    than avoiding one) are new.
+
+    CR 608.2d offers no impossible choice: sacrifice and discard are never
+    even asked of a player who cannot perform them (no matching permanent;
+    fewer cards in hand than the printed count - the 2013-07-01 Oracle
+    ruling's own example, verified against Scryfall's rulings text this
+    session, is exactly this discard case). `may_pay_life` already refuses
+    the affirmative itself when the payer's life total is too low, so the
+    fixed-amount life shape needs no separate ability check here.
+    """
+    text = action_text.strip()
+
+    if match := _PUNISHER_PAY_LIFE_RE.fullmatch(text):
+        amount = int(match.group("n"))
+
+        def pay_fixed_life(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> bool:
+            return game.may_pay_life(player, amount, source=source, source_id=source_id)
+
+        return pay_fixed_life
+
+    if match := _PUNISHER_PAY_HALF_LIFE_RE.fullmatch(text):
+        round_up = match.group("direction").lower() == "up"
+
+        def pay_half_life(game: "Game", player: Player, source: str, source_id: str | None) -> bool:
+            amount = halve(player.life, round_up=round_up)
+            return game.may_pay_life(player, amount, source=source, source_id=source_id)
+
+        return pay_half_life
+
+    if match := _PUNISHER_SACRIFICE_RE.fullmatch(text):
+        description = match.group("description").strip()
+        requirement = permanent_description(description)
+        if requirement is None:
+            return None
+        wanted_words = with_indefinite_article(description)
+        sacrifice_of_choice = _sacrifice_of_choice_clause_effect(description, 1, wanted_words)
+
+        def sacrifice_choice(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> bool:
+            candidates = [
+                permanent
+                for permanent in game.permanents_controlled_by(player.username)
+                if requirement.rejects(permanent, player.username, game) is None
+            ]
+            if not candidates:
+                return False
+            if not game.may(
+                player,
+                f"sacrifice {wanted_words} rather than let {source} resolve",
+                source=source,
+                source_id=source_id,
+            ):
+                return False
+            sacrifice_of_choice(game, player, source, source_id)
+            return True
+
+        return sacrifice_choice
+
+    if match := _PUNISHER_DISCARD_RE.fullmatch(text):
+        count = parse_count(match.group("n"))
+        if count is None or count < 1:
+            return None
+
+        def discard_choice(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> bool:
+            if len(player.hand) < count:
+                return False
+            if not game.may(
+                player,
+                f"discard {count} card(s) rather than let {source} resolve",
+                source=source,
+                source_id=source_id,
+            ):
+                return False
+            _discard_cards(game, player, count, source, source_id=source_id, exact=True)
+            return True
+
+        return discard_choice
+
+    return None
+
+
+def _parse_any_player_may_punisher_clause(text: str) -> AbilityEffect | None:
+    """`_ANY_PLAYER_MAY_PUNISHER_RE`'s shape, or `None`."""
+    match = _ANY_PLAYER_MAY_PUNISHER_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    offer = _parse_punisher_action(match.group("action").strip())
+    if offer is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        for player in _players_in_apnap_order(game):
+            performed = offer(game, player, ability.source_name, source_id_of(ability))
+            if not performed:
+                continue
+            spell = next((item for item in game.stack if item.id == ability.source_id), None)
+            if spell is not None:
+                game.counter(spell)
+
+    return effect
 
 
 def _discard_at_random(game: "Game", player: Player, count: int, source: str) -> None:
@@ -59878,6 +60214,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     each_opponent_discards = _parse_each_opponent_discards_clause(clause, for_spell=for_spell)
     if each_opponent_discards is not None:
         return each_opponent_discards
+    target_player_may_put_from_hand = _parse_target_player_may_put_card_from_hand_clause(
+        clause, for_spell=for_spell
+    )
+    if target_player_may_put_from_hand is not None:
+        return target_player_may_put_from_hand
     # `_parse_owner_puts_it_into_library_clause`'s single-clause shape is
     # already tried above through `_parse_targeted_clause`, this function's
     # very first check - a second call here could never be reached.
