@@ -2709,24 +2709,40 @@ def ring_emblem_text(tempted: int) -> str:
 #: player" is that target, not whoever the trigger event named.
 _TARGET_PLAYER_BEFORE_THAT_PLAYER_RE = re.compile(r"\btarget (?:player|opponent)\b", re.IGNORECASE)
 
+#: The phrases that bind "that player" to the trigger event's own player
+#: (`GameEvent.player`) rather than leaving `ControllerRestriction.EVENT_
+#: PLAYER`/its zone-clause twin unbound - "that player controls" for a
+#: permanent (CR 508.5-style "that player"), and "that player's graveyard"
+#: (or another zone) for a card, Shark Shredder, Killer Clone's own combat-
+#: damage trigger: "put up to one target creature card from that player's
+#: graveyard onto the battlefield under your control." Both are searched for
+#: in printed order and the earliest one found is what "target player"/
+#: "target opponent" is checked against below - a card could in principle
+#: print either first.
+_THAT_PLAYER_BINDING_RE = re.compile(
+    r"that player controls|that player'?s (?:graveyards?|hands?|libraries?|library|exile)",
+    re.IGNORECASE,
+)
+
 
 def _that_player_of(ability: "AbilityOnStack") -> str | None:
-    """Who a triggered ability's "... that player controls" names: the player
-    its trigger event names (`GameEvent.player` - the player dealt the damage
-    for "deals combat damage to a player"), bound into the targeting
-    restriction by `TargetingProfile.for_event_player`.
+    """Who a triggered ability's "... that player controls"/"... that
+    player's `<zone>`" names: the player its trigger event names
+    (`GameEvent.player` - the player dealt the damage for "deals combat
+    damage to a player"), bound into the targeting restriction by
+    `TargetingProfile.for_event_player`.
 
     `None` - the restriction left unbound, exactly as it read before - when
-    there is no event or it names nobody, when the text has no "that player
-    controls" at all, and when a "target player"/"target opponent" comes
-    first, since "that player" is then that target rather than the event's.
+    there is no event or it names nobody, when the text has neither phrase at
+    all, and when a "target player"/"target opponent" comes first, since
+    "that player" is then that target rather than the event's.
     """
     event = ability.event
     if event is None or event.player is None:
         return None
     text = ability.ability.text or ""
-    at = text.lower().find("that player controls")
-    if at < 0 or _TARGET_PLAYER_BEFORE_THAT_PLAYER_RE.search(text[:at]):
+    match = _THAT_PLAYER_BINDING_RE.search(text)
+    if match is None or _TARGET_PLAYER_BEFORE_THAT_PLAYER_RE.search(text[: match.start()]):
         return None
     return event.player
 

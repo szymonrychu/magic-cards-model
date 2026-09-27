@@ -1,7 +1,9 @@
 """Scenario: "put any number of `<type>` cards from your hand onto the
 battlefield" - Ghalta, Stampede Tyrant's enters trigger and Last March of the
 Ents' second instruction, read by `_parse_put_permanent_card_from_hand_clause`
-(which already read "a" and "up to N"; "any number of" is the widening).
+(which already read "a" and "up to N"; "any number of" is the widening) - and
+two independent "and/or" permanent-card groups from hand, each its own
+CR 608.2d question (Michelangelo, Improviser).
 
 Every CR number below was looked up with `mise run rules:find` in the
 session that wrote this file:
@@ -17,12 +19,30 @@ session that wrote this file:
   trigger.
 - **CR 608.2d** - a card that is not a creature card is never a legal choice,
   and a hand with nothing to choose is never asked.
+- **CR 608.2c** - "and/or" (Michelangelo, Improviser) is read as plain
+  English: do the first thing, the second, both, or neither. Two independent
+  questions, not one joint choice - unlike `_PUT_PERMANENT_CARD_FROM_HAND_RE`'s
+  single "a permanent card" group (Kona, Rescue Beastie) or Ghalta's own "any
+  number of creature cards", which each offer many cards out of *one* group
+  at once.
+- **CR 110.4a** - a creature card and a land card are each their own
+  CR 205.2a card type; a card satisfying the first group is taken out of
+  hand before the second group is asked, so nothing can be offered to both.
+- **CR 601.2a/601.2i** - nothing here is cast: no cost is paid, no spell
+  exists, and a "when you cast" trigger on either arriving card never fires.
 
 Last March of the Ents is the off-pool proof (Modern-legal, not in any
 `magic-cards-model-api` deck): a sorcery rather than an enters trigger, the
 put printed after a ", then" behind a draw whose count is "the greatest
 toughness among creatures you control" (`_parse_draw_cards_equal_to_count_
 clause`, read here for the first time).
+
+Michelangelo, Improviser's own "and/or" reader has no second legal printing
+carrying its exact "... from your hand onto the battlefield" tail (dated
+MEMORY.md line: every other "creature card and/or a land card" hit found
+reveals four and offers the pair from among them, a different shape).
+Generality for that reader is instead covered across every combination of
+what the hand holds.
 """
 
 from magic_cards_model.machines import Step
@@ -214,3 +234,76 @@ def test_ghalta_s_creatures_enter_simultaneously_and_see_each_other():
     scenario.pass_until_resolved()
 
     assert scenario.player("alice").life == 22
+
+
+# -- Michelangelo, Improviser: "you may put a creature card and/or a land
+# -- card from your hand onto the battlefield" ------------------------------
+
+_MICHELANGELO_TRIGGER = "Michelangelo, Improviser's triggered ability"
+
+
+def _michelangelo_board(*hand: str) -> Scenario:
+    return (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Michelangelo, Improviser"],
+            hand=list(hand),
+            library=["Forest"] * 5,
+        )
+        .player("bob", library=["Island"] * 5)
+    )
+
+
+def _michelangelo_attacks_and_deals_combat_damage(scenario: PlayedScenario) -> None:
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    michelangelo = scenario.creature("Michelangelo, Improviser", "alice")
+    scenario.attack_with(michelangelo, defending="bob")
+    scenario.advance()
+    scenario.no_blocks()
+    scenario.combat_damage()
+
+
+def test_both_groups_arrive_when_the_hand_offers_both():
+    scenario = _michelangelo_board("Grizzly Bears", "Forest", "Lightning Bolt").build()
+    _michelangelo_attacks_and_deals_combat_damage(scenario)
+    assert scenario.stack_names() == [_MICHELANGELO_TRIGGER]
+    scenario.pass_until_resolved()
+
+    assert scenario.creature("Grizzly Bears", "alice").zone is Zone.BATTLEFIELD
+    assert scenario.find("Forest", Zone.BATTLEFIELD, "alice").zone is Zone.BATTLEFIELD
+    assert [state.name for state in scenario.player("alice").hand] == ["Lightning Bolt"]
+
+
+def test_only_the_group_the_hand_actually_offers_is_asked():
+    scenario = _michelangelo_board("Forest", "Lightning Bolt").build()
+    _michelangelo_attacks_and_deals_combat_damage(scenario)
+    scenario.pass_until_resolved()
+
+    assert scenario.find("Forest", Zone.BATTLEFIELD, "alice").zone is Zone.BATTLEFIELD
+    hand_names = [state.name for state in scenario.player("alice").hand]
+    assert hand_names == ["Lightning Bolt"]
+    # The land group asked twice (the "may" and then which card) - never
+    # three times, which is what a spurious creature-group question would add.
+    sources = [q.source for q in scenario.questions_asked()]
+    assert sources.count("Michelangelo, Improviser") == 2
+
+
+def test_declining_both_leaves_the_hand_untouched():
+    scenario = _michelangelo_board("Grizzly Bears", "Forest").build()
+    scenario.will_take_the_may(False, username="alice", times=None)
+    _michelangelo_attacks_and_deals_combat_damage(scenario)
+    scenario.pass_until_resolved()
+
+    hand_names = {state.name for state in scenario.player("alice").hand}
+    assert hand_names == {"Grizzly Bears", "Forest"}
+
+
+def test_a_hand_with_neither_group_is_never_asked_anything():
+    scenario = _michelangelo_board("Lightning Bolt", "Opt").build()
+    _michelangelo_attacks_and_deals_combat_damage(scenario)
+    scenario.pass_until_resolved()
+
+    hand_names = {state.name for state in scenario.player("alice").hand}
+    assert hand_names == {"Lightning Bolt", "Opt"}
+    assert "Michelangelo, Improviser" not in [q.source for q in scenario.questions_asked()]

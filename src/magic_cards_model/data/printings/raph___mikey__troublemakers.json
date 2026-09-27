@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "8795fba4-0ff3-4c04-a81c-60408608a00c",
+  "oracle_id": "82563a5f-cae4-4ece-876c-0df245d2dc58",
+  "multiverse_ids": [],
+  "resource_id": "F906DE60E29ED03759E769C493591AE8473FE7C221FDEDFA8D363DE369142F9A",
+  "mtgo_id": 147957,
+  "arena_id": 100624,
+  "tcgplayer_id": 673671,
+  "cardmarket_id": 868407,
+  "name": "Raph & Mikey, Troublemakers",
+  "lang": "en",
+  "released_at": "2026-03-06",
+  "uri": "https://api.scryfall.com/cards/8795fba4-0ff3-4c04-a81c-60408608a00c",
+  "scryfall_uri": "https://scryfall.com/card/tmt/167/raph-&-mikey-troublemakers?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T00:54:29Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.jpg?1783904069",
+    "normal": "https://cards.scryfall.io/normal/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.jpg?1783904069",
+    "large": "https://cards.scryfall.io/large/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.jpg?1783904069",
+    "png": "https://cards.scryfall.io/png/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.png?1783904069",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.jpg?1783904069",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.jpg?1783904069",
+    "thumb": "https://cards.scryfall.io/thumb/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.webp?1783904069",
+    "grid": "https://cards.scryfall.io/grid/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.webp?1783904069",
+    "display": "https://cards.scryfall.io/display/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.webp?1783904069",
+    "art": "https://cards.scryfall.io/art/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.webp?1783904069",
+    "crop": "https://cards.scryfall.io/crop/front/8/7/8795fba4-0ff3-4c04-a81c-60408608a00c.webp?1783904069"
+  },
+  "mana_cost": "{5}{R/G}{R/G}",
+  "cmc": 7.0,
+  "type_line": "Legendary Creature \u2014 Mutant Ninja Turtle",
+  "oracle_text": "Trample, haste\nWhenever Raph & Mikey attack, reveal cards from the top of your library until you reveal a creature card. Put that card onto the battlefield tapped and attacking and the rest on the bottom of your library in a random order.",
+  "power": "7",
+  "toughness": "7",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [
+    "Haste",
+    "Trample"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set": "tmt",
+  "set_name": "Teenage Mutant Ninja Turtles",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/03990f52-1d8a-4ce8-828a-c9bf633f0de6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atmt&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tmt?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/8795fba4-0ff3-4c04-a81c-60408608a00c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A82563a5f-cae4-4ece-876c-0df245d2dc58&unique=prints",
+  "collector_number": "167",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Aaron J. Riley",
+  "artist_ids": [
+    "f21b412c-aef5-4d15-88be-4f40615acde3"
+  ],
+  "illustration_id": "70425eec-352b-4098-830f-9a4828daccd4",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 6501,
+  "prices": {
+    "usd": "3.69",
+    "usd_foil": "3.19",
+    "usd_etched": null,
+    "eur": "1.59",
+    "eur_foil": "2.74",
+    "tix": "0.42"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BMikey%252C%2BTroublemakers",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DRaph%2B%2526%2BMikey%252C%2BTroublemakers",
+    "edhrec": "https://edhrec.com/route/?cc=Raph+%26+Mikey%2C+Troublemakers"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F673671%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=868407&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/147957?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
