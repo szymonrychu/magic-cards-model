@@ -1360,6 +1360,40 @@ class AttackingTokensControlledBy(SelectorBase):
         )
 
 
+class AttackingGroupControlledBy(SelectorBase):
+    """ "Attacking creatures you control" (Raphael, the Nightwatcher's double
+    strike) / "Attacking `<subtype>`s you control" (Dark Leo & Shredder's
+    deathtouch, `machines/attacking_statics.py`) - `AttackingTokensControlledBy`
+    just above, minus its CR 111.1 token requirement, with an optional CR
+    205.3m subtype filter in its place. No token/subtype-list combination is
+    printed in the pool, so - unlike that sibling's own `creatures_only` -
+    this selector is never both at once; a future card needing both would add
+    a `creatures_only` field here the identical way.
+
+    CR 508.1k's attacking status is not a characteristic and never reaches
+    the board, so - exactly as `AttackingTokensControlledBy`'s own docstring
+    already explains - the attacking ids are read off `LayerContext.
+    attacking` when the effect is built, and the builder is rebuilt on every
+    computation (CR 613.5): a creature stops being selected the moment it is
+    removed from combat.
+    """
+
+    kind: Literal["attacking_group_controlled_by"] = "attacking_group_controlled_by"
+    username: str | None = None
+    attacking_ids: tuple[UUID, ...] = ()
+    subtypes: tuple[str, ...] = ()
+
+    def __call__(self, chars: Characteristics, board: Board) -> bool:
+        if not (chars.is_creature and chars.controller == self.username):
+            return False
+        if chars.card_id not in self.attacking_ids:
+            return False
+        if not self.subtypes:
+            return True
+        wanted = {subtype.lower() for subtype in self.subtypes}
+        return any(subtype.lower() in wanted for subtype in chars.subtypes)
+
+
 class WithChangeling(SelectorBase):
     """Every object that has changeling as layer 4 finds it (CR 702.73a).
 
@@ -1409,6 +1443,7 @@ Selector = Annotated[
     | CreaturesControlledByWithColor
     | PermanentsControlledByWithCounters
     | AttackingTokensControlledBy
+    | AttackingGroupControlledBy
     | WithChangeling,
     Field(discriminator="kind"),
 ]
@@ -11096,6 +11131,16 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _attacking_tokens_keyword_grant_builder(
             attacking_keywords, creatures_only=match.group("creature") is not None, line=sentence
         )
+    # `machines/attacking_statics.py`: "Attacking creatures you control have
+    # `<keywords>`."/"Attacking `<subtype>`s you control have `<keywords>`." -
+    # imported here, lazily, rather than at module scope, because that module
+    # imports `AttackingGroupControlledBy`/`grant_ability`/etc. *from* this
+    # one; importing it back at this module's own top level would be a cycle.
+    from .attacking_statics import parse_attacking_group_keyword_grant
+
+    attacking_group = parse_attacking_group_keyword_grant(sentence)
+    if attacking_group is not None:
+        return attacking_group
     if (gated := split_as_long_as(sentence)) is not None:
         return _parse_designation_gated_sentence(sentence, *gated)
     if _BOARD_COUNT_GATE_RE.fullmatch(sentence):

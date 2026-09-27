@@ -3438,6 +3438,24 @@ _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION = re.compile(
     r"^(?P<who>you put|an opponent puts) one or more loyalty counters on a planeswalker$"
 )
 
+#: Party Dude's own level-3 ability: "Whenever one or more of your opponents
+#: are attacked, ..." - "attacked" (no "s", past participle) never matches
+#: `machines/abilities._trigger_event`'s own `\battacks?\b` word-boundary
+#: read (the "k" and the "ed" that follows share no boundary), so this
+#: reaches `condition_matches` with `ability.event` still `None` - the same
+#: `_unread_trigger_events`/`_unread_condition_matches` fallback pair every
+#: other condition in this section goes through, watching the identical
+#: `TriggerEvent.ATTACKS` event "you attack" above already fires once per
+#: declaration (CR 603.2c), never once per attacker. CR 506.4: a planeswalker
+#: or a battle can itself "be attacked", so "your opponents are attacked" is
+#: read the same defending-player normalisation `_attacks_you_holds` already
+#: gives "attacks you or a planeswalker you control" - an opponent is
+#: attacked whether the declared defender is that opponent directly or a
+#: planeswalker/battle they control.
+_OPPONENTS_ARE_ATTACKED_CONDITION = re.compile(
+    r"^one or more of your opponents (?:are|is) attacked$"
+)
+
 #: The Great Goblin's own "Whenever you put one or more counters on a
 #: Goblin, Orc, or Army you control, ..." - `_LOYALTY_COUNTERS_PUT_ON_
 #: PLANESWALKER_CONDITION`'s own active-voice shape widened from one fixed
@@ -3454,6 +3472,27 @@ _COUNTERS_PUT_ON_DESCRIPTION_CONDITION = re.compile(
     r"^you put one or more counters on an? "
     r"(?P<subtypes>[A-Z][A-Za-z]*(?:,\s*[A-Z][A-Za-z]*)*(?:,?\s+or\s+[A-Z][A-Za-z]*)?)"
     r" you control$"
+)
+
+#: "Whenever you put a counter on a creature you control, ..." (Mikey & Leo,
+#: Chaos & Order) / "Whenever you put a +1/+1 counter on a creature, ..."
+#: (Ant-Man, Colony Commander, verified Modern/Pioneer/Standard legal) - CR
+#: 122.6's active voice, singular ("a counter", not "one or more"), on any
+#: object matching a plain quality (`models.game._permanent_quality`) rather
+#: than `_COUNTERS_PUT_ON_DESCRIPTION_CONDITION`'s own capitalised subtype
+#: list just above. "you control" is optional: Ant-Man's own bare "a
+#: creature" names any creature at all, not only the controller's own, so it
+#: is read the same loose "you put" convention `_LOYALTY_COUNTERS_PUT_ON_
+#: PLANESWALKER_CONDITION` above already uses for the identical active-voice
+#: shape - "you put" is read off *whose* permanent the counter landed on
+#: (`event.subject_controller`) when the clause names one, never off a
+#: separate "who actually moved it" record this engine does not keep for a
+#: plain counter placement. The kind group's negative lookahead keeps it from
+#: swallowing the literal word "counter(s)" itself when the printed text
+#: carries no kind at all ("a counter", not "a +1/+1 counter").
+_YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION = re.compile(
+    r"^you put an? (?:(?!counters?\b)(?P<kind>[a-z0-9+/-]+) )?counters? on "
+    r"(?P<article>another|an?) (?P<quality>[a-z][a-z -]*?)(?P<yours> you control)?$"
 )
 
 #: Hardened Academic's "one or more cards leave your graveyard" and Murktide
@@ -3842,6 +3881,10 @@ def _unread_trigger_events(condition: str) -> frozenset[TriggerEvent | ExtraTrig
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
     if _COUNTERS_PUT_ON_DESCRIPTION_CONDITION.match(condition.strip()):
         return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION.match(lowered):
+        return frozenset({ExtraTriggerEvent.COUNTERS_PUT})
+    if _OPPONENTS_ARE_ATTACKED_CONDITION.match(lowered):
+        return frozenset({TriggerEvent.ATTACKS})
     if _PLAYER_COUNTERS_PUT_CONDITION.match(lowered):
         return frozenset({ExtraTriggerEvent.PLAYER_COUNTERS_PUT})
     if _LEAVES_GRAVEYARD_CONDITION.match(lowered):
@@ -4006,6 +4049,57 @@ def _unread_condition_matches(
         if game.controller_of(permanent).username != controller:
             return False
         return quality(game.characteristics_of(permanent))
+
+    match = _YOU_PUT_A_COUNTER_ON_QUALITY_CONDITION.match(condition)
+    if match is not None:
+        if event.event is not ExtraTriggerEvent.COUNTERS_PUT:
+            return False
+        kind = match.group("kind")
+        if kind is not None and event.counter_kind != kind:
+            return False
+        from ..models.game import _permanent_quality
+
+        quality = _permanent_quality(match.group("quality"))
+        if quality is None:
+            return False
+        permanent = game.find_by_id(event.subject_id) if event.subject_id else None
+        if not isinstance(permanent, CardState) or permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if match.group("article") == "another" and permanent.id == source.id:
+            return False
+        # "you control": the same loose "you put" convention `_LOYALTY_
+        # COUNTERS_PUT_ON_PLANESWALKER_CONDITION` below reads - whose
+        # permanent the counter landed on, since this engine keeps no
+        # separate "who actually moved it" record for a plain counter
+        # placement. Absent (Ant-Man's own bare "a creature"), any creature
+        # at all qualifies, its controller's own included.
+        if (
+            match.group("yours") is not None
+            and game.controller_of(permanent).username != controller
+        ):
+            return False
+        return quality(game.characteristics_of(permanent))
+
+    if _OPPONENTS_ARE_ATTACKED_CONDITION.match(condition):
+        # CR 603.2c: the same subject-less, once-per-declaration event "you
+        # attack" fires - only `controller`'s own declaration counts, and
+        # whether it happened at all is `event.subject_id is None`.
+        if event.event is not TriggerEvent.ATTACKS or event.subject_id is not None:
+            return False
+        if event.player != controller:
+            return False
+        from .combat import defending_player
+
+        opponents = {player.username for player in game.players if player.username != controller}
+        for attack in game.combat.attacks:
+            attacker = game.find_by_id(attack.attacker_id)
+            if not isinstance(attacker, CardState):
+                continue
+            if game.controller_of(attacker).username != controller:
+                continue
+            if defending_player(game, attack.defender) in opponents:
+                return True
+        return False
 
     match = _LOYALTY_COUNTERS_PUT_ON_PLANESWALKER_CONDITION.match(condition)
     if match is not None:

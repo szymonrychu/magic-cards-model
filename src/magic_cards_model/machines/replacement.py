@@ -4981,7 +4981,42 @@ def _read_enters_condition(condition: str) -> EntersCondition | None:
     if condition.strip().lower() == "a creature died this turn":
         return _a_creature_died_this_turn
 
+    if condition.strip().lower() in _revolt_clauses():
+        return _revolt_active
+
     return None
+
+
+def _revolt_clauses() -> frozenset[str]:
+    """CR 207.2c's Revolt/Disappear condition text, both printed phrasings -
+    imported lazily from `machines/triggers.py` (which has no reverse import
+    of this module, so this would be safe at module scope too, but every
+    other cross-`machines/` reuse in this file is already lazy this way)
+    rather than duplicated as a second literal pair here."""
+    from .triggers import _REVOLT_CLAUSES
+
+    return _REVOLT_CLAUSES
+
+
+def _revolt_active(game: "Game", entering: CardState) -> bool:
+    """Putrid Pals' own Disappear (CR 207.2c, the ability word already
+    stripped): "This creature enters with two +1/+1 counters on it if a
+    permanent left the battlefield under your control this turn." Read off
+    the identical `Game.revolt_active_for` running count Renegade Rallier's
+    and Fatal Push's own *triggered*-ability intervening-if already reads for
+    the same fact (`machines/triggers.py`'s own `_REVOLT_CLAUSES` branch) -
+    the fact is shared, the reading site is not, the same division
+    `_a_creature_died_this_turn` just above already states for its own
+    Morbid counterpart.
+
+    `entering`'s own controller: CR 614.12's replacement is judged as the
+    permanent enters, whose eventual controller `Game.enter_the_battlefield`
+    has already fixed by the time this runs (`entering.controller`), the
+    identical read `_controls_a_card_type`/`_controls_a_subtype` above give
+    every other "you control ..." enters-with condition in this module.
+    """
+    controller = entering.controller
+    return controller is not None and game.revolt_active_for(controller)
 
 
 #: "As [this] enters, choose a color/card name/creature type." (CR 614.1c).

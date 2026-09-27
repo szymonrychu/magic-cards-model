@@ -2082,8 +2082,23 @@ def parse_granted_ability_lines(texts: Sequence[str]) -> list[Ability]:
 #: sentence instead - "choose one. If there are four or more card types among
 #: cards in your graveyard, choose both instead." (Prophetic Titan) - which is
 #: still the header of the bullets under it.
+#:
+#: TMT's own Alliance (CR 207.2c) cards - Lita, Little Orphan Amphibian's
+#: "Alliance — Whenever another creature you control enters, choose one that
+#: hasn't been chosen this turn." - print the CR 700.2d exclusivity tail
+#: ("that hasn't [already] been chosen[ this turn]") with a plain period
+#: instead of the trailing em dash every other modal header in the pool ends
+#: in, so the dash/"instead" alternation above never matched it and every
+#: bullet under it parsed as its own orphaned static line (exactly the
+#: Elder Gargaroth defect this function's own docstring describes) - a whole
+#: mechanic misread as three unconditioned static abilities. Added as a third
+#: alternative, purely additive: every line the two alternatives above
+#: already matched still does, since this only ever widens which lines merge,
+#: never which stay apart.
 _MODAL_INSTRUCTION_TAIL = re.compile(
-    r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.)\s*$", re.IGNORECASE
+    r"choose\b.*(?:[-—]|\bchoose [^.]+ instead\.|\bthat hasn'?t (?:already )?"
+    r"been chosen(?: this turn)?\.)\s*$",
+    re.IGNORECASE,
 )
 
 
@@ -3781,8 +3796,15 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
     # condition_matches`'s own DEALS_DAMAGE branch reads the same words
     # ("is dealt" vs "deals") to pick `GameEvent.target_id`/`player` over
     # `subject_id`.
+    #
+    # "deals?" (not the bare "deals" this pattern used to require) is the
+    # plural verb a team-up "`<A>` & `<B>`" legendary's own self-reference
+    # prints with (Dark Leo & Shredder's "Whenever Dark Leo & Shredder deal
+    # combat damage to a player") - the name reads as a grammatical plural
+    # even though it is one game object (CR 201.5). Purely additive: every
+    # condition the old, singular-only pattern already matched still does.
     if re.search(
-        r"\bdeals (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
+        r"\bdeals? (?:combat )?damage\b|\b(?:is|are) dealt (?:combat |noncombat )?damage\b", lowered
     ):
         return TriggerEvent.DEALS_DAMAGE
     # CR 701.37a: "When [this creature] becomes monstrous" (Polukranos, World
