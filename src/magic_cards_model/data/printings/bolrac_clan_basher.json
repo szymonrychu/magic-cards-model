@@ -1,0 +1,161 @@
+{
+  "object": "card",
+  "id": "b87683f7-8a61-4e4a-8b8b-3bf812454096",
+  "oracle_id": "c23617c9-53f9-4063-8241-b504e9b80cbe",
+  "multiverse_ids": [
+    646670
+  ],
+  "mtgo_id": 121702,
+  "arena_id": 89027,
+  "tcgplayer_id": 534082,
+  "cardmarket_id": 751953,
+  "name": "Bolrac-Clan Basher",
+  "lang": "en",
+  "released_at": "2024-02-09",
+  "uri": "https://api.scryfall.com/cards/b87683f7-8a61-4e4a-8b8b-3bf812454096",
+  "scryfall_uri": "https://scryfall.com/card/mkm/112/bolrac-clan-basher?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:21:27Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.jpg?1783912887",
+    "normal": "https://cards.scryfall.io/normal/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.jpg?1783912887",
+    "large": "https://cards.scryfall.io/large/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.jpg?1783912887",
+    "png": "https://cards.scryfall.io/png/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.png?1783912887",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.jpg?1783912887",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.jpg?1783912887",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.webp?1783912887",
+    "grid": "https://cards.scryfall.io/grid/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.webp?1783912887",
+    "display": "https://cards.scryfall.io/display/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.webp?1783912887",
+    "art": "https://cards.scryfall.io/art/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.webp?1783912887",
+    "crop": "https://cards.scryfall.io/crop/front/b/8/b87683f7-8a61-4e4a-8b8b-3bf812454096.webp?1783912887"
+  },
+  "mana_cost": "{4}{R}{R}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Cyclops Warrior",
+  "oracle_text": "Double strike, trample\nDisguise {3}{R}{R} (You may cast this card face down for {3} as a 2/2 creature with ward {2}. Turn it face up any time for its disguise cost.)",
+  "power": "3",
+  "toughness": "2",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [
+    "Trample",
+    "Disguise",
+    "Double strike"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "241b3b6d-a25f-4a43-b5d6-1d1079e7e498",
+      "component": "combo_piece",
+      "name": "A Mysterious Creature",
+      "type_line": "Creature",
+      "uri": "https://api.scryfall.com/cards/241b3b6d-a25f-4a43-b5d6-1d1079e7e498"
+    },
+    {
+      "object": "related_card",
+      "id": "b87683f7-8a61-4e4a-8b8b-3bf812454096",
+      "component": "combo_piece",
+      "name": "Bolrac-Clan Basher",
+      "type_line": "Creature \u2014 Cyclops Warrior",
+      "uri": "https://api.scryfall.com/cards/b87683f7-8a61-4e4a-8b8b-3bf812454096"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set": "mkm",
+  "set_name": "Murders at Karlov Manor",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/2b17794b-15c3-4796-ad6f-0887a0eceeca",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amkm&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mkm?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b87683f7-8a61-4e4a-8b8b-3bf812454096/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac23617c9-53f9-4063-8241-b504e9b80cbe&unique=prints",
+  "collector_number": "112",
+  "digital": false,
+  "rarity": "uncommon",
+  "flavor_text": "Determining the culprit was not difficult. Getting him to stop committing the crime long enough to be arrested, however, was a massive challenge.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Warren Mahy",
+  "artist_ids": [
+    "002c739e-aa1f-4c1d-921b-37cb2d1b1c5b"
+  ],
+  "illustration_id": "5f8d2d14-c0d7-45c1-bc13-9010ededf83b",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 22841,
+  "preview": {
+    "source": "General Games",
+    "source_uri": "https://www.facebook.com/100085064374846/posts/345744194937724/",
+    "previewed_at": "2024-01-19"
+  },
+  "prices": {
+    "usd": "0.06",
+    "usd_foil": "0.16",
+    "usd_etched": null,
+    "eur": "0.03",
+    "eur_foil": "0.18",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=646670&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DBolrac-Clan%2BBasher",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DBolrac-Clan%2BBasher",
+    "edhrec": "https://edhrec.com/route/?cc=Bolrac-Clan+Basher"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F534082%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=751953&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/121702?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

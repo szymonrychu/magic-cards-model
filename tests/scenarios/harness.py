@@ -18,6 +18,7 @@ card data, since the point of these tests is that they run against real cards.
 
 from collections.abc import Sequence
 from typing import Any
+from uuid import UUID
 
 from magic_cards_model.machines import Casting, CostPayment, PriorityOutcome, Step, TurnMachine
 from magic_cards_model.machines.abilities import granted_mana_abilities, parse_mana_abilities
@@ -721,6 +722,32 @@ class PlayedScenario:
         """
         self._queue(DecisionKind.MAY, taken, username, source, times)
 
+    def will_dredge(
+        self,
+        card: CardState | str | None,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next dredge offer (CR 702.52a): replace the draw by
+        dredging `card`, or decline with `None` to draw normally.
+
+        `card` is a graveyard `CardState`, or its name - resolved off the
+        dredger's own graveyard, the way `will_choose_mode` resolves a mode by
+        its printed text rather than an id nobody outside the engine has yet.
+        """
+        value: tuple[UUID, ...]
+        if card is None:
+            value = ()
+        elif isinstance(card, str):
+            owner = self.player(username)
+            (state,) = [c for c in owner.cards_in(Zone.GRAVEYARD) if c.name == card]
+            value = (state.id,)
+        else:
+            value = (card.id,)
+        self._queue(DecisionKind.DREDGE, value, username, source, times)
+
     def will_pay_the_life(
         self,
         paid: bool = True,
@@ -1422,16 +1449,25 @@ class PlayedScenario:
         return self.game.bring_companion_to_hand(player)
 
     def turn_face_up(
-        self, permanent: CardState, *mana_sources: CardState, username: str | None = None
+        self,
+        permanent: CardState,
+        *mana_sources: CardState,
+        username: str | None = None,
+        procedure: str | None = None,
     ) -> CardState:
         """CR 702.37e: pay the morph cost and turn a face-down permanent
-        face up, paying with `mana_sources`."""
+        face up, paying with `mana_sources`.
+
+        `procedure` ("morph" or "manifest") picks CR 701.40c-d's alternative
+        for a permanent that is manifested *and* has morph or disguise;
+        `None` keeps the engine's own default preference.
+        """
         controller = username or self.game.controller_of(permanent).username
-        payment = self.game.begin_turning_face_up(permanent, controller)
+        payment = self.game.begin_turning_face_up(permanent, controller, procedure=procedure)
         for mana_source in mana_sources:
             payment.tap_for_mana(mana_source, mana_from(mana_source))
         payment.pay()
-        turned = self.game.turn_face_up(permanent, controller)
+        turned = self.game.turn_face_up(permanent, controller, procedure=procedure)
         self.game.retain_priority(controller)
         return turned
 

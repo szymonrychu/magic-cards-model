@@ -29,6 +29,8 @@ Every CR number here was read in full with `mise run rules:find` from the
   player, not any card's effect.
 - **CR 704.5j** - the legend rule is a state-based action: "that player
   chooses one of them".
+- **CR 702.52a** - dredge is asked as an individual draw is about to happen,
+  naming every eligible graveyard card at once rather than any one of them.
 
 `CHOOSE_A_MODE` is asked by exactly one path in this engine - a modal
 *triggered* ability's "choose one" (Elder Gargaroth). A modal *spell* chooses
@@ -480,6 +482,19 @@ def _combat_damage_assignment() -> list[Decision]:
     return _asked(scenario.questions_asked(), DecisionKind.ASSIGN_COMBAT_DAMAGE)
 
 
+def _dredge() -> list[Decision]:
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", library=["Forest"] * 6, graveyard=["Dakmor Salvage"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.draw(1, "alice")
+    return _asked(scenario.questions_asked(), DecisionKind.DREDGE)
+
+
 SOURCELESS: dict[DecisionKind, tuple[str, Callable[[], list[Decision]]]] = {
     DecisionKind.ASSIGN_COMBAT_DAMAGE: (
         "CR 703.4k: assigning combat damage is a turn-based action, not any object's",
@@ -501,6 +516,11 @@ SOURCELESS: dict[DecisionKind, tuple[str, Callable[[], list[Decision]]]] = {
         "CR 603.3b: one question about several abilities, each with its own "
         "source, so no single object is the asker",
         _trigger_order,
+    ),
+    DecisionKind.DREDGE: (
+        "CR 702.52a: the draw process asks about every eligible graveyard card "
+        "at once, not any one of them",
+        _dredge,
     ),
 }
 
