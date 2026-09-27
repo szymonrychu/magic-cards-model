@@ -19,7 +19,7 @@ session that wrote this file:
 """
 
 from magic_cards_model.machines import Step
-from magic_cards_model.models import Zone
+from magic_cards_model.models import CardState, Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -60,32 +60,57 @@ def test_maelstrom_pulse_destroys_every_same_named_permanent():
     assert angel.zone is Zone.BATTLEFIELD, "a different name is never part of the group"
 
 
-def test_maelstrom_pulse_leaves_a_nameless_face_down_permanent_alone():
+def _cast_face_down(scenario, name: str, *mana_sources: CardState) -> CardState:
+    """Cast `name` face down for {3} and resolve it (CR 702.37c), the same
+    minimal helper `test_morph.py` uses."""
+    casting = scenario.cast(name)
+    casting.use_keyword("Morph")
+    assert str(casting.total_cost.mana) == "{3}"
+    payment = casting.begin_paying()
+    scenario.pay_with(payment, *mana_sources)
+    scenario.put_on_stack(casting)
+    return scenario.resolve_top()
+
+
+def test_maelstrom_pulse_leaves_a_second_nameless_face_down_permanent_alone():
     """CR 201.2a: "An object with no name doesn't have the same name as any
-    other object, including another object with no name" - a face-down
-    permanent (Ashcloud Phoenix's own morph, unrelated to the targeted
-    Grizzly Bears' printed name) sits on the battlefield throughout and is
-    never touched."""
+    other object, including another object with no name." Two face-down
+    morph creatures (Brine Elemental, Aquamorph Entity) sit on the
+    battlefield, each a nameless 2/2 (`CardState.face_down_characteristics`
+    - see `test_morph.py`); Maelstrom Pulse targets one of them. Its own
+    empty `name` skips `_same_name_battlefield_group`'s board scan
+    entirely, so the group is the target alone - the second face-down
+    permanent, whose name is equally empty, is never swept alongside it."""
     scenario = (
         Scenario()
         .player(
             "alice",
-            hand=["Maelstrom Pulse"],
-            battlefield=["Swamp", "Forest", "Forest"],
+            hand=["Maelstrom Pulse", "Brine Elemental", "Aquamorph Entity"],
+            battlefield=["Swamp", "Forest", "Forest"] + ["Island"] * 6,
         )
-        .player("bob", battlefield=["Grizzly Bears"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    bears = scenario.creature("Grizzly Bears", "bob")
+
+    brine = _cast_face_down(
+        scenario, "Brine Elemental", *scenario.untapped_sources(*["Island"] * 3)
+    )
+    aquamorph = _cast_face_down(
+        scenario, "Aquamorph Entity", *scenario.untapped_sources(*["Island"] * 3)
+    )
+    assert brine.face_down and brine.name == ""
+    assert aquamorph.face_down and aquamorph.name == ""
 
     scenario.cast_and_resolve(
         "Maelstrom Pulse",
         *scenario.untapped_sources("Swamp", "Forest", "Forest"),
-        targets=[bears],
+        targets=[brine],
     )
 
-    assert bears.zone is Zone.GRAVEYARD
+    assert brine.zone is Zone.GRAVEYARD
+    assert aquamorph.zone is Zone.BATTLEFIELD, (
+        "a nameless permanent never shares a name with another nameless one - CR 201.2a"
+    )
 
 
 def test_echoing_truth_returns_every_same_named_permanent_to_hand():
