@@ -7925,10 +7925,17 @@ class Game(EngineModel):
         cast as a spell" (CR 305.9), so an effect that offers a cast from among
         several cards (Portent of Calamity) never offers the land."""
         options: list[str | None] = []
+        # CR 712.11c: a card about to be cast transformed (its back face up
+        # off the battlefield, `_back_face_up_if_cast_transformed`) is
+        # evaluated as that face.
+        back_face = (
+            card.card.back_face if card.transformed and card.zone is not Zone.BATTLEFIELD else None
+        )
         for option in castable_faces(card.card):
-            if Type.LAND in types_being_cast(card.card, option):
+            evaluated = back_face.name if back_face is not None and option is None else option
+            if Type.LAND in types_being_cast(card.card, evaluated):
                 continue
-            if why_cannot_cast_restriction(card, caster, self, face=option) is not None:
+            if why_cannot_cast_restriction(card, caster, self, face=evaluated) is not None:
                 continue
             if mana_value_below is not None and (
                 self._resulting_mana_value(card, option) >= mana_value_below
@@ -8010,6 +8017,20 @@ class Game(EngineModel):
             if cost is None or not self._cost_objects_available(cost, caster, taken):
                 return False
         return True
+
+    @contextmanager
+    def _back_face_up_if_cast_transformed(
+        self, card: CardState, transformed: bool
+    ) -> Iterator[None]:
+        """CR 712.11c: "Only the face that will be face up on the stack is
+        evaluated to determine if it can be cast" - for a cast "transformed"
+        (CR 712.11a), the back face. Turned back afterwards."""
+        was = card.transformed
+        card.transformed = was or (transformed and card.card.back_face is not None)
+        try:
+            yield
+        finally:
+            card.transformed = was
 
     @contextmanager
     def _face_up_while_announced(self, card: CardState) -> Iterator[None]:
@@ -8157,11 +8178,14 @@ class Game(EngineModel):
         Returns the spell or land, or `None` when nothing was cast or played.
         """
         is_land = play and card.card.is_land
-        legal = (
-            self._can_play_land_during_resolution(caster)
-            if is_land
-            else self.can_cast_during_resolution(card, caster, mana_value_below=mana_value_below)
-        )
+        with self._back_face_up_if_cast_transformed(card, transformed):
+            legal = (
+                self._can_play_land_during_resolution(caster)
+                if is_land
+                else self.can_cast_during_resolution(
+                    card, caster, mana_value_below=mana_value_below
+                )
+            )
         answer = self.ask(
             Decision(
                 kind=DecisionKind.MAY,
@@ -8298,11 +8322,17 @@ class Game(EngineModel):
         self._refuse_if_over()
         was_face_up = card.face_up
         card.face_up = True  # CR 406.3a
+        # CR 712.11a/712.11c: a card cast transformed is evaluated, and goes
+        # to the stack, back face up.
+        transformed = transformed and card.card.back_face is not None
+        card.transformed = card.transformed or transformed
         options = self.spell_options_castable_during_resolution(
             card, caster, mana_value_below=mana_value_below
         )
         if not options:
             card.face_up = was_face_up
+            if card.zone is not Zone.BATTLEFIELD:
+                card.transformed = False
             return None
         permission = self.grant_play_permission(
             card,
@@ -8342,10 +8372,14 @@ class Game(EngineModel):
                 )
                 face = options[labels.index(str(answer))]
             with self._id_allocator_scope():
-                casting = Casting(spell=card, caster=caster, origin_zone=card.zone, game=self)
+                casting = Casting(
+                    spell=card,
+                    caster=caster,
+                    origin_zone=card.zone,
+                    game=self,
+                    transformed=transformed,
+                )
                 casting.use_permission()
-                if transformed:
-                    casting.cast_transformed()
                 if alternative_cost is not None:
                     casting.use_triggered_alternative_cost(keyword or "", alternative_cost)
                     x_value = self._announce_alternative_cost_x(card, caster, alternative_cost)
@@ -8383,6 +8417,8 @@ class Game(EngineModel):
                 casting.cancel()
             if card.zone is Zone.EXILE:
                 card.face_up = was_face_up
+            if card.zone is not Zone.BATTLEFIELD:
+                card.transformed = False
             return None
         finally:
             self.play_permissions = [
@@ -11511,7 +11547,7 @@ class Game(EngineModel):
                 subject_id=permanent.id,
                 subject_name=permanent.name,
                 subject_card=permanent.card,
-                player=permanent.controller or permanent.owner,
+                player=self.controller_of(permanent).username,
                 counter_kind=kind,
             )
         )

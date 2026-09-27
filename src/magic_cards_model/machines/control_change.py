@@ -218,9 +218,13 @@ _GAIN_CONTROL_INDEFINITELY_RE = re.compile(
 )
 
 #: A duration or condition inside the target phrase belongs to another
-#: reader, and a spell (Commandeer, CR 115.1) is not a permanent to control.
+#: reader, a spell (Commandeer, CR 115.1) is not a permanent to control, and
+#: a rider ("and untap it", "and each Aura attached to it", ", then ...") or
+#: an opponent's choice (not a target, CR 115.1) is more than this shape says.
 _NOT_INDEFINITE_RE = re.compile(
-    r"\b(?:until|for as long as|during|if|this turn|spells?)\b", re.IGNORECASE
+    r"\b(?:until|for as long as|during|if|this turn|spells?|and|then|choice|attached)\b"
+    r"|,",
+    re.IGNORECASE,
 )
 
 

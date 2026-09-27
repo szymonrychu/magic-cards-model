@@ -4328,8 +4328,11 @@ class Casting(EngineModel):
             raise ValueError(refusal)
         options = castable_faces(self.spell.card) if self.face is None else (self.face,)
         refusals: dict[str, str] = {}
+        # CR 712.11c: a card cast transformed is evaluated as its back face.
+        back_face = self.spell.card.back_face if self.transformed else None
         for option in options:
-            timing = why_cannot_cast_now(self.spell, self.caster, self.game, face=option)
+            evaluated = back_face.name if back_face is not None and option is None else option
+            timing = why_cannot_cast_now(self.spell, self.caster, self.game, face=evaluated)
             if timing is not None:
                 window_refusal = self._timing_window_refusal()
                 if window_refusal is None:
@@ -4341,7 +4344,7 @@ class Casting(EngineModel):
                     timing = f"{timing}; and {window_refusal}"
             reason = (
                 timing
-                or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=option)
+                or why_cannot_cast_restriction(self.spell, self.caster, self.game, face=evaluated)
                 or why_cannot_cast_self_restriction(self.spell, self.caster, self.game)
             )
             if reason is not None:

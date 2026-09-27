@@ -299,3 +299,165 @@ def test_a_copy_of_a_siege_has_the_defeat_trigger_and_is_exiled_when_defeated():
 
     assert copy.zone is Zone.EXILE
     assert scenario.stack_names() == []
+
+
+def test_a_copy_of_a_copy_of_a_siege_enters_with_the_original_defense():
+    """CR 310.4 makes defense a characteristic, and CR 707.2's copiable
+    values are "as modified by other copy effects": Clever Impersonator
+    copying a Clever Impersonator that copies Invasion of Ergamon enters as
+    Invasion of Ergamon, with its 5 defense."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Clever Impersonator", "Clever Impersonator"])
+        .player("bob", battlefield=[ERGAMON])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = scenario.find(ERGAMON, Zone.BATTLEFIELD, "bob")
+    scenario.will_choose_cards(siege, username="alice", source="Clever Impersonator")
+    first = scenario.put_onto_battlefield("Clever Impersonator", "alice")
+    scenario.will_take_the_may(False, username="alice")  # the copied loot
+    scenario.pass_until_resolved()
+    scenario.will_choose_cards(first, username="alice", source="Clever Impersonator")
+
+    second = scenario.put_onto_battlefield("Clever Impersonator", "alice")
+
+    assert scenario.game.characteristics_of(second).name == ERGAMON
+    assert second.counter_count("defense") == 5
+
+
+def test_only_the_back_face_is_evaluated_for_the_transformed_cast():
+    """CR 712.11c: "Only the face that will be face up on the stack is
+    evaluated to determine if it can be cast." Soulless Jailer stops
+    noncreature spells being cast from exile - the Siege face is a battle,
+    but Awakened Skyclave is a creature, so the cast is allowed."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=[ZENDIKAR], battlefield=["Grizzly Bears", "Grizzly Bears"])
+        .player("bob", battlefield=["Soulless Jailer"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = _enter_siege(scenario, ZENDIKAR, "alice")
+
+    _attack_own_siege(scenario, siege, "Grizzly Bears", "Grizzly Bears")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.pass_until_resolved()
+
+    assert scenario.stack_names() == ["Awakened Skyclave"]
+    (question,) = [
+        decision
+        for decision in scenario.questions_asked()
+        if decision.kind is DecisionKind.MAY and "transformed" in decision.prompt
+    ]
+    assert question.affirmative_is_legal
+
+
+def test_removing_the_counters_any_other_way_also_defeats_a_siege():
+    """CR 310.12b triggers on the last defense counter being removed, not on
+    damage: Vampire Hexmage's "Remove all counters from target permanent"."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=[ZENDIKAR], battlefield=["Vampire Hexmage"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = _enter_siege(scenario, ZENDIKAR, "alice")
+    hexmage = scenario.creature("Vampire Hexmage", "alice")
+
+    scenario.activate(hexmage, sacrificing=[hexmage], targets=[siege])
+    scenario.pass_until_resolved()  # the Hexmage ability
+    scenario.will_take_the_may(True, username="alice")
+    scenario.pass_until_resolved()  # the defeat trigger
+
+    assert scenario.stack_names() == ["Awakened Skyclave"]
+
+
+def test_infect_damage_to_a_battle_removes_defense_counters_only():
+    """CR 120.3h is the battle result whatever the source: Glistener Elf's
+    infect (CR 702.90) puts no -1/-1 counters on a battle."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=[ZENDIKAR], battlefield=["Glistener Elf"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = _enter_siege(scenario, ZENDIKAR, "alice")
+
+    _attack_own_siege(scenario, siege, "Glistener Elf")
+
+    assert siege.counter_count("defense") == 2
+    assert siege.counter_count("-1/-1") == 0
+
+
+def test_a_siege_whose_defeat_trigger_is_countered_goes_to_the_graveyard():
+    """CR 704.5v spares a defense-0 Siege only while its trigger has not
+    left the stack: Consign to Memory counters it, and the Siege is put into
+    its owner's graveyard."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=[ZENDIKAR, "Consign to Memory"],
+            battlefield=["Grizzly Bears", "Grizzly Bears", "Island"],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = _enter_siege(scenario, ZENDIKAR, "alice")
+    _attack_own_siege(scenario, siege, "Grizzly Bears", "Grizzly Bears")
+    scenario.game.put_triggers_on_stack()
+    (trigger,) = [item for item in scenario.game.stack if item.source_id == siege.id]
+
+    scenario.cast_onto_stack(
+        "Consign to Memory",
+        *scenario.untapped_sources("Island", username="alice"),
+        username="alice",
+        targets=[trigger],
+    )
+    scenario.pass_until_resolved()
+
+    assert siege.zone is Zone.GRAVEYARD
+    assert scenario.stack_names() == []
+
+
+def test_the_transformed_spell_has_the_front_faces_mana_value():
+    """CR 712.8c: back face up on the stack, but its mana value is still
+    calculated from the front face's mana cost."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=[ZENDIKAR], battlefield=["Grizzly Bears", "Grizzly Bears"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    siege = _enter_siege(scenario, ZENDIKAR, "alice")
+    front_mana_value = siege.mana_value
+    _attack_own_siege(scenario, siege, "Grizzly Bears", "Grizzly Bears")
+    scenario.will_take_the_may(True, username="alice")
+    scenario.pass_until_resolved()
+
+    assert scenario.stack_names() == ["Awakened Skyclave"]
+    assert siege.mana_value == front_mana_value == 4
+    assert Type.CREATURE in scenario.game.characteristics_of(siege).types or Type.CREATURE in (
+        siege.types
+    )
+
+
+def test_a_bare_its_a_type_sentence_is_not_read_as_a_self_type_grant():
+    """Only "As long as this ... is on the battlefield, it's a ..." is the
+    static self grant; the bare sentence is resolution text about another
+    object (Infernal Vessel's returned creature)."""
+    from magic_cards_model.machines.layers import _self_type_grant
+
+    assert _self_type_grant("It's a Demon in addition to its other types.") is None
+    assert (
+        _self_type_grant(
+            "As long as this creature is on the battlefield, it's a land in addition to "
+            "its other types."
+        )
+        is not None
+    )

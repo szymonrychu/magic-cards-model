@@ -14,7 +14,10 @@ its owner controls.
   self-reference and a narrower target.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.machines.control_change import _parse_gain_control_indefinitely_clause
 from magic_cards_model.models import Zone
 
 from .harness import Scenario
@@ -94,3 +97,22 @@ def test_keiga_dying_steals_a_creature():
     assert _controller(scenario, bears) == "alice"
     _next_turn(scenario)
     assert _controller(scenario, bears) == "alice"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "gain control of target creature and untap it.",
+        "gain control of target creature an opponent controls and untap it.",
+        "you gain control of target creature and it gains haste.",
+        "gain control of target creature and each Aura attached to it.",
+        "Gain control of target creature of an opponent's choice they control.",
+        "gain control of target creature until end of turn.",
+        "gain control of target spell.",
+    ],
+)
+def test_a_rider_duration_or_non_target_is_not_read_as_untimed_control(text):
+    """A sentence that says more than "gain control of target X." is left to
+    its own reader (or fails closed) rather than being read as this shape
+    with the rest dropped."""
+    assert _parse_gain_control_indefinitely_clause(text) is None

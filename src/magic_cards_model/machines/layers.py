@@ -288,6 +288,12 @@ class Characteristics(EngineModel):
     abilities: tuple[str, ...] = ()
     power: int | None = None
     toughness: int | None = None
+    #: CR 310.4: "Defense is a characteristic that battles have." The printed
+    #: number (CR 310.4a) - a copiable value (CR 707.2), which is what a
+    #: permanent entering as a copy of a battle enters with in defense
+    #: counters (CR 310.4b). On the battlefield a battle's defense is its
+    #: counters (CR 310.4c), read off the permanent, not this.
+    defense: int | None = None
     #: Counters on the permanent. Not a characteristic - it is state the layer
     #: system reads (CR 613.4c) - but it has to travel with the object.
     counters: dict[str, int] = Field(default_factory=dict)
@@ -1966,9 +1972,11 @@ class BecomeACopy(ModificationBase):
     abilities: tuple[str, ...] = ()
     power: int | None = None
     toughness: int | None = None
+    defense: int | None = None
 
     def __call__(self, chars: Characteristics, board: Board) -> Characteristics:
         return chars.with_(
+            defense=self.defense,
             name=self.name,
             mana_value=self.mana_value,
             supertypes=self.supertypes,
@@ -2451,6 +2459,7 @@ def printed_characteristics(
         + _keyword_counter_lines(on_the_permanent),
         power=power,
         toughness=toughness,
+        defense=state.printed_defense,
         counters=on_the_permanent,
         is_token=state.token,
         zone_change_stamp=state.zone_change_stamp,
@@ -4746,6 +4755,7 @@ def _become_a_copy_builder(
             + tuple(ability for ability in added_abilities if ability not in copied.abilities),
             power=power_override if power_override is not None else copied.power,
             toughness=toughness_override if toughness_override is not None else copied.toughness,
+            defense=copied.defense,
         )
 
         return [
@@ -6214,13 +6224,14 @@ _BOARD_WIDE_TYPE_GRANT_RE = re.compile(
 )
 
 #: "As long as this creature is on the battlefield, it's a land in addition
-#: to its other types." (Awakened Skyclave) and the same self type grant
-#: printed without the battlefield clause. A static ability functions only
+#: to its other types." (Awakened Skyclave). The battlefield clause is
+#: required: a bare "It's a `<type>` ..." is resolution text about another
+#: object (Infernal Vessel, Portal to Phyrexia). A static ability functions only
 #: on the battlefield (CR 113.6), so "as long as this ... is on the
 #: battlefield" states no further condition. Layer 4 (CR 613.1d), additive by
 #: CR 205.1b. Every word must be a CR 205.2a card type or a CR 205.3 subtype.
 _SELF_TYPE_GRANT_RE = re.compile(
-    r"^(?:as long as this [a-z]+ is on the battlefield, )?"
+    r"^as long as this [a-z]+ is on the battlefield, "
     r"(?:it's|it is|this [a-z]+ is) (?:also )?an? (?P<words>[a-z][a-z -]*?) "
     r"in addition to its other types\.?$",
     re.IGNORECASE,

@@ -495,6 +495,7 @@ def _become_a_copy(
                 abilities=tuple(abilities),
                 power=power,
                 toughness=toughness,
+                defense=copied.defense,
             ),
         ),
         game,
