@@ -104,6 +104,7 @@ from ..numbers import COUNT, parse_count, where_x_pattern
 from ..snapshot import EngineModel
 from .abilities import (
     ActivatedAbility,
+    _split_top_level_sentences,
     keywords_in_lines,
     layer_readable_sentences,
     parse_abilities,
@@ -9704,17 +9705,75 @@ _GAINED_LIFE_GATED_GROUP_STATIC_RE = re.compile(
     re.IGNORECASE,
 )
 
-#: The same group pump gated, condition-leading, on the controller's life
-#: total against their own starting life total (CR 103.4) - Path of
-#: Bravery's "As long as your life total is greater than or equal to your
-#: starting life total, creatures you control get +1/+1." CR 604.2/611.3a:
-#: re-read on every computation, off `LayerContext.life_of`/`starting_life_of`.
+#: The starting-life comparison itself (CR 103.4), as a fragment shared by
+#: every sentence shape below rather than a second copy of the grammar per
+#: shape - three printed templates, one comparison:
+#:
+#: - "your life total is greater/less than [or equal to] your starting life
+#:   total" (Path of Bravery's own group static);
+#: - the same comparison with a printed numeric gap, "your life total is at
+#:   least N greater/less than your starting life total" (Elenda, Saint of
+#:   Dusk's own second self-pump, "gets an additional +5/+5 as long as your
+#:   life total is at least 10 greater than your starting life total.");
+#: - the CR-standard "you have at least N life more/less than your starting
+#:   life total" (Leyline of Hope's and Righteous Valkyrie's own group
+#:   statics, Ajani/Angel of Destiny/Ayli/Speaker of the Heavens/Chalice of
+#:   Life's activation and trigger conditions - the identical wording
+#:   `machines/conditions/player.py`'s `_life_against_starting` already
+#:   reads for those, never a second grammar for the same words).
+#:
+#: Embedded verbatim into every sentence-shape regex below, so `_life_
+#: against_starting_gate` can read the same group names off any of their
+#: matches without a separate reader per shape.
+_STARTING_LIFE_CONDITION = (
+    r"your life total is (?:(?P<direction>less|greater) than(?P<or_equal> or equal to)?"
+    r"|(?P<equal>equal to)|at least (?P<threshold>\d+) (?P<threshold_direction>greater|less) than)"
+    r" your starting life total"
+    r"|you have at least (?P<amount>\d+) life (?P<amount_direction>more|less|fewer) than"
+    r" your starting life total"
+)
+
+#: The group pump gated, condition-leading, on `_STARTING_LIFE_CONDITION` -
+#: Path of Bravery's own "As long as your life total is greater than or
+#: equal to your starting life total, creatures you control get +1/+1." and
+#: Leyline of Hope's/Righteous Valkyrie's own "As long as you have at least 7
+#: life more than your starting life total, creatures you control get
+#: +2/+2." CR 604.2/611.3a: re-read on every computation, off `LayerContext.
+#: life_of`/`starting_life_of`.
 _STARTING_LIFE_GATED_GROUP_STATIC_RE = re.compile(
-    r"^as long as your life total is (?:(?P<direction>less|greater) than(?P<or_equal> or equal to)?"
-    r"|(?P<equal>equal to)) your starting life total, "
+    rf"^as long as (?:{_STARTING_LIFE_CONDITION}), "
     r"creatures you control get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
     r"(?: and (?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
     r"\.?$",
+    re.IGNORECASE,
+)
+
+#: The self-static twin, condition-leading - Elenda, Saint of Dusk's own "As
+#: long as your life total is greater than your starting life total, Elenda
+#: gets +1/+1 and has menace." Read after `self_normalized_effect_text` has
+#: already rewritten "Elenda" to "this permanent" (`_layer_readable_
+#: sentences_uncached`'s own call, the same normalisation `_LIFE_GATED_SELF_
+#: STATIC_LEADING_RE`'s own "this creature"/"it" pair already relies on), so
+#: no literal-name branch is needed here either.
+_STARTING_LIFE_GATED_SELF_STATIC_LEADING_RE = re.compile(
+    rf"^as long as (?:{_STARTING_LIFE_CONDITION}), "
+    r"(?:this (?:creature|permanent|token)|it) "
+    r"(?:gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)(?P<rest>.*?)"
+    r"|(?P<grant_only>has .+?))\.?$",
+    re.IGNORECASE,
+)
+
+#: The self-static twin, condition-trailing - Elenda, Saint of Dusk's own
+#: second sentence, "Elenda gets an additional +5/+5 as long as your life
+#: total is at least 10 greater than your starting life total." (CR 613.4c's
+#: sublayer 7c stacks this pump on top of the first static's own +1/+1
+#: independently, the same "an additional" adjective `_DESCEND_GATED_SELF_
+#: STATIC_LEADING_RE`'s own docstring already reads as rules-inert English).
+_STARTING_LIFE_GATED_SELF_STATIC_TRAILING_RE = re.compile(
+    rf"^this (?:creature|permanent|token) "
+    r"gets (?:an additional )?(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?P<rest>(?: and has [^.]+?)?)"
+    rf" as long as (?:{_STARTING_LIFE_CONDITION})\.?$",
     re.IGNORECASE,
 )
 
@@ -9722,7 +9781,39 @@ _STARTING_LIFE_GATED_GROUP_STATIC_RE = re.compile(
 def _life_against_starting_gate(
     match: re.Match[str],
 ) -> Callable[[CardState, LayerContext], bool]:
-    """`_STARTING_LIFE_GATED_GROUP_STATIC_RE`'s comparison, as a gate."""
+    """`_STARTING_LIFE_CONDITION`'s comparison, as a gate - shared by every
+    sentence shape that embeds it, since a `re.Match` answers `.group(name)`
+    the same way regardless of which of those compiled it."""
+    threshold_text = match.group("threshold")
+    if threshold_text is not None:
+        threshold = int(threshold_text)
+        more = (match.group("threshold_direction") or "").lower() == "greater"
+
+        def gate(source: CardState, context: LayerContext) -> bool:
+            life = context.life_of(source.controller)
+            start = context.starting_life_of(source.controller)
+            if life is None or start is None:
+                return False
+            difference = life - start
+            return difference >= threshold if more else -difference >= threshold
+
+        return gate
+
+    amount_text = match.group("amount")
+    if amount_text is not None:
+        amount = int(amount_text)
+        more = (match.group("amount_direction") or "").lower() == "more"
+
+        def gate(source: CardState, context: LayerContext) -> bool:
+            life = context.life_of(source.controller)
+            start = context.starting_life_of(source.controller)
+            if life is None or start is None:
+                return False
+            difference = life - start
+            return difference >= amount if more else -difference >= amount
+
+        return gate
+
     direction = (match.group("direction") or "").lower()
     or_equal = match.group("or_equal") is not None or match.group("equal") is not None
 
@@ -10263,6 +10354,17 @@ def _source_line_for(source: CardState, sentence: str) -> str:
             )
         )
         if normalized == sentence or normalized.startswith(sentence):
+            return line
+        # A line holding more than one top-level sentence (CR 608.2c's one
+        # instruction, printed as several) - Elenda, Saint of Dusk's own two-
+        # sentence static line, "As long as ... menace. Elenda gets an
+        # additional +5/+5 ...". A sentence that is not the *first* one on
+        # the line is never a prefix of the line's own normalized text, so
+        # `startswith` above never matches it - split the line the identical
+        # top-level way `layer_readable_sentences` itself already split it
+        # into sentences, and match against each one instead of only the
+        # whole line.
+        if sentence in _split_top_level_sentences(normalized):
             return line
     return sentence
 
@@ -14936,6 +15038,29 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while your life total stands against your starting life total",
         )
+    for starting_life_self_re in (
+        _STARTING_LIFE_GATED_SELF_STATIC_LEADING_RE,
+        _STARTING_LIFE_GATED_SELF_STATIC_TRAILING_RE,
+    ):
+        if match := starting_life_self_re.fullmatch(sentence):
+            grant_only = match.groupdict().get("grant_only")
+            if grant_only is not None:
+                granted = _split_gated_grants(grant_only)
+                power = toughness = 0
+            else:
+                granted = _split_gated_grants(match.group("rest") or "")
+                power = int(match.group("power"))
+                toughness = int(match.group("toughness"))
+            if granted is None:
+                return None
+            return _context_gated_self_pump_builder(
+                _life_against_starting_gate(match),
+                power,
+                toughness,
+                granted,
+                line=sentence,
+                description="while its controller's life stands against their starting life",
+            )
     if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
         return _self_chosen_basic_land_type_builder(line=sentence)
     return None

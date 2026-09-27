@@ -3719,6 +3719,18 @@ class Game(EngineModel):
     which is not enough to judge *which* creature a target names - FRA
     stream S2's own field, not folded into `turn_facts` for that reason."""
 
+    attacked_players_this_turn: dict[UUID, SortedSet[str]] = Field(default_factory=dict)
+    """Which players (by username) each attacking creature (by id) attacked
+    this turn (CR 508.1a), for Angel of Destiny's own "each player this
+    creature attacked this turn loses the game." `attacked_this_turn` above
+    already answers "did this creature attack this turn"; this answers
+    "whom" - not folded into it, the same `attacked_this_turn`-vs-`turn_facts`
+    split above: a creature can attack a different defending player in an
+    extra combat phase (CR 500.7/508.1a), and every one of them must be swept
+    up, not just the latest. Recorded by `Game.declare_attackers` off
+    `machines.combat.defending_player`. Cleared when a new turn begins, the
+    same reset `attacked_this_turn` already gets."""
+
     turn_facts: dict[str, SortedSet[str]] = Field(default_factory=dict)
     """A general per-turn, per-player fact ledger: `turn_facts[fact]` is the
     set of usernames for whom `fact` has happened this turn.
@@ -19964,6 +19976,18 @@ class Game(EngineModel):
                 # over. Cleared at the same new-turn reset as the rest of
                 # `Game`'s "this turn" fields.
                 self.attacked_this_turn.add(creature.id)
+                # The same per-object historical fact as `attacked_this_turn`
+                # above, but naming *whom* - Angel of Destiny's own "each
+                # player this creature attacked this turn loses the game."
+                # CR 508.5's defending player, resolved right away rather than
+                # re-derived later: `defending_player` needs `attack.defender`
+                # still resolvable, and a battle's protector (CR 310.9d) can
+                # change once combat is over.
+                defender_username = combat_rules.defending_player(self, attack.defender)
+                if defender_username is not None:
+                    self.attacked_players_this_turn.setdefault(creature.id, set()).add(
+                        defender_username
+                    )
                 # "you attacked with a Hero this turn" (Avengers Assemble!) -
                 # the attacker's types as declared (CR 508.1).
                 chars = self.characteristics_of(creature)
@@ -25945,6 +25969,7 @@ class Game(EngineModel):
             self.previous_turn_active_player = previous_active_player
             self.permanents_left_battlefield_this_turn = {}
             self.attacked_this_turn = set()
+            self.attacked_players_this_turn = {}
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
