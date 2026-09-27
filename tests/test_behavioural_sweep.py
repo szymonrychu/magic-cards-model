@@ -2969,7 +2969,14 @@ def _tapping_for_mana(case: Case, ability: TriggeredAbility) -> Iterator[Attempt
     `run_trigger_case` checks for both."""
     lowered = ability.condition.lower()
     tapper = BOB if "opponent" in lowered else ALICE
-    extra = ("Llanowar Elves",) if "creature" in lowered else ()
+    # The stock boards' mana sources are all lands, so a trigger about a
+    # nonland one (a creature, an artifact, "a nonland permanent") gets a
+    # mana source of that type staged beside them.
+    extra = tuple(
+        name
+        for name, types in (("Llanowar Elves", ("creature",)), ("Mind Stone", ("artifact",)))
+        if "nonland" in lowered or any(t in lowered for t in types)
+    )
     # "As this enters, choose a color" (Caged Sun, Utopia Sprawl) is only
     # chosen by really entering (CR 614.12), so the source is also tried
     # put onto the battlefield rather than staged there.
@@ -3908,12 +3915,6 @@ SWEEP_DRIVER_GAPS: tuple[DriverGap, ...] = (
         kind="enters_the_battlefield",
         event="a creature type chosen for the source as it entered (CR 614.12a)",
         precondition=r"of the chosen type enters",
-    ),
-    # The stock boards' only mana sources are lands.
-    DriverGap(
-        kind="tapped_for_mana",
-        event="a nonland permanent of the controller's tapped for mana",
-        precondition=r"tap a nonland permanent for mana",
     ),
 )
 
