@@ -3769,6 +3769,7 @@ _EVENT_QUALIFIER = re.compile(r"^(?:you(?:'re| are) )?[a-z]+ing\b", re.IGNORECAS
 #: Replicator). CR 603.4's clause ends at the comma before the effect, which
 #: is none of these.
 _IF_LIST_CONTINUATION = re.compile(r"^(?:(?:or|and|and/or)\s|[A-Z][\w'-]*$)")
+_IF_SERIAL_CLOSING = re.compile(r"^(?:or|and|and/or)\s", re.IGNORECASE)
 _IF_QUALIFIER_TAIL = re.compile(r"\bnon-?[a-z]+$", re.IGNORECASE)
 _IF_QUALIFIER_LEAD = re.compile(r"^non-?[a-z]+\s", re.IGNORECASE)
 
@@ -3786,6 +3787,13 @@ def _intervening_if_end(parts: list[str]) -> int:
             end += 1
             continue
         break
+    # A serial list of whole conditions (Happily Ever After's "if A, B, and
+    # C, you win the game"): a later item, short of the effect, that opens
+    # with the list's closing "and"/"or" pulls every item before it into the
+    # clause too - CR 603.4's clause ends at the comma before the effect.
+    for closing in range(len(parts) - 2, end - 1, -1):
+        if _IF_SERIAL_CLOSING.match(parts[closing].strip()):
+            return closing + 1
     return end
 
 

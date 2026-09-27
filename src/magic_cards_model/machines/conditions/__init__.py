@@ -169,7 +169,24 @@ def _binary_splits(clause: str) -> list[tuple[str, str, str]]:
         if left and right:
             joiner = "and" if match.group("joiner") == "and" else "or"
             splits.append((joiner, left, right))
+    # A serial list's earlier commas ("A, B, and C" - Happily Ever After)
+    # join with the list's closing joiner: cutting at one leaves "A" and
+    # "B, and C", each read the same way in turn.
+    closing = _SERIAL_CLOSING.search(clause)
+    if closing is not None:
+        joiner = "and" if closing.group("joiner") == "and" else "or"
+        for match in _SERIAL_COMMA.finditer(clause, 0, closing.start()):
+            left = clause[: match.start()].strip()
+            right = clause[match.end() :].strip()
+            if left and right:
+                splits.append((joiner, left, right))
     return splits
+
+
+#: A serial list's closing item: ", and C" / ", or C".
+_SERIAL_CLOSING = re.compile(r", (?P<joiner>and|or) ")
+#: A bare comma, the separator between a serial list's earlier items.
+_SERIAL_COMMA = re.compile(r", (?!and |or )")
 
 
 def _read_half(context: ConditionContext, half: str) -> bool | None:

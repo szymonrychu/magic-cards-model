@@ -322,8 +322,10 @@ _LIFE_TOTAL_OWNER = {
 
 
 def _life_total_is(context: "ConditionContext", match: re.Match[str]) -> bool:
-    """ "your life total is less than 7" (Elderscale Wurm) and "your life total
-    is less than your starting life total" (Resolute Archangel, CR 103.4)."""
+    """ "your life total is less than 7" (Elderscale Wurm), "your life total
+    is less than your starting life total" (Resolute Archangel, CR 103.4) and
+    "... greater than or equal to your starting life total" (Happily Ever
+    After, Path of Bravery)."""
     subject = _LIFE_TOTAL_OWNER[match.group("owner")]
     direction = match.group("direction")
     number = match.group("number")
@@ -331,9 +333,13 @@ def _life_total_is(context: "ConditionContext", match: re.Match[str]) -> bool:
     if number is not None and bound is None:
         return False
 
+    or_equal = match.group("or_equal") is not None
+
     def holds(username: str) -> bool:
         life = _stat(context, username, "life")
         against = bound if bound is not None else _starting_life(context, username)
+        if or_equal and life == against:
+            return True
         if direction in ("less", "fewer"):
             return life < against
         if direction in ("more", "greater"):
@@ -732,7 +738,8 @@ READERS: tuple[ConditionReader, ...] = (
     ConditionReader(
         re.compile(
             rf"(?P<owner>{'|'.join(re.escape(owner) for owner in _LIFE_TOTAL_OWNER)}) "
-            r"life total is (?:(?P<direction>less|fewer|more|greater) than|equal to) "
+            r"life total is (?:(?P<direction>less|fewer|more|greater) than"
+            r"(?P<or_equal> or equal to)?|equal to) "
             rf"(?:(?P<number>{COUNT})|{_POSSESSIVE}starting life total)"
         ),
         _life_total_is,

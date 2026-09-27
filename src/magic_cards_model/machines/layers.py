@@ -9704,6 +9704,43 @@ _GAINED_LIFE_GATED_GROUP_STATIC_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: The same group pump gated, condition-leading, on the controller's life
+#: total against their own starting life total (CR 103.4) - Path of
+#: Bravery's "As long as your life total is greater than or equal to your
+#: starting life total, creatures you control get +1/+1." CR 604.2/611.3a:
+#: re-read on every computation, off `LayerContext.life_of`/`starting_life_of`.
+_STARTING_LIFE_GATED_GROUP_STATIC_RE = re.compile(
+    r"^as long as your life total is (?:(?P<direction>less|greater) than(?P<or_equal> or equal to)?"
+    r"|(?P<equal>equal to)) your starting life total, "
+    r"creatures you control get (?P<power>[+-]\d+)/(?P<toughness>[+-]\d+)"
+    r"(?: and (?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*))?"
+    r"\.?$",
+    re.IGNORECASE,
+)
+
+
+def _life_against_starting_gate(
+    match: re.Match[str],
+) -> Callable[[CardState, LayerContext], bool]:
+    """`_STARTING_LIFE_GATED_GROUP_STATIC_RE`'s comparison, as a gate."""
+    direction = (match.group("direction") or "").lower()
+    or_equal = match.group("or_equal") is not None or match.group("equal") is not None
+
+    def gate(source: CardState, context: LayerContext) -> bool:
+        life = context.life_of(source.controller)
+        start = context.starting_life_of(source.controller)
+        if life is None or start is None:
+            return False
+        if or_equal and life == start:
+            return True
+        if direction == "greater":
+            return life > start
+        if direction == "less":
+            return life < start
+        return False
+
+    return gate
+
 
 def _context_gated_group_pump_and_keyword_builder(
     condition: Callable[[CardState, LayerContext], bool],
@@ -14883,6 +14920,22 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while you gained life this turn",
         )
+    if match := _STARTING_LIFE_GATED_GROUP_STATIC_RE.fullmatch(sentence):
+        granted = (
+            _split_and_validate_keywords(match.group("keywords"))
+            if match.group("keywords") is not None
+            else []
+        )
+        if granted is None:
+            return None
+        return _context_gated_group_pump_and_keyword_builder(
+            _life_against_starting_gate(match),
+            int(match.group("power")),
+            int(match.group("toughness")),
+            granted,
+            line=sentence,
+            description="while your life total stands against your starting life total",
+        )
     if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
         return _self_chosen_basic_land_type_builder(line=sentence)
     return None
@@ -15393,6 +15446,12 @@ class LayerContext(EngineModel):
     #: graveyard is. Read when the effects are built, like every field here.
     life_by_player: Mapping[str, int] = Field(default_factory=dict)
 
+    #: Each player's starting life total (CR 103.4, `Player.starting_life`),
+    #: keyed by username - Path of Bravery's "As long as your life total is
+    #: greater than or equal to your starting life total, ..." compares the
+    #: two. Read when the effects are built, like `life_by_player`.
+    starting_life_by_player: Mapping[str, int] = Field(default_factory=dict)
+
     #: Every battlefield permanent's mana cost, keyed by its id - what CR
     #: 700.5's devotion counts ("the number of mana symbols ... among the mana
     #: costs of permanents that player controls"). Keyed by object rather than
@@ -15463,6 +15522,13 @@ class LayerContext(EngineModel):
         if player is None:
             return None
         return self.life_by_player.get(player)
+
+    def starting_life_of(self, player: str | None) -> int | None:
+        """`player`'s starting life total (CR 103.4), or None for a player this
+        context does not know."""
+        if player is None:
+            return None
+        return self.starting_life_by_player.get(player)
 
     #: Each player's hand size (CR 402.2), keyed by username - a seventh
     #: thing the layer engine never sees standing on the battlefield. Ms.

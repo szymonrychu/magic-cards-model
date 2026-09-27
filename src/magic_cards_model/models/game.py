@@ -231,7 +231,6 @@ from ..machines.layers import (
     LayerNotice,
     additional_land_plays_of_line,
     all_activated_abilities_grant,
-    count_card_types,
     dont_cause_triggers_text,
     grant_ability,
     off_battlefield_characteristics_of,
@@ -1149,9 +1148,12 @@ _CONDITION_ENTERED_THIS_TURN = re.compile(
 #: Delirium (CR 207.2c: an ability word, no rules meaning of its own - the
 #: whole condition is the sentence): "there are four or more card types among
 #: cards in your graveyard", and its "permanent types" sibling (CR 110.4).
+#: Happily Ever After widens the pool to "permanents you control and/or cards
+#: in your graveyard": one set of types over both (CR 300.1), the permanents'
+#: read off the computed board.
 _CONDITION_TYPES_AMONG_GRAVEYARD = re.compile(
     rf"there (?:is|are) {count_pattern('count')} or more (?P<kind>card|permanent) types "
-    r"among cards in your graveyard",
+    r"among (?P<permanents>permanents you control and/or )?cards in your graveyard",
     re.IGNORECASE,
 )
 #: Threshold: "there are seven or more cards in your graveyard" (Barbarian
@@ -18899,6 +18901,9 @@ class Game(EngineModel):
             # ..." read their controller's, neither of which stands on the
             # battlefield as a characteristic the layer engine could see.
             life_by_player={player.username: player.life for player in self.players_in_game},
+            starting_life_by_player={
+                player.username: player.starting_life for player in self.players_in_game
+            },
             # CR 402.2: Ms. Marvel, Kamala Khan's own granted "'s base power
             # is equal to the number of cards in your hand." reads a hand
             # size, which no more stands on the battlefield as a
@@ -23185,16 +23190,18 @@ class Game(EngineModel):
             needed = parse_count(match.group("count"))
             if needed is None:
                 return None
-            graveyard = self.player(controller).graveyard
-            if match.group("kind").lower() == "card":
-                return count_card_types(graveyard) >= needed
-            permanent_types = {
+            found = {
                 card_type
-                for state in graveyard
+                for state in self.player(controller).graveyard
                 for card_type in state.types
-                if card_type in _PERMANENT_TYPES
             }
-            return len(permanent_types) >= needed
+            if match.group("permanents") is not None:
+                found.update(
+                    card_type for state in controlled for card_type in board.of(state).types
+                )
+            if match.group("kind").lower() == "permanent":
+                found &= _PERMANENT_TYPES
+            return len(found) >= needed
 
         if match := _CONDITION_GRAVEYARD_CARDS.fullmatch(text):
             needed = parse_count(match.group("count"))

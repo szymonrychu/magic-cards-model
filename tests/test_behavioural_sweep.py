@@ -147,6 +147,7 @@ from magic_cards_model.models.card import Layout
 from magic_cards_model.models.card_state import Choice, ChoiceKind, TargetRef
 from magic_cards_model.models.game import (
     _STEP_NAMES,
+    builtin_condition_readable,
     colored_symbol_count,
     read_activation_instructions,
     symbol_threshold_exile_cost,
@@ -1017,7 +1018,21 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
     """Real printings that make an intervening "if an opponent controls more
     [lands/creatures/artifacts] than you" (CR 603.4) true on the stock board:
     the opponent gets one more of that type than the controller has, counted
-    on the stock board by the engine itself."""
+    on the stock board by the engine itself. "N or more card types among
+    [permanents you control and/or] cards in your graveyard" (delirium,
+    Happily Ever After) gets one graveyard card of each type the stock board
+    lacks (CR 300.1). A compound is staged one conjunct at a time."""
+    if len(parts := _conjuncts(condition)) > 1:
+        return tuple(item for part in parts for item in _precondition_material(part))
+    types_among = re.fullmatch(
+        r"there (?:is|are) (?P<count>\w+) or more card types among "
+        r"(?P<permanents>permanents you control and/or )?cards in your graveyard",
+        _clause(condition),
+    )
+    if types_among is not None:
+        return _card_types_material(
+            types_among.group("count"), types_among.group("permanents") is not None
+        )
     subtype_card = re.search(
         r"there(?:'s| is) an? (?P<subtype>[\w-]+) card in your graveyard", condition.lower()
     )
@@ -1053,6 +1068,38 @@ def _precondition_material(condition: str) -> tuple[Material, ...]:
         _STAGING.variant, _STAGING.material = saved
     more = counts[ALICE] + 1 - counts[BOB]
     return tuple(Material(_MORE_OF[wanted], BOB, Zone.BATTLEFIELD) for _ in range(max(0, more)))
+
+
+@cache
+def _card_types_material(count: str, with_permanents: bool) -> tuple[Material, ...]:
+    """`_precondition_material`'s card-types case: single-typed graveyard
+    printings of each card type the stock board is missing, until `count`."""
+    needed = parse_count(count)
+    if needed is None:
+        return ()
+    saved = _STAGING.variant, _STAGING.material
+    _STAGING.variant, _STAGING.material = QUIET, ()
+    try:
+        game = _board().game
+        have = {t for state in game.player(ALICE).graveyard for t in state.types}
+        if with_permanents:
+            have |= {
+                t
+                for state in game.permanents_controlled_by(ALICE)
+                for t in game.characteristics_of(state).types
+            }
+    finally:
+        _STAGING.variant, _STAGING.material = saved
+    material: list[Material] = []
+    for card in _format_pool():
+        if len(have) >= needed:
+            break
+        types = set(card.types)
+        if card.card_faces or len(types) != 1 or types <= have:
+            continue
+        have |= types
+        material.append(Material(card.name, ALICE, Zone.GRAVEYARD))
+    return tuple(material)
 
 
 def _find_material(requirement: TargetRequirement) -> Material | None:
@@ -1125,6 +1172,21 @@ def _clause(condition: str) -> str:
 
 
 @cache
+def _conjuncts(condition: str) -> tuple[str, ...]:
+    """A compound "A and B" / serial "A, B, and C" condition (Happily Ever
+    After) as the conjuncts the engine's own compound reader splits it into,
+    so each is staged on its own; a clause some single reader claims whole,
+    or any other shape, is its own only conjunct."""
+    text = _clause(condition)
+    if not text or conditions._claiming(text) is not None or builtin_condition_readable(text):
+        return (condition,)
+    for joiner, left, right in conditions._binary_splits(text):
+        if joiner == "and" and conditions.claims(left) and conditions.claims(right):
+            return _conjuncts(left) + _conjuncts(right)
+    return (condition,)
+
+
+@cache
 def _board_clause(condition: str) -> tuple[str, Any, Any] | None:
     """`("control", test, amount)` for a "you control <amount> <quality>"
     clause and `("colors", test, None)` for "there are N colors among
@@ -1172,6 +1234,10 @@ def _board_threshold(scenario: PlayedScenario, source: CardState | None, conditi
     one creature", "no other creatures"); then the opponent's permanents
     that pass it gained control of (layer 2, CR 613.1b - "permanents you
     don't own"), each stopping as soon as the condition holds."""
+    if len(parts := _conjuncts(condition or "")) > 1:
+        for part in parts:
+            _board_threshold(scenario, source, part)
+        return
     found = _board_clause(condition or "")
     if found is None or found[0] != "control":
         return
@@ -1246,7 +1312,10 @@ def _board_material(card_name: str, condition: str) -> tuple[Material, ...]:
     after `_board_threshold` - the fewest copies of the first candidate the
     engine's own quality test accepts, confirmed by the engine's own reader
     on a built board. For "N colors among permanents you control" (CR
-    105.2), one permanent of each missing color."""
+    105.2), one permanent of each missing color. A compound is staged one
+    conjunct at a time (`_conjuncts`)."""
+    if len(parts := _conjuncts(condition or "")) > 1:
+        return tuple(item for part in parts for item in _board_material(card_name, part))
     found = _board_clause(condition or "")
     if found is None:
         return ()

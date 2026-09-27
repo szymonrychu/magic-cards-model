@@ -1361,7 +1361,10 @@ _COLOR_NAME: dict[Color, str] = {
 _COUNT_YOU_CONTROL_RE = re.compile(
     r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped|attacking) )?"
     r"(?:(?P<nontoken>nontoken) )?"
-    r"(?P<qualifier>[a-z]+) (?P<whose>you control|your opponents control)$",
+    r"(?P<qualifier>[a-z]+) (?P<whose>you control|your opponents control)$"
+    # CR 508.1k: every attacking creature, whoever controls it - Path of
+    # Bravery's "the number of attacking creatures", with no "you control".
+    r"|^(?:the )?number of (?P<attacking_any>attacking) (?P<attacking_qualifier>[a-z]+)$",
     re.IGNORECASE,
 )
 #: Same relaxation, for Lotleth Giant's "for each creature card in your
@@ -1645,7 +1648,7 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # identical way off `Game.combat.attacker_ids` rather than tapped
         # status - a creature can be attacking and untapped at once (a
         # vigilance attacker), so this is never folded into the tapped check.
-        status = match.group("status")
+        status = match.group("status") or match.group("attacking_any")
         wants_tapped = (
             None
             if status is None or status.lower() == "attacking"
@@ -1659,17 +1662,22 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
         # someone" reading `creatures_controlled_by_opponents_of` already
         # documents (a permanent with no controller at all belongs to
         # neither side).
-        wants_opponents = match.group("whose").lower() == "your opponents control"
+        whose = match.group("whose")
+        wants_anyone = whose is None
+        wants_opponents = whose is not None and whose.lower() == "your opponents control"
         wants_nontoken = match.group("nontoken") is not None
+        qualifier = match.group("qualifier") or match.group("attacking_qualifier")
 
         def _belongs_to_group(board_controller: str | None, controller: str) -> bool:
+            if wants_anyone:
+                return True
             if wants_opponents:
                 return board_controller is not None and board_controller != controller
             return board_controller == controller
 
-        card_type = _singular_card_type(match.group("qualifier"))
+        card_type = _singular_card_type(qualifier)
         if card_type is None:
-            subtype = _singular_subtype_for_count_expression(match.group("qualifier"))
+            subtype = _singular_subtype_for_count_expression(qualifier)
             if subtype is None:
                 return None
 

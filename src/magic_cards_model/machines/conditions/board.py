@@ -420,7 +420,10 @@ def _grouped_measure(
     if match.group("distinct"):
         attribute = match.group("distinct").removesuffix("s")
         if attribute == "name":
-            return len({board.of(state).name for state in states})
+            # CR 201.2b: "different names only if each of them has at least
+            # one name" - a nameless object (a face-down permanent, CR
+            # 708.2a) adds no name, and two of them share none.
+            return len({name for state in states if (name := board.of(state).name)})
         return len({_stat(board.of(state), attribute) for state in states})
     shared: Counter[str] = Counter()
     for state in states:

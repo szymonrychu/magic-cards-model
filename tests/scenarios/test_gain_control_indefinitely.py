@@ -17,7 +17,7 @@ its owner controls.
 import pytest
 
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.control_change import _parse_gain_control_indefinitely_clause
+from magic_cards_model.machines.control_change import parse_gain_control_untimed_clause
 from magic_cards_model.models import Zone
 
 from .harness import Scenario
@@ -115,4 +115,4 @@ def test_a_rider_duration_or_non_target_is_not_read_as_untimed_control(text):
     """A sentence that says more than "gain control of target X." is left to
     its own reader (or fails closed) rather than being read as this shape
     with the rest dropped."""
-    assert _parse_gain_control_indefinitely_clause(text) is None
+    assert parse_gain_control_untimed_clause(text) is None

@@ -415,3 +415,60 @@ def test_every_life_form_is_read_against_the_live_totals():
     }
     for clause, holds in expected.items():
         assert game.condition_holds("alice", clause) is holds, clause
+
+
+# -- "your life total is greater than or equal to your starting life total" -
+
+
+def _bravery_board(*, made_at: int = 20):
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            life=made_at,
+            battlefield=["Path of Bravery", "Grizzly Bears", "Memnite"],
+            library=["Plains"] * 6,
+        )
+        .player("bob", battlefield=["Ornithopter"], library=["Plains"] * 6)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    return scenario
+
+
+@pytest.mark.parametrize(
+    ("made_at", "change", "pumped"),
+    [(20, 0, True), (20, 4, True), (20, -1, False), (30, -1, False), (30, 0, True)],
+)
+def test_life_total_at_or_above_the_starting_life_total(made_at, change, pumped):
+    """Path of Bravery: "As long as your life total is greater than or equal
+    to your starting life total, creatures you control get +1/+1." - equal
+    counts; the bar is alice's own start (CR 103.4); bob's creature never."""
+    scenario = _bravery_board(made_at=made_at)
+    if change > 0:
+        scenario.game.gain_life("alice", change)
+    elif change < 0:
+        scenario.game.lose_life("alice", -change)
+    board = scenario.game.computed_board()
+    bears = board.of(scenario.creature("Grizzly Bears", "alice"))
+    assert (bears.power, bears.toughness) == ((3, 3) if pumped else (2, 2))
+    thopter = board.of(scenario.creature("Ornithopter", "bob"))
+    assert (thopter.power, thopter.toughness) == (0, 2)
+
+
+def test_life_gained_from_each_attacking_creature():
+    """Path of Bravery: "Whenever one or more creatures you control attack,
+    you gain life equal to the number of attacking creatures." - two attack,
+    two life; alice is then above her start and the anthem stays on."""
+    scenario = _bravery_board()
+    scenario.game.lose_life("alice", 1)
+    _to_declare_attackers(scenario)
+    scenario.attack_with(
+        scenario.creature("Grizzly Bears", "alice"), scenario.creature("Memnite", "alice")
+    )
+    assert scenario.stack_names() == ["Path of Bravery's triggered ability"]
+    scenario.pass_until_resolved()
+    assert scenario.player("alice").life == 21
+    bears = scenario.game.computed_board().of(scenario.creature("Grizzly Bears", "alice"))
+    assert bears.power == 3

@@ -240,67 +240,6 @@ def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | 
     return effect
 
 
-#: "Gain control of target `<object>`." with no duration - Agent of
-#: Treachery's "When this creature enters, gain control of target
-#: permanent.", Keiga, the Tide Star's "When Keiga dies, gain control of
-#: target creature.". CR 611.2a: "If no duration is stated, it lasts until
-#: the end of the game." Layer 2 (CR 613.1b), keyed to each target as it is
-#: now (CR 400.7).
-_GAIN_CONTROL_INDEFINITELY_RE = re.compile(
-    r"^(?:you )?gain control of (?P<phrase>(?:up to (?:one|two|three|\d+) )?target [^.]+?)\.?$",
-    re.IGNORECASE,
-)
-
-#: A duration or condition inside the target phrase belongs to another
-#: reader, a spell (Commandeer, CR 115.1) is not a permanent to control, and
-#: a rider ("and untap it", "and each Aura attached to it", ", then ...") or
-#: an opponent's choice (not a target, CR 115.1) is more than this shape says.
-_NOT_INDEFINITE_RE = re.compile(
-    r"\b(?:until|for as long as|during|if|this turn|spells?|and|then|choice|attached)\b"
-    r"|,",
-    re.IGNORECASE,
-)
-
-
-def _parse_gain_control_indefinitely_clause(effect_text: str) -> AbilityEffect | None:
-    """`_GAIN_CONTROL_INDEFINITELY_RE`'s shape, or `None`."""
-    from .effects import _targets_understood
-
-    match = _GAIN_CONTROL_INDEFINITELY_RE.fullmatch(" ".join(effect_text.split()))
-    if match is None or _NOT_INDEFINITE_RE.search(match.group("phrase")):
-        return None
-    if not _targets_understood(match.group("phrase"), count_agnostic=True):
-        return None
-
-    def effect(game: Game, ability: AbilityOnStack) -> None:
-        targets = [
-            target
-            for target in game.resolve_card_targets(ability)
-            if target.zone is Zone.BATTLEFIELD
-        ]
-        if not targets:
-            return
-        store = game.continuous_effects
-        timestamp = store.tick()
-        for target in targets:
-            store.add(
-                ContinuousEffect(
-                    description=(
-                        f"{ability.source_name}: {ability.controller} gains control of "
-                        f"{target.name}"
-                    ),
-                    layer=Layer.CONTROL,
-                    timestamp=timestamp,
-                    duration=Duration.INDEFINITE,
-                    selector=only_this_incarnation(target, target.zone_change_stamp),
-                    modification=set_controller(ability.controller),
-                ),
-                game=game,
-            )
-
-    return effect
-
-
 #: "Gain control of target creature until end of turn. If you control a[n]
 #: `<quality>` with greater mana value than that creature, gain control of
 #: that creature until the end of your next turn instead.[ Untap that
@@ -404,22 +343,35 @@ def _parse_gain_control_longer_if_clause(effect_text: str) -> Effect | None:
     return effect
 
 
-#: "Gain control of `<target>`.[ `<It|That creature>` becomes a[n]
+#: "[You ]gain control of `<target>`." with no duration, and its riders:
+#: Agent of Treachery's "When this creature enters, gain control of target
+#: permanent.", Keiga, the Tide Star's "When Keiga dies, gain control of
+#: target creature.", and Sorin, Ravenous Neonate's -6 / Captivating
+#: Vampire's "Gain control of `<target>`.[ `<It|That creature>` becomes a[n]
 #: `<creature type>` in addition to its other types.][ Put a[n] `<kind>`
 #: counter on `<it|that creature>` if you control a[n] `<quality>` permanent
-#: other than that creature[ or `<this>`].]" - Sorin, Ravenous Neonate's -6
-#: and Captivating Vampire's activated ability. No duration is printed, so
-#: CR 611.2a: "If no duration is stated, it lasts until the end of the game" -
-#: the control change (layer 2, CR 613.1b) and the type change (layer 4,
-#: CR 613.1d) both outlive the source. The counter rider is decided once, as
-#: the ability resolves, against the board after the steal.
+#: other than that creature[ or `<this>`].]". CR 611.2a: "If no duration is
+#: stated, it lasts until the end of the game" - the control change (layer 2,
+#: CR 613.1b) and the type change (layer 4, CR 613.1d) both outlive the
+#: source, keyed to each target as it is now (CR 400.7). The counter rider is
+#: decided once, as the ability resolves, against the board after the steal.
 _GAIN_CONTROL_UNTIMED_RE = re.compile(
-    r"^gain control of (?P<phrase>target [^.]+?)\."
-    r"(?:\s*(?:it|that creature) becomes an? (?P<subtype>[A-Z][a-z-]+) in addition to its "
+    r"^(?:you )?gain control of (?P<phrase>(?:up to (?:one|two|three|\d+) )?target [^.]+?)"
+    r"(?:\.(?:\s*(?:it|that creature) becomes an? (?P<subtype>[A-Z][a-z-]+) in addition to its "
     r"other types\.)?"
     r"(?:\s*put an? (?P<kind>[a-z]+) counter on (?:it|that creature) if you control an? "
     r"(?P<quality>[a-z]+) permanent other than (?:that creature|it)"
-    rf"(?: or (?P<self>{_SELF}))?\.)?$",
+    rf"(?: or (?P<self>{_SELF}))?\.)?)?$",
+    re.IGNORECASE,
+)
+
+#: A duration or condition inside the target phrase belongs to another
+#: reader, a spell (Commandeer, CR 115.1) is not a permanent to control, and
+#: a rider ("and untap it", "and each Aura attached to it", ", then ...") or
+#: an opponent's choice (not a target, CR 115.1) is more than this shape says.
+_NOT_UNTIMED_RE = re.compile(
+    r"\b(?:until|for as long as|as long as|during|if|this turn|spells?|and|then|choice"
+    r"|attached)\b|,",
     re.IGNORECASE,
 )
 
@@ -451,9 +403,9 @@ def parse_gain_control_untimed_clause(effect_text: str) -> AbilityEffect | None:
     if match is None:
         return None
     phrase = match.group("phrase")
-    if re.search(r"\b(?:until|for as long as|as long as)\b", phrase, re.IGNORECASE):
+    if _NOT_UNTIMED_RE.search(phrase):
         return None
-    if not _targets_understood(phrase):
+    if not _targets_understood(phrase, count_agnostic=True):
         return None
     subtype: str | None = None
     if match.group("subtype"):
@@ -533,7 +485,6 @@ def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     for reader in (
         _parse_tap_then_lock_clause,
         _parse_gain_control_for_as_long_clause,
-        _parse_gain_control_indefinitely_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:
