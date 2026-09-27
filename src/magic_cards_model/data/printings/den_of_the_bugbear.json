@@ -1,0 +1,156 @@
+{
+  "object": "card",
+  "id": "f231caf8-56c0-4719-a90d-5e5efbee3148",
+  "oracle_id": "f451b8f0-1ff5-4e8d-9f30-9352d83ed687",
+  "multiverse_ids": [
+    527541
+  ],
+  "mtgo_id": 92010,
+  "arena_id": 77359,
+  "tcgplayer_id": 243062,
+  "cardmarket_id": 571053,
+  "name": "Den of the Bugbear",
+  "lang": "en",
+  "released_at": "2021-07-23",
+  "uri": "https://api.scryfall.com/cards/f231caf8-56c0-4719-a90d-5e5efbee3148",
+  "scryfall_uri": "https://scryfall.com/card/afr/254/den-of-the-bugbear?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T07:07:15Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.jpg?1783926435",
+    "normal": "https://cards.scryfall.io/normal/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.jpg?1783926435",
+    "large": "https://cards.scryfall.io/large/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.jpg?1783926435",
+    "png": "https://cards.scryfall.io/png/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.png?1783926435",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.jpg?1783926435",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.jpg?1783926435",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.webp?1783926435",
+    "grid": "https://cards.scryfall.io/grid/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.webp?1783926435",
+    "display": "https://cards.scryfall.io/display/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.webp?1783926435",
+    "art": "https://cards.scryfall.io/art/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.webp?1783926435",
+    "crop": "https://cards.scryfall.io/crop/front/f/2/f231caf8-56c0-4719-a90d-5e5efbee3148.webp?1783926435"
+  },
+  "mana_cost": "",
+  "cmc": 0.0,
+  "type_line": "Land",
+  "oracle_text": "If you control two or more other lands, this land enters tapped.\n{T}: Add {R}.\n{3}{R}: Until end of turn, this land becomes a 3/2 red Goblin creature with \"Whenever this creature attacks, create a 1/1 red Goblin creature token that's tapped and attacking.\" It's still a land.",
+  "colors": [],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "R"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "1425e965-7eea-419c-a7ec-c8169fa9edbf",
+      "component": "token",
+      "name": "Goblin",
+      "type_line": "Token Creature \u2014 Goblin",
+      "uri": "https://api.scryfall.com/cards/1425e965-7eea-419c-a7ec-c8169fa9edbf"
+    },
+    {
+      "object": "related_card",
+      "id": "565be37a-4c14-420b-a07c-18e21f7fd731",
+      "component": "combo_piece",
+      "name": "Den of the Bugbear",
+      "type_line": "Land",
+      "uri": "https://api.scryfall.com/cards/565be37a-4c14-420b-a07c-18e21f7fd731"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set": "afr",
+  "set_name": "Adventures in the Forgotten Realms",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/e1ef87ba-ba92-4573-817f-543b996d2851",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aafr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/afr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/f231caf8-56c0-4719-a90d-5e5efbee3148/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Af451b8f0-1ff5-4e8d-9f30-9352d83ed687&unique=prints",
+  "collector_number": "254",
+  "digital": false,
+  "rarity": "rare",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Johannes Voss",
+  "artist_ids": [
+    "3593dd7e-c547-4a32-81cd-7da725f60118"
+  ],
+  "illustration_id": "eee5d933-3485-4259-aa84-9187f4974c84",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3065,
+  "preview": {
+    "source": "Star City Games",
+    "source_uri": "https://articles.starcitygames.com/news/den-of-the-bugbear-gives-red-new-creature-land-from-adventures-in-the-forgotten-realms/",
+    "previewed_at": "2021-06-29"
+  },
+  "prices": {
+    "usd": "1.48",
+    "usd_foil": "1.98",
+    "usd_etched": null,
+    "eur": "1.80",
+    "eur_foil": "2.66",
+    "tix": "0.26"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=527541&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDen%2Bof%2Bthe%2BBugbear",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDen%2Bof%2Bthe%2BBugbear",
+    "edhrec": "https://edhrec.com/route/?cc=Den+of+the+Bugbear"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F243062%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=571053&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/92010?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

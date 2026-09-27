@@ -216,6 +216,7 @@ from ..machines.layers import (
     BASIC_LAND_TYPES,
     DOESNT_UNTAP_TEXT,
     LEGEND_RULE_EXEMPT_TEXT,
+    LOST_LIFE_TURN_FACT,
     SPELLS_HAVE_SPLIT_SECOND_TEXT,
     Characteristics,
     ComputedBoard,
@@ -18471,7 +18472,17 @@ class Game(EngineModel):
                 for player in self.players_in_game
             },
             active_player=self.turn.active_player if self.turn is not None else None,
-            turn_facts={fact: frozenset(players) for fact, players in self.turn_facts.items()},
+            turn_facts={
+                **{fact: frozenset(players) for fact, players in self.turn_facts.items()},
+                # CR 119.3's life lost this turn (Essence Channeler's "as long
+                # as you've lost life this turn"), off the per-turn tally
+                # `Player.life_lost_this_turn` spectacle already reads.
+                LOST_LIFE_TURN_FACT: frozenset(
+                    player.username
+                    for player in self.players_in_game
+                    if player.life_lost_this_turn > 0
+                ),
+            },
             # Infusion's own turn-history fact (CR 207.2c's ability word),
             # for a static "as long as you gained life this turn" gate
             # (`LayerContext.gained_life_this_turn`) - `Game.life_gained_
