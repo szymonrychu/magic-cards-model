@@ -18,6 +18,7 @@ from ..ids import new_id
 from ..snapshot import AnnouncesMutation, EngineModel, announce_mutation, mutation_landed
 from .card import (
     Card,
+    CardFace,
     Color,
     Layout,
     Supertype,
@@ -668,6 +669,30 @@ class AttachmentSnapshot(EngineModel):
     controller: str | None = None
     types: tuple[Type, ...] = ()
     subtypes: tuple[str, ...] = ()
+
+
+_LOCKED_ROOM_FACES: dict[UUID, CardFace] = {}
+
+
+def locked_room_face(card: Card) -> CardFace:
+    """A Room permanent with neither unlocked designation (CR 709.5c-d), as
+    one face: CR 709.5's two statics strip "the name, mana cost, or rules
+    text" of both halves, leaving only the shared type line (CR 709.5a) -
+    no name (CR 201.2a: it shares a name with nothing), no mana cost (so no
+    color, CR 202.2b), no rules text and so no abilities. Memoised per
+    printing; `Card` is immutable."""
+    cached = _LOCKED_ROOM_FACES.get(card.id)
+    if cached is None:
+        front = card.front_face
+        cached = CardFace(
+            name="",
+            mana_cost="",
+            type_line=front.type_line if front is not None else card.type_line,
+            oracle_text="",
+            colors=[],
+        )
+        _LOCKED_ROOM_FACES[card.id] = cached
+    return cached
 
 
 class CardState(EngineModel):
@@ -1792,28 +1817,55 @@ class CardState(EngineModel):
                 if face.name == self.face_played:
                     return face
         if self.card.layout is Layout.SPLIT and "Room" in self.card.subtypes:
-            # CR 709.5's own permanent split card (a Room, "Unholy Annex //
-            # Ritual Chamber"): unlike an ordinary split card - never itself
-            # a permanent in this pool, and whose own `.name` off the stack
-            # is deliberately kept reading the front face alone (this
-            # property's own docstring: an earlier attempt at CR 709.4's
-            # full combining default was reverted for breaking that
-            # encoding) - a *permanent* split card has abilities on both
-            # doors that need to be seen regardless of which was cast.
-            # `None` here falls through to this object's own top-level
-            # fields, Scryfall's combined "Front // Back" values for a
-            # split card's `name`/`type_line` - CR 709.4's real default,
-            # scoped to Rooms only so it never touches the ordinary split-
-            # card behaviour above. Without this, `machines/triggers.
-            # triggered_abilities_on`'s `up_face_name` filter (built for a
-            # transform/MDFC's single active face) silently dropped every
-            # ability printed on the door that was not the object's front
-            # face, whichever half was actually cast. CR 709.5c's own
-            # further narrowing - a *locked* door's name/mana cost/text
-            # genuinely hidden, not just combined - is not modelled yet
-            # (`docs/engine-coverage.md`).
-            return None
+            return self._room_face
         return self.card.front_face
+
+    @property
+    def _room_face(self) -> Any:
+        """`up_face` for a permanent split card with a shared type line (a
+        Room, "Unholy Annex // Ritual Chamber") anywhere but the stack.
+
+        Off the battlefield, CR 709.4's combining default: `None`, which
+        falls through to this object's own top-level fields - Scryfall's
+        combined "Front // Back" values for a split card's `name`/`type_
+        line` - and leaves every ability printed on either half unfiltered
+        (`machines/triggers.triggered_abilities_on`'s `up_face_name` filter
+        was built for a transform/MDFC's single active face and would
+        otherwise drop every line not on the front half).
+
+        On the battlefield (or entering it, CR 614.12's "as it would exist on
+        the battlefield"), CR 709.5's two statics apply: "As long as this
+        permanent doesn't have the 'left half unlocked' designation, it
+        doesn't have the name, mana cost, or rules text of this object's left
+        half" - and the same for the right. So:
+
+        - one door unlocked (`unlocked_doors`, CR 709.5c): that half's own
+          face, exactly as a single up face - its name, mana cost, rules text
+          and abilities only (Ritual Chamber alone has no end-step trigger);
+        - both unlocked: `None`, the combined card again (CR 709.4);
+        - neither (CR 709.5d's "enters with neither unlocked designation"):
+          `locked_room_face`, a face with only the shared type line (CR
+          709.5a) and no name, mana cost or rules text - so no ability
+          either, and an empty `up_face_name` every face filter matches
+          nothing against.
+
+        A Room entering from the stack is its cast half: `face_played` names
+        it (the stack branch of `up_face` above already answered), or is
+        `None` for the front half cast with CR 709.3's choice left at its
+        default - CR 709.5d gives exactly that half its designation as it
+        enters, so the front face is the answer here too.
+        """
+        if self.zone is not Zone.BATTLEFIELD and not self._entering_battlefield:
+            return None
+        faces = self.card.card_faces or []
+        if self._entering_battlefield and self.zone is Zone.STACK:
+            return self.card.front_face
+        unlocked = [face for face in faces if face.name in self.unlocked_doors]
+        if len(unlocked) == 1:
+            return unlocked[0]
+        if unlocked:
+            return None
+        return locked_room_face(self.card)
 
     @property
     def up_face_name(self) -> str | None:
@@ -2080,6 +2132,17 @@ class CardState(EngineModel):
             return self.face_down_characteristics.oracle_text
         up_face = self.up_face
         own = up_face.oracle_text if up_face is not None else self.card.oracle_text
+        if (
+            up_face is None
+            and own is None
+            and self.card.layout is Layout.SPLIT
+            and "Room" in self.card.subtypes
+        ):
+            # CR 709.4c: "A split card has ... each ability in the text box of
+            # each half" - Scryfall prints a split card's text only per face.
+            # Scoped to Rooms (a both-doors-unlocked Room on the battlefield,
+            # CR 709.5), the same scope `_room_face` keeps.
+            own = "\n".join(face.oracle_text or "" for face in self.card.card_faces or [])
         return "\n".join([own or "", *self.spliced_text]).strip("\n")
 
     @property

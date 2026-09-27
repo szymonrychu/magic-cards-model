@@ -268,7 +268,12 @@ from ..machines.replacement import (
     apply_replacements,
     replace_mana_production,
 )
-from ..machines.special_actions import why_cannot_turn_face_up_as
+from ..machines.special_actions import (
+    unlock_cost,
+    why_cannot_turn_face_up_as,
+    why_cannot_unlock_door,
+    why_cannot_unlock_door_as,
+)
 from ..machines.speed import (
     check_speed_increase_on_life_loss,
     players_starting_their_engines,
@@ -20446,11 +20451,13 @@ class Game(EngineModel):
 
         The one door-unlocking function every route runs through: `Game.
         enter_the_battlefield`'s own CR 709.5d (the half that was cast), CR
-        709.5e's special action (`legal_actions.py`'s own enumeration, paid
-        through `machines/cost.py`), and any future "unlock [it/the other
+        709.5e's special action (`finish_unlocking_door`, after `begin_
+        unlocking_door`'s payment; enumerated by `legal_actions.py` as
+        `ActionKind.UNLOCK_DOOR`), and any future "unlock [it/the other
         door]" resolution effect (CR 709.5f) alike - so CR 709.5h's own
-        trigger ("Whenever a player unlocks this door") fires the same way
-        regardless of which of those caused it.
+        trigger ("When you unlock this door") fires the same way regardless
+        of which of those caused it. No legality check here: the special
+        action's is `why_cannot_unlock_door`, and CR 709.5d/709.5f need none.
 
         CR 709.5c: "Otherwise, that half is said to be 'locked.'" Giving an
         already-unlocked door the designation again is a no-op - the
@@ -20477,6 +20484,50 @@ class Game(EngineModel):
             )
         )
         return True
+
+    # -- a Room's unlock cost (CR 709.5e, CR 116.2m) -------------------------
+
+    def why_cannot_unlock_door(self, username: str, permanent: CardState, door: str) -> str | None:
+        """Why `username` cannot pay the unlock cost of `permanent`'s `door`
+        right now (CR 709.5e), or None - legality only, never affordability
+        (CR 118.6). See `machines/special_actions.why_cannot_unlock_door`."""
+        return why_cannot_unlock_door(self, username, permanent, door)
+
+    def why_cannot_unlock_door_as(
+        self, username: str, permanent: CardState, door: str
+    ) -> str | None:
+        """`why_cannot_unlock_door` plus whether `username` can pay the
+        unlock cost right now (CR 118.3) - the seat-facing refusal."""
+        return why_cannot_unlock_door_as(self, username, permanent, door)
+
+    def begin_unlocking_door(self, username: str, permanent: CardState, door: str) -> CostPayment:
+        """Announce CR 709.5e's special action and open the locked half's
+        mana-cost payment. Same two-call split as `begin_bringing_companion_
+        to_hand` (CR 116.1: paying can take more than one priority-free
+        moment). Raises if the action is unavailable, before anything has
+        been spent."""
+        self._refuse_if_over()
+        refusal = self.why_cannot_unlock_door(username, permanent, door)
+        if refusal is not None:
+            raise ValueError(refusal)
+        return CostPayment.for_total(unlock_cost(permanent, door), game=self, payer=username)
+
+    def finish_unlocking_door(self, username: str, permanent: CardState, door: str) -> CardState:
+        """Finish CR 709.5e: give `permanent` the unlocked designation for
+        `door`, the cost having been paid through `begin_unlocking_door`.
+
+        CR 116.1: a special action does not use the stack - but what it
+        triggers does (CR 603.3): `unlock_door` emits the event CR 709.5h's
+        "When you unlock this door" waits for, and `put_triggers_on_stack`
+        puts that ability on the stack the next time a player would receive
+        priority (CR 116.3: the player who took the action receives it)."""
+        self._refuse_if_over()
+        refusal = self.why_cannot_unlock_door(username, permanent, door)
+        if refusal is not None:
+            raise ValueError(refusal)
+        with self._id_allocator_scope():
+            self.unlock_door(permanent, door, controller=username)
+        return permanent
 
     def become_monstrous(self, permanent: CardState, amount: int) -> bool:
         """CR 701.37a: "Monstrosity N" means "If this permanent isn't

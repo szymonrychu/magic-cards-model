@@ -6670,7 +6670,7 @@ _SEARCH_AND_PUT_RE = re.compile(
     # qualifies".
     r"(?:(?P<quality>.+?) )?card(?:s)?"
     # "a Room card that doesn't have the same name as a Room you control"
-    # (Central Elevator // Promising Stairs, CR 201.4b's "two objects have the
+    # (Central Elevator // Promising Stairs, CR 201.2a's "two objects have the
     # same name" test) - CR 701.23a's own "description" a search may name
     # narrows to exclude candidates sharing a name with something the
     # searcher already controls of the stated type. Read generally (any
@@ -7424,22 +7424,28 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
             return
         effective_matches = matches
         if unique_word is not None:
-            # CR 201.4b: "two objects have the same name" when their printed
-            # names match - so the exclusion is read off `state.card.name`,
-            # against whatever the searcher currently controls of the named
-            # type, at the moment the search actually runs (not baked in at
-            # parse time - the controlled set can only be known then).
+            # CR 201.2a: "Two or more objects have the same name if they have
+            # at least one name in common ... An object with no name doesn't
+            # have the same name as any other object." A split card has two
+            # names (CR 709.4a); a Room permanent has only its unlocked
+            # doors' names, and none while fully locked (CR 709.5) - so the
+            # controlled side is read off each permanent's own current
+            # `name`, the searched card's off its printed one, both split
+            # into single names, at the moment the search actually runs (not
+            # baked in at parse time - the controlled set can only be known
+            # then).
             type_matcher = _named_type_matcher(unique_word)
             excluded_names = {
-                permanent.card.name
+                name
                 for permanent in game.permanents_controlled_by(player.username)
                 if type_matcher(permanent)
+                for name in _single_names(permanent.name)
             }
 
             def effective_matches(
                 state: CardState, _base=matches, _excluded=excluded_names
             ) -> bool:
-                return _base(state) and state.card.name not in _excluded
+                return _base(state) and _excluded.isdisjoint(_single_names(state.card.name))
 
         game.search_and_put(
             player,
@@ -7454,6 +7460,12 @@ def _search_and_place_for(match: re.Match[str], *, optional: bool) -> Callable[.
         )
 
     return run
+
+
+def _single_names(name: str) -> set[str]:
+    """Each individual name in `name` - a split card's "Left // Right" is two
+    (CR 709.4a) - and none for an object with no name (CR 201.2a)."""
+    return {part for part in name.split(" // ") if part}
 
 
 def _build_search_clause(match: re.Match[str], *, for_spell: bool) -> TargetedClause | None:

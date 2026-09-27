@@ -124,6 +124,7 @@ from magic_cards_model.machines.layers import (
     set_controller,
 )
 from magic_cards_model.machines.legal_actions import legal_actions
+from magic_cards_model.machines.special_actions import locked_doors
 from magic_cards_model.machines.speed import effective_speed, increase_speed
 from magic_cards_model.machines.targeting import (
     CombatState,
@@ -590,7 +591,9 @@ def _named(state: CardState, name: str) -> bool:
     battlefield answers to the face that is up (CR 712.8f), so the front
     face's name has to match too."""
     faces = {name, *name.split(" // ")}
-    return state.name in faces or state.name.split(" //")[0] in faces
+    # A Room permanent answers only to its unlocked doors' names, and to
+    # none while fully locked (CR 709.5) - its printing's name still finds it.
+    return state.name in faces or state.name.split(" //")[0] in faces or state.card.name == name
 
 
 def _last(scenario: PlayedScenario, name: str, zone: Zone, username: str) -> CardState:
@@ -1375,6 +1378,17 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     (CR 716.2a)."""
     if _back_face(source.card, ability):
         source.transformed = True
+    face = getattr(ability, "face", None)
+    if (
+        source.zone is Zone.BATTLEFIELD
+        and face
+        and face not in source.unlocked_doors
+        and any(door.name == face for door in locked_doors(source))
+    ):
+        # A Room's door has its rules text only while unlocked (CR 709.5) -
+        # staged with the designation (CR 709.5c), the way a Case is staged
+        # solved below.
+        source.unlocked_doors = (*source.unlocked_doors, face)
     level = getattr(ability, "class_level", None)
     if level is not None:
         source.class_level = level

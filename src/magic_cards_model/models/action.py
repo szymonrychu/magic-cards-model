@@ -60,6 +60,9 @@ class ActionKind(StrEnum):
     """CR 116.2k."""
     DREDGE = "dredge"
     """CR 702.52a-b: replace a draw with a mill, off a graveyard card."""
+    UNLOCK_DOOR = "unlock_door"
+    """CR 709.5e (CR 116.2m): pay the mana cost of a locked half of a Room
+    the player controls to unlock it - `Action.door` names which half."""
     ACTIVATE = "activate"
     """CR 602.2: activate a printed or granted ability of a permanent the
     player controls on the battlefield - `Action.ability_index` names which."""
@@ -302,6 +305,9 @@ class Action(EngineModel):
     land_face: str | None = None
     """Which face of an MDFC is being played as a land (CR 712.12), or `None`
     for an ordinary land or a card's normal front face."""
+    door: str | None = None
+    """Which locked half (CR 709.5j's "door") an `UNLOCK_DOOR` action pays
+    the mana cost of, by that half's own printed name; `None` otherwise."""
     spell_face: str | None = None
     """Which face this `CAST` announces (CR 709.3's split-card choice,
     CR 715.3's Adventure), or `None` for the card's plain front face. A split

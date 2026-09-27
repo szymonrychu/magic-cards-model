@@ -514,6 +514,12 @@ class PlayedScenario:
         for state in candidates:
             if state.name == name or state.name.startswith(f"{name} //"):
                 return state
+        # CR 709.5: a Room on the battlefield has only its unlocked doors'
+        # names (none at all while fully locked), so the printed card name
+        # is how a scenario still finds the permanent.
+        for state in candidates:
+            if isinstance(state, CardState) and state.card.name == name:
+                return state
         raise AssertionError(
             f"{name} is not in {zone.value}; it holds {[s.name for s in candidates]}"
         )
@@ -1451,6 +1457,18 @@ class PlayedScenario:
             payment.tap_for_mana(mana_source, mana_from(mana_source))
         payment.pay()
         return self.game.bring_companion_to_hand(player)
+
+    def unlock_door(
+        self, permanent: CardState, door: str, *mana_sources: CardState, username: str | None = None
+    ) -> CardState:
+        """CR 709.5e: pay the mana cost of `permanent`'s locked `door` with
+        `mana_sources` and give it that door's unlocked designation."""
+        player = username or self.game.controller_of(permanent).username
+        payment = self.game.begin_unlocking_door(player, permanent, door)
+        for mana_source in mana_sources:
+            payment.tap_for_mana(mana_source, mana_from(mana_source))
+        payment.pay()
+        return self.game.finish_unlocking_door(player, permanent, door)
 
     def turn_face_up(
         self,

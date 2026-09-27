@@ -56,11 +56,11 @@ enumerating every legal subset or permutation of it.
 
 - **CR 116.2's other special actions** - CR 116.2c/d/e (an effect's own
   "ignore this" or "stop this" window, and the one Circling Vultures-specific
-  discard), CR 116.2g (companion), CR 116.2i (Planechase's planar die),
-  CR 116.2j (Conspiracy draft face-up), CR 116.2m (an unlock cost) - none of
-  which this engine models at all (`grep`-confirmed empty for "companion",
-  "planechase", "unlock cost", "locked half" across `src/`), so there is
-  nothing here to enumerate a refusal for.
+  discard), CR 116.2i (Planechase's planar die),
+  CR 116.2j (Conspiracy draft face-up) - none of which this engine models
+  at all, so there is nothing here to enumerate a refusal for. (CR 116.2g's
+  companion and CR 116.2m's unlock cost *are* enumerated: `COMPANION` and
+  `UNLOCK_DOOR`.)
 - **A targeted off-battlefield activation with no legal target to name.**
   `keywords.off_battlefield_activation` checks targets while it builds, so
   `_off_zone_actions` hands it the first legal candidates of the row's own
@@ -160,6 +160,7 @@ from .keywords import (
     why_cannot_turn_face_up,
 )
 from .modes import modal_profile
+from .special_actions import locked_doors, unlock_cost, why_cannot_unlock_door
 from .targeting import profile_for_text
 from .turn import Step
 
@@ -1227,6 +1228,39 @@ def _turn_face_up_action(
 
 
 # ---------------------------------------------------------------------------
+# A Room's unlock cost (CR 709.5e, CR 116.2m).
+# ---------------------------------------------------------------------------
+
+
+def _unlock_door_actions(
+    game: Any, player: str, permanent: CardState, candidate_scan: list[_ScannedCandidate]
+) -> list[Action]:
+    actions: list[Action] = []
+    for face in locked_doors(permanent):
+        if why_cannot_unlock_door(game, player, permanent, face.name) is not None:
+            continue
+        total = unlock_cost(permanent, face.name)
+        affordable, reason, pays_with = _cost_affordability(game, player, total, candidate_scan)
+        cost_str, mana_cost_str = _cost_strings(total)
+        actions.append(
+            Action(
+                kind=ActionKind.UNLOCK_DOOR,
+                player=player,
+                rule="CR 709.5e",
+                card_id=permanent.id,
+                from_zone=Zone.BATTLEFIELD,
+                door=face.name,
+                cost=cost_str,
+                mana_cost=mana_cost_str,
+                affordable=affordable,
+                unaffordable_reason=reason,
+                pays_with=pays_with,
+            )
+        )
+    return actions
+
+
+# ---------------------------------------------------------------------------
 # Suspend, foretell, plot (CR 116.2f/h/k) - `MarkedExile` in `casting.py`.
 # ---------------------------------------------------------------------------
 
@@ -2078,6 +2112,7 @@ def _legal_actions(
             turn_up = _turn_face_up_action(game, player, permanent, candidate_scan)
             if turn_up is not None:
                 actions.append(turn_up)
+        actions.extend(_unlock_door_actions(game, player, permanent, candidate_scan))
     # CR 602.1b: an ability whose own instructions admit someone other than
     # its controller ("Only your opponents may activate this ability") is
     # offered to them too, from a permanent they do not control.

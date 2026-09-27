@@ -37,7 +37,7 @@ printings pool (every card Modern-legal):
   than Ritual Chamber's back half) unlocks correctly too.
 
 Also closed here: Central Elevator's own search-quality restriction, "a Room
-card that doesn't have the same name as a Room you control" (CR 201.4b's own
+card that doesn't have the same name as a Room you control" (CR 201.2a's own
 name-identity test) - `machines/effects._SEARCH_AND_PUT_RE`'s new, general
 "that doesn't have the same name as a `<type>` you control" clause, read off
 any type word rather than gated to Rooms, and enforced dynamically at
@@ -80,7 +80,7 @@ def test_casting_ritual_chamber_unlocks_it_and_creates_a_demon():
 
     assert ritual_chamber.unlocked_doors == (RITUAL_CHAMBER,)
     scenario.game.put_triggers_on_stack()
-    assert scenario.stack_names() == [f"{UNHOLY_ANNEX}'s triggered ability"]
+    assert scenario.stack_names() == [f"{RITUAL_CHAMBER}'s triggered ability"]
     scenario.resolve_top()
 
     demons = [
@@ -114,7 +114,7 @@ def test_unholy_annex_end_step_otherwise_branch_without_a_demon():
     while scenario.step is not Step.END_STEP:
         scenario.advance()
     scenario.game.put_triggers_on_stack()
-    assert scenario.stack_names() == [f"{UNHOLY_ANNEX}'s triggered ability"]
+    assert scenario.stack_names() == ["Unholy Annex's triggered ability"]
     scenario.resolve_top()
 
     assert len(scenario.player("alice").hand) == hand_before + 1
@@ -136,9 +136,14 @@ def test_unholy_annex_end_step_if_branch_with_a_demon():
     scenario.start_at(Step.PRECOMBAT_MAIN)
     swamps = scenario.untapped_sources(*["Swamp"] * 5)
     _cast_split_half(scenario, "Unholy Annex", RITUAL_CHAMBER, *swamps)
-    scenario.resolve_top()
+    room = scenario.resolve_top()
     scenario.game.put_triggers_on_stack()
     scenario.resolve_top()  # the door-unlock trigger: creates the Demon
+    # CR 709.5: with only Ritual Chamber unlocked the permanent does not have
+    # Unholy Annex's rules text - unlock that door too (CR 709.5e's special
+    # action, paid with the three remaining Swamps) so its end-step trigger
+    # is one the permanent has.
+    scenario.unlock_door(room, "Unholy Annex", *scenario.untapped_sources(*["Swamp"] * 3))
 
     life_before = scenario.player("alice").life
     bob_life_before = scenario.player("bob").life
@@ -195,7 +200,7 @@ def test_central_elevator_unlocks_and_searches_for_another_room():
 
     assert elevator.unlocked_doors == ("Central Elevator",)
     scenario.game.put_triggers_on_stack()
-    assert scenario.stack_names() == [f"{CENTRAL_ELEVATOR}'s triggered ability"]
+    assert scenario.stack_names() == ["Central Elevator's triggered ability"]
     scenario.resolve_top()
 
     # The trigger fires and its search runs (no notice, no exception) - a
@@ -208,7 +213,7 @@ def test_central_elevator_unlocks_and_searches_for_another_room():
 
 def test_central_elevator_search_excludes_a_room_it_already_controls():
     """ "a Room card that doesn't have the same name as a Room you control"
-    (CR 201.4b's own name-identity test) - a second, differently-worded
+    (CR 201.2a's own name-identity test) - a second, differently-worded
     printing's search-quality restriction, read generally off the "`<type>`
     you control" phrase rather than gated to Rooms. Only a same-named Room
     is in the library here, so the restriction has to make the search find
@@ -234,7 +239,7 @@ def test_central_elevator_search_excludes_a_room_it_already_controls():
     _cast_split_half(scenario, "Central Elevator", None, *islands)
     scenario.resolve_top()
     scenario.game.put_triggers_on_stack()
-    assert scenario.stack_names() == [f"{CENTRAL_ELEVATOR}'s triggered ability"]
+    assert scenario.stack_names() == ["Central Elevator's triggered ability"]
     scenario.resolve_top()
 
     # No legal candidate existed (the library's only card shares a name with
