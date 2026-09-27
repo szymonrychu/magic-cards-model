@@ -1724,5 +1724,26 @@ def test_a_snapshot_written_before_speed_is_refused() -> None:
     with pytest.raises(
         SchemaVersionMismatch,
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SPEED}",
+
+
+#: The version stamped before `Game` gained
+#: `nontoken_creatures_died_under_control_this_turn` (Vile Redeemer's cast
+#: trigger, "for each nontoken creature that died under your control this
+#: turn").
+_SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL = 99
+
+
+def test_a_snapshot_written_before_nontoken_deaths_under_control_is_refused() -> None:
+    """A version-99 dump has no per-player count of nontoken creatures that
+    died under their control this turn: decoded as current it would default
+    to none, and a Vile Redeemer cast later that same turn would make no
+    Scions for deaths that really happened. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL}",
     ):
         Game.model_validate(dumped)
