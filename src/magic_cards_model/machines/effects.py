@@ -62710,6 +62710,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
     `machines/control_change.py`'s own readers."""
     from .cast_copies import cast_copy_ability_effect
     from .control_change import control_change_ability_effect
+    from .resolving_exile import resolving_exile_ability_effect
     from .copy_effects import copy_ability_effect
 
     for reader in (
@@ -62719,6 +62720,7 @@ def _c02_t6_ability_effect(effect_text: str) -> AbilityEffect | None:
         _parse_return_with_rider_clause,
         copy_ability_effect,
         cast_copy_ability_effect,
+        resolving_exile_ability_effect,
         control_change_ability_effect,
     ):
         effect = reader(effect_text)

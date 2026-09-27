@@ -255,6 +255,29 @@ def test_an_opponent_casting_on_their_own_turn_does_not_trigger_yours():
     assert scenario.stack_names() == ["Opt"]
 
 
+def test_brineborn_cutthroat_reads_the_same_opponents_turn_window():
+    """The proof printing for the "during an opponent's turn" window: a
+    different effect behind the identical condition - and on Alice's own
+    turn it does not trigger."""
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Island"], library=["Island"] * 5)
+        .player(
+            "alice",
+            hand=["Opt", "Opt"],
+            battlefield=["Brineborn Cutthroat", "Island", "Island"],
+            library=["Island"] * 5,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    cutthroat = scenario.creature("Brineborn Cutthroat", "alice")
+    scenario.pass_priority("bob")
+    scenario.cast_onto_stack("Opt", auto=True, username="alice")
+    scenario.resolve_top()
+    assert cutthroat.counters[Counter.PLUS_ONE] == 1
+
+
 def test_crossway_troublemakers_pays_two_life_to_draw_when_a_vampire_dies():
     """The proof printing: a dies trigger with the same "you may pay N life.
     If you do, ..." rider."""

@@ -198,6 +198,10 @@ def executes(keyword: str) -> bool:
         # pay_casualty`, the trigger `casualty_triggered_abilities`/
         # `_casualty_effect` here, one per casualty cost paid (CR 702.153b).
         "casualty",
+        # CR 702.78a: the additional cost is `machines/casting.Casting.
+        # pay_conspire`, the trigger `conspire_triggered_abilities`/
+        # `_conspire_effect` here, one per conspire cost paid.
+        "conspire",
         "persist",
         "dredge",
         "mobilize",
@@ -652,6 +656,38 @@ def casualty_triggered_abilities(paid: int) -> list[TriggeredAbility]:
         raw="Casualty", text="Casualty", face="", keyword="Casualty", canonical="Casualty"
     )
     return [_casualty_ability(line) for _ in range(max(paid, 0))]
+
+
+def _conspire_ability(ability: KeywordAbility) -> TriggeredAbility:
+    """CR 702.78a's second ability: "When you cast this spell, if its
+    conspire cost was paid, copy it. If the spell has any targets, you may
+    choose new targets for the copy."
+
+    Like casualty, one per conspire cost actually paid
+    (`conspire_triggered_abilities`), read off the spell's `CastRecord`.
+    """
+    return _expansion(
+        ability,
+        keyword="conspire",
+        word=TriggerWord.WHEN,
+        condition="you cast this spell",
+        intervening_if="its conspire cost was paid",
+        effect="copy it. If the spell has any targets, you may choose new targets for the copy",
+        event=TriggerEvent.CAST_SPELL,
+    )
+
+
+def conspire_triggered_abilities(paid: int) -> list[TriggeredAbility]:
+    """CR 702.78a: one conspire trigger for each conspire cost paid."""
+    line = KeywordAbility(
+        raw="Conspire", text="Conspire", face="", keyword="Conspire", canonical="Conspire"
+    )
+    return [_conspire_ability(line) for _ in range(max(paid, 0))]
+
+
+def printed_conspire_count(card: Card) -> int:
+    """How many "Conspire" keyword lines `card` prints (CR 702.78a)."""
+    return sum(1 for ability in keyword_abilities(card) if ability.canonical.lower() == "conspire")
 
 
 def printed_casualty_numbers(card: Card) -> list[int]:
@@ -6149,6 +6185,9 @@ KEYWORD_TRIGGER_EFFECTS: dict[str, Callable[[Any, AbilityOnStack], Any]] = {
     "storm": _storm_effect,
     "replicate": _replicate_effect,
     "casualty": _casualty_effect,
+    # CR 702.78a's copy is casualty's own: "copy it. If the spell has any
+    # targets, you may choose new targets for the copy."
+    "conspire": _casualty_effect,
     "ward": _ward_effect,
     "madness": _madness_effect,
     "miracle": _miracle_effect,

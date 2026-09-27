@@ -2178,6 +2178,12 @@ class CastRecord(EngineModel):
     (`machines/spell_grants.granted_triggered_abilities_for`), each gated by
     `machines/triggers.intervening_if_holds`'s "a casualty cost was paid for
     it" clause."""
+    conspire_paid: int = 0
+    """How many of the spell's conspire costs were paid (CR 702.78a), copied
+    from `Casting.conspire_paid` - one conspire trigger per payment
+    (`machines/spell_grants.granted_triggered_abilities_for`), each gated by
+    `machines/triggers.intervening_if_holds`'s "its conspire cost was paid"
+    clause."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), copied
     from `Casting.offspring_paid`. Bool rather than a count: CR 702.175b's
@@ -6571,6 +6577,7 @@ class Game(EngineModel):
         kicked: int = 0,
         replicated: int = 0,
         casualty_paid: int = 0,
+        conspire_paid: int = 0,
         offspring_paid: bool = False,
         blight_paid: bool = False,
         cast_using_teamwork: bool = False,
@@ -6643,6 +6650,7 @@ class Game(EngineModel):
             kicked=kicked,
             replicated=replicated,
             casualty_paid=casualty_paid,
+            conspire_paid=conspire_paid,
             offspring_paid=offspring_paid,
             blight_paid=blight_paid,
             cast_using_teamwork=cast_using_teamwork,
@@ -8384,6 +8392,7 @@ class Game(EngineModel):
             ):
                 casting.pay_offspring()
         self._announce_casualty(casting, card, caster, taken)
+        self._announce_conspire(casting, card, caster, taken)
         if "gift" in printed:
             opponents = [p.username for p in self.players_in_game if p.username != caster]
             promised = self.ask(
@@ -8491,6 +8500,44 @@ class Game(EngineModel):
             chosen = next(state for state in fodder if state.id == answer[0])
             taken.add(chosen.id)
             casting.pay_casualty(chosen)
+
+    def _announce_conspire(
+        self, casting: Casting, card: CardState, caster: str, taken: set[UUID]
+    ) -> None:
+        """CR 702.78a's optional tap of two creatures, one `MAY` per conspire
+        instance the spell has - printed or granted - legal only while two
+        untapped creatures sharing a colour with it are left, then which two
+        (`CHOOSE_CARDS`)."""
+        for _ in range(casting.conspire_count()):
+            fodder = [state for state in casting.conspire_candidates() if state.id not in taken]
+            if not self.ask(
+                Decision(
+                    kind=DecisionKind.MAY,
+                    player=caster,
+                    prompt=(
+                        f"pay conspire (tap two untapped creatures you control that share a "
+                        f"color with it) as you cast {card.name} (CR 702.78a)"
+                    ),
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    affirmative_is_legal=len(fodder) >= 2,
+                )
+            ):
+                return
+            answer = self.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=caster,
+                    prompt=f"choose two creatures to tap for {card.name}'s conspire",
+                    source=card.name,
+                    source_id=source_id_of(card),
+                    amount=2,
+                    cards=tuple(state.id for state in fodder),
+                )
+            )
+            chosen = [state for state in fodder if state.id in answer]
+            taken.update(state.id for state in chosen)
+            casting.pay_conspire(chosen)
 
     def _announce_bargain_evidence_and_reveal(
         self, casting: Casting, card: CardState, caster: str, printed: dict
@@ -8879,6 +8926,7 @@ class Game(EngineModel):
                 kicked=original_record.kicked,
                 replicated=original_record.replicated,
                 casualty_paid=original_record.casualty_paid,
+                conspire_paid=original_record.conspire_paid,
                 offspring_paid=original_record.offspring_paid,
                 blight_paid=original_record.blight_paid,
                 gift_promised=original_record.gift_promised,
@@ -17221,6 +17269,13 @@ class Game(EngineModel):
                         linked_permanent_id=event.exile_link.id,
                         linked_permanent_stamp=event.exile_link.zone_change_stamp,
                     )
+                if event.exile_counters or event.exile_rider:
+                    # CR 122.1 / CR 603.7: a resolving-exile replacement's
+                    # counter and "If you do" rider (`machines/resolving_
+                    # exile.py`).
+                    from ..machines.resolving_exile import after_resolving_exile
+
+                    after_resolving_exile(self, card_state, event)
             elif event.destination is Zone.LIBRARY:
                 # Green Sun's Zenith's own "Shuffle [this] into its owner's
                 # library" (`machines/replacement.py`'s `_stack_replacements`
@@ -20146,6 +20201,7 @@ class Game(EngineModel):
         collect_evidence: bool = False,
         reveal_for_cost: CardState | None = None,
         casualty: Sequence[CardState] | None = None,
+        conspire: Sequence[Sequence[CardState]] | None = None,
     ) -> CardState:
         """Cast `card` for `caster`, start to finish, as one atomic action.
 
@@ -20264,6 +20320,10 @@ class Game(EngineModel):
             # before CR 601.2c's targets.
             for creature in casualty or ():
                 casting.pay_casualty(creature)
+            # CR 702.78a: each conspire instance's two creatures, announced
+            # with the rest of CR 601.2b's additional costs.
+            for pair in conspire or ():
+                casting.pay_conspire(list(pair))
             if targets:
                 casting.choose_targets(list(targets))
             for card_id in splice or ():

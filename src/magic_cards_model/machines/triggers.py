@@ -2390,6 +2390,11 @@ def _self_or_other_enters_match(
     return None
 
 
+#: "this creature or a Dragon you control dies" (Dragon-Kami's Egg) - the
+#: self half plus an "a[n] `<subject>`" half that is not "another": the
+#: source itself, and any other object the second half describes.
+_SELF_OR_A_SUBJECT_RE = re.compile(r"\bor an? (?!other\b)[a-z]")
+
 _LEGENDARY_WORD = re.compile(r"\blegendary\b")
 
 
@@ -2719,7 +2724,12 @@ def condition_matches(
         # no self-name (`_self_referential`), and only a condition that
         # *does* self-reference needs "another"/"other" to say "besides me
         # too" rather than "instead of me" (CR 603.10a).
-        if mine and "another" not in lowered and "other" not in lowered:
+        if (
+            mine
+            and "another" not in lowered
+            and "other" not in lowered
+            and _SELF_OR_A_SUBJECT_RE.search(lowered) is None
+        ):
             return False
         subtype = _required_subtype(condition)
         if not (
@@ -4840,6 +4850,8 @@ _REPLICATE_CLAUSE = re.compile(r"^a replicate cost was paid for it$")
 #: CR 702.153a's own intervening *if*, written out by
 #: `machines/keywords._casualty_ability` - "a casualty cost was paid for it".
 _CASUALTY_CLAUSE = re.compile(r"^a casualty cost was paid for it$")
+#: `machines/keywords._conspire_ability` - "its conspire cost was paid".
+_CONSPIRE_CLAUSE = re.compile(r"^its conspire cost was paid$")
 
 #: CR 601.2h's "no mana was spent to cast it" (Vexing Bauble) and "[mana
 #: symbols] was spent to cast it" (Wistfulness's "{G}{G}", Drowner of Truth's
@@ -5453,6 +5465,12 @@ def intervening_if_answer(
         if record is None:
             return _fail_closed(game, ability, source)
         return record.casualty_paid > 0
+
+    if _CONSPIRE_CLAUSE.match(clause):
+        record = _cast_record_for_clause(game, ability, source, event, source_stamp)
+        if record is None:
+            return _fail_closed(game, ability, source)
+        return record.conspire_paid > 0
 
     if _NO_MANA_SPENT_CLAUSE.match(clause):
         record = _cast_record_for_clause(game, ability, source, event, source_stamp)

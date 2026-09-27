@@ -78,12 +78,13 @@ from .keywords import (
     enchant_restrictions,
     face_down_characteristics,
     printed_casualty_numbers,
+    printed_conspire_count,
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
 from .modes import ModalProfile, Mode, modal_profile, substitute_x
 from .objects_as_costs import power_of
-from .spell_grants import casualty_numbers, granted_affinity_reductions
+from .spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
 from .targeting import (
     TargetingProfile,
     kicked_instead_target_text,
@@ -2656,6 +2657,7 @@ ADDITIONAL_COST_KEYWORDS = frozenset(
         "teamwork",
         "bargain",
         "casualty",
+        "conspire",
     }
 )
 
@@ -2771,6 +2773,16 @@ def casualty_cost_option(number: int) -> OptionalAdditionalCost:
     )
 
 
+#: CR 702.78a's cost, spelled out.
+CONSPIRE_COST = "Tap two untapped creatures you control that each share a color with it"
+
+
+def conspire_cost_option() -> OptionalAdditionalCost:
+    """One conspire instance as an optional additional cost (CR 702.78a,
+    CR 118.8b) - `Casting.pay_conspire` pays it."""
+    return OptionalAdditionalCost(keyword="conspire", cost=CONSPIRE_COST, rule="CR 702.78a")
+
+
 def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
     """Every optional additional cost `card` prints for CR 601.2b's
     announcement, keyword lines and "you may ..." sentences alike.
@@ -2808,6 +2820,7 @@ def optional_additional_costs(card: Card) -> list[OptionalAdditionalCost]:
             OptionalAdditionalCost(keyword="bargain", cost=BARGAIN_COST, rule="CR 702.166a")
         )
     found.extend(casualty_cost_option(number) for number in printed_casualty_numbers(card))
+    found.extend(conspire_cost_option() for _ in range(printed_conspire_count(card)))
     for phrase in additional_cost_phrases(card):
         if _OPTIONAL_ADDITIONAL_COST.match(phrase) is None:
             continue
@@ -2850,10 +2863,13 @@ def granted_optional_additional_costs(
     if game is None:
         return []
     printed = len(printed_casualty_numbers(card.card))
+    granted_conspire = conspire_count(game, card, caster, card.zone) - printed_conspire_count(
+        card.card
+    )
     return [
         casualty_cost_option(number)
         for number in casualty_numbers(game, card, caster, card.zone)[printed:]
-    ]
+    ] + [conspire_cost_option() for _ in range(max(granted_conspire, 0))]
 
 
 def has_flash(card: Card) -> bool:
@@ -3876,6 +3892,9 @@ class Casting(EngineModel):
     casualty_paid: int = 0
     """How many of this spell's casualty instances were paid (CR 702.153a,
     CR 702.153b: "each is paid separately"), set by `pay_casualty`."""
+    conspire_paid: int = 0
+    """How many of this spell's conspire instances were paid (CR 702.78a),
+    set by `pay_conspire`."""
     offspring_paid: bool = False
     """Whether this spell's offspring cost was paid (CR 702.175a), set by
     `pay_offspring`. A flag rather than `kicked`'s count: offspring has no
@@ -5754,6 +5773,75 @@ class Casting(EngineModel):
         self.casualty_paid += 1
         return self.step
 
+    def conspire_count(self) -> int:
+        """How many conspire instances this spell has as it is cast (CR
+        702.78a): printed, then granted ("Each noncreature spell you cast
+        has conspire.", `machines/spell_grants.py`)."""
+        return conspire_count(self.game, self.spell, self.caster, self.origin_zone)
+
+    def conspire_candidates(self) -> list[CardState]:
+        """The untapped creatures the caster controls that share a colour
+        with this spell - what CR 702.78a's cost may tap."""
+        if self.game is None:
+            return []
+        spell_colors = set(self.spell.colors)
+        board = self.game.computed_board()
+        return [
+            state
+            for state in self.game.permanents_controlled_by(self.caster)
+            if board.of(state).is_creature
+            and not state.tapped
+            and spell_colors & set(board.of(state).colors)
+        ]
+
+    def pay_conspire(self, creatures: list[CardState]) -> CastingStep:
+        """CR 702.78a: "As an additional cost to cast this spell, you may tap
+        two untapped creatures you control that each share a color with it."
+
+        The two are chosen now (CR 601.2b) and tapped with the rest of the
+        total cost at CR 601.2h. Each instance is paid with its own two
+        creatures; a creature already paying another cost of this spell
+        cannot pay this one too.
+        """
+        from .cost import tap_cost
+
+        if self.conspire_paid >= self.conspire_count():
+            raise ValueError(f"{self.spell.name} has no unpaid conspire ability (CR 702.78a)")
+        if len(creatures) != 2 or creatures[0] is creatures[1]:
+            raise ValueError(f"conspire taps exactly two creatures (CR 702.78a)")
+        spell_colors = set(self.spell.colors)
+        for creature in creatures:
+            if creature.zone is not Zone.BATTLEFIELD:
+                raise ValueError(f"{creature.name} is not a permanent (CR 702.78a)")
+            controller = (
+                self.game.controller_of(creature).username
+                if self.game is not None
+                else creature.controller
+            )
+            if controller != self.caster:
+                raise ValueError(f"{self.caster} does not control {creature.name} (CR 702.78a)")
+            chars = self.game.characteristics_of(creature) if self.game is not None else creature
+            if not chars.is_creature:
+                raise ValueError(f"{creature.name} is not a creature (CR 702.78a)")
+            if creature.tapped:
+                raise ValueError(
+                    f"{creature.name} is tapped, and conspire taps untapped creatures (CR 118.3)"
+                )
+            if not spell_colors & set(chars.colors):
+                raise ValueError(
+                    f"{creature.name} does not share a color with {self.spell.name} (CR 702.78a)"
+                )
+            if any(
+                component.cards and creature in component.cards
+                for extra in self.additional_costs
+                for component in extra.components
+            ):
+                raise ValueError(f"{creature.name} is already paying another cost of this spell")
+        component = tap_cost(*creatures, payer=self.caster, description=CONSPIRE_COST)
+        self.add_additional_cost(TotalCost(components=[component]))
+        self.conspire_paid += 1
+        return self.step
+
     def _optional_sentence(self, pattern: re.Pattern[str], what: str, rule: str) -> str:
         """The cost of the card's own "As an additional cost to cast this
         spell, you may <cost>" sentence matching `pattern` (CR 118.8b)."""
@@ -7125,6 +7213,7 @@ class Casting(EngineModel):
                 kicked=self.kicked,
                 replicated=self.replicated,
                 casualty_paid=self.casualty_paid,
+                conspire_paid=self.conspire_paid,
                 offspring_paid=self.offspring_paid,
                 blight_paid=self.blight_paid,
                 cast_using_teamwork=self.teamwork_paid,

@@ -1646,6 +1646,16 @@ class ReplaceableEvent:
     #: "exiled with" itself, so that ability finds the card. `Game.put_into_
     #: graveyard` writes the CR 607.2a link once the card is in exile.
     exile_link: CardState | None = None
+    #: Counters the card arrives in exile with (CR 122.1) - Goliath
+    #: Daydreamer's "exile that card with a dream counter on it ... as it
+    #: resolves" (`machines/resolving_exile.py`). `Game.put_into_graveyard`
+    #: places them once the card is in exile.
+    exile_counters: dict[str, int] = field(default_factory=dict)
+    #: An "If you do, ..." rider to run once the card is in exile (Feather,
+    #: the Redeemed's "return it to your hand at the beginning of the next
+    #: end step"), and whose it is.
+    exile_rider: str | None = None
+    exile_rider_controller: str | None = None
     #: True while combat damage is being dealt (CR 510.2).
     combat: bool = False
     #: True for the draw an active player takes as the draw step's turn-based
@@ -6553,8 +6563,27 @@ def _stack_replacements(game: "Game", event: ReplaceableEvent) -> list[Applicabl
     if card is None or not _leaving_the_stack(event):
         return []
 
-    record = game.cast_record(card)
     found: list[ApplicableEffect] = []
+    from .resolving_exile import apply_resolving_exile, resolving_exile_of
+
+    if (
+        event.resolving
+        and event.destination is Zone.GRAVEYARD
+        and resolving_exile_of(card) is not None
+    ):
+        # CR 614.1a: a cast trigger's "exile that card [with a <kind>
+        # counter on it] instead of putting it into your graveyard as it
+        # resolves" (Goliath Daydreamer, Feather, the Redeemed, Lilah,
+        # Undefeated Slickshot) - recorded on the spell by the trigger.
+        found.append(
+            ApplicableEffect(
+                key=f"{card.id}:resolving_exile",
+                source=card,
+                label="exiled instead of put into the graveyard as it resolves",
+                apply=lambda game, source, event: apply_resolving_exile(game, event.card, event),
+            )
+        )
+    record = game.cast_record(card)
 
     if record.keyword is not None and record.keyword.lower() == "flashback":
         found.append(
