@@ -1456,3 +1456,26 @@ def test_a_snapshot_written_before_cast_permission_riders_is_refused() -> None:
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_CAST_PERMISSION_RIDERS}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before `machines/cost.CostComponent` gained
+#: `exile_after` (Champion of the Clachan's own "behold a Kithkin and exile
+#: it", CR 118.8/601.2f) - ecl T4.
+_SCHEMA_VERSION_BEFORE_BEHOLD_AND_EXILE = 91
+
+
+def test_a_snapshot_written_before_behold_and_exile_is_refused() -> None:
+    """A version-91 dump's own `CostComponent` rows have no `exile_after`
+    flag at all: decoded as current, a pending Champion of the Clachan cast
+    whose behold cost was mid-payment would forget that beholding also
+    exiles, and CR 607.2q's own link would never be written. Refused
+    instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_BEHOLD_AND_EXILE
+    dumped = _a_played_game().model_dump(mode="json")
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_BEHOLD_AND_EXILE
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_BEHOLD_AND_EXILE}",
+    ):
+        Game.model_validate(dumped)
