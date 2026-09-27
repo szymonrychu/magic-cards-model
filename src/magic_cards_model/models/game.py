@@ -4320,7 +4320,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 103
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 106
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4467,32 +4467,31 @@ class Game(EngineModel):
     #: 101: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
     #: Start your engines! speed, R0a-T8; renumbered from 96 at the R0a
     #: integration).
-    #: 97: `AbilityOnStack` gained `mana_spent` and `treasure_mana_spent`
-    #: 99: `AbilityOnStack` gained `mana_spent` and `treasure_mana_spent`
+    #: 102: `AbilityOnStack` gained `mana_spent` and `treasure_mana_spent`
     #: (CR 601.2h via CR 602.2b: what paid an activation's own cost, the
     #: ability-side twin of `CastRecord`'s identical two fields) - Paragon of
     #: Modernity's and Jetmir's Fixer's own "If `<mana condition>`, put a
     #: +1/+1 counter on it instead" (ec7-instead).
-    #: 100: `Game` gained `monarch` (CR 725, the monarch designation), and
+    #: 103: `Game` gained `monarch` (CR 725, the monarch designation), and
     #: `machines/abilities.TriggeredAbility` gained `monarch_inherent`, the
     #: tag `machines/monarch.py`'s two synthetic, sourceless CR 725.2
     #: abilities carry so `Game._effect_of` can find their effect without a
     #: card name to key off of (ec7-monarch; renumbered from 96 at
-    #: integration and again above main's 97/98).
-    #: 101: `GraveyardArrival` gained `card_types` (Raphael, Fiendish Savior's
+    #: integration and again above main's 97-101).
+    #: 104: `GraveyardArrival` gained `card_types` (Raphael, Fiendish Savior's
     #: and Macabre Reconstruction's "a creature card was put into your
     #: graveyard from anywhere this turn", EC7; renumbered from 96 at
-    #: integration and again above main's 97/98).
-    #: 102: `Game` gained `nontoken_creatures_died_under_control_this_turn`
+    #: integration and again above main's 97-101).
+    #: 105: `Game` gained `nontoken_creatures_died_under_control_this_turn`
     #: (ec7-cast-optional: Vile Redeemer's own cast-trigger "for each
     #: nontoken creature that died under your control this turn").
-    #: The 98 -> 102 window also changed, under the bumps above rather than
+    #: The 101 -> 105 window also changed, under the bumps above rather than
     #: a version of its own: `machines/layers`
     #: `QualifiedCreatures`/`CreatureQualifiers` gained `colorless`; the
     #: `turn_history` event kinds gained "blocked" and "fought"; generic P/T
     #: counters joined `_counter_effects`; and protection gained CR 112.1's
     #: "spell" quality.
-    #: 103: `machines/triggers.GameEvent` gained `subject_stamp` (ec7-rv-rules:
+    #: 106: `machines/triggers.GameEvent` gained `subject_stamp` (ec7-rv-rules:
     #: a cast-trigger's own X, Hydroid Krasis/Genesis Hydra/Old Stickfingers/
     #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
     #: the cast spell has left the stack - CR 608.2h - rather than lost the

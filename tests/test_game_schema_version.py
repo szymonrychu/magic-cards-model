@@ -1619,11 +1619,11 @@ def test_a_snapshot_written_before_entering_counter_replacements_is_refused() ->
 
 #: The version stamped before `AbilityOnStack` gained `mana_spent` and
 #: `treasure_mana_spent` (CR 601.2h via CR 602.2b, ec7-instead).
-_SCHEMA_VERSION_BEFORE_ABILITY_MANA_SPENT = 98
+_SCHEMA_VERSION_BEFORE_ABILITY_MANA_SPENT = 101
 
 
 def test_a_snapshot_written_before_ability_mana_spent_is_refused() -> None:
-    """A version-98 dump's activated abilities on the stack carry no record
+    """A version-101 dump's activated abilities on the stack carry no record
     of what paid their cost: decoded as current, each would default to
     nothing spent, and Paragon of Modernity's "If `<mana condition>`, put a
     +1/+1 counter on it instead" would silently take the ordinary branch for
@@ -1662,11 +1662,11 @@ def test_a_snapshot_written_before_group_evasion_grants_is_refused() -> None:
 
 #: The version stamped before `Game` gained `monarch` and `TriggeredAbility`
 #: gained `monarch_inherent` (CR 725, ec7-monarch).
-_SCHEMA_VERSION_BEFORE_MONARCH = 99
+_SCHEMA_VERSION_BEFORE_MONARCH = 102
 
 
 def test_a_snapshot_written_before_the_monarch_is_refused() -> None:
-    """A version-99 dump has no monarch: decoded as current it would default
+    """A version-102 dump has no monarch: decoded as current it would default
     to nobody, and a game where a player really was the monarch would stop
     drawing them the end-step card (CR 725.2) with no signal. Refused
     instead."""
@@ -1685,11 +1685,11 @@ def test_a_snapshot_written_before_the_monarch_is_refused() -> None:
 #: The version stamped before `GraveyardArrival` gained `card_types`
 #: (Raphael, Fiendish Savior's and Macabre Reconstruction's "a creature card
 #: was put into your graveyard from anywhere this turn", EC7).
-_SCHEMA_VERSION_BEFORE_GRAVEYARD_ARRIVAL_CARD_TYPES = 100
+_SCHEMA_VERSION_BEFORE_GRAVEYARD_ARRIVAL_CARD_TYPES = 103
 
 
 def test_a_snapshot_written_before_graveyard_arrival_card_types_is_refused() -> None:
-    """A version-100 dump's own `GraveyardArrival` entries have no
+    """A version-103 dump's own `GraveyardArrival` entries have no
     `card_types`: decoded as current, each would default to `()`, which
     reads as "no printed types" - a creature card that already reached a
     graveyard this turn would silently stop counting for "a creature card
@@ -1771,17 +1771,19 @@ def test_a_snapshot_written_before_speed_is_refused() -> None:
     with pytest.raises(
         SchemaVersionMismatch,
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_SPEED}",
+    ):
+        Game.model_validate(dumped)
 
 
 #: The version stamped before `Game` gained
 #: `nontoken_creatures_died_under_control_this_turn` (Vile Redeemer's cast
 #: trigger, "for each nontoken creature that died under your control this
 #: turn").
-_SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL = 101
+_SCHEMA_VERSION_BEFORE_NONTOKEN_DEATHS_UNDER_CONTROL = 104
 
 
 def test_a_snapshot_written_before_nontoken_deaths_under_control_is_refused() -> None:
-    """A version-101 dump has no per-player count of nontoken creatures that
+    """A version-104 dump has no per-player count of nontoken creatures that
     died under their control this turn: decoded as current it would default
     to none, and a Vile Redeemer cast later that same turn would make no
     Scions for deaths that really happened. Refused instead."""
@@ -1821,11 +1823,11 @@ def _a_game_with_a_pending_cast_trigger() -> Game:
 #: The version stamped before `GameEvent` gained `subject_stamp` (EC7-rv-rules:
 #: a cast trigger's own X - Hydroid Krasis, Genesis Hydra, Old Stickfingers,
 #: Geometer's Arthropod - lost the moment its own spell left the stack).
-_SCHEMA_VERSION_BEFORE_CAST_TRIGGER_SUBJECT_STAMP = 102
+_SCHEMA_VERSION_BEFORE_CAST_TRIGGER_SUBJECT_STAMP = 105
 
 
 def test_a_snapshot_written_before_cast_trigger_subject_stamp_is_refused() -> None:
-    """A version-102 dump's own cast-triggered `AbilityOnStack.event` carries
+    """A version-105 dump's own cast-triggered `AbilityOnStack.event` carries
     no `subject_stamp`: decoded as current it would default to `None`, and a
     cast trigger resolving after its own spell was countered in response
     would read no cast X at all (`Game.cast_record_of` keyed by the spell's
