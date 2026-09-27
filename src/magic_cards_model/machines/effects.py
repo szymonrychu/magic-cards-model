@@ -61316,15 +61316,15 @@ def _parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause(
 ) -> AbilityEffect | None:
     """`_MULTI_PART_SACRIFICE_GAIN_DRAW_DISCARD_DAMAGE_COUNTERS_RE`'s shape -
     Everything Pizza's own activated ability, which sacrifices its source as
-    part of the cost (CR 602.2c): by the time this resolves the artifact is
-    already in its owner's graveyard, so "this artifact" is read through
-    `AbilityOnStack.source_or_last_known` (CR 608.2h) exactly the way
+    part of the cost (CR 602.2b/601.2h): by the time this resolves the
+    artifact is already in its owner's graveyard, so "this artifact" is read
+    through `AbilityOnStack.source_or_last_known` (CR 608.2h) exactly the way
     `_parse_reveal_until_land_damage_clause` already reads a sacrificed
     Goblin Charbelcher's own "this artifact deals damage".
 
     The three targets are read back off `Game.resolve_targets`, in the order
     CR 601.2c/602.2b declared them: a player (mandatory), then "any target"
-    (mandatory, CR 115.5 lets it be a creature, player, planeswalker, or
+    (mandatory, CR 115.4 lets it be a creature, player, planeswalker, or
     battle), then up to one target creature (CR 115.6's "up to one", so it
     may be absent). The first `Player` found is read as the mandatory
     "target player" slot - it is declared first, so it is the first one this

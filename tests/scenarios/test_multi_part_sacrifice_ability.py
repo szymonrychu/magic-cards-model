@@ -8,9 +8,10 @@ player gains 3 life and draws a card. Each of your opponents discards a card.
 This artifact deals 3 damage to any target. Put three +1/+1 counters on up to
 one target creature."
 
-- **CR 602.2c/601.2h** - the cost is paid, sacrifice included, before the
-  ability ever goes on the stack: by the time this resolves, the artifact is
-  already in its owner's graveyard.
+- **CR 602.2b/601.2h** - the ability goes on the stack when it is announced
+  (CR 602.2a), then its cost, sacrifice included, is paid the same way a
+  spell's cost is (CR 602.2b routes to CR 601.2h) before it ever resolves: by
+  the time this resolves, the artifact is already in its owner's graveyard.
 - **CR 608.2h** - "this artifact" is read through `AbilityOnStack.source_or_
   last_known` from then on, the identical last-known-information primitive
   Goblin Charbelcher's own "this artifact deals damage" already uses once it
@@ -35,10 +36,52 @@ Every CR number here was looked up with `mise run rules:find` in the session
 that wrote this file.
 """
 
+import re
+from pathlib import Path
+
+import pytest
+
+import magic_cards_model.machines.effects as effects_module
 from magic_cards_model.machines import Step
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
+
+_CR_CITATION_RE = re.compile(r"\b\d{3}\.\d+[a-z]?\b")
+
+
+def _cited_rule_numbers(text: str) -> set[str]:
+    return set(_CR_CITATION_RE.findall(text))
+
+
+def test_cr_citations_in_multi_part_sacrifice_docs_are_real_rules():
+    """Every CR number this module's own docstring and the parser's docstring
+    in `effects.py` cite for Everything Pizza's multi-part sacrifice ability
+    must actually exist in the pulled Comprehensive Rules text. A prior
+    version of these docstrings cited a fabricated CR 602.2c (602.2 has only
+    602.2a and 602.2b) and a mismatched CR 115.5 (self-targeting, not "any
+    target"'s creature/player/planeswalker/battle definition, which is
+    115.4) - `mise run rules:find` catches both.
+    """
+    rules_file = Path(__file__).resolve().parents[2] / ".rules" / "MagicCompRules.txt"
+    if not rules_file.exists():
+        pytest.skip("no local .rules/MagicCompRules.txt - run `mise run rules:pull` first")
+    rules_text = rules_file.read_text(errors="ignore")
+
+    module_doc = __doc__ or ""
+    parser_doc = (
+        effects_module._parse_multi_part_sacrifice_gain_draw_discard_damage_counters_clause.__doc__
+        or ""
+    )
+
+    cited = sorted(_cited_rule_numbers(module_doc) | _cited_rule_numbers(parser_doc))
+    assert cited, "expected at least one CR citation to check"
+    missing = [
+        number
+        for number in cited
+        if not re.search(rf"^{re.escape(number)}\b", rules_text, re.MULTILINE)
+    ]
+    assert not missing, f"CR number(s) not found in the pulled Comprehensive Rules: {missing}"
 
 
 def _board(*, alice_creature: str = "Grizzly Bears", bob_creature: str = "Llanowar Elves"):
