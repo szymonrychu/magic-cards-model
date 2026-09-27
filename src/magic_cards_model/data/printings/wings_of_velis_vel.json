@@ -1,0 +1,134 @@
+{
+  "object": "card",
+  "id": "cc5f287b-beaa-4b51-8db7-91982e2c0bb0",
+  "oracle_id": "0bb2b3cc-d3e6-40e9-a5da-d589e8e8f0bd",
+  "multiverse_ids": [
+    397897
+  ],
+  "mtgo_id": 57032,
+  "mtgo_foil_id": 57033,
+  "tcgplayer_id": 98781,
+  "cardmarket_id": 282921,
+  "name": "Wings of Velis Vel",
+  "lang": "en",
+  "released_at": "2015-05-22",
+  "uri": "https://api.scryfall.com/cards/cc5f287b-beaa-4b51-8db7-91982e2c0bb0",
+  "scryfall_uri": "https://scryfall.com/card/mm2/70/wings-of-velis-vel?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T10:26:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.jpg?1783938415",
+    "normal": "https://cards.scryfall.io/normal/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.jpg?1783938415",
+    "large": "https://cards.scryfall.io/large/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.jpg?1783938415",
+    "png": "https://cards.scryfall.io/png/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.png?1783938415",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.jpg?1783938415",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.jpg?1783938415",
+    "thumb": "https://cards.scryfall.io/thumb/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.webp?1783938415",
+    "grid": "https://cards.scryfall.io/grid/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.webp?1783938415",
+    "display": "https://cards.scryfall.io/display/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.webp?1783938415",
+    "art": "https://cards.scryfall.io/art/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.webp?1783938415",
+    "crop": "https://cards.scryfall.io/crop/front/c/c/cc5f287b-beaa-4b51-8db7-91982e2c0bb0.webp?1783938415"
+  },
+  "mana_cost": "{1}{U}",
+  "cmc": 2.0,
+  "type_line": "Kindred Instant \u2014 Shapeshifter",
+  "oracle_text": "Changeling (This card is every creature type.)\nUntil end of turn, target creature has base power and toughness 4/4, gains all creature types, and gains flying.",
+  "colors": [
+    "U"
+  ],
+  "color_identity": [
+    "U"
+  ],
+  "keywords": [
+    "Changeling"
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "28cac015-43df-4e88-90d0-95dcdd894834",
+  "set": "mm2",
+  "set_name": "Modern Masters 2015",
+  "set_type": "masters",
+  "set_uri": "https://api.scryfall.com/sets/28cac015-43df-4e88-90d0-95dcdd894834",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Amm2&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/mm2?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/cc5f287b-beaa-4b51-8db7-91982e2c0bb0/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A0bb2b3cc-d3e6-40e9-a5da-d589e8e8f0bd&unique=prints",
+  "collector_number": "70",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Changeling magic grants unusual wishes.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jim Pavelec",
+  "artist_ids": [
+    "1431bdd4-c187-40ea-847a-e1dcd835598a"
+  ],
+  "illustration_id": "c74205d7-ec51-4bb5-862e-e6f1c99d2cf8",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 13719,
+  "penny_rank": 15290,
+  "prices": {
+    "usd": "0.13",
+    "usd_foil": "0.24",
+    "usd_etched": null,
+    "eur": "0.17",
+    "eur_foil": "0.51",
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=397897&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWings%2Bof%2BVelis%2BVel",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWings%2Bof%2BVelis%2BVel",
+    "edhrec": "https://edhrec.com/route/?cc=Wings+of+Velis+Vel"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F98781%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=282921&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/57032?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

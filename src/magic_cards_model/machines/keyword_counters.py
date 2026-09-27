@@ -74,10 +74,14 @@ from .combat import Keyword
 #: dead line; see this module's own docstring for the two names that *did*
 #: need adding here (indestructible, hexproof). Decayed is now read
 #: (`Keyword.DECAYED`, `machines/combat.block_refusal`,
-#: `machines/keywords._decayed_ability`), so it is listed below even though
-#: `_KEYWORD_COUNTER_LINE_TEXT` grants it no line of its own - `_ALREADY_
-#: GRANTED_BY_LAYERS` already excludes every `Keyword` member, `machines/
-#: layers.py::_keyword_counter_lines` grants its line instead.
+#: `machines/keywords._decayed_ability`), so it is listed below.
+#:
+#: Every kind here is granted in layer 6 at its own CR 613.7c timestamp by
+#: `machines/layers.ContinuousEffects.keyword_counter_grants` (ecl T5), which
+#: replaced the post-layer supplement this module used to hand
+#: `Game.characteristics_of` for indestructible and hexproof: added after
+#: every layer, those two survived a later "loses all abilities", which CR
+#: 613.1f's own ordering does not allow.
 KEYWORD_COUNTER_KEYWORDS: frozenset[str] = frozenset(
     {
         Keyword.FLYING.value,
@@ -95,40 +99,6 @@ KEYWORD_COUNTER_KEYWORDS: frozenset[str] = frozenset(
         "hexproof",
     }
 )
-
-#: The keywords `machines/layers.py::_keyword_counter_lines` already grants a
-#: line for on its own (every `Keyword` member) - this module supplements
-#: only the rest of `KEYWORD_COUNTER_KEYWORDS`, so a keyword already granted
-#: there is never granted twice.
-_ALREADY_GRANTED_BY_LAYERS = frozenset(keyword.value for keyword in Keyword)
-
-#: What CR 122.1b's own vocabulary calls each of the keywords this module
-#: grants a line for, title-cased the identical way `_keyword_counter_lines`
-#: already spells a granted keyword - `machines/combat.py::_reading_
-#: vocabulary` compares case-insensitively, so the casing itself is
-#: cosmetic, but matching it keeps a granted line indistinguishable from one
-#: `machines/layers.py` would have written.
-_KEYWORD_COUNTER_LINE_TEXT: dict[str, str] = {
-    keyword: keyword.replace("_", " ").title()
-    for keyword in KEYWORD_COUNTER_KEYWORDS
-    if keyword not in _ALREADY_GRANTED_BY_LAYERS
-}
-
-
-def supplemental_keyword_counter_lines(counters: dict[str, int]) -> tuple[str, ...]:
-    """CR 122.1b's own ability lines for a keyword counter that
-    `machines/layers.py::_keyword_counter_lines` does not already grant one
-    for (indestructible, hexproof) - see this module's own docstring.
-
-    `counters` is a permanent's counter map exactly as `Characteristics.
-    counters` already carries it (`CardState.counters.as_dict()`), so a
-    caller with a `Characteristics` in hand passes `chars.counters` straight
-    through.
-    """
-    return tuple(
-        text for keyword, text in _KEYWORD_COUNTER_LINE_TEXT.items() if counters.get(keyword, 0) > 0
-    )
-
 
 #: CR 122.1c's own counter kind, as `CardState.counters`/`Game.add_counters`
 #: key it - Diamond City's own "Move a shield counter" (`tests/scenarios/

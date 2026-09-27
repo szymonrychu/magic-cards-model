@@ -2879,8 +2879,17 @@ class CardState(EngineModel):
         return self.counters[kind]
 
     def add_counters(self, kind: CounterKind, amount: int = 1) -> int:
-        """Put counters on this object, returning the new count (CR 122.1)."""
-        return self.counters.add(kind, amount)
+        """Put counters on this object, returning the new count (CR 122.1).
+
+        A keyword counter put on a permanent takes a timestamp (CR 613.7c) -
+        `Game.stamp_keyword_counter`, which `machines/layers.py` orders it by
+        against the other layer 6 effects (CR 613.1f)."""
+        total = self.counters.add(kind, amount)
+        game = self._board_source
+        stamp = getattr(game, "stamp_keyword_counter", None)
+        if amount > 0 and stamp is not None and self.zone is Zone.BATTLEFIELD:
+            stamp(self, str(kind))
+        return total
 
     def remove_counters(self, kind: CounterKind, amount: int = 1) -> int:
         """Take counters off, returning what is left. Raises if there are too few."""

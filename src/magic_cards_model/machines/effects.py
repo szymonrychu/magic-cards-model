@@ -21291,6 +21291,14 @@ def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> Tar
     the remainder is always read the same way, regardless of which shape
     carries the layer sentence beside it.
     """
+    from .becomes import counter_list_on_anaphor
+
+    # Abigale, Eloquent First-Year's "Put a flying counter, a first strike
+    # counter, and a lifelink counter on that creature." - one instruction
+    # the clause splitter would cut at its commas (`machines/becomes.py`).
+    counters = counter_list_on_anaphor(remainder_text)
+    if counters is not None:
+        return counters
     return (
         parse_mixed_effect_for_spell(remainder_text)
         if for_spell
@@ -25840,6 +25848,11 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     counter_resolution = _parse_counter_resolution_text(effect_text)
     if counter_resolution is not None:
         return counter_resolution
+    from .becomes import becomes_ability_effect
+
+    becomes = becomes_ability_effect(effect_text)
+    if becomes is not None:
+        return becomes
     choose_card_name = _parse_choose_card_name_for_source_clause(effect_text)
     if choose_card_name is not None:
         return choose_card_name
@@ -29737,6 +29750,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     counter_resolution = _parse_counter_resolution_text(whole, for_spell=True)
     if counter_resolution is not None:
         return counter_resolution
+    from .becomes import becomes_spell_effect
+
+    becomes = becomes_spell_effect(whole)
+    if becomes is not None:
+        return becomes
     c02_t6 = _c02_t6_spell_effect(whole)
     if c02_t6 is not None:
         return c02_t6
@@ -52247,12 +52265,26 @@ def _parse_target_player_creatures_pump_clause(
 #: (CR 611.3), read by `machines/layers.py`'s battlefield sweep, not a
 #: resolution effect. The group subject is any `_mass_creature_group_
 #: targets` reads, plus "creatures target player/opponent controls".
+#:
+#: Widened (ecl T5) to Curious Colossus's "each creature target opponent
+#: controls loses all abilities, becomes a Coward in addition to its other
+#: types, and has base power and toughness 1/1." - the singular "each
+#: creature ... controls" subject, a layer 4 rider that only *adds* creature
+#: types (CR 205.1b's "in addition to its other types", CR 613.1d), and no
+#: duration at all: a targeted subject can never be a permanent's own static
+#: ability (CR 115.1: targets are declared as a spell or ability is put on
+#: the stack, which a static ability never is), so a durationless
+#: targeted sentence is a resolution effect that lasts indefinitely (CR
+#: 611.2a) rather than Dress Down's CR 611.3 static.
 _MASS_LOSE_ALL_ABILITIES_RE = re.compile(
     r"^(?P<leading>until end of turn, )?"
     r"(?P<subject>all creatures|(?:other )?creatures (?:you control|your opponents control)"
-    r"|creatures (?P<targeted>target (?:player|opponent)) controls)"
-    r" lose all abilities"
-    r"(?: and have base power and toughness (?P<power>\d+)/(?P<toughness>\d+))?"
+    r"|creatures (?P<targeted>target (?:player|opponent)) controls"
+    r"|each creature (?P<each_targeted>target (?:player|opponent)) controls)"
+    r" loses? all abilities"
+    r"(?:,? (?:and )?becomes? an? (?P<added>[A-Z][A-Za-z'-]*(?: [A-Z][A-Za-z'-]*)*)"
+    r" in addition to (?:its|their) other types)?"
+    r"(?:,? and (?:have|has) base power and toughness (?P<power>\d+)/(?P<toughness>\d+))?"
     r"(?P<trailing> until end of turn)?\.?$",
     re.IGNORECASE,
 )
@@ -52270,12 +52302,19 @@ def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> Ta
     match = _MASS_LOSE_ALL_ABILITIES_RE.fullmatch(clause.strip())
     if match is None:
         return None
-    if bool(match.group("leading")) == bool(match.group("trailing")):
-        return None
     subject = match.group("subject")
-    targeted = match.group("targeted")
+    targeted = match.group("targeted") or match.group("each_targeted")
+    leading, trailing = bool(match.group("leading")), bool(match.group("trailing"))
+    if leading and trailing:
+        return None
+    if not (leading or trailing) and targeted is None:
+        # Dress Down's durationless "Creatures lose all abilities." is a
+        # static ability (CR 611.3), never this resolution reader's.
+        return None
     if targeted is not None and not _targets_understood(targeted, allow_player_targets=True):
         return None
+    duration = Duration.UNTIL_END_OF_TURN if leading or trailing else Duration.INDEFINITE
+    added = tuple((match.group("added") or "").split())
     power = int(match.group("power")) if match.group("power") is not None else None
     toughness = int(match.group("toughness")) if match.group("toughness") is not None else None
 
@@ -52310,11 +52349,23 @@ def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> Ta
                     description=f"{source.name}: {creature.name} loses all abilities",
                     layer=Layer.ABILITY,
                     timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
+                    duration=duration,
                     selector=selector,
                     modification=lose_all_abilities,
                 )
             ]
+            for subtype in added:
+                # CR 205.1b: "in addition to its other types" keeps them all.
+                built.append(
+                    ContinuousEffect(
+                        description=f"{source.name}: {creature.name} is also a {subtype}",
+                        layer=Layer.TYPE,
+                        timestamp=timestamp,
+                        duration=duration,
+                        selector=selector,
+                        modification=add_subtype(subtype),
+                    )
+                )
             if power is not None and toughness is not None:
                 built.append(
                     ContinuousEffect(
@@ -52324,7 +52375,7 @@ def _parse_mass_lose_all_abilities_clause(clause: str, *, for_spell: bool) -> Ta
                         layer=Layer.POWER_TOUGHNESS,
                         sublayer=Sublayer.SET,
                         timestamp=timestamp,
-                        duration=Duration.UNTIL_END_OF_TURN,
+                        duration=duration,
                         selector=selector,
                         modification=set_power_toughness(power, toughness),
                     )

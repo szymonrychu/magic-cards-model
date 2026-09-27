@@ -1,0 +1,155 @@
+{
+  "object": "card",
+  "id": "fc779971-24e2-46a8-86be-16f0b244a3d2",
+  "oracle_id": "2e17cd4c-ebf0-40d0-b52d-b4d84bbcf7b3",
+  "multiverse_ids": [],
+  "resource_id": "A3BB8794CA3418DD1714B617A0322815D690E3D8A3BE241333DE36275701D664",
+  "mtgo_id": 142877,
+  "arena_id": 96706,
+  "tcgplayer_id": 644614,
+  "cardmarket_id": 835723,
+  "name": "Devastating Onslaught",
+  "lang": "en",
+  "released_at": "2025-08-01",
+  "uri": "https://api.scryfall.com/cards/fc779971-24e2-46a8-86be-16f0b244a3d2",
+  "scryfall_uri": "https://scryfall.com/card/eoe/132/devastating-onslaught?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:25:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.jpg?1783905955",
+    "normal": "https://cards.scryfall.io/normal/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.jpg?1783905955",
+    "large": "https://cards.scryfall.io/large/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.jpg?1783905955",
+    "png": "https://cards.scryfall.io/png/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.png?1783905955",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.jpg?1783905955",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.jpg?1783905955",
+    "thumb": "https://cards.scryfall.io/thumb/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.webp?1783905955",
+    "grid": "https://cards.scryfall.io/grid/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.webp?1783905955",
+    "display": "https://cards.scryfall.io/display/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.webp?1783905955",
+    "art": "https://cards.scryfall.io/art/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.webp?1783905955",
+    "crop": "https://cards.scryfall.io/crop/front/f/c/fc779971-24e2-46a8-86be-16f0b244a3d2.webp?1783905955"
+  },
+  "mana_cost": "{X}{X}{R}",
+  "cmc": 1.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Create X tokens that are copies of target artifact or creature you control. Those tokens gain haste until end of turn. Sacrifice them at the beginning of the next end step.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "2dedcdcd-4dbf-4bc1-9de3-823f0c7e3961",
+      "component": "combo_piece",
+      "name": "Devastating Onslaught",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/2dedcdcd-4dbf-4bc1-9de3-823f0c7e3961"
+    },
+    {
+      "object": "related_card",
+      "id": "f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c",
+      "component": "token",
+      "name": "Copy",
+      "type_line": "Token",
+      "uri": "https://api.scryfall.com/cards/f4e87a11-b3b1-47b2-bd73-f4c78d6fbe6c"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set": "eoe",
+  "set_name": "Edge of Eternities",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/452951cf-378b-4472-b7fe-572fe2af2ac0",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aeoe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/eoe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/fc779971-24e2-46a8-86be-16f0b244a3d2/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A2e17cd4c-ebf0-40d0-b52d-b4d84bbcf7b3&unique=prints",
+  "collector_number": "132",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "\"Adapt to this, you bug-eyed planet-squatters!\"\n\u2014Admiral Scargruf, Kavaron Memorial Navy",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Chris Seaman",
+  "artist_ids": [
+    "b9c49463-6f55-4039-9d32-c02a658af100"
+  ],
+  "illustration_id": "a2b2d35b-91a7-4dec-a819-df5b3431c0df",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3762,
+  "penny_rank": 2132,
+  "preview": {
+    "source": "Brandon Sanderson",
+    "source_uri": "https://www.youtube.com/watch?v=-6dWGdtpjbI",
+    "previewed_at": "2025-07-15"
+  },
+  "prices": {
+    "usd": "2.93",
+    "usd_foil": "3.07",
+    "usd_etched": null,
+    "eur": "2.22",
+    "eur_foil": "2.50",
+    "tix": "0.21"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DDevastating%2BOnslaught",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DDevastating%2BOnslaught",
+    "edhrec": "https://edhrec.com/route/?cc=Devastating+Onslaught"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F644614%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=835723&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/142877?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

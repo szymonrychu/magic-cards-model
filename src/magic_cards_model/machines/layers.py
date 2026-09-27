@@ -3606,10 +3606,17 @@ _QUALIFIER = r"(?: [a-z][a-z-]*)*?"
 #: targeted, it only has to recognise the shape, so admitting the second
 #: possessive costs nothing.
 _CONTROLLER_CLAUSE = r"(?: you control| an opponent controls)?"
+#: "Up to one other target creature" (Glamer Gifter's, Lizard, Connors's
+#: Curse's and Abigale, Eloquent First-Year's own enters triggers) - CR
+#: 115.6's "up to one" with "other" excluding the source itself, which
+#: `machines/targeting.py` already enforced at announcement
+#: (`excludes_source`); recognised here the same recognise-only way as
+#: "another target".
 _SUBJECT = (
     rf"(?:{_UP_TO_ONE_PREFIX}target{_QUALIFIER} {_SUBJECT_NOUN}{_CONTROLLER_CLAUSE}"
     rf"|this creature|this permanent"
-    rf"|another target{_QUALIFIER} {_SUBJECT_NOUN}{_CONTROLLER_CLAUSE})"
+    rf"|another target{_QUALIFIER} {_SUBJECT_NOUN}{_CONTROLLER_CLAUSE}"
+    rf"|{_UP_TO_ONE_PREFIX}other target{_QUALIFIER} {_SUBJECT_NOUN}{_CONTROLLER_CLAUSE})"
 )
 
 #: A plural target subject - "up to two target creatures" (Dauntless
@@ -3710,8 +3717,19 @@ _THAT_CREATURES_POWER_RE = re.compile(r"^that creature'?s power$", re.IGNORECASE
 #: list, a controller clause, a colour clause) the same grammar a spell's own
 #: `_targets_understood` already vets independently - re-deriving that
 #: grammar here would only be able to disagree with it, never improve on it.
+#:
+#: Widened (ecl T5) to Abigale, Eloquent First-Year's durationless "up to one
+#: other target creature loses all abilities." - no duration is printed, so
+#: the loss lasts indefinitely (CR 611.2a's "if no duration is stated, it
+#: lasts until the end of the game" reading is the card's own ruling), and
+#: the "up to one"/"other" prefix CR 115.6's zero-or-one choice already
+#: settled at announcement. A durationless targeted sentence can never be a
+#: static ability (CR 115.1: targets are declared as a spell or ability is
+#: put on the stack, which a static ability never is).
 _TARGETED_LOSES_ALL_ABILITIES_RE = re.compile(
-    r"^target .+? loses all abilities until end of turn\.?$", re.IGNORECASE
+    r"^(?:up to one )?(?:other |another )?target .+? loses all abilities"
+    r"(?P<until_eot> until end of turn)?\.?$",
+    re.IGNORECASE,
 )
 
 #: "This creature can't be blocked this turn." (Matterbending Mage's own
@@ -4942,14 +4960,33 @@ _BECOMES_CREATURE_WITH_MANA_VALUE_PT_RE = re.compile(
 #: X reaches this reader already substituted with the announced value (CR
 #: 107.3a) by `machines/effects.create_continuous_effect`; the colours are
 #: all set together in layer 5 (CR 613.1e), replacing every other colour.
+#:
+#: Widened (ecl T5) three ways, none of which a narrower sentence reads
+#: differently:
+#:
+#: - **No duration** - Lizard, Connors's Curse's "up to one other target
+#:   creature loses all abilities and becomes a green Lizard creature with
+#:   base power and toughness 4/4." and Figure of Fable's own "{G/W}: This
+#:   creature becomes a Kithkin Scout with base power and toughness 2/3."
+#:   print none, so the effect lasts until the end of the game (CR 611.2a).
+#: - **"<creature types> creature"** as the noun (the Lizard's) - CR 205.1a:
+#:   the card type is *set* to creature and the creature types to the ones
+#:   named, every other card type and subtype going with them.
+#: - **A trailing ability list** after the base power and toughness - Figure
+#:   of Destiny's "... with base power and toughness 8/8, flying, and first
+#:   strike." and Figure of Fable's "... 7/8 and protection from each of your
+#:   opponents." (CR 702.16k, CR 702.16i) - the object *has* them, a layer 6
+#:   grant (CR 613.1f) from the same instruction (CR 613.6).
 _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE = re.compile(
     rf"^(?:{_SUBJECT}) (?P<loses>loses all abilities and )?becomes an? "
     r"(?:(?P<color>(?:white|blue|black|red|green)(?: and (?:white|blue|black|red|green))?) )?"
     r"(?:(?P<artifact_types>(?:[a-z'-]+ )*?)(?P<artifact>artifact creature)"
+    r"|(?P<creature_types>(?:[a-z'-]+ )+?)(?P<creature>creature)"
     r"|(?P<subtype>[a-z'-]+(?: [a-z'-]+)*?)) with base power and "
     r"toughness (?:(?P<power>\d+)/(?P<toughness>\d+)"
     r"|each equal to (?P<each>\d+)(?: plus (?P<plus>\d+))?)"
-    r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))? until end of turn\.?$",
+    r"(?:(?P<with_abilities>(?:,| and) (?!gains )[a-z][a-z ,]*?))?"
+    r"(?: and gains (?P<keywords>[a-z][a-z ,]*?))?(?P<until_eot> until end of turn)?\.?$",
     re.IGNORECASE,
 )
 
@@ -6130,12 +6167,14 @@ def _effect_sentences_uncached(
     )
 
 
-def _targeted_loses_all_abilities_builder() -> EffectBuilder:
+def _targeted_loses_all_abilities_builder(*, until_eot: bool = True) -> EffectBuilder:
     """ "Target `<X>` loses all abilities until end of turn." - CR 613.1f,
     layer 6, one `target`'s incarnation at a time (`only_this_incarnation`,
     the same per-target selector `_pump_and_keyword_builder` uses just
     below), timed to expire at CR 514.2's cleanup step like any other
-    "until end of turn" effect (`Duration.UNTIL_END_OF_TURN`).
+    "until end of turn" effect (`Duration.UNTIL_END_OF_TURN`) - or, printed
+    with no duration at all (Abigale, Eloquent First-Year), never
+    (`Duration.INDEFINITE`).
     """
 
     def builder(
@@ -6149,7 +6188,7 @@ def _targeted_loses_all_abilities_builder() -> EffectBuilder:
                 description=f"{source.name}: {target.name} loses all abilities",
                 layer=Layer.ABILITY,
                 timestamp=timestamp,
-                duration=Duration.UNTIL_END_OF_TURN,
+                duration=Duration.UNTIL_END_OF_TURN if until_eot else Duration.INDEFINITE,
                 selector=only_this_incarnation(target, target.zone_change_stamp),
                 modification=lose_all_abilities,
             )
@@ -7261,17 +7300,22 @@ def _becomes_creature_type_with_base_pt_builder(
     *,
     loses_abilities: bool,
     artifact_creature: bool = False,
+    creature_card_type: bool = False,
     keywords: Sequence[str] = (),
+    until_eot: bool = True,
 ) -> EffectBuilder:
     """`_BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE`'s shape: one resolving effect
-    applied in each layer it names (CR 613.6), until end of turn, to each
+    applied in each layer it names (CR 613.6), until end of turn - or with no
+    duration printed, until the end of the game (CR 611.2a) - to each
     target's current incarnation (CR 400.7).
 
     Layer 4 (CR 613.1d): a creature-type list sets the creature types
     (CR 205.1a); "artifact creature" adds both card types and keeps every
     prior type and subtype, and "<creature types> artifact creature" keeps
-    every prior one but the creature types, which it replaces (CR 205.1b).
-    Layer 6 (CR 613.1f) grants each keyword."""
+    every prior one but the creature types, which it replaces (CR 205.1b);
+    "<creature types> creature" sets the card type to creature and the
+    subtypes to the ones named (CR 205.1a). Layer 6 (CR 613.1f) grants each
+    keyword (a "Protection from ..." line included)."""
     subtypes = tuple(subtypes)
     named = " ".join(subtypes)
     type_parts: list[Modification]
@@ -7280,8 +7324,12 @@ def _becomes_creature_type_with_base_pt_builder(
         if subtypes:
             type_parts.append(SetCreatureTypes(subtypes=subtypes))
         named = f"{named} artifact creature".strip()
+    elif creature_card_type:
+        type_parts = [SetTypesAndSubtypes(types=(Type.CREATURE,), subtypes=subtypes)]
+        named = f"{named} creature"
     else:
         type_parts = [SetCreatureTypes(subtypes=subtypes)]
+    duration = Duration.UNTIL_END_OF_TURN if until_eot else Duration.INDEFINITE
 
     def builder(
         source: CardState,
@@ -7324,7 +7372,7 @@ def _becomes_creature_type_with_base_pt_builder(
                     layer=layer,
                     sublayer=sublayer,
                     timestamp=timestamp,
-                    duration=Duration.UNTIL_END_OF_TURN,
+                    duration=duration,
                     selector=selector,
                     modification=modification,
                 )
@@ -7333,6 +7381,28 @@ def _becomes_creature_type_with_base_pt_builder(
         return effects
 
     return builder
+
+
+def _with_ability_list(raw: str) -> list[str] | None:
+    """The abilities a "becomes a[n] ... with base power and toughness N/N,
+    <a>, and <b>" tail names, as ability lines - each keyword validated the
+    way every layer 6 grant is (`_split_and_validate_keywords`), and a
+    "protection from <quality>" kept whole as its "Protection from ..." line
+    (CR 702.16a) - or `None` when any item is neither."""
+    text = raw.strip().lstrip(",").strip()
+    if text.lower().startswith("and "):
+        text = text[4:]
+    items = [item.strip() for item in re.split(r",\s*(?:and\s+)?|\s+and\s+", text) if item.strip()]
+    abilities: list[str] = []
+    for item in items:
+        if item.lower().startswith("protection from "):
+            abilities.append("Protection from " + item[len("protection from ") :])
+            continue
+        validated = _split_and_validate_keywords(item)
+        if validated is None:
+            return None
+        abilities.extend(validated)
+    return abilities or None
 
 
 def _becomes_type_in_addition_builder(
@@ -7872,10 +7942,17 @@ _ATTACHED_CREATURE_STATIC_RE = re.compile(
 #: - a colour (layer 5, CR 613.1e) and no "in addition to its other types",
 #: so CR 205.1a's replacement: the new card type and creature type are all
 #: that is left.
+#:
+#: Widened (ecl T5) to Noggle the Mind's "Enchanted creature loses all
+#: abilities and is a colorless Noggle with base power and toughness 1/1." -
+#: "colorless" is a layer 5 set to no colour at all (CR 105.2c, CR 613.1e),
+#: and no card type is named, so the Noggle is CR 205.1a's creature-type set
+#: alone: the card types stay, every other creature type goes (the reminder
+#: text's "It loses all colors and all other creature types").
 _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE = re.compile(
     r"^(?P<attachment>[Ee]quipped|[Ee]nchanted) creature loses all abilities and is an? "
-    r"(?:(?P<color>white|blue|black|red|green) )?"
-    r"(?P<subtype>[A-Z][a-z]+) (?P<types>[a-z]+(?: [a-z]+)*) with base power and toughness "
+    r"(?:(?P<color>white|blue|black|red|green|colorless) )?"
+    r"(?P<subtype>[A-Z][a-z]+)(?: (?P<types>[a-z]+(?: [a-z]+)*))? with base power and toughness "
     r"(?P<power>\d+)/(?P<toughness>\d+)(?P<in_addition> in addition to its other types)?\.?$"
 )
 
@@ -9598,12 +9675,18 @@ def _attached_creature_loses_and_becomes_builder(
     subject: str,
     line: str,
     color: Color | None = None,
+    colorless: bool = False,
     in_addition: bool = True,
 ) -> EffectBuilder:
     """`_ATTACHED_CREATURE_LOSES_AND_BECOMES_RE`'s shape - Unable to Scream,
     and Kenrith's Transformation's colour-setting, type-replacing twin
     (`in_addition=False`: CR 205.1a, `SetTypesAndSubtypes`; the colour is a
     layer 5 set, CR 613.1e).
+
+    `types` empty is Noggle the Mind's "is a colorless Noggle": no card type
+    is named, so only the creature types are set (CR 205.1a,
+    `SetCreatureTypes`) and the card types stay. `colorless` sets the colours
+    to none at all in layer 5 (CR 105.2c).
 
     Three effects from one ability, in three layers (CR 613.6). They are
     deliberately not one:
@@ -9653,7 +9736,9 @@ def _attached_creature_loses_and_becomes_builder(
                 source_ability=ability,
                 selector=selector,
                 modification=(
-                    _add_types_and_subtype(types, subtype)
+                    SetCreatureTypes(subtypes=(subtype,))
+                    if not types
+                    else _add_types_and_subtype(types, subtype)
                     if in_addition
                     else SetTypesAndSubtypes(types=tuple(types), subtypes=(subtype,))
                 ),
@@ -9669,16 +9754,19 @@ def _attached_creature_loses_and_becomes_builder(
                 modification=set_power_toughness(power, toughness),
             ),
         ]
-        if color is not None:
+        if color is not None or colorless:
             effects.append(
                 ContinuousEffect(
-                    description=f"{source.name}: {subject} creature is {color.value}",
+                    description=(
+                        f"{source.name}: {subject} creature is "
+                        f"{color.value if color is not None else 'colorless'}"
+                    ),
                     layer=Layer.COLOR,
                     timestamp=timestamp,
                     source_id=source.id,
                     source_ability=ability,
                     selector=selector,
-                    modification=set_colors(color),
+                    modification=set_colors(color) if color is not None else set_colors(),
                 )
             )
         return effects
@@ -11462,8 +11550,8 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         return _target_and_same_name_pump_builder(
             int(match.group("power")), int(match.group("toughness"))
         )
-    if _TARGETED_LOSES_ALL_ABILITIES_RE.fullmatch(sentence):
-        return _targeted_loses_all_abilities_builder()
+    if match := _TARGETED_LOSES_ALL_ABILITIES_RE.fullmatch(sentence):
+        return _targeted_loses_all_abilities_builder(until_eot=match.group("until_eot") is not None)
     if _SELF_OR_TARGET_CANT_BE_BLOCKED_EOT_RE.fullmatch(sentence):
         return _cant_be_blocked_until_eot_builder()
     if match := _PUMP_RE.fullmatch(sentence):
@@ -11748,8 +11836,13 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if match := _BECOMES_CREATURE_TYPE_WITH_BASE_PT_RE.fullmatch(sentence):
         artifact = match.group("artifact") is not None
+        creature = match.group("creature") is not None
         raw_subtypes = (
-            match.group("artifact_types") if artifact else match.group("subtype")
+            match.group("artifact_types")
+            if artifact
+            else match.group("creature_types")
+            if creature
+            else match.group("subtype")
         ).strip()
         subtypes = _creature_type_words(raw_subtypes) if raw_subtypes else []
         if subtypes is None or (not artifact and not subtypes):
@@ -11761,12 +11854,22 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
         if keywords is None:
             return None
+        if match.group("with_abilities") is not None:
+            listed = _with_ability_list(match.group("with_abilities"))
+            if listed is None:
+                return None
+            keywords = [*listed, *keywords]
         color = match.group("color")
         colors = tuple(_COLOR_WORDS[word] for word in color.lower().split(" and ")) if color else ()
         if match.group("each") is not None:
             power = toughness = int(match.group("each")) + int(match.group("plus") or 0)
         else:
             power, toughness = int(match.group("power")), int(match.group("toughness"))
+        # A durationless form only ever stands for itself as a resolving
+        # instruction when something marks it as one - a target, or an
+        # activated ability's own self-reference (the battlefield sweep never
+        # reads an activated ability's body, `static_only`), so no static
+        # ability is ever read here (CR 611.3).
         return _becomes_creature_type_with_base_pt_builder(
             tuple(subtypes),
             colors,
@@ -11774,7 +11877,9 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             toughness,
             loses_abilities=match.group("loses") is not None,
             artifact_creature=artifact,
+            creature_card_type=creature,
             keywords=tuple(keywords),
+            until_eot=match.group("until_eot") is not None,
         )
     if (match := _BECOMES_TYPE_IN_ADDITION_RE.fullmatch(sentence)) and (
         extra_type := _OTHER_PERMANENT_TYPE_WORDS.get(match.group("extra_type").lower())
@@ -12294,10 +12399,10 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
         )
     if match := _ATTACHED_CREATURE_LOSES_AND_BECOMES_RE.fullmatch(sentence):
-        types = [_card_type_word(word) for word in match.group("types").split()]
+        types = [_card_type_word(word) for word in (match.group("types") or "").split()]
         if any(card_type is None for card_type in types):
             return None
-        color = match.group("color")
+        color = (match.group("color") or "").lower()
         return _attached_creature_loses_and_becomes_builder(
             match.group("subtype"),
             [card_type for card_type in types if card_type is not None],
@@ -12305,7 +12410,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("toughness")),
             subject=match.group("attachment").lower(),
             line=sentence,
-            color=_COLOR_WORDS[color.lower()] if color else None,
+            color=_COLOR_WORDS[color] if color and color != "colorless" else None,
+            colorless=color == "colorless",
             in_addition=match.group("in_addition") is not None,
         )
     if match := _ATTACHED_CREATURE_IS_SUBTYPE_RE.fullmatch(sentence):
@@ -14171,10 +14277,63 @@ class ContinuousEffects(EngineModel):
     """Every card whose static/pump text `effects_for` could not read into a
     continuous effect - see `LayerNotice`."""
 
+    keyword_counter_stamps: dict[str, int] = Field(default_factory=dict)
+    """When each kind of keyword counter was last put on each permanent,
+    keyed `"<permanent id>:<kind>"` - CR 613.7c: "Each counter receives a
+    timestamp as it's put on an object or player. If that object or player
+    already has a counter of that kind on it, each counter of that kind
+    receives a new timestamp identical to that of the new counter." CR 613.1f
+    applies keyword counters in layer 6 alongside ability-removing effects,
+    so the order between them is this timestamp's: a flying counter put on
+    *after* "loses all abilities" (Abigale, Eloquent First-Year's own
+    sentence order) still grants flying, and one put on before it does not
+    (`keyword_counter_grants`)."""
+
     def tick(self) -> int:
         """The next timestamp (CR 613.7)."""
         self.clock += 1
         return self.clock
+
+    def stamp_keyword_counter(self, permanent_id: UUID, kind: str) -> None:
+        """A keyword counter of `kind` was just put on the permanent: every
+        counter of that kind on it takes the new timestamp (CR 613.7c)."""
+        self.keyword_counter_stamps[f"{permanent_id}:{kind}"] = self.tick()
+
+    def keyword_counter_grants(self, permanents: Iterable[CardState]) -> list[ContinuousEffect]:
+        """CR 122.1b's keyword counters as the layer 6 grants CR 613.1f says
+        they are, each at its own CR 613.7c timestamp
+        (`keyword_counter_stamps`; a counter this store never saw put on -
+        one a permanent entered with, say - is as old as the permanent's own
+        entry, CR 613.7d).
+
+        `printed_characteristics` already starts a permanent off with its
+        combat keyword counters' lines, which is right until a layer 6
+        "loses all abilities" or a layer 1 copy effect wipes the ability
+        list: this re-grants each keyword after exactly the removals older
+        than its counter, and a removal newer than the counter still takes
+        it away, because `_apply_group` walks layer 6 in timestamp order.
+        """
+        from .keyword_counters import KEYWORD_COUNTER_KEYWORDS
+
+        grants: list[ContinuousEffect] = []
+        for permanent in permanents:
+            for kind in sorted(KEYWORD_COUNTER_KEYWORDS):
+                if permanent.counters[kind] <= 0:
+                    continue
+                stamp = self.keyword_counter_stamps.get(
+                    f"{permanent.id}:{kind}", self.entered.get(permanent.id, 0)
+                )
+                grants.append(
+                    ContinuousEffect(
+                        description=f"{permanent.name}: {kind} counter (CR 122.1b)",
+                        layer=Layer.ABILITY,
+                        timestamp=stamp,
+                        from_counters=True,
+                        selector=_only(permanent.id),
+                        modification=grant_ability(kind.replace("_", " ").title()),
+                    )
+                )
+        return grants
 
     def note(self, permanents: Iterable[CardState]) -> None:
         """Stamp any permanent this store has not seen yet (CR 613.7a).
@@ -14398,7 +14557,7 @@ class ContinuousEffects(EngineModel):
                     static_only=True,
                 )
             )
-        return effects + stored
+        return effects + stored + self.keyword_counter_grants(permanents)
 
     def board(
         self,

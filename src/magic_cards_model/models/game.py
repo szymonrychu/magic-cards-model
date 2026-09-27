@@ -185,7 +185,6 @@ from ..machines.keyword_counters import (
     consume_shield_counter,
     enters_with_counters_pronoun_fallback,
     has_shield_counter,
-    supplemental_keyword_counter_lines,
 )
 from ..machines.keywords import (
     apply_as_enters_day_night,
@@ -14706,6 +14705,16 @@ class Game(EngineModel):
             self._emit_counters_put(permanent, str(kind), event.amount, putter=event.putter)
             return new_total
 
+    def stamp_keyword_counter(self, permanent: CardState, kind: str) -> None:
+        """CR 613.7c's timestamp for a keyword counter (CR 122.1b) just put on
+        `permanent` - `CardState.add_counters` calls this for every kind, and
+        only the keyword kinds are kept (`ContinuousEffects.
+        keyword_counter_grants` orders them in layer 6, CR 613.1f)."""
+        from ..machines.keyword_counters import KEYWORD_COUNTER_KEYWORDS
+
+        if kind.lower() in KEYWORD_COUNTER_KEYWORDS:
+            self.continuous_effects.stamp_keyword_counter(permanent.id, kind.lower())
+
     def proliferate(
         self, chosen: Sequence[CardState], chosen_players: Sequence["Player | str"] = ()
     ) -> None:
@@ -18182,10 +18191,11 @@ class Game(EngineModel):
         this round, so not a file this task may edit) leaves, closed here
         additively instead, on top of what it already computed:
 
-        - **CR 122.1b's indestructible/hexproof keyword counters**
-          (`supplemental_keyword_counter_lines`, see `machines/keyword_
-          counters.py`'s own docstring for why `machines/layers.py::
-          _keyword_counter_lines` does not already grant these two).
+        - (CR 122.1b's indestructible/hexproof keyword counters used to be
+          added here, after every layer; they are now layer 6 grants at
+          their own CR 613.7c timestamps - `ContinuousEffects.
+          keyword_counter_grants` - so a later "loses all abilities" can
+          take them away, CR 613.1f.)
         - **CR 702.186b's own harness gate** ("As long as this permanent is
           harnessed, it has [Ability]") - an Infinity permanent's "∞ —
           [Ability]" line (parsed as an ordinary triggered ability now that
@@ -18221,10 +18231,6 @@ class Game(EngineModel):
           casting.py`/`machines/layers.py`.
         """
         abilities = chars.abilities
-        supplemental = supplemental_keyword_counter_lines(chars.counters)
-        for line in supplemental:
-            if line not in abilities:
-                abilities = abilities + (line,)
         infinity_lines = [
             stripped
             for raw in (permanent.oracle_text or "").splitlines()
