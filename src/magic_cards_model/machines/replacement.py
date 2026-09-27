@@ -5654,7 +5654,7 @@ def _choose_colors(count: int, card_name: str) -> Apply:
 #:
 #: Widened (ecl T5) to Moritte of the Frost's "a permanent you control" - the
 #: battlefield, narrowed to what the entering permanent's controller controls
-#: (CR 108.4's "you" is the controller of the replacement's source).
+#: (CR 109.5: "you" on an object is its controller).
 _COPY_CANDIDATES_RE = re.compile(
     r"^(?:any|an?) (?:non(?P<excluded>artifact|creature|enchantment|land|planeswalker) )?"
     r"(?P<filter>artifact|creature|enchantment|land|permanent|planeswalker)"

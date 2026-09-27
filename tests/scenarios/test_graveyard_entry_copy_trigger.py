@@ -12,7 +12,9 @@ that wrote this file:
   with it.
 - **CR 603.4** the intervening "if" is checked as the event happens and
   again as the ability resolves.
-- **CR 603.2h** "only once each turn".
+- **CR 603.2h** "This ability triggers only if its source's controller has
+  not yet taken the indicated action that turn" - the once-each-turn gate
+  the engine reads "This ability triggers only once each turn" through.
 - **CR 707.2** a token copy takes the copiable values only; **CR 702.138b**
   a permanent "escaped" only if it was cast with escape - a token copy of an
   escaped Uro did not.

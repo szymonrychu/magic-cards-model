@@ -4053,7 +4053,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 91
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 92
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4144,6 +4144,13 @@ class Game(EngineModel):
     #: CR 614.1c rider, tmt T6) and `Game` gained `next_spell_keyword_grants`
     #: ("the next noncreature spell you cast this turn has affinity for
     #: artifacts", CR 702.41a, tmt T6; renumbered from 90 at integration).
+    #: 92: `ContinuousEffects` gained `keyword_counter_stamps` (CR 613.7c's
+    #: timestamp for a keyword counter, ordered against layer 6 removals, CR
+    #: 613.1f) and `GameEvent` gained `entered_together` (CR 603.6a's one
+    #: enters event for several permanents, a pending or stacked trigger's
+    #: event); token creation raises its enters events together and counts
+    #: each creation event per turn ("token creation", Mirrormind Crown's
+    #: "the first time", ecl T5).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
