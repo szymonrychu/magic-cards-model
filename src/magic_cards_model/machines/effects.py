@@ -29559,6 +29559,30 @@ _CAST_TRIGGER_REVEAL_UNTIL_X_KIND_TO_GRAVEYARD_RE = re.compile(
 )
 
 
+#: "You gain half X life and draw half X cards. Round down each time." -
+#: Hydroid Krasis's own cast trigger. CR 107.1a: "If a spell or ability could
+#: generate a fractional number, the spell or ability will tell you whether
+#: to round up or down" - printed here as one trailing sentence governing
+#: *both* halves rather than `numbers.parse_half`'s own inline "half `<of>`,
+#: rounded up/down" (Tamiyo, Seasoned Scholar), so this is its own shape, not
+#: a second call site for that parser. The backreference (`(?P=of)`) requires
+#: the identical printed expression on both sides, so this is not fitted to
+#: the literal word "X" - it reads whatever quantity a card halves twice in a
+#: row, and X (CR 107.3a's own value announced for the spell as it was cast,
+#: never the ability's own - a triggered ability announces no X of its own,
+#: the identical read `_parse_cast_trigger_look_top_x_take_one_clause` above
+#: already gives Geometer's Arthropod) is simply the one term `amount_
+#: expression` reads that this reader has to special-case, since the spell's
+#: own announced X lives on its `CastRecord`, not on anything `amount_
+#: expression`'s ordinary `(game, controller, obj, x)` callers already thread
+#: through.
+_HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE = re.compile(
+    r"^you gain half (?P<of>.+?) life and draw half (?P=of) cards\.\s*"
+    r"round (?P<direction>up|down) each time\.?$",
+    re.IGNORECASE,
+)
+
+
 def _parse_cast_trigger_reveal_until_x_kind_to_graveyard_clause(
     effect_text: str,
 ) -> AbilityEffect | None:
@@ -29651,6 +29675,47 @@ def _parse_target_opponent_exile_top_then_put_lands_clause(
             state = by_id.get(card_id)
             if state is not None and state.zone is Zone.EXILE:
                 game.put_onto_battlefield(state, controller.username)
+
+    return effect
+
+
+def _parse_half_x_life_and_draw_half_x_cards_clause(effect_text: str) -> AbilityEffect | None:
+    """`_HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE`'s shape - see the banner
+    above. `of` other than a bare "x" falls back to `amount_expression`,
+    evaluated against the ability's own controller and source (0 for any
+    embedded X of *its own*, since a triggered ability announces none) -
+    unreadable there fails the whole clause closed rather than guessing.
+    """
+    match = _HALF_X_LIFE_AND_DRAW_HALF_X_CARDS_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    of = match.group("of").strip()
+    round_up = match.group("direction").lower() == "up"
+    is_x = of.lower() == "x"
+    magnitude = None if is_x else amount_expression(of)
+    if not is_x and magnitude is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        controller = game.controller_of(ability)
+        if is_x:
+            event = ability.event
+            spell = (
+                game.find_by_id(event.subject_id)
+                if event is not None and event.subject_id is not None
+                else None
+            )
+            record = game.cast_record_of(spell) if spell is not None else None
+            amount = record.x_value if record is not None else 0
+        else:
+            source = ability.source_or_last_known(game)
+            assert magnitude is not None
+            amount = 0 if source is None else magnitude(game, controller.username, source, 0)
+        half = halve(max(amount, 0), round_up=round_up)  # CR 107.1b, then CR 107.1a
+        if half <= 0:
+            return
+        game.gain_life(controller, half)
+        game.draw_cards(controller.username, half)
 
     return effect
 
@@ -29819,6 +29884,30 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     c02_t6 = _c02_t6_ability_effect(effect_text)
     if c02_t6 is not None:
         return c02_t6
+    # EC7: Kozilek, the Broken Reality's own "Up to two target players each
+    # manifest two cards from their hands. For each card manifested this
+    # way, you draw a card." - read whole, ahead of the clause splitter: the
+    # second sentence's "manifested this way" is CR 608.2c anaphora back to
+    # the first sentence's own count, which no per-clause parser below has
+    # any room to carry across the period.
+    manifest_from_hand_then_draw = _parse_manifest_from_hand_then_draw_clause(effect_text)
+    if manifest_from_hand_then_draw is not None:
+        return manifest_from_hand_then_draw
+    # EC7: Distended Mindbender's own "Target opponent reveals their hand.
+    # You choose from it a `<qualityA>` card with mana value N or less and a
+    # `<qualityB>` card with mana value M or greater. That player discards
+    # those cards." - read whole, ahead of the clause splitter's bare-"and"
+    # cut through "... or less and a card ...".
+    reveal_two_bounds = _parse_reveal_hand_choose_two_bounded_cards_then_discard_clause(effect_text)
+    if reveal_two_bounds is not None:
+        return reveal_two_bounds
+    # EC7: Hydroid Krasis's own "You gain half X life and draw half X cards.
+    # Round down each time." - read whole: the trailing "Round down each
+    # time." sentence governs both halves in the sentence before it, which
+    # no per-clause parser below has any room to see together.
+    half_x_life_and_draw = _parse_half_x_life_and_draw_half_x_cards_clause(effect_text)
+    if half_x_life_and_draw is not None:
+        return half_x_life_and_draw
     # ecl-T8: Meek Attack's own "... a creature card with total power and
     # toughness 5 or less from your hand onto the battlefield." - read whole,
     # ahead of the clause splitter, the same reason `_DOUBLE_TARGET_POWER_
@@ -47156,6 +47245,84 @@ def _parse_manifest_dread_clause(clause: str, *, for_spell: bool) -> TargetedCla
     return effect
 
 
+#: "Up to two target players each manifest two cards from their hands. For
+#: each card manifested this way, you draw a card." - Kozilek, the Broken
+#: Reality's own cast trigger. CR 701.40a's manifest names no zone of its
+#: own - "manifest the top card of your library" above and CR 701.62a's
+#: "manifest dread" both happen to manifest from the library, but the keyword
+#: action itself is just "turn it face down [and] put that card onto the
+#: battlefield face down", so this reader generalises `manifest` to a card
+#: taken from a player's *hand* instead - the identical primitive, a
+#: different origin zone. Each target player is the one who chooses which of
+#: their own cards to manifest (CR 601.2d/701.9b's default: the affected
+#: player's own choice, not the caster's), the same "choose N cards from your
+#: own hand" question `_parse_reveal_n_cards_then_choose_discard_whole_text`
+#: already asks for a reveal. "For each card manifested this way" is CR
+#: 608.2c's running count of what the first sentence actually did (`record_
+#: count`'s own convention elsewhere in this file), read across both target
+#: players together, not per player - a target player short of two cards in
+#: hand manifests as many as they have (CR 609.3) and simply contributes
+#: fewer to that shared count.
+_MANIFEST_FROM_HAND_THEN_DRAW_RE = re.compile(
+    rf"^(?P<phrase>(?:up to )?{COUNT} target players) each manifest "
+    rf"(?P<count>{COUNT}) cards? from their hands?\.\s*"
+    r"for each card manifested this way, you draw a card\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_manifest_from_hand_then_draw_clause(effect_text: str) -> AbilityEffect | None:
+    """`_MANIFEST_FROM_HAND_THEN_DRAW_RE`'s shape - see the banner above."""
+    match = _MANIFEST_FROM_HAND_THEN_DRAW_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(
+        match.group("phrase"), allow_player_targets=True, count_agnostic=True
+    ):
+        return None
+    count = parse_count(match.group("count"))
+    if count is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        players = [target for target in game.resolve_targets(ability) if isinstance(target, Player)]
+        if not players:
+            return
+        controller = game.controller_of(ability)
+        manifested = 0
+        for player in players:
+            hand = list(player.hand)
+            take = min(count, len(hand))
+            if take <= 0:
+                continue
+            if take < len(hand):
+                chosen_ids = game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_CARDS,
+                        player=player.username,
+                        prompt=f"choose {take} card(s) from your hand to manifest",
+                        source=ability.source_name,
+                        source_id=source_id_of(ability),
+                        amount=take,
+                        exact=True,
+                        cards=tuple(card.id for card in hand),
+                    )
+                )
+                assert isinstance(chosen_ids, tuple)
+                by_id = {card.id: card for card in hand}
+                chosen = [by_id[card_id] for card_id in chosen_ids]
+            else:
+                chosen = hand
+            for card in chosen:
+                player.zones[Zone.HAND].remove(card)
+                manifest(game, player.username, card)
+                manifested += 1
+        if manifested > 0:
+            game.draw_cards(controller.username, manifested)
+
+    return effect
+
+
 #: "If this spell's additional cost was paid, <consequence>." - Requiting
 #: Hex's own linked ability (CR 607, CR 118.8b's optional additional cost).
 #: The condition names no keyword, so `CastRecord.optional_additional_cost_
@@ -52536,6 +52703,138 @@ def _merge_reveal_hand_choose_discard_clauses(
             game.lose_life(controller, life_loss)
 
     return consumed, effect
+
+
+#: "Target opponent reveals their hand. You choose from it a `<qualityA>`
+#: card with mana value `<mvA>` or less and a `<qualityB>` card with mana
+#: value `<mvB>` or greater. That player discards those cards." - Distended
+#: Mindbender's own cast trigger: two *independent* picks, each with its own
+#: mana-value bound, rather than `_CHOOSE_CARD_FROM_REVEALED_RE`'s one shared
+#: bound repeated N times. Not fitted to this card's own sentence: Perilous
+#: Iteration's "Seek a card with mana value 2 or less and a card with mana
+#: value 3 or greater." (a Seek, a different verb entirely) proves the
+#: "`<quality>` with mana value X or less and a card with mana value Y or
+#: greater" phrase-pair is itself a shared MTG template, not one author's
+#: wording - this reader targets that shared template's *choose-from-a-
+#: revealed-hand* verb, the one Distended Mindbender actually prints.
+#:
+#: Read against the *whole*, unsplit text, like `_parse_manifest_from_hand_
+#: then_draw_clause` just above: `_prepare_effect_clauses`'s bare-"and" split
+#: cuts "... or less and a card ..." into two fragments before any per-clause
+#: or per-clause-run merge ever sees them together (the identical trap
+#: `_parse_pump_and_becomes_chosen_color_clause`'s own docstring already
+#: documents for a "power and toughness" type list), so this cannot be a
+#: `_merge_*_clauses` entry the way `_merge_reveal_hand_choose_discard_
+#: clauses` is.
+_REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_DISCARD_RE = re.compile(
+    r"^target opponent reveals their hand\.\s*"
+    r"you choose from it an? (?:(?P<qualityA>[a-z]+) )?card with mana value (?P<mvA>\d+) "
+    r"or (?P<cmpA>less|greater) and an? (?:(?P<qualityB>[a-z]+) )?card with mana value "
+    r"(?P<mvB>\d+) or (?P<cmpB>less|greater)\.\s*"
+    r"that player discards those cards\.?$",
+    re.IGNORECASE,
+)
+
+
+def _bounded_revealed_card_matcher(
+    quality_text: str | None, bound: int, *, at_least: bool
+) -> Callable[[CardState], bool] | None:
+    """A predicate for one of `_REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_
+    DISCARD_RE`'s two conjuncts - CR 202.3's mana value bound, and
+    `_nonland_or_typed_card_matcher`'s optional quality word (Distended
+    Mindbender's own "nonland" on its first conjunct; the second names no
+    quality at all, so any card, lands included, may satisfy it) - or `None`
+    if the quality word is not one this file reads.
+    """
+    if quality_text is None:
+        quality_matches: Callable[[CardState], bool] = lambda _state: True  # noqa: E731
+    else:
+        read_quality = _nonland_or_typed_card_matcher(quality_text)
+        if read_quality is None:
+            return None
+        quality_matches = read_quality
+
+    def matches(state: CardState) -> bool:
+        if not quality_matches(state):
+            return False
+        return state.mana_value >= bound if at_least else state.mana_value <= bound
+
+    return matches
+
+
+def _parse_reveal_hand_choose_two_bounded_cards_then_discard_clause(
+    effect_text: str,
+) -> AbilityEffect | None:
+    """`_REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_DISCARD_RE`'s shape - see
+    the banner above.
+
+    CR 608.2d: each of the two picks is asked and made independently, and a
+    bracket with no qualifying card left is CR 608.2d's own "impossible
+    option" - skipped rather than asked, exactly as `_merge_reveal_hand_
+    choose_discard_clauses` already treats an unsatisfiable single bound.
+    A card already taken for the first pick is never offered for the second,
+    even on a hypothetical printing whose two brackets could overlap - CR
+    608.2d's "the player announces their choice of an appropriate object"
+    reads each instruction as choosing a *fresh* one.
+    """
+    match = _REVEAL_HAND_CHOOSE_TWO_BOUNDED_CARDS_THEN_DISCARD_RE.fullmatch(
+        " ".join(effect_text.split())
+    )
+    if match is None:
+        return None
+    if not _targets_understood("target opponent", allow_player_targets=True):
+        return None
+    matches_a = _bounded_revealed_card_matcher(
+        match.group("qualityA"),
+        int(match.group("mvA")),
+        at_least=match.group("cmpA").lower() == "greater",
+    )
+    if matches_a is None:
+        return None
+    matches_b = _bounded_revealed_card_matcher(
+        match.group("qualityB"),
+        int(match.group("mvB")),
+        at_least=match.group("cmpB").lower() == "greater",
+    )
+    if matches_b is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        revealer = next(
+            (target for target in game.resolve_targets(ability) if isinstance(target, Player)),
+            None,
+        )
+        if revealer is None:
+            return
+        source = ability.source_name
+        for state in list(revealer.hand):
+            game.reveal(state, source=source)
+        controller = game.controller_of(ability)
+        chosen: list[CardState] = []
+        for matcher in (matches_a, matches_b):
+            candidates = [
+                state for state in revealer.hand if state not in chosen and matcher(state)
+            ]
+            if not candidates:
+                continue
+            chosen_ids = game.ask(
+                Decision(
+                    kind=DecisionKind.CHOOSE_CARDS,
+                    player=controller.username,
+                    prompt=f"choose a card from {revealer.username}'s revealed hand",
+                    source=source,
+                    amount=1,
+                    cards=tuple(state.id for state in candidates),
+                    source_id=source_id_of(ability),
+                )
+            )
+            assert isinstance(chosen_ids, tuple)
+            by_id = {state.id: state for state in candidates}
+            chosen.append(by_id[chosen_ids[0]])
+        if chosen:
+            game.discard_cards(revealer.username, chosen, source=source)
+
+    return effect
 
 
 def _merge_damage_target_then_reveal_choose_discard_clauses(

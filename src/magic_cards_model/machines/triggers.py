@@ -3166,7 +3166,20 @@ def condition_matches(
             if (source.choice.value == "even") != is_even:
                 return False
         if mine and "this spell" in lowered:
-            return event.subject_id == source.id
+            # Banish into Fable's own "When you cast this spell **from your
+            # hand**, ..." carries a CR 601.2a origin-zone qualifier on top
+            # of the plain self-reference every other "this spell" cast
+            # trigger in the pool has (Ulamog, the Ceaseless Hunger, Ugin,
+            # Eye of the Storms, ...) - none of which print a "from
+            # `<zone>`"/"from anywhere other than `<zone>`" clause at all, so
+            # `_origin_zone_matches`'s own "nothing named, nothing required"
+            # default (see its docstring) leaves every one of them reading
+            # exactly as before. Checked here rather than falling through to
+            # the ordinary origin-zone check below this early `return`,
+            # which it would otherwise skip entirely.
+            return event.subject_id == source.id and _origin_zone_matches(
+                event.origin_zone, condition
+            )
         # Frontline Heroism's own "that targets only a single creature you
         # control" clause is stripped first (CR 115.3/109.4's own vocabulary,
         # read directly by the dedicated block near the end of this branch,
