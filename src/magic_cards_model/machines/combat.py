@@ -204,6 +204,13 @@ def _assignment_power_of(game: "Game | None", creature: CardState) -> int | None
     power = _power_of(game, creature)
     if power is None or game is None:
         return power
+    if creature.assigns_no_combat_damage_this_combat:
+        # Master of Cruelties' own attack trigger: "This creature assigns
+        # no combat damage this combat." - a one-shot override on the
+        # *assignment*, distinct from CR 510.1a's own "0 or less power
+        # assigns nothing", so it applies even to a creature with real
+        # power.
+        return 0
     chars = game.characteristics_of(creature)
     if chars.has_ability(ASSIGNS_DAMAGE_AS_TOUGHNESS_TEXT):
         toughness = _toughness_of(game, creature)
@@ -868,6 +875,10 @@ class GroupAttackRestriction:
     #: "Creatures with flying can't attack you ..." (Storm, Windrider;
     #: Sandwurm Convergence): only creatures that have this keyword.
     keyword: str | None = None
+    #: "Creatures without flying can't attack you." (Form of the Dragon) -
+    #: the same `keyword` field, negated: only a creature that *lacks* it is
+    #: restricted.
+    keyword_negated: bool = False
     #: "... or planeswalkers you control" (Sandwurm Convergence): attacks on
     #: the controller's planeswalkers are refused too.
     also_planeswalkers: bool = False
@@ -889,6 +900,17 @@ _KEYWORD_GROUP_CANT_ATTACK_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Creatures without flying can't attack you." (Form of the Dragon) - the
+#: negated twin of `_KEYWORD_GROUP_CANT_ATTACK_RE` just above: the same
+#: template with "without" in place of "with", restricting every creature
+#: that *lacks* the named keyword instead of every one that has it.
+_NEGATED_KEYWORD_GROUP_CANT_ATTACK_RE = re.compile(
+    r"creatures without (?P<keyword>[a-z]+(?: [a-z]+)?) can't attack you"
+    r"(?P<planeswalkers> or planeswalkers you control)?"
+    r"(?P<block> or block creatures you control)?\.?",
+    re.IGNORECASE,
+)
+
 
 def parse_group_attack_restriction(sentence: str) -> GroupAttackRestriction | None:
     """Read one static sentence into a `GroupAttackRestriction`, or None when
@@ -905,6 +927,19 @@ def parse_group_attack_restriction(sentence: str) -> GroupAttackRestriction | No
             keyword=keyword,
             also_planeswalkers=keyword_group.group("planeswalkers") is not None,
             blocks_creatures_you_control=keyword_group.group("block") is not None,
+        )
+    negated_keyword_group = _NEGATED_KEYWORD_GROUP_CANT_ATTACK_RE.fullmatch(text)
+    if negated_keyword_group is not None:
+        keyword = negated_keyword_group.group("keyword").lower()
+        if keyword not in {member.value.lower() for member in Keyword}:
+            return None
+        return GroupAttackRestriction(
+            sentence=text,
+            only_attacks_on_controller=True,
+            keyword=keyword,
+            keyword_negated=True,
+            also_planeswalkers=negated_keyword_group.group("planeswalkers") is not None,
+            blocks_creatures_you_control=negated_keyword_group.group("block") is not None,
         )
     match = _GROUP_CANT_ATTACK_RE.fullmatch(text)
     if match is None:
@@ -989,6 +1024,28 @@ def _self_attack_restriction_sentence(creature: CardState, game: "Game") -> str 
     return None
 
 
+#: Master of Cruelties' own static: "This creature can only attack alone."
+#: CR 508.1c's restriction is "it can't attack unless it attacks alone"
+#: (CR 506.5: "A creature attacks alone if it's the only creature declared
+#: as an attacker during the declare attackers step") - a restriction about
+#: the *whole* declaration, unlike the unconditional "can't attack" sentence
+#: just above, so this is only the sentence-finder; `Game.
+#: _refuse_attack_alone_violations` is where the declared party is actually
+#: checked against it.
+def self_attack_alone_only_sentence(creature: CardState, game: "Game") -> str | None:
+    """The creature's own "can only attack alone" sentence among its
+    computed abilities (CR 613.5), or None."""
+    subjects = _self_reference_alternatives(creature)
+    pattern = re.compile(
+        rf"^(?:{'|'.join(re.escape(name) for name in subjects)}) can only attack alone\.?$",
+        re.IGNORECASE,
+    )
+    for sentence in _computed_ability_sentences(creature, game):
+        if pattern.match(sentence.strip()):
+            return sentence.strip()
+    return None
+
+
 def group_attack_restriction_refusal(
     game: "Game", creature: CardState, defender: TargetRef
 ) -> str | None:
@@ -1017,10 +1074,10 @@ def group_attack_restriction_refusal(
                     )
                 ):
                     continue
-                if restriction.keyword is not None and not has_keyword(
-                    creature, restriction.keyword, game
-                ):
-                    continue
+                if restriction.keyword is not None:
+                    has_it = has_keyword(creature, restriction.keyword, game)
+                    if has_it if restriction.keyword_negated else not has_it:
+                        continue
                 detail = ""
                 if restriction.operator is not None:
                     power = board.of(creature).power

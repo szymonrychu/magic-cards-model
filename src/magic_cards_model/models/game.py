@@ -4002,6 +4002,14 @@ class Game(EngineModel):
     """The blocker/attacker pairs that have already fired their block triggers
     this combat, so re-declaring the same block does not trigger twice."""
 
+    attacks_unblocked_triggered: list[UUID] = Field(default_factory=list)
+    """Attacker ids that have already fired their CR 508.3f/509.3g "attacks
+    and isn't blocked" event this combat - the identical dedup `blocks_
+    triggered` gives block pairs, so a `Game.declare_blockers` call that adds
+    more blocks to an already-legal declaration (a scenario building one up
+    over several calls) never re-emits the same still-unblocked attacker's
+    event a second time."""
+
     continuous_effects: ContinuousEffects = Field(default_factory=ContinuousEffects)
     """Every continuous effect a resolving spell or ability has created (CR 611.2).
 
@@ -6172,6 +6180,12 @@ class Game(EngineModel):
         here always runs, and is the one combat step that never skips.
         """
         assert self.turn is not None
+        # Master of Cruelties' own "assigns no combat damage this combat":
+        # scoped to the combat that already used it up, cleared here as the
+        # next one's attackers are about to be declared - the same boundary
+        # `CardState.exerted`'s own docstring gives "next untap step".
+        for permanent in self.battlefield:
+            permanent.assigns_no_combat_damage_this_combat = False
         active = self.turn.active_player
         attacks = ask_attackers(
             self.decisions,
@@ -15120,6 +15134,29 @@ class Game(EngineModel):
             )
         return new_total
 
+    def set_life_total(self, player: Player | str, new_total: int) -> int:
+        """A player's life total is set to a specific number (CR 119.5).
+
+        "If an effect sets a player's life total to a specific number, the
+        player gains or loses the necessary amount of life to end up with
+        the new total." - so this is never its own kind of life-total
+        change: it is CR 119.3's ordinary gain or loss, routed through
+        `Game.gain_life`/`Game.lose_life` so every replacement effect
+        (Alhammarret's Archive) and every "whenever you gain/lose life"
+        trigger (CR 119.9) sees it exactly the way it would see the
+        matching plain "gain N life"/"lose N life" instruction. A player
+        already at the new total gains and loses nothing (CR 603.2g: no
+        event for a zero-amount change).
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        delta = new_total - player.life
+        if delta > 0:
+            return self.gain_life(player, delta)
+        if delta < 0:
+            return self.lose_life(player, -delta)
+        return player.life
+
     def exchange_life_totals(self, a: Player | str, b: Player | str) -> int:
         """Two players exchange life totals (CR 701.12a, CR 701.12c).
 
@@ -19866,6 +19903,28 @@ class Game(EngineModel):
                     "against it"
                 )
 
+    def _refuse_attack_alone_violations(
+        self, attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> None:
+        """CR 508.1c/CR 506.5: a creature whose own text says it "can only
+        attack alone" (Master of Cruelties) is a restriction that it can't
+        attack unless it "attacks alone" - the only creature declared as an
+        attacker this combat. Judged on the whole declaration, the same
+        reason `_refuse_illegal_attacker_caps` is: whether a creature is
+        attacking alone is a fact about every creature declared, not about
+        any one of them by itself.
+        """
+        if len(attacks) < 2:
+            return
+        for creature, _defender in attacks:
+            restriction = combat_rules.self_attack_alone_only_sentence(creature, self)
+            if restriction is not None:
+                others = ", ".join(other.name for other, _ in attacks if other.id != creature.id)
+                raise ValueError(
+                    f'{creature.name} can\'t attack: "{restriction}" (CR 508.1c, CR 506.5), '
+                    f"but {others} were also declared as attackers"
+                )
+
     def _required_attack_declaration(self, active: str) -> list[tuple[UUID, UUID | str]]:
         """The fewest attackers that obey every requirement that can be obeyed
         (CR 508.1d), each attacking the defender that obeys the most of its
@@ -19911,6 +19970,7 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             self._refuse_unobeyed_attack_requirements(attacks)
             self._refuse_illegal_attacker_caps(attacks)
+            self._refuse_attack_alone_violations(attacks)
             # CR 508.1: an illegal declaration returns the game to the moment
             # before it, so every attacker is judged before any one taps.
             # CR 508.1a-b: each chosen creature attacks one player,
@@ -20056,6 +20116,41 @@ class Game(EngineModel):
                             player=self.controller_of(blocker).username,
                         )
                     )
+
+            # CR 508.3f/509.3g: "Whenever [a creature] attacks and isn't
+            # blocked, ..." - a separate event from `TriggerEvent.ATTACKS`,
+            # fired here (the declare blockers step, once this declaration
+            # is legal) rather than at `declare_attackers` time, since
+            # "isn't blocked" is not knowable until now. CR 509.3g: "It will
+            # trigger even if the creature was never declared as an
+            # attacker" - `self.combat.attacks` already includes a creature
+            # put onto the battlefield attacking (CR 508.4) the same way it
+            # includes a declared one, so no separate case is needed for
+            # that. CR 509.1h: a creature "stays blocked" even once its
+            # blockers are removed, so `attack.blocked` (not "has blockers
+            # right now") is the read this asks.
+            for attack in self.combat.attacks:
+                if attack.blocked or attack.attacker_id in self.attacks_unblocked_triggered:
+                    continue
+                attacker = self.find_by_id(attack.attacker_id)
+                if attacker is None:
+                    continue
+                self.attacks_unblocked_triggered.append(attack.attacker_id)
+                attacker_chars = self.characteristics_of(attacker)
+                defender_controller = combat_rules.defending_player(self, attack.defender)
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.ATTACKS_UNBLOCKED,
+                        subject_id=attacker.id,
+                        subject_name=attacker.name,
+                        subject_controller=self.controller_of(attacker).username,
+                        subject_card=attacker.card,
+                        subject_types=attacker_chars.types,
+                        subject_subtypes=attacker_chars.subtypes,
+                        defender=attack.defender,
+                        defender_controller=defender_controller,
+                    )
+                )
             self.put_triggers_on_stack()
 
     def attacking_creatures(self) -> list[CardState]:
@@ -20154,6 +20249,7 @@ class Game(EngineModel):
         """Everything is removed from combat as the step ends (CR 511.3)."""
         self.combat.clear()
         self.blocks_triggered = []
+        self.attacks_unblocked_triggered = []
 
     # -- special actions ---------------------------------------------------
 

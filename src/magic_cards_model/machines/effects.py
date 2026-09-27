@@ -2196,6 +2196,56 @@ def _amount_term(term: str) -> AmountReader | None:
         # object's own controller - the same `controller` argument every
         # other term here already receives.
         return lambda game, controller, _object, _x: game.player(controller).life
+    if lowered in (
+        "your starting life total",
+        "their starting life total",
+        "his starting life total",
+        "her starting life total",
+    ):
+        # CR 103.4/119.1: Torgaar, Famine Incarnate's "up to one target
+        # player's life total becomes half their starting life total,
+        # rounded down" and The Endstone's "your life total becomes half
+        # your starting life total, rounded up" both reach this through
+        # `parse_half`'s own recursive `_amount_term(half.of)` call - this
+        # term is the base a "half `<this>`, rounded ..." wraps, the
+        # identical composition `_HALF_OF_OWN_LIBRARY_RE`'s sibling terms
+        # already lean on - and Resolute Archangel's/Long Rest's/Oketra's
+        # Last Mercy's own bare "equal to your starting life total" reaches
+        # it directly, the "equal to " prefix stripped by the life-total-
+        # becomes reader before this is ever asked. `controller` is
+        # whichever player this amount is being asked about (CR 608.2h),
+        # never assumed to be "you" - the same convention "your life total"
+        # just above already keeps.
+        return lambda game, controller, _object, _x: game.player(controller).starting_life
+    if lowered == "the highest life total among all players":
+        # Arbiter of Knollridge's own ETB: "each player's life total
+        # becomes the highest life total among all players" (CR 119.1,
+        # CR 102.1's whole player set). Read fresh each time this is asked -
+        # the life-total-becomes reader snapshots every player's answer
+        # before applying any of them, so this always sees the totals as
+        # they stood before the effect began adjusting anyone's.
+        return lambda game, _controller, _object, _x: max(
+            (player.life for player in game.players_in_game), default=0
+        )
+    if lowered == "the lowest life total among all players":
+        # Repay in Kind's own twin: "each player's life total becomes the
+        # lowest life total among all players."
+        return lambda game, _controller, _object, _x: min(
+            (player.life for player in game.players_in_game), default=0
+        )
+    if lowered == "that number":
+        # Invincible Hymn's "Count the number of cards in your library.
+        # Your life total becomes that number." and Touch of the Eternal's
+        # "count the number of permanents you control. Your life total
+        # becomes that number." - CR 608.2c's own "later text ... may modify
+        # the meaning of earlier text": the *first* sentence's "Count the
+        # number of `<expr>`" clause (`_parse_count_the_number_of_clause`)
+        # records the count through `Game.record_count`, the identical
+        # channel every other "that many"/"that much" reader in this file
+        # (`that_many`) already reads back - "that number" is simply that
+        # same channel's own noun for a plain count rather than a count of
+        # cards moved.
+        return lambda game, _controller, _object, _x: game.recorded_count() or 0
     if _COLORS_OF_MANA_SPENT_TO_CAST_IT_RE.fullmatch(text):
         # Converge (CR 207.2c), the enters-with position: Magmablood/
         # Rancorous/Wildgrowth Archaic's own "This creature enters with a
@@ -10034,6 +10084,135 @@ def _parse_half_life_loss_clause(clause: str) -> ClauseEffect | None:
     return half_life_loss
 
 
+#: CR 119.5: "If an effect sets a player's life total to a specific number,
+#: the player gains or loses the necessary amount of life to end up with the
+#: new total." "Your life total becomes `<amount>`" - Elderscale Wurm's own
+#: ETB ("if your life total is less than 7, your life total becomes 7", the
+#: intervening-if already stripped by `machines/abilities.py` before this
+#: ever runs), Form of the Dinosaur's/Form of the Dragon's/Angel of Grace's
+#: graveyard activation's/Sway of the Stars's plain numbers, Long Rest's/
+#: Oketra's Last Mercy's "equal to your starting life total", The Endstone's
+#: "half your starting life total, rounded up" - and Resolute Archangel's own
+#: "if your life total is less than your starting life total, it becomes
+#: equal to your starting life total", where "it" is CR 607.1 anaphora onto
+#: the "your life total" the intervening-if just named, never a different
+#: printed shape this reader has seen. `<amount>` is `_life_total_becomes_
+#: amount_reader`'s: a number, "equal to `<expr>`", "half `<expr>`, rounded
+#: up/down" (through `_amount_term`'s own "your/their starting life total"
+#: term), "the number of `<expr>`", "that number", or "the highest/lowest
+#: life total among all players".
+_YOUR_LIFE_TOTAL_BECOMES_RE = re.compile(
+    r"^(?:your life total|it) becomes (?P<amount>.+)$", re.IGNORECASE
+)
+
+
+def _life_total_becomes_amount_reader(expr: str) -> "AmountReader | None":
+    """The `<amount>` half of "`<subject>`'s life total becomes `<amount>`"
+    (CR 119.5), or `None` when it cannot be read. "equal to `<X>`" is just
+    `<X>` itself; every other shape is `amount_expression`'s own (a number,
+    "half `<X>`, rounded up/down", "the number of `<expr>`", "that number",
+    "the highest/lowest life total among all players" - the last four
+    through `_amount_term`'s own new branches, above)."""
+    text = expr.strip().rstrip(".").strip()
+    text = re.sub(r"^equal to\s+", "", text, flags=re.IGNORECASE).strip()
+    return amount_expression(text)
+
+
+def _parse_your_life_total_becomes_clause(clause: str) -> ClauseEffect | None:
+    """`_YOUR_LIFE_TOTAL_BECOMES_RE`'s shape, or `None`."""
+    match = _YOUR_LIFE_TOTAL_BECOMES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    reader = _life_total_becomes_amount_reader(match.group("amount"))
+    if reader is None:
+        return None
+
+    def life_total_becomes(
+        game: "Game", player: Player, source: str, source_id: str | None
+    ) -> None:
+        new_total = reader(game, player.username, None, 0)
+        game.set_life_total(player, new_total)
+
+    return life_total_becomes
+
+
+#: CR 701.10d: "To double a player's life total, the player gains or loses an
+#: amount of life such that their new life total is twice its current
+#: value." Angelic Enforcer's (Enduring Angel's back face) own attack
+#: trigger: "Whenever this creature attacks, double your life total."
+_DOUBLE_YOUR_LIFE_TOTAL_RE = re.compile(r"^double your life total\.?$", re.IGNORECASE)
+
+
+def _parse_double_your_life_total_clause(clause: str) -> ClauseEffect | None:
+    """`_DOUBLE_YOUR_LIFE_TOTAL_RE`'s shape, or `None`."""
+    if _DOUBLE_YOUR_LIFE_TOTAL_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def double_life_total(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        game.set_life_total(player, 2 * player.life)
+
+    return double_life_total
+
+
+#: CR 608.2c's own counting instruction: "Count the number of `<expr>`."
+#: Invincible Hymn's "Count the number of cards in your library. Your life
+#: total becomes that number." and Touch of the Eternal's "count the number
+#: of permanents you control. Your life total becomes that number." -
+#: `Game.record_count` is the same "later text ... may modify the meaning of
+#: earlier text" channel `that_many`'s own callers already write to (Jaya
+#: Ballard's "Discard up to three cards, then draw that many cards"); "that
+#: number" (`_amount_term`'s own new branch, above) is simply this file's
+#: existing count channel under the noun a life total counts with instead of
+#: a number of cards.
+_COUNT_THE_NUMBER_OF_RE = re.compile(r"^count the number of (?P<expr>.+)$", re.IGNORECASE)
+
+
+def _parse_count_the_number_of_clause(clause: str) -> ClauseEffect | None:
+    """`_COUNT_THE_NUMBER_OF_RE`'s shape, or `None`."""
+    match = _COUNT_THE_NUMBER_OF_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    reader = count_expression(match.group("expr"))
+    if reader is None:
+        return None
+
+    def count_the_number_of(
+        game: "Game", player: Player, source: str, source_id: str | None
+    ) -> None:
+        game.record_count(reader(game, player.username))
+
+    return count_the_number_of
+
+
+#: Oketra's Last Mercy's own rider: "Lands you control don't untap during
+#: your next untap step." - the group-of-permanents twin of `_THAT_
+#: PERMANENT_NO_UNTAP_RE`'s single anaphoric one (Vorinclex, Voice of
+#: Hunger's "that land"), both reusing `CardState.exerted` (CR 701.43a-b) as
+#: the shared "does not untap next untap step" flag - it is not CR 701.43's
+#: Exert keyword action either time, only the identical mechanical effect a
+#: card can print without the word "exert" at all.
+_LANDS_DONT_UNTAP_NEXT_STEP_RE = re.compile(
+    r"^lands you control (?:don'?t|do not) untap during your next untap step\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_lands_dont_untap_next_step_clause(clause: str) -> ClauseEffect | None:
+    """`_LANDS_DONT_UNTAP_NEXT_STEP_RE`'s shape, or `None`."""
+    if _LANDS_DONT_UNTAP_NEXT_STEP_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def lands_dont_untap(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        for permanent in game.battlefield:
+            if (
+                permanent.controller == player.username
+                and Type.LAND in game.characteristics_of(permanent).types
+            ):
+                permanent.exerted = True
+
+    return lands_dont_untap
+
+
 #: "You gain hexproof until your next turn." (Blossoming Calm), and the
 #: player half of "You and permanents you control gain hexproof from blue and
 #: from black until end of turn." (Veil of Summer, once its compound subject is
@@ -11394,6 +11573,22 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     # CR 207.2a: reminder text in parentheses is not rules text - "get {E}
     # (an energy counter)" and "surveil 1 (Look at ...)" both carry one.
     clause = re.sub(r"\s*\([^()]*\)\s*$", "", clause).strip().rstrip(".").strip()
+
+    your_life_total_becomes = _parse_your_life_total_becomes_clause(clause)
+    if your_life_total_becomes is not None:
+        return your_life_total_becomes
+
+    double_life_total = _parse_double_your_life_total_clause(clause)
+    if double_life_total is not None:
+        return double_life_total
+
+    count_the_number_of = _parse_count_the_number_of_clause(clause)
+    if count_the_number_of is not None:
+        return count_the_number_of
+
+    lands_dont_untap_next_step = _parse_lands_dont_untap_next_step_clause(clause)
+    if lands_dont_untap_next_step is not None:
+        return lands_dont_untap_next_step
 
     discard_unless = _parse_discard_unless_condition_clause(clause)
     if discard_unless is not None:
@@ -19944,6 +20139,29 @@ _PREVENT_NEXT_DAMAGE_TO_TARGET_RE = re.compile(
 _TARGET_PLAYER_OR_OPPONENT_VERB_RE = re.compile(
     r"^target (?P<who>player|opponent) (?P<rest>.+)$", re.IGNORECASE
 )
+#: CR 119.5's own targeted subjects: "target player's life total becomes
+#: `<amount>`" (Magister Sphinx, Vraska, Relic Seeker's -10), "target
+#: opponent's life total becomes `<amount>`" (Sorin Markov's -3), and "up to
+#: one target player's life total becomes `<amount>`" (Torgaar, Famine
+#: Incarnate's own ETB, CR 115.6's optional target). The possessive "'s"
+#: is why this cannot reuse `_TARGET_PLAYER_OR_OPPONENT_VERB_RE` just above -
+#: that pattern requires a literal space after "player"/"opponent", which
+#: "player's"/"opponent's" never has, the identical gap "Exile target
+#: player's graveyard" (`_EXILE_TARGET_PLAYERS_GRAVEYARD_RE`) already works
+#: around by matching the possessive shape whole instead.
+_LIFE_TOTAL_BECOMES_TARGET_RE = re.compile(
+    r"^(?P<phrase>target player|target opponent|up to one target player)'s "
+    r"life total becomes (?P<amount>.+)$",
+    re.IGNORECASE,
+)
+#: "Each player's life total becomes `<amount>`" (Arbiter of Knollridge's
+#: ETB, Biorhythm, Shaman of Forgotten Ways's Formidable activation, Repay
+#: in Kind, Worldfire, Sway of the Stars) - CR 102.1's whole player set, no
+#: target at all, the identical "no target" shape `_DAMAGE_EACH_PLAYER_RE`
+#: above already reads for damage.
+_EACH_PLAYERS_LIFE_TOTAL_BECOMES_RE = re.compile(
+    r"^each player'?s life total becomes (?P<amount>.+)$", re.IGNORECASE
+)
 #: "Each player exiles all creature cards from their graveyard, then
 #: sacrifices all creatures they control, then puts all cards they exiled
 #: this way onto the battlefield." (Living End) - three CR 608.2c instructions
@@ -21415,6 +21633,45 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
                     clause_effect(game, target, source, source_id_of(stack_object))
 
         return player_verb_effect
+
+    if match := _LIFE_TOTAL_BECOMES_TARGET_RE.fullmatch(clause):
+        if not _targets_understood(
+            match.group("phrase"), allow_player_targets=True, count_agnostic=True
+        ):
+            return None
+        amount_reader = _life_total_becomes_amount_reader(match.group("amount"))
+        if amount_reader is None:
+            return None
+
+        def target_life_total_becomes(game: "Game", stack_object: "StackObject") -> None:
+            for target in game.resolve_targets(stack_object):
+                if isinstance(target, Player):
+                    new_total = amount_reader(game, target.username, None, 0)
+                    game.set_life_total(target, new_total)
+
+        return target_life_total_becomes
+
+    if match := _EACH_PLAYERS_LIFE_TOTAL_BECOMES_RE.fullmatch(clause):
+        amount_reader = _life_total_becomes_amount_reader(match.group("amount"))
+        if amount_reader is None:
+            return None
+
+        def each_player_life_total_becomes(game: "Game", stack_object: "StackObject") -> None:
+            # CR 119.5's own set applies to every player "at once" in
+            # effect: each player's new total is read off the board as it
+            # stood before this instruction touched anyone, then every
+            # total is set - never one player's already-adjusted total
+            # feeding the next player's own count (irrelevant for "the
+            # number of creatures they control", but load-bearing for "the
+            # highest/lowest life total among all players").
+            new_totals = {
+                player.username: amount_reader(game, player.username, None, 0)
+                for player in game.players_in_game
+            }
+            for username, new_total in new_totals.items():
+                game.set_life_total(username, new_total)
+
+        return each_player_life_total_becomes
 
     return None
 
@@ -58668,6 +58925,16 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
         that_player = _parse_that_player_clause(clause, for_spell=for_spell)
         if that_player is not None:
             return that_player
+        that_players_life_total_becomes = _parse_that_players_life_total_becomes_clause(
+            clause, for_spell=for_spell
+        )
+        if that_players_life_total_becomes is not None:
+            return that_players_life_total_becomes
+        self_assigns_no_combat_damage = _parse_self_assigns_no_combat_damage_clause(
+            clause, for_spell=for_spell
+        )
+        if self_assigns_no_combat_damage is not None:
+            return self_assigns_no_combat_damage
     minus_counters_clause = _parse_minus_counters_mixed_clause(clause, for_spell=for_spell)
     if minus_counters_clause is not None:
         return minus_counters_clause
@@ -64586,6 +64853,80 @@ def _parse_that_player_clause(clause: str, *, for_spell: bool) -> TargetedClause
             return
         player = game.player(event.player)
         clause_effect(game, player, ability.source_name, source_id_of(ability))
+
+    return effect
+
+
+#: Master of Cruelties' own attack trigger: "Whenever this creature attacks
+#: a player and isn't blocked, that player's life total becomes 1." CR
+#: 607.1's "that player" anaphora onto the very player the condition just
+#: named - the defending player, `GameEvent.defender_controller` on the
+#: `TriggerEvent.ATTACKS_UNBLOCKED` event `Game.declare_blockers` emits
+#: (CR 508.3f/509.3g), not `GameEvent.player` (`_parse_that_player_clause`'s
+#: own referent, a different field for a different event shape entirely).
+#: The possessive "'s" is why this cannot reuse that reader anyway (see
+#: `_LIFE_TOTAL_BECOMES_TARGET_RE`'s own docstring for the identical gap on
+#: "target player's").
+_THAT_PLAYERS_LIFE_TOTAL_BECOMES_RE = re.compile(
+    r"^that player'?s life total becomes (?P<amount>.+)$", re.IGNORECASE
+)
+
+
+def _parse_that_players_life_total_becomes_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_THAT_PLAYERS_LIFE_TOTAL_BECOMES_RE`'s shape. Ability-only, the same
+    restriction `_parse_that_player_clause` states: a resolving spell has no
+    `ability.event` to resolve "that player" against."""
+    if for_spell:
+        return None
+    match = _THAT_PLAYERS_LIFE_TOTAL_BECOMES_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    amount_reader = _life_total_becomes_amount_reader(match.group("amount"))
+    if amount_reader is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        event = ability.event
+        if event is None or event.defender_controller is None:
+            return
+        player = game.player(event.defender_controller)
+        new_total = amount_reader(game, player.username, None, 0)
+        game.set_life_total(player, new_total)
+
+    return effect
+
+
+#: Master of Cruelties' own rider on the same trigger: "This creature
+#: assigns no combat damage this combat." CR 700.7's "this creature" is the
+#: ability's own source; the flag lasts only for the combat under way right
+#: now (`CardState.assigns_no_combat_damage_this_combat`, cleared at the top
+#: of the next `declare_attackers_step`, the way `exerted` is cleared at the
+#: next untap), read by `machines.combat._assignment_power_of`.
+_SELF_ASSIGNS_NO_COMBAT_DAMAGE_THIS_COMBAT_RE = re.compile(
+    r"^this (?:creature|permanent) assigns no combat damage this combat\.?$", re.IGNORECASE
+)
+
+
+def _parse_self_assigns_no_combat_damage_clause(
+    clause: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_SELF_ASSIGNS_NO_COMBAT_DAMAGE_THIS_COMBAT_RE`'s shape. Ability-only:
+    a spell is never itself a combat participant."""
+    if for_spell:
+        return None
+    if _SELF_ASSIGNS_NO_COMBAT_DAMAGE_THIS_COMBAT_RE.fullmatch(clause.strip()) is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        ability = stack_object
+        assert isinstance(ability, AbilityOnStack)
+        source = ability.source_or_last_known(game)
+        if source is not None and source.zone is Zone.BATTLEFIELD:
+            source.assigns_no_combat_damage_this_combat = True
 
     return effect
 
