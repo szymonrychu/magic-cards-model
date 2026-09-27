@@ -6,7 +6,7 @@ CR 509.1b: "A restriction may be created by an evasion ability (a static
 ability an attacking creature has that restricts what can block it)." Nothing
 in `combat.py`'s own reader (`_evasion_restriction_sentences`) ever considered
 this shape - its subject filter only ever accepts the attacker's own name or
-"this creature" (CR 201.4-style self-reference), so a group-subject line like
+"this creature" (CR 201.5 self-reference), so a group-subject line like
 Deepchannel Mentor's "Blue creatures you control can't be blocked." was
 invisible to it: not enforced, and - because the sentence was never even a
 candidate - not recorded as an `EvasionNotice` either. Confirmed live before
@@ -201,3 +201,96 @@ def test_tanglewalkers_grant_does_not_apply_without_an_artifact_land():
     scenario.block(bears, wurm)
     assert scenario.game.is_blocked(bears)
     assert scenario.game.evasion_notices == []
+
+
+_GRANTED = "This creature can't be blocked."
+
+
+def _granted(scenario, creature) -> bool:
+    return _GRANTED in scenario.game.characteristics_of(creature).abilities
+
+
+def test_deepchannel_mentors_grant_reaches_another_blue_creature_its_controller_controls():
+    """ "Blue creatures you control": Spectral Sailor, a different blue
+    creature alice controls, is unblockable too, not only the Mentor."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Deepchannel Mentor", "Spectral Sailor"])
+        .player("bob", battlefield=["Wurmcoil Engine"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    sailor = scenario.creature("Spectral Sailor", "alice")
+    wurm = scenario.creature("Wurmcoil Engine", "bob")
+
+    assert _granted(scenario, sailor)
+    scenario.attack_with(sailor)
+    assert not scenario.game.can_block(wurm, sailor)
+
+
+def test_deepchannel_mentors_grant_does_not_reach_an_opponents_blue_creature():
+    """ "you control" scopes the group to the source's controller: bob's blue
+    Merfolk Observer gets nothing from alice's Mentor."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Deepchannel Mentor"])
+        .player("bob", battlefield=["Merfolk Observer"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    assert not _granted(scenario, scenario.creature("Merfolk Observer", "bob"))
+
+
+def test_deepchannel_mentors_grant_reaches_a_creature_that_enters_later_and_ends_with_the_source():
+    """CR 613.5: the grant is continually re-applied, so a blue creature that
+    enters afterwards has it at once, and once the Mentor is destroyed no
+    creature has it any more."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Merfolk Looter"],
+            battlefield=["Deepchannel Mentor", "Spectral Sailor"],
+        )
+        .player("bob", battlefield=["Wurmcoil Engine"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mentor = scenario.creature("Deepchannel Mentor", "alice")
+    sailor = scenario.creature("Spectral Sailor", "alice")
+    looter = scenario.put_onto_battlefield("Merfolk Looter", "alice")
+
+    assert _granted(scenario, looter)
+    scenario.game.destroy(mentor)
+    assert not _granted(scenario, looter)
+    assert not _granted(scenario, sailor)
+
+
+def test_deepchannel_mentors_grant_follows_its_controller():
+    """Act of Treason takes bob's Mentor: "you" is now alice, so alice's blue
+    Spectral Sailor gains the grant and bob's blue Merfolk Observer loses it."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice", hand=["Act of Treason"], battlefield=["Mountain"] * 3 + ["Spectral Sailor"]
+        )
+        .player("bob", battlefield=["Deepchannel Mentor", "Merfolk Observer"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mentor = scenario.creature("Deepchannel Mentor", "bob")
+    sailor = scenario.creature("Spectral Sailor", "alice")
+    observer = scenario.creature("Merfolk Observer", "bob")
+    assert _granted(scenario, observer)
+    assert not _granted(scenario, sailor)
+
+    mountains = scenario.untapped_sources("Mountain", "Mountain", "Mountain", username="alice")
+    scenario.cast_and_resolve("Act of Treason", *mountains, targets=[mentor])
+
+    assert _granted(scenario, sailor)
+    assert not _granted(scenario, observer)

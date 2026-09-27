@@ -44,8 +44,9 @@ Shapes read (`combat.evasion_restriction_refusal`):
   required.
 - **Sacred Knight**: "... by black and/or red creatures." - an adjective
   *list* sharing one elided trailing noun phrase ("creature(s)", printed
-  once rather than once per adjective), CR 700.2's inclusive "and/or" read
-  the identical way the plain "or" disjunction above already is.
+  once rather than once per adjective), the inclusive "and/or" (the
+  wording CR 702.9b itself prints) read the identical way the plain "or"
+  disjunction above already is.
 
 Every printing in `src/magic_cards_model/data/printings` carrying "can't be
 blocked by" now reads `handled` (`scripts/sweep_pool.py --card`, confirmed
@@ -814,9 +815,9 @@ def test_sacred_knight_is_refused_by_either_colour_alone():
     creatures." - an adjective *list* sharing one trailing noun phrase
     (`_parse_elided_noun_list`), unlike Blazing Torch's "Vampires or
     Zombies", whose two bare subtypes need nothing reattached. A black
-    creature and a red creature are each refused on their own; CR 700.2's
-    "either or both" is the same inclusive-or `_CreatureDescriptionAlternatives`
-    already gives a plain "or" list.
+    creature and a red creature are each refused on their own; "and/or"
+    ("either or both") is the same inclusive-or
+    `_CreatureDescriptionAlternatives` already gives a plain "or" list.
 
     No second real printing of this exact "by `<adjective list>` and/or
     `<adjective>` creatures" connective exists anywhere in Scryfall's card
@@ -864,4 +865,24 @@ def test_elided_noun_and_or_list_is_read_off_a_self_block_restriction_too():
     connective on the "can't block ..." (CR 509.1b) half."""
     assert reads_self_combat_restriction_line(
         "This creature can't block black and/or red creatures.", "Some Zombie"
+    )
+
+
+def test_a_plain_and_adjective_list_is_not_guessed_as_either_or():
+    """ "white and blue creatures" is ambiguous - it may mean a creature that
+    is both colours - unlike "and/or" (702.9b's own "flying and/or reach"
+    wording) or a plain "or". The elided-noun list reads only the
+    unambiguous connectives and leaves a plain "and" unread, so it fails
+    closed with a notice instead of a guessed inclusive-or."""
+    assert not reads_self_combat_restriction_line(
+        "This creature can't be blocked by white and blue creatures.", "Some Knight"
+    )
+    assert not reads_self_combat_restriction_line(
+        "This creature can't be blocked by artifact, black, and red creatures.", "Some Knight"
+    )
+    assert reads_self_combat_restriction_line(
+        "This creature can't be blocked by white or blue creatures.", "Some Knight"
+    )
+    assert reads_self_combat_restriction_line(
+        "This creature can't be blocked by artifact, black, and/or red creatures.", "Some Knight"
     )

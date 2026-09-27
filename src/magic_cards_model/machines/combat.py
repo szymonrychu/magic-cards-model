@@ -1217,7 +1217,7 @@ def _self_reference_alternatives(state: CardState) -> tuple[str, ...]:
     """Every way `state`'s own oracle text could name itself in a
     self-restriction sentence, longest first so a regex alternation tries the
     most specific match: the generic "this creature"/"this token", the full
-    printed name, the short name before a comma (CR 201.4's legendary
+    printed name, the short name before a comma (CR 201.5c's legendary
     short-name convention - "April O'Neil can't be blocked ..." on a card
     printed "April O'Neil, Kunoichi Trainee" - the same self-reference
     `machines/triggers.py`'s `_self_referential` already reads), and - Zurgo
@@ -1246,10 +1246,11 @@ def _self_reference_names(name: str) -> tuple[str, ...]:
 def _evasion_restriction_sentences(attacker: CardState, game: "Game | None" = None) -> list[str]:
     """Self-referential "can't be blocked" sentences the attacker has *now*
     (CR 509.1b): the subject must be one of `_self_reference_alternatives`
-    (CR 509.1b's restriction is on the attacker itself; nothing in the pool
-    grants "can't be blocked" to *another* creature the way Akroma's Memorial
-    grants protection, so that shape is not read here - see
-    `docs/engine-coverage.md`).
+    (CR 509.1b's restriction is on the attacker itself). A group grant -
+    Deepchannel Mentor's "Blue creatures you control can't be blocked." - is
+    not read here directly: `layers._group_evasion_grant_builder` grants it
+    onto each qualifying creature as a self-referential line, which this
+    reader then picks up like any printed one.
 
     Which sentences those are is CR 613.5's question, the same one `has_keyword`
     asks: "the application of continuous effects as described by the layer
@@ -1576,20 +1577,23 @@ class _CreatureDescriptionAlternatives:
 #: creatures." - an adjective *list* sharing one trailing noun phrase printed
 #: once at the end ("creature(s)[ with ...]"), rather than once per adjective
 #: the way "Vampires or Zombies" prints two complete, self-sufficient bare
-#: subtypes with nothing elided. CR 700.2's "and/or" reminder text ("either
-#: or both") is the same inclusive-or `_CreatureDescriptionAlternatives`
-#: already gives a bare "or" list; a plain "or"/"and" joining the adjectives
-#: (Sky Hussar's "white and/or blue", read the identical way once the noun is
-#: reattached) is accepted alongside "and/or" and a Oxford-comma list of three
-#: or more, since nothing about the elision is specific to which conjunction
-#: joins the last two words.
+#: subtypes with nothing elided. "and/or" (the same connective CR 702.9b
+#: prints as "flying and/or reach") is the same inclusive-or
+#: `_CreatureDescriptionAlternatives` already gives a bare "or" list; a plain
+#: "or" joining the adjectives, and an Oxford-comma list of three or more
+#: ending in ", or"/", and/or", read the identical way once the noun is
+#: reattached. A plain "and" ("white and blue creatures") is deliberately
+#: *not* read: it may mean a creature that is both, so it fails closed with
+#: a notice rather than being guessed as "either".
 _ELIDED_NOUN_LIST_RE = re.compile(
-    r"^(?P<items>[a-z][a-z'-]*(?:(?:,\s*|\s+and/or\s+|\s+or\s+|\s+and\s+)[a-z][a-z'-]*)+)"
+    r"^(?P<items>[a-z][a-z'-]*(?:(?:,\s*(?:and/or\s+|or\s+)?|\s+and/or\s+|\s+or\s+)[a-z][a-z'-]*)+)"
     r"\s+(?P<rest>creatures?.*)$",
     re.IGNORECASE,
 )
 
-_ELIDED_NOUN_LIST_ITEM_SEP_RE = re.compile(r",\s*|\s+and/or\s+|\s+or\s+|\s+and\s+", re.IGNORECASE)
+_ELIDED_NOUN_LIST_ITEM_SEP_RE = re.compile(
+    r",\s*(?:and/or\s+|or\s+)?|\s+and/or\s+|\s+or\s+", re.IGNORECASE
+)
 
 
 def _parse_elided_noun_list(description: str) -> "tuple[_CreatureDescriptionMatcher, ...] | None":
