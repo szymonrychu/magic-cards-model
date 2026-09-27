@@ -282,3 +282,129 @@ def test_targeting_a_non_blue_spell_does_not_reduce_the_cost():
     payment = scenario.game.determine_total_cost(casting)
 
     assert str(payment.cost) == "{2}{U}"
+
+
+# --------------------------------------------------------------------------
+# Hearth Elemental: "This spell costs {X} less to cast, where X is the
+# number of cards in your graveyard that are instant cards, sorcery cards,
+# and/or have an Adventure." A union count over CR 205.2a's card types *and*
+# CR 715's own idiom - "have an Adventure" is read off `Card.layout is
+# Layout.ADVENTURE`, since "Adventure" prints where a *subtype* would (CR
+# 715.2's own back face, "Sorcery — Adventure"), never as a quality of the
+# whole card the way this clause needs it.
+#
+# Frantic Firebolt reads the identical list, off the pool and in a damage
+# amount rather than a cost reduction ("X is 2 plus the number of cards in
+# your graveyard that are ...") - proof the new `count_expression` term
+# generalises past the one position Hearth Elemental prints it in.
+# --------------------------------------------------------------------------
+
+
+def test_hearth_elemental_counts_instant_and_sorcery_cards_in_the_graveyard():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Hearth Elemental"],
+            graveyard=["Lightning Bolt", "Counterspell"],
+            battlefield=["Mountain"] * 7,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Hearth Elemental")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{3}{R}", "{5}{R} minus 2 (a Bolt, a Counterspell)"
+
+
+def test_hearth_elemental_also_counts_a_card_that_has_an_adventure():
+    """A second Hearth Elemental, dead in the graveyard, is itself a card
+    that "has an Adventure" - CR 715.2, whether or not its Adventure half was
+    ever cast."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Hearth Elemental"],
+            graveyard=["Lightning Bolt", "Hearth Elemental"],
+            battlefield=["Mountain"] * 7,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Hearth Elemental")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{3}{R}", "{5}{R} minus 2 (a Bolt, an Adventure card)"
+
+
+def test_a_card_that_is_neither_a_quality_nor_an_adventure_does_not_count():
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Hearth Elemental"],
+            graveyard=["Grizzly Bears"],
+            battlefield=["Mountain"] * 7,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Hearth Elemental")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{5}{R}", "the printed cost, unreduced"
+
+
+def test_the_reduction_is_only_generic_mana_cr_118_7a():
+    """CR 118.7a: a generic reduction never eats into the coloured part."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Hearth Elemental"],
+            graveyard=["Lightning Bolt"] * 6,
+            battlefield=["Mountain"] * 7,
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    casting = scenario.cast("Hearth Elemental")
+    scenario.game.determine_total_cost(casting)
+
+    assert str(casting.total_cost.mana) == "{R}", "{5}{R} minus 6, floored at the coloured symbol"
+
+
+def test_frantic_firebolt_reads_the_identical_list_off_pool():
+    """Off-pool proof: the same quality-list count, read as a damage amount
+    rather than a cost reduction. 4 damage (2 base plus 2 - a Bolt, an
+    Adventure card) is lethal to a 2/2, so the state-based check (CR 704.5g)
+    is the assertion: a wrong, unread amount would leave Grizzly Bears
+    alive."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Frantic Firebolt"],
+            graveyard=["Lightning Bolt", "Hearth Elemental"],
+            battlefield=["Mountain"] * 3,
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+
+    scenario.cast_and_resolve("Frantic Firebolt", auto=True, targets=[bears])
+
+    assert bears.zone is Zone.GRAVEYARD, "4 damage is lethal to a 2/2"

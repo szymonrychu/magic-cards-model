@@ -99,3 +99,48 @@ def test_the_line_is_read_so_nothing_is_reported_unread():
     scenario = _board("Canopy Vista")
 
     assert unread_self_enters_tapped_lines(scenario.find("Canopy Vista", Zone.HAND, "alice")) == []
+
+
+# --------------------------------------------------------------------------
+# "unless you control a basic land" - the bare, uncounted form
+# --------------------------------------------------------------------------
+#
+# Ba Sing Se's own "This land enters tapped unless you control a basic
+# land." is the battle lands' "two or more basic lands" shape with the count
+# dropped to one - a different sentence (no "or more", singular "a basic
+# land"), read by its own `_YOU_CONTROL_A_BASIC_LAND_RE` rather than
+# `_YOU_CONTROL_OTHER_LANDS_RE`'s counted form.
+
+
+def test_ba_sing_se_enters_tapped_with_no_basic_land():
+    scenario = _board("Ba Sing Se")
+
+    assert scenario.play_land("Ba Sing Se").tapped
+
+
+def test_ba_sing_se_enters_untapped_with_one_basic_land():
+    scenario = _board("Ba Sing Se", ["Forest"])
+
+    assert not scenario.play_land("Ba Sing Se").tapped
+
+
+def test_a_nonbasic_land_with_a_basic_land_type_does_not_satisfy_ba_sing_se():
+    """CR 205.4c: Watery Grave is an Island but not a basic land."""
+    scenario = _board("Ba Sing Se", ["Watery Grave"])
+
+    assert scenario.play_land("Ba Sing Se").tapped
+
+
+def test_an_opponents_basic_land_does_not_count_for_ba_sing_se():
+    scenario = _board("Ba Sing Se", bob_battlefield=["Forest"])
+
+    assert scenario.play_land("Ba Sing Se").tapped
+
+
+def test_agna_qel_a_reads_the_same_bare_shape_off_pool():
+    """Agna Qel'a, a different printing of the identical sentence."""
+    untapped = _board("Agna Qel'a", ["Island"])
+    tapped = _board("Agna Qel'a")
+
+    assert not untapped.play_land("Agna Qel'a").tapped
+    assert tapped.play_land("Agna Qel'a").tapped

@@ -1364,6 +1364,29 @@ _COUNT_CARDS_IN_YOUR_GRAVEYARD_RE = re.compile(
     r"in your graveyard$",
     re.IGNORECASE,
 )
+#: Hearth Elemental's own "the number of cards in your graveyard that are
+#: instant cards, sorcery cards, and/or have an Adventure." - the "that are
+#: `<list>`" twin of `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`'s own leading-
+#: qualifier shape, needed because this phrasing repeats "cards" once per
+#: list item rather than once for the whole list, and because one item can be
+#: CR 715's own idiom instead of a card type at all. `list` is split and read
+#: word by word in `count_expression` itself.
+_COUNT_CARDS_IN_GRAVEYARD_QUALITY_LIST_RE = re.compile(
+    r"^(?:the )?number of cards in your graveyard that are (?P<list>.+)$", re.IGNORECASE
+)
+#: "have an Adventure" (CR 715.2) - Scryfall's own name for the same rule is
+#: the `Layout.ADVENTURE` a card's `layout` field already carries (Stoke
+#: Genius's own back face is what makes Hearth Elemental one), read here
+#: rather than through `types_of`/`subtypes_of`: "Adventure" prints in a
+#: face's own type line the way a *subtype* does ("Sorcery — Adventure"), not
+#: as a quality of the whole card the way this clause needs it, and `Card.
+#: layout` is the one field Scryfall already computes that question from.
+_ADVENTURE_CARD_CLAUSE_RE = re.compile(r"^have an adventure$", re.IGNORECASE)
+#: "`<type>` cards" - one item of the list above, always plural (never a bare
+#: type word the way `_COUNT_CARDS_IN_YOUR_GRAVEYARD_RE`'s leading qualifier
+#: is), so it needs its own singular-then-lookup rather than reusing that
+#: regex's own trailing "cards?" against a list already split apart.
+_TYPE_CARDS_CLAUSE_RE = re.compile(r"^(?P<type>[a-z]+) cards$", re.IGNORECASE)
 #: Domain (CR 702.94-adjacent naming; no keyword ability of its own, just a
 #: fixed count expression templated identically on every card that uses it):
 #: Tribal Flames' "the number of basic land types among lands you control".
@@ -1707,6 +1730,46 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
             )
 
         return count_subtype_in_graveyard
+
+    if match := _COUNT_CARDS_IN_GRAVEYARD_QUALITY_LIST_RE.fullmatch(stripped):
+        # Hearth Elemental: split the comma/"and"/"or"/"and-or" list back
+        # into its own clauses and read each one - a card type ("instant
+        # cards") or CR 715's "have an Adventure" - failing the whole
+        # expression closed the instant one clause is neither, the same
+        # posture the "and" list just above already takes for a card type it
+        # cannot place.
+        clauses = [
+            clause.strip()
+            for clause in re.split(
+                r",\s*(?:and/or\s+|and\s+|or\s+)?|\s+and/or\s+|\s+and\s+|\s+or\s+",
+                match.group("list"),
+                flags=re.IGNORECASE,
+            )
+            if clause.strip()
+        ]
+        wants_adventure = False
+        wanted_types: set[Type] = set()
+        for clause in clauses:
+            if _ADVENTURE_CARD_CLAUSE_RE.fullmatch(clause):
+                wants_adventure = True
+                continue
+            type_match = _TYPE_CARDS_CLAUSE_RE.fullmatch(clause)
+            card_type = _singular_card_type(type_match.group("type")) if type_match else None
+            if card_type is None:
+                return None
+            wanted_types.add(card_type)
+        if not wanted_types and not wants_adventure:
+            return None
+
+        def count_quality_list_in_graveyard(game: "Game", controller: str) -> int:
+            return sum(
+                1
+                for state in game.player(controller).graveyard
+                if (wanted_types & set(state.types))
+                or (wants_adventure and state.card.layout is Layout.ADVENTURE)
+            )
+
+        return count_quality_list_in_graveyard
 
     if match := _COUNT_THIS_WAY_RE.fullmatch(stripped):
         verb = match.group("verb").lower()
@@ -19441,6 +19504,47 @@ def _merge_prevent_damage_from_target_clauses(
 # --------------------------------------------------------------------------
 
 
+def _where_x_count_expression(phrase: str) -> Callable[["Game", str], int] | None:
+    """`count_expression`, widened to accept CR 107.1's "plus"/"minus"
+    between two terms - `_resolve_multiplied_amount`'s own "where X is ..."
+    reading needs a `(game, controller) -> int` function, not `amount_
+    expression`'s own `(game, controller, obj, x) -> int` `AmountReader`:
+    there is no resolving object or announced X in scope at this call site,
+    only the caster this damage/counter multiplier is computed for.
+
+    Frantic Firebolt's own "where X is 2 plus the number of cards in your
+    graveyard that are instant cards, sorcery cards, and/or have an
+    Adventure." is the shape that needs this: a literal number offsetting a
+    count `count_expression` alone already reads perfectly well, the
+    identical "plus"/"minus" arithmetic `amount_expression` already gives
+    every other position this engine reads a dynamic amount in - just
+    re-read here against this function's own narrower signature rather than
+    reusing that one directly.
+    """
+    parts = _AMOUNT_OPERATOR_RE.split(phrase.strip().rstrip("."))
+    readers: list[Callable[[Game, str], int]] = []
+    for term in parts[0::2]:
+        term = term.strip()
+        constant = parse_count(term)
+        if constant is not None:
+            readers.append(lambda _game, _controller, _constant=constant: _constant)
+            continue
+        reader = count_expression(term)
+        if reader is None:
+            return None
+        readers.append(reader)
+    operators = [operator.lower() for operator in parts[1::2]]
+
+    def evaluate(game: "Game", controller: str) -> int:
+        total = readers[0](game, controller)
+        for operator, reader in zip(operators, readers[1:], strict=True):
+            value = reader(game, controller)
+            total = total - value if operator == "minus" else total + value
+        return max(total, 0)  # CR 107.1b
+
+    return evaluate
+
+
 def _resolve_multiplied_amount(
     n: str, each: str | None, where_x: str | None
 ) -> Callable[["Game", str], int] | None:
@@ -19453,7 +19557,7 @@ def _resolve_multiplied_amount(
     if n.lower() == "x":
         if where_x is None:
             return None
-        return count_expression(where_x)
+        return _where_x_count_expression(where_x)
     base = parse_count(n)
     if base is None:
         return None

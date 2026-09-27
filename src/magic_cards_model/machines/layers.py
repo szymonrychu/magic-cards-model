@@ -6325,6 +6325,59 @@ def _each_land_is_builder(subtype: str, line: str) -> EffectBuilder:
     return builder
 
 
+#: Multiversal Passage's own "This land is the chosen type." - CR 614.12a's
+#: choice (`chosen_type.py`'s `_CHOOSE_A_BASIC_LAND_TYPE_RE` in
+#: `machines/replacement.py`) read back as a self-only, unconditional layer 4
+#: type-setting effect, `_nonbasic_lands_are_builder`'s own board-wide shape
+#: narrowed to one permanent and one already-recorded type instead of a
+#: printed one.
+_THIS_LAND_IS_CHOSEN_TYPE_RE = re.compile(r"^this land is the chosen type\.?$", re.IGNORECASE)
+
+
+def _self_chosen_basic_land_type_builder(line: str) -> EffectBuilder:
+    """`_THIS_LAND_IS_CHOSEN_TYPE_RE`'s shape.
+
+    Layer 4 (CR 613.1d), setting rather than additive (CR 305.7 - no "in
+    addition to its other types" is printed, unlike Thran Portal's own
+    "This land is the chosen type in addition to its other types.", a
+    different sentence this regex does not match): `set_basic_land_type`
+    replaces the land's subtypes and rules-text abilities with the chosen
+    basic type and its intrinsic mana ability, the identical modification
+    `_nonbasic_lands_are_builder` gives Blood Moon's board-wide effect, just
+    over `_only(source.id)` - this one permanent - instead of every nonbasic
+    land, and over `chosen_basic_land_type_of(source)` instead of a type
+    fixed at parse time.
+
+    No choice recorded (a permanent that somehow entered without it) grants
+    nothing rather than guessing one, the same posture `_chosen_type_anthem_
+    builder`'s own missing-choice case already takes.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        chosen = chosen_basic_land_type_of(source)
+        mana_ability = BASIC_LAND_TYPES.get(chosen) if chosen is not None else None
+        if chosen is None or mana_ability is None:
+            return []
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: this land is the chosen type ({chosen})",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=set_basic_land_type(chosen, mana_ability),
+            )
+        ]
+
+    return builder
+
+
 def _board_wide_type_grant_builder(
     subject: Type, granted: Type, *, nontoken: bool, line: str
 ) -> EffectBuilder:
@@ -7322,6 +7375,20 @@ def chosen_creature_type_of(source: CardState) -> str | None:
     if chosen is None or chosen.kind is not ChoiceKind.CREATURE_TYPE or not chosen.value:
         return None
     return chosen.value.lower()
+
+
+def chosen_basic_land_type_of(source: CardState) -> str | None:
+    """The basic land type `source` chose as it entered (Multiversal
+    Passage's own "As this land enters, choose a basic land type."), one of
+    CR 305.6's five proper-noun spellings ("Island", never "island"), or
+    `None` if it recorded no such choice - `chosen_creature_type_of`'s own
+    twin, kept capitalised rather than lowercased because `set_basic_land_
+    type` (and every other basic-land-type reader in this module) wants the
+    proper-noun spelling `BASIC_LAND_TYPES` is keyed by."""
+    chosen = source.choice
+    if chosen is None or chosen.kind is not ChoiceKind.BASIC_LAND_TYPE or not chosen.value:
+        return None
+    return chosen.value if chosen.value in BASIC_LAND_TYPES else chosen.value.capitalize()
 
 
 #: An Unexpected Party's own "Creatures you control of the chosen type get
@@ -13884,6 +13951,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             line=sentence,
             description="while you gained life this turn",
         )
+    if _THIS_LAND_IS_CHOSEN_TYPE_RE.fullmatch(sentence):
+        return _self_chosen_basic_land_type_builder(line=sentence)
     return None
 
 
