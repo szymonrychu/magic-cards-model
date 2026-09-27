@@ -3281,6 +3281,8 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
                 )
             )
 
+    if remainder and remainder_effect is None:
+        return _with_unparsed_remainder(effect, remainder)
     return effect
 
 
@@ -3571,6 +3573,8 @@ def _parse_where_x_is_continuous_effect(effect_text: str) -> AbilityEffect | Non
             run_remainder(game, ability)
             run_pump(game, ability)
 
+    if remainder_text and remainder_effect is None:
+        return _with_unparsed_remainder(effect, remainder_text)
     return effect
 
 
@@ -4177,6 +4181,8 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
                 )
             )
 
+    if remainder and remainder_effect is None:
+        return _with_unparsed_remainder(effect, remainder)
     return effect
 
 
@@ -5220,6 +5226,15 @@ def _is_notice_only(effect: object) -> bool:
     (`anaphoric_notice_only`, `delayed_notice_only`, ...) rather than a real
     effect - named that way by `_spell_effect_or_notice` itself."""
     return getattr(effect, "__name__", "").endswith("notice_only")
+
+
+def _with_unparsed_remainder[F](effect: F, remainder: str) -> F:
+    """`effect`, marked as a closure that only notices `remainder` at runtime
+    (CR 608.2c: an instruction it skips leaves the clause half-played) - the
+    `unparsed_remainder` attribute `support.unparsed_remainder` reads, so the
+    support oracle never scores such a clause `handled`."""
+    effect.unparsed_remainder = remainder  # type: ignore[attr-defined]
+    return effect
 
 
 def _strip_self_exile_sentence(card_name: str, text: str) -> str | None:
@@ -14164,7 +14179,7 @@ def _parse_cast_from_hand_then_exile_clause(text: str) -> AbilityEffect | None:
             )
         )
 
-    return unread_tail_notice_only
+    return _with_unparsed_remainder(unread_tail_notice_only, tail)
 
 
 #: Back from the Brink: "Exile a creature card from your graveyard and pay
@@ -23785,7 +23800,7 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
             )
         )
 
-    return layer_effect_with_remainder_notice
+    return _with_unparsed_remainder(layer_effect_with_remainder_notice, remainder_text)
 
 
 #: "If `<condition>`, put `<n>` `<kind>` counter(s) on it/that creature/this
@@ -24551,7 +24566,11 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
                 if target.zone is Zone.BATTLEFIELD:
                     game.add_counters(target, upgrade_kind, upgrade_amount)
 
-        return layer_or_counter_instead
+        from . import conditions
+
+        if conditions.claims(condition_text):
+            return layer_or_counter_instead
+        return _with_unparsed_remainder(layer_or_counter_instead, remainder_text)
 
     remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=False)
     if remainder_effect is not None:
@@ -24583,7 +24602,7 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
             )
         )
 
-    return layer_effect_with_remainder_notice
+    return _with_unparsed_remainder(layer_effect_with_remainder_notice, remainder_text)
 
 
 def _compose_layer_effect_with_remainder_for_mode(mode_text: str) -> Effect | None:
@@ -24645,7 +24664,7 @@ def _compose_layer_effect_with_remainder_for_mode(mode_text: str) -> Effect | No
             )
         )
 
-    return layer_effect_with_remainder_notice
+    return _with_unparsed_remainder(layer_effect_with_remainder_notice, remainder_text)
 
 
 def _compose_layer_effect_with_remainder_for_ability_mode(mode_text: str) -> AbilityEffect | None:
@@ -24681,7 +24700,7 @@ def _compose_layer_effect_with_remainder_for_ability_mode(mode_text: str) -> Abi
             )
         )
 
-    return layer_effect_with_remainder_notice
+    return _with_unparsed_remainder(layer_effect_with_remainder_notice, remainder_text)
 
 
 #: A literal mana symbol or run of them - "{G}". Read by several clause
