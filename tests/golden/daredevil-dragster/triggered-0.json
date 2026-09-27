@@ -36,14 +36,16 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn"],
+    "fields_changed": ["counters_put_this_turn"],
     "notices": {},
     "objects": {
-      "Forest@alice#6": {
-        "zone": ["library", "hand"]
-      },
-      "Grizzly Bears@alice#3": {
-        "zone": ["library", "hand"]
+      "Daredevil Dragster@alice#1": {
+        "counters": [
+          {},
+          {
+            "velocity": 1
+          }
+        ]
       }
     },
     "players": {},
