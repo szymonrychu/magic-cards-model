@@ -337,12 +337,35 @@ def _kicked(context: "ConditionContext", match: re.Match[str]) -> bool:
 def _keyword_cost_paid(context: "ConditionContext", match: re.Match[str]) -> bool:
     """ "its prowl cost was paid", "his sneak cost was paid", "they were cast
     using web-slinging" - the alternative cost the spell was cast for
-    (`CastRecord.keyword`, CR 118.9a allows one)."""
+    (`CastRecord.keyword`, CR 118.9a allows one).
+
+    "... this turn" (Karai, Future of the Foot's own "If her sneak cost was
+    paid this turn, instead return that card to the battlefield") narrows a
+    sneak/surge/etc. permanent that keeps its `CastRecord` for the rest of
+    the game to only the turn it actually entered on. `CastRecord` carries no
+    turn number of its own, but CR 702.190a's sneak (and every other
+    alternative cost this reader claims) is paid as part of *casting*, and a
+    permanent spell becomes the permanent it will ever be the moment it
+    resolves - the same turn it was cast, always - so "paid this turn" is
+    exactly "paid, and this permanent's own `turn_entered` is the current
+    turn" (`CardState.turn_entered`, the same field summoning sickness
+    already reads). The subject ("her"/"his"/"its"/"their") is always the
+    ability's own source here - `_record`'s own no-subject-given default
+    routes through `_cast_record_for_clause` the identical way every other
+    keyword-cost clause in this reader already does - so `context.source` is
+    the permanent whose entering turn is being asked about.
+    """
     record = _record(context)
     if record is None or record.is_copy:
         return False
     keyword = (record.keyword or "").lower()
-    return keyword == match.group("keyword") and record.keyword_cost_paid
+    if keyword != match.group("keyword") or not record.keyword_cost_paid:
+        return False
+    if match.group("this_turn") is None:
+        return True
+    source = context.source
+    turn = context.game.turn
+    return source is not None and turn is not None and source.turn_entered == turn.turn_number
 
 
 def _bargained(context: "ConditionContext", match: re.Match[str]) -> bool:
@@ -453,14 +476,23 @@ READERS: tuple[ConditionReader, ...] = (
         rf"(?: (?P<times>{MULTIPLIER})| with its (?P<cost>(?:\{{[^}}]+\}})+) kicker)?",
         _kicked,
     ),
+    # "this creature's sneak cost was paid" (Turncoat Kunoichi) / "this
+    # spell's sneak cost was paid" (The Last Ronin's Technique) - CR 700.7's
+    # own "this `<type>`" self-reference in its possessive form, alongside
+    # the pronoun forms every other TMT sneak-paid rider already used
+    # ("her sneak cost was paid" - Karai, Future of the Foot). Purely
+    # additive: every subject the bare pronoun alternation already matched
+    # still does.
     _reader(
-        r"(?:its|his|her|their) (?P<keyword>prowl|spectacle|madness|surge|emerge|sneak|dash"
-        r"|evoke|blitz|warp|mayhem|web-slinging|disturb|escape|flashback) cost was paid",
+        r"(?:its|his|her|their|this [a-z]+'s) "
+        r"(?P<keyword>prowl|spectacle|madness|surge|emerge|sneak|dash"
+        r"|evoke|blitz|warp|mayhem|web-slinging|disturb|escape|flashback) cost was paid"
+        r"(?P<this_turn> this turn)?",
         _keyword_cost_paid,
     ),
     _reader(
         r"(?:it was|he was|she was|they were) cast using (?P<keyword>web-slinging|sneak|surge"
-        r"|prowl|spectacle|madness|emerge|dash|blitz|evoke|mayhem|warp)",
+        r"|prowl|spectacle|madness|emerge|dash|blitz|evoke|mayhem|warp)(?P<this_turn> this turn)?",
         _keyword_cost_paid,
     ),
     _reader(rf"{_SUBJECT} (?:was|were){_NEGATED} bargained", _bargained),

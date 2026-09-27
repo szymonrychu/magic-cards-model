@@ -8494,6 +8494,37 @@ def _parse_counted_life_change_clause(clause: str) -> ClauseEffect | None:
     return counted_life_change
 
 
+#: "loses half their life, rounded up" (Dark Leo & Shredder's own combat
+#: damage trigger, via `_parse_that_player_clause`'s "that player " strip) /
+#: "loses half your life, rounded down" - CR 107.1a's own rounding-direction
+#: requirement on a fractional result, read the identical `numbers.parse_half`
+#: `_amount_term` (`machines/replacement.py`'s enters-with-counters position)
+#: already reuses, except the thing being halved here is not a count at all
+#: but the clause's own player's *current life total* (CR 119.1) - "their"/
+#: "his"/"her"/"your" all read as "this clause's own player", never a
+#: different one, so no anaphora resolution belongs here the way `_ANAPHORIC_
+#: OBJECT_TERM_RE` refuses one for `_parse_counted_life_change_clause` above.
+#: "gains half ... life" is not a printed shape in the pool and is
+#: deliberately left unread rather than guessed at.
+_HALF_LIFE_LOSS_RE = re.compile(
+    r"^loses half (?:their|his|her|your) life,\s*rounded (?P<direction>up|down)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_half_life_loss_clause(clause: str) -> ClauseEffect | None:
+    """`_HALF_LIFE_LOSS_RE`'s shape, or `None`."""
+    match = _HALF_LIFE_LOSS_RE.fullmatch(clause.strip())
+    if match is None:
+        return None
+    round_up = match.group("direction").lower() == "up"
+
+    def half_life_loss(game: "Game", player: Player, source: str, source_id: str | None) -> None:
+        game.lose_life(player, halve(player.life, round_up=round_up))
+
+    return half_life_loss
+
+
 #: "You gain hexproof until your next turn." (Blossoming Calm), and the
 #: player half of "You and permanents you control gain hexproof from blue and
 #: from black until end of turn." (Veil of Summer, once its compound subject is
@@ -9783,6 +9814,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
     counted_life = _parse_counted_life_change_clause(clause)
     if counted_life is not None:
         return counted_life
+
+    half_life_loss = _parse_half_life_loss_clause(clause)
+    if half_life_loss is not None:
+        return half_life_loss
 
     if match := _EACH_OPPONENT_LOSES_LIFE_RE.fullmatch(clause):
         amount = parse_count(match.group("n"))
@@ -14656,6 +14691,78 @@ def _two_battlefield_targets_understood(phrase: str, *, up_to_one: bool) -> bool
     return True
 
 
+#: Shredder's Technique's own body: "Destroy target creature or enchantment.
+#: If an enchantment was destroyed this way, you lose 2 life." CR 608.2c's
+#: "this way" rider on the base clause's *own* single target - not one of
+#: `numbers.Half`'s counted "N `<verb>` this way" amounts (Radiant Lotus's
+#: own "for each artifact sacrificed this way"), which count across a list;
+#: here there is exactly one target, and "this way" asks only whether *it*
+#: had the named card type at the moment it was destroyed. Read generally on
+#: the type word, so a future "Destroy target artifact or creature. If an
+#: artifact was destroyed this way, ..." reaches the identical reader.
+_DESTROY_TARGET_THEN_RIDER_IF_TYPE_DESTROYED_RE = re.compile(
+    r"^destroy target (?P<phrase>.+?)\.\s*"
+    r"if an? (?P<type>[a-z]+) was destroyed this way,\s*(?P<consequence>.+?)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_destroy_target_then_rider_if_type_destroyed_clause(
+    text: str, *, for_spell: bool
+) -> TargetedClause | None:
+    """`_DESTROY_TARGET_THEN_RIDER_IF_TYPE_DESTROYED_RE`'s shape, or `None`.
+
+    The base "destroy target `<phrase>`." is read whole through the ordinary
+    `_parse_targeted_clause` (CR 608.2b's legality recheck, indestructible,
+    regeneration and all its other nuances included, unrepeated here), and
+    the rider fires only afterward, off the target's own computed
+    characteristics (`Game.characteristics_of`) captured the instant before
+    that clause runs - CR 400.7: once destroyed it is a new object in the
+    graveyard with no memory of what it was.
+    """
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _DESTROY_TARGET_THEN_RIDER_IF_TYPE_DESTROYED_RE.fullmatch(whole)
+    if match is None:
+        return None
+    base = _parse_targeted_clause(f"destroy target {match.group('phrase')}.", for_spell=for_spell)
+    if base is None:
+        return None
+    try:
+        wanted_type = Type(match.group("type").lower())
+    except ValueError:
+        return None
+    consequence_text = match.group("consequence").strip()
+    consequence = (
+        parse_player_effect_for_spell(consequence_text)
+        if for_spell
+        else parse_mixed_effect(consequence_text)
+    )
+    if consequence is None:
+        return None
+
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        targets = [
+            target for target in game.resolve_targets(stack_object) if isinstance(target, CardState)
+        ]
+        # CR 400.7: captured before the move, since a destroyed card is a new
+        # object in the graveyard with no memory of what it was.
+        pre_move = {
+            target.id: (target, game.characteristics_of(target).types)
+            for target in targets
+            if target.zone is Zone.BATTLEFIELD
+        }
+        base(game, stack_object)
+        destroyed_a_wanted_type = any(
+            wanted_type in types
+            for target, types in pre_move.values()
+            if target.zone is not Zone.BATTLEFIELD  # actually moved - CR 701.8a
+        )
+        if destroyed_a_wanted_type:
+            consequence(game, stack_object)  # type: ignore[arg-type]
+
+    return effect
+
+
 #: "Tap/Untap [up to one ]target X and [up to one ]target Y." - Kiora, Master
 #: of the Depths' +1 ("Untap up to one target creature and up to one target
 #: land."). `_DESTROY_TWO_TARGETS_RE`'s shape with the tap/untap verbs: two
@@ -14986,6 +15093,71 @@ def _parse_exile_until_leaves_battlefield_clause(
             if exiled.zone is not Zone.EXILE:
                 continue  # CR 111.8: a token refused the move; nothing to bring back later.
             _watch_for_departure_and_return_exiled_card(game, source, exiled, ability.controller)
+
+    return effect
+
+
+#: Turncoat Kunoichi's own ETB: "choose target creature an opponent
+#: controls. Exile that creature until this creature leaves the battlefield.
+#: If this creature's sneak cost was paid, instead exile the chosen
+#: creature." Two sentences establish `_EXILE_UNTIL_THIS_LEAVES_BATTLEFIELD_
+#: RE`'s own temporary exile (CR 610.3) under a "choose target ..." heading
+#: rather than naming the target inline the way that regex's own callers do
+#: (`_parse_choose_target_then_return_to_your_hand_pair`'s own docstring
+#: gives the identical "choose target `<phrase>`." shape its precedent), and
+#: a third instead-clause (CR 614.1a) drops CR 610.3's own return-on-leaving
+#: watcher entirely when the sneak cost was paid, making the exile
+#: permanent - "the chosen creature" (CR 400.7's anaphora) is the same
+#: object the first sentence's "choose target" already fixed, read the
+#: identical `game.resolve_targets(ability)` way every branch here does,
+#: never a second target of its own.
+_CHOOSE_TARGET_EXILE_UNTIL_LEAVES_THEN_INSTEAD_PERMANENT_RE = re.compile(
+    r"^choose target (?P<phrase>.+?)\.\s*"
+    r"exile that [a-z]+ until this (?P<type>creature|artifact|enchantment|planeswalker|permanent)"
+    r" leaves the battlefield\.\s*"
+    r"if (?P<condition>[^,]+), instead exile the chosen [a-z]+\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_choose_target_exile_until_leaves_then_instead_permanent_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_CHOOSE_TARGET_EXILE_UNTIL_LEAVES_THEN_INSTEAD_PERMANENT_RE`'s shape."""
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _CHOOSE_TARGET_EXILE_UNTIL_LEAVES_THEN_INSTEAD_PERMANENT_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(f"target {match.group('phrase')}", count_agnostic=True):
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return  # CR 608.2b/115.6: no (legal) target chosen; nothing to exile.
+        source = ability.source(game)
+        if source is None:
+            return  # CR 113.7a: the source is already gone; nothing left to watch leave.
+        controller = game.controller_of(ability).username
+        held = game.condition_holds(controller, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        for target in targets:
+            exiled = game.exile_permanent(target)
+            if exiled.zone is not Zone.EXILE:
+                continue  # CR 111.8: a token refused the move.
+            if not held:
+                _watch_for_departure_and_return_exiled_card(game, source, exiled, controller)
 
     return effect
 
@@ -25024,6 +25196,19 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     create_token_then_attach = _parse_create_token_then_attach_clause(effect_text)
     if create_token_then_attach is not None:
         return create_token_then_attach
+    may_attach_to_entering_creature = _parse_may_attach_to_entering_creature_clause(effect_text)
+    if may_attach_to_entering_creature is not None:
+        return may_attach_to_entering_creature
+    return_then_instead_battlefield = (
+        _parse_return_target_card_then_instead_battlefield_if_cost_paid_clause(effect_text)
+    )
+    if return_then_instead_battlefield is not None:
+        return return_then_instead_battlefield
+    choose_exile_until_leaves_then_permanent = (
+        _parse_choose_target_exile_until_leaves_then_instead_permanent_clause(effect_text)
+    )
+    if choose_exile_until_leaves_then_permanent is not None:
+        return choose_exile_until_leaves_then_permanent
     named_equipment_token = _parse_named_equipment_token_clause(effect_text)
     if named_equipment_token is not None:
         return named_equipment_token
@@ -28516,6 +28701,16 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     dealt_damage_this_way = _parse_dealt_damage_this_way_die_to_exile(whole)
     if dealt_damage_this_way is not None:
         return dealt_damage_this_way
+    destroy_then_rider_if_type_destroyed = (
+        _parse_destroy_target_then_rider_if_type_destroyed_clause(whole, for_spell=True)
+    )
+    if destroy_then_rider_if_type_destroyed is not None:
+        return destroy_then_rider_if_type_destroyed  # type: ignore[return-value]
+    create_tokens_then_instead_tapped_attacking = (
+        _parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause(whole)
+    )
+    if create_tokens_then_instead_tapped_attacking is not None:
+        return create_tokens_then_instead_tapped_attacking
     prevent_dealt_by_target = _parse_prevent_damage_dealt_by_target_clause(whole)
     if prevent_dealt_by_target is not None:
         return prevent_dealt_by_target  # type: ignore[return-value]
@@ -36815,6 +37010,64 @@ def _parse_create_token_then_if_control_n_sacrifice_self_then_clause(
     return effect
 
 
+#: "Create a `<token>`. Then if you control `<n>` or more `<subtype>`s, that
+#: player loses half their life, rounded up." - Dark Leo & Shredder's own
+#: combat-damage trigger. The same CR 608.2c "Then if ..." shape
+#: `_CREATE_TOKEN_THEN_IF_CONTROL_N_SACRIFICE_SELF_THEN_RE` just above reads,
+#: with a different consequence: "that player" (CR 607.1's anaphora back to
+#: whichever player the trigger's own `DEALS_DAMAGE` event named,
+#: `AbilityOnStack.event.player` - the same subject `_parse_that_player_
+#: clause` elsewhere in this module reads off the identical field) loses half
+#: their own current life total (CR 119.1), rounded the way CR 107.1a's own
+#: printed direction says (`numbers.parse_half`/`halve` - the same halving
+#: primitive `_parse_half_life_loss_clause` above and `machines/replacement.
+#: py`'s enters-with-counters position both already reuse).
+_CREATE_TOKEN_THEN_IF_CONTROL_N_THAT_PLAYER_HALF_LIFE_RE = re.compile(
+    r"^(?P<first_token>create an? .+?\btokens?\b(?:\s+with\s+.+?)?)\.\s*"
+    r"then if you control (?P<n>[a-z0-9]+) or more (?P<subtype>[A-Za-z]+?)s?,\s*"
+    r"that player loses half (?:their|his|her) life,\s*rounded (?P<direction>up|down)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_token_then_if_control_n_that_player_half_life_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_CREATE_TOKEN_THEN_IF_CONTROL_N_THAT_PLAYER_HALF_LIFE_RE`'s shape.
+
+    Ability-only: `ability.event.player` (CR 607.1's anaphora referent) is an
+    `AbilityOnStack`'s own attribute, the same restriction `_parse_that_
+    player_clause` states for the identical field.
+    """
+    whole = _strip_non_effect_preamble(text).strip()
+    match = _CREATE_TOKEN_THEN_IF_CONTROL_N_THAT_PLAYER_HALF_LIFE_RE.fullmatch(whole)
+    if match is None:
+        return None
+    token_effect = parse_mixed_effect(match.group("first_token").strip() + ".")
+    if token_effect is None:
+        return None
+    threshold = parse_count(match.group("n"))
+    if threshold is None:
+        return None
+    count_reader = count_expression(f"{match.group('subtype')}s you control")
+    if count_reader is None:
+        return None
+    round_up = match.group("direction").lower() == "up"
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        token_effect(game, ability)  # type: ignore[arg-type]
+        controller = game.controller_of(ability).username
+        if count_reader(game, controller) < threshold:
+            return
+        event = ability.event
+        if event is None or event.player is None:
+            return
+        player = game.player(event.player)
+        game.lose_life(player, halve(player.life, round_up=round_up))
+
+    return effect
+
+
 #: Cori-Steel Cutter's *Flurry* trigger: "create a 1/1 white Monk creature
 #: token with prowess. You may attach this Equipment to it." CR 701.3a's
 #: "attach" is the general action - "take it from where it currently is and
@@ -36949,6 +37202,60 @@ def _parse_create_token_then_attach_clause(text: str) -> AbilityEffect | None:
         if source is None or source.zone is not Zone.BATTLEFIELD:
             return
         attach_permanent(game, source, token)
+
+    return effect
+
+
+#: "Whenever a `<subtype>` you control enters, you may attach this Equipment
+#: to it." (Quintessential Katana's own trigger) / "Whenever a creature you
+#: control with mana value 5 or greater enters, you may attach this
+#: Equipment to it." (Doc Ock's Tentacles, verified Modern/Pioneer/Standard
+#: legal - a mana-value filter rather than a subtype one, proving this reads
+#: the mechanism, not the card). CR 701.3a's attach, offered as CR 608.2d's
+#: ordinary "you may" - unlike `_CREATE_TOKEN_THEN_MAY_ATTACH_RE`'s own "it",
+#: which is the token the same sentence just created, "it" here is CR 603.2's
+#: own trigger subject: the permanent that entering is what triggered this
+#: ability at all (`AbilityOnStack.event.subject_id`), read by *this*
+#: reader alone - the filter ("a Ninja", "a creature ... with mana value 5 or
+#: greater") lives entirely in the trigger's own condition, already read by
+#: the ordinary `ENTERS_THE_BATTLEFIELD` machinery, and is no part of this
+#: effect body at all.
+_MAY_ATTACH_TO_ENTERING_CREATURE_RE = re.compile(
+    r"^you may attach this (?:equipment|permanent) to it\.?$", re.IGNORECASE
+)
+
+
+def _parse_may_attach_to_entering_creature_clause(text: str) -> AbilityEffect | None:
+    """`_MAY_ATTACH_TO_ENTERING_CREATURE_RE`'s shape, or `None`."""
+    if (
+        _MAY_ATTACH_TO_ENTERING_CREATURE_RE.fullmatch(_strip_non_effect_preamble(text).strip())
+        is None
+    ):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        event = ability.event
+        if event is None or event.subject_id is None:
+            return
+        entered = game.find_by_id(event.subject_id)
+        if not isinstance(entered, CardState) or entered.zone is not Zone.BATTLEFIELD:
+            return  # CR 608.2b: no longer there to attach to.
+        source = ability.source(game)
+        if source is None or source.zone is not Zone.BATTLEFIELD:
+            return
+        controller = game.controller_of(ability)
+        decision = game.ask(
+            Decision(
+                kind=DecisionKind.MAY,
+                player=controller.username,
+                prompt=f"attach {source.name} to {entered.name}",
+                source=ability.source_name,
+                source_id=source_id_of(ability),
+                affirmative_is_legal=True,
+            )
+        )
+        if decision:
+            attach_permanent(game, source, entered)
 
     return effect
 
@@ -45905,6 +46212,80 @@ def _resolve_instead_alternative(base_text: str, alternative_text: str) -> Effec
     return parse_mixed_effect_for_spell(spliced)
 
 
+#: Karai, Future of the Foot's own combat-damage trigger: "return target
+#: creature card from your graveyard to your hand. If her sneak cost was
+#: paid this turn, instead return that card to the battlefield." CR 614.1a's
+#: "instead" replaces the base instruction's *destination* only - the target
+#: itself is the ability's own already-chosen one (CR 601.2c has no bearing
+#: on an ability, but CR 603.3c fixes a triggered ability's targets the
+#: identical way, once, as it is put on the stack), so "that card" (CR
+#: 400.7's anaphora) is read here as the same object `game.resolve_targets`
+#: already gives the base branch, never as a second, separately-elided
+#: target `_anaphoric_target_substitution`'s text-only rewrite would have to
+#: reconstruct - which is why this is its own reader rather than a case of
+#: `_parse_condition_instead_clause_for_ability` below: that function's own
+#: alternative half is read as an independent instruction with its own
+#: targeting, and "return that card" names no target phrase at all for it to
+#: elide onto. `quality` generalises past "creature card" to whatever card
+#: type(s) a future printing of this same rider names, read the identical
+#: way every other "target `<quality>` card" clause in this file is
+#: (`_targets_understood`, `battlefield_only=False` - CR 701.13a puts no
+#: floor-only restriction on "return", `_targets_understood`'s own docstring
+#: on this exact point).
+_RETURN_TARGET_CARD_THEN_INSTEAD_BATTLEFIELD_IF_COST_PAID_RE = re.compile(
+    r"^return target (?P<quality>.+? cards?) from your graveyard to your hand\.\s*"
+    r"if (?P<condition>[^,]+), instead return that card to the battlefield\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_return_target_card_then_instead_battlefield_if_cost_paid_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_RETURN_TARGET_CARD_THEN_INSTEAD_BATTLEFIELD_IF_COST_PAID_RE`'s shape.
+
+    Ability-only: `Game.condition_holds`'s own `source` argument is a live
+    battlefield permanent's `ConditionContext.source`, which only a
+    resolving ability - never a spell - carries the same way the whole
+    `_keyword_cost_paid`/"paid this turn" family already requires.
+    """
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _RETURN_TARGET_CARD_THEN_INSTEAD_BATTLEFIELD_IF_COST_PAID_RE.fullmatch(whole)
+    if match is None:
+        return None
+    if not _targets_understood(
+        f"target {match.group('quality')} from your graveyard", battlefield_only=False
+    ):
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        targets = [
+            target for target in game.resolve_targets(ability) if isinstance(target, CardState)
+        ]
+        if not targets:
+            return  # CR 608.2b/115.6: no (legal) target chosen; nothing to move.
+        target = targets[0]
+        controller = game.controller_of(ability).username
+        source = ability.source(game)
+        held = game.condition_holds(controller, condition_text, source)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=ability.source_id, source_name=ability.source_name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        if held:
+            game.put_onto_battlefield(target, controller)
+        else:
+            game.return_to_hand(target)
+
+    return effect
+
+
 def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     """`_CONDITION_INSTEAD_RE`'s shape: the base instruction, or - when the
     condition holds as the spell resolves - the alternative in its place.
@@ -52364,6 +52745,15 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
             # sentences ahead of them that no per-clause parser below reads
             # as part of the same instruction.
             return [create_then_threshold_sacrifice]  # type: ignore[list-item]
+        create_then_threshold_half_life = (
+            _parse_create_token_then_if_control_n_that_player_half_life_clause(text)
+        )
+        if create_then_threshold_half_life is not None:
+            # Read whole for the identical reason: "Then if ..." chains off
+            # the token-creation sentence ahead of it, and "that player"
+            # names the trigger's own event, not a subject any per-clause
+            # parser below could resolve on its own.
+            return [create_then_threshold_half_life]  # type: ignore[list-item]
     token_list = _parse_token_list_clause(text, for_spell=for_spell)
     if token_list is not None:
         return [token_list]
@@ -56862,6 +57252,77 @@ def _parse_attacking_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
         controller = game.controller_of(stack_object).username
         defender = _defender_of_controllers_attack(game, controller)
         create_tokens(game, definition, controller, count, tapped=tapped, attacking=defender)
+
+    return effect
+
+
+#: The Last Ronin's Technique's own body: "Create three 1/1 white Ninja
+#: Turtle Spirit creature tokens. If this spell's sneak cost was paid, they
+#: enter tapped and attacking." CR 702.190b's own second sentence, extended
+#: past the sneak spell *itself* becoming a tapped, attacking permanent to
+#: tokens a resolving *non*-permanent spell with sneak creates - "the same
+#: player, planeswalker, or battle as the creature that was returned to its
+#: owner's hand to pay the sneak cost" is `CastRecord.sneak_defender`, read
+#: here the identical way `Game._sneak_defender_of` reads it for the spell's
+#: own permanent case, off `Game.cast_record(spell)` directly (this file
+#: already reaches into `Game`'s own private surface everywhere else it
+#: needs a fact only `Game` keeps).
+#:
+#: The condition is read generally, through `Game.condition_holds`, the same
+#: as every other "if `<cost>` was paid" rider in this file - only *which*
+#: defender the tokens join is CR 702.190b-specific, since sneak is the only
+#: alternative cost in this pool that records one at all.
+_CREATE_TOKENS_THEN_INSTEAD_TAPPED_ATTACKING_IF_COST_PAID_RE = re.compile(
+    r"^(?P<token>create .+?\btokens?\b(?:\s+with\s+.+?)?)\.\s*"
+    r"if (?P<condition>this spell's [a-z][a-z-]* cost was paid), "
+    r"they enter tapped and attacking\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
+def _parse_create_tokens_then_instead_tapped_attacking_if_cost_paid_clause(
+    text: str,
+) -> Effect | None:
+    """`_CREATE_TOKENS_THEN_INSTEAD_TAPPED_ATTACKING_IF_COST_PAID_RE`'s shape.
+
+    Spell-only: `CastRecord.sneak_defender` is recorded against the spell's
+    own cast, which only a resolving spell - never an ability - carries a
+    record of at all.
+    """
+    whole = " ".join(_strip_non_effect_preamble(text).split())
+    match = _CREATE_TOKENS_THEN_INSTEAD_TAPPED_ATTACKING_IF_COST_PAID_RE.fullmatch(whole)
+    if match is None:
+        return None
+    token_match = _TOKEN_CLAUSE_RE.fullmatch(match.group("token").strip())
+    if token_match is None:
+        return None
+    count = parse_count(token_match.group("n"))
+    if count is None:
+        return None
+    words = token_match.group("desc").strip().split()
+    if not words:
+        return None
+    definition = _parse_generic_token_descriptor(words, token_match.group("tail"))
+    if definition is None:
+        return None
+    condition_text = match.group("condition").strip()
+    if not _effect_condition_is_readable(condition_text):
+        return None
+
+    def effect(game: "Game", spell: CardState) -> None:
+        controller = game.controller_of(spell).username
+        held = game.condition_holds(controller, condition_text, spell)
+        if held is None:
+            notice = ConditionalClauseNotice(
+                source_id=spell.id, source_name=spell.card.name, text=whole
+            )
+            if notice not in game.conditional_clause_notices:
+                game.conditional_clause_notices.append(notice)
+            held = False
+        defender = game.cast_record(spell).sneak_defender if held else None
+        create_tokens(
+            game, definition, controller, count, tapped=defender is not None, attacking=defender
+        )
 
     return effect
 
