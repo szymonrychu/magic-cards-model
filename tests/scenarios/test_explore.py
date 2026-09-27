@@ -39,6 +39,8 @@ from magic_cards_model.machines import Step
 from magic_cards_model.machines.decisions import DecisionKind
 from magic_cards_model.models import Zone
 from magic_cards_model.models.card_state import Counter
+from magic_cards_model.support import executed_keywords
+from tests.cards import card
 from tests.scenarios.harness import Scenario
 
 
@@ -716,3 +718,58 @@ def test_over_the_edges_second_mode_explores_its_target_twice():
     assert bears.counters[Counter.PLUS_ONE] == 1
     assert _hand_names(scenario) == ["Plains"]
     assert _library_names(scenario) == ["Llanowar Elves"]
+
+
+# --------------------------------------------------------------------------
+# The "Explore" keyword credit for a card whose own text never says
+# "explores" - the ability lives on the Map token it creates instead
+# (CR 111.10s, "R0a-T2" in `docs/engine-coverage.md`).
+# --------------------------------------------------------------------------
+
+
+def test_spyglass_sirens_own_text_never_says_explores():
+    """Scryfall's own keyword tag is real (the card genuinely carries CR
+    701.44 through the Map it creates), but the card's own printed sentence
+    - "When this creature enters, create a Map token." - never uses the
+    word at all outside the reminder parenthetical. If the credit below
+    were reading the card's own text for the literal word, it would never
+    find it here."""
+    siren = card("Spyglass Siren")
+    assert "explore" in [k.lower() for k in siren.keywords]
+    assert "explores" not in (siren.oracle_text or "").lower().split("(")[0]
+
+
+def test_spyglass_siren_and_sentinel_credit_explore_via_their_map_token():
+    """Both cards' own trigger only creates a Map token; the credit below
+    has to read the token's own reminder-spelled ability, not the card's
+    name, to find CR 701.44 on either of them."""
+    for name in ("Spyglass Siren", "Sentinel of the Nameless City"):
+        assert executed_keywords(card(name)).get("explore") is not None, name
+
+
+def test_get_lost_and_fanatical_offering_also_credit_explore_via_their_map():
+    """Get Lost's Map tokens go to the referent, not the caster; Fanatical
+    Offering's Map is the tail of a compound "draw two and create a Map"
+    sentence. Neither card's own text ever says "explores" either."""
+    for name in ("Get Lost", "Fanatical Offering"):
+        assert executed_keywords(card(name)).get("explore") is not None, name
+
+
+def test_cartographers_companion_also_credits_explore_via_its_map_token():
+    """The second, unrelated printing (`test_map_tokens.py`'s own proof
+    card) - not one of this task's own five cards, and its own text is the
+    identical "create a Map token" shape. If the credit only worked for
+    this task's own five cards, this one would be missed too."""
+    assert executed_keywords(card("Cartographer's Companion")).get("explore") is not None
+
+
+def test_a_card_that_creates_no_token_at_all_gets_no_explore_credit():
+    """The credit must not fire on every card carrying the keyword
+    regardless of what it actually does - Amalia's own text already says
+    "explores" directly, through the ordinary path, and creates no token at
+    all, so the Map-reminder credit must never be why she is credited."""
+    amalia = card("Amalia Benavides Aguirre")
+    assert "Map" not in (amalia.oracle_text or "")
+    assert executed_keywords(amalia).get("explore") == (
+        "machines/effects.py (_parse_explores_then_conditional_mass_destroy, CR 701.44a)"
+    )

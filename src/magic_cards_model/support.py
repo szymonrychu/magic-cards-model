@@ -147,6 +147,7 @@ from magic_cards_model.machines.layers import (
     parsed_layer_effects,
     plays_lands_from_graveyard_line,
 )
+from magic_cards_model.machines.map_tokens import credits_explore_via_created_token
 from magic_cards_model.machines.modes import modal_profile, substitute_x
 from magic_cards_model.machines.objects_as_costs import has_improvise
 from magic_cards_model.machines.opening_hand import OpeningHandAction, read_opening_hand_line
@@ -923,6 +924,18 @@ def executed_keywords(printing: Card) -> dict[str, str]:
                 # be exact.
                 found["explore"] = "machines/effects.py (_parse_explores_clause, CR 701.44a-d)"
                 break
+        if "explore" not in found and credits_explore_via_created_token(printing.oracle_text or ""):
+            # R0a-T2: the card's own printed text never says "explores" at
+            # all - Spyglass Siren's whole sentence is "When this creature
+            # enters, create a Map token." - the explore clause lives on
+            # the Map token it creates, spelled out only in its own
+            # reminder parenthetical. `credits_explore_via_created_token`
+            # reads that reminder structurally (any reminder-described
+            # token, not "Map" by name) - see machines/map_tokens.py.
+            found["explore"] = (
+                "machines/map_tokens.py (credits_explore_via_created_token, "
+                "CR 111.10s, CR 701.44a-d)"
+            )
 
     # Connive (CR 701.50a) is the same bare-word keyword-action shape as
     # explore: `machines/connive.parse_connive_clause`, registered once in

@@ -55,6 +55,7 @@ from magic_cards_model.machines.effects import (
     parse_search_and_put_effect,
 )
 from magic_cards_model.models import Zone
+from magic_cards_model.models.card_state import Counter
 from tests.scenarios.harness import Scenario
 
 #: Every real fetchland fixture in the pool, land types as printed.
@@ -538,3 +539,173 @@ def test_the_parser_reads_a_tapped_and_optional_single_type_search():
     plains = scenario.find("Plains", Zone.BATTLEFIELD)
     assert plains.tapped is True
     assert "Plains" not in [state.card.name for state in scenario.player("alice").library]
+
+
+# -- Fabled Passage: the same search, plus a land-count-gated untap --------
+
+#: CR 701.23a (search), CR 701.24a (shuffle) - both already proven above by
+#: every ordinary fetchland - plus the rider this file's own task owns:
+#: "Then if you control four or more lands, untap that land." CR 611.2c/
+#: 608.2h: the count is read only once the search has actually resolved and
+#: the found land has already entered, not off the printed card in a vacuum
+#: - which is exactly why the corner case below (three lands before, four
+#: after) exists: a reader that counted the board *before* the land arrived
+#: would wrongly leave it tapped.
+
+
+def test_fabled_passage_untaps_when_four_or_more_lands_are_controlled():
+    """Three lands on the battlefield plus the fetched one makes four -
+    CR 701.23a's search and CR 701.24a's shuffle both still run, and the
+    found land arrives tapped and then untaps in the same resolution."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Fabled Passage", "Forest", "Forest", "Mountain"],
+            library=["Plains", "Island"],
+        )
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    passage = scenario.find("Fabled Passage", Zone.BATTLEFIELD)
+    before = len(scenario.player("alice").library)
+
+    scenario.activate(passage, sacrificing=[passage])
+    scenario.pass_until_resolved()
+
+    plains = scenario.find("Plains", Zone.BATTLEFIELD)
+    assert plains.zone is Zone.BATTLEFIELD
+    assert plains.tapped is False
+    assert passage.zone is Zone.GRAVEYARD
+    assert len(scenario.player("alice").library) == before - 1
+
+
+def test_fabled_passage_leaves_the_land_tapped_below_four():
+    """Two lands before the fetch, three after - CR 701.44... no, CR 611.2c:
+    the threshold not met leaves the freshly fetched land tapped, the same
+    as an ordinary fetchland with no untap rider at all."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Fabled Passage", "Forest"],
+            library=["Plains", "Island"],
+        )
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    passage = scenario.find("Fabled Passage", Zone.BATTLEFIELD)
+
+    scenario.activate(passage, sacrificing=[passage])
+    scenario.pass_until_resolved()
+
+    plains = scenario.find("Plains", Zone.BATTLEFIELD)
+    assert plains.tapped is True
+
+
+def test_fabled_passage_with_no_basic_land_in_library_finds_nothing():
+    """CR 701.23b again: finding nothing is a legal answer, and the land
+    count check never runs at all - there is no found land for "that land"
+    to refer to."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Fabled Passage", "Forest", "Forest", "Mountain"],
+            library=["Grizzly Bears"],
+        )
+        .player("bob", library=["Forest"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    passage = scenario.find("Fabled Passage", Zone.BATTLEFIELD)
+
+    scenario.activate(passage, sacrificing=[passage])
+    scenario.pass_until_resolved()
+
+    assert passage.zone is Zone.GRAVEYARD
+    assert [state.card.name for state in scenario.player("alice").library] == ["Grizzly Bears"]
+    remaining = sorted(
+        state.card.name
+        for state in scenario.game.permanents_controlled_by("alice")
+        if state.card.is_land
+    )
+    assert remaining == ["Forest", "Forest", "Mountain"]
+
+
+# -- Magmatic Hellkite: destroy, then its controller (not the caster) ------
+# -- searches for a basic land, tapped, with a stun counter -----------------
+
+#: CR 701.8a (destroy), CR 701.23a (search), CR 122.1d (the stun counter's
+#: own replacement effect, exercised end to end by `test_stun_counters.py`
+#: elsewhere - this file only proves the counter actually lands). CR 400.7's
+#: anaphora ("Its controller") points at whoever controlled the destroyed
+#: land, never at Magmatic Hellkite's own controller.
+
+
+def test_magmatic_hellkite_destroys_then_its_victims_controller_searches():
+    """Alice's Hellkite destroys Bob's nonbasic land; Bob, not Alice,
+    searches his own library and gets the basic, tapped, with a stun
+    counter - never Alice's search, never Alice's land."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Magmatic Hellkite"],
+            battlefield=["Mountain"] * 4,
+        )
+        .player(
+            "bob",
+            battlefield=["Breeding Pool"],
+            library=["Forest", "Island"],
+        )
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain")
+    pool = scenario.find("Breeding Pool", Zone.BATTLEFIELD)
+    # CR 603.3d: the ETB trigger's own target is chosen as it goes on the
+    # stack, after the creature spell itself has already resolved with no
+    # targets of its own - registered before casting, the same way
+    # `test_activated_ability_effects.py`'s reflexive-trigger case above
+    # scripts a target nothing has chosen yet.
+    scenario.choose_trigger_targets("Magmatic Hellkite", [pool])
+
+    scenario.cast_and_resolve("Magmatic Hellkite", *sources)
+    assert scenario.stack_names() == ["Magmatic Hellkite's triggered ability"]
+    scenario.resolve_top()
+
+    assert pool.zone is Zone.GRAVEYARD
+    forest = scenario.find("Forest", Zone.BATTLEFIELD)
+    assert forest.tapped is True
+
+    assert forest.counters[Counter.STUN] == 1
+    assert forest in scenario.game.permanents_controlled_by("bob")
+    assert "Forest" not in [state.card.name for state in scenario.player("bob").library]
+
+
+def test_magmatic_hellkite_with_no_basic_land_still_destroys_the_target():
+    """CR 701.23b: the search still is not required to find anything, and
+    CR 608.2b's own "legal target, verb refuses" case (Beast Within's
+    printed ruling, 2021-03-19) does not apply here at all - the destroy
+    itself is unconditional and always succeeds against a nonbasic land with
+    no indestructible of its own."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Magmatic Hellkite"], battlefield=["Mountain"] * 4)
+        .player("bob", battlefield=["Breeding Pool"], library=["Grizzly Bears"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Mountain")
+    pool = scenario.find("Breeding Pool", Zone.BATTLEFIELD)
+    scenario.choose_trigger_targets("Magmatic Hellkite", [pool])
+
+    scenario.cast_and_resolve("Magmatic Hellkite", *sources)
+    scenario.resolve_top()
+
+    assert pool.zone is Zone.GRAVEYARD
+    assert scenario.player("bob").library != []
+    assert [state.card.name for state in scenario.player("bob").library] == ["Grizzly Bears"]
