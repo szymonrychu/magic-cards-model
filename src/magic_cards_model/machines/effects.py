@@ -26690,6 +26690,55 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     then_if_moved_this_way = _parse_then_if_moved_this_way_clause(effect_text)
     if then_if_moved_this_way is not None:
         return then_if_moved_this_way
+
+    # CR 701.68's Blight as an ordinary resolving effect (not the cost
+    # `machines/cost.py` already reads) - `machines/blight_effects.py`,
+    # this round's own owner of every position it prints in. Imported here,
+    # not at module load, to avoid the import cycle that module's own
+    # `from .effects import ...` calls would otherwise close.
+    from . import blight_effects
+
+    bare_blight = blight_effects.parse_bare_blight_ability_clause(effect_text)
+    if bare_blight is not None:
+        return bare_blight
+    each_opponent_blights = blight_effects.parse_each_opponent_blights_clause(effect_text)
+    if each_opponent_blights is not None:
+        return each_opponent_blights
+    target_opponent_blights = blight_effects.parse_target_opponent_blights_clause(effect_text)
+    if target_opponent_blights is not None:
+        return target_opponent_blights
+    may_blight_then_copy_blighted = (
+        blight_effects.parse_may_blight_then_copy_blighted_creature_clause(effect_text)
+    )
+    if may_blight_then_copy_blighted is not None:
+        return may_blight_then_copy_blighted
+    may_blight_then_reflexive = blight_effects.parse_may_blight_then_reflexive_clause(effect_text)
+    if may_blight_then_reflexive is not None:
+        return may_blight_then_reflexive
+    target_gains_quoted_trigger = blight_effects.parse_target_gains_quoted_ability_until_eot_clause(
+        effect_text
+    )
+    if target_gains_quoted_trigger is not None:
+        return target_gains_quoted_trigger
+    protection_from_each_color = (
+        blight_effects.parse_protection_from_each_color_until_your_next_turn_clause(effect_text)
+    )
+    if protection_from_each_color is not None:
+        return protection_from_each_color
+    then_if_not_main_phase = blight_effects.parse_then_if_not_main_phase_clause(
+        effect_text, for_spell=False
+    )
+    if then_if_not_main_phase is not None:
+        return then_if_not_main_phase
+    # The general CR 118.12 "you may `<action>`. If you [do|don't],
+    # `<consequence>`." reader last, so every narrower "may ... if you
+    # do/don't" reader above (sacrifice, discard, pay energy, pay mana, tap,
+    # remove a counter) still gets first refusal at its own shape - this one
+    # only ever runs when every one of those already failed.
+    may_action_then_branch = blight_effects.parse_may_action_then_branch_clause(effect_text)
+    if may_action_then_branch is not None:
+        return may_action_then_branch
+
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=False)
     if unread_conditional is not None:
 
@@ -30121,6 +30170,21 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     )
     if put_then_grant_then_delayed is not None:
         return put_then_grant_then_delayed
+
+    # CR 701.68's Blight as a spell effect (Dose of Dawnglow's own "Then if
+    # it isn't your main phase, blight 2." tail) - see the ability-side hook
+    # in `_ability_effect_or_notice` for why this is imported here.
+    from . import blight_effects
+
+    bare_blight = blight_effects.parse_bare_blight_spell_clause(effect_text)
+    if bare_blight is not None:
+        return bare_blight
+    then_if_not_main_phase = blight_effects.parse_then_if_not_main_phase_clause(
+        effect_text, for_spell=True
+    )
+    if then_if_not_main_phase is not None:
+        return then_if_not_main_phase
+
     unread_conditional = _unreadable_conditional_clause(effect_text, for_spell=True)
     if unread_conditional is not None:
 
@@ -53005,6 +53069,56 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     of instruction a card lists first, so no parser gets priority for any
     reason beyond "try this one, then the next").
     """
+    # CR 701.68's Blight as an ordinary resolving effect - tried per clause
+    # here (not only as a whole-text shape in `_ability_effect_or_notice`)
+    # so a "blight N"/"you may blight N. If you do, ..." clause is also read
+    # when it is one clause of a larger printed sentence, or when it is the
+    # consequence half of another reader's own recursive `parse_mixed_
+    # effect`/`parse_mixed_effect_for_spell` call (Dose of Dawnglow's own
+    # "Then if it isn't your main phase, blight 2." tail).
+    # `machines/blight_effects.py` is this round's own owner; imported here
+    # rather than at module load to avoid its own `from .effects import ...`
+    # closing an import cycle.
+    from . import blight_effects
+
+    bare_blight = (
+        blight_effects.parse_bare_blight_spell_clause(clause)
+        if for_spell
+        else blight_effects.parse_bare_blight_ability_clause(clause)
+    )
+    if bare_blight is not None:
+        return bare_blight  # type: ignore[return-value]
+    if not for_spell:
+        each_opponent_blights = blight_effects.parse_each_opponent_blights_clause(clause)
+        if each_opponent_blights is not None:
+            return each_opponent_blights
+        target_opponent_blights = blight_effects.parse_target_opponent_blights_clause(clause)
+        if target_opponent_blights is not None:
+            return target_opponent_blights
+        may_blight_then_copy_blighted = (
+            blight_effects.parse_may_blight_then_copy_blighted_creature_clause(clause)
+        )
+        if may_blight_then_copy_blighted is not None:
+            return may_blight_then_copy_blighted
+        may_blight_then_reflexive = blight_effects.parse_may_blight_then_reflexive_clause(clause)
+        if may_blight_then_reflexive is not None:
+            return may_blight_then_reflexive
+        target_gains_quoted_trigger = (
+            blight_effects.parse_target_gains_quoted_ability_until_eot_clause(clause)
+        )
+        if target_gains_quoted_trigger is not None:
+            return target_gains_quoted_trigger
+        protection_from_each_color = (
+            blight_effects.parse_protection_from_each_color_until_your_next_turn_clause(clause)
+        )
+        if protection_from_each_color is not None:
+            return protection_from_each_color
+    then_if_not_main_phase = blight_effects.parse_then_if_not_main_phase_clause(
+        clause, for_spell=for_spell
+    )
+    if then_if_not_main_phase is not None:
+        return then_if_not_main_phase  # type: ignore[return-value]
+
     targeted = _parse_targeted_clause(clause, for_spell=for_spell)
     if targeted is not None:
         return targeted
@@ -53683,9 +53797,23 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     if player_clause is None:
         # Last resort: a "you may" over a board instruction rather than over
         # the plain-player vocabulary `_parse_optional_player_clause` covers.
-        return _parse_optional_mixed_clause(
+        mixed_or_hand = _parse_optional_mixed_clause(
             clause, for_spell=for_spell
         ) or _parse_may_put_card_from_hand_clause(clause, for_spell=for_spell)
+        if mixed_or_hand is not None:
+            return mixed_or_hand
+        if for_spell:
+            return None
+        # The true last resort: the general CR 118.12 "you may `<action>`.
+        # If you [do|don't], `<consequence>`." reader
+        # (`machines/blight_effects.py`), tried only once every narrower "may
+        # ... if you do/don't" reader in this whole dispatch chain - and
+        # every other clause shape this function knows - has already
+        # refused the text, so it never shadows a more specific reader's own
+        # handling of the identical shape.
+        from . import blight_effects
+
+        return blight_effects.parse_may_action_then_branch_clause(clause)  # type: ignore[return-value]
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         player = game.controller_of(stack_object)

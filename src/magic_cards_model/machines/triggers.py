@@ -6525,7 +6525,8 @@ def triggered_abilities_of(card: Card) -> list[TriggeredAbility]:
                             card.name,
                             legendary=Supertype.LEGENDARY in card.supertypes,
                         ):
-                            expanded.extend(_expand_enters_or_transforms_into(damage_split))
+                            for transforms_split in _expand_enters_or_transforms_into(damage_split):
+                                expanded.extend(_expand_transforms_and_first_main(transforms_split))
     return expanded + keyword_triggered_abilities(card)
 
 
@@ -6637,6 +6638,46 @@ def _expand_enters_or_transforms_into(ability: TriggeredAbility) -> list[Trigger
             update={
                 "condition": f"this {kind} {match.group('transforms')}",
                 "event": TriggerEvent.TRANSFORMS,
+            }
+        ),
+    ]
+
+
+#: "Whenever this creature transforms into `<face>` and at the beginning of
+#: your first main phase, ..." - Ashling, Rimebound's own condition
+#: (`machines/abilities._transforms_into_face_and_first_main_boundary`
+#: already keeps this whole compound condition intact against the face's own
+#: internal comma). CR 603.1b: one triggered ability, two trigger
+#: conditions - CR 701.27e's transform and CR 505.1a's precombat main phase -
+#: each its own `TriggerEvent` `_trigger_event` cannot read as a pair, since
+#: it reads only the first event word and stops.
+_TRANSFORMS_AND_FIRST_MAIN_RE = re.compile(
+    r"^(?P<transform>this [a-z]+ transforms into .+?) and at "
+    r"(?P<first_main>the beginning of your first main phase)$",
+    re.IGNORECASE,
+)
+
+
+def _expand_transforms_and_first_main(ability: TriggeredAbility) -> list[TriggeredAbility]:
+    """One "transforms into `<face>` and at the beginning of your first main
+    phase" ability becomes two: CR 701.27e's transform half and CR 505.1a's
+    precombat-main-phase half, each a `TriggeredAbility` in its own right -
+    the same split every other `_expand_*` function in this module already
+    performs for its own compound condition.
+
+    Every other printed ability passes through unchanged, singleton-wrapped.
+    """
+    match = _TRANSFORMS_AND_FIRST_MAIN_RE.match(ability.condition.strip())
+    if match is None:
+        return [ability]
+    return [
+        ability.model_copy(
+            update={"condition": match.group("transform"), "event": TriggerEvent.TRANSFORMS}
+        ),
+        ability.model_copy(
+            update={
+                "condition": match.group("first_main"),
+                "event": TriggerEvent.BEGINNING_OF_STEP,
             }
         ),
     ]
@@ -7003,7 +7044,8 @@ def granted_triggered_abilities_of(texts: Sequence[str]) -> list[TriggeredAbilit
         for split in _expand_attacks_or_blocks(ability):
             for enters_split in _expand_enters_or_attacks(split):
                 for leaves_split in _expand_enters_or_leaves(enters_split):
-                    expanded.extend(_expand_enters_or_transforms_into(leaves_split))
+                    for transforms_split in _expand_enters_or_transforms_into(leaves_split):
+                        expanded.extend(_expand_transforms_and_first_main(transforms_split))
     return expanded + granted_keyword_triggered_abilities(texts)
 
 

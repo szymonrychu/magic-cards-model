@@ -112,19 +112,19 @@
   "textless": false,
   "booster": true,
   "story_spotlight": false,
-  "edhrec_rank": 14860,
+  "edhrec_rank": 14975,
   "preview": {
     "source": "MTGGoldfish",
     "source_uri": "https://www.mtggoldfish.com/articles/turning-red-exclusive-double-masters-previews",
     "previewed_at": "2020-07-27"
   },
   "prices": {
-    "usd": "1.37",
-    "usd_foil": "1.39",
+    "usd": "1.35",
+    "usd_foil": "1.44",
     "usd_etched": null,
-    "eur": "1.34",
-    "eur_foil": "1.27",
-    "tix": "0.89"
+    "eur": "1.22",
+    "eur_foil": "1.42",
+    "tix": "0.79"
   },
   "related_uris": {
     "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=489800&printed=false",

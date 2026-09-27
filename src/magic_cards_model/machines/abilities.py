@@ -3488,6 +3488,64 @@ def _transforms_into_face_boundary(body: str, face: str) -> tuple[str, str] | No
     return body[:end].strip(), body[end + 1 :].strip()
 
 
+#: "this `<noun>` enters or transforms into " - CR 603.6a and CR 701.27e as
+#: one compound condition (Ashling, Rekindled's own "Whenever this creature
+#: enters or transforms into Ashling, Rekindled, ..."). `_TRANSFORMS_INTO_
+#: LEAD` alone does not match the leading "enters or".
+_ENTERS_OR_TRANSFORMS_INTO_LEAD = re.compile(
+    r"^this [a-z]+ enters or transforms into ", re.IGNORECASE
+)
+
+
+def _enters_or_transforms_into_face_boundary(body: str, face: str) -> tuple[str, str] | None:
+    """`(condition, effect)` for "this `<noun>` enters or transforms into
+    `<face>`, `<effect>`" when `<face>` is the name of the face the ability is
+    printed on and itself carries an internal comma - Ashling, Rekindled's
+    own "Whenever this creature enters or transforms into Ashling, Rekindled,
+    you may discard a card. If you do, draw a card." `_transforms_into_face_
+    boundary`'s own lead does not match "enters or transforms into", so
+    without this the plain top-level comma split cut the condition down to
+    "...into Ashling" and left "Rekindled, you may discard ..." sitting in
+    the effect text instead - the same class of defect that function already
+    exists to fix for the bare "transforms into `<face>`" shape."""
+    lead = _ENTERS_OR_TRANSFORMS_INTO_LEAD.match(body)
+    if lead is None or not face:
+        return None
+    named = body[lead.end() :]
+    if not named.lower().startswith(f"{face.lower()},"):
+        return None
+    end = lead.end() + len(face)
+    return body[:end].strip(), body[end + 1 :].strip()
+
+
+#: The tail CR 701.27e's "transforms into `<face>`" and CR 505.1a's own first
+#: main phase are joined by, when a single ability triggers on both events
+#: (Ashling, Rimebound's own "Whenever this creature transforms into Ashling,
+#: Rimebound and at the beginning of your first main phase, ...").
+_AND_FIRST_MAIN_PHASE_TAIL = " and at the beginning of your first main phase,"
+
+
+def _transforms_into_face_and_first_main_boundary(body: str, face: str) -> tuple[str, str] | None:
+    """`(condition, effect)` for "this `<noun>` transforms into `<face>` and
+    at the beginning of your first main phase, `<effect>`" (CR 603.1b's two
+    trigger conditions on one triggered ability) when `<face>`'s own name
+    carries an internal comma - Ashling, Rimebound's own printing above.
+    `_transforms_into_face_boundary`'s own check ("`<face>`,") fails here
+    because no comma follows the face name directly - "and at the beginning
+    ..." does - so without this the plain top-level split cut the condition
+    down to "...into Ashling" the same wrong way `_enters_or_transforms_into_
+    face_boundary`'s own docstring describes."""
+    lead = _TRANSFORMS_INTO_LEAD.match(body)
+    if lead is None or not face:
+        return None
+    named = body[lead.end() :]
+    prefix = f"{face}{_AND_FIRST_MAIN_PHASE_TAIL}"
+    if not named.lower().startswith(prefix.lower()):
+        return None
+    end = lead.end() + len(prefix) - 1  # the position of the trailing comma
+    return body[:end].strip(), body[end + 1 :].strip()
+
+
 def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
     """The triggered ability `text` prints, as one `TriggeredAbility` per
     trigger condition (CR 603.1b) - every entry shares the printed `text`,
@@ -3517,9 +3575,27 @@ def _parse_triggered(text: str, common: dict) -> list[TriggeredAbility] | None:
         )
     )
     self_named_boundary = _self_named_condition_boundary(body, common.get("face") or "")
+    enters_or_transforms_into_boundary = _enters_or_transforms_into_face_boundary(
+        body, common.get("face") or ""
+    )
+    transforms_and_first_main_boundary = _transforms_into_face_and_first_main_boundary(
+        body, common.get("face") or ""
+    )
     transforms_into_boundary = _transforms_into_face_boundary(body, common.get("face") or "")
     if self_named_boundary is not None:
         condition, rest = self_named_boundary
+        if not rest:
+            return None
+    elif enters_or_transforms_into_boundary is not None:
+        # CR 603.6a and CR 701.27e as one compound condition: see
+        # `_enters_or_transforms_into_face_boundary`'s own docstring.
+        condition, rest = enters_or_transforms_into_boundary
+        if not rest:
+            return None
+    elif transforms_and_first_main_boundary is not None:
+        # CR 701.27e and CR 505.1a as one compound condition: see
+        # `_transforms_into_face_and_first_main_boundary`'s own docstring.
+        condition, rest = transforms_and_first_main_boundary
         if not rest:
             return None
     elif transforms_into_boundary is not None:
