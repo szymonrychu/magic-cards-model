@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 7.5% |
-| Works (untested) | 94 | 41.2% |
+| Works (untested) | 95 | 41.7% |
 | Partial (unaudited) | 22 | 9.6% |
-| Not working | 95 | 41.7% |
+| Not working | 94 | 41.2% |
 
 ## Cards needing work
 
@@ -85,7 +85,6 @@
 | Quartzwood Crasher | silent | Whenever one or more creatures you control with trample deal combat damage to a player, create an X/X green Dinosaur Beast creature token with trample, where X  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Regal Leosaur | silent | Whenever this creature mutates, other creatures you control get +2/+1 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Reptilian Reflection | silent | Whenever you cycle a card, you may have this enchantment become a 5/4 Dinosaur creature with trample and haste in addition to its other types until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Ruinous Ultimatum | silent | Destroy all nonland permanents your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanctuary Smasher | silent | When you cycle this card, put a first strike counter on target creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sea-Dasher Octopus | silent | Mutate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shark Typhoon | silent | Whenever you cast a noncreature spell, create an X/X blue Shark creature token with flying, where X is that spell's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,15 +110,15 @@
 | Call of the Death-Dweller | notice | Return up to two target creature cards with total mana value 3 or less from your graveyard to the battlefield. Put a deathtouch counter on either of them. Then  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dire Tactics | notice | Exile target creature. If you don't control a Human, you lose life equal to that creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flame Spill | notice | Flame Spill deals 4 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Heightened Reflexes | notice | Target creature gets +1/+0 until end of turn. Put a first strike counter on it. | unparsed remainder: Put a first strike counter on it. | Y/Y/- | not_working |
 | Jubilant Skybonder | notice | Creatures you control with flying have "Spells your opponents cast that target this creature cost {2} more to cast." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lavabrink Venturer | notice | This creature has protection from each mana value of the chosen quality. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Monstrous Step | notice | Target creature gets +7/+7 until end of turn. Up to one other target creature blocks it this turn if able. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: Up to one other target creature blocks it this turn if able. | Y/Y/- | not_working |
 | Mythos of Illuna | notice | Create a token that's a copy of target permanent. If {R}{G} was spent to cast this spell, instead create a token that's a copy of that permanent, except the tok | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ram Through | notice | Target creature you control deals damage equal to its power to target creature you don't control. If the creature you control has trample, excess damage is deal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rooting Moloch | notice | When this creature enters, exile target card with a cycling ability from your graveyard. Until the end of your next turn, you may play that card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Spelleater Wolverine | notice | This creature has double strike as long as there are three or more instant and/or sorcery cards in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Will of the All-Hunter | notice | Target creature gets +2/+2 until end of turn. If it's blocking, instead put two +1/+1 counters on it. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Will of the All-Hunter | notice | Target creature gets +2/+2 until end of turn. If it's blocking, instead put two +1/+1 counters on it. Cycling {2} ({2}, Discard this card: Draw a card.) | unparsed remainder: If it's blocking, instead put two +1/+1 counters on it. | Y/Y/- | not_working |
 | Yorion, Sky Nomad | notice | When Yorion enters, exile any number of other nonland permanents you own and control. Return those cards to the battlefield at the beginning of the next end ste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Boot Nipper | unaudited | This creature enters with your choice of a deathtouch counter or a lifelink counter on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Cunning Nightbonder | unaudited | Spells with flash you cast cost {1} less to cast and can't be countered. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -205,6 +204,7 @@
 | Raugrin Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
 | Reconnaissance Mission | handled | Whenever a creature you control deals combat damage to a player, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rielle, the Everwise | handled | Rielle gets +1/+0 for each instant and sorcery card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Ruinous Ultimatum | handled | Destroy all nonland permanents your opponents control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rumbling Rockslide | handled | Rumbling Rockslide deals damage to target creature equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sanctuary Lockdown | handled | Humans you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Savai Crystal | handled | Cycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/- | not_tested |
@@ -284,7 +284,6 @@
 | creatures you control with flying have "..." | 1 | Jubilant Skybonder | iko |
 | creatures you control with trample have "..." | 1 | Proud Wildbonder | iko |
 | creatures you control with vigilance have "..." | 1 | Frondland Felidar | iko |
-| destroy all nonland permanents your opponents control. | 1 | Ruinous Ultimatum | iko |
 | destroy target creature. put a menace counter on a creature you control. (it can't be blocked except by two or more creatures.) | 1 | Blood Curdle | iko |
 | destroy target nonland permanent if it's a creature or if {M}{M} was spent to cast ~. | 1 | Mythos of Nethroi | iko |
 | each creature spell you cast costs {M} less to cast if it has mutate. | 1 | Pollywog Symbiote | iko |

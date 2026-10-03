@@ -1114,6 +1114,18 @@ class CardState(EngineModel):
     with no memory of this one) and by the cleanup step (CR 514.2: "this
     turn").
     """
+    assigns_no_combat_damage_this_combat: bool = False
+    """True while a resolved effect says this creature "assigns no combat
+    damage this combat" (Master of Cruelties' own attack trigger).
+
+    A flag scoped to the combat under way right now, not "this turn" - a
+    creature that attacks again in a second combat phase (CR 500.4) assigns
+    damage normally there. `machines.combat._assignment_power_of` reads it
+    ahead of CR 510.1a's ordinary power-based assignment; `Game.
+    declare_attackers_step` clears it for every permanent as the next combat's
+    attackers are about to be declared, the same boundary `exerted`'s own
+    "next untap step" expiry sits at for untapping.
+    """
     damage: int = 0
     dealt_deathtouch_damage: bool = False
     """True if a source with deathtouch has dealt damage to this creature

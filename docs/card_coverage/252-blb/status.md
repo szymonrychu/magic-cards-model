@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 33 | 12.8% |
-| Works (untested) | 122 | 47.3% |
+| Works (untested) | 123 | 47.7% |
 | Partial (unaudited) | 7 | 2.7% |
-| Not working | 96 | 37.2% |
+| Not working | 95 | 36.8% |
 
 ## Cards needing work
 
@@ -104,17 +104,16 @@
 | Wax-Wane Witness | silent | Whenever you gain or lose life during your turn, this creature gets +1/+0 until end of turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Whiskervale Forerunner | silent | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, look at the top five cards of your library.  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wick, the Whorled Mind | silent | Whenever Wick or another Rat you control enters, create a 1/1 black Snail creature token if you don't control a Snail. Otherwise, put a +1/+1 counter on a Snail | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Wildfire Howl | silent | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Wildfire Howl deals 2 damage to e | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Blooming Blast | notice | Gift a Treasure (You may promise an opponent a gift as you cast this spell. If you do, they create a Treasure token before its other effects. It's an artifact w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Dragonhawk, Fate's Tempest | notice | Whenever Dragonhawk enters or attacks, exile the top X cards of your library, where X is the number of creatures you control with power 4 or greater. You may pl | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Early Winter | notice | Choose one — • Exile target creature. • Target opponent exiles an enchantment they control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Fireglass Mentor | notice | At the beginning of your second main phase, if an opponent lost life this turn, exile the top two cards of your library. Choose one of them. Until end of turn,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Harnesser of Storms | notice | Whenever you cast a noncreature or Otter spell, you may exile the top card of your library. Until end of turn, you may play that card. This ability triggers onl | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Harvestrite Host | notice | Whenever this creature or another Rabbit you control enters, target creature you control gets +1/+0 until end of turn. Then draw a card if this is the second ti | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Hazardroot Herbalist | notice | Whenever you attack, target creature you control gets +1/+0 until end of turn. If that creature is a token, it also gains deathtouch until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Harvestrite Host | notice | Whenever this creature or another Rabbit you control enters, target creature you control gets +1/+0 until end of turn. Then draw a card if this is the second ti | unparsed remainder: Then draw a card if this is the second time this ability has resolved this turn. | Y/Y/Y | not_working |
+| Hazardroot Herbalist | notice | Whenever you attack, target creature you control gets +1/+0 until end of turn. If that creature is a token, it also gains deathtouch until end of turn. | unparsed remainder: If that creature is a token, it also gains deathtouch until end of turn. | Y/Y/Y | not_working |
 | Kastral, the Windcrested | notice | Whenever one or more Birds you control deal combat damage to a player, choose one — • You may put a Bird creature card from your hand or graveyard onto the batt | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kitnap | notice | When this Aura enters, tap enchanted creature. If the gift wasn't promised, put three stun counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Long River Lurker | notice | When this creature enters, target creature you control can't be blocked this turn. Whenever that creature deals combat damage this turn, you may exile it. If yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Long River Lurker | notice | When this creature enters, target creature you control can't be blocked this turn. Whenever that creature deals combat damage this turn, you may exile it. If yo | unparsed remainder: Whenever that creature deals combat damage this turn, you may exile it. If you do, return it to the battlefield under its owner's control. | Y/Y/Y | not_working |
 | Maha, Its Feathers Night | notice | Creatures your opponents control have base toughness 1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Parting Gust | notice | Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other eff | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Salvation Swan | notice | Whenever this creature or another Bird you control enters, exile up to one target creature you control without flying. Return it to the battlefield under its ow | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -251,6 +250,7 @@
 | Waterspout Warden | handled | Whenever this creature attacks, if another creature entered the battlefield under your control this turn, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wear Down | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Destroy target artifact or enchan | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Whiskerquill Scribe | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, you may discard a card. If you do, draw a ca | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Wildfire Howl | handled | Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.) Wildfire Howl deals 2 damage to e | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
@@ -329,7 +329,6 @@
 | gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) return target creature card from your grav | 1 | Coiling Rebirth | blb |
 | gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) target opponent reveals their hand. you ch | 1 | Cruelclaw's Heist | blb |
 | gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) target opponent sacrifices a creature with | 1 | Consumed by Greed | blb |
-| gift a card (you may promise an opponent a gift as you cast ~. if you do, they draw a card before its other effects.) ~ deals N damage to each creature. if the  | 1 | Wildfire Howl | blb |
 | gift a food (you may promise an opponent a gift as you cast ~. if you do, they create a food token before its other effects. it"..."t promised, you lose N life. | 1 | Nocturnal Hunger | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) as | 1 | Sazacap's Brew | blb |
 | gift a tapped fish (you may promise an opponent a gift as you cast ~. if you do, they create a tapped N/N blue fish creature token before its other effects.) ch | 1 | Longstalk Brawl | blb |

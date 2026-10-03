@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 6 | 15.4% |
-| Works (untested) | 24 | 61.5% |
+| Works (untested) | 25 | 64.1% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 9 | 23.1% |
+| Not working | 8 | 20.5% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Exhaustion | silent | Creatures and lands target opponent controls don't untap during their next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Primeval Force | silent | When this creature enters, sacrifice it unless you sacrifice three Forests. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thundermare | silent | When this creature enters, tap all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Time Ebb | silent | Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Withering Gaze | silent | Target opponent reveals their hand. You draw a card for each Forest and green card in it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Anaconda | handled | Landwalk | no code needed | Y/-/- | not_tested |
 | Ardent Militia | handled | Vigilance | machines/combat.py | Y/-/- | not_tested |
@@ -56,6 +55,7 @@
 | Serpent Warrior | handled | When this creature enters, you lose 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Snapping Drake | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Spined Wurm | handled |  |  | Y/-/- | not_tested |
+| Time Ebb | handled | Put target creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Venerable Monk | handled | When this creature enters, you gain 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vengeance | handled | Destroy target tapped creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Volcanic Hammer | handled | Volcanic Hammer deals 3 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -81,7 +81,6 @@
 | creatures and lands target opponent controls don't untap during their next untap step. | 1 | Exhaustion | por |
 | destroy all islands. | 1 | Boiling Seas | por |
 | if target opponent has more cards in hand than you, draw cards equal to the difference. | 1 | Balance of Power | por |
-| put target creature on top of its owner's library. | 1 | Time Ebb | por |
 | target opponent reveals their hand. you draw a card for each forest and green card in it. | 1 | Withering Gaze | por |
 | target opponent reveals their hand. you draw a card for each mountain and red card in it. | 1 | Baleful Stare | por |
 | when ~ enters, sacrifice it unless you sacrifice three forests. | 1 | Primeval Force | por |

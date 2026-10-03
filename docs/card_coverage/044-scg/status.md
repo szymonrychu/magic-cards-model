@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 7 | 29.2% |
+| Tested | 8 | 33.3% |
 | Works (untested) | 9 | 37.5% |
 | Partial (unaudited) | 1 | 4.2% |
-| Not working | 7 | 29.2% |
+| Not working | 6 | 25.0% |
 
 ## Cards needing work
 
@@ -28,7 +28,6 @@
 |---|---|---|---|---|---|
 | Decree of Justice | silent | When you cycle this card, you may pay {X}. If you do, create X 1/1 white Soldier creature tokens. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Final Punishment | silent | Target player loses life equal to the damage already dealt to that player this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Form of the Dragon | silent | At the beginning of each end step, your life total becomes 5. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Frozen Solid | silent | When enchanted creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rain of Blades | silent | Rain of Blades deals 1 damage to each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealous Inquisitor | silent | {1}{W}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -47,12 +46,13 @@
 ## Fully supported
 
 <details>
-<summary>7 cards</summary>
+<summary>8 cards</summary>
 
 - Call to the Grave
 - Carrion Feeder
 - Enrage
 - Fierce Empath
+- Form of the Dragon
 - Goblin Brigand
 - Goblin Warchief
 - Twisted Abomination
@@ -63,7 +63,6 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| at the beginning of each end step, your life total becomes N. | 1 | Form of the Dragon | scg |
 | players don't lose unspent mana as steps and phases end. | 1 | Upwelling | scg |
 | search your library for a dragon permanent card, put it onto the battlefield, then shuffle. storm (when you cast ~, copy it for each spell cast before it ~.) | 1 | Dragonstorm | scg |
 | target player loses life equal to the damage already dealt to that player ~. | 1 | Final Punishment | scg |

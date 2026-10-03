@@ -1528,6 +1528,7 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
         increase_speed(player, by=4 - effective_speed(player))
     _counter_threshold(scenario, source, getattr(ability, "intervening_if", None))
     _history_threshold(scenario, source, getattr(ability, "intervening_if", None))
+    _target_damage_history(scenario, source, getattr(ability, "text", None))
     _board_threshold(scenario, source, getattr(ability, "intervening_if", None) or "")
     _player_state_threshold(scenario, getattr(ability, "intervening_if", None))
     _object_state_threshold(scenario, source, getattr(ability, "intervening_if", None))
@@ -1535,6 +1536,68 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     _equip_for_condition(scenario, source, ability)
     _enter_for_condition(scenario, ability)
     return source
+
+
+def _target_damage_history(scenario: PlayedScenario, source: CardState, text: str | None) -> None:
+    """A target restriction or object filter reading "was dealt [combat]
+    damage [by [N or more] <quality>] this turn" (Admiral Beckett Brass, Hope
+    of Ghirapur, Steel Hellkite - CR 120.2a/120.2b) is satisfied on the stock
+    board by playing the damage it asks about: opponent Bob is dealt damage
+    by enough sources, each with the words of the "by" phrase (a color, a
+    supertype, a card type, a subtype) or, for a self-reference, by the
+    ability's own source - the records `Game.deal_damage` would have made."""
+    from magic_cards_model.machines.conditions.history import (
+        _DEALT_DAMAGE_TAIL_RE,
+        _THIS_SELF_RE,
+        _source_quality,
+    )
+    from magic_cards_model.models.card import Supertype
+    from magic_cards_model.models.game import _COLOR_WORDS, DamageDealt
+
+    lowered = (text or "").lower().replace(source.name.lower(), "this creature")
+    found = _DEALT_DAMAGE_TAIL_RE.search(lowered)
+    # Only the target phrase's own subject ("target player who", "a player
+    # who", "whose controller") - an intervening "if" naming the damage is
+    # `_damage_history`'s, staged by its own attempt.
+    if found is None or not re.search(
+        r"(?:player who|whose controller|^controller) $", lowered[: found.start()]
+    ):
+        return
+    by_phrase = (found.group("by") or "").strip()
+    sources = parse_count(found.group("by_count")) if found.group("by_count") else 1
+    amount = parse_count(found.group("count")) if found.group("count") else 1
+    self_reference = bool(by_phrase) and _THIS_SELF_RE.fullmatch(by_phrase) is not None
+    if by_phrase and not self_reference and _source_quality(by_phrase) is None:
+        return
+    colors, supertypes, types, subtypes = [], [], [], []
+    for word in by_phrase.replace(",", " ").split() if not self_reference else []:
+        singular = word.removesuffix("s")
+        if word in _COLOR_WORDS:
+            colors.append(_COLOR_WORDS[word])
+        elif (
+            supertype := next((each for each in Supertype if each.value == word), None)
+        ) is not None:
+            supertypes.append(supertype)
+        elif (
+            card_type := next((each for each in Type if each.value == singular), None)
+        ) is not None:
+            types.append(card_type)
+        elif (subtype := canonical_subtype(word)) is not None:
+            subtypes.append(subtype)
+    for index in range(sources):
+        scenario.game.damage_dealt_this_turn.append(
+            DamageDealt(
+                source_id=source.id if self_reference else uuid5(NAMESPACE_OID, f"dealt-{index}"),
+                source_controller=ALICE,
+                source_types=tuple(types) or (Type.CREATURE,),
+                source_subtypes=tuple(subtypes),
+                source_supertypes=tuple(supertypes),
+                source_colors=tuple(colors),
+                recipient_player=BOB,
+                amount=amount,
+                combat="noncombat" not in (found.group("kind") or ""),
+            )
+        )
 
 
 def _history_threshold(scenario: PlayedScenario, source: CardState, condition: str | None) -> None:
@@ -4049,6 +4112,7 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _teamwork_tapping(case, ability)
         elif kind in (
             "attacks",
+            "attacks_unblocked",
             "blocks",
             "combat_damage_to_players",
             "becomes_tapped",

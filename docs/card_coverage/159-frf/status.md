@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 6.8% |
-| Works (untested) | 74 | 46.0% |
+| Works (untested) | 73 | 45.3% |
 | Partial (unaudited) | 11 | 6.8% |
-| Not working | 65 | 40.4% |
+| Not working | 66 | 41.0% |
 
 ## Cards needing work
 
@@ -78,7 +78,6 @@
 | Torrent Elemental | silent | Whenever this creature attacks, tap all creatures defending player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin's Construct | silent | When this creature enters, sacrifice a permanent that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ugin, the Spirit Dragon | silent | −X: Exile each permanent with mana value X or less that's one or more colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Whisk Away | silent | Put target attacking or blocking creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Whisperwood Elemental | silent | Sacrifice this creature: Until end of turn, face-up nontoken creatures you control gain "When this creature dies, manifest the top card of your library." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildcall | silent | Manifest the top card of your library, then put X +1/+1 counters on it. (To manifest a card, put it onto the battlefield face down as a 2/2 creature. Turn it fa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Winds of Qal Sisma | silent | Prevent all combat damage that would be dealt this turn. Ferocious — If you control a creature with power 4 or greater, instead prevent all combat damage that w | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -88,9 +87,11 @@
 | Bloodfire Enforcers | notice | This creature has first strike and trample as long as an instant card and a sorcery card are in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Crux of Fate | notice | Choose one — • Destroy all Dragon creatures. • Destroy all non-Dragon creatures. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fearsome Awakening | notice | Return target creature card from your graveyard to the battlefield. If it's a Dragon, put two +1/+1 counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Flamerush Rider | notice | Whenever this creature attacks, create a token that's a copy of another target attacking creature and that's tapped and attacking. Exile the token at end of com | unparsed remainder: Exile the token at end of combat. | Y/Y/- | not_working |
 | Rally the Ancestors | notice | Return each creature card with mana value X or less from your graveyard to the battlefield. Exile those creatures at the beginning of your next upkeep. Exile Ra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Reality Shift | notice | Exile target creature. Its controller manifests the top card of their library. (That player puts the top card of their library onto the battlefield face down as | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Supplant Form | notice | Return target creature to its owner's hand. You create a token that's a copy of that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| War Flare | notice | Creatures you control get +2/+1 until end of turn. Untap those creatures. | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
 | Battlefront Krushok | unaudited | Each creature you control with a +1/+1 counter on it can't be blocked by more than one creature. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Citadel Siege | unaudited | As this enchantment enters, choose Khans or Dragons. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Frontier Mastodon | unaudited | Ferocious — This creature enters with a +1/+1 counter on it if you control a creature with power 4 or greater. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -121,7 +122,6 @@
 | Enhanced Awareness | handled | Draw three cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fascination | handled | Choose one — • Each player draws X cards. • Each player mills X cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feral Krushok | handled |  |  | Y/Y/- | not_tested |
-| Flamerush Rider | handled | Whenever this creature attacks, create a token that's a copy of another target attacking creature and that's tapped and attacking. Exile the token at end of com | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flamewake Phoenix | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Frost Walker | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Boom Keg | handled | At the beginning of your upkeep, sacrifice this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -172,7 +172,7 @@
 | Temporal Trespass | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Take an extra turn after this one. Exile Temporal Trespass. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Valorous Stance | handled | Choose one — • Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) • Destroy target creature with  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vaultbreaker | handled | Whenever this creature attacks, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| War Flare | handled | Creatures you control get +2/+1 until end of turn. Untap those creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Whisk Away | handled | Put target attacking or blocking creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Whisperer of the Wilds | handled | Ferocious | no code needed | Y/Y/- | not_tested |
 | Wild Slash | handled | Ferocious — If you control a creature with power 4 or greater, damage can't be prevented this turn. Wild Slash deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Will of the Naga | handled | Delve (Each card you exile from your graveyard while casting this spell pays for {1}.) Tap up to two target creatures. Those creatures don't untap during their  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -218,6 +218,7 @@
 | choose target creature. mill three cards, then put a +N/+N counter on that creature for each creature card in your graveyard. (to mill three cards, put the top  | 1 | Grave Strength | frf |
 | choose target creature. whenever that creature is dealt damage ~, it deals that much damage to each other creature and each player. | 1 | Arcbond | frf |
 | counter target spell unless its controller pays {M} for each card in your graveyard. | 1 | Rakshasa's Disdain | frf |
+| creatures you control get +N/+N until end of turn. untap those creatures. | 1 | War Flare | frf |
 | delve (each card you exile from your graveyard while casting ~ pays for {M}.) return target nonland permanent you control and target nonland permanent you don". | 1 | Rite of Undoing | frf |
 | each creature you control with a +N/+N counter on it can't be blocked by more than one creature. | 1 | Battlefront Krushok | frf |
 | enchanted creature has deathtouch as long as you control a green or blue permanent. | 1 | Sultai Runemark | frf |
@@ -236,7 +237,6 @@
 | mill four cards, then return a creature card and a land card from your graveyard to your hand. | 1 | Sudden Reclamation | frf |
 | prevent all combat damage that would be dealt ~. ferocious — if you control a creature with power N or greater, instead prevent all combat damage that would be  | 1 | Winds of Qal Sisma | frf |
 | prevent all damage that would be dealt to you and permanents you control ~ by sources you don't control. if damage is prevented ~, you may have ~ deal that much | 1 | Channel Harm | frf |
-| put target attacking or blocking creature on top of its owner's library. | 1 | Whisk Away | frf |
 | return each creature card with mana value N or less from your graveyard to the battlefield. exile those creatures at the beginning of your next upkeep. exile ~. | 1 | Rally the Ancestors | frf |
 | return target creature card from your graveyard to the battlefield. if it's a dragon, put two +N/+N counters on it. | 1 | Fearsome Awakening | frf |
 | return target creature to its owner"..."s a copy of that creature. | 1 | Supplant Form | frf |
@@ -256,6 +256,7 @@
 | whenever a dragon you control attacks, creatures defending player controls get -N/-N until end of turn. | 1 | Silumgar, the Drifting Death | frf |
 | whenever a permanent you control is turned face up, if it"..."t control. | 1 | Temur War Shaman | frf |
 | whenever alesha attacks, you may pay {M}{M}. if you do, return target creature card with power N or less from your graveyard to the battlefield tapped and attac | 1 | Alesha, Who Smiles at Death | frf |
+| whenever ~ attacks, create a token that"..."s tapped and attacking. exile the token at end of combat. | 1 | Flamerush Rider | frf |
 | whenever ~ attacks, tap all creatures defending player controls. | 1 | Torrent Elemental | frf |
 | whenever ~ deals combat damage to a player, it deals N damage to each creature that player controls. | 1 | Shockmaw Dragon | frf |
 | you gain N life. bolster N. (choose a creature with the least toughness among creatures you control and put two +N/+N counters on it.) | 1 | Honor's Reward | frf |

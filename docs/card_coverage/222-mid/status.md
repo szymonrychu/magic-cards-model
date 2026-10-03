@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 28 | 11.2% |
-| Works (untested) | 122 | 49.0% |
+| Tested | 30 | 12.0% |
+| Works (untested) | 123 | 49.4% |
 | Partial (unaudited) | 15 | 6.0% |
-| Not working | 84 | 33.7% |
+| Not working | 81 | 32.5% |
 
 ## Cards needing work
 
@@ -46,7 +46,6 @@
 | Dennick, Pious Apprentice // Dennick, Pious Apparition | silent | Whenever one or more creature cards are put into graveyards from anywhere, investigate. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Devoted Grafkeeper // Departed Soulkeeper | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Duel for Dominance | silent | Coven — Choose target creature you control and target creature you don't control. If you control three or more creatures with different powers, put a +1/+1 coun | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Enduring Angel // Angelic Enforcer | silent | Angelic Enforcer's power and toughness are each equal to your life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fading Hope | silent | Return target creature to its owner's hand. If its mana value was 3 or less, scry 1. (Look at the top card of your library. You may put that card on the bottom. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Falkenrath Perforator | silent | Whenever this creature attacks, it deals 1 damage to defending player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Florian, Voldaren Scion | silent | At the beginning of each of your postcombat main phases, look at the top X cards of your library, where X is the total amount of life your opponents lost this t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -66,7 +65,6 @@
 | Moonveil Regent | silent | Whenever you cast a spell, you may discard your hand. If you do, draw a card for each of that spell's colors. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Mourning Patrol // Morning Apparition | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Neonate's Rush | silent | This spell costs {1} less to cast if you control a Vampire. Neonate's Rush deals 1 damage to target creature and 1 damage to its controller. Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Old Stickfingers | silent | When you cast this spell, reveal cards from the top of your library until you reveal X creature cards. Put all creature cards revealed this way into your gravey | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Overwhelmed Archivist // Archive Haunt | silent | Disturb | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Path to the Festival | silent | Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle. Then if there are three or more basic land types among lands | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Play with Fire | silent | Play with Fire deals 2 damage to any target. If a player is dealt damage this way, scry 1. (Look at the top card of your library. You may put that card on the b | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -74,7 +72,6 @@
 | Seize the Storm | silent | Create a red Elemental creature token with trample and "This token's power and toughness are each equal to the number of instant and sorcery cards in your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sigarda's Splendor | silent | At the beginning of your upkeep, draw a card if your life total is greater than or equal to the last noted life total for this enchantment. Then note your life  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siphon Insight | silent | Look at the top two cards of target opponent's library. Exile one of them face down and put the other on the bottom of that library. You may play the exiled car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Slaughter Specialist | silent | When this creature enters, each opponent creates a 1/1 white Human creature token. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Slogurk, the Overslime | silent | Whenever a land card is put into your graveyard from anywhere, put a +1/+1 counter on Slogurk. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Spectral Adversary | silent | When this creature enters, you may pay {1}{U} any number of times. When you pay this cost one or more times, put that many +1/+1 counters on this creature, then | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sungold Sentinel | silent | Coven — {1}{W}: Choose a color. This creature gains hexproof from that color until end of turn and can't be blocked by creatures of that color this turn. Activa | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -97,16 +94,16 @@
 | Dire-Strain Rampage | notice | Destroy target artifact, enchantment, or land. If a land was destroyed this way, its controller may search their library for up to two basic land cards, put the | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Diregraf Horde | notice | When this creature enters, create two 2/2 black Zombie creature tokens with decayed. When you do, exile up to two target cards from graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fateful Absence | notice | Destroy target creature or planeswalker. Its controller investigates. (They create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Flare of Faith | notice | Target creature gets +2/+2 until end of turn. If it's a Human, instead it gets +3/+3 and gains indestructible until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Flare of Faith | notice | Target creature gets +2/+2 until end of turn. If it's a Human, instead it gets +3/+3 and gains indestructible until end of turn. | unparsed remainder: If it's a Human, instead it gets +3/+3 and gains indestructible until end of turn. | Y/Y/- | not_working |
 | Hallowed Respite | notice | Exile target nonlegendary creature, then return it to the battlefield under its owner's control. If it entered under your control, put a +1/+1 counter on it. Ot | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heirloom Mirror // Inherited Fiend | notice | {1}, {T}, Pay 1 life, Discard a card: Draw a card, mill a card, then put a ritual counter on this artifact. Then if it has three or more ritual counters on it,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hungry for More | notice | Create a 3/1 black and red Vampire creature token with trample, lifelink, and haste. Sacrifice it at the beginning of the next end step. Flashback {1}{B}{R} (Yo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Light Up the Night | notice | Light Up the Night deals X damage to any target. It deals X plus 1 damage instead if that target is a creature or planeswalker. Flashback—{3}{R}, Remove X loyal | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Olivia's Midnight Ambush | notice | Target creature gets -2/-2 until end of turn. If it's night, that creature gets -13/-13 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Pack's Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. (Look at th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Olivia's Midnight Ambush | notice | Target creature gets -2/-2 until end of turn. If it's night, that creature gets -13/-13 until end of turn instead. | unparsed remainder: If it's night, that creature gets -13/-13 until end of turn instead. | Y/Y/- | not_working |
+| Pack's Betrayal | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. (Look at th | unparsed remainder: Untap that creature. It gains haste until end of turn. If you control a Wolf or Werewolf, scry 2. | Y/Y/- | not_working |
 | Purifying Dragon | notice | Whenever this creature attacks, it deals 1 damage to target creature defending player controls. If that creature is a Zombie, this creature deals 2 damage to it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Stolen Vitality | notice | Target creature gets +3/+1 until end of turn. If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of tu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Unnatural Moonrise | notice | It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and "Whenever this creature deals combat damage to a player, draw a card." Fla | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Stolen Vitality | notice | Target creature gets +3/+1 until end of turn. If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of tu | unparsed remainder: If it's your turn, that creature gains trample until end of turn. Otherwise, it gains first strike until end of turn. | Y/Y/- | not_working |
+| Unnatural Moonrise | notice | It becomes night. Until end of turn, target creature gets +1/+0 and gains trample and "Whenever this creature deals combat damage to a player, draw a card." Fla | unparsed remainder: It becomes night. | Y/Y/- | not_working |
 | Voldaren Stinger | notice | This creature has first strike as long as it's attacking. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Wake to Slaughter | notice | Choose up to two target creature cards in your graveyard. An opponent chooses one of them. Return that card to your hand. Return the other to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Winterthorn Blessing | notice | Put a +1/+1 counter on up to one target creature you control. Tap up to one target creature you don't control, and that creature doesn't untap during its contro | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -227,6 +224,7 @@
 | Sigarda, Champion of Light | handled | Humans you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sigardian Savior | handled | When this creature enters, if you cast it, return up to two target creature cards with mana value 2 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skaab Wrangler | handled | Tap three untapped creatures you control: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Slaughter Specialist | handled | When this creature enters, each opponent creates a 1/1 white Human creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Smoldering Egg // Ashmouth Dragon | handled | Whenever you cast an instant or sorcery spell, put a number of ember counters on this creature equal to the amount of mana spent to cast that spell. Then if thi | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Snarling Wolf | handled | {1}{G}: This creature gets +2/+2 until end of turn. Activate only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Soul-Guide Gryff | handled | When this creature enters, exile up to one target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -251,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>28 cards</summary>
+<summary>30 cards</summary>
 
 - Blood Pact
 - Bounding Wolf
@@ -261,6 +259,7 @@
 - Croaking Counterpart
 - Dawnhart Wardens
 - Deserted Beach
+- Enduring Angel // Angelic Enforcer
 - Faithful Mending
 - Falkenrath Pit Fighter
 - Gavony Dawnguard
@@ -270,6 +269,7 @@
 - Hedgewitch's Mask
 - Jadar, Ghoulcaller of Nephalia
 - Moonsilver Key
+- Old Stickfingers
 - Otherworldly Gaze
 - Overgrown Farmland
 - Reckless Stormseeker // Storm-Charged Slasher
@@ -293,7 +293,6 @@
 | Choose one | 2 | Bloodline Culling, Burn Down the House | mid |
 | +N: choose up to one target artifact, up to one target creature, and up to one target land. untap the chosen permanents you control. tap the chosen permanents y | 1 | Teferi, Who Slows the Sunset | mid |
 | +N: until your next turn, you may cast creature spells as though they had flash, and each creature you control enters with an additional +N/+N counter on it. | 1 | Arlinn, the Pack's Hope // Arlinn, the Moon's Fury | mid |
-| angelic enforcer's power and toughness are each equal to your life total. | 1 | Enduring Angel // Angelic Enforcer | mid |
 | as an additional cost to cast ~, sacrifice any number of creatures. create an N/N blue and black zombie creature token with menace, where N is the total power o | 1 | Corpse Cobble | mid |
 | as long as an opponent lost life ~, each other vampire you control enters with an additional +N/+N counter on it. | 1 | Vampire Socialite | mid |
 | as long as you control a token, ~ gets +N/+N. | 1 | Briarbridge Tracker | mid |
@@ -336,12 +335,10 @@
 | target creature gets -N/-N until end of turn. if it's night, that creature gets -N/-N until end of turn instead. | 1 | Olivia's Midnight Ambush | mid |
 | target creature you control gets +N/+N and gains lifelink until end of turn. when that creature dies ~, create a N/N white spirit creature token with flying. | 1 | Blessed Defiance | mid |
 | up to two target creatures can't block ~. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Abandon the Post | mid |
-| when you cast ~, reveal cards from the top of your library until you reveal N creature cards. put all creature cards revealed ~ into your graveyard, then put th | 1 | Old Stickfingers | mid |
 | when ~ dies, return it to the battlefield transformed under your control attached to target creature or planeswalker an opponent controls. | 1 | Vengeful Strangler // Strangling Grasp | mid |
 | when ~ dies, you gain life equal to its power. | 1 | Willow Geist | mid |
 | when ~ enters, create two N/N black zombie creature tokens with decayed. when you do, exile up to two target cards from graveyards. | 1 | Diregraf Horde | mid |
 | when ~ enters, each creature gets -N/-N until end of turn. | 1 | The Meathook Massacre | mid |
-| when ~ enters, each opponent creates a N/N white human creature token. | 1 | Slaughter Specialist | mid |
 | when ~ enters, if enchanted creature is a wolf or werewolf, untap that creature. | 1 | Howl of the Hunt | mid |
 | when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then create twice that many N/N blac | 1 | Tainted Adversary | mid |
 | when ~ enters, you may pay {M}{M} any number of times. when you pay ~ one or more times, put that many +N/+N counters on ~, then exile up to that many target in | 1 | Bloodthirsty Adversary | mid |

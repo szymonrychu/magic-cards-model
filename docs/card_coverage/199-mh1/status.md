@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 26 | 12.4% |
-| Works (untested) | 99 | 47.1% |
+| Works (untested) | 98 | 46.7% |
 | Partial (unaudited) | 15 | 7.1% |
-| Not working | 70 | 33.3% |
+| Not working | 71 | 33.8% |
 
 ## Cards needing work
 
@@ -85,7 +85,7 @@
 | Fallen Shinobi | notice | Whenever this creature deals combat damage to a player, that player exiles the top two cards of their library. Until end of turn, you may play those cards witho | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Fists of Flame | notice | Draw a card. Until end of turn, target creature gains trample and gets +1/+0 for each card you've drawn this turn. (A creature with trample can deal excess comb | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Force of Rage | notice | If it's not your turn, you may exile a red card from your hand rather than pay this spell's mana cost. Create two 3/1 red Elemental creature tokens with trample | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Goatnap | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Goatnap | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until e | unparsed remainder: Untap that creature. It gains haste until end of turn. If that creature is a Goat, it also gets +3/+0 until end of turn. | Y/Y/Y | not_working |
 | Ice-Fang Coatl | notice | This creature has deathtouch as long as you control at least three other snow permanents. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kaya's Guile | notice | Choose two — • Each opponent sacrifices a creature of their choice. • Exile all opponents' graveyards. • Create a 1/1 white and black Spirit creature token with | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Murasa Behemoth | notice | This creature gets +3/+3 as long as there is a land card in your graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -96,6 +96,7 @@
 | Twisted Reflection | notice | Choose one — • Target creature gets -6/-0 until end of turn. • Switch target creature's power and toughness until end of turn. Entwine {B} (Choose both if you p | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Urza, Lord High Artificer | notice | {5}: Shuffle your library, then exile the top card. Until end of turn, you may play that card without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Volatile Claws | notice | Until end of turn, creatures you control get +2/+0 and gain all creature types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Yawgmoth, Thran Physician | notice | Protection | protection from a quality the engine does not read: Humans | Y/-/- | not_working |
 | Bladeback Sliver | unaudited | Hellbent — As long as you have no cards in hand, Sliver creatures you control have "{T}: This creature deals 1 damage to target player or planeswalker." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dregscape Sliver | unaudited | Each Sliver creature card in your graveyard has unearth {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Enduring Sliver | unaudited | Other Sliver creatures you control have outlast {2}. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -209,7 +210,6 @@
 | Waterlogged Grove | handled | {1}, {T}, Sacrifice this land: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Weather the Storm | handled | You gain 3 life. Storm (When you cast this spell, copy it for each spell cast before it this turn.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Webweaver Changeling | handled | When this creature enters, if there are three or more creature cards in your graveyard, you gain 5 life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Yawgmoth, Thran Physician | handled | Pay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 
 ## Fully supported
 
@@ -284,6 +284,7 @@
 | modular | 1 | Scrapyard Recombiner | mh1 |
 | other creatures you control of the chosen type get +N/+N. | 1 | Morophon, the Boundless | mh1 |
 | other sliver creatures you control have outlast {M}. | 1 | Enduring Sliver | mh1 |
+| protection | 1 | Yawgmoth, Thran Physician | mh1 |
 | retrace | 1 | Throes of Chaos | mh1 |
 | return N cards at random from your graveyard to your hand. exile ~. | 1 | Reap the Past | mh1 |
 | return target creature to its owner"..."s controller may pay {M}{M}. if the player does, they may copy ~ and may choose a new target for that copy. | 1 | String of Disappearances | mh1 |

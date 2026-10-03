@@ -1,0 +1,158 @@
+{
+  "object": "card",
+  "id": "02cbd397-3ef3-465f-84fe-765dd1444af8",
+  "oracle_id": "43b5e462-d860-473d-828f-6c513fc7768a",
+  "multiverse_ids": [
+    640560
+  ],
+  "mtgo_id": 118928,
+  "tcgplayer_id": 525708,
+  "cardmarket_id": 743616,
+  "name": "Admiral Beckett Brass",
+  "lang": "en",
+  "released_at": "2023-11-17",
+  "uri": "https://api.scryfall.com/cards/02cbd397-3ef3-465f-84fe-765dd1444af8",
+  "scryfall_uri": "https://scryfall.com/card/lcc/264/admiral-beckett-brass?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:37:32Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.jpg?1783913852",
+    "normal": "https://cards.scryfall.io/normal/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.jpg?1783913852",
+    "large": "https://cards.scryfall.io/large/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.jpg?1783913852",
+    "png": "https://cards.scryfall.io/png/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.png?1783913852",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.jpg?1783913852",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.jpg?1783913852",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.webp?1783913852",
+    "grid": "https://cards.scryfall.io/grid/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.webp?1783913852",
+    "display": "https://cards.scryfall.io/display/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.webp?1783913852",
+    "art": "https://cards.scryfall.io/art/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.webp?1783913852",
+    "crop": "https://cards.scryfall.io/crop/front/0/2/02cbd397-3ef3-465f-84fe-765dd1444af8.webp?1783913852"
+  },
+  "mana_cost": "{1}{U}{B}{R}",
+  "cmc": 4.0,
+  "type_line": "Legendary Creature \u2014 Human Pirate",
+  "oracle_text": "Other Pirates you control get +1/+1.\nAt the beginning of your end step, gain control of target nonland permanent controlled by a player who was dealt combat damage by three or more Pirates this turn.",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "B",
+    "R",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "R",
+    "U"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "577304f8-89e5-47d2-bdb3-311d4be88af2",
+      "component": "combo_piece",
+      "name": "Brazen Boarding",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/577304f8-89e5-47d2-bdb3-311d4be88af2"
+    },
+    {
+      "object": "related_card",
+      "id": "02cbd397-3ef3-465f-84fe-765dd1444af8",
+      "component": "combo_piece",
+      "name": "Admiral Beckett Brass",
+      "type_line": "Legendary Creature \u2014 Human Pirate",
+      "uri": "https://api.scryfall.com/cards/02cbd397-3ef3-465f-84fe-765dd1444af8"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set": "lcc",
+  "set_name": "The Lost Caverns of Ixalan Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/d253edc3-5bc7-4cf1-9446-a8540dedffa5",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Alcc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/lcc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/02cbd397-3ef3-465f-84fe-765dd1444af8/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A43b5e462-d860-473d-828f-6c513fc7768a&unique=prints",
+  "collector_number": "264",
+  "digital": false,
+  "rarity": "mythic",
+  "flavor_text": "\"You and your ship will make a fine addition to my fleet.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason Rainville",
+  "artist_ids": [
+    "6ed7e669-579b-443d-b223-e5cbcb2a7483"
+  ],
+  "illustration_id": "8590b2be-8a63-4221-a043-d6b40fd2bc91",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 6143,
+  "penny_rank": 10164,
+  "prices": {
+    "usd": "0.27",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.24",
+    "eur_foil": null,
+    "tix": "0.05"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=640560&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DAdmiral%2BBeckett%2BBrass",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DAdmiral%2BBeckett%2BBrass",
+    "edhrec": "https://edhrec.com/route/?cc=Admiral+Beckett+Brass"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F525708%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=743616&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/118928?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.8% |
-| Works (untested) | 129 | 56.1% |
+| Tested | 19 | 8.3% |
+| Works (untested) | 130 | 56.5% |
 | Partial (unaudited) | 20 | 8.7% |
-| Not working | 63 | 27.4% |
+| Not working | 61 | 26.5% |
 
 ## Cards needing work
 
@@ -49,7 +49,6 @@
 | Karn, Scion of Urza | silent | +1: Reveal the top two cards of your library. An opponent chooses one of them. Put that card into your hand and exile the other with a silver counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Kwende, Pride of Femeref | silent | Creatures you control with first strike have double strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lich's Mastery | silent | Whenever you lose life, for each 1 life you lost, exile a permanent you control or a card from your hand or graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Lyra Dawnbringer | silent | Other Angels you control get +1/+1 and have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Navigator's Compass | silent | {T}: Until end of turn, target land you control becomes the basic land type of your choice in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Niambi, Faithful Healer | silent | When Niambi enters, you may search your library and/or graveyard for a card named Teferi, Timebender, reveal it, and put it into your hand. If you search your l | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | On Serra's Wings | silent | Enchanted creature is legendary, gets +1/+1, and has flying, vigilance, and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -69,7 +68,6 @@
 | The Mending of Dominaria | silent | III — Return all land cards from your graveyard to the battlefield, then shuffle your graveyard into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thran Temporal Gateway | silent | {4}, {T}: You may put a historic permanent card from your hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Time of Ice | silent | III — Return all tapped creatures to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Torgaar, Famine Incarnate | silent | When Torgaar enters, up to one target player's life total becomes half their starting life total, rounded down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Triumph of Gerrard | silent | III — Target creature you control with the greatest power gains flying, first strike, and lifelink until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Two-Headed Giant | silent | Whenever this creature attacks, flip two coins. If both coins come up heads, this creature gains double strike until end of turn. If both coins come up tails, t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unwind | silent | Counter target noncreature spell. Untap up to three lands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -78,7 +76,7 @@
 | Urza's Tome | silent | {3}, {T}: Draw a card. Then discard a card unless you exile a historic card from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warcry Phoenix | silent | Whenever you attack with three or more creatures, you may pay {2}{R}. If you do, return this card from your graveyard to the battlefield tapped and attacking. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Benalish Honor Guard | notice | This creature gets +1/+0 for each legendary creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blessing of Belzenlok | notice | Target creature gets +2/+1 until end of turn. If it's legendary, it also gains lifelink until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Blessing of Belzenlok | notice | Target creature gets +2/+1 until end of turn. If it's legendary, it also gains lifelink until end of turn. | unparsed remainder: If it's legendary, it also gains lifelink until end of turn. | Y/Y/- | not_working |
 | Champion of the Flame | notice | This creature gets +2/+2 for each Aura and Equipment attached to it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chandra's Outburst | notice | Chandra's Outburst deals 4 damage to target player or planeswalker. Search your library and/or graveyard for a card named Chandra, Bold Pyromancer, reveal it, a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Corrosive Ooze | notice | Whenever this creature blocks or becomes blocked by an equipped creature, destroy all Equipment attached to that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -87,7 +85,7 @@
 | Merfolk Trickster | notice | When this creature enters, tap target creature an opponent controls. It loses all abilities until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rampaging Cyclops | notice | This creature gets -2/-0 as long as two or more creatures are blocking it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Tempest Djinn | notice | This creature gets +1/+0 for each basic Island you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Thallid Omnivore | notice | {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Thallid Omnivore | notice | {1}, Sacrifice another creature: This creature gets +2/+2 until end of turn. If a Saproling was sacrificed this way, you gain 2 life. | unparsed remainder: If a Saproling was sacrificed this way, you gain 2 life. | Y/Y/- | not_working |
 | Valduk, Keeper of the Flame | notice | At the beginning of combat on your turn, for each Aura and Equipment attached to Valduk, create a 3/1 red Elemental creature token with trample and haste. Exile | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Academy Drake | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Baird, Steward of Argive | unaudited | Creatures can't attack you or planeswalkers you control unless their controller pays {1} for each of those creatures. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -177,6 +175,7 @@
 | Lingering Phantom | handled | Whenever you cast a historic spell, you may pay {B}. If you do, return this card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Llanowar Envoy | handled |  |  | Y/Y/- | not_tested |
 | Llanowar Scout | handled | {T}: You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Lyra Dawnbringer | handled | Other Angels you control get +1/+1 and have lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mammoth Spider | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Marwyn, the Nurturer | handled | Whenever another Elf you control enters, put a +1/+1 counter on Marwyn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Memorial to Folly | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -242,7 +241,7 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>19 cards</summary>
 
 - Adamant Will
 - Adventurous Impulse
@@ -262,6 +261,7 @@
 - Sentinel of the Pearl Trident
 - Teferi, Timebender
 - Tetsuko Umezawa, Fugitive
+- Torgaar, Famine Incarnate
 
 </details>
 
@@ -303,7 +303,6 @@
 | kicker {M} (you may pay an additional {M} as you cast ~.) create two N/N green saproling creature tokens. if ~ was kicked, create four of those tokens instead. | 1 | Saproling Migration | dom |
 | kicker {M} (you may pay an additional {M} as you cast ~.) untap target creature. it gets +N/+N until end of turn. if ~ was kicked, that creature gets +N/+N unti | 1 | Gift of Growth | dom |
 | look at the top three cards of your library. put two of them into your hand and the other into your graveyard. ~ deals N damage to you. | 1 | Dark Bargain | dom |
-| other angels you control get +N/+N and have lifelink. | 1 | Lyra Dawnbringer | dom |
 | prevent the next N damage that would be dealt to any target ~ by a source of your choice. you gain N life. | 1 | Healing Grace | dom |
 | put a +N/+N counter on target creature you control if it's legendary. then it fights target creature an opponent controls. (each deals damage equal to its power | 1 | Ancient Animus | dom |
 | return all land cards from your graveyard to the battlefield, then shuffle your graveyard into your library. | 1 | The Mending of Dominaria | dom |
@@ -320,7 +319,6 @@
 | when garna enters, return to your hand all creature cards in your graveyard that were put there from anywhere ~. | 1 | Garna, the Bloodflame | dom |
 | when niambi enters, you may search your library and/or graveyard for a card named teferi, timebender, reveal it, and put it into your hand. if you search your l | 1 | Niambi, Faithful Healer | dom |
 | when slinn voda enters, if it was kicked, return all creatures to their owners' hands except for merfolk, krakens, leviathans, octopuses, and serpents. | 1 | Slinn Voda, the Rising Deep | dom |
-| when torgaar enters, up to one target player's life total becomes half their starting life total, rounded down. | 1 | Torgaar, Famine Incarnate | dom |
 | when ~ enters, choose four nonenchantment permanents you don't control and put an aim counter on each of them. | 1 | Haphazard Bombardment | dom |
 | when ~ enters, exile cards from the top of your library until you exile a nonland card, then put that card into your hand. if the card's mana value is N or grea | 1 | Demonlord Belzenlok | dom |
 | when ~ enters, tap target creature an opponent controls. it loses all abilities until end of turn. | 1 | Merfolk Trickster | dom |

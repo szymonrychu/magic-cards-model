@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 7 | 4.3% |
-| Works (untested) | 74 | 45.7% |
+| Works (untested) | 77 | 47.5% |
 | Partial (unaudited) | 10 | 6.2% |
-| Not working | 71 | 43.8% |
+| Not working | 68 | 42.0% |
 
 ## Cards needing work
 
@@ -40,7 +40,6 @@
 | Arcbound Worker | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Auriok Glaivemaster | silent | As long as this creature is equipped, it gets +1/+1 and has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Auriok Siege Sled | silent | {1}: Target artifact creature can't block this creature this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Burden of Greed | silent | Target player loses 1 life for each tapped artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Carry Away | silent | When this Aura enters, unattach enchanted Equipment. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Chittering Rats | silent | When this creature enters, target opponent puts a card from their hand on top of their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Darksteel Reactor | silent | When this artifact has twenty or more charge counters on it, you win the game. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
@@ -49,7 +48,6 @@
 | Drooling Ogre | silent | Whenever a player casts an artifact spell, that player gains control of this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dross Golem | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Eater of Days | silent | When this creature enters, you skip your next two turns. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Emissary of Despair | silent | Whenever this creature deals combat damage to a player, that player loses 1 life for each artifact they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Emissary of Hope | silent | Whenever this creature deals combat damage to a player, you gain 1 life for each artifact that player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fangren Firstborn | silent | Whenever this creature attacks, put a +1/+1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Flamebreak | silent | Flamebreak deals 3 damage to each creature without flying and each player. Creatures dealt damage this way can't be regenerated this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -58,7 +56,6 @@
 | Greater Harvester | silent | At the beginning of your upkeep, sacrifice a permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Hallow | silent | Prevent all damage target spell would deal this turn. You gain life equal to the damage prevented this way. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lich's Tomb | silent | Whenever you lose life, sacrifice a permanent for each 1 life you lost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Magnetic Flux | silent | Artifact creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Memnarch | silent | {1}{U}{U}: Target permanent becomes an artifact in addition to its other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mephitic Ooze | silent | Whenever this creature deals combat damage to a creature, destroy that creature. The creature can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mycosynth Lattice | silent | All permanents are artifacts in addition to their other types. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -112,6 +109,7 @@
 | Arcane Spyglass | handled | {2}, {T}, Sacrifice a land: Draw a card and put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barbed Lightning | handled | Choose one — • Barbed Lightning deals 3 damage to target creature. • Barbed Lightning deals 3 damage to target player or planeswalker. Entwine {2} (Choose both  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blinkmoth Nexus | handled | {1}: This land becomes a 1/1 Blinkmoth artifact creature with flying until end of turn. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Burden of Greed | handled | Target player loses 1 life for each tapped artifact they control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chimeric Egg | handled | Whenever an opponent casts a nonartifact spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chromescale Drake | handled | When this creature enters, reveal the top three cards of your library. Put all artifact cards revealed this way into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Coretapper | handled | {T}: Put a charge counter on target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -124,6 +122,7 @@
 | Demon's Horn | handled | Whenever a player casts a black spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Dragon's Claw | handled | Whenever a player casts a red spell, you may gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Echoing Decay | handled | Target creature and all other creatures with the same name as that creature get -2/-2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Emissary of Despair | handled | Whenever this creature deals combat damage to a player, that player loses 1 life for each artifact they control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Essence Drain | handled | Essence Drain deals 3 damage to any target and you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Geth's Grimoire | handled | Whenever an opponent discards a card, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grimclaw Bats | handled | {B}, Pay 1 life: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -137,6 +136,7 @@
 | Leonin Bola | handled | Equipped creature has "{T}, Unattach Leonin Bola: Tap target creature." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Mystic | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Machinate | handled | Look at the top X cards of your library, where X is the number of artifacts you control. Put one of those cards into your hand and the rest on the bottom of you | the engine reads this text and performs it | Y/-/- | not_tested |
+| Magnetic Flux | handled | Artifact creatures you control gain flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Metal Fatigue | handled | Tap all artifacts. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mirrodin's Core | handled | {T}: Put a charge counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Myr Moonvessel | handled | When this creature dies, add {C}. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -208,7 +208,6 @@
 | all creatures able to block equipped creature do so. | 1 | Nemesis Mask | dst |
 | all permanents are artifacts in addition to their other types. | 1 | Mycosynth Lattice | dst |
 | any time you could mulligan and ~ is in your hand, you may exile all the cards from your hand, then draw that many cards. | 1 | Serum Powder | dst |
-| artifact creatures you control gain flying until end of turn. | 1 | Magnetic Flux | dst |
 | artifacts you control have indestructible. | 1 | Darksteel Forge | dst |
 | as long as a card exiled with ~ has flying, ~ has flying. the same is true for fear, first strike, double strike, haste, landwalk, protection, and trample. | 1 | Death-Mask Duplicant | dst |
 | as long as ~ is equipped, it gets +N/+N and has first strike. | 1 | Auriok Glaivemaster | dst |
@@ -240,7 +239,6 @@
 | return all artifacts you control to their owner's hand. | 1 | Retract | dst |
 | target creature gets +N/+N until end of turn for each artifact you control. | 1 | Hunger of the Nim | dst |
 | target opponent chooses an artifact card in their graveyard. put that card onto the battlefield under your control. | 1 | Scrounge | dst |
-| target player loses N life for each tapped artifact they control. | 1 | Burden of Greed | dst |
 | target player reveals three cards from their hand and you choose one of them. that player discards that card. then if that player has more cards in hand than yo | 1 | Pulse of the Dross | dst |
 | when ~ enters or leaves the battlefield, choose a land of each basic land type, then destroy those lands. | 1 | Sundering Titan | dst |
 | when ~ enters, sacrifice it unless you sacrifice an artifact. | 1 | Vulshok War Boar | dst |
@@ -255,7 +253,6 @@
 | whenever ~ attacks, create a colorless construct artifact creature token named twin that's attacking. its power is equal to ~ power and its toughness is equal t | 1 | Gemini Engine | dst |
 | whenever ~ attacks, put a +N/+N counter on each attacking creature. | 1 | Fangren Firstborn | dst |
 | whenever ~ deals combat damage to a creature, destroy that creature. the creature can't be regenerated. | 1 | Mephitic Ooze | dst |
-| whenever ~ deals combat damage to a player, that player loses N life for each artifact they control. | 1 | Emissary of Despair | dst |
 | whenever ~ deals combat damage to a player, you gain N life for each artifact that player controls. | 1 | Emissary of Hope | dst |
 | you gain N life. then if an opponent has more life than you, return ~ to its owner's hand. | 1 | Pulse of the Fields | dst |
 | you may activate equip abilities any time you could cast an instant. | 1 | Leonin Shikari | dst |

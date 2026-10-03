@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 12 | 8.1% |
-| Works (untested) | 55 | 37.2% |
+| Works (untested) | 57 | 38.5% |
 | Partial (unaudited) | 7 | 4.7% |
-| Not working | 74 | 50.0% |
+| Not working | 72 | 48.6% |
 
 ## Cards needing work
 
@@ -42,7 +42,6 @@
 | Fire Juggler | silent | Whenever this creature becomes blocked, clash with an opponent. If you win, this creature deals 4 damage to each creature blocking it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Floodchaser | silent | {U}, Remove a +1/+1 counter from this creature: Target land becomes an Island until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Forfend | silent | Prevent all damage that would be dealt to creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Gilt-Leaf Archdruid | silent | Tap seven untapped Druids you control: Gain control of all lands target player controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Graceful Reprieve | silent | When target creature dies this turn, return that card to the battlefield under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Greatbow Doyen | silent | Whenever an Archer you control deals damage to a creature, that Archer deals that much damage to that creature's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grimoire Thief | silent | Whenever this creature becomes tapped, exile the top three cards of target opponent's library face down. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -58,7 +57,6 @@
 | Mind Shatter | silent | Target player discards X cards at random. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Mosquito Guard | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Mudbutton Clanger | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Nevermaker | silent | When this creature leaves the battlefield, put target nonland permanent on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Nightshade Schemers | silent | Kinship — At the beginning of your upkeep, you may look at the top card of your library. If it shares a creature type with this creature, you may reveal it. If  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Noggin Whack | silent | Prowl {1}{B} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Target player reveals three cards from their  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Notorious Throng | silent | Prowl {5}{U} (You may cast this for its prowl cost if you dealt combat damage to a player this turn with a Rogue.) Create X 1/1 black Faerie Rogue creature toke | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -125,6 +123,7 @@
 | Feudkiller's Verdict | handled | You gain 10 life. Then if you have more life than an opponent, create a 5/5 white Giant Warrior creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Final-Sting Faerie | handled | When this creature enters, destroy target creature that was dealt damage this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Game-Trail Changeling | handled | Trample | machines/combat.py | Y/-/- | not_tested |
+| Gilt-Leaf Archdruid | handled | Whenever you cast a Druid spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Heritage Druid | handled |  |  | Y/-/- | not_tested |
 | Idyllic Tutor | handled | Search your library for an enchantment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inspired Sprite | handled | Whenever you cast a Wizard spell, you may untap this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -136,6 +135,7 @@
 | Moonglove Changeling | handled | {B}: This creature gains deathtouch until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mothdust Changeling | handled | Tap an untapped creature you control: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Murmuring Bosk | handled | As this land enters, you may reveal a Treefolk card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Nevermaker | handled | When this creature leaves the battlefield, put target nonland permanent on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Obsidian Battle-Axe | handled | Equipped creature gets +2/+1 and has haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offalsnout | handled | When this creature leaves the battlefield, exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Order of the Golden Cricket | handled | Whenever this creature attacks, you may pay {W}. If you do, it gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -220,7 +220,6 @@
 | return target creature card from a graveyard to its owner"..."s hand. (each clashing player reveals the top card of their library, then puts that card on their  | 1 | Revive the Fallen | mor |
 | reveal cards from the top of your library until you reveal a land card. put that card onto the battlefield and the rest on the bottom of your library in any ord | 1 | Recross the Paths | mor |
 | reveal the top seven cards of your library, then put those cards on the bottom of your library in any order. if a card named ~ was revealed ~, ~ deals N damage  | 1 | Stomping Slabs | mor |
-| tap seven untapped druids you control: gain control of all lands target player controls. | 1 | Gilt-Leaf Archdruid | mor |
 | target player discards N cards at random. | 1 | Mind Shatter | mor |
 | target player sacrifices a creature of their choice. if a goblin is sacrificed ~, that player creates two N/N black goblin rogue creature tokens, and those toke | 1 | Warren Weirding | mor |
 | treefolk spells and shaman spells you cast cost {M} less to cast. | 1 | Bosk Banneret | mor |
@@ -232,7 +231,6 @@
 | when ~ enters, look at target player's hand. you may choose a nonland card from it. if you do, that player reveals the chosen card, puts it on the bottom of the | 1 | Vendilion Clique | mor |
 | when ~ enters, put a +N/+N counter on each other shaman creature you control. | 1 | Rage Forger | mor |
 | when ~ leaves the battlefield, choose an opponent. if that player has more cards in hand than you, draw cards equal to the difference. | 1 | Slithermuse | mor |
-| when ~ leaves the battlefield, put target nonland permanent on top of its owner's library. | 1 | Nevermaker | mor |
 | whenever a creature you control attacks, it gets +N/+N until end of turn for each other attacking creature that shares a creature type with it. | 1 | Shared Animosity | mor |
 | whenever a creature you control becomes blocked, it gets +N/+N until end of turn. | 1 | Unstoppable Ash | mor |
 | whenever a creature you control enters, you may look at the top N cards of your library, where N is that creature's power. if you do, put one of those cards on  | 1 | Cream of the Crop | mor |

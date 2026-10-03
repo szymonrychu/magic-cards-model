@@ -600,6 +600,20 @@ _COSTS_LESS_X_WHERE_X_IS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Shadow of Mortality's own shape: "If your life total is less than your
+#: starting life total, this spell costs {X} less to cast, where X is the
+#: difference." A leading CR 601.2f condition (unlike every other row here,
+#: this one is never open text `condition_holds` has to read - it is always
+#: this one comparison) paired with a variable amount that is the plain gap
+#: between the caster's current and starting (CR 103.4) life totals - "the
+#: difference" is symmetric, so `greater than` is read too rather than
+#: assuming which side of the comparison a future printing states.
+_COSTS_LESS_IF_LIFE_TOTAL_VS_STARTING_X_IS_DIFFERENCE_RE = re.compile(
+    r"if your life total is (?P<cmp>less|greater) than your starting life total, "
+    r"this spell costs \{x\} less to cast,? where x is the difference",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's per-turn-history reduction: "This spell costs {2} less to cast
 #: for each card you've cycled or discarded this turn." (Hollow One, text
 #: confirmed with `resolve_cards` this session). Unlike Emrakul's row above,
@@ -712,6 +726,12 @@ def reads_self_cost_reduction_line(text: str) -> bool:
         from ..machines.effects import amount_expression
 
         return amount_expression(generic_where_x.group("expr")) is not None
+    if re.fullmatch(
+        rf"{_COSTS_LESS_IF_LIFE_TOTAL_VS_STARTING_X_IS_DIFFERENCE_RE.pattern}\.?",
+        line,
+        re.IGNORECASE,
+    ):
+        return True
     condition_match = _COSTS_LESS_IF_CONDITION_RE.fullmatch(line)
     return condition_match is not None and condition_is_readable(condition_match.group("condition"))
 
@@ -3865,6 +3885,18 @@ class Game(EngineModel):
     which is not enough to judge *which* creature a target names - FRA
     stream S2's own field, not folded into `turn_facts` for that reason."""
 
+    attacked_players_this_turn: dict[UUID, SortedSet[str]] = Field(default_factory=dict)
+    """Which players (by username) each attacking creature (by id) attacked
+    this turn (CR 508.1a), for Angel of Destiny's own "each player this
+    creature attacked this turn loses the game." `attacked_this_turn` above
+    already answers "did this creature attack this turn"; this answers
+    "whom" - not folded into it, the same `attacked_this_turn`-vs-`turn_facts`
+    split above: a creature can attack a different defending player in an
+    extra combat phase (CR 500.7/508.1a), and every one of them must be swept
+    up, not just the latest. Recorded by `Game.declare_attackers` off
+    `machines.combat.defending_player`. Cleared when a new turn begins, the
+    same reset `attacked_this_turn` already gets."""
+
     turn_facts: dict[str, SortedSet[str]] = Field(default_factory=dict)
     """A general per-turn, per-player fact ledger: `turn_facts[fact]` is the
     set of usernames for whom `fact` has happened this turn.
@@ -4148,6 +4180,14 @@ class Game(EngineModel):
     """The blocker/attacker pairs that have already fired their block triggers
     this combat, so re-declaring the same block does not trigger twice."""
 
+    attacks_unblocked_triggered: list[UUID] = Field(default_factory=list)
+    """Attacker ids that have already fired their CR 508.3f/509.3g "attacks
+    and isn't blocked" event this combat - the identical dedup `blocks_
+    triggered` gives block pairs, so a `Game.declare_blockers` call that adds
+    more blocks to an already-legal declaration (a scenario building one up
+    over several calls) never re-emits the same still-unblocked attacker's
+    event a second time."""
+
     continuous_effects: ContinuousEffects = Field(default_factory=ContinuousEffects)
     """Every continuous effect a resolving spell or ability has created (CR 611.2).
 
@@ -4357,7 +4397,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 106
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 107
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4533,6 +4573,13 @@ class Game(EngineModel):
     #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
     #: the cast spell has left the stack - CR 608.2h - rather than lost the
     #: moment a countered spell's zone change stamps it fresh).
+    #: 107: `Game` gained `attacked_players_this_turn` and
+    #: `attacks_unblocked_triggered` (CR 508.3f's attacks-and-isn't-blocked
+    #: trigger, `TriggerEvent.ATTACKS_UNBLOCKED`), `CardState` gained
+    #: `assigns_no_combat_damage_this_combat`, the replacement layer gained
+    #: `DamageLifeFloorReplacement` and the `EventKind.LOSE_THE_GAME`/
+    #: `LOSE_LIFE` event kinds, and CR 119.5 "your life total becomes" got one
+    #: reader (fix-archangel-beckett).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6365,6 +6412,12 @@ class Game(EngineModel):
         here always runs, and is the one combat step that never skips.
         """
         assert self.turn is not None
+        # Master of Cruelties' own "assigns no combat damage this combat":
+        # scoped to the combat that already used it up, cleared here as the
+        # next one's attackers are about to be declared - the same boundary
+        # `CardState.exerted`'s own docstring gives "next untap step".
+        for permanent in self.battlefield:
+            permanent.assigns_no_combat_damage_this_combat = False
         active = self.turn.active_player
         attacks = ask_attackers(
             self.decisions,
@@ -15484,15 +15537,64 @@ class Game(EngineModel):
         each one. The event carries the amount lost, what a "that player
         mills that many cards" trigger reads (The Master of Lake-town,
         Mindcrank); a loss of 0 is no event (CR 603.2g).
+
+        Replacement effects get first refusal (CR 614.1a), the identical
+        shape `gain_life` already gives CR 119.10's own gain-side doublers -
+        Enduring Angel's own "if your life total would be reduced to 0 or
+        less, instead ..." is what this opens up, and it sees damage-caused
+        loss too: `deal_damage_to_player` always ends by calling this same
+        method, *after* `EventKind.DAMAGE`'s own replacements (Elderscale
+        Wurm's, Angel of Grace's floor) have already had their say, so the
+        amount here is whatever survived those.
         """
         if isinstance(player, str):
             player = self.player(player)
-        new_total = player.lose_life(amount)
-        if amount > 0:
-            self.emit(
-                GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=amount)
-            )
+        if amount <= 0:
+            return player.life
+        event = ReplaceableEvent(kind=EventKind.LOSE_LIFE, player=player, amount=amount)
+        apply_replacements(self, event)
+        if event.amount <= 0:
+            return player.life
+        new_total = player.lose_life(event.amount)
+        self.emit(
+            GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=event.amount)
+        )
         return new_total
+
+    def set_life_total(self, player: Player | str, amount: int) -> int:
+        """A player's life total becomes a specific number (CR 119.5).
+
+        CR 119.5: "If an effect sets a player's life total to a specific
+        number, the player gains or loses the necessary amount of life to end
+        up with the new total." So this is never a third way a life total
+        moves - it is CR 119.3's gain or loss, worked out as a delta and sent
+        through `gain_life`/`lose_life` exactly like any other one, which is
+        what lets a "whenever you gain/lose life" trigger (CR 119.9), a life
+        gain doubler (Alhammarret's Archive) or a can't-gain-life prohibition
+        (CR 119.7) see this exactly the way they see a plain "you gain/lose N
+        life" - reusing the one gain/loss path rather than writing `player.
+        life = amount` directly, which would skip all three.
+
+        Named `set_life_total` (not `life_total_becomes`) because it is the
+        primitive every "life total becomes ..." reader calls once it has
+        worked out the number - `machines/effects.py`'s trigger/resolution
+        reader and `machines/replacement.py`'s "if you would lose the game"
+        compilers both call this one function so the two stay in agreement
+        about what CR 119.5 means.
+
+        Already at the target total, this asks for neither a gain nor a loss
+        (CR 603.2g: an amount of zero is not an event), so a `Player` already
+        sitting at their starting life total (or a total already reset) is
+        left alone rather than reported as a gain of zero.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        delta = amount - player.life
+        if delta > 0:
+            self.gain_life(player, delta)
+        elif delta < 0:
+            self.lose_life(player, -delta)
+        return player.life
 
     def exchange_life_totals(self, a: Player | str, b: Player | str) -> int:
         """Two players exchange life totals (CR 701.12a, CR 701.12c).
@@ -16443,6 +16545,22 @@ class Game(EngineModel):
                 if isinstance(spell.ability, ActivatedAbility)
                 and cost_announces_x(spell.ability.cost)
                 else spell.ability.text
+            )
+            # CR 201.5's self-reference, normalized to "this permanent" the
+            # same way `_activation_target_text` already normalizes it for
+            # the initial announcement (Hope of Ghirapur's own "by Hope of
+            # Ghirapur") - `find_by_id` for a still-live source's real
+            # supertypes, `legendary=True` (the function's own documented
+            # default) once the source is gone and there is nothing left to
+            # check.
+            ability_source = self.find_by_id(spell.source_id) if spell.source_id else None
+            ability_legendary = (
+                Supertype.LEGENDARY in ability_source.card.supertypes
+                if ability_source is not None
+                else True
+            )
+            ability_text = self_normalized_effect_text(
+                spell.source_name, ability_text, legendary=ability_legendary
             )
             profile = (
                 profile_for_text(ability_text)
@@ -19230,14 +19348,25 @@ class Game(EngineModel):
             leaving = self._state_based_actions_once()
             gone.extend(leaving)
             self.announce_batched_events()
-            losing = self._losing_players()
-            if not leaving and not losing:
+            would_lose = self._losing_players()
+            if not leaving and not would_lose:
                 break
+            # CR 614/616.1: a player this check would remove gets a "would
+            # lose the game" replacement's own first refusal (Exquisite
+            # Archangel, Lich's Mirror) before the loss is real - so `losing`,
+            # not `would_lose`, is what the draw check and the actual removal
+            # below both read. A player whose loss got replaced never joins
+            # either.
+            losing = [
+                username
+                for username in would_lose
+                if self._apply_lose_the_game_replacements(username)
+            ]
             # CR 104.4a: "If all the players remaining in a game lose
-            # simultaneously, the game is a draw." `_losing_players` is who one
-            # check removes and `players_in_game` is who it found still in the
-            # game, so equal sets mean nobody survives to win. A solo game has
-            # no draw to hand out, matching `_check_for_a_winner`'s guard.
+            # simultaneously, the game is a draw." `losing` is who this check
+            # actually removes and `players_in_game` is who it found still in
+            # the game, so equal sets mean nobody survives to win. A solo game
+            # has no draw to hand out, matching `_check_for_a_winner`'s guard.
             remaining = {player.username for player in self.players_in_game}
             if len(self.players) > 1 and losing and set(losing) == remaining:
                 self.drawn = True
@@ -20070,6 +20199,29 @@ class Game(EngineModel):
             )
         ]
 
+    def _apply_lose_the_game_replacements(self, username: str) -> bool:
+        """CR 614: raise `username`'s loss as a replaceable event (CR 104.3b/
+        c/d/e), before it becomes real.
+
+        Returns `True` when the loss still happens - nothing replaced it, so
+        the caller should still call `_lose_the_game` - and `False` when a
+        printed "if you would lose the game, instead ..." effect (Exquisite
+        Archangel, Lich's Mirror) applied instead; that effect's own `apply`
+        performs whatever it says (exile, a shuffle-and-draw, a new life
+        total) as it runs, so there is nothing further for the caller to do
+        beyond not removing the player.
+
+        A no-op (still `True`) for a player already gone - the same guard
+        `player_loses_the_game` already carries, needed here too now that
+        both call sites share this one choke point.
+        """
+        if not self.is_in_game(username):
+            return False
+        player = self.player(username)
+        event = ReplaceableEvent(kind=EventKind.LOSE_THE_GAME, player=player)
+        apply_replacements(self, event)
+        return not event.replaced
+
     def _lose_the_game(self, username: str) -> None:
         """This player loses, and so leaves the game (CR 104.5)."""
         if username not in self.losers:
@@ -20357,6 +20509,28 @@ class Game(EngineModel):
                     "against it"
                 )
 
+    def _refuse_attack_alone_violations(
+        self, attacks: "Sequence[tuple[CardState, Targetable | str]]"
+    ) -> None:
+        """CR 508.1c/CR 506.5: a creature whose own text says it "can only
+        attack alone" (Master of Cruelties) is a restriction that it can't
+        attack unless it "attacks alone" - the only creature declared as an
+        attacker this combat. Judged on the whole declaration, the same
+        reason `_refuse_illegal_attacker_caps` is: whether a creature is
+        attacking alone is a fact about every creature declared, not about
+        any one of them by itself.
+        """
+        if len(attacks) < 2:
+            return
+        for creature, _defender in attacks:
+            restriction = combat_rules.self_attack_alone_only_sentence(creature, self)
+            if restriction is not None:
+                others = ", ".join(other.name for other, _ in attacks if other.id != creature.id)
+                raise ValueError(
+                    f'{creature.name} can\'t attack: "{restriction}" (CR 508.1c, CR 506.5), '
+                    f"but {others} were also declared as attackers"
+                )
+
     def _required_attack_declaration(self, active: str) -> list[tuple[UUID, UUID | str]]:
         """The fewest attackers that obey every requirement that can be obeyed
         (CR 508.1d), each attacking the defender that obeys the most of its
@@ -20402,6 +20576,7 @@ class Game(EngineModel):
         with self._id_allocator_scope():
             self._refuse_unobeyed_attack_requirements(attacks)
             self._refuse_illegal_attacker_caps(attacks)
+            self._refuse_attack_alone_violations(attacks)
             # CR 508.1: an illegal declaration returns the game to the moment
             # before it, so every attacker is judged before any one taps.
             # CR 508.1a-b: each chosen creature attacks one player,
@@ -20455,6 +20630,18 @@ class Game(EngineModel):
                 # over. Cleared at the same new-turn reset as the rest of
                 # `Game`'s "this turn" fields.
                 self.attacked_this_turn.add(creature.id)
+                # The same per-object historical fact as `attacked_this_turn`
+                # above, but naming *whom* - Angel of Destiny's own "each
+                # player this creature attacked this turn loses the game."
+                # CR 508.5's defending player, resolved right away rather than
+                # re-derived later: `defending_player` needs `attack.defender`
+                # still resolvable, and a battle's protector (CR 310.9d) can
+                # change once combat is over.
+                defender_username = combat_rules.defending_player(self, attack.defender)
+                if defender_username is not None:
+                    self.attacked_players_this_turn.setdefault(creature.id, set()).add(
+                        defender_username
+                    )
                 # "you attacked with a Hero this turn" (Avengers Assemble!) -
                 # the attacker's types as declared (CR 508.1).
                 chars = self.characteristics_of(creature)
@@ -20547,6 +20734,41 @@ class Game(EngineModel):
                             player=self.controller_of(blocker).username,
                         )
                     )
+
+            # CR 508.3f/509.3g: "Whenever [a creature] attacks and isn't
+            # blocked, ..." - a separate event from `TriggerEvent.ATTACKS`,
+            # fired here (the declare blockers step, once this declaration
+            # is legal) rather than at `declare_attackers` time, since
+            # "isn't blocked" is not knowable until now. CR 509.3g: "It will
+            # trigger even if the creature was never declared as an
+            # attacker" - `self.combat.attacks` already includes a creature
+            # put onto the battlefield attacking (CR 508.4) the same way it
+            # includes a declared one, so no separate case is needed for
+            # that. CR 509.1h: a creature "stays blocked" even once its
+            # blockers are removed, so `attack.blocked` (not "has blockers
+            # right now") is the read this asks.
+            for attack in self.combat.attacks:
+                if attack.blocked or attack.attacker_id in self.attacks_unblocked_triggered:
+                    continue
+                attacker = self.find_by_id(attack.attacker_id)
+                if attacker is None:
+                    continue
+                self.attacks_unblocked_triggered.append(attack.attacker_id)
+                attacker_chars = self.characteristics_of(attacker)
+                defender_controller = combat_rules.defending_player(self, attack.defender)
+                self.emit(
+                    GameEvent(
+                        event=TriggerEvent.ATTACKS_UNBLOCKED,
+                        subject_id=attacker.id,
+                        subject_name=attacker.name,
+                        subject_controller=self.controller_of(attacker).username,
+                        subject_card=attacker.card,
+                        subject_types=attacker_chars.types,
+                        subject_subtypes=attacker_chars.subtypes,
+                        defender=attack.defender,
+                        defender_controller=defender_controller,
+                    )
+                )
             self.put_triggers_on_stack()
 
     def attacking_creatures(self) -> list[CardState]:
@@ -20645,6 +20867,7 @@ class Game(EngineModel):
         """Everything is removed from combat as the step ends (CR 511.3)."""
         self.combat.clear()
         self.blocks_triggered = []
+        self.attacks_unblocked_triggered = []
 
     # -- special actions ---------------------------------------------------
 
@@ -22153,7 +22376,23 @@ class Game(EngineModel):
             amount += max(values, default=0)
 
         total_power_with_keyword = _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE.search(text)
-        if total_power_with_keyword is not None:
+        life_vs_starting = _COSTS_LESS_IF_LIFE_TOTAL_VS_STARTING_X_IS_DIFFERENCE_RE.search(text)
+        if life_vs_starting is not None:
+            # Shadow of Mortality's own shape - checked ahead of the generic
+            # "where X is <expr>" fallback below, whose bare `.search` would
+            # otherwise match this same sentence's own tail ("... where x is
+            # the difference") and hand "the difference" to `amount_
+            # expression`, which reads no such bare phrase (it needs a named
+            # "between A and B" pair) and would silently add nothing.
+            player = self.player(owner)
+            holds = (
+                player.life < player.starting_life
+                if life_vs_starting.group("cmp").lower() == "less"
+                else player.life > player.starting_life
+            )
+            if holds:
+                amount += abs(player.life - player.starting_life)
+        elif total_power_with_keyword is not None:
             keyword = total_power_with_keyword.group("keyword")
             amount += sum(
                 self.characteristics_of(state).power or 0
@@ -25219,7 +25458,7 @@ class Game(EngineModel):
                 self.add_counters(permanent, Counter.PLUS_ONE, 1, putter=controller)
             return permanent
 
-    def _activation_target_text(self, ability: Any, x_value: int) -> str:
+    def _activation_target_text(self, ability: Any, x_value: int, permanent: CardState) -> str:
         """The ability's own text its targets are announced against.
 
         `x_value` is substituted in first when the printed cost carries an
@@ -25232,6 +25471,14 @@ class Game(EngineModel):
         symbol is written "-X", not "{X}", so Tamiyo, Compleated Sage's "-X:
         Exile target nonland permanent card with mana value X from your
         graveyard" is marked by `LoyaltyCost.variable` instead.
+
+        CR 201.5's self-reference is rewritten to "this permanent" too
+        (`self_normalized_effect_text`, `machines/effects.activated_effect_
+        for`'s own normalization the *effect* half already gets) - Hope of
+        Ghirapur's own "target player who was dealt combat damage by Hope
+        of Ghirapur this turn" is unreadable by `machines/targeting.py`
+        with its own literal printed name still in the target phrase, the
+        identical reason `x_value` is substituted first.
         """
         has_variable_loyalty = ability.loyalty is not None and ability.loyalty.variable
         text = (
@@ -25239,6 +25486,8 @@ class Game(EngineModel):
             if (cost_announces_x(ability.cost) or has_variable_loyalty)
             else ability.text
         )
+        legendary = Supertype.LEGENDARY in permanent.card.supertypes
+        text = self_normalized_effect_text(permanent.name, text, legendary=legendary)
         # Raft Security Officer's own trailing "This ability costs {1} less
         # to activate if it targets a creature with power 3 or less." reads
         # like a second targeting sentence to `machines/targeting.profile_
@@ -25293,6 +25542,7 @@ class Game(EngineModel):
         x_value: int,
         targets: list[TargetRef],
         division: list[int],
+        permanent: CardState,
     ) -> list[int]:
         """Refuse an illegal CR 601.2d division of an activated ability's
         effect, or return the shares as announced.
@@ -25303,7 +25553,7 @@ class Game(EngineModel):
         `Casting.announce_division`. An ability whose text divides nothing
         has no division to announce.
         """
-        profile = profile_for_text(self._activation_target_text(ability, x_value))
+        profile = profile_for_text(self._activation_target_text(ability, x_value, permanent))
         if profile.division is None:
             raise ValueError(f"{ability.text} does not divide anything to announce (CR 601.2d)")
         shares = [int(share) for share in division]
@@ -25410,13 +25660,16 @@ class Game(EngineModel):
         ability = self.activated_abilities(permanent)[index]
         announced_x = x_value or self.announced_reveal_counts.get(key, 0)
         announced = self._announce_activation_targets(
-            permanent, controller, self._activation_target_text(ability, announced_x), targets
+            permanent,
+            controller,
+            self._activation_target_text(ability, announced_x, permanent),
+            targets,
         )
         if division is not None:
             # CR 601.2d via CR 602.2b: the division is announced right after
             # the targets, and refused now, before anything is paid.
             self._check_activation_division(
-                ability, announced_x, list(announced or []), list(division)
+                ability, announced_x, list(announced or []), list(division), permanent
             )
         # CR 106.6: an activation is what Shang-Chi's and Eldrazi Temple's
         # mana is restricted *to*, and what Cavern of Souls's and Delighted
@@ -25635,7 +25888,10 @@ class Game(EngineModel):
                 # A caller that never went through `begin_activating` announces
                 # here instead, against the ability's own text.
                 announced_targets = self._announce_activation_targets(
-                    permanent, controller, self._activation_target_text(ability, x_value), targets
+                    permanent,
+                    controller,
+                    self._activation_target_text(ability, x_value, permanent),
+                    targets,
                 )
                 if announced_targets is not None:
                     targets = list(announced_targets)
@@ -25645,6 +25901,7 @@ class Game(EngineModel):
                     x_value,
                     [TargetRef.coerce(t) for t in targets or []],
                     list(division),
+                    permanent,
                 )
                 if division is not None
                 else None
@@ -26350,8 +26607,16 @@ class Game(EngineModel):
         A no-op for a player already gone - `_lose_the_game` is not idempotent
         about `_player_left`'s cleanup, and CR 104.3a already makes "losing
         stays gone" the rule (`check_state_based_actions`'s own docstring).
+
+        CR 614: this loss is exactly as replaceable as the state-based ones -
+        `_apply_lose_the_game_replacements` is the one choke point both this
+        method and `_check_state_based_actions_impl` raise it through, so a
+        card whose "if you would lose the game, instead ..." fires here too,
+        never only against the three state-based losses.
         """
         if not self.is_in_game(username):
+            return
+        if not self._apply_lose_the_game_replacements(username):
             return
         self._lose_the_game(username)
         self._check_for_a_winner()
@@ -26550,6 +26815,7 @@ class Game(EngineModel):
             self.previous_turn_active_player = previous_active_player
             self.permanents_left_battlefield_this_turn = {}
             self.attacked_this_turn = set()
+            self.attacked_players_this_turn = {}
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0

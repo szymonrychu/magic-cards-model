@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 27 | 9.6% |
-| Works (untested) | 134 | 47.7% |
+| Works (untested) | 133 | 47.3% |
 | Partial (unaudited) | 20 | 7.1% |
-| Not working | 100 | 35.6% |
+| Not working | 101 | 35.9% |
 
 ## Cards needing work
 
@@ -105,13 +105,14 @@
 | Witch-king of Angmar | silent | Whenever one or more creatures deal combat damage to you, each opponent sacrifices a creature of their choice that dealt combat damage to you this turn. The Rin | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Witch-king, Bringer of Ruin | silent | Whenever Witch-king attacks, defending player sacrifices a creature with the least power among creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Éowyn, Lady of Rohan | silent | At the beginning of combat on your turn, target creature gains your choice of first strike or vigilance until end of turn. If that creature is equipped, it gain | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Arwen, Mortal Queen | notice | {1}, Remove an indestructible counter from Arwen: Another target creature gains indestructible until end of turn. Put a +1/+1 counter and a lifelink counter on  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Arwen, Mortal Queen | notice | {1}, Remove an indestructible counter from Arwen: Another target creature gains indestructible until end of turn. Put a +1/+1 counter and a lifelink counter on  | unparsed remainder: Put a +1/+1 counter and a lifelink counter on that creature and a +1/+1 counter and a lifelink counter on this permanent. | Y/-/- | not_working |
 | Bill Ferny, Bree Swindler | notice | Whenever Bill Ferny becomes blocked, choose one — • Create a Treasure token. • Target opponent gains control of target Horse you control. If they do, remove Bil | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eastfarthing Farmer | notice | When this creature enters, create a Food token. When you do, target creature you control gets +1/+1 until end of turn for each Food you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Esquire of the King | notice | {4}{W}, {T}: Creatures you control get +1/+1 until end of turn. This ability costs {2} less to activate if you control a legendary creature. | unparsed remainder: This ability costs {2} less to activate if you control a legendary creature. | Y/-/- | not_working |
 | Fires of Mount Doom | notice | When Fires of Mount Doom enters, it deals 2 damage to target creature an opponent controls. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flowering of the White Tree | notice | Legendary creatures you control get +2/+1 and have ward {1}. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gandalf's Sanction | notice | Gandalf's Sanction deals X damage to target creature, where X is the number of instant and sorcery cards in your graveyard. Excess damage is dealt to that creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Gimli's Fury | notice | Target creature gets +3/+2 until end of turn. If it's legendary, it also gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Gimli's Fury | notice | Target creature gets +3/+2 until end of turn. If it's legendary, it also gains trample until end of turn. | unparsed remainder: If it's legendary, it also gains trample until end of turn. | Y/-/- | not_working |
 | Glorious Gale | notice | Counter target creature spell. If it was a legendary spell, the Ring tempts you. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorbag of Minas Morgul | notice | Whenever a Goblin or Orc you control deals combat damage to a player, you may sacrifice it. When you do, choose one — • Draw a card. • Create a Treasure token. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Grishnákh, Brash Instigator | notice | When Grishnákh enters, amass Orcs 2. When you do, until end of turn, gain control of target nonlegendary creature an opponent controls with power less than or e | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -119,11 +120,11 @@
 | Merry, Esquire of Rohan | notice | Merry has first strike as long as it's equipped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Nimble Hobbit | notice | Whenever this creature attacks, you may sacrifice a Food or pay {2}{W}. When you do, tap target creature an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Pippin's Bravery | notice | You may sacrifice a Food. If you do, target creature gets +4/+4 until end of turn. Otherwise, that creature gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Ringwraiths | notice | When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Rush the Room | notice | Target creature gets +1/+0 and gains first strike until end of turn. If it's a Goblin or Orc, it also gains haste until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Ringwraiths | notice | When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life. | unparsed remainder: If that creature is legendary, its controller loses 3 life. | Y/-/- | not_working |
+| Rush the Room | notice | Target creature gets +1/+0 and gains first strike until end of turn. If it's a Goblin or Orc, it also gains haste until end of turn. | unparsed remainder: If it's a Goblin or Orc, it also gains haste until end of turn. | Y/-/- | not_working |
 | Sauron, the Necromancer | notice | Whenever Sauron attacks, exile target creature card from your graveyard. Create a tapped and attacking token that's a copy of that card, except it's a 3/3 black | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Smite the Deathless | notice | Smite the Deathless deals 3 damage to target creature. That creature loses indestructible until end of turn. If that creature would die this turn, exile it inst | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Strider, Ranger of the North | notice | Landfall — Whenever a land you control enters, target creature gets +1/+1 until end of turn. Then if that creature has power 4 or greater, it gains first strike | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Strider, Ranger of the North | notice | Landfall — Whenever a land you control enters, target creature gets +1/+1 until end of turn. Then if that creature has power 4 or greater, it gains first strike | unparsed remainder: Then if that creature has power 4 or greater, it gains first strike until end of turn. | Y/-/- | not_working |
 | Uglúk of the White Hand | notice | Whenever another creature you control dies, put a +1/+1 counter on Uglúk. If that creature was a Goblin or Orc, put two +1/+1 counters on Uglúk instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Éowyn, Fearless Knight | notice | When Éowyn enters, exile target creature an opponent controls with greater power. Legendary creatures you control gain protection from each of that creature's c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Barad-dûr | unaudited | Barad-dûr enters tapped unless you control a legendary creature. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -181,7 +182,6 @@
 | Erkenbrand, Lord of Westfold | handled | Whenever Erkenbrand or another Human you control enters, creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Errand-Rider of Gondor | handled | When this creature enters, draw a card. Then if you don't control a legendary creature, put a card from your hand on the bottom of your library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Escape from Orthanc | handled | Target creature gets +1/+3 and gains flying until end of turn. Untap it. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Esquire of the King | handled | {4}{W}, {T}: Creatures you control get +1/+1 until end of turn. This ability costs {2} less to activate if you control a legendary creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faramir, Field Commander | handled | At the beginning of your end step, if a creature died under your control this turn, draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fiery Inscription | handled | When this enchantment enters, the Ring tempts you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Galadhrim Guide | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -428,6 +428,7 @@
 | {M}, remove an indestructible counter from arwen: another target creature gains indestructible until end of turn. put a +N/+N counter and a lifelink counter on  | 1 | Arwen, Mortal Queen | ltr |
 | {M}: another target creature you control gains protection from the card type of your choice until end of turn. | 1 | Pippin, Guard of the Citadel | ltr |
 | {M}: move a counter of each kind not on goldberry from another target permanent you control onto goldberry. | 1 | Goldberry, River-Daughter | ltr |
+| {M}{M}, {M}: creatures you control get +N/+N until end of turn. ~ costs {M} less to activate if you control a legendary creature. | 1 | Esquire of the King | ltr |
 | {M}{M}{M}, {M}, sacrifice ~ and a legendary artifact: choose up to two creatures, then destroy the rest. activate only as a sorcery. | 1 | Mount Doom | ltr |
 | {M}{M}{M}: if frodo is a scout, it becomes a halfling rogue with "..." | 1 | Frodo, Sauron's Bane | ltr |
 | ~ can't be blocked except by three or more creatures. | 1 | Troll of Khazad-dûm | ltr |

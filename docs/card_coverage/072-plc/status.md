@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 11 | 6.8% |
+| Tested | 15 | 9.3% |
 | Works (untested) | 64 | 39.5% |
 | Partial (unaudited) | 12 | 7.4% |
-| Not working | 75 | 46.3% |
+| Not working | 71 | 43.8% |
 
 ## Cards needing work
 
@@ -32,9 +32,7 @@
 | Benalish Commander | silent | Whenever a time counter is removed from this card while it's exiled, create a 1/1 white Soldier creature token. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Bog Serpent | silent | When you control no Swamps, sacrifice this creature. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Braids, Conjurer Adept | silent | At the beginning of each player's upkeep, that player may put an artifact, creature, or land card from their hand onto the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Brain Gorgers | silent | When you cast this spell, any player may sacrifice a creature of their choice. If a player does, counter Brain Gorgers. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crovax, Ascendant Hero | silent | Other white creatures get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Dash Hopes | silent | When you cast this spell, any player may pay 5 life. If a player does, counter Dash Hopes. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Detritivore | silent | Detritivore's power and toughness are each equal to the number of nonbasic land cards in your opponents' graveyards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dichotomancy | silent | For each tapped nonland permanent target opponent controls, search that player's library for a card with the same name as that permanent. Put those cards onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dismal Failure | silent | Counter target spell. Its controller discards a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -61,7 +59,6 @@
 | Oros, the Avenger | silent | Whenever Oros deals combat damage to a player, you may pay {2}{W}. If you do, Oros deals 3 damage to each nonwhite creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ovinize | silent | Until end of turn, target creature loses all abilities and has base power and toughness 0/1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Pallid Mycoderm | silent | Sacrifice a Saproling: Each creature you control that's a Fungus or a Saproling gets +1/+1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Phantasmagorian | silent | When you cast this spell, any player may discard three cards. If a player does, counter Phantasmagorian. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Porphyry Nodes | silent | At the beginning of your upkeep, destroy the creature with the least power. It can't be regenerated. If two or more creatures are tied for least power, you choo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reality Acid | silent | When this Aura leaves the battlefield, enchanted permanent's controller sacrifices it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Rebuff the Wicked | silent | Counter target spell that targets a permanent you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -82,7 +79,6 @@
 | Stormfront Riders | silent | When this creature enters, return two creatures you control to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sulfur Elemental | silent | White creatures get +1/-1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Synchronous Sliver | silent | All Sliver creatures have vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Temporal Extortion | silent | When you cast this spell, any player may pay half their life, rounded up. If a player does, counter Temporal Extortion. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tidewalker | silent | Tidewalker's power and toughness are each equal to the number of time counters on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Timbermare | silent | When this creature enters, tap all other creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Uktabi Drake | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -181,18 +177,22 @@
 ## Fully supported
 
 <details>
-<summary>11 cards</summary>
+<summary>15 cards</summary>
 
 - Aether Membrane
 - Aven Riftwatcher
+- Brain Gorgers
 - Cradle to Grave
+- Dash Hopes
 - Deadly Grub
 - Dunerider Outlaw
 - Harmonize
 - Magus of the Library
+- Phantasmagorian
 - Pyrohemia
 - Rough // Tumble
 - Sunlance
+- Temporal Extortion
 - Urborg, Tomb of Yawgmoth
 
 </details>
@@ -243,10 +243,6 @@
 | until end of turn, target creature you control gains trample and gets +N/+N, where N is its power. sacrifice it at the beginning of the next end step. | 1 | Fatal Frenzy | plc |
 | when the last time counter is removed from ~ while it"..."t be blocked ~. | 1 | Veiling Oddity | plc |
 | when the last time counter is removed from ~ while it's exiled, create a N/N black knight creature token with flanking, protection from white, and haste. | 1 | Riftmarked Knight | plc |
-| when you cast ~, any player may discard three cards. if a player does, counter ~. | 1 | Phantasmagorian | plc |
-| when you cast ~, any player may pay N life. if a player does, counter ~. | 1 | Dash Hopes | plc |
-| when you cast ~, any player may pay half their life, rounded up. if a player does, counter ~. | 1 | Temporal Extortion | plc |
-| when you cast ~, any player may sacrifice a creature of their choice. if a player does, counter ~. | 1 | Brain Gorgers | plc |
 | when you control no swamps, sacrifice ~. | 1 | Bog Serpent | plc |
 | when ~ enters, any player may sacrifice a land of their choice. if a player does, put ~ on top of its owner's library. | 1 | Shivan Wumpus | plc |
 | when ~ enters, if it was kicked with its {M}{M} kicker, tap target untapped creature and that creature deals damage equal to its power to its controller. | 1 | Ana Battlemage | plc |

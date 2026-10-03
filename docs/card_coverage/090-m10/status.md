@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 9.9% |
-| Works (untested) | 68 | 61.3% |
+| Works (untested) | 66 | 59.5% |
 | Partial (unaudited) | 8 | 7.2% |
-| Not working | 24 | 21.6% |
+| Not working | 26 | 23.4% |
 
 ## Cards needing work
 
@@ -47,7 +47,9 @@
 | Sleep | silent | Tap all creatures target player controls. Those creatures don't untap during that player's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sphinx Ambassador | silent | Whenever this creature deals combat damage to a player, search that player's library for a card, then that player chooses a card name. If you searched for a cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vampire Nocturnus | silent | As long as the top card of your library is black, this creature and other Vampire creatures you control get +2/+1 and have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Baneslayer Angel | notice | Protection | protection from a quality the engine does not read: Demons, Dragons | Y/Y/- | not_working |
 | Djinn of Wishes | notice | {2}{U}{U}, Remove a wish counter from this creature: Reveal the top card of your library. You may play that card without paying its mana cost. If you don't, exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Great Sable Stag | notice | Protection | protection from a quality the engine does not read: black (This creature can't be blocked | Y/-/- | not_working |
 | Rise from the Grave | notice | Put target creature card from a graveyard onto the battlefield under your control. That creature is a black Zombie in addition to its other colors and types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Demon | notice | At the beginning of your upkeep, sacrifice a creature other than this creature, then each opponent loses life equal to the sacrificed creature's power. If you c | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Convincing Mirage | unaudited | Enchanted land is the chosen type. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -61,7 +63,6 @@
 | Acolyte of Xathrid | handled | {1}{B}, {T}: Target player loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Angel's Mercy | handled | You gain 7 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ant Queen | handled | {1}{G}: Create a 1/1 green Insect creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Baneslayer Angel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Berserkers of Blood Ridge | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blinding Mage | handled | {W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Borderland Ranger | handled | When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -88,7 +89,6 @@
 | Glorious Charge | handled | Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Goblin Artillery | handled | {T}: This creature deals 2 damage to any target and 3 damage to you. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gorgon Flail | handled | Equipped creature gets +1/+1 and has deathtouch. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Great Sable Stag | handled | This spell can't be countered. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Griffin Sentinel | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Howling Banshee | handled | When this creature enters, each player loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Illusionary Servant | handled | When this creature becomes the target of a spell or ability, sacrifice it. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -150,6 +150,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
+| protection | 2 | Baneslayer Angel, Great Sable Stag | m10 |
 | all creatures able to block ~ do so. | 1 | Prized Unicorn | m10 |
 | as long as the top card of your library is black, ~ and other vampire creatures you control get +N/+N and have flying. | 1 | Vampire Nocturnus | m10 |
 | at the beginning of your upkeep, choose target nonland permanent you control and up to two target nonland permanents you don't control. destroy one of them at r | 1 | Capricious Efreet | m10 |

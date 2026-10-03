@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 8 | 5.6% |
-| Works (untested) | 73 | 51.0% |
+| Tested | 10 | 7.0% |
+| Works (untested) | 72 | 50.3% |
 | Partial (unaudited) | 5 | 3.5% |
-| Not working | 57 | 39.9% |
+| Not working | 56 | 39.2% |
 
 ## Cards needing work
 
@@ -39,7 +39,6 @@
 | Eternal Thirst | silent | Enchanted creature has lifelink and "Whenever a creature an opponent controls dies, put a +1/+1 counter on this creature." | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Festergloom | silent | Nonblack creatures get -1/-1 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Garruk, Apex Predator | silent | −3: Destroy target creature. You gain life equal to its toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Genesis Hydra | silent | When you cast this spell, reveal the top X cards of your library. You may put a nonland permanent card with mana value X or less from among them onto the battle | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Glacial Crasher | silent | This creature can't attack unless there is a Mountain on the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Goblin Rabblemaster | silent | Whenever this creature attacks, it gets +1/+0 until end of turn for each other attacking Goblin. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hot Soup | silent | Whenever equipped creature is dealt damage, destroy it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -64,7 +63,6 @@
 | Polymorphist's Jest | silent | Until end of turn, each creature target player controls loses all abilities and becomes a blue Frog with base power and toughness 1/1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Profane Memento | silent | Whenever a creature card is put into an opponent's graveyard from anywhere, you gain 1 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Quickling | silent | When this creature enters, sacrifice it unless you return another creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Resolute Archangel | silent | When this creature enters, if your life total is less than your starting life total, it becomes equal to your starting life total. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Scrapyard Mongrel | silent | As long as you control an artifact, this creature gets +2/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Siege Dragon | silent | When this creature enters, destroy all Walls your opponents control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Spectra Ward | silent | Enchanted creature gets +2/+2 and has protection from each color. This effect doesn't remove Auras. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -81,6 +79,7 @@
 | Life's Legacy | notice | As an additional cost to cast this spell, sacrifice a creature. Draw cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nightfire Giant | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rotfeaster Maggot | notice | When this creature enters, exile target creature card from a graveyard. You gain life equal to that card's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Sanctified Charge | notice | Creatures you control get +2/+1 until end of turn. White creatures you control also gain first strike until end of turn. (They deal combat damage before creatur | unparsed remainder: White creatures you control also gain first strike until end of turn. | Y/Y/- | not_working |
 | Sunblade Elf | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Warden of the Beyond | notice | This creature gets +2/+2 as long as an opponent owns a card in exile. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aggressive Mining | unaudited | You can't play lands. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -137,7 +136,6 @@
 | Return to the Ranks | handled | Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.) Return X ta | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rogue's Gloves | handled | Whenever equipped creature deals combat damage to a player, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sacred Armory | handled | {2}: Target creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Sanctified Charge | handled | Creatures you control get +2/+1 until end of turn. White creatures you control also gain first strike until end of turn. (They deal combat damage before creatur | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scuttling Doom Engine | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Seraph of the Masses | handled | Seraph of the Masses's power and toughness are each equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Shadowcloak Vampire | handled | Pay 2 life: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -165,15 +163,17 @@
 ## Fully supported
 
 <details>
-<summary>8 cards</summary>
+<summary>10 cards</summary>
 
 - Ensoul Artifact
 - Feast on the Fallen
 - First Response
+- Genesis Hydra
 - Goblin Kaboomist
 - Hushwing Gryff
 - Might Makes Right
 - Ob Nixilis, Unshackled
+- Resolute Archangel
 - Soul of Shandalar
 
 </details>
@@ -188,6 +188,7 @@
 | as long as you control an artifact, ~ gets +N/+N and has trample. | 1 | Scrapyard Mongrel | m15 |
 | at the beginning of your upkeep, draw a card unless target opponent sacrifices a creature of their choice or pays N life. | 1 | Indulgent Tormentor | m15 |
 | convoke (your creatures can help cast ~. each creature you tap while casting ~ pays for {M} or one mana of that creature"..."s graveyard, hand, and library for  | 1 | Stain the Mind | m15 |
+| creatures you control get +N/+N until end of turn. white creatures you control also gain first strike until end of turn. (they deal combat damage before creatur | 1 | Sanctified Charge | m15 |
 | destroy all creatures you don"..."t control. | 1 | In Garruk's Wake | m15 |
 | enchanted creature gets +N/+N and has protection from each color. ~ doesn't remove auras. | 1 | Spectra Ward | m15 |
 | enchanted creature has lifelink and "..." | 1 | Eternal Thirst | m15 |
@@ -207,13 +208,11 @@
 | sliver creatures you control have indestructible. | 1 | Sliver Hivelord | m15 |
 | sliver creatures you control have menace. | 1 | Belligerent Sliver | m15 |
 | until end of turn, each creature target player controls loses all abilities and becomes a blue frog with base power and toughness N/N. | 1 | Polymorphist's Jest | m15 |
-| when you cast ~, reveal the top N cards of your library. you may put a nonland permanent card with mana value N or less from among them onto the battlefield. th | 1 | Genesis Hydra | m15 |
 | when ~ dies, create N N/N blue squid creature tokens with islandwalk, where N is the number of +N/+N counters on ~. | 1 | Chasm Skulker | m15 |
 | when ~ dies, return it to the battlefield tapped under its owner's control at the beginning of their next upkeep. | 1 | Phytotitan | m15 |
 | when ~ enters, create a N/N blue squid creature token with islandwalk. | 1 | Coral Barrier | m15 |
 | when ~ enters, destroy all walls your opponents control. | 1 | Siege Dragon | m15 |
 | when ~ enters, exile target creature card from a graveyard. you gain life equal to that card's toughness. | 1 | Rotfeaster Maggot | m15 |
-| when ~ enters, if your life total is less than your starting life total, it becomes equal to your starting life total. | 1 | Resolute Archangel | m15 |
 | when ~ enters, return another permanent you control to its owner's hand. | 1 | Invasive Species | m15 |
 | when ~ enters, sacrifice it unless you return another creature you control to its owner's hand. | 1 | Quickling | m15 |
 | when ~ enters, you may search your graveyard, hand, and/or library for an aura card and put it onto the battlefield attached to ~. if you search your library ~, | 1 | Boonweaver Giant | m15 |

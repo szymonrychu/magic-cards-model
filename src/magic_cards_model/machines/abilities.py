@@ -1370,7 +1370,7 @@ class TriggerWord(StrEnum):
 class TriggerEvent(StrEnum):
     """The common trigger shapes, recognised off the condition text.
 
-    Only these twenty-five are recognised; every other condition leaves `event`
+    Only these twenty-nine are recognised; every other condition leaves `event`
     None with `condition` still holding the printed text.
     """
 
@@ -1380,6 +1380,13 @@ class TriggerEvent(StrEnum):
     DIES = "dies"
     #: CR 508.3c, "Whenever [a creature] attacks, ..."
     ATTACKS = "attacks"
+    #: CR 508.3f/509.3g: "Whenever [a creature] attacks [a player] and isn't
+    #: blocked, ..." (Frenzy's own template, CR 702.68a; Master of Cruelties'
+    #: own printed line). Distinct from plain `ATTACKS`: CR 508.3f is
+    #: explicit that this "triggers during the declare blockers step, not
+    #: the declare attackers step" - blocking status is not knowable yet
+    #: when attackers are declared, so this can never be the same event.
+    ATTACKS_UNBLOCKED = "attacks_unblocked"
     #: CR 509, "Whenever this creature blocks or becomes blocked, ..."
     BLOCKS = "blocks"
     #: "At the beginning of [a step or phase], ..."
@@ -2248,10 +2255,12 @@ _EMPOWER_KEYWORD_LOOKBEHIND = r"(?<!(?i:empower ))"
 #: Curse's own "becomes a green Lizard creature" names the Lizard creature
 #: type (CR 205.3m), not the card calling itself "Lizard". Without this the
 #: sentence read "becomes a green this permanent creature" and the whole
-#: layer effect went unread.
+#: layer effect went unread. "target " is the same: Assembly-Worker's own
+#: "Target Assembly-Worker creature gets +1/+1" names the creature type a
+#: target must have (CR 115.1), never the card itself.
 _TYPE_NOUN_LOOKBEHIND = (
     r"(?<!(?i:\ba ))(?<!(?i:\ban ))(?<!(?i:white ))(?<!(?i:blue ))(?<!(?i:black ))"
-    r"(?<!(?i:red ))(?<!(?i:green ))(?<!(?i:colorless ))"
+    r"(?<!(?i:red ))(?<!(?i:green ))(?<!(?i:colorless ))(?<!(?i:target ))"
 )
 
 #: A candidate self-name is never a match when what follows it in the text is
@@ -3913,6 +3922,11 @@ def _trigger_event(condition: str) -> TriggerEvent | None:
         or "put into a graveyard from the battlefield" in lowered
     ):
         return TriggerEvent.DIES
+    # CR 508.3f/509.3g/702.68a: "attacks [a player] and isn't blocked" -
+    # checked ahead of the plain "attacks" branch just below, which this
+    # phrase would otherwise also satisfy (it contains "attacks" too).
+    if re.search(r"\battacks?\b.*\bisn'?t blocked\b", lowered):
+        return TriggerEvent.ATTACKS_UNBLOCKED
     # "attack" (no s) is the plural-subject form printed on "Whenever you
     # attack" (CR 508.3d) - the player attacks, not "a creature".
     if re.search(r"\battacks?\b", lowered):

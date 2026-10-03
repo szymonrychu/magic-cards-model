@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 36 | 14.0% |
-| Works (untested) | 122 | 47.3% |
+| Works (untested) | 120 | 46.5% |
 | Partial (unaudited) | 12 | 4.7% |
-| Not working | 88 | 34.1% |
+| Not working | 90 | 34.9% |
 
 ## Cards needing work
 
@@ -108,7 +108,9 @@
 | Wren's Run Hydra | silent | Reinforce | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Yusri, Fortune's Flame | silent | Whenever Yusri attacks, choose a number between 1 and 5. Flip that many coins. For each flip you win, draw a card. For each flip you lose, Yusri deals 2 damage  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zabaz, the Glimmerwasp | silent | Modular | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Blacksmith's Skill | notice | Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Blacksmith's Skill | notice | Target permanent gains hexproof and indestructible until end of turn. If it's an artifact creature, it gets +2/+2 until end of turn. | unparsed remainder: If it's an artifact creature, it gets +2/+2 until end of turn. | Y/-/- | not_working |
+| Breathless Knight | notice | Whenever this creature or another creature you control enters, if that creature entered from a graveyard or you cast it from a graveyard, put a +1/+1 counter on | unread intervening "if": "that creature entered from a graveyard or you cast it from a graveyard" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/-/- | not_working |
+| Fae Offering | notice | At the beginning of each end step, if you've cast both a creature spell and a noncreature spell this turn, create a Clue token, a Food token, and a Treasure tok | unread intervening "if": "you've cast both a creature spell and a noncreature spell this turn" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/-/- | not_working |
 | Flay Essence | notice | Exile target creature or planeswalker. You gain life equal to the number of counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mount Velus Manticore | notice | At the beginning of combat on your turn, you may discard a card. When you do, this creature deals X damage to any target, where X is the number of card types th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Unmarked Grave | notice | Search your library for a nonlegendary card, put that card into your graveyard, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -131,7 +133,6 @@
 | Battle Plan | handled | At the beginning of combat on your turn, target creature you control gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bone Shards | handled | As an additional cost to cast this spell, sacrifice a creature or discard a card. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Brainstone | handled | {2}, {T}, Sacrifice this artifact: Draw three cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Breathless Knight | handled | Whenever this creature or another creature you control enters, if that creature entered from a graveyard or you cast it from a graveyard, put a +1/+1 counter on | the engine reads this text and performs it | Y/-/- | not_tested |
 | Breya's Apprentice | handled | When this creature enters, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burdened Aerialist | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Cabal Initiate | handled | Discard a card: This creature gains lifelink until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -151,7 +152,6 @@
 | Duskshell Crawler | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Etherium Spinner | handled | Whenever you cast a spell with mana value 4 or greater, create a 1/1 colorless Thopter artifact creature token with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ethersworn Sphinx | handled | Cascade | machines/keywords.py | Y/-/- | not_tested |
-| Fae Offering | handled | At the beginning of each end step, if you've cast both a creature spell and a noncreature spell this turn, create a Clue token, a Food token, and a Treasure tok | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fairgrounds Patrol | handled | {1}{W}, Exile this card from your graveyard: Create a 1/1 colorless Thopter artifact creature token with flying. Activate only as a sorcery. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faithless Salvaging | handled | Discard a card, then draw a card. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beginning of your next upkeep, you may cast th | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fast // Furious | handled | Discard a card, then draw two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -310,6 +310,7 @@
 | aftermath | 1 | Road // Ruin | mh2 |
 | as ~ enters, choose a card type. | 1 | Serra's Emissary | mh2 |
 | at the beginning of combat on your turn, you may discard a card. when you do, ~ deals N damage to any target, where N is the number of card types the discarded  | 1 | Mount Velus Manticore | mh2 |
+| at the beginning of each end step, if you've cast both a creature spell and a noncreature spell ~, create a clue token, a food token, and a treasure token. | 1 | Fae Offering | mh2 |
 | at the beginning of your upkeep, if ~ is in your graveyard, you may pay N life. if you do, return it to your hand. | 1 | Master of Death | mh2 |
 | at the beginning of your upkeep, sacrifice piru unless you pay {M}{M}{M}. | 1 | Piru, the Volatile | mh2 |
 | bushido | 1 | Jade Avenger | mh2 |
@@ -373,6 +374,7 @@
 | whenever you win a coin flip, create two treasure tokens. | 1 | Tavern Scoundrel | mh2 |
 | whenever yusri attacks, choose a number between N and N. flip that many coins. for each flip you win, draw a card. for each flip you lose, yusri deals N damage  | 1 | Yusri, Fortune's Flame | mh2 |
 | whenever ~ attacks, flip three coins. for each flip you win, create a N/N red goblin creature token that's tapped and attacking. | 1 | Goblin Traprunner | mh2 |
+| whenever ~ or another creature you control enters, if that creature entered from a graveyard or you cast it from a graveyard, put a +N/+N counter on ~. | 1 | Breathless Knight | mh2 |
 | {M}, sacrifice N clues: target opponent reveals the top N cards of their library. you may put a nonland permanent card with mana value N or less from among them | 1 | Lonis, Cryptozoologist | mh2 |
 | {M}: choose a card name that hasn't been chosen from among disenchant, braingeyser, terror, shivan dragon, regrowth, and black lotus. create a copy of the card  | 1 | Garth One-Eye | mh2 |
 | {M}{M}{M}: put enchanted creature into its owner's library third from the top. | 1 | Shattered Ego | mh2 |

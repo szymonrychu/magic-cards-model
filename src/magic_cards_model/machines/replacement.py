@@ -1872,6 +1872,16 @@ class EventKind(StrEnum):
     DRAW = "draw"
     #: A player is about to gain life (CR 119.3).
     GAIN_LIFE = "gain_life"
+    #: A player is about to lose life (CR 119.3) - "you lose N life", a life
+    #: payment (CR 118.3b), an exchange's losing half (CR 701.12c), or the
+    #: life loss combat or noncombat damage to a player becomes (CR 119.2):
+    #: `Game.deal_damage_to_player` always ends by calling `Game.lose_life`,
+    #: so this is raised for damage too, *after* `EventKind.DAMAGE`'s own
+    #: replacements have already had their say - a card watching "if your
+    #: life total would be reduced to 0 or less" (Enduring Angel) sees the
+    #: final amount either way arrived at, damage-scoped floor effects
+    #: (Elderscale Wurm, Angel of Grace) included.
+    LOSE_LIFE = "lose_life"
     #: Counters are about to be put on a permanent (CR 122.1, 122.6).
     ADD_COUNTERS = "add_counters"
     #: One or more tokens are about to be created (CR 111.1, 701.7a, 701.7b).
@@ -1887,6 +1897,17 @@ class EventKind(StrEnum):
     #: `player` is the player who would create them (CR 111.2: "the player who
     #: creates a token is its owner"), and `amount` is how many.
     CREATE_TOKENS = "create_tokens"
+    #: A player is about to lose the game (CR 104.3b/c/d's state-based losses
+    #: for 0 or less life, an empty-library draw and ten-plus poison, and CR
+    #: 104.3e's "an effect may state that a player loses the game"). Raised
+    #: by `Game._apply_lose_the_game_replacements` ahead of `Game._lose_the_
+    #: game` at both call sites, so a printed "if you would lose the game,
+    #: instead ..." replacement (Exquisite Archangel, Lich's Mirror) gets CR
+    #: 616.1's first refusal before the loss actually happens. `player` is
+    #: who would lose; there is no `amount` to modify, only `replaced` to set
+    #: (see `happens` below) - the same shape `DESTROY` already uses for a
+    #: yes/no event with nothing to scale.
+    LOSE_THE_GAME = "lose_the_game"
 
 
 @dataclass
@@ -2096,9 +2117,9 @@ class ReplaceableEvent:
         Damage prevented down to zero (CR 615.1a) and a draw replaced by
         something else both land here.
         """
-        if self.kind is EventKind.DAMAGE:
+        if self.kind in (EventKind.DAMAGE, EventKind.LOSE_LIFE):
             return self.amount > 0
-        if self.kind is EventKind.DESTROY:
+        if self.kind in (EventKind.DESTROY, EventKind.LOSE_THE_GAME):
             return not self.replaced
         return True
 
@@ -3115,6 +3136,136 @@ def double_all_damage_line(line: str) -> bool:
     module performs - `support.py`'s credit for it."""
     match = _DOUBLE_ALL_DAMAGE_RE.fullmatch(line.strip())
     return match is not None and _double_all_damage_subject(match.group("subject")) is not None
+
+
+# -- "damage that would reduce your life total to less than N reduces it to
+#    N instead." (Elderscale Wurm's static, Angel of Grace's until-end-of-turn
+#    created form) - CR 119.2/119.3's own damage-as-life-loss, floored -------
+#
+# Read directly off the raw sentence like `_double_all_damage_replacements`
+# above, rather than through the generic `IF_WOULD_INSTEAD` parser: this
+# sentence has no leading "If", so `_try_if_would` never claims it (it comes
+# back `UNPARSED`), the same reason `_double_all_damage_replacements` is its
+# own bespoke reader instead of a `_COMPILERS` row.
+
+#: "damage that would reduce your life total to less than N reduces it to N
+#: instead" - both numbers read, not assumed equal, though every printing in
+#: the pool repeats the same one.
+_DAMAGE_LIFE_FLOOR_RE = re.compile(
+    r"^damage that would reduce your life total to less than (?P<less_than>\d+) "
+    r"reduces it to (?P<floor>\d+) instead$",
+    re.IGNORECASE,
+)
+#: Elderscale Wurm's own leading condition: "As long as you have N or more
+#: life, `<floor clause>`." Read generally - the threshold number, not
+#: assumed equal to the floor it happens to match on this printing.
+_AS_LONG_AS_LIFE_THRESHOLD_PREFIX_RE = re.compile(
+    r"^as long as you have (?P<threshold>\d+) or more life, (?P<rest>.+)$", re.IGNORECASE
+)
+
+
+def _read_damage_life_floor(sentence: str) -> int | None:
+    """`_DAMAGE_LIFE_FLOOR_RE`'s floor, or `None` when the two numbers
+    printed don't agree with each other (an engine defect to fail closed on,
+    not a floor to guess between)."""
+    match = _DAMAGE_LIFE_FLOOR_RE.fullmatch(sentence.strip().rstrip("."))
+    if match is None:
+        return None
+    less_than = parse_count(match.group("less_than"))
+    floor = parse_count(match.group("floor"))
+    if less_than is None or floor is None or less_than != floor:
+        return None
+    return floor
+
+
+def _damage_life_floor_replacements(lines: Iterable[str]) -> list[CardReplacement]:
+    """Every static "damage that would reduce your life total ..." line among
+    `lines`, Elderscale Wurm's own leading "as long as" condition included."""
+    found: list[CardReplacement] = []
+    for line in lines:
+        stripped = line.strip()
+        threshold: int | None = None
+        rest = stripped
+        as_long = _AS_LONG_AS_LIFE_THRESHOLD_PREFIX_RE.fullmatch(stripped.rstrip("."))
+        if as_long is not None:
+            threshold = parse_count(as_long.group("threshold"))
+            rest = as_long.group("rest")
+            if threshold is None:
+                continue
+        floor = _read_damage_life_floor(rest)
+        if floor is None:
+            continue
+
+        def applies(
+            game: "Game",
+            source: CardState,
+            event: ReplaceableEvent,
+            floor: int = floor,
+            threshold: int | None = threshold,
+        ) -> bool:
+            if event.kind is not EventKind.DAMAGE or event.player is None or event.amount <= 0:
+                return False
+            if event.player.username != source.controller:
+                return False
+            if threshold is not None and event.player.life < threshold:
+                return False
+            return event.player.life - event.amount < floor
+
+        def apply(
+            game: "Game", source: CardState | None, event: ReplaceableEvent, floor: int = floor
+        ) -> None:
+            if event.player is None:
+                return
+            event.amount = max(event.player.life - floor, 0)
+
+        found.append(CardReplacement(label=stripped, applies=applies, apply=apply))
+    return found
+
+
+def damage_life_floor_line(line: str) -> bool:
+    """Whether `line` is a "damage that would reduce your life total ..."
+    static (Elderscale Wurm's own leading "as long as" included)
+    `_damage_life_floor_replacements` performs - `support.py`'s credit."""
+    stripped = line.strip()
+    as_long = _AS_LONG_AS_LIFE_THRESHOLD_PREFIX_RE.fullmatch(stripped.rstrip("."))
+    rest = as_long.group("rest") if as_long is not None else stripped
+    if as_long is not None and parse_count(as_long.group("threshold")) is None:
+        return False
+    return _read_damage_life_floor(rest) is not None
+
+
+class DamageLifeFloorReplacement(EngineModel):
+    """The created (until-end-of-turn) form of the static shape above -
+    Angel of Grace's own "When this creature enters, until end of turn,
+    damage that would reduce your life total to less than 1 reduces it to 1
+    instead." No leading "as long as" condition on the created form: it is
+    simply on or off for the stated duration."""
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["damage_life_floor"] = "damage_life_floor"
+    floor: int
+
+    def applies(self, game: "Game", controller: str, event: "ReplaceableEvent") -> bool:
+        return (
+            event.kind is EventKind.DAMAGE
+            and event.player is not None
+            and event.player.username == controller
+            and event.amount > 0
+            and event.player.life - event.amount < self.floor
+        )
+
+    def apply(self, game: "Game", controller: str, event: "ReplaceableEvent") -> None:
+        if event.player is None:
+            return
+        event.amount = max(event.player.life - self.floor, 0)
+
+
+def read_damage_life_floor(sentence: str) -> "DamageLifeFloorReplacement | None":
+    """`created_replacement_spec`'s own reader for the shape above, shared
+    with the static form's `_read_damage_life_floor`."""
+    floor = _read_damage_life_floor(sentence)
+    return None if floor is None else DamageLifeFloorReplacement(floor=floor)
 
 
 # -- "if [damage event], prevent that damage and [someone] mill[s] [N] that many cards" --
@@ -4575,6 +4726,218 @@ def reads_cant_enter_line(text: str) -> bool:
     return _read_zone_list(match.group("zones")) is not None
 
 
+# -- "If you would lose the game, instead <effects>." (CR 104.3b/c/d/e's own
+#    loss, replaced by CR 614.1a) - Exquisite Archangel, Lich's Mirror -------
+#
+# `_try_if_would` already parses this into `event="you would lose the game"`,
+# `replacement="<effects>"` - the general `IF_WOULD_INSTEAD` shape every other
+# "if ... would ..., instead ..." sentence in this file goes through. What is
+# new here is only the *event* (CR 104.3's loss, `EventKind.LOSE_THE_GAME`) and
+# a small vocabulary for the two printed "<effects>" shapes the pool carries:
+# CR 201.5's "exile this creature" self-reference (any noun, not just
+# Exquisite Archangel's own "creature") joined by a bare "and" to a life-total
+# clause, and CR 701.24a's "shuffle your hand, your graveyard, and all
+# permanents you own into your library" joined by "then" to a draw and a
+# second life-total clause. Both read the life-total half through
+# `machines/effects.life_total_becomes_effect_for` - the one place CR 119.5's
+# "sets a player's life total to a specific number" is read, so a replacement
+# and a resolving spell/trigger never disagree about what "life total becomes
+# ..." means.
+
+_LOSE_THE_GAME_EVENT_RE = re.compile(r"^you would lose the game$", re.IGNORECASE)
+
+#: "exile this creature and your life total becomes equal to your starting
+#: life total." (Exquisite Archangel). `noun` is read but not constrained to
+#: "creature" - CR 201.5 makes "this `<noun>`" a self-reference whatever the
+#: permanent's own type happens to be.
+_EXILE_SELF_AND_LIFE_TOTAL_BECOMES_RE = re.compile(
+    r"^exile this (?P<noun>[a-z]+) and (?P<life_clause>your life total becomes .+)$",
+    re.IGNORECASE,
+)
+
+#: "shuffle your hand, your graveyard, and all permanents you own into your
+#: library, then draw N cards and your life total becomes M." (Lich's
+#: Mirror). CR 701.24a's shuffle over three named piles at once (hand,
+#: graveyard, and every permanent this player owns - not merely controls,
+#: since a stolen permanent is shuffled into *its owner's* library, CR
+#: 401.1), then CR 121.1's draw and CR 119.5's life-total-becomes, chained by
+#: "then" and a bare "and".
+_SHUFFLE_HAND_GRAVEYARD_PERMANENTS_THEN_DRAW_AND_LIFE_TOTAL_RE = re.compile(
+    rf"^shuffle your hand, your graveyard, and all permanents you own into "
+    rf"your library, then draw (?P<draw>{COUNT}) cards? and "
+    rf"(?P<life_clause>your life total becomes .+)$",
+    re.IGNORECASE,
+)
+
+
+def _compile_exile_self_and_life_total_becomes(
+    effect: "ReplacementEffect",
+) -> "CardReplacement | None":
+    """Exquisite Archangel's own shape - see the section banner above."""
+    from .effects import life_total_becomes_effect_for
+
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if _LOSE_THE_GAME_EVENT_RE.fullmatch((effect.event or "").strip()) is None:
+        return None
+    match = _EXILE_SELF_AND_LIFE_TOTAL_BECOMES_RE.fullmatch(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if match is None:
+        return None
+    life_total = life_total_becomes_effect_for(match.group("life_clause"))
+    if life_total is None:
+        return None
+
+    def applies(game: "Game", source: CardState, event: "ReplaceableEvent") -> bool:
+        return (
+            event.kind is EventKind.LOSE_THE_GAME
+            and event.player is not None
+            and event.player.username == source.controller
+        )
+
+    def apply(game: "Game", source: CardState | None, event: "ReplaceableEvent") -> None:
+        event.replaced = True
+        if source is None or event.player is None:
+            return
+        if source.zone is Zone.BATTLEFIELD:
+            game.exile_cards([source])
+        life_total(game, event.player, source.name, source_id_of(source))
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+def _compile_shuffle_hand_graveyard_permanents_then_draw_and_life_total(
+    effect: "ReplacementEffect",
+) -> "CardReplacement | None":
+    """Lich's Mirror's own shape - see the section banner above."""
+    from .effects import life_total_becomes_effect_for
+
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if _LOSE_THE_GAME_EVENT_RE.fullmatch((effect.event or "").strip()) is None:
+        return None
+    match = _SHUFFLE_HAND_GRAVEYARD_PERMANENTS_THEN_DRAW_AND_LIFE_TOTAL_RE.fullmatch(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if match is None:
+        return None
+    draw_count = parse_count(match.group("draw"))
+    life_total = life_total_becomes_effect_for(match.group("life_clause"))
+    if draw_count is None or life_total is None:
+        return None
+
+    def applies(game: "Game", source: CardState, event: "ReplaceableEvent") -> bool:
+        return (
+            event.kind is EventKind.LOSE_THE_GAME
+            and event.player is not None
+            and event.player.username == source.controller
+        )
+
+    def apply(game: "Game", source: CardState | None, event: "ReplaceableEvent") -> None:
+        event.replaced = True
+        player = event.player
+        if player is None:
+            return
+        owned = [
+            permanent
+            for permanent in list(game.battlefield)
+            if (permanent.owner or permanent.controller) == player.username
+        ]
+        game.put_cards_into_library([*player.hand, *player.graveyard, *owned])
+        game.shuffle_library(player)
+        game.draw_cards(player.username, draw_count)
+        life_total(game, player, source.name if source is not None else "Lich's Mirror", None)
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
+# -- "If your life total would be reduced to 0 or less, instead <effects>."
+#    (Enduring Angel) -----------------------------------------------------
+#
+# A different `IF_WOULD_INSTEAD` event than the "lose the game" family above:
+# this one watches the *life loss itself* (any `DAMAGE` to a player or any
+# `LOSE_LIFE`, CR 119.2/119.3 - `Game.deal_damage_to_player` always ends by
+# calling `Game.lose_life`, so a combat blow reaches this the same as a plain
+# "you lose N life" spell), not CR 104.3's loss that follows it. Enduring
+# Angel's own trailing sentence - "Then if this creature didn't transform this
+# way, you lose the game." - is not part of the same parsed `ReplacementEffect`
+# (the sentence splitter that produces `event`/`replacement` keeps only the
+# first sentence of the paragraph), so it is read off `effect.raw`, the whole
+# printed paragraph, directly.
+
+#: "your life total would be reduced to 0 or less" - the threshold is read,
+#: not hardcoded, so a differently-worded printing (a `less than 1`-shaped
+#: sibling naming another number) is not left out.
+_LIFE_REDUCED_TO_THRESHOLD_INSTEAD_EVENT_RE = re.compile(
+    r"^your life total would be reduced to (?P<threshold>\d+) or less$", re.IGNORECASE
+)
+#: "transform this creature and your life total becomes 3." `noun` is read but
+#: not constrained to "creature", the same CR 201.5 generality `_EXILE_SELF_
+#: AND_LIFE_TOTAL_BECOMES_RE` above already gives "exile this `<noun>`".
+_TRANSFORM_SELF_AND_LIFE_TOTAL_BECOMES_RE = re.compile(
+    r"^transform this (?P<noun>[a-z]+) and (?P<life_clause>your life total becomes .+)$",
+    re.IGNORECASE,
+)
+#: "Then if this creature didn't transform this way, you lose the game." -
+#: read off `effect.raw` (see the section banner above), not off `event`/
+#: `replacement`.
+_THEN_IF_DIDNT_TRANSFORM_LOSE_RE = re.compile(
+    r"then if this [a-z]+ didn'?t transform this way, you lose the game\.?\s*$", re.IGNORECASE
+)
+
+
+def _compile_life_reduced_to_threshold_transform(
+    effect: "ReplacementEffect",
+) -> "CardReplacement | None":
+    """Enduring Angel's own shape - see the section banner above."""
+    from .effects import life_total_becomes_effect_for
+
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    event_match = _LIFE_REDUCED_TO_THRESHOLD_INSTEAD_EVENT_RE.fullmatch(
+        (effect.event or "").strip()
+    )
+    if event_match is None:
+        return None
+    threshold = parse_count(event_match.group("threshold"))
+    match = _TRANSFORM_SELF_AND_LIFE_TOTAL_BECOMES_RE.fullmatch(
+        (effect.replacement or "").strip().rstrip(".")
+    )
+    if threshold is None or match is None:
+        return None
+    life_total = life_total_becomes_effect_for(match.group("life_clause"))
+    if life_total is None:
+        return None
+    then_loses = _THEN_IF_DIDNT_TRANSFORM_LOSE_RE.search(effect.raw) is not None
+
+    def applies(game: "Game", source: CardState, event: "ReplaceableEvent") -> bool:
+        if event.kind not in (EventKind.DAMAGE, EventKind.LOSE_LIFE):
+            return False
+        if event.player is None or event.amount <= 0:
+            return False
+        if event.player.username != source.controller:
+            return False
+        return event.player.life - event.amount <= threshold
+
+    def apply(game: "Game", source: CardState | None, event: "ReplaceableEvent") -> None:
+        # CR 614.6: the original loss never happens - transforming and
+        # setting the life total happens in its place.
+        event.amount = 0
+        player = event.player
+        if source is None or player is None:
+            return
+        before = source.times_transformed
+        if source.zone is Zone.BATTLEFIELD:
+            source.transform()
+        transformed = source.times_transformed != before
+        life_total(game, player, source.name, source_id_of(source))
+        if then_loses and not transformed:
+            game.player_loses_the_game(player.username)
+
+    return CardReplacement(label=effect.text, applies=applies, apply=apply)
+
+
 # -- "if <player> would draw a card[ except ...], [instead ]that player skips
 #    that draw[ and you draw a card]" (Notion Thief; Plagiarize's created form) --
 
@@ -4666,6 +5029,9 @@ _COMPILERS: tuple[Callable[[ReplacementEffect], CardReplacement | None], ...] = 
     _compile_counter_doubler,
     _compile_lands_you_control_enter_untapped,
     _compile_opponents_permanents_enter_tapped,
+    _compile_exile_self_and_life_total_becomes,
+    _compile_shuffle_hand_graveyard_permanents_then_draw_and_life_total,
+    _compile_life_reduced_to_threshold_transform,
 )
 
 
@@ -4705,6 +5071,7 @@ def parsed_card_replacements(card: Card) -> list[CardReplacement]:
         _keyword_replacements(card)
         + _cant_enter_replacements(card)
         + _double_all_damage_replacements(_rules_lines(card.oracle_text or ""))
+        + _damage_life_floor_replacements(_rules_lines(card.oracle_text or ""))
     )
     for effect in parse_replacement_effects(card):
         compiled = _compile(effect)
@@ -4717,14 +5084,27 @@ def performs_static_line(card: Card, text: str) -> bool:
     """Whether one of this card's printed static lines is a replacement or
     prevention effect this module actually performs - a generic compiler
     claims it, or it is a "Double all damage ... would deal." line.
-    `support.py`'s credit for such a line (CR 614.1, CR 615.1)."""
+    `support.py`'s credit for such a line (CR 614.1, CR 615.1).
+
+    Matched against either `effect.text` (the one sentence the event/
+    replacement split was read from) or `effect.raw` (the whole printed
+    paragraph) - the two are equal for an ordinary one-sentence paragraph,
+    but Enduring Angel's own "... instead transform this creature and your
+    life total becomes 3. Then if this creature didn't transform this way,
+    you lose the game." is two: only the first sentence becomes `event`/
+    `replacement`, and a compiler that also reads the second off `effect.raw`
+    (`_compile_life_reduced_to_threshold_transform`) still needs `text` here
+    - the *whole* paragraph `support.py` passes in - to find a match.
+    """
     line = strip_reminder_text(text)[0].strip()
     if not line:
         return False
     if double_all_damage_line(line):
         return True
+    if damage_life_floor_line(line):
+        return True
     return any(
-        effect.text.strip() == line and _compile(effect) is not None
+        line in (effect.text.strip(), effect.raw.strip()) and _compile(effect) is not None
         for effect in parse_replacement_effects(card)
     )
 
@@ -4776,9 +5156,24 @@ def replacements_of_state(
         # CR 613.1f: read off the computed ability list, so a layer-6 removal
         # takes the doubling away with the rest of the permanent's text.
         + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
+        + _damage_life_floor_replacements(_rules_lines("\n".join(chars.abilities)))
     )
     if "Class" not in chars.subtypes:
+        # CR 712.8d/712.8e/712.8f: a double-faced permanent has only the
+        # characteristics of the face that's up, and CR 109.3 counts a
+        # replacement effect among them - the same face filter `_self_enters_
+        # modifiers` already applies for a permanent's *own* CR 614.12 entry
+        # effects. Enduring Angel's own "if your life total would be reduced
+        # to 0 or less, instead transform ..." is on its front face only;
+        # without this, `parse_replacement_effects(card)` reads the whole
+        # multi-face printing and the effect kept applying even once the
+        # permanent had transformed to Angelic Enforcer, which prints no
+        # such thing. `up_face_name` is `None` for an ordinary single-faced
+        # card, which keeps every line exactly as before for one.
+        up_face_name = permanent.up_face_name
         for effect in parse_replacement_effects(card):
+            if up_face_name is not None and effect.face not in (None, up_face_name):
+                continue
             compiled = _compile(effect)
             if compiled is not None:
                 found.append(compiled)
@@ -7043,6 +7438,10 @@ def _self_enters_modifiers(
     if tribute is not None:
         performable.append(tribute)
 
+    enters_under_opponent = _enters_under_opponents_control_modifier(game, card_state)
+    if enters_under_opponent is not None:
+        performable.append(enters_under_opponent)
+
     performable.extend(_riot_modifiers(game, card_state))
     performable.extend(_cast_permission_rider_modifiers(game, card_state))
 
@@ -7214,6 +7613,97 @@ def _tribute_modifier(game: "Game", card_state: CardState) -> tuple[str, Apply, 
             event.counters_put_by.append((str(Counter.PLUS_ONE), opponent, amount))
 
     return ("self:tribute", apply, f"Tribute {amount} (CR 702.104a)", False)
+
+
+#: "This enchantment enters under the control of an opponent of your
+#: choice." (Captive Audience). `noun` is read but not constrained to
+#: "enchantment" - CR 201.5's self-reference ("this `<noun>`") the same way
+#: `_EXILE_SELF_AND_LIFE_TOTAL_BECOMES_RE` reads "exile this `<noun>`".
+_SELF_ENTERS_UNDER_OPPONENTS_CONTROL_RE = re.compile(
+    r"^this (?P<noun>[a-z]+) enters under the control of an opponent of your choice\.?$",
+    re.IGNORECASE,
+)
+
+
+def _enters_under_opponents_control_modifier(
+    game: "Game", card_state: CardState
+) -> tuple[str, Apply, str, bool] | None:
+    """Captive Audience's own shape, read off the printed sentence rather
+    than through the generic `IF_WOULD_INSTEAD`/bare-`ENTERS_TAPPED` shapes:
+    "enters under the control of `<X>`" names no event this module's parser
+    already reads, so this is hand-read the same way tribute and sunburst
+    are above.
+
+    CR 616.1b would put a control-changing effect ahead of every other CR
+    614.12 modifier if two ever competed for the same permanent; nothing in
+    the pool pairs this with another one, so that forced tier is not wired
+    in here (`applicable_effects`'s own `ApplicableEffect.controls_entry`
+    stays `False` for this suffix), and the ordinary "one candidate needs no
+    question" shortcut in `choose_effect` already covers the case that
+    matters.
+    """
+    text = card_state.card.front_oracle_text or card_state.card.oracle_text or ""
+    for line in text.split("\n"):
+        if _SELF_ENTERS_UNDER_OPPONENTS_CONTROL_RE.fullmatch(strip_reminder_text(line)[0].strip()):
+            break
+    else:
+        return None
+
+    def apply(game: "Game", source: CardState | None, event: "ReplaceableEvent") -> None:
+        controller = source.controller if source is not None else None
+        if source is None or controller is None or event.card is None:
+            return
+        opponents = [
+            player.username for player in game.players_in_game if player.username != controller
+        ]
+        if not opponents:
+            return
+        opponent = opponents[0]
+        if len(opponents) > 1:
+            opponent = str(
+                game.ask(
+                    Decision(
+                        kind=DecisionKind.CHOOSE_A_QUALITY,
+                        player=controller,
+                        prompt=(
+                            f"choose an opponent for {source.name} to enter under the "
+                            "control of (CR 614.12)"
+                        ),
+                        source=source.name,
+                        source_id=source_id_of(source),
+                        options=tuple(opponents),
+                        quality="opponent",
+                    )
+                )
+            )
+        event.card.controller = opponent
+
+    return (
+        "self:enters_under_opponent",
+        apply,
+        "This enters under the control of an opponent of your choice.",
+        False,
+    )
+
+
+def reads_self_enters_under_opponents_control_line(text: str) -> bool:
+    """Whether `text` is Captive Audience's own "This `<noun>` enters under
+    the control of an opponent of your choice." shape `_self_enters_
+    modifiers`'s `_enters_under_opponents_control_modifier` performs -
+    `support.py`'s credit for it.
+
+    Read directly against the sentence, not through `parse_replacement_
+    effects`: CR 614.1d's bare "enters" templates the generic parser does
+    read are a closed list (`ENTERS_TAPPED`/`ENTERS_WITH`/`ENTERS_AS_COPY`/
+    `AS_ENTERS`/`ENTERS_PREPARED`) that does not include "enters under the
+    control of", and this sentence carries none of the cue words ("instead",
+    "prevent", "skip", "rather than") the parser's other templates need
+    either - so it comes back with no `ReplacementEffect` at all, not even
+    `UNPARSED`, and needs its own credit the same way tribute's and
+    sunburst's keyword-read shapes already have one.
+    """
+    line = strip_reminder_text(text)[0].strip()
+    return _SELF_ENTERS_UNDER_OPPONENTS_CONTROL_RE.fullmatch(line) is not None
 
 
 def self_enters_effects_read(card: Card, effects: Sequence[ReplacementEffect]) -> bool:
@@ -8103,7 +8593,11 @@ class EnterUncastExile(EngineModel):
 #: What a `CreatedReplacement` does - a `kind`-tagged union, refused at decode
 #: for an unknown tag rather than silently doing nothing.
 CreatedReplacementSpec = Annotated[
-    DrawSkipReplacement | CounterAmountReplacement | EnterUnderYourControl | EnterUncastExile,
+    DrawSkipReplacement
+    | CounterAmountReplacement
+    | EnterUnderYourControl
+    | EnterUncastExile
+    | DamageLifeFloorReplacement,
     Field(discriminator="kind"),
 ]
 
@@ -8180,6 +8674,14 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     entering = _read_enter_under_your_control(body)
     if entering is not None:
         return entering
+    # "damage that would reduce your life total to less than N reduces it to
+    # N instead" (Angel of Grace's until-end-of-turn form) has no leading
+    # "If", so the generic `_parse_sentence` loop below never claims it (see
+    # `_damage_life_floor_replacements`'s own banner for why its static twin
+    # is read directly off the sentence too, rather than through that parser).
+    damage_floor = read_damage_life_floor(body)
+    if damage_floor is not None:
+        return damage_floor
     for effect in _parse_sentence(body, ()):
         for reader in (read_draw_skip, read_counter_amount, read_enter_uncast_exile):
             spec = reader(effect)

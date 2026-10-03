@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 23 | 10.5% |
+| Tested | 24 | 10.9% |
 | Works (untested) | 117 | 53.2% |
 | Partial (unaudited) | 7 | 3.2% |
-| Not working | 73 | 33.2% |
+| Not working | 72 | 32.7% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Scythe Tiger | silent | When this creature enters, sacrifice it unless you sacrifice a land. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Seascape Aerialist | silent | Whenever this creature or another Ally you control enters, you may have Ally creatures you control gain flying until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shoal Serpent | silent | Landfall — Whenever a land you control enters, this creature loses defender until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sorin Markov | silent | −3: Target opponent's life total becomes 10. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spreading Seas | silent | Enchanted land is an Island. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Surrakar Marauder | silent | Landfall — Whenever a land you control enters, this creature gains intimidate until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tajuru Archer | silent | Whenever this creature or another Ally you control enters, you may have this creature deal damage to target creature with flying equal to the number of Allies y | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -96,7 +95,7 @@
 | Elemental Appeal | notice | Kicker {5} (You may pay an additional {5} as you cast this spell.) Create a 7/1 red Elemental creature token with trample and haste. Exile it at the beginning o | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Guul Draz Specter | notice | This creature gets +3/+3 as long as an opponent has no cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kalitas, Bloodchief of Ghet | notice | {B}{B}{B}, {T}: Destroy target creature. If that creature dies this way, create a black Vampire creature token. Its power is equal to that creature's power and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Mark of Mutiny | notice | Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. (It can attack and {T} t | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Mark of Mutiny | notice | Gain control of target creature until end of turn. Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. (It can attack and {T} t | unparsed remainder: Put a +1/+1 counter on it and untap it. That creature gains haste until end of turn. | Y/-/- | not_working |
 | Obsidian Fireheart | notice | {1}{R}{R}: Put a blaze counter on target land without a blaze counter on it. For as long as that land has a blaze counter on it, it has "At the beginning of you | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Primal Bellow | notice | Target creature gets +1/+1 until end of turn for each Forest you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Aether Figment | unaudited | If this creature was kicked, it enters with two +1/+1 counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -227,7 +226,7 @@
 ## Fully supported
 
 <details>
-<summary>23 cards</summary>
+<summary>24 cards</summary>
 
 - Archive Trap
 - Arid Mesa
@@ -246,6 +245,7 @@
 - Misty Rainforest
 - Mold Shambler
 - Scalding Tarn
+- Sorin Markov
 - Spell Pierce
 - Steppe Lynx
 - Valakut, the Molten Pinnacle
@@ -331,7 +331,6 @@
 | ~ gets +N/+N as long as an opponent has no cards in hand. | 1 | Guul Draz Specter | zen |
 | ~ has haste as long as an opponent has N or less life. | 1 | Bloodghast | zen |
 | −N: cast any number of red instant and/or sorcery cards from your graveyard without paying their mana costs. | 1 | Chandra Ablaze | zen |
-| −N: target opponent's life total becomes N. | 1 | Sorin Markov | zen |
 
 ## Notes
 

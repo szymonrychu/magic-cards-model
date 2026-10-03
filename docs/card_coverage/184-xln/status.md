@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 18 | 7.3% |
-| Works (untested) | 158 | 64.5% |
+| Tested | 21 | 8.6% |
+| Works (untested) | 157 | 64.1% |
 | Partial (unaudited) | 14 | 5.7% |
-| Not working | 55 | 22.4% |
+| Not working | 53 | 21.6% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | River's Rebuke | silent | Return all nonland permanents target player controls to their owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rowdy Crew | silent | When this creature enters, draw three cards, then discard two cards at random. If two cards that share a card type are discarded this way, put two +1/+1 counter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ruin Raider | silent | Raid — At the beginning of your end step, if you attacked this turn, reveal the top card of your library and put that card into your hand. You lose life equal t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Run Aground | silent | Put target artifact or creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sanguine Sacrament | silent | You gain twice X life. Put Sanguine Sacrament on the bottom of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shadowed Caravel | silent | Whenever a creature you control explores, put a +1/+1 counter on this Vehicle. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Spell Swindle | silent | Counter target spell. Create X Treasure tokens, where X is that spell's mana value. (They're artifacts with "{T}, Sacrifice this token: Add one mana of any colo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -67,20 +66,19 @@
 | Thrash of Raptors | silent | As long as you control another Dinosaur, this creature gets +2/+0 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Tishana, Voice of Thunder | silent | Tishana's power and toughness are each equal to the number of cards in your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vance's Blasting Cannons // Spitfire Bastion | silent | At the beginning of your upkeep, exile the top card of your library. If it's a nonland card, you may cast that card this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Verdant Sun's Avatar | silent | Whenever this creature or another creature you control enters, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vraska, Relic Seeker | silent | −10: Target player's life total becomes 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wakening Sun's Avatar | silent | When this creature enters, if you cast it from your hand, destroy all non-Dinosaur creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wildgrowth Walker | silent | Whenever a creature you control explores, put a +1/+1 counter on this creature and you gain 3 life. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
-| Arguel's Blood Fast // Temple of Aclazotz | notice | {T}, Sacrifice a creature: You gain life equal to the sacrificed creature's toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Blinding Fog | notice | Prevent all damage that would be dealt to creatures this turn. Creatures you control gain hexproof until end of turn. (They can't be the targets of spells or ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Blinding Fog | notice | Prevent all damage that would be dealt to creatures this turn. Creatures you control gain hexproof until end of turn. (They can't be the targets of spells or ab | unparsed remainder: Prevent all damage that would be dealt to creatures this turn. | Y/Y/- | not_working |
 | Drover of the Mighty | notice | This creature gets +2/+2 as long as you control a Dinosaur. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Emergent Growth | notice | Target creature gets +5/+5 until end of turn and must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kumena's Speaker | notice | This creature gets +1/+1 as long as you control another Merfolk or an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Rallying Roar | notice | Creatures you control get +1/+1 until end of turn. Untap them. | unparsed remainder: Untap them. | Y/Y/- | not_working |
 | Siren's Ruse | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If a Pirate was exiled this way, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Skulduggery | notice | Until end of turn, target creature you control gets +1/+1 and target creature an opponent controls gets -1/-1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Thaumatic Compass // Spires of Orazca | notice | {T}: Untap target attacking creature an opponent controls and remove it from combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Vampire's Zeal | notice | Target creature gets +2/+2 until end of turn. If it's a Vampire, it gains first strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Vampire's Zeal | notice | Target creature gets +2/+2 until end of turn. If it's a Vampire, it gains first strike until end of turn. | unparsed remainder: If it's a Vampire, it gains first strike until end of turn. | Y/Y/- | not_working |
 | Verdant Rebirth | notice | Until end of turn, target creature gains "When this creature dies, return it to its owner's hand." Draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Waker of the Wilds | notice | {X}{G}{G}: Put X +1/+1 counters on target land you control. That land becomes a 0/0 Elemental creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
 | Ashes of the Abhorrent | unaudited | Players can't cast spells from graveyards or activate abilities of cards in graveyards. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Belligerent Brontodon | unaudited | Each creature you control assigns combat damage equal to its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Bloodcrazed Paladin | unaudited | This creature enters with a +1/+1 counter on it for each creature that died this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -95,7 +93,6 @@
 | Spike-Tailed Ceratops | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Storm Fleet Aerialist | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Trove of Temptation | unaudited | Each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
-| Admiral Beckett Brass | handled | Other Pirates you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ancient Brontodon | handled |  |  | Y/Y/- | not_tested |
 | Angrath's Marauders | handled | If a source you control would deal damage to a permanent or player, it deals double that damage to that permanent or player instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bishop of Rebirth | handled | Whenever this creature attacks, you may return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -193,7 +190,6 @@
 | Queen's Bay Soldier | handled |  |  | Y/Y/- | not_tested |
 | Queen's Commission | handled | Create two 1/1 white Vampire creature tokens with lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raiders' Wake | handled | Whenever an opponent discards a card, that player loses 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rallying Roar | handled | Creatures you control get +1/+1 until end of turn. Untap them. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rampaging Ferocidon | handled | Players can't gain life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raptor Companion | handled |  |  | Y/Y/- | not_tested |
 | Raptor Hatchling | handled | Enrage — Whenever this creature is dealt damage, create a 3/3 green Dinosaur creature token with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -205,6 +201,7 @@
 | Ripjaw Raptor | handled | Enrage — Whenever this creature is dealt damage, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ritual of Rejuvenation | handled | You gain 4 life. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Sneak | handled | This creature can't be blocked. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Run Aground | handled | Put target artifact or creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Knave | handled | {2}{B}, Sacrifice a creature: Create two Treasure tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sailor of Means | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanctum Seeker | handled | Whenever a Vampire you control attacks, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -244,10 +241,10 @@
 | Unfriendly Fire | handled | Unfriendly Fire deals 4 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vanquish the Weak | handled | Destroy target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vanquisher's Banner | handled | As this artifact enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Verdant Sun's Avatar | handled | Whenever this creature or another creature you control enters, you gain life equal to that creature's toughness. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vicious Conquistador | handled | Whenever this creature attacks, each opponent loses 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vineshaper Mystic | handled | When this creature enters, put a +1/+1 counter on each of up to two target Merfolk you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vona, Butcher of Magan | handled | {T}, Pay 7 life: Destroy target nonland permanent. Activate only during your turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Waker of the Wilds | handled | {X}{G}{G}: Put X +1/+1 counters on target land you control. That land becomes a 0/0 Elemental creature with haste. It's still a land. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Walk the Plank | handled | Destroy target non-Merfolk creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wanted Scoundrels | handled | When this creature dies, target opponent creates two Treasure tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Watertrap Weaver | handled | When this creature enters, tap target creature an opponent controls. That creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -257,8 +254,10 @@
 ## Fully supported
 
 <details>
-<summary>18 cards</summary>
+<summary>21 cards</summary>
 
+- Admiral Beckett Brass
+- Arguel's Blood Fast // Temple of Aclazotz
 - Bellowing Aegisaur
 - Captivating Crew
 - Carnage Tyrant
@@ -277,6 +276,7 @@
 - Treasure Map // Treasure Cove
 - Unclaimed Territory
 - Vraska's Contempt
+- Vraska, Relic Seeker
 
 </details>
 
@@ -298,6 +298,7 @@
 | attacking creatures get +N/+N until end of turn. dinosaurs you control gain trample until end of turn. | 1 | Dinosaur Stampede | xln |
 | counter target spell. create N treasure tokens, where N is that spell"..."re artifacts with "...") | 1 | Spell Swindle | xln |
 | creatures you control are the chosen type in addition to their other types. the same is true for creature spells you control and creature cards you own that are | 1 | Arcane Adaptation | xln |
+| creatures you control get +N/+N until end of turn. untap them. | 1 | Rallying Roar | xln |
 | creatures you control with +N/+N counters on them can't be blocked. | 1 | Herald of Secret Streams | xln |
 | each creature you control assigns combat damage equal to its toughness rather than its power. | 1 | Belligerent Brontodon | xln |
 | each opponent must attack you or a planeswalker you control with at least one creature each combat if able. | 1 | Trove of Temptation | xln |
@@ -309,7 +310,6 @@
 | players can't cast spells from graveyards or activate abilities of cards in graveyards. | 1 | Ashes of the Abhorrent | xln |
 | prevent all damage that would be dealt to creatures ~. creatures you control gain hexproof until end of turn. (they can't be the targets of spells or abilities  | 1 | Blinding Fog | xln |
 | put a +N/+N counter on target creature and a +N/+N counter on up to one target merfolk. | 1 | River Heralds' Boon | xln |
-| put target artifact or creature on top of its owner's library. | 1 | Run Aground | xln |
 | return a pirate card from your graveyard to your hand, then do the same for vampire, dinosaur, and merfolk. | 1 | Grim Captain's Call | xln |
 | return all nonland permanents target player controls to their owner's hand. | 1 | River's Rebuke | xln |
 | return target nonland permanent you don"..."s hand. if its mana value was N or less, scry N. | 1 | Perilous Voyage | xln |
@@ -337,11 +337,10 @@
 | whenever you cast a spell from your hand, reveal the top N cards of your library, where N is that spell's mana value. you may cast a spell with mana value N or  | 1 | Sunbird's Invocation | xln |
 | whenever ~ attacks, it gets +N/+N until end of turn for each other attacking pirate. | 1 | Dire Fleet Captain | xln |
 | whenever ~ enters or attacks, you may exile target card from a graveyard. if a creature card is exiled ~, you gain N life. if a noncreature card is exiled ~, ~  | 1 | Deathgorge Scavenger | xln |
-| whenever ~ or another creature you control enters, you gain life equal to that creature's toughness. | 1 | Verdant Sun's Avatar | xln |
 | you gain twice N life. put ~ on the bottom of its owner's library. | 1 | Sanguine Sacrament | xln |
 | your opponents can't cast spells with the same name as the exiled card. | 1 | Ixalan's Binding | xln |
-| {M}, sacrifice a creature: you gain life equal to the sacrificed creature's toughness. | 1 | Arguel's Blood Fast // Temple of Aclazotz | xln |
 | {M}: untap target attacking creature an opponent controls and remove it from combat. | 1 | Thaumatic Compass // Spires of Orazca | xln |
+| {M}{M}{M}: put N +N/+N counters on target land you control. that land becomes a N/N elemental creature with haste. it's still a land. | 1 | Waker of the Wilds | xln |
 | ~ can block an additional creature each combat. | 1 | Spike-Tailed Ceratops | xln |
 | ~ can block only creatures with flying. | 1 | Dreamcaller Siren | xln |
 | ~ can't attack or block alone. | 1 | Bonded Horncrest | xln |
@@ -350,7 +349,6 @@
 | ~ gets +N/+N as long as you control another merfolk or an island. | 1 | Kumena's Speaker | xln |
 | −N: huatli deals N damage divided as you choose among any number of target creatures. creatures dealt damage ~ can't block ~. | 1 | Huatli, Warrior Poet | xln |
 | −N: target dinosaur you control deals damage equal to its power to target creature you don't control. | 1 | Huatli, Dinosaur Knight | xln |
-| −N: target player's life total becomes N. | 1 | Vraska, Relic Seeker | xln |
 
 ## Notes
 

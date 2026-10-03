@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 7.8% |
+| Tested | 22 | 8.2% |
 | Works (untested) | 153 | 56.9% |
 | Partial (unaudited) | 9 | 3.3% |
-| Not working | 86 | 32.0% |
+| Not working | 85 | 31.6% |
 
 ## Cards needing work
 
@@ -56,7 +56,6 @@
 | Leonin Den-Guard | silent | As long as this creature is equipped, it gets +1/+1 and has vigilance. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Leveler | silent | When this creature enters, exile all cards from your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Liar's Pendulum | silent | {2}, {T}: Choose a card name. Target opponent guesses whether a card with that name is in your hand. You may reveal your hand. If you do and your opponent guess | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Looming Hoverguard | silent | When this creature enters, put target artifact on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Loxodon Peacekeeper | silent | At the beginning of your upkeep, the player with the lowest life total gains control of this creature. If two or more players are tied for lowest life total, yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Lumengrid Augur | silent | {1}, {T}: Target player draws a card, then discards a card. If that player discards an artifact card this way, untap this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | March of the Machines | silent | Each noncreature artifact is an artifact creature with power and toughness each equal to its mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -172,6 +171,7 @@
 | Lifespark Spellbomb | handled | {G}, Sacrifice this artifact: Until end of turn, target land becomes a 3/3 creature that's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Living Hive | handled | Whenever this creature deals combat damage to a player, create that many 1/1 green Insect creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lodestone Myr | handled | Tap an untapped artifact you control: This creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Looming Hoverguard | handled | When this creature enters, put target artifact on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Mender | handled | {W}, {T}: Regenerate target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Loxodon Warhammer | handled | Equipped creature gets +3/+0 and has trample and lifelink. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lumengrid Sentinel | handled | Whenever an artifact you control enters, you may tap target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -211,7 +211,6 @@
 | Promise of Power | handled | Choose one — • You draw five cards and you lose 5 life. • Create an X/X black Demon creature token with flying, where X is the number of cards in your hand. Ent | the engine reads this text and performs it | Y/-/- | not_tested |
 | Psychic Membrane | handled | Whenever this creature blocks, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Pyrite Spellbomb | handled | {R}, Sacrifice this artifact: It deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Raise the Alarm | handled | Create two 1/1 white Soldier creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Regress | handled | Return target permanent to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Roar of the Kha | handled | Choose one — • Creatures you control get +1/+1 until end of turn. • Untap all creatures you control. Entwine {1}{W} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rustmouth Ogre | handled | Whenever this creature deals combat damage to a player, you may destroy target artifact that player controls. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -278,7 +277,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>22 cards</summary>
 
 - Aether Spellbomb
 - Awe Strike
@@ -295,6 +294,7 @@
 - Loxodon Punisher
 - Mindslaver
 - Oblivion Stone
+- Raise the Alarm
 - Rule of Law
 - Seat of the Synod
 - Solemn Simulacrum
@@ -355,7 +355,6 @@
 | when ~ enters, exile all cards from your library. | 1 | Leveler | mrd |
 | when ~ enters, if you cast it from your hand, destroy all nonartifact, nonblack creatures. they can't be regenerated. | 1 | Reiver Demon | mrd |
 | when ~ enters, look at target opponent's hand. | 1 | Wanderguard Sentry | mrd |
-| when ~ enters, put target artifact on top of its owner's library. | 1 | Looming Hoverguard | mrd |
 | when ~ enters, you may pay {M}. if you do, search your library for an equipment card with mana value N or less, put that card onto the battlefield, then shuffle | 1 | Taj-Nar Swordsmith | mrd |
 | whenever a creature dealt damage by equipped creature ~ dies, return that card to the battlefield under your control. attach ~ to that creature. | 1 | Scythe of the Wretched | mrd |
 | whenever a permanent becomes untapped, that permanent's controller mills a card. | 1 | Mesmeric Orb | mrd |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 27 | 10.7% |
-| Works (untested) | 106 | 42.1% |
+| Works (untested) | 105 | 41.7% |
 | Partial (unaudited) | 9 | 3.6% |
-| Not working | 110 | 43.7% |
+| Not working | 111 | 44.0% |
 
 ## Cards needing work
 
@@ -115,10 +115,10 @@
 | Armored Scrapgorger | notice | This creature gets +3/+0 as long as it has three or more oil counters on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Aspirant's Ascent | notice | Until end of turn, target creature gets +1/+3 and gains flying and toxic 1. (Players dealt combat damage by that creature also get a poison counter.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Atraxa's Skitterfang | notice | At the beginning of combat on your turn, you may remove an oil counter from this creature. When you do, target creature you control gains your choice of flying, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Awaken the Sleeper | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attach | unparsed remainder: Untap that creature. It gains haste until end of turn. If it's equipped, you may destroy all Equipment attached to that creature. | Y/Y/- | not_working |
 | Carnivorous Canopy | notice | Destroy target artifact, enchantment, or creature with flying. If that permanent's mana value was 3 or less, proliferate. (Choose any number of permanents and/o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Charge of the Mites | notice | Choose one — • Charge of the Mites deals damage equal to the number of creatures you control to target creature or planeswalker. • Create two 1/1 colorless Phyr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Compleat Devotion | notice | Target creature you control gets +2/+2 until end of turn. If that creature has toxic, draw a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Compleat Devotion | notice | Target creature you control gets +2/+2 until end of turn. If that creature has toxic, draw a card. | unparsed remainder: If that creature has toxic, draw a card. | Y/Y/- | not_working |
 | Evolved Spinoderm | notice | This creature has trample as long as it has two or fewer oil counters on it. Otherwise, it has hexproof. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Evolving Adaptive | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Exuberant Fuseling | notice | This creature gets +1/+0 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -128,11 +128,12 @@
 | Hexgold Slash | notice | Hexgold Slash deals 2 damage to target creature. If that creature has toxic, Hexgold Slash deals 4 damage to that creature instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kethek, Crucible Goliath | notice | At the beginning of your end step, you may sacrifice another creature. If you do, reveal cards from the top of your library until you reveal a nonlegendary crea | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Necrosquito | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Noxious Assault | notice | Creatures you control get +2/+2 until end of turn. Whenever a creature blocks this turn, its controller gets a poison counter. | unparsed remainder: Whenever a creature blocks this turn, its controller gets a poison counter. | Y/Y/- | not_working |
 | Orthodoxy Enforcer | notice | This creature gets +2/+0 as long as you control two or more artifacts. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Porcelain Zealot | notice | At the beginning of combat on your turn, target creature you control gets +1/+1 until end of turn. If that creature has toxic, instead it gets +2/+2 until end o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Porcelain Zealot | notice | At the beginning of combat on your turn, target creature you control gets +1/+1 until end of turn. If that creature has toxic, instead it gets +2/+2 until end o | unparsed remainder: If that creature has toxic, instead it gets +2/+2 until end of turn. | Y/Y/- | not_working |
 | Rebel Salvo | notice | Affinity for Equipment (This spell costs {1} less to cast for each Equipment you control.) Rebel Salvo deals 5 damage to target creature or planeswalker. That p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Red Sun's Twilight | notice | Destroy up to X target artifacts. If X is 5 or more, for each artifact destroyed this way, create a token that's a copy of it. Those tokens gain haste. Exile th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Resistance Reunited | notice | Target creature gets +2/+2 until end of turn. Equipped creatures you control gain indestructible until end of turn. (Damage and effects that say "destroy" don't | unparsed remainder: Equipped creatures you control gain indestructible until end of turn. | Y/Y/- | not_working |
 | Serum Snare | notice | Return target nonland permanent to its owner's hand. If that permanent had mana value 3 or less, proliferate. (Choose any number of permanents and/or players, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Trawler Drake | notice | This creature gets +1/+1 for each oil counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urabrask's Forge | notice | At the beginning of combat on your turn, put an oil counter on this artifact, then create an X/1 red Phyrexian Horror creature token with trample and haste, whe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -200,7 +201,6 @@
 | Necrogen Communion | handled | Enchanted creature has toxic 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Nimraiser Paladin | handled | When this creature enters, return target creature card with mana value 3 or less from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Norn's Wellspring | handled | Whenever a creature you control dies, scry 1 and put an oil counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Noxious Assault | handled | Creatures you control get +2/+2 until end of turn. Whenever a creature blocks this turn, its controller gets a poison counter. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Offer Immortality | handled | Target creature gains deathtouch and indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Oil-Gorger Troll | handled | When this creature enters, you gain 3 life. Then if you control a permanent with an oil counter on it, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ossification | handled | When this Aura enters, exile target creature or planeswalker an opponent controls until this Aura leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -315,6 +315,7 @@
 | counter target spell unless its controller pays {M}. corrupted — counter that spell instead if its controller has three or more poison counters. | 1 | Bring the Ending | one |
 | counter target spell. if that spell's mana value was N or less, proliferate. (choose any number of permanents and/or players, then give each another counter of  | 1 | Reject Imperfection | one |
 | create a N/N green phyrexian beast creature token with toxic N. (players dealt combat damage by it also get a poison counter.) corrupted — as long as an opponen | 1 | Viral Spawning | one |
+| creatures you control get +N/+N until end of turn. whenever a creature blocks ~, its controller gets a poison counter. | 1 | Noxious Assault | one |
 | creatures you control that are equipped get +N/+N. | 1 | Hexgold Hoverwings | one |
 | creatures you control with oil counters on them get +N/+N. | 1 | Ichorplate Golem | one |
 | destroy target artifact, enchantment, or creature with flying. if that permanent's mana value was N or less, proliferate. (choose any number of permanents and/o | 1 | Carnivorous Canopy | one |

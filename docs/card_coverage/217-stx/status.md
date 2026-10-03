@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 11.7% |
-| Works (untested) | 152 | 55.5% |
+| Tested | 33 | 12.0% |
+| Works (untested) | 151 | 55.1% |
 | Partial (unaudited) | 5 | 1.8% |
 | Not working | 85 | 31.0% |
 
@@ -52,7 +52,7 @@
 | Extus, Oriq Overlord // Awaken the Blood Avatar | silent | As an additional cost to cast this spell, you may sacrifice any number of creatures. This spell costs {2} less to cast for each creature sacrificed this way. Ea | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fervent Mastery | silent | You may pay {2}{R}{R} rather than pay this spell's mana cost. If the {2}{R}{R} cost was paid, an opponent discards any number of cards, then draws that many car | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness Infinity | silent | Exchange your hand and graveyard. Exile Harness Infinity. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Hofri Ghostforge | silent | Spirits you control get +1/+1 and have trample and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Hofri Ghostforge | silent | Whenever another nontoken creature you control dies, exile it. If you do, create a token that's a copy of that creature, except it's a Spirit in addition to its | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Humiliate | silent | Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. Put a +1/+1 counter on a creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Ingenious Mastery | silent | You may pay {2}{U} rather than pay this spell's mana cost. If the {2}{U} cost was paid, you draw three cards, then an opponent creates two Treasure tokens and t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jadzi, Oracle of Arcavios // Journey to the Oracle | silent | You may put any number of land cards from your hand onto the battlefield. Then if you control eight or more lands, you may discard a card. If you do, return Jou | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -100,12 +100,12 @@
 | Academic Probation | notice | Choose one — • Choose a nonland card name. Opponents can't cast spells with the chosen name until your next turn. • Choose target nonland permanent. Until your  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ardent Dustspeaker | notice | Whenever this creature attacks, you may put an instant or sorcery card from your graveyard on the bottom of your library. If you do, exile the top two cards of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Confront the Past | notice | Choose one — • Return target planeswalker card with mana value X or less from your graveyard to the battlefield. • Remove twice X loyalty counters from target p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Emergent Sequence | notice | Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. That land becomes a 0/0 green and blue Fractal creature that's stil | unparsed remainder: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Put a +1/+1 counter on it for each land you had enter the battlefield under your control this turn. | Y/Y/- | not_working |
 | Flunk | notice | Target creature gets -X/-X until end of turn, where X is 7 minus the number of cards in that creature's controller's hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Fortifying Draught | notice | You gain 2 life. Target creature gets +X/+X until end of turn, where X is the amount of life you gained this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lorehold Command | notice | Choose two — • Create a 3/2 red and white Spirit creature token. • Creatures you control get +1/+0 and gain indestructible and haste until end of turn. • Loreho | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Pigment Storm | notice | Pigment Storm deals 5 damage to target creature. Excess damage is dealt to that creature's controller instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Prismari Apprentice | notice | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature can't be blocked this turn. If that spell has mana value 5 or greater, put a +1 | unparsed remainder: If that spell has mana value 5 or greater, put a +1/+1 counter on this creature. | Y/Y/- | not_working |
 | Quandrix Command | notice | Choose two — • Return target creature or planeswalker to its owner's hand. • Counter target artifact or enchantment spell. • Put two +1/+1 counters on target cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Scurrid Colony | notice | This creature gets +2/+2 as long as you control eight or more lands. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Semester's End | notice | Exile any number of target creatures and/or planeswalkers you control. At the beginning of the next end step, return each of them to the battlefield under its o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -184,7 +184,6 @@
 | Letter of Acceptance | handled | {2}, {T}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Leyline Invocation | handled | Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it, where X is the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lorehold Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Lorehold Excavation | handled | At the beginning of your end step, mill a card. If a land card was milled this way, you gain 1 life. Otherwise, this enchantment deals 1 damage to each opponent | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lorehold Pledgemage | handled | Magecraft — Whenever you cast or copy an instant or sorcery spell, this creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mage Duel | handled | This spell costs {2} less to cast if you've cast another instant or sorcery spell this turn. Target creature you control gets +1/+2 until end of turn. Then it f | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Mage Hunter | handled | Whenever an opponent casts or copies an instant or sorcery spell, they lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -272,7 +271,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>33 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -297,6 +296,7 @@
 - Infuse with Vitality
 - Introduction to Annihilation
 - Kelpie Guide
+- Lorehold Excavation
 - Make Your Mark
 - Mascot Exhibition
 - Prismari Command
@@ -354,7 +354,6 @@
 | search your library and graveyard for up to four creature cards with different names that each have mana value N or less and reveal them. an opponent chooses tw | 1 | Ecological Appreciation | stx |
 | search your library for a basic land card, put it onto the battlefield tapped, then shuffle. that land becomes a N/N green and blue fractal creature that's stil | 1 | Emergent Sequence | stx |
 | spells you cast that target a creature cost {M} less to cast. | 1 | Killian, Ink Duelist | stx |
-| spirits you control get +N/+N and have trample and haste. | 1 | Hofri Ghostforge | stx |
 | target creature gets -N/-N until end of turn, where N is N minus the number of cards in that creature"..."s hand. | 1 | Flunk | stx |
 | target creature you control deals damage equal to its power to target creature or planeswalker you don"..."t control dies ~, you gain N life. | 1 | Devouring Tendrils | stx |
 | target opponent reveals their hand. you choose a nonland card from it. that player discards that card. put a +N/+N counter on a creature you control. | 1 | Humiliate | stx |
@@ -364,6 +363,7 @@
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Archway Commons | stx |
 | whenever a creature you control deals combat damage to an opponent, put a point counter on ~. then if it has ten or more point counters on it, remove them all a | 1 | Strixhaven Stadium | stx |
 | whenever a permanent entering causes a triggered ability to trigger, counter that ability unless its controller pays {M}. | 1 | Strict Proctor | stx |
+| whenever another nontoken creature you control dies, exile it. if you do, create a token that"..."s a spirit in addition to its other types and it has "..." | 1 | Hofri Ghostforge | stx |
 | whenever one or more cards are put into exile during your turn, put a +N/+N counter on ~. ~ triggers only once each turn. | 1 | Stonebinder's Familiar | stx |
 | whenever you gain life, you may pay {M}. if you do, put a +N/+N counter on each creature you control and those creatures gain trample until end of turn. | 1 | Valentin, Dean of the Vein // Lisette, Dean of the Root | stx |
 | whenever ~ attacks or blocks, sacrifice a creature. | 1 | Daemogoth Titan | stx |

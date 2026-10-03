@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 24 | 9.4% |
-| Works (untested) | 135 | 52.7% |
+| Works (untested) | 134 | 52.3% |
 | Partial (unaudited) | 11 | 4.3% |
-| Not working | 86 | 33.6% |
+| Not working | 87 | 34.0% |
 
 ## Cards needing work
 
@@ -29,7 +29,6 @@
 | Airlift Chaplain | silent | When this creature enters, mill three cards. You may put a Plains card or a creature card with mana value 3 or less from among the cards milled this way into yo | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Arcane Proxy | silent | When this creature enters, if you cast it, exile target instant or sorcery card with mana value less than or equal to this creature's power from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Argivian Avenger | silent | {1}: Until end of turn, this creature gets -1/-1 and gains your choice of flying, vigilance, deathtouch, or haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Artificer's Dragon | silent | {R}: Artifact creatures you control get +1/+0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Autonomous Assembler | silent | Prototype | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Battlefield Butcher | silent | {5}, {T}: Each opponent loses 2 life. This ability costs {1} less to activate for each creature card in your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Bladecoil Serpent | silent | When this creature enters, for each {U}{U} spent to cast it, draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -107,8 +106,10 @@
 | Obliterating Bolt | notice | Obliterating Bolt deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Portal to Phyrexia | notice | At the beginning of your upkeep, put target creature card from a graveyard onto the battlefield under your control. It's a Phyrexian in addition to its other ty | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Recommission | notice | Return target artifact or creature card with mana value 3 or less from your graveyard to the battlefield. If a creature enters this way, it enters with an addit | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Sibling Rivalry | notice | Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn. Create a tapped Powerstone token. (It's an artifact w | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Sibling Rivalry | notice | Gain control of target artifact or creature until end of turn. Untap it. It gains haste until end of turn. Create a tapped Powerstone token. (It's an artifact w | unparsed remainder: Untap it. It gains haste until end of turn. Create a tapped Powerstone token. | Y/Y/- | not_working |
 | Soul Partition | notice | Exile target nonland permanent. For as long as that card remains exiled, its owner may play it. A spell cast by an opponent this way costs {2} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Spectrum Sentinel | notice | Protection | protection from a quality the engine does not read: multicolored (This creature can't be blocked | Y/Y/- | not_working |
+| Titania, Gaea Incarnate | notice | {3}{G}: Put four +1/+1 counters on target land you control. It becomes a 0/0 Elemental creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/- | not_working |
 | Tocasia, Dig Site Mentor | notice | Creatures you control have vigilance and "{T}: Surveil 1." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Unleash Shell | notice | Unleash Shell deals 5 damage to target creature or planeswalker and 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Urza's Command | notice | Choose two — • Creatures you don't control get -2/-0 until end of turn. • Create a tapped Powerstone token. • Create a tapped 0/0 colorless Construct artifact c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -130,6 +131,7 @@
 | Arbalest Engineers | handled | When this creature enters, choose one — • This creature deals 1 damage to any target. • Put a +1/+1 counter on target creature. It gains trample and haste until | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argothian Opportunist | handled | When this creature enters, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Argothian Sprite | handled | This creature can't be blocked by artifact creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Artificer's Dragon | handled | {R}: Artifact creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashnod's Harvester | handled | Whenever this creature attacks, exile target card from a graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashnod's Intervention | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies or is put into exile from the battlefield, return it to its owner's hand." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ashnod, Flesh Mechanist | handled | Whenever Ashnod attacks, you may sacrifice another creature. If you do, create a tapped Powerstone token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -217,7 +219,6 @@
 | Simian Simulacrum | handled | When this creature enters, put two +1/+1 counters on target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skystrike Officer | handled | Whenever this creature attacks, create a 1/1 colorless Soldier artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Slagstone Refinery | handled | Whenever this artifact or another nontoken artifact you control is put into a graveyard from the battlefield or is put into exile from the battlefield, create a | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Spectrum Sentinel | handled | Whenever a nonbasic land an opponent controls enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Splitting the Powerstone | handled | As an additional cost to cast this spell, sacrifice an artifact. Create two tapped Powerstone tokens. If the sacrificed artifact was legendary, draw a card. (Th | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Static Net | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stern Lesson | handled | Draw two cards, then discard a card. Create a tapped Powerstone token. (It's an artifact with "{T}: Add {C}. This mana can't be spent to cast a nonartifact spel | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -236,7 +237,6 @@
 | Thopter Mechanic | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thraxodemon | handled | {3}, {T}, Sacrifice another creature or artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Titania's Command | handled | Choose two — • Exile target player's graveyard. You gain 1 life for each card exiled this way. • Search your library for up to two land cards, put them onto the | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Titania, Gaea Incarnate | handled | Titania's power and toughness are each equal to the number of lands you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tocasia's Dig Site | handled | {3}, {T}: Surveil 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tocasia's Onulet | handled | When this creature leaves the battlefield, you gain 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tocasia's Welcome | handled | Whenever one or more creatures you control with mana value 3 or less enter, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -330,6 +330,7 @@
 | look at the top seven cards of your library. put up to N artifact and/or creature cards with mana value N or less from among them onto the battlefield. put the  | 1 | Kayla's Reconstruction | bro |
 | permanents you control have "..." | 1 | Mishra, Tamer of Mak Fawa | bro |
 | prevent all damage that would be dealt to other attacking soldiers you control. | 1 | Rescue Retriever | bro |
+| protection | 1 | Spectrum Sentinel | bro |
 | return target artifact or creature card with mana value N or less from your graveyard to the battlefield. if a creature enters ~, it enters with an additional + | 1 | Recommission | bro |
 | sacrifice hajar: legendary creatures you control get +N/+N and gain indestructible until end of turn. | 1 | Hajar, Loyal Bodyguard | bro |
 | target opponent reveals their hand. you choose an artifact or creature card from it, then choose an artifact or creature card from their graveyard. exile the ch | 1 | Dreams of Steel and Oil | bro |
@@ -362,9 +363,9 @@
 | {M}, {M}, sacrifice ~: exile the top two cards of your library. choose one of them. until the end of your next turn, you may play that card. | 1 | Mishra's Research Desk | bro |
 | {M}, {M}: discard all the cards in your hand, then draw that many cards. you may choose an artifact or creature card with mana value N you discarded ~, then do  | 1 | Queen Kayla bin-Kroog | bro |
 | {M}, {M}: each opponent loses N life. ~ costs {M} less to activate for each creature card in your graveyard. | 1 | Battlefield Butcher | bro |
-| {M}: artifact creatures you control get +N/+N until end of turn. | 1 | Artificer's Dragon | bro |
 | {M}: until end of turn, ~ gets -N/-N and gains your choice of flying, vigilance, deathtouch, or haste. | 1 | Argivian Avenger | bro |
 | {M}: ~ loses defender and gains "..." | 1 | Surge Engine | bro |
+| {M}{M}: put four +N/+N counters on target land you control. it becomes a N/N elemental creature with haste. it's still a land. | 1 | Titania, Gaea Incarnate | bro |
 | {M}{M}: return target permanent you control to its owner"..."s hand. activate only during your turn. | 1 | Meticulous Excavation | bro |
 | {M}{M}: you may put an artifact card from your hand onto the battlefield. that artifact gains haste. sacrifice it at the beginning of the next end step. | 1 | Arms Race | bro |
 | {M}{M}{M}, sacrifice ~: create an N/N colorless golem artifact creature token, where N is three times ~ power. it gains haste until end of turn. activate only a | 1 | Rootwire Amalgam | bro |

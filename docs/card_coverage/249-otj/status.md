@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.3% |
-| Works (untested) | 130 | 50.2% |
+| Tested | 25 | 9.7% |
+| Works (untested) | 129 | 49.8% |
 | Partial (unaudited) | 7 | 2.7% |
 | Not working | 98 | 37.8% |
 
@@ -49,7 +49,6 @@
 | Ertha Jo, Frontier Mentor | silent | Whenever you activate an ability that targets a creature or player, copy that ability. You may choose new targets for the copy. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Fblthp, Lost on the Range | silent | Plot | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Geralf, the Fleshwright | silent | Whenever a Zombie you control enters, put a +1/+1 counter on it for each other Zombie that entered the battlefield under your control this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Gisa, the Hellraiser | silent | Skeletons and Zombies you control get +1/+1 and have menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hellspur Posse Boss | silent | Other outlaws you control have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Hollow Marauder | silent | When this creature enters, any number of target opponents each discard a card. For each of those opponents who didn't discard a card with mana value 4 or greate | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Kellan, the Kid | silent | Whenever you cast a spell from anywhere other than your hand, you may cast a permanent spell with equal or lesser mana value from your hand without paying its m | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -92,8 +91,8 @@
 | Caught in the Crossfire | notice | Spree (Choose one or more additional costs.) + {1} — Caught in the Crossfire deals 2 damage to each outlaw creature. (Assassins, Mercenaries, Pirates, Rogues, a | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Colossal Rattlewurm | notice | Colossal Rattlewurm has flash as long as you control a Desert. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Consuming Ashes | notice | Exile target creature. If it had mana value 3 or less, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard an | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Desert's Due | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each Desert you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Fleeting Reflection | notice | Target creature you control gains hexproof until end of turn. Untap that creature. Until end of turn, it becomes a copy of up to one other target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Desert's Due | notice | Target creature gets -2/-2 until end of turn. It gets an additional -1/-1 until end of turn for each Desert you control. | unparsed remainder: It gets an additional -1/-1 until end of turn for each Desert you control. | Y/Y/Y | not_working |
+| Fleeting Reflection | notice | Target creature you control gains hexproof until end of turn. Untap that creature. Until end of turn, it becomes a copy of up to one other target creature. | unparsed remainder: Untap that creature. Until end of turn, it becomes a copy of up to one other target creature. | Y/Y/Y | not_working |
 | Fortune, Loyal Steed | notice | Whenever Fortune attacks while saddled, at end of combat, exile it and up to one creature that saddled it this turn, then return those cards to the battlefield  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Full Steam Ahead | notice | Until end of turn, each creature you control gets +2/+2 and gains trample and "This creature can't be blocked by more than one creature." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Getaway Glamer | notice | Spree (Choose one or more additional costs.) + {1} — Exile target nontoken creature. Return it to the battlefield under its owner's control at the beginning of  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -108,21 +107,22 @@
 | Mystical Tether | notice | You may cast this spell as though it had flash if you pay {2} more to cast it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Omenport Vigilante | notice | This creature has double strike as long as you've committed a crime this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | One Last Job | notice | Spree (Choose one or more additional costs.) + {2} — Return target creature card from your graveyard to the battlefield. + {1} — Return target Mount or Vehicle  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Quick Draw | notice | Target creature you control gets +1/+1 and gains first strike until end of turn. Creatures target opponent controls lose first strike and double strike until en | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Quick Draw | notice | Target creature you control gets +1/+1 and gains first strike until end of turn. Creatures target opponent controls lose first strike and double strike until en | unparsed remainder: Creatures target opponent controls lose first strike and double strike until end of turn. | Y/Y/Y | not_working |
 | Return the Favor | notice | Spree (Choose one or more additional costs.) + {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability. You may choose new targe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Riku of Many Paths | notice | Whenever you cast a modal spell, choose up to X, where X is the number of times you chose a mode for that spell — • Exile the top card of your library. Until th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rush of Dread | notice | Spree (Choose one or more additional costs.) + {1} — Target opponent sacrifices half the creatures they control of their choice, rounded up. + {2} — Target oppo | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Rustler Rampage | notice | Spree (Choose one or more additional costs.) + {1} — Untap all creatures target player controls. + {1} — Target creature gains double strike until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Satoru, the Infiltrator | notice | Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card. | unread intervening "if": "none of them were cast or no mana was spent to cast them" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
 | Shepherd of the Clouds | notice | When this creature enters, return target permanent card with mana value 3 or less from your graveyard to your hand. Return that card to the battlefield instead  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Shifting Grift | notice | Spree (Choose one or more additional costs.) + {2} — Exchange control of two target creatures. + {1} — Exchange control of two target artifacts. + {1} — Exchang | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Slickshot Vault-Buster | notice | This creature gets +2/+0 as long as you've committed a crime this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Steer Clear | notice | Steer Clear deals 2 damage to target attacking or blocking creature. Steer Clear deals 4 damage to that creature instead if you controlled a Mount as you cast t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Stingerback Terror | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Stoic Sphinx | notice | This creature has hexproof as long as you haven't cast a spell this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Take for a Ride | notice | Take for a Ride has flash as long as you've committed a crime this turn. (Targeting opponents, anything they control, and/or cards in their graveyards is a crim | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Take the Fall | notice | Target creature gets -1/-0 until end of turn. It gets -4/-0 until end of turn instead if you control an outlaw. (Assassins, Mercenaries, Pirates, Rogues, and Wa | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Take for a Ride | notice | Take for a Ride has flash as long as you've committed a crime this turn. (Targeting opponents, anything they control, and/or cards in their graveyards is a crim | unparsed remainder: Take for a Ride has flash as long as you've committed a crime this turn. Untap that creature. It gains haste until end of turn. | Y/Y/Y | not_working |
+| Take the Fall | notice | Target creature gets -1/-0 until end of turn. It gets -4/-0 until end of turn instead if you control an outlaw. (Assassins, Mercenaries, Pirates, Rogues, and Wa | unparsed remainder: It gets -4/-0 until end of turn instead if you control an outlaw. Draw a card. | Y/Y/Y | not_working |
 | The Gitrog, Ravenous Ride | notice | Whenever The Gitrog deals combat damage to a player, you may sacrifice a creature that saddled it this turn. If you do, draw X cards, then put up to X land card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Throw from the Saddle | notice | Target creature you control gets +1/+1 until end of turn. Put a +1/+1 counter on it instead if it's a Mount. Then it deals damage equal to its power to target c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Throw from the Saddle | notice | Target creature you control gets +1/+1 until end of turn. Put a +1/+1 counter on it instead if it's a Mount. Then it deals damage equal to its power to target c | unparsed remainder: Put a +1/+1 counter on it instead if it's a Mount. Then it deals damage equal to its power to target creature you don't control. | Y/Y/Y | not_working |
 | Trash the Town | notice | Spree (Choose one or more additional costs.) + {2} — Put two +1/+1 counters on target creature. + {1} — Target creature gains trample until end of turn. + {1} — | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Doc Aurlock, Grizzled Genius | unaudited | Spells you cast from your graveyard or from exile cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Duelist of the Mind | unaudited | Duelist of the Mind's power is equal to the number of cards you've drawn this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -227,7 +227,6 @@
 | Roxanne, Starfall Savant | handled | Whenever Roxanne enters or attacks, create a tapped colorless artifact token named Meteorite with "When this token enters, it deals 2 damage to any target" and  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ruthless Lawbringer | handled | When this creature enters, you may sacrifice another creature. When you do, destroy target nonland permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sandstorm Verge | handled | {3}, {T}: Target creature can't block this turn. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Satoru, the Infiltrator | handled | Whenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scalestorm Summoner | handled | Whenever this creature attacks, create a 3/1 red Dinosaur creature token if you control a creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scorching Shot | handled | Scorching Shot deals 5 damage to target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Seize the Secrets | handled | This spell costs {1} less to cast if you've committed a crime this turn. (Targeting opponents, anything they control, and/or cards in their graveyards is a crim | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -265,12 +264,13 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
 - Final Showdown
 - Forsaken Miner
+- Gisa, the Hellraiser
 - Goldvein Hydra
 - High Noon
 - Highway Robbery
@@ -315,7 +315,6 @@
 | plot | 1 | Fblthp, Lost on the Range | otj |
 | sacrifice any number of permanents you control, then draw that many cards. plot {M}{M}{M} (you may pay {M}{M}{M} and exile ~ from your hand. cast it as a sorcer | 1 | Pitiless Carnage | otj |
 | search your library for up to two basic land cards and/or desert cards, put them onto the battlefield tapped, then shuffle. | 1 | Map the Frontier | otj |
-| skeletons and zombies you control get +N/+N and have menace. | 1 | Gisa, the Hellraiser | otj |
 | spells you cast from your graveyard or from exile cost {M} less to cast. | 1 | Doc Aurlock, Grizzled Genius | otj |
 | spree (choose one or more additional costs.) + {M} — copy target instant spell, sorcery spell, activated ability, or triggered ability. you may choose new targe | 1 | Return the Favor | otj |
 | spree (choose one or more additional costs.) + {M} — exchange control of two target creatures. + {M} — exchange control of two target artifacts. + {M} — exchang | 1 | Shifting Grift | otj |
@@ -359,6 +358,7 @@
 | whenever equipped creature deals combat damage to a player, look at that many cards from the top of your library. you may exile a nonland card from among them.  | 1 | The Key to the Vault | otj |
 | whenever fortune attacks while saddled, at end of combat, exile it and up to one creature that saddled it ~, then return those cards to the battlefield under th | 1 | Fortune, Loyal Steed | otj |
 | whenever obeka deals combat damage to a player, you get that many additional upkeep steps after ~. | 1 | Obeka, Splitter of Seconds | otj |
+| whenever satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card. | 1 | Satoru, the Infiltrator | otj |
 | whenever the gitrog deals combat damage to a player, you may sacrifice a creature that saddled it ~. if you do, draw N cards, then put up to N land cards from y | 1 | The Gitrog, Ravenous Ride | otj |
 | whenever tinybones deals combat damage to a player, you may cast target nonland permanent card from that player's graveyard, and mana of any type can be spent t | 1 | Tinybones, the Pickpocket | otj |
 | whenever you activate an ability that targets a creature or player, copy that ability. you may choose new targets for the copy. | 1 | Ertha Jo, Frontier Mentor | otj |

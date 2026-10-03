@@ -471,6 +471,29 @@ def _permanent_quality_matcher(word: str) -> Callable[[Characteristics], bool] |
     return _quality_matcher(word)
 
 
+def _phrase_has_validated_history_restriction(phrase: str) -> bool:
+    """Whether `phrase`'s own "this turn" is `machines/targeting.py`'s
+    validated "controlled by a player who was dealt combat damage ... this
+    turn" restriction (Admiral Beckett Brass) rather than an unread duration
+    or condition `_NOT_UNTIMED_RE` exists to catch.
+
+    A narrow, provable carve-out rather than a loosening of `_NOT_UNTIMED_RE`
+    itself: only a phrase that `machines/targeting.py` fully reads as
+    exactly one requirement, and whose requirement is specifically this
+    per-turn historical restriction (`TargetRequirement.
+    controller_dealt_damage_clause`/`dealt_damage_clause`), is let through -
+    every other "this turn", "until", "for as long as", etc. still fails
+    closed the same way it always has.
+    """
+    from .targeting import profile_for_text
+
+    profile = profile_for_text(phrase)
+    if not profile.understood or len(profile.requirements) != 1:
+        return False
+    requirement = profile.requirements[0]
+    return bool(requirement.controller_dealt_damage_clause or requirement.dealt_damage_clause)
+
+
 def parse_gain_control_untimed_clause(effect_text: str) -> AbilityEffect | None:
     """`_GAIN_CONTROL_UNTIMED_RE`'s shape, or `None`."""
     from .effects import _counter_kind, _targets_understood
@@ -480,7 +503,7 @@ def parse_gain_control_untimed_clause(effect_text: str) -> AbilityEffect | None:
     if match is None:
         return None
     phrase = match.group("phrase")
-    if _NOT_UNTIMED_RE.search(phrase):
+    if _NOT_UNTIMED_RE.search(phrase) and not _phrase_has_validated_history_restriction(phrase):
         return None
     if not _targets_understood(phrase, count_agnostic=True):
         return None

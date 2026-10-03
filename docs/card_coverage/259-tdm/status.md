@@ -54,7 +54,6 @@
 | Lasyd Prowler | silent | When this creature enters, you may mill cards equal to the number of lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Lotuslight Dancers | silent | When this creature enters, search your library for a black card, a green card, and a blue card. Put those cards into your graveyard, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Mardu Siegebreaker | silent | Whenever this creature attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. At the beginning of your next | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Marshal of the Lost | silent | Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Molten Exhale | silent | You may cast this spell as though it had flash if you behold a Dragon as an additional cost to cast it. (To behold a Dragon, choose a Dragon you control or reve | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Narset's Rebuke | silent | Narset's Rebuke deals 5 damage to target creature. Add {U}{R}{W}. If that creature would die this turn, exile it instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Narset, Jeskai Waymaster | silent | At the beginning of your end step, you may discard your hand. If you do, draw cards equal to the number of spells you've cast this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
@@ -84,6 +83,7 @@
 | Windcrag Siege | silent | • Jeskai — At the beginning of your upkeep, create a 1/1 red Goblin creature token. It gains lifelink and haste until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Wingspan Stride | silent | {2}{U}: Return this Aura to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Desperate Measures | notice | Target creature gets +1/-1 until end of turn. When it dies under your control this turn, draw two cards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Eshki Dragonclaw | notice | At the beginning of combat on your turn, if you've cast both a creature spell and a noncreature spell this turn, draw a card and put two +1/+1 counters on Eshki | unread intervening "if": "you've cast both a creature spell and a noncreature spell this turn" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
 | Karakyk Guardian | notice | This creature has hexproof as long as it hasn't dealt damage yet. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kishla Trawlers | notice | When this creature enters, you may exile a creature card from your graveyard. When you do, return target instant or sorcery card from your graveyard to your han | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Lie in Wait | notice | Return target creature card from your graveyard to your hand. Lie in Wait deals damage equal to that card's power to target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -136,7 +136,6 @@
 | Elspeth, Storm Slayer | handled | If one or more tokens would be created under your control, twice that many of those tokens are created instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Encroaching Dragonstorm | handled | When this enchantment enters, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Equilibrium Adept | handled | When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Eshki Dragonclaw | handled | At the beginning of combat on your turn, if you've cast both a creature spell and a noncreature spell this turn, draw a card and put two +1/+1 counters on Eshki | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fangkeeper's Familiar | handled | When this creature enters, choose one — • You gain 3 life and surveil 3. • Destroy target enchantment. • Counter target creature spell. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Felothar, Dawn of the Abzan | handled | Whenever Felothar enters or attacks, you may sacrifice a nonland permanent. When you do, put a +1/+1 counter on each creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Feral Deathgorger // Dusk Sight | handled | Put a +1/+1 counter on up to one target creature. Draw a card. (Then shuffle this card into its owner's library.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -167,6 +166,7 @@
 | Mammoth Bellow | handled | Create a 5/5 green Elephant creature token. Harmonize {5}{G}{U}{R} (You may cast this card from your graveyard for its harmonize cost. You may tap a creature yo | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mardu Devotee | handled | When this creature enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mardu Monument | handled | When this artifact enters, search your library for a basic Mountain, Plains, or Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Marshal of the Lost | handled | Whenever you attack, target creature gets +X/+X until end of turn, where X is the number of attacking creatures. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Meticulous Artisan | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Monastery Messenger | handled | When this creature enters, put up to one target noncreature, nonland card from your graveyard on top of your library. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Mox Jasper | handled |  |  | Y/Y/Y | not_tested |
@@ -297,6 +297,7 @@
 | as long as you control a creature with a counter on it, ~ gets +N/+N. | 1 | Formation Breaker | tdm |
 | as ~ enters, choose abzan or mardu. | 1 | Barrensteppe Siege | tdm |
 | as ~ enters, choose temur or sultai. | 1 | Glacierwood Siege | tdm |
+| at the beginning of combat on your turn, if you've cast both a creature spell and a noncreature spell ~, draw a card and put two +N/+N counters on ~. | 1 | Eshki Dragonclaw | tdm |
 | at the beginning of each combat, if you've cast two or more spells ~, ~ becomes a N/N monk creature with haste in addition to its other types until end of turn. | 1 | Reverberating Summons | tdm |
 | at the beginning of your end step, if creatures you control have total toughness N or greater, draw a card. then if creatures you control have total toughness N | 1 | Betor, Kin to All | tdm |
 | at the beginning of your end step, you may discard your hand. if you do, draw cards equal to the number of spells you've cast ~. | 1 | Narset, Jeskai Waymaster | tdm |
@@ -341,7 +342,6 @@
 | whenever kotis deals combat damage to a player, exile the top N cards of their library, where N is the amount of damage dealt. you may cast any number of spells | 1 | Kotis, the Fangkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, create a treasure token. | 1 | Kheru Goldkeeper | tdm |
 | whenever one or more cards leave your graveyard during your turn, put a +N/+N counter on ~. | 1 | Attuned Hunter | tdm |
-| whenever you attack, target creature gets +N/+N until end of turn, where N is the number of attacking creatures. | 1 | Marshal of the Lost | tdm |
 | whenever you cast a spell, you lose life equal to its mana value. | 1 | Teval, Arbiter of Virtue | tdm |
 | whenever ~ attacks, for each opponent, create a tapped token that's a copy of the exiled card attacking that opponent. at the beginning of your next end step, s | 1 | Mardu Siegebreaker | tdm |
 | whenever ~ attacks, up to one target player mills cards equal to ~ power. | 1 | Veteran Ice Climber | tdm |

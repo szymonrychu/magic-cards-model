@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 14 | 6.0% |
-| Works (untested) | 114 | 49.1% |
+| Works (untested) | 115 | 49.6% |
 | Partial (unaudited) | 8 | 3.4% |
-| Not working | 96 | 41.4% |
+| Not working | 95 | 40.9% |
 
 ## Cards needing work
 
@@ -101,7 +101,6 @@
 | Stolen Identity | silent | Cipher | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Structural Collapse | silent | Target player sacrifices an artifact and a land of their choice. Structural Collapse deals 2 damage to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Thrull Parasite | silent | {T}, Pay 2 life: Remove a counter from target nonland permanent. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Totally Lost | silent | Put target nonland permanent on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undercity Informer | silent | {1}, Sacrifice a creature: Target player reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Undercity Plague | silent | Target player loses 1 life, discards a card, then sacrifices a permanent of their choice. Cipher (Then you may exile this spell card encoded on a creature you c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unexpected Results | silent | Shuffle your library, then reveal the top card. If it's a nonland card, you may cast it without paying its mana cost. If it's a land card, you may put it onto t | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -229,6 +228,7 @@
 | Sunhome Guildmage | handled | {1}{R}{W}: Creatures you control get +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Syndicate Enforcer | handled | Extort | machines/keywords.py | Y/Y/- | not_tested |
 | Thespian's Stage | handled | {2}, {T}: This land becomes a copy of target land, except it has this ability. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Totally Lost | handled | Put target nonland permanent on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tower Defense | handled | Creatures you control get +0/+5 and gain reach until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Towering Thunderfist | handled | {W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Treasury Thrull | handled | Whenever this creature attacks, you may return target artifact, creature, or enchantment card from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -305,7 +305,6 @@
 | prevent all combat damage that would be dealt to ~ by creatures blocking it. | 1 | Armored Transport | gtc |
 | prevent all combat damage that would be dealt ~ by creatures with no +N/+N counters on them. | 1 | Hindervines | gtc |
 | prevent all damage that would be dealt to target creature ~. | 1 | Shielded Passage | gtc |
-| put target nonland permanent on top of its owner's library. | 1 | Totally Lost | gtc |
 | remove two +N/+N counters from ~: regenerate it. | 1 | Experiment One | gtc |
 | return all attacking creatures to their owner's hand. | 1 | Aetherize | gtc |
 | sacrifice another creature: ~ gains protection from the color of your choice until end of turn. | 1 | Cartel Aristocrat | gtc |

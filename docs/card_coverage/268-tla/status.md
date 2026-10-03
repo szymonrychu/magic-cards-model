@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 52 | 18.8% |
-| Works (untested) | 129 | 46.6% |
+| Works (untested) | 128 | 46.2% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 83 | 30.0% |
+| Not working | 84 | 30.3% |
 
 ## Cards needing work
 
@@ -102,11 +102,12 @@
 | Iroh, Tea Master | notice | At the beginning of combat on your turn, you may have target opponent gain control of target permanent you control. When you do, create a 1/1 white Ally creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jeong Jeong, the Deserter | notice | Exhaust — {3}: Put a +1/+1 counter on Jeong Jeong. When you next cast a Lesson spell this turn, copy it and you may choose new targets for the copy. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Jet's Brainwashing | notice | Kicker {3} (You may pay an additional {3} as you cast this spell.) Target creature can't block this turn. If this spell was kicked, gain control of that creatur | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Katara, Water Tribe's Hope | notice | Waterbend {X}: Creatures you control have base power and toughness X/X until end of turn. X can't be 0. Activate only during your turn. | unparsed remainder: 0 can't be 0. | Y/Y/Y | not_working |
 | Messenger Hawk | notice | This creature gets +2/+0 as long as you've drawn two or more cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Planetarium of Wan Shi Tong | notice | Whenever you scry or surveil, look at the top card of your library. You may cast that card without paying its mana cost. Do this only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sandbender Scavengers | notice | When this creature dies, you may exile it. When you do, return target creature card with mana value less than or equal to this creature's power from your gravey | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sold Out | notice | Exile target creature. If it was dealt damage this turn, create a Clue token. (It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Yip Yip! | notice | Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Yip Yip! | notice | Target creature you control gets +2/+2 until end of turn. If that creature is an Ally, it also gains flying until end of turn. | unparsed remainder: If that creature is an Ally, it also gains flying until end of turn. | Y/Y/Y | not_working |
 | Zuko's Conviction | notice | Kicker {4} (You may pay an additional {4} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Zuko, Conflicted | notice | At the beginning of your first main phase, choose one that hasn't been chosen and you lose 2 life — • Draw a card. • Put a +1/+1 counter on Zuko. • Add {R}. • E | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bender's Waterskin | unaudited | Untap this artifact during each other player's untap step. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -182,7 +183,6 @@
 | Jet, Freedom Fighter | handled | When Jet enters, he deals damage equal to the number of creatures you control to target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | June, Bounty Hunter | handled | June can't be blocked as long as you've drawn two or more cards this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Katara, Bending Prodigy | handled | At the beginning of your end step, if Katara is tapped, put a +1/+1 counter on her. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Katara, Water Tribe's Hope | handled | When Katara enters, create a 1/1 white Ally creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Katara, the Fearless | handled | If a triggered ability of an Ally you control triggers, that ability triggers an additional time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Knowledge Seeker | handled | Whenever you draw your second card each turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kyoshi Village | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -365,6 +365,7 @@
 | untap one or two target creatures. they each get +N/+N until end of turn. | 1 | Fancy Footwork | tla |
 | untap ~ during each other player's untap step. | 1 | Bender's Waterskin | tla |
 | waterbend {M}, {M}: you may cast a noncreature spell from your hand without paying its mana cost. | 1 | Yue, the Moon Spirit | tla |
+| waterbend {M}: creatures you control have base power and toughness N/N until end of turn. N can't be N. activate only during your turn. | 1 | Katara, Water Tribe's Hope | tla |
 | waterbend {M}: enchanted creature's owner shuffles it into their library. | 1 | Watery Grasp | tla |
 | waterbend {M}: look at the top four cards of your library. you may reveal a creature card with power N or less from among them and put it into your hand. put th | 1 | Water Tribe Rallier | tla |
 | waterbend {M}: sacrifice ~. if you do, scry N. | 1 | Aang's Iceberg | tla |

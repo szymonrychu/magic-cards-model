@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 21 | 8.6% |
-| Works (untested) | 119 | 48.8% |
+| Works (untested) | 118 | 48.4% |
 | Partial (unaudited) | 18 | 7.4% |
-| Not working | 86 | 35.2% |
+| Not working | 87 | 35.7% |
 
 ## Cards needing work
 
@@ -31,12 +31,12 @@
 | Bortuk Bonerattle | silent | Domain — When Bortuk Bonerattle enters, if you cast it, choose target creature card in your graveyard. Return that card to the battlefield if its mana value is  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Braids's Frightful Return | silent | III — Target opponent may sacrifice a nonland, nontoken permanent of their choice. If they don't, they lose 2 life and you draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Chaotic Transformation | silent | Exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. For each  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Cleaving Skyrider | silent | When this creature enters, if it was kicked, it deals X damage to any target, where X is the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Combat Research | silent | As long as enchanted creature is legendary, it gets +1/+1 and has ward {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Coral Colony | silent | {1}{U}, {T}: Target player mills X cards, where X is the number of creatures you control with defender. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Cut Down | silent | Destroy target creature with total power and toughness 5 or less. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Danitha, Benalia's Hope | silent | When Danitha enters, you may put an Aura or Equipment card from your hand or graveyard onto the battlefield attached to Danitha. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Drag to the Bottom | silent | Domain — Each creature gets -X/-X until end of turn, where X is 1 plus the number of basic land types among lands you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Evolved Sleeper | silent | {1}{B}: If this creature is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Founding the Third Path | silent | I — You may cast an instant or sorcery spell with mana value 1 or 2 from your hand without paying its mana cost. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hero's Heirloom | silent | As long as equipped creature is legendary, it has trample and haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Inscribed Tablet | silent | {1}, {T}, Sacrifice this artifact: Reveal the top five cards of your library. Put a land card from among them into your hand and the rest on the bottom of your  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -95,12 +95,12 @@
 | Zur, Eternal Schemer | silent | Enchantment creatures you control have deathtouch, lifelink, and hexproof. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Aggressive Sabotage | notice | Kicker {R} (You may pay an additional {R} as you cast this spell.) Target player discards two cards. If this spell was kicked, it deals 3 damage to that player. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Braids, Arisen Nightmare | notice | At the beginning of your end step, you may sacrifice an artifact, creature, enchantment, land, or planeswalker. If you do, each opponent may sacrifice a permane | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Choking Miasma | notice | Kicker {G} (You may pay an additional {G} as you cast this spell.) If this spell was kicked, put a +1/+1 counter on a creature you control. All creatures get -2 | unparsed remainder: If this spell was kicked, put a +1/+1 counter on a creature you control. | Y/Y/- | not_working |
 | Djinn of the Fountain | notice | Whenever you cast an instant or sorcery spell, choose one — • This creature gets +1/+1 until end of turn. • Exile this creature. Return it to the battlefield un | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ertai Resurrected | notice | When Ertai Resurrected enters, choose up to one — • Counter target spell, activated ability, or triggered ability. Its controller draws a card. • Destroy anothe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Evolved Sleeper | notice | {1}{B}: If this creature is a Cleric, put a deathtouch counter on it and it becomes a Phyrexian Human Cleric with base power and toughness 3/3. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golden Argosy | notice | Whenever Golden Argosy attacks, exile each creature that crewed it this turn. Return them to the battlefield tapped under their owner's control at the beginning | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| In Thrall to the Pit | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Gain control of target creature until end of turn. Untap that creature. It gains haste  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Heroic Charge | notice | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Creatures you control get +2/+1 until end of turn. If this spell was kicked, those crea | unparsed remainder: If this spell was kicked, those creatures also gain trample until end of turn. | Y/Y/- | not_working |
+| In Thrall to the Pit | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Gain control of target creature until end of turn. Untap that creature. It gains haste  | unparsed remainder: Untap that creature. It gains haste until end of turn. If this spell was kicked, sacrifice that creature at the beginning of the next end step. | Y/Y/- | not_working |
 | Jodah, the Unifier | notice | Legendary creatures you control get +X/+X, where X is the number of legendary creatures you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Keldon Strike Team | notice | As long as this creature entered this turn, creatures you control have haste. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Llanowar Greenwidow | notice | Domain — {7}{G}: Return this card from your graveyard to the battlefield tapped. It gains "If this permanent would leave the battlefield, exile it instead of pu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -108,9 +108,10 @@
 | Rona's Vortex | notice | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Return target creature or planeswalker you don't control to its owner's hand. If this s | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sheoldred's Restoration | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Return target creature card from your graveyard to the battlefield. If this spell was k | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sol'Kanar the Tainted | notice | At the beginning of your end step, choose one that hasn't been chosen — • Draw a card. • Each opponent loses 2 life and you gain 2 life. • Sol'Kanar deals 3 dam | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Timely Interference | notice | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Target creature gets -1/-0 until end of turn. If this spell was kicked, that creature b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tribute to Urborg | notice | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Target creature gets -2/-2 until end of turn. If this spell was kicked, that creature g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Timely Interference | notice | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Target creature gets -1/-0 until end of turn. If this spell was kicked, that creature b | unparsed remainder: If this spell was kicked, that creature blocks this turn if able. Draw a card. | Y/Y/- | not_working |
+| Tribute to Urborg | notice | Kicker {1}{U} (You may pay an additional {1}{U} as you cast this spell.) Target creature gets -2/-2 until end of turn. If this spell was kicked, that creature g | unparsed remainder: If this spell was kicked, that creature gets an additional -1/-1 until end of turn for each instant and sorcery card in your graveyard. | Y/Y/- | not_working |
 | Twinferno | notice | Choose one — • When you cast your next instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy. • Target creature you contr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Warhost's Frenzy | notice | Kicker {B} (You may pay an additional {B} as you cast this spell.) Creatures you control get +2/+0 until end of turn. If this spell was kicked, whenever a creat | unparsed remainder: If this spell was kicked, whenever a creature you control dies this turn, draw a card. | Y/Y/- | not_working |
 | Weatherlight Compleated | notice | Whenever a creature you control dies, put a phyresis counter on Weatherlight Compleated. Then draw a card if it has seven or more phyresis counters on it. If it | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Anointed Peacekeeper | unaudited | As this creature enters, look at an opponent's hand, then choose any card name. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Astor, Bearer of Blades | unaudited | Equipment you control have equip {1}. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -150,6 +151,7 @@
 | Briar Hydra | handled | Domain — Whenever this creature deals combat damage to a player, put X +1/+1 counters on target creature you control, where X is the number of basic land types  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Charismatic Vanguard | handled | {4}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Citizen's Arrest | handled | When this enchantment enters, exile target creature or planeswalker an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Cleaving Skyrider | handled | When this creature enters, if it was kicked, it deals X damage to any target, where X is the number of attacking creatures. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clockwork Drawbridge | handled | {2}{W}, {T}: Tap target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Coalition Skyknight | handled | Enlist | machines/enlist.py (apply_enlist, CR 702.154a-c) | Y/Y/- | not_tested |
 | Coalition Warbrute | handled | Trample | machines/combat.py | Y/Y/- | not_tested |
@@ -177,7 +179,6 @@
 | Haunted Mire | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Haunting Figment | handled | This creature can't be blocked as long as you've cast an instant or sorcery spell this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Herd Migration | handled | Domain — Create a 3/3 green Beast creature token for each basic land type among lands you control. {1}{G}, Discard this card: Search your library for a basic la | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Heroic Charge | handled | Kicker {1}{R} (You may pay an additional {1}{R} as you cast this spell.) Creatures you control get +2/+1 until end of turn. If this spell was kicked, those crea | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hexbane Tortoise | handled | Ward | machines/keywords.py | Y/Y/- | not_tested |
 | Hurler Cyclops | handled | {1}, Sacrifice another creature: This creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hurloon Battle Hymn | handled | Kicker {W} (You may pay an additional {W} as you cast this spell.) Hurloon Battle Hymn deals 4 damage to target creature or planeswalker. If this spell was kick | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,7 +244,6 @@
 | Vanquisher's Axe | handled | Equipped creature gets +2/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vineshaper Prodigy | handled | When this creature enters, if it was kicked, look at the top three cards of your library. Put one of them into your hand and the rest on the bottom of your libr | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Volshe Tideturner | handled |  |  | Y/Y/- | not_tested |
-| Warhost's Frenzy | handled | Kicker {B} (You may pay an additional {B} as you cast this spell.) Creatures you control get +2/+0 until end of turn. If this spell was kicked, whenever a creat | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Wooded Ridgeline | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Writhing Necromass | handled | This spell costs {1} less to cast for each creature card in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Yavimaya Iconoclast | handled | When this creature enters, if it was kicked, it gets +1/+1 and gains haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -308,9 +308,11 @@
 | enchantment creatures you control have deathtouch, lifelink, and hexproof. | 1 | Zur, Eternal Schemer | dmu |
 | equipment you control have equip {M}. | 1 | Astor, Bearer of Blades | dmu |
 | exile up to one target artifact, up to one target creature, up to one target enchantment, up to one target planeswalker, and/or up to one target land. for each  | 1 | Chaotic Transformation | dmu |
+| kicker {M} (you may pay an additional {M} as you cast ~.) creatures you control get +N/+N until end of turn. if ~ was kicked, whenever a creature you control di | 1 | Warhost's Frenzy | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, create a N/N white soldier creature token. counter target spell unless its controller | 1 | Protect the Negotiators | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) if ~ was kicked, put a +N/+N counter on a creature you control. all creatures get -N/-N until end of t | 1 | Choking Miasma | dmu |
 | kicker {M} (you may pay an additional {M} as you cast ~.) target player discards two cards. if ~ was kicked, it deals N damage to that player. | 1 | Aggressive Sabotage | dmu |
+| kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) creatures you control get +N/+N until end of turn. if ~ was kicked, those creatures also gain tr | 1 | Heroic Charge | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) gain control of target creature until end of turn. untap that creature. it gains haste until end | 1 | In Thrall to the Pit | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) return target creature card from your graveyard to the battlefield. if ~ was kicked, you gain li | 1 | Sheoldred's Restoration | dmu |
 | kicker {M}{M} (you may pay an additional {M}{M} as you cast ~.) return target creature or planeswalker you don"..."s hand. if ~ was kicked, put that permanent o | 1 | Rona's Vortex | dmu |
@@ -336,7 +338,6 @@
 | when ~ enters, create a N/N white bird creature token with flying for each creature with defender you control. | 1 | Wingmantle Chaplain | dmu |
 | when ~ enters, exile each nonland permanent with mana value N or less until ~ leaves the battlefield. | 1 | Temporary Lockdown | dmu |
 | when ~ enters, gain control of target creature with power less than ~ power for as long as you control ~. | 1 | Vodalian Mindsinger | dmu |
-| when ~ enters, if it was kicked, it deals N damage to any target, where N is the number of attacking creatures. | 1 | Cleaving Skyrider | dmu |
 | when ~ enters, you gain N life for each time it was kicked. | 1 | Stronghold Arena | dmu |
 | when ~ enters, you may search your library for an instant or sorcery card with mana value N, reveal it, put it into your hand, then shuffle. | 1 | Micromancer | dmu |
 | whenever a creature you control dies, put a phyresis counter on ~. then draw a card if it has seven or more phyresis counters on it. if it doesn't, scry N. | 1 | Weatherlight Compleated | dmu |

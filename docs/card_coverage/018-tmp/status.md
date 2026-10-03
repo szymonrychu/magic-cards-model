@@ -19,14 +19,15 @@
 |---|---|---|
 | Tested | 8 | 14.0% |
 | Works (untested) | 32 | 56.1% |
-| Partial (unaudited) | 5 | 8.8% |
-| Not working | 12 | 21.1% |
+| Partial (unaudited) | 4 | 7.0% |
+| Not working | 13 | 22.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Boil | silent | Destroy all Islands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
+| Booby Trap | silent | When the chosen player draws a card with the chosen name, sacrifice this artifact. If you do, this artifact deals 10 damage to that player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Death Pits of Rath | silent | Whenever a creature is dealt damage, destroy it. It can't be regenerated. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Elvish Fury | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jinxed Idol | silent | Sacrifice a creature: Target opponent gains control of this artifact. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -38,7 +39,6 @@
 | Vhati il-Dal | silent | {T}: Until end of turn, target creature has base power 1 or base toughness 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whispers of the Muse | silent | Buyback | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Altar of Dementia | notice | Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Booby Trap | unaudited | As this artifact enters, choose an opponent and a card name other than a basic land card name. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Choke | unaudited | Islands don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Marble Titan | unaudited | Creatures with power 3 or greater don't untap during their controllers' untap steps. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Root Maze | unaudited | Artifacts and lands enter tapped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -98,13 +98,13 @@
 |---|---|---|---|
 | buyback | 2 | Elvish Fury, Whispers of the Muse | tmp |
 | artifacts and lands enter tapped. | 1 | Root Maze | tmp |
-| as ~ enters, choose an opponent and a card name other than a basic land card name. | 1 | Booby Trap | tmp |
 | creatures with power N or greater don"..." untap steps. | 1 | Marble Titan | tmp |
 | destroy all islands. | 1 | Boil | tmp |
 | islands don"..." untap steps. | 1 | Choke | tmp |
 | sacrifice a creature: target opponent gains control of ~. | 1 | Jinxed Idol | tmp |
 | sacrifice a creature: target player mills cards equal to the sacrificed creature's power. | 1 | Altar of Dementia | tmp |
 | target player takes an extra turn after ~. | 1 | Time Warp | tmp |
+| when the chosen player draws a card with the chosen name, sacrifice ~. if you do, ~ deals N damage to that player. | 1 | Booby Trap | tmp |
 | when ~ enters, sacrifice it unless you sacrifice two mountains. | 1 | Rathi Dragon | tmp |
 | whenever a creature is dealt damage, destroy it. it can't be regenerated. | 1 | Death Pits of Rath | tmp |
 | {M}: gain control of target creature for as long as that creature is enchanted. | 1 | Rootwater Matriarch | tmp |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 52 | 18.9% |
-| Works (untested) | 141 | 51.3% |
+| Works (untested) | 140 | 50.9% |
 | Partial (unaudited) | 13 | 4.7% |
-| Not working | 69 | 25.1% |
+| Not working | 70 | 25.5% |
 
 ## Cards needing work
 
@@ -36,10 +36,8 @@
 | Chupacabra Echo | silent | Fathomless descent — When this creature enters, target creature an opponent controls gets -X/-X until end of turn, where X is the number of permanent cards in y | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Compass Gnome | silent | When this creature enters, you may search your library for a basic land card or Cave card, reveal it, then shuffle and put that card on top. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Contested Game Ball | silent | Whenever you're dealt combat damage, the attacking player gains control of this artifact and untaps it. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
-| Corpses of the Lost | silent | Skeletons you control get +1/+0 and have haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Curator of Sun's Creation | silent | Whenever you discover, discover again for the same value. This ability triggers only once each turn. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
 | Daring Discovery | silent | Up to three target creatures can't block this turn. Discover 4. (Exile cards from the top of your library until you exile a nonland card with mana value 4 or le | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Dauntless Dismantler | silent | {X}{X}{W}, Sacrifice this creature: Destroy each artifact with mana value X. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Deepfathom Echo | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Defossilize | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
 | Glowcap Lantern | silent | Explore | no machine in the engine executes this keyword | Y/Y/Y | not_working |
@@ -86,14 +84,17 @@
 | Zoyowa's Justice | silent | The owner of target artifact or creature with mana value 1 or greater shuffles it into their library. Then that player discovers X, where X is its mana value. ( | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Bonehoard Dracosaur | notice | At the beginning of your upkeep, exile the top two cards of your library. You may play them this turn. If you exiled a land card this way, create a 3/1 red Dino | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Brackish Blunder | notice | Return target creature to its owner's hand. If it was tapped, create a Map token. (It's an artifact with "{1}, {T}, Sacrifice this token: Target creature you co | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Cavernous Maw | notice | {2}: This land becomes a 3/3 Elemental creature until end of turn. It's still a Cave land. Activate only if the number of other Caves you control plus the numbe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Cavernous Maw | notice | {2}: This land becomes a 3/3 Elemental creature until end of turn. It's still a Cave land. Activate only if the number of other Caves you control plus the numbe | unparsed remainder: It's still a Cave land. | Y/Y/Y | not_working |
+| Cosmium Confluence | notice | Choose three. You may choose the same mode more than once. • Search your library for a Cave card, put it onto the battlefield tapped, then shuffle. • Put three  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Disturbed Slumber | notice | Until end of turn, target land you control becomes a 4/4 Dinosaur creature with reach and haste. It's still a land. It must be blocked this turn if able. | unparsed remainder: It must be blocked this turn if able. | Y/Y/Y | not_working |
 | Grasping Shadows // Shadows' Lair | notice | Whenever a creature you control attacks alone, it gains deathtouch and lifelink until end of turn. Put a dread counter on this enchantment. Then if there are th | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Itzquinth, Firstborn of Gishath | notice | When Itzquinth enters, you may pay {2}. When you do, target Dinosaur you control deals damage equal to its power to another target creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Kutzil's Flanker | notice | When this creature enters, choose one — • Put a +1/+1 counter on this creature for each creature that left the battlefield under your control this turn. • You g | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Malicious Eclipse | notice | All creatures get -2/-2 until end of turn. If a creature an opponent controls would die this turn, exile it instead. | unparsed remainder: If a creature an opponent controls would die this turn, exile it instead. | Y/Y/Y | not_working |
 | Quintorius Kand | notice | −6: Exile any number of target cards from your graveyard. Add {R} for each card exiled this way. You may play those cards this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Saheeli, the Sun's Brilliance | notice | {U}{R}, {T}: Create a token that's a copy of another target creature or artifact you control, except it's an artifact in addition to its other types. It gains h | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Scampering Surveyor | notice | When this creature enters, search your library for a basic land card or Cave card, put it onto the battlefield tapped, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Tendril of the Mycotyrant | notice | {5}{G}{G}: Put seven +1/+1 counters on target noncreature land you control. It becomes a 0/0 Fungus creature with haste. It's still a land. | unparsed remainder: It's still a land. | Y/Y/Y | not_working |
 | The Enigma Jewel // Locus of Enlightenment | notice | Locus of Enlightenment has each activated ability of the exiled cards used to craft it. You may activate each of those abilities only once each turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Bedrock Tortoise | unaudited | During your turn, creatures you control have hexproof. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Bloodletter of Aclazotz | unaudited | If an opponent would lose life during your turn, they lose twice that much life instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -134,9 +135,10 @@
 | Cogwork Wrestler | handled | When this creature enters, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Colossadactyl | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Confounding Riddle | handled | Choose one — • Look at the top four cards of your library. Put one of them into your hand and the rest into your graveyard. • Counter target spell unless its co | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Corpses of the Lost | handled | Skeletons you control get +1/+0 and have haste. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cosmium Blast | handled | Cosmium Blast deals 4 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Cosmium Confluence | handled | Choose three. You may choose the same mode more than once. • Search your library for a Cave card, put it onto the battlefield tapped, then shuffle. • Put three  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Council of Echoes | handled | Descend 4 — When this creature enters, if there are four or more permanent cards in your graveyard, return up to one target nonland permanent other than this cr | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Dauntless Dismantler | handled | Artifacts your opponents control enter tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deathcap Marionette | handled | When this creature enters, you may mill two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deconstruction Hammer | handled | Equipped creature gets +1/+1 and has "{3}, {T}, Sacrifice Deconstruction Hammer: Destroy target artifact or enchantment." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deep Goblin Skulltaker | handled | At the beginning of your end step, if you descended this turn, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -188,7 +190,6 @@
 | Malamet Scythe | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Malamet Veteran | handled | Descend 4 — Whenever this creature attacks, if there are four or more permanent cards in your graveyard, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Malamet War Scribe | handled | When this creature enters, creatures you control get +2/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Malicious Eclipse | handled | All creatures get -2/-2 until end of turn. If a creature an opponent controls would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Marauding Brinefang | handled | Islandcycling | machines/keywords.py (off_zone_abilities: cycling) | Y/Y/Y | not_tested |
 | Mephitic Draught | handled | When this artifact enters or is put into a graveyard from the battlefield, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Might of the Ancestors | handled | At the beginning of combat on your turn, target creature you control gets +2/+0 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -237,7 +238,6 @@
 | Sunshot Militia | handled | Tap two untapped artifacts and/or creatures you control: This creature deals 1 damage to each opponent. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Synapse Necromage | handled | When this creature dies, create two 1/1 black Fungus creature tokens with "This token can't block." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tectonic Hazard | handled | Tectonic Hazard deals 1 damage to each opponent and each creature they control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Tendril of the Mycotyrant | handled | {5}{G}{G}: Put seven +1/+1 counters on target noncreature land you control. It becomes a 0/0 Fungus creature with haste. It's still a land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thousand Moons Crackshot | handled | Whenever this creature attacks, you may pay {2}{W}. When you do, tap target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thousand Moons Smithy // Barracks of the Thousand | handled | When Thousand Moons Smithy enters, create a white Gnome Soldier artifact creature token with "This token's power and toughness are each equal to the number of a | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Tinker's Tote | handled | When this artifact enters, create two 1/1 colorless Gnome artifact creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -316,6 +316,7 @@
 |---|---|---|---|
 | Fathomless descent | 5 | Chupacabra Echo, Matzalantli, the Great Door // The Core, Song of Stupefaction, Squirming Emergence, Terror Tide | lci |
 | explore | 3 | Deepfathom Echo, Defossilize, Glowcap Lantern | lci |
+| all creatures get -N/-N until end of turn. if a creature an opponent controls would die ~, exile it instead. | 1 | Malicious Eclipse | lci |
 | as an additional cost to cast ~, discard a card or sacrifice a permanent. | 1 | Souls of the Lost | lci |
 | as an additional cost to cast ~, tap four untapped artifacts, creatures, and/or lands you control. | 1 | Guardian of the Great Door | lci |
 | as long as an artifact entered the battlefield under your control ~, ~ can attack as though it didn't have defender. | 1 | Shipwreck Sentry | lci |
@@ -325,6 +326,7 @@
 | at the beginning of your end step, if you descended ~, each opponent may discard a card or sacrifice a permanent of their choice. zoyowa deals N damage to each  | 1 | Zoyowa Lava-Tongue | lci |
 | at the beginning of your upkeep, exile the top two cards of your library. you may play them ~. if you exiled a land card ~, create a N/N red dinosaur creature t | 1 | Bonehoard Dracosaur | lci |
 | choose target creature you control and target creature you don't control. if the creature you control entered ~, put a +N/+N counter on it. then those creatures | 1 | Malamet Battle Glyph | lci |
+| choose three. you may choose the same mode more than once. • search your library for a cave card, put it onto the battlefield tapped, then shuffle. • put three  | 1 | Cosmium Confluence | lci |
 | counter target artifact or creature spell. discover N, where N is that spell's mana value. (exile cards from the top of your library until you exile a nonland c | 1 | Hurl into History | lci |
 | create N map tokens, where N is one plus the number of opponents who control an artifact. (then exile ~. you may cast the creature later from exile.) | 1 | Kellan, Daring Traveler // Journey On | lci |
 | descend N — choose one. if there are eight or more permanent cards in your graveyard as you cast ~, choose one or more instead. • return target nonland permanen | 1 | Wail of the Forgotten | lci |
@@ -340,7 +342,6 @@
 | mastercraft raptor's power is equal to the total power of the exiled cards used to craft it. | 1 | Saheeli's Lattice // Mastercraft Raptor | lci |
 | other caves you control have "..." | 1 | Forgotten Monument | lci |
 | return target creature to its owner"..."s an artifact with "...") | 1 | Brackish Blunder | lci |
-| skeletons you control get +N/+N and have haste. | 1 | Corpses of the Lost | lci |
 | sunbird effigy's power and toughness are each equal to the number of colors among the exiled cards used to craft it. | 1 | Sunbird Standard // Sunbird Effigy | lci |
 | the owner of target artifact or creature with mana value N or greater shuffles it into their library. then that player discovers N, where N is its mana value. ( | 1 | Zoyowa's Justice | lci |
 | untap ~ during each other player's untap step. | 1 | Thousand Moons Infantry | lci |
@@ -384,8 +385,8 @@
 | {M}{M}, {M}: create a token that"..."s an artifact in addition to its other types. it gains haste. sacrifice it at the beginning of the next end step. | 1 | Saheeli, the Sun's Brilliance | lci |
 | {M}{M}, {M}: look at the top four cards of your library. you may reveal a creature card from among them and put that card into your hand. put the rest on the bo | 1 | Twists and Turns // Mycoid Maze | lci |
 | {M}{M}: ~ can't be blocked by creatures with power N or less ~. | 1 | Cavern Stomper | lci |
-| {M}{M}{M}, sacrifice ~: destroy each artifact with mana value N. | 1 | Dauntless Dismantler | lci |
 | {M}{M}{M}: draw a card, then discard a card. when you discard a card ~, target player mills cards equal to its mana value. | 1 | The Ancient One | lci |
+| {M}{M}{M}: put seven +N/+N counters on target noncreature land you control. it becomes a N/N fungus creature with haste. it's still a land. | 1 | Tendril of the Mycotyrant | lci |
 | ~ can't be blocked except by three or more creatures. | 1 | Rampaging Ceratops | lci |
 | ~ deals damage to target creature equal to N or the greatest power among dinosaurs you control, whichever is greater. | 1 | Triumphant Chomp | lci |
 | ~ is the chosen type in addition to its other types. | 1 | Roaming Throne | lci |

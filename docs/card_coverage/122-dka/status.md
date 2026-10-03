@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 15 | 9.7% |
-| Works (untested) | 72 | 46.8% |
+| Tested | 16 | 10.4% |
+| Works (untested) | 71 | 46.1% |
 | Partial (unaudited) | 5 | 3.2% |
 | Not working | 62 | 40.3% |
 
@@ -44,7 +44,6 @@
 | Gavony Ironwright | silent | Fateful hour — As long as you have 5 or less life, other creatures you control get +1/+4. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Geralf's Messenger | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Geralf's Mindcrusher | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Griptide | silent | Put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Haunted Fengraf | silent | {3}, {T}, Sacrifice this land: Return a creature card at random from your graveyard to your hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Lich | silent | {1}: You may cast target creature card in a graveyard this turn. When you cast it this turn, this creature gains all activated abilities of that card until end  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Havengul Runebinder | silent | {2}{U}, {T}, Exile a creature card from your graveyard: Create a 2/2 black Zombie creature token, then put a +1/+1 counter on each Zombie creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -80,6 +79,7 @@
 | Young Wolf | silent | Undying | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Zombie Apocalypse | silent | Return all Zombie creature cards from your graveyard to the battlefield tapped, then destroy all Humans. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Afflicted Deserter // Werewolf Ransacker | notice | Whenever this creature transforms into Werewolf Ransacker, you may destroy target artifact. If that artifact is put into a graveyard this way, this creature dea | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Break of Day | notice | Creatures you control get +1/+1 until end of turn. Fateful hour — If you have 5 or less life, those creatures gain indestructible until end of turn. (Damage and | unparsed remainder: If you have 5 or less life, those creatures gain indestructible until end of turn. | Y/-/- | not_working |
 | Counterlash | notice | Counter target spell. You may cast a spell that shares a card type with it from your hand without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Deadly Allure | notice | Target creature gains deathtouch until end of turn and must be blocked this turn if able. Flashback {G} (You may cast this card from your graveyard for its flas | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Death's Caress | notice | Destroy target creature. If that creature was a Human, you gain life equal to its toughness. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -98,11 +98,9 @@
 | Bar the Door | handled | Creatures you control get +0/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blood Feud | handled | Target creature fights another target creature. (Each deals damage equal to its power to the other.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bone to Ash | handled | Counter target creature spell. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Break of Day | handled | Creatures you control get +1/+1 until end of turn. Fateful hour — If you have 5 or less life, those creatures gain indestructible until end of turn. (Damage and | the engine reads this text and performs it | Y/-/- | not_tested |
 | Briarpack Alpha | handled | When this creature enters, target creature gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Burden of Guilt | handled | {1}: Tap enchanted creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Burning Oil | handled | Burning Oil deals 3 damage to target attacking or blocking creature. Flashback {3}{W} (You may cast this card from your graveyard for its flashback cost. Then e | the engine reads this text and performs it | Y/-/- | not_tested |
-| Chalice of Life // Chalice of Death | handled | {T}: You gain 1 life. Then if you have at least 10 life more than your starting life total, transform this artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chant of the Skifsang | handled | Enchanted creature gets -13/-0. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chill of Foreboding | handled | Each player mills five cards. Flashback {7}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Chosen of Markov // Markov's Servant | handled | {T}, Tap an untapped Vampire you control: Transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -123,6 +121,7 @@
 | Gravetiller Wurm | handled | Morbid — This creature enters with four +1/+1 counters on it if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grim Backwoods | handled | {2}{B}{G}, {T}, Sacrifice a creature: Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grim Flowering | handled | Draw a card for each creature card in your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Griptide | handled | Put target creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Harrowing Journey | handled | Target player draws three cards and loses 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Headless Skaab | handled | As an additional cost to cast this spell, exile a creature card from your graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Hinterland Hermit // Hinterland Scourge | handled | At the beginning of each upkeep, if no spells were cast last turn, transform this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -169,9 +168,10 @@
 ## Fully supported
 
 <details>
-<summary>15 cards</summary>
+<summary>16 cards</summary>
 
 - Avacyn's Collar
+- Chalice of Life // Chalice of Death
 - Curse of Exhaustion
 - Dungeon Geists
 - Faithless Looting
@@ -206,6 +206,7 @@
 | counter target spell. you may cast a spell that shares a card type with it from your hand without paying its mana cost. | 1 | Counterlash | dka |
 | create five N/N white human creature tokens. if ~ was cast from a graveyard, create ten of those tokens instead. flashback {M}{M}{M} (you may cast ~ from your g | 1 | Increasing Devotion | dka |
 | create two N/N white human creature tokens. fateful hour — if you have N or less life, create five of those tokens instead. | 1 | Gather the Townsfolk | dka |
+| creatures you control get +N/+N until end of turn. fateful hour — if you have N or less life, those creatures gain indestructible until end of turn. (damage and | 1 | Break of Day | dka |
 | destroy target creature. if that creature was a human, you gain life equal to its toughness. | 1 | Death's Caress | dka |
 | destroy target land. ~ deals N damage to each human creature. | 1 | Scorch the Fields | dka |
 | discard all the cards in your hand, then draw that many cards. flashback {M}{M} (you may cast ~ from your graveyard for its flashback cost. then exile it.) | 1 | Shattered Perception | dka |
@@ -216,7 +217,6 @@
 | other spirit creatures you control get +N/+N and have hexproof. | 1 | Drogskol Captain | dka |
 | other vampire creatures you control get +N/+N and have first strike. | 1 | Stromkirk Captain | dka |
 | prevent all combat damage that would be dealt ~. fateful hour — if you have N or less life, tap all attacking creatures. those creatures don"..."s next untap st | 1 | Clinging Mists | dka |
-| put target creature on top of its owner's library. | 1 | Griptide | dka |
 | return all zombie creature cards from your graveyard to the battlefield tapped, then destroy all humans. | 1 | Zombie Apocalypse | dka |
 | reveal the top four cards of your library. put a creature card from among them into your hand and the rest into your graveyard. flashback {M}{M} (you may cast ~ | 1 | Tracker's Instincts | dka |
 | search your library for a card and put that card into your hand. if ~ was cast from a graveyard, instead search your library for two cards and put those cards i | 1 | Increasing Ambition | dka |
