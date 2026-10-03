@@ -169,3 +169,65 @@ def test_captain_is_reached_through_the_real_transform_trigger() -> None:
         scenario.resolve_top()
     fodder = scenario.find("Catapult Captain", Zone.BATTLEFIELD, "alice")
     assert fodder.name == "Catapult Captain"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "Ayli, Eternal Pilgrim",
+        "Kheru Dreadmaw",
+        "Disciple of Griselbrand",
+        "Miren, the Moaning Well",
+    ],
+)
+def test_other_printings_of_the_gain_shape_have_the_gain_clause_handled(name) -> None:
+    gain = [c for c in classify_clauses(card(name)) if "sacrificed creature" in c.text]
+    assert gain and all(c.category == HANDLED for c in gain)
+
+
+@pytest.mark.parametrize(
+    ("name", "lands", "index"),
+    [
+        ("Ayli, Eternal Pilgrim", ["Plains"], 0),
+        ("Kheru Dreadmaw", ["Forest", "Forest"], 0),
+        ("Disciple of Griselbrand", ["Swamp"], 0),
+    ],
+)
+def test_other_printings_gain_the_sacrificed_toughness(name, lands, index) -> None:
+    scenario = (
+        Scenario()
+        .player("alice", life=10, battlefield=[name, "Wall of Omens", *lands])
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    source = scenario.creature(name, "alice")
+    wall = scenario.creature("Wall of Omens", "alice")
+    scenario.activate(source, index=index, sacrificing=[wall], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("alice").life == 14
+    assert wall.zone is Zone.GRAVEYARD
+
+
+def test_jarad_each_opponent_loses_the_sacrificed_creatures_power() -> None:
+    """Jarad, Golgari Lich Lord is the second printing of the loss shape
+    ("Each opponent loses life equal to the sacrificed creature's power")."""
+    assert all(c.category == HANDLED for c in classify_clauses(card("Jarad, Golgari Lich Lord")))
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            life=20,
+            battlefield=["Jarad, Golgari Lich Lord", "Grizzly Bears", "Swamp", "Forest", "Forest"],
+        )
+        .player("bob", life=20)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    jarad = scenario.creature("Jarad, Golgari Lich Lord", "alice")
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.game.add_counters(bears, Counter.PLUS_ONE, 1)
+    scenario.activate(jarad, index=0, sacrificing=[bears], auto=True)
+    scenario.resolve_top()
+    assert scenario.player("bob").life == 20 - 3
+    assert scenario.player("alice").life == 20

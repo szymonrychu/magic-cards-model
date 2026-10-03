@@ -30281,6 +30281,12 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
         # draw half needs the activation's own cost-sacrificed card, which no
         # per-clause parser below has access to.
         return draw_equal_to_sacrificed_then_discard
+    opponents_lose_equal_to_sacrificed = (
+        _parse_each_opponent_loses_life_equal_to_sacrificed_creature_clause(effect_text)
+    )
+    if opponents_lose_equal_to_sacrificed is not None:
+        return opponents_lose_equal_to_sacrificed
+
     gain_life_equal_to_sacrificed = _parse_gain_life_equal_to_sacrificed_creature_clause(
         effect_text
     )
@@ -68540,6 +68546,35 @@ def _parse_gain_life_equal_to_sacrificed_creature_clause(text: str) -> AbilityEf
         total = _cost_sacrificed_stat_total(game, ability, attribute)
         if total > 0:
             game.gain_life(game.controller_of(ability).username, total)
+
+    return effect
+
+
+#: "Each opponent loses life equal to the sacrificed creature's power." -
+#: Jarad, Golgari Lich Lord's "{1}{B}{G}, Sacrifice another creature:"
+#: ability: the untargeted twin of the target-player loss below.
+_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE = re.compile(
+    r"^each opponent loses life equal to the sacrificed creature'?s "
+    r"(?P<attribute>power|toughness)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_each_opponent_loses_life_equal_to_sacrificed_creature_clause(
+    text: str,
+) -> AbilityEffect | None:
+    """`_EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE`'s shape."""
+    match = _EACH_OPPONENT_LOSES_LIFE_EQUAL_TO_SACRIFICED_CREATURE_RE.fullmatch(text.strip())
+    if match is None:
+        return None
+    attribute = match.group("attribute").lower()
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        total = _cost_sacrificed_stat_total(game, ability, attribute)
+        if total <= 0:
+            return
+        for opponent in _opponents(game, game.controller_of(ability).username):
+            game.lose_life(opponent, total)
 
     return effect
 
