@@ -1486,6 +1486,18 @@ def _prime(scenario: PlayedScenario, source: CardState, ability: Any) -> CardSta
     if _back_face(source.card, ability):
         source.transformed = True
     face = getattr(ability, "face", None)
+    faces = source.card.card_faces or []
+    if (
+        source.zone is Zone.BATTLEFIELD
+        and source.card.layout is Layout.MODAL_DFC
+        and not source.transformed
+        and len(faces) > 1
+        and face == faces[1].name
+    ):
+        # A modal permanent back face (The Prismatic Bridge) is up only when
+        # it was cast as that face (CR 712.11b, CR 712.13) - staged the way
+        # `move_to` records that resolution.
+        source.land_face_played = face
     if (
         source.zone is Zone.BATTLEFIELD
         and face

@@ -5509,6 +5509,22 @@ _INDEFINITE_KEYWORD_GRANT_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: `_INDEFINITE_KEYWORD_GRANT_RE` with a quoted ability as the last granted
+#: item: Inga and Esika's "Creatures you control have vigilance and "{T}: Add
+#: one mana of any color. Spend this mana only to cast a creature spell."",
+#: Esika, God of the Tree's "Other legendary creatures you control have
+#: vigilance and "{T}: Add one mana of any color."" and Tocasia, Dig Site
+#: Mentor's "... have vigilance and "{T}: Surveil 1."" - each keyword and the
+#: quoted line are separate layer 6 grants (CR 613.1f, CR 113.10). Making the
+#: quoted line activatable is `quoted_ability_grants`' job, which reads this
+#: same pattern.
+_INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE = re.compile(
+    rf"^{_QUALIFIED_CREATURE_SUBJECT} "
+    rf"(?:have|has) (?P<keywords>{_KEYWORD_LIST_WITH_COSTS}),? and "
+    r'"(?P<granted>[^"]+)"\.?$',
+    re.IGNORECASE,
+)
+
 #: `_INDEFINITE_KEYWORD_GRANT_RE`'s singular-noun twin - Eirdu, Carrier of
 #: Dawn's own "Each other nontoken creature you control has persist.": CR
 #: 700.7's plain-English "each ... creature ... has" is the identical group
@@ -5847,6 +5863,24 @@ _BASE_PT_SET_AND_TYPE_RE = re.compile(
     r"|(?P<every>gains? all creature types))"
     r"(?:,? and gains? (?P<keywords>[a-z][a-z ,]*?))?"
     r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: The static (CR 611.3) group twin of `_BASE_PT_SET_AND_TYPE_RE`: "Creatures
+#: you control have base power and toughness 6/6 and are Oozes in addition to
+#: their other types." (March of the World Ooze) and "Other creatures you
+#: control have base power and toughness 5/3 and are Juggernauts in addition
+#: to their other creature types." (Graaz, Unstoppable Juggernaut). No
+#: duration: it lasts as long as the source does (CR 604.2) and reaches
+#: whatever the subject names at each moment (CR 611.3a). Sublayer 7b
+#: (CR 613.4b) for the set, layer 4 (CR 613.1d) for the additive type rider
+#: (CR 205.1b); the rider is optional, so a bare "... have base power and
+#: toughness N/N." reads too.
+_GROUP_BASE_PT_AND_TYPE_RE = re.compile(
+    rf"^{_QUALIFIED_CREATURE_SUBJECT} have base power and toughness "
+    r"(?P<power>\d+)/(?P<toughness>\d+)"
+    r"(?: and are (?P<subtypes>[A-Za-z][A-Za-z ]*?) in addition to their other "
+    r"(?:creature )?types)?\.?$",
     re.IGNORECASE,
 )
 
@@ -8582,6 +8616,79 @@ def _base_pt_set_and_type_builder(
     return builder
 
 
+def _plural_creature_type_words(raw: str) -> list[str] | None:
+    """ "Oozes" / "Juggernauts" -> each CR 205.3m creature type as the
+    official list spells it, or `None` if any word is not one."""
+    known = {kind.lower(): kind for kind in creature_types()}
+    found: list[str] = []
+    for word in raw.split():
+        lowered = word.lower()
+        singular = _singular_subtype_word(word)
+        candidates = [lowered, singular or "", lowered.removesuffix("es")]
+        if lowered.endswith("ves"):
+            candidates.append(lowered.removesuffix("ves") + "f")
+        kind = next((known[c] for c in candidates if c in known), None)
+        if kind is None:
+            return None
+        found.append(kind)
+    return found or None
+
+
+def _group_base_pt_and_type_builder(
+    power: int,
+    toughness: int,
+    subtypes: Sequence[str],
+    *,
+    other: bool,
+    whose: str,
+    line: str,
+    qualifiers: CreatureQualifiers | None = None,
+) -> EffectBuilder:
+    """`_GROUP_BASE_PT_AND_TYPE_RE`'s shape: a static ability's effect (CR
+    611.3), timestamped off the source (CR 613.7a) and keyed to its printed
+    line so it ends with the source or the ability (CR 604.2, CR 613.6). One
+    layer 4 addition per creature type (CR 613.1d, CR 205.1b) and one
+    sublayer 7b set (CR 613.4b); counters and pumps still apply on top in 7c
+    (CR 613.4c)."""
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        selector, subject = _creature_group(source, other=other, whose=whose, qualifiers=qualifiers)
+        gate = qualifiers.gate_words if qualifiers is not None else ""
+        source_ability = _source_line_for(source, line)
+        effects = [
+            ContinuousEffect(
+                description=f"{source.name}: {gate}{subject} are {subtype}s in addition",
+                layer=Layer.TYPE,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=source_ability,
+                selector=selector,
+                modification=add_subtype(subtype),
+            )
+            for subtype in subtypes
+        ]
+        effects.append(
+            ContinuousEffect(
+                description=f"{source.name}: {gate}{subject} have base P/T {power}/{toughness}",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.SET,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=source_ability,
+                selector=selector,
+                modification=set_power_toughness(power, toughness),
+            )
+        )
+        return effects
+
+    return builder
+
+
 def _gains_or_loses_all_creature_types_builder(*, gains: bool) -> EffectBuilder:
     """`_GAINS_OR_LOSES_ALL_CREATURE_TYPES_RE`'s shape: one layer 4 effect per
     target (CR 613.1d), until end of turn, fixed to the objects resolved now
@@ -11310,6 +11417,21 @@ def quoted_ability_grants(
                     continue
                 if selector(printed_characteristics(permanent), {}):
                     wanted.setdefault(permanent.id, set()).add(text)
+            continue
+        if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(normalized):
+            text = (match.group("granted") or "").strip()
+            if not text:
+                continue
+            grantable.add(text)
+            group_selector, _ = _creature_group(
+                source,
+                other=match.group("other") is not None,
+                whose=match.group("whose").lower(),
+                qualifiers=qualifiers_from_subject(match),
+            )
+            for permanent in permanents:
+                if group_selector(printed_characteristics(permanent), {}):
+                    wanted.setdefault(permanent.id, set()).add(text)
     return grantable, wanted
 
 
@@ -13936,6 +14058,34 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             return None
         return _indefinite_keyword_grant_builder(
             keywords,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match),
+        )
+    if match := _GROUP_BASE_PT_AND_TYPE_RE.fullmatch(sentence):
+        group_subtypes: list[str] = []
+        if match.group("subtypes") is not None:
+            read_subtypes = _plural_creature_type_words(match.group("subtypes"))
+            if read_subtypes is None:
+                return None
+            group_subtypes = read_subtypes
+        return _group_base_pt_and_type_builder(
+            int(match.group("power")),
+            int(match.group("toughness")),
+            group_subtypes,
+            other=match.group("other") is not None,
+            whose=match.group("whose").lower(),
+            line=sentence,
+            qualifiers=qualifiers_from_subject(match),
+        )
+    if match := _INDEFINITE_KEYWORD_AND_QUOTED_GRANT_RE.fullmatch(sentence):
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        granted_line = match.group("granted").strip()
+        if keywords is None or not granted_line:
+            return None
+        return _indefinite_keyword_grant_builder(
+            [*keywords, granted_line],
             other=match.group("other") is not None,
             whose=match.group("whose").lower(),
             line=sentence,
