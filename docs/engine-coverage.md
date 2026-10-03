@@ -6968,3 +6968,11 @@ documented exception" rule rather than left silently asserted.
   description` rather than pinned to "artifact"/"enchantment"; Mentor's
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
+
+## R0b-T2: Verges, Pathways, painlands (proofs) - a Pathway's back face is playable, the auto-payer prefers a painland's free ability
+
+| Mechanic | CR | Where | Proof |
+|---|---|---|---|
+| A Verge's conditional second mana ability ("Activate only if you control a X or a Y") - first colour unconditional, second refused without either land type, nonbasic typed lands count, turning off when the land is lost, auto-payer never plans around the unavailable colour | CR 605.1a, 205.3i, 602.5b | `Game._activation_condition_holds` (already handled; proofs only) | `scenarios/test_r0b_verge_mana.py` (all six Verges) |
+| A modal double-faced land plays as either land face (a Pathway's front is a land too, so the back was unreachable): `Game.play_land(..., face=...)`, `Card.land_faces`, one `PLAY_LAND` offer per land face in `legal_actions` | CR 712.12, 712.8f, 712.8d, 305.2 | `models/card.py` (`land_faces`), `Game.play_land`, `machines/legal_actions.py` (`_land_actions`) | `scenarios/test_r0b_pathway_faces.py` (all four Pathways) |
+| A painland's / painland-artifact's coloured ability deals 1 damage to you from the permanent as part of the mana ability (no stack); the `{C}` ability is free; the auto-payer pays a generic cost with the free ability instead of taking the damage (`_prefer_painless_mana`) | CR 605.1a, 405.6c, 120.1 | `machines/cost.py` (`_entry_life_loss`, `_prefer_painless_mana`) | `scenarios/test_r0b_painland_mana_riders.py` (Llanowar Wastes, Caves of Koilos, Talisman of Curiosity) |

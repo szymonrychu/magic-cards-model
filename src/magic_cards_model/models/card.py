@@ -343,6 +343,19 @@ class Card(ScryfallModel):
         return None
 
     @property
+    def land_faces(self) -> "tuple[CardFace, ...]":
+        """Every face of a modal double-faced card that is a land, front first
+        (CR 712.12: the player "chooses one of its faces that's a land").
+        `land_face` is the first of these; a Pathway has two."""
+        if self.layout is not Layout.MODAL_DFC:
+            return ()
+        return tuple(
+            face
+            for face in self.card_faces or []
+            if face.type_line and "land" in _words_before_dash(face.type_line)
+        )
+
+    @property
     def prepare_spell(self) -> "CardFace | None":
         """This card's inset "prepare spell" face, or None (CR 722.1, 722.2a).
 

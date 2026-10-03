@@ -21758,7 +21758,7 @@ class Game(EngineModel):
         """
         return self.why_cannot_play_land(username) is None
 
-    def play_land(self, land: CardState, username: str) -> CardState:
+    def play_land(self, land: CardState, username: str, face: str | None = None) -> CardState:
         """Play a land: a special action, so it uses no stack and no priority.
 
         Nobody gets a chance to respond, because nothing is ever put on the
@@ -21774,9 +21774,22 @@ class Game(EngineModel):
         "playing an MDFC's land face" special action in the rules - it is the
         same CR 305.1 land drop, so it is checked and counted exactly like any
         other land below.
+
+        `face` is CR 712.12's choice of "one of its faces that's a land" for a
+        modal double-faced card with more than one (a Pathway's front *and*
+        back are lands). `None` keeps the default: the front face when it is a
+        land, otherwise the card's land face.
         """
         self._refuse_if_over()
         land_face = land.card.land_face
+        if face is not None:
+            chosen = next((each for each in land.card.land_faces if each.name == face), None)
+            if chosen is None:
+                raise ValueError(
+                    f"{face!r} is not a land face of {land.name} (CR 712.12: the player "
+                    "chooses one of its faces that's a land)"
+                )
+            land_face = chosen
         if not land.card.is_land and land_face is None:
             raise ValueError(f"{land.name} is not a land")
         refusal = self.why_cannot_play_land(username)
@@ -21823,7 +21836,7 @@ class Game(EngineModel):
         # counted. A land PUT onto the battlefield (CR 305.4) must not.
         self.lands_played[username] = self.lands_played.get(username, 0) + 1
 
-        if not land.card.is_land and land_face is not None:
+        if land_face is not None and (not land.card.is_land or face is not None):
             land.land_face_played = land_face.name
 
         # Playing a land is not casting it (CR 116.2a, 305.1), so `was_cast` is

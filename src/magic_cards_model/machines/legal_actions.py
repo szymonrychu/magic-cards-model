@@ -1155,8 +1155,12 @@ def _land_actions(game: Any, player: str, card: CardState) -> list[Action]:
                 affordable=Affordability.YES,
             )
         )
-    land_face = card.card.land_face
-    if land_face is not None:
+    # CR 712.12: one offer per land face the player could choose. A land front
+    # is the plain offer above; a Pathway's back is the only extra one.
+    front = card.card.front_face
+    for land_face in card.card.land_faces:
+        if card.card.is_land and front is not None and land_face.name == front.name:
+            continue
         actions.append(
             Action(
                 kind=ActionKind.PLAY_LAND,
