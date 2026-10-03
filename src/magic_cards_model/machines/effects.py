@@ -243,6 +243,7 @@ from .modes import (
     modal_profile,
     modal_profile_from_text,
     mode_effect_text,
+    strip_x_restrictions,
     substitute_x,
 )
 from .replacement import (
@@ -5626,7 +5627,11 @@ def effect_for(
         substituted = _spell_effect_or_notice(substitute_x(effect_text, x_value))
         if substituted is not None and (effect is None or not _is_notice_only(substituted)):
             effect = substituted
-    if effect is not None and not _is_notice_only(effect):
+    if (
+        effect is not None
+        and not _is_notice_only(effect)
+        and getattr(effect, "unparsed_remainder", None) is None
+    ):
         return effect
     time_counters: int | None = None
     rest_text = _strip_self_exile_sentence(card_name, effect_text)
@@ -5670,6 +5675,7 @@ def spell_resolution_text(card_name: str, effect_text: str) -> str:
     effect_text = _strip_trailing_standalone_triggered_ability(effect_text)
     effect_text = _strip_trailing_standalone_activated_ability(effect_text)
     effect_text = _DECK_CONSTRUCTION_LINE_RE.sub("", effect_text)
+    effect_text = strip_x_restrictions(effect_text)
     return _CAST_TIMING_RESTRICTION_RE.sub(" ", effect_text).strip()
 
 
@@ -35224,6 +35230,11 @@ def _spell_effect_or_notice(effect_text: str) -> Effect | None:
     lose_then_destroy = lose_abilities_then_destroy_spell_effect(whole)
     if lose_then_destroy is not None:
         return lose_then_destroy
+    from .spell_remainders_e5 import spell_sentence_sequence_effect
+
+    multi_slot = spell_sentence_sequence_effect(whole)
+    if multi_slot is not None:
+        return multi_slot
     r0a_t5 = _r0a_t5_spell_effect(whole)
     if r0a_t5 is not None:
         return r0a_t5
@@ -64588,6 +64599,7 @@ def activation_resolution_text(effect_text: str) -> str:
     resolution readers are handed - and what the support oracle's ablation
     probe removes sentences from."""
     effect_text = _TRAILING_ACTIVATION_TIMING_RESTRICTION_RE.sub("", effect_text).strip()
+    effect_text = strip_x_restrictions(effect_text).strip()
     return _TRAILING_ACTIVATION_TARGET_COST_REDUCTION_RE.sub("", effect_text).strip()
 
 

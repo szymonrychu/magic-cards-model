@@ -1673,6 +1673,11 @@ class ActivationCostReduction(EngineModel):
     #: `CardState.counter_count`, the same open CR 122.1 vocabulary every
     #: other counter-kind read in this codebase already takes.
     self_counter_kind: str | None = None
+    #: Esquire of the King's "This ability costs {2} less to activate if you
+    #: control a legendary creature." - `quality` is then a condition, not a
+    #: per-object count: the whole `amount` comes off once when the activator
+    #: controls at least one such permanent.
+    if_you_control: bool = False
 
 
 #: "This ability costs {N} less to activate for each <quality> you control."
@@ -1681,6 +1686,14 @@ class ActivationCostReduction(EngineModel):
 _TRAILING_ACTIVATION_COST_REDUCTION_RE = re.compile(
     r"^this ability costs \{(?P<amount>\d+)\} less to activate for each "
     r"(?P<quality>.+?) you control\.?$",
+    re.IGNORECASE,
+)
+
+#: The conditional sibling: "This ability costs {2} less to activate if you
+#: control a legendary creature." (Esquire of the King).
+_TRAILING_ACTIVATION_COST_REDUCTION_IF_RE = re.compile(
+    r"^this ability costs \{(?P<amount>\d+)\} less to activate if you control "
+    r"(?:an? )?(?P<quality>.+?)\.?$",
     re.IGNORECASE,
 )
 
@@ -1760,6 +1773,14 @@ def _split_off_trailing_cost_reduction(effect: str) -> tuple[str, ActivationCost
     if match is not None:
         reduction = ActivationCostReduction(
             amount=int(match.group("amount")), quality=match.group("quality").strip()
+        )
+        return " ".join(sentences[:-1]).strip(), reduction
+    if_match = _TRAILING_ACTIVATION_COST_REDUCTION_IF_RE.match(last)
+    if if_match is not None:
+        reduction = ActivationCostReduction(
+            amount=int(if_match.group("amount")),
+            quality=if_match.group("quality").strip(),
+            if_you_control=True,
         )
         return " ".join(sentences[:-1]).strip(), reduction
     target_match = _TRAILING_TARGET_COST_REDUCTION_RE.match(last)

@@ -1,0 +1,153 @@
+{
+  "object": "card",
+  "id": "b9cf2116-7ae5-4b6a-830a-919a55235690",
+  "oracle_id": "c29b997a-5be6-4d51-a81b-d00677ef401d",
+  "multiverse_ids": [
+    194939
+  ],
+  "mtgo_id": 36702,
+  "mtgo_foil_id": 36703,
+  "tcgplayer_id": 34804,
+  "cardmarket_id": 22558,
+  "name": "Essence Feed",
+  "lang": "en",
+  "released_at": "2010-04-23",
+  "uri": "https://api.scryfall.com/cards/b9cf2116-7ae5-4b6a-830a-919a55235690",
+  "scryfall_uri": "https://scryfall.com/card/roe/110/essence-feed?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T11:26:25Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.jpg?1783941985",
+    "normal": "https://cards.scryfall.io/normal/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.jpg?1783941985",
+    "large": "https://cards.scryfall.io/large/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.jpg?1783941985",
+    "png": "https://cards.scryfall.io/png/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.png?1783941985",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.jpg?1783941985",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.jpg?1783941985",
+    "thumb": "https://cards.scryfall.io/thumb/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.webp?1783941985",
+    "grid": "https://cards.scryfall.io/grid/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.webp?1783941985",
+    "display": "https://cards.scryfall.io/display/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.webp?1783941985",
+    "art": "https://cards.scryfall.io/art/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.webp?1783941985",
+    "crop": "https://cards.scryfall.io/crop/front/b/9/b9cf2116-7ae5-4b6a-830a-919a55235690.webp?1783941985"
+  },
+  "mana_cost": "{5}{B}",
+  "cmc": 6.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Target player loses 3 life. You gain 3 life and create three 0/1 colorless Eldrazi Spawn creature tokens. They have \"Sacrifice this token: Add {C}.\"",
+  "colors": [
+    "B"
+  ],
+  "color_identity": [
+    "B"
+  ],
+  "keywords": [],
+  "produced_mana": [
+    "C"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "d0da4f8d-cce9-4d08-8d11-792e0b2af7d0",
+      "component": "token",
+      "name": "Eldrazi Spawn",
+      "type_line": "Token Creature \u2014 Eldrazi Spawn",
+      "uri": "https://api.scryfall.com/cards/d0da4f8d-cce9-4d08-8d11-792e0b2af7d0"
+    },
+    {
+      "object": "related_card",
+      "id": "b9cf2116-7ae5-4b6a-830a-919a55235690",
+      "component": "combo_piece",
+      "name": "Essence Feed",
+      "type_line": "Sorcery",
+      "uri": "https://api.scryfall.com/cards/b9cf2116-7ae5-4b6a-830a-919a55235690"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "eadb8a82-ec56-4623-b50e-42e7e60cb535",
+  "set": "roe",
+  "set_name": "Rise of the Eldrazi",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/eadb8a82-ec56-4623-b50e-42e7e60cb535",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aroe&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/roe?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/b9cf2116-7ae5-4b6a-830a-919a55235690/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ac29b997a-5be6-4d51-a81b-d00677ef401d&unique=prints",
+  "collector_number": "110",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "Eldrazi grow wherever something else dies.",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Daarken",
+  "artist_ids": [
+    "e607a0d4-fc12-4c01-9e3f-501f5269b9cb"
+  ],
+  "illustration_id": "f241894a-e18e-41ff-825a-5952135e1455",
+  "border_color": "black",
+  "frame": "2003",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 23822,
+  "penny_rank": 12299,
+  "prices": {
+    "usd": "0.11",
+    "usd_foil": "0.42",
+    "usd_etched": null,
+    "eur": "0.18",
+    "eur_foil": "0.30",
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=194939&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DEssence%2BFeed",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DEssence%2BFeed",
+    "edhrec": "https://edhrec.com/route/?cc=Essence+Feed"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F34804%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=22558&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/36702?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

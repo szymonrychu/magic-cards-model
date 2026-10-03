@@ -3070,7 +3070,11 @@ def unparsed_remainder(effect: object) -> str | None:
     return None
 
 
-def same_closure(first: object, second: object, _seen: set[tuple[int, int]] | None = None) -> bool:
+def same_closure(
+    first: object,
+    second: object,
+    _seen: dict[tuple[int, int], tuple[object, object]] | None = None,
+) -> bool:
     """Whether two dispatcher answers are the same effect, compared by value
     the way two builds from the same text differ only in identity: the same
     object; functions with the same code whose closure cells, defaults and
@@ -3079,14 +3083,21 @@ def same_closure(first: object, second: object, _seen: set[tuple[int, int]] | No
     groups; and an instance of one class whose attributes are (a callable
     pydantic modification, a plain parsed description). Compared
     recursively - a composed closure holds other closures. Anything else
-    compares with `==`; a comparison that raises is not equal."""
+    compares with `==`; a comparison that raises is not equal.
+
+    The visited pairs keep the objects themselves, not just their ids: the
+    temporaries built along the way (`_closure_children`'s lists, `dict(model)`)
+    are freed as soon as their comparison returns, and a later temporary
+    reusing a freed id would otherwise be taken for a pair already compared
+    equal - Essence Feed's token definition carrying its granted ability
+    compared equal to one without it."""
     if first is second:
         return True
-    seen = set() if _seen is None else _seen
+    seen = {} if _seen is None else _seen
     key = (id(first), id(second))
     if key in seen:
         return True
-    seen.add(key)
+    seen[key] = (first, second)
     if isinstance(first, FunctionType) and isinstance(second, FunctionType):
         if first.__code__ is not second.__code__:
             return False
