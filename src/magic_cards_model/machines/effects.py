@@ -262,6 +262,12 @@ from .targeting import (
     profile_for_text,
     spell_profile_for_text,
 )
+from .turn_scoped_riders import (
+    parse_event_subject_controller_poison_clause,
+    run_layer_then_rider,
+    run_with_antecedent,
+    turn_scoped_rider,
+)
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -3578,17 +3584,21 @@ def _mass_pump_ability_effect(effect_text: str) -> AbilityEffect | None:
 
         return counter_effect
 
-    remainder_effect = parse_mixed_effect(remainder) if remainder else None
+    remainder_effect = (
+        (turn_scoped_rider(remainder, for_spell=False) or parse_mixed_effect(remainder))
+        if remainder
+        else None
+    )
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         if source is None:
             return
-        _run_mass_pump(game, source, ability.controller, template, magnitude_expr)
+        pumped = _run_mass_pump(game, source, ability.controller, template, magnitude_expr)
         if not remainder:
             return
         if remainder_effect is not None:
-            remainder_effect(game, ability)
+            run_with_antecedent(game, ability, remainder_effect, pumped)
         else:
             game.layer_remainder_notices.append(
                 LayerRemainderNotice(
@@ -4539,14 +4549,20 @@ def _mass_pump_spell_effect(effect_text: str) -> Effect | None:
 
         return counter_effect
 
-    remainder_effect = parse_mixed_effect_for_spell(remainder) if remainder else None
+    remainder_effect = (
+        (turn_scoped_rider(remainder, for_spell=True) or parse_mixed_effect_for_spell(remainder))
+        if remainder
+        else None
+    )
 
     def effect(game: "Game", spell: CardState) -> None:
-        _run_mass_pump(game, spell, game.controller_of(spell).username, template, magnitude_expr)
+        pumped = _run_mass_pump(
+            game, spell, game.controller_of(spell).username, template, magnitude_expr
+        )
         if not remainder:
             return
         if remainder_effect is not None:
-            remainder_effect(game, spell)
+            run_with_antecedent(game, spell, remainder_effect, pumped)
         else:
             game.layer_remainder_notices.append(
                 LayerRemainderNotice(
@@ -24843,6 +24859,13 @@ def _layer_remainder_or_composed(remainder_text: str, *, for_spell: bool) -> Tar
     counters = counter_list_on_anaphor(remainder_text)
     if counters is not None:
         return counters
+    # Malicious Eclipse's "If a creature an opponent controls would die this
+    # turn, exile it instead.", Death Frenzy's "Whenever a creature dies this
+    # turn, ...", Predatory Rampage's "... blocks this turn if able." - the
+    # riders that last the turn (`machines/turn_scoped_riders.py`).
+    turn_scoped = turn_scoped_rider(remainder_text, for_spell=for_spell)
+    if turn_scoped is not None:
+        return turn_scoped
     return (
         parse_mixed_effect_for_spell(remainder_text)
         if for_spell
@@ -24933,8 +24956,7 @@ def _compose_layer_effect_with_remainder(effect_text: str) -> Effect | None:
     if remainder_effect is not None:
 
         def layer_and_remainder_effect(game: "Game", spell: CardState) -> None:
-            create_continuous_effect(game, spell)
-            remainder_effect(game, spell)
+            run_layer_then_rider(game, spell, create_continuous_effect, remainder_effect)
 
         return layer_and_remainder_effect
 
@@ -25750,8 +25772,9 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
             return remainder_then_layer_effect
 
         def layer_and_remainder_effect(game: "Game", ability: AbilityOnStack) -> None:
-            create_continuous_effect_of_ability(game, ability)
-            remainder_effect(game, ability)
+            run_layer_then_rider(
+                game, ability, create_continuous_effect_of_ability, remainder_effect
+            )
 
         return layer_and_remainder_effect
 
@@ -25812,8 +25835,7 @@ def _compose_layer_effect_with_remainder_for_mode(mode_text: str) -> Effect | No
     if remainder_effect is not None:
 
         def layer_and_remainder_effect(game: "Game", spell: CardState) -> None:
-            layer_effect(game, spell)
-            remainder_effect(game, spell)
+            run_layer_then_rider(game, spell, layer_effect, remainder_effect)
 
         return layer_and_remainder_effect
 
@@ -25848,8 +25870,7 @@ def _compose_layer_effect_with_remainder_for_ability_mode(mode_text: str) -> Abi
     if remainder_effect is not None:
 
         def layer_and_remainder_effect(game: "Game", ability: AbilityOnStack) -> None:
-            layer_effect(game, ability)
-            remainder_effect(game, ability)
+            run_layer_then_rider(game, ability, layer_effect, remainder_effect)
 
         return layer_and_remainder_effect
 
@@ -60680,6 +60701,11 @@ def _parse_mixed_clause(clause: str, *, for_spell: bool) -> TargetedClause | Non
     poison_that_many = _parse_event_player_gets_that_many_poison_clause(clause, for_spell=for_spell)
     if poison_that_many is not None:
         return poison_that_many
+    subject_controller_poison = parse_event_subject_controller_poison_clause(
+        clause, for_spell=for_spell
+    )
+    if subject_controller_poison is not None:
+        return subject_controller_poison
     each_player_attacked_loses = _parse_each_player_this_creature_attacked_loses_clause(
         clause, for_spell=for_spell
     )

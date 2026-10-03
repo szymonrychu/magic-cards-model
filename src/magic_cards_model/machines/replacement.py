@@ -8590,6 +8590,73 @@ class EnterUncastExile(EngineModel):
         event.destination = Zone.EXILE
 
 
+#: The event half of a created die-to-exile replacement, the duration words
+#: already taken off: "a creature would die" (Malicious Malfunction, Flaying
+#: Tendrils, Cry of the Carnarium) and "a creature an opponent controls would
+#: die" (Malicious Eclipse), plus the "you control" twin of the static form.
+_CREATED_DIES_EVENT_RE = re.compile(
+    r"^a (?P<nontoken>nontoken )?creature(?: (?P<whose>an opponent controls|you control))? "
+    r"would die$",
+    re.IGNORECASE,
+)
+
+
+class DieToExileReplacement(EngineModel):
+    """ "If a creature [an opponent controls] would die this turn, exile it
+    instead." - a resolving spell's own turn-long replacement (CR 614.1a,
+    CR 611.2a). CR 700.4: "dies" is put into a graveyard from the
+    battlefield, so the event is that zone change of an object that is a
+    creature on the battlefield as it would leave.
+
+    CR 611.2c: it changes no characteristics, so it is not locked to the
+    creatures present when it began - a creature entering, or coming under
+    an opponent's control, later this turn is caught too (Malicious Eclipse's
+    and Cry of the Carnarium's rulings). `whose` is read against the dying
+    creature's controller (CR 108.4) at the moment it would die.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["die_to_exile"] = "die_to_exile"
+    #: `None` every creature; "opponent" one an opponent of the effect's
+    #: controller controls; "you" one the effect's controller controls.
+    whose: Literal["opponent", "you"] | None = None
+    nontoken: bool = False
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        if not _to_graveyard(event) or event.origin is not Zone.BATTLEFIELD:
+            return False
+        card = event.card
+        if card is None or Type.CREATURE not in game.characteristics_of(card).types:
+            return False
+        if self.nontoken and is_token(card):
+            return False
+        if self.whose == "opponent":
+            return _is_opponent(game, card.controller, controller)
+        if self.whose == "you":
+            return card.controller == controller
+        return True
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.destination = Zone.EXILE
+
+
+def read_die_to_exile(effect: ReplacementEffect) -> DieToExileReplacement | None:
+    """`DieToExileReplacement`'s reader, for the created form."""
+    if effect.kind is not ReplacementKind.IF_WOULD_INSTEAD:
+        return None
+    if (effect.replacement or "").strip().rstrip(".").lower() != "exile it":
+        return None
+    match = _CREATED_DIES_EVENT_RE.match((effect.event or "").strip())
+    if match is None:
+        return None
+    whose = match.group("whose")
+    return DieToExileReplacement(
+        whose=None if whose is None else ("you" if whose.lower() == "you control" else "opponent"),
+        nontoken=match.group("nontoken") is not None,
+    )
+
+
 #: What a `CreatedReplacement` does - a `kind`-tagged union, refused at decode
 #: for an unknown tag rather than silently doing nothing.
 CreatedReplacementSpec = Annotated[
@@ -8597,7 +8664,8 @@ CreatedReplacementSpec = Annotated[
     | CounterAmountReplacement
     | EnterUnderYourControl
     | EnterUncastExile
-    | DamageLifeFloorReplacement,
+    | DamageLifeFloorReplacement
+    | DieToExileReplacement,
     Field(discriminator="kind"),
 ]
 
@@ -8683,7 +8751,12 @@ def created_replacement_spec(sentence: str) -> CreatedReplacementSpec | None:
     if damage_floor is not None:
         return damage_floor
     for effect in _parse_sentence(body, ()):
-        for reader in (read_draw_skip, read_counter_amount, read_enter_uncast_exile):
+        for reader in (
+            read_draw_skip,
+            read_counter_amount,
+            read_enter_uncast_exile,
+            read_die_to_exile,
+        ):
             spec = reader(effect)
             if spec is not None:
                 return spec
