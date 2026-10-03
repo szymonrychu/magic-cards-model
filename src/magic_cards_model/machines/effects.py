@@ -19369,12 +19369,10 @@ _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
 )
 
 
-def _parse_damage_target_also_damages_controller_clause(
-    effect_text: str, *, for_spell: bool = True
-) -> Any:
-    """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape, on a spell or (with
-    `for_spell=False`) an activated or triggered ability, whose damage source
-    is the ability's source or its last known information (CR 608.2h).
+def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Any:
+    """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape, on a spell or an
+    activated or triggered ability, whose damage source is the ability's
+    source or its last known information (CR 608.2h).
 
     CR 608.2b: the target is the only one, so with it illegal nothing - not
     even the controller's share - happens."""
@@ -31892,9 +31890,7 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     condition_instead = _parse_condition_instead_clause_for_ability(effect_text)
     if condition_instead is not None:
         return condition_instead
-    damage_target_and_controller = _parse_damage_target_also_damages_controller_clause(
-        effect_text, for_spell=False
-    )
+    damage_target_and_controller = _parse_damage_target_also_damages_controller_clause(effect_text)
     if damage_target_and_controller is not None:
         return damage_target_and_controller
     # "... deals N damage to target creature and each other creature that
