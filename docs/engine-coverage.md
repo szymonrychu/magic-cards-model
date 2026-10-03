@@ -5707,7 +5707,8 @@ object identity (CR 400.7) on every event and before any card leaves exile.
 | "you didn't attack with a creature this turn" | See Red | Curious Obsession | same |
 | "a <q> and a <q> attacked this combat" | Fearless Swashbuckler | - (only printing) | same |
 | "<name> and at least N other creatures attacked this combat" | Kytheon, Hero of Akros (triggers at end of combat, CR 511.2, and transforms) | - (only printing) | same |
-| "a <q> crewed it this turn" (CR 702.122b) | Adrestia | - (only printing) | same |
+| "a <q> crewed it this turn" (CR 702.122b) | Adrestia | - (only printing) | `scenarios/test_crewed_by_a_subtype_this_turn.py` |
+| "attacks while saddled" + nonland-permanent search to the battlefield (CR 702.171b, 701.23) | Guardian Sunmare | - (only printing) | `scenarios/test_saddled_attack_tutor_to_battlefield.py` |
 | "a [non-X] creature died under your / an opponent's control this turn" | Cult Conscript | Essenceknit Scholar, Sidequest: Hunt the Mark | `test_condition_zone_change_history.py` |
 | "a <q> was put into a / your graveyard from the battlefield this turn" | Ichor Shade | Kami of Transience | same |
 | "a permanent was put into your hand from the battlefield this turn" | Barrin, Tolarian Archmage | - (only printing) | same |
