@@ -595,6 +595,20 @@ _COSTS_LESS_X_WHERE_X_IS_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: Shadow of Mortality's own shape: "If your life total is less than your
+#: starting life total, this spell costs {X} less to cast, where X is the
+#: difference." A leading CR 601.2f condition (unlike every other row here,
+#: this one is never open text `condition_holds` has to read - it is always
+#: this one comparison) paired with a variable amount that is the plain gap
+#: between the caster's current and starting (CR 103.4) life totals - "the
+#: difference" is symmetric, so `greater than` is read too rather than
+#: assuming which side of the comparison a future printing states.
+_COSTS_LESS_IF_LIFE_TOTAL_VS_STARTING_X_IS_DIFFERENCE_RE = re.compile(
+    r"if your life total is (?P<cmp>less|greater) than your starting life total, "
+    r"this spell costs \{x\} less to cast,? where x is the difference",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's per-turn-history reduction: "This spell costs {2} less to cast
 #: for each card you've cycled or discarded this turn." (Hollow One, text
 #: confirmed with `resolve_cards` this session). Unlike Emrakul's row above,
@@ -707,6 +721,12 @@ def reads_self_cost_reduction_line(text: str) -> bool:
         from ..machines.effects import amount_expression
 
         return amount_expression(generic_where_x.group("expr")) is not None
+    if re.fullmatch(
+        rf"{_COSTS_LESS_IF_LIFE_TOTAL_VS_STARTING_X_IS_DIFFERENCE_RE.pattern}\.?",
+        line,
+        re.IGNORECASE,
+    ):
+        return True
     condition_match = _COSTS_LESS_IF_CONDITION_RE.fullmatch(line)
     return condition_match is not None and condition_is_readable(condition_match.group("condition"))
 
@@ -15448,15 +15468,64 @@ class Game(EngineModel):
         each one. The event carries the amount lost, what a "that player
         mills that many cards" trigger reads (The Master of Lake-town,
         Mindcrank); a loss of 0 is no event (CR 603.2g).
+
+        Replacement effects get first refusal (CR 614.1a), the identical
+        shape `gain_life` already gives CR 119.10's own gain-side doublers -
+        Enduring Angel's own "if your life total would be reduced to 0 or
+        less, instead ..." is what this opens up, and it sees damage-caused
+        loss too: `deal_damage_to_player` always ends by calling this same
+        method, *after* `EventKind.DAMAGE`'s own replacements (Elderscale
+        Wurm's, Angel of Grace's floor) have already had their say, so the
+        amount here is whatever survived those.
         """
         if isinstance(player, str):
             player = self.player(player)
-        new_total = player.lose_life(amount)
-        if amount > 0:
-            self.emit(
-                GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=amount)
-            )
+        if amount <= 0:
+            return player.life
+        event = ReplaceableEvent(kind=EventKind.LOSE_LIFE, player=player, amount=amount)
+        apply_replacements(self, event)
+        if event.amount <= 0:
+            return player.life
+        new_total = player.lose_life(event.amount)
+        self.emit(
+            GameEvent(event=TriggerEvent.LOSES_LIFE, player=player.username, amount=event.amount)
+        )
         return new_total
+
+    def set_life_total(self, player: Player | str, amount: int) -> int:
+        """A player's life total becomes a specific number (CR 119.5).
+
+        CR 119.5: "If an effect sets a player's life total to a specific
+        number, the player gains or loses the necessary amount of life to end
+        up with the new total." So this is never a third way a life total
+        moves - it is CR 119.3's gain or loss, worked out as a delta and sent
+        through `gain_life`/`lose_life` exactly like any other one, which is
+        what lets a "whenever you gain/lose life" trigger (CR 119.9), a life
+        gain doubler (Alhammarret's Archive) or a can't-gain-life prohibition
+        (CR 119.7) see this exactly the way they see a plain "you gain/lose N
+        life" - reusing the one gain/loss path rather than writing `player.
+        life = amount` directly, which would skip all three.
+
+        Named `set_life_total` (not `life_total_becomes`) because it is the
+        primitive every "life total becomes ..." reader calls once it has
+        worked out the number - `machines/effects.py`'s trigger/resolution
+        reader and `machines/replacement.py`'s "if you would lose the game"
+        compilers both call this one function so the two stay in agreement
+        about what CR 119.5 means.
+
+        Already at the target total, this asks for neither a gain nor a loss
+        (CR 603.2g: an amount of zero is not an event), so a `Player` already
+        sitting at their starting life total (or a total already reset) is
+        left alone rather than reported as a gain of zero.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        delta = amount - player.life
+        if delta > 0:
+            self.gain_life(player, delta)
+        elif delta < 0:
+            self.lose_life(player, -delta)
+        return player.life
 
     def exchange_life_totals(self, a: Player | str, b: Player | str) -> int:
         """Two players exchange life totals (CR 701.12a, CR 701.12c).
@@ -19210,14 +19279,25 @@ class Game(EngineModel):
             leaving = self._state_based_actions_once()
             gone.extend(leaving)
             self.announce_batched_events()
-            losing = self._losing_players()
-            if not leaving and not losing:
+            would_lose = self._losing_players()
+            if not leaving and not would_lose:
                 break
+            # CR 614/616.1: a player this check would remove gets a "would
+            # lose the game" replacement's own first refusal (Exquisite
+            # Archangel, Lich's Mirror) before the loss is real - so `losing`,
+            # not `would_lose`, is what the draw check and the actual removal
+            # below both read. A player whose loss got replaced never joins
+            # either.
+            losing = [
+                username
+                for username in would_lose
+                if self._apply_lose_the_game_replacements(username)
+            ]
             # CR 104.4a: "If all the players remaining in a game lose
-            # simultaneously, the game is a draw." `_losing_players` is who one
-            # check removes and `players_in_game` is who it found still in the
-            # game, so equal sets mean nobody survives to win. A solo game has
-            # no draw to hand out, matching `_check_for_a_winner`'s guard.
+            # simultaneously, the game is a draw." `losing` is who this check
+            # actually removes and `players_in_game` is who it found still in
+            # the game, so equal sets mean nobody survives to win. A solo game
+            # has no draw to hand out, matching `_check_for_a_winner`'s guard.
             remaining = {player.username for player in self.players_in_game}
             if len(self.players) > 1 and losing and set(losing) == remaining:
                 self.drawn = True
@@ -20049,6 +20129,29 @@ class Game(EngineModel):
                 or player.loses_to_poison
             )
         ]
+
+    def _apply_lose_the_game_replacements(self, username: str) -> bool:
+        """CR 614: raise `username`'s loss as a replaceable event (CR 104.3b/
+        c/d/e), before it becomes real.
+
+        Returns `True` when the loss still happens - nothing replaced it, so
+        the caller should still call `_lose_the_game` - and `False` when a
+        printed "if you would lose the game, instead ..." effect (Exquisite
+        Archangel, Lich's Mirror) applied instead; that effect's own `apply`
+        performs whatever it says (exile, a shuffle-and-draw, a new life
+        total) as it runs, so there is nothing further for the caller to do
+        beyond not removing the player.
+
+        A no-op (still `True`) for a player already gone - the same guard
+        `player_loses_the_game` already carries, needed here too now that
+        both call sites share this one choke point.
+        """
+        if not self.is_in_game(username):
+            return False
+        player = self.player(username)
+        event = ReplaceableEvent(kind=EventKind.LOSE_THE_GAME, player=player)
+        apply_replacements(self, event)
+        return not event.replaced
 
     def _lose_the_game(self, username: str) -> None:
         """This player loses, and so leaves the game (CR 104.5)."""
@@ -22122,7 +22225,23 @@ class Game(EngineModel):
             amount += max(values, default=0)
 
         total_power_with_keyword = _COSTS_LESS_X_WHERE_X_IS_TOTAL_POWER_WITH_KEYWORD_RE.search(text)
-        if total_power_with_keyword is not None:
+        life_vs_starting = _COSTS_LESS_IF_LIFE_TOTAL_VS_STARTING_X_IS_DIFFERENCE_RE.search(text)
+        if life_vs_starting is not None:
+            # Shadow of Mortality's own shape - checked ahead of the generic
+            # "where X is <expr>" fallback below, whose bare `.search` would
+            # otherwise match this same sentence's own tail ("... where x is
+            # the difference") and hand "the difference" to `amount_
+            # expression`, which reads no such bare phrase (it needs a named
+            # "between A and B" pair) and would silently add nothing.
+            player = self.player(owner)
+            holds = (
+                player.life < player.starting_life
+                if life_vs_starting.group("cmp").lower() == "less"
+                else player.life > player.starting_life
+            )
+            if holds:
+                amount += abs(player.life - player.starting_life)
+        elif total_power_with_keyword is not None:
             keyword = total_power_with_keyword.group("keyword")
             amount += sum(
                 self.characteristics_of(state).power or 0
@@ -26260,8 +26379,16 @@ class Game(EngineModel):
         A no-op for a player already gone - `_lose_the_game` is not idempotent
         about `_player_left`'s cleanup, and CR 104.3a already makes "losing
         stays gone" the rule (`check_state_based_actions`'s own docstring).
+
+        CR 614: this loss is exactly as replaceable as the state-based ones -
+        `_apply_lose_the_game_replacements` is the one choke point both this
+        method and `_check_state_based_actions_impl` raise it through, so a
+        card whose "if you would lose the game, instead ..." fires here too,
+        never only against the three state-based losses.
         """
         if not self.is_in_game(username):
+            return
+        if not self._apply_lose_the_game_replacements(username):
             return
         self._lose_the_game(username)
         self._check_for_a_winner()

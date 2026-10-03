@@ -174,6 +174,7 @@ from magic_cards_model.machines.replacement import (
     performed_static_replacement_line,
     performs_static_line,
     reads_cant_enter_line,
+    reads_self_enters_under_opponents_control_line,
     self_enters_effects_read,
     strip_reminder_text,
 )
@@ -2099,6 +2100,10 @@ def _static_ability_category(
     if reads_self_cost_reduction_line(text) or reads_mandatory_additional_cost_line(text):
         # CR 601.2f / 118.8a: `Game.cost_reduction_for` and
         # `casting.mandatory_additional_costs` charge them on every cast.
+        return HANDLED
+    if reads_self_enters_under_opponents_control_line(text):
+        # CR 614.12: `_self_enters_modifiers`'s own `_enters_under_opponents_
+        # control_modifier`.
         return HANDLED
     if _CANT_BE_COUNTERED_RE.match(text.strip()) or _CONDITIONAL_CANT_BE_COUNTERED_RE.match(
         text.strip()

@@ -10437,6 +10437,51 @@ _GAIN_LIFE_RE = re.compile(
 _LOSE_LIFE_RE = re.compile(
     rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
 )
+#: "Your life total becomes 26." (Providence's own reveal rider and its
+#: direct line, Captive Audience's upkeep mode, Angel of Grace's graveyard
+#: activation, Elderscale Wurm's enters trigger) and "Your life total becomes
+#: equal to your starting life total." (Exquisite Archangel's own "if you
+#: would lose the game" replacement, read through this same clause reader
+#: where a replacement's own apply function needs one). CR 119.5: "If an
+#: effect sets a player's life total to a specific number, the player gains
+#: or loses the necessary amount of life to end up with the new total" -
+#: `Game.set_life_total` is the one place that gain-or-loss is worked out, so
+#: every reader of this shape (this one, and `machines/replacement.py`'s own
+#: "if you would lose the game, instead ..." compilers) calls it rather than
+#: writing `player.life` directly. Named `life_total_becomes` rather than
+#: folded anonymously into `parse_clause_effect`, so a second "life total
+#: becomes" reader (built in parallel for statics/replacements elsewhere)
+#: can find this one and the two can be merged instead of duplicated.
+_LIFE_TOTAL_BECOMES_RE = re.compile(
+    r"your life total becomes (?:(?P<n>\d+)|equal to your starting life total)",
+    re.IGNORECASE,
+)
+
+
+def life_total_becomes_effect_for(clause: str) -> ClauseEffect | None:
+    """`_LIFE_TOTAL_BECOMES_RE`'s shape, or `None`. See that pattern's own
+    docstring - this is the "life total becomes" primitive `parse_clause_
+    effect` dispatches to, exposed under its own name for
+    `machines/replacement.py`'s "if you would lose the game" compilers and
+    `machines/opening_hand.py`'s rider reader to call directly."""
+    match = _LIFE_TOTAL_BECOMES_RE.fullmatch(clause.strip().rstrip("."))
+    if match is None:
+        return None
+    to_starting = match.group("n") is None
+    amount = None if to_starting else parse_count(match.group("n"))
+    if not to_starting and amount is None:
+        return None
+
+    def life_total_becomes(
+        game: "Game", player: Player, source: str, source_id: str | None
+    ) -> None:
+        target = player.starting_life if to_starting else amount
+        assert target is not None
+        game.set_life_total(player, target)
+
+    return life_total_becomes
+
+
 #: A life total changed by a counted amount: "Target player gains X life,
 #: where X is the greatest power among creatures they control" (Inscription
 #: of Abundance), "Target opponent loses life equal to the number of
@@ -11947,6 +11992,10 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
 
         return gain_life
 
+    life_total_becomes = life_total_becomes_effect_for(clause)
+    if life_total_becomes is not None:
+        return life_total_becomes
+
     if match := _PLAYER_GAINS_HEXPROOF_RE.fullmatch(clause):
         return _player_gains_hexproof_clause(match)
 
@@ -12836,6 +12885,26 @@ _FREE_ALTERNATIVE_COST_LINE_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+#: CR 103.6b's "You may reveal this card from your opening hand." (plus
+#: whatever rider it carries, up to the end of that one printed line) and CR
+#: 103.6a's "If this card is in your opening hand, ..." - Providence's own
+#: "You may reveal this card from your opening hand. If you do, at the
+#: beginning of the first upkeep, your life total becomes 26." CR 103.6's
+#: whole sequence runs before the mulligan process is even over (CR 103.5),
+#: long before this card could ever be cast - `machines/opening_hand.py` owns
+#: it entirely, reading the same paragraph directly off `Card.oracle_text`.
+#: Left in here, it is one clause `effect_for`'s dispatch cannot read (it
+#: describes something that happens before a game turn exists, never a
+#: resolution instruction) and, the paragraph being atomic, it would take
+#: Providence's own second line - "Your life total becomes 26." - down with
+#: it, the identical preamble-poisoning failure `_SELF_COST_REDUCTION_LINE_RE`
+#: already documents for a cost line ahead of an unrelated resolving one.
+_OPENING_HAND_ACTION_LINE_RE = re.compile(
+    r"^(?:You may reveal this card from your opening hand"
+    r"|If this card is in your opening hand)\b[^\n]*\.\s*",
+    re.IGNORECASE | re.MULTILINE,
+)
+
 #: "This spell costs {N} less to cast if [condition]." (Mystical Dispute) - a
 #: static ability about *announcing* the spell (CR 601.2f), never part of
 #: what it does on resolution. This self-referential reduction (as opposed to
@@ -13135,6 +13204,7 @@ def _strip_non_effect_preamble(text: str) -> str:
     text = _X_CAP_LINE_RE.sub("", text)
     text = _CANT_BE_COUNTERED_LINE_RE.sub("", text)
     text = _strip_conditional_cant_be_countered_line(text)
+    text = _OPENING_HAND_ACTION_LINE_RE.sub("", text)
     text = _PITCH_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _FREE_ALTERNATIVE_COST_LINE_RE.sub("", text)
     text = _SELF_COST_REDUCTION_LINE_RE.sub("", text)
@@ -71125,9 +71195,13 @@ def _parse_draw_if_power_at_least(text: str) -> AbilityEffect | None:
 #: Horror) - CR 111.2: the player the instruction names creates the token, so
 #: that player owns and controls it. The token phrase is read by the same
 #: named (CR 111.4 appositive) and counted token readers "create" already
-#: uses.
+#: uses. The subject may also be a group - "each opponent creates five 2/2
+#: black Zombie creature tokens" (Captive Audience), "each player creates a
+#: Food token" (Party Dude) - and then every player in the group creates the
+#: tokens for themself, in turn order from the ability's controller.
 _TARGET_PLAYER_CREATES_RE = re.compile(
-    r"^target (?:player|opponent) creates? (?P<phrase>.+)$", re.IGNORECASE | re.DOTALL
+    r"^(?P<subject>target (?:player|opponent)|each opponent|each player) creates? (?P<phrase>.+)$",
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -71169,11 +71243,19 @@ def _parse_target_player_creates_token(text: str) -> AbilityEffect | None:
         if definition is None:
             return None
     token = definition
+    subject = match.group("subject").lower()
+
+    def creators(game: "Game", ability: AbilityOnStack) -> list[str]:
+        controller = game.controller_of(ability).username
+        if subject == "each opponent":
+            return [player.username for player in _opponents(game, controller)]
+        if subject == "each player":
+            return [player.username for player in game.players_in_game]
+        return [t.username for t in game.resolve_targets(ability) if isinstance(t, Player)]
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
-        for target in game.resolve_targets(ability):
-            if isinstance(target, Player):
-                create_tokens(game, token, target.username, count, tapped=tapped)
+        for username in creators(game, ability):
+            create_tokens(game, token, username, count, tapped=tapped)
 
     return effect
 
