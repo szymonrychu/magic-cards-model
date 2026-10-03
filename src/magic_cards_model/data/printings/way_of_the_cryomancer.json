@@ -3,6 +3,8 @@
   "id": "838b0efb-7398-4df9-8fdf-b8af43b47938",
   "oracle_id": "7d32c63d-aa9e-4f5d-a3e6-51377a786009",
   "multiverse_ids": [],
+  "resource_id": "FCF25833BE89849A97D4C3BADC928B6A46D2539918FA0A465060714B2EEF81CE",
+  "mtgo_id": 155592,
   "tcgplayer_id": 715904,
   "cardmarket_id": 907295,
   "name": "Way of the Cryomancer",
@@ -38,32 +40,51 @@
     "U"
   ],
   "keywords": [
-    "Surveil"
+    "Surveil",
+    "Empower Jace"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "838b0efb-7398-4df9-8fdf-b8af43b47938",
+      "component": "combo_piece",
+      "name": "Way of the Cryomancer",
+      "type_line": "Legendary Enchantment",
+      "uri": "https://api.scryfall.com/cards/838b0efb-7398-4df9-8fdf-b8af43b47938"
+    },
+    {
+      "object": "related_card",
+      "id": "8d1e424f-6407-4f8c-bed2-eaf148237c81",
+      "component": "token",
+      "name": "Jace",
+      "type_line": "Token Planeswalker \u2014 Jace",
+      "uri": "https://api.scryfall.com/cards/8d1e424f-6407-4f8c-bed2-eaf148237c81"
+    }
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -111,14 +132,14 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 28099,
+  "edhrec_rank": 20948,
   "prices": {
-    "usd": "1.45",
-    "usd_foil": null,
+    "usd": "0.33",
+    "usd_foil": "0.46",
     "usd_etched": null,
-    "eur": "1.20",
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.02",
+    "eur_foil": "0.34",
+    "tix": "0.01"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWay%2Bof%2Bthe%2BCryomancer",
@@ -128,6 +149,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F715904%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=907295&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Way+of+the+Cryomancer&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155592?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }
