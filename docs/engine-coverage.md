@@ -6968,3 +6968,17 @@ documented exception" rule rather than left silently asserted.
   description` rather than pinned to "artifact"/"enchantment"; Mentor's
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
+
+## R0b-T6: life-gain payoffs, dies/ETB value creatures, sacrifice artifacts
+
+Proof-only for eleven already-handled cards (Hinterland Sanctifier, Starscape
+Cleric, Leonardo Cutting Edge, Moseo, Professor Dellian Fel, Dream Beavers,
+Greedy Freebooter, Callous Inspector, Curious Farm Animals, Vinereap Mentor,
+Candy Trail, Giant's Boulder); one reader widened because a proof exposed it.
+
+| Mechanic | Reader | Cards | Second printing | Test |
+|---|---|---|---|---|
+| "target opponent loses that much life" off a trigger event's amount (CR 603.2c / 608.2c); before this, the clause parsed to nothing and the Dellian emblem trigger resolved as a silent no-op | `effects._THAT_MUCH_LIFE_LOSS_RE` in `parse_clause_effect` (fails closed with a notice when the event carries no amount) | Professor Dellian Fel (emblem) | Vito, Thorn of the Dusk Rose | `test_r0b_life_gain_payoffs.py` |
+| Gain-life triggers, offspring, sneak, Infusion intervening-if, Pest token attack trigger, emblem persistence | existing readers, each proven per card | Hinterland Sanctifier, Starscape Cleric, Leonardo, Moseo, Dellian | - | `test_r0b_life_gain_payoffs.py` |
+| ETB/dies value triggers (scry, Treasure/Clue/Food, gain, self-damage with last-known source) | existing readers | Dream Beavers, Greedy Freebooter, Callous Inspector, Curious Farm Animals, Vinereap Mentor | - | `test_r0b_etb_and_dies_value_creatures.py` |
+| Sacrifice-for-value artifacts, "up to one target" with zero targets | existing readers | Candy Trail, Giant's Boulder, Curious Farm Animals | - | `test_r0b_sacrificial_value_artifacts.py` |

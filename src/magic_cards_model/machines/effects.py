@@ -10437,6 +10437,11 @@ _GAIN_LIFE_RE = re.compile(
 _LOSE_LIFE_RE = re.compile(
     rf"you loses? (?P<n>{COUNT}) life(?: for each (?P<each>.+))?", re.IGNORECASE
 )
+#: "<player> loses that much life" - an amount carried by the triggering
+#: event or an earlier instruction (`that_many`, CR 608.2c / 603.2c): Professor
+#: Dellian Fel's emblem "Whenever you gain life, target opponent loses that
+#: much life." The player is whoever the dispatcher runs the clause for.
+_THAT_MUCH_LIFE_LOSS_RE = re.compile(r"^you loses? that much life\.?$", re.IGNORECASE)
 #: A life total changed by a counted amount: "Target player gains X life,
 #: where X is the greatest power among creatures they control" (Inscription
 #: of Abundance), "Target opponent loses life equal to the number of
@@ -12080,6 +12085,17 @@ def parse_clause_effect(clause: str) -> ClauseEffect | None:
             game.lose_life(player, total)
 
         return lose_life
+
+    if _THAT_MUCH_LIFE_LOSS_RE.fullmatch(clause):
+
+        def lose_that_much_life(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            amount = _that_many_or_notice(game, clause, source_id=source_id, source_name=source)
+            if amount:
+                game.lose_life(player, amount)
+
+        return lose_that_much_life
 
     counted_life = _parse_counted_life_change_clause(clause)
     if counted_life is not None:
