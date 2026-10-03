@@ -2582,6 +2582,9 @@ def _self_or_other_enters_match(
 #: "this creature or a Dragon you control dies" (Dragon-Kami's Egg) - the
 #: self half plus an "a[n] `<subject>`" half that is not "another": the
 #: source itself, and any other object the second half describes.
+#: "a creature dealt damage by this creature this turn" - the dying
+#: creature's own damage history from the trigger's source (CR 120.1).
+DEALT_DAMAGE_BY_THIS_RE = re.compile(r"\bdealt damage by this [a-z]+ this turn\b")
 _SELF_OR_A_SUBJECT_RE = re.compile(r"\bor an? (?!other\b)[a-z]")
 
 _LEGENDARY_WORD = re.compile(r"\blegendary\b")
@@ -2918,6 +2921,19 @@ def condition_matches(
             # sweep yet at the moment this event fires, so it still names
             # the creature that just died rather than nothing.
             return event.subject_id is not None and event.subject_id == source.attached_to
+        if DEALT_DAMAGE_BY_THIS_RE.search(lowered):
+            # Vein Drinker's and Sengir Vampire's "a creature dealt damage by
+            # this creature this turn dies": CR 120.1's damage events this
+            # turn, from this object to the one that died (CR 603.10a looks
+            # back at it), not this creature's own death.
+            return (
+                event.subject_id is not None
+                and _types_match(event.subject_types, condition)
+                and any(
+                    record.source_id == source.id and record.recipient_id == event.subject_id
+                    for record in game.damage_dealt_this_turn
+                )
+            )
         if event.subject_id == source.id:
             # Covers "When this creature dies" and the self half of
             # "Whenever this creature or another creature dies" (Blood

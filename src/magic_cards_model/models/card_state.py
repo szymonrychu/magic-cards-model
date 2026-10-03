@@ -811,6 +811,18 @@ class CardState(EngineModel):
     every other zone its front face's characteristics only, and `move_to`
     clears the flag on the way out.
     """
+    flipped: bool = False
+    """True once this flip-card permanent has flipped (CR 710).
+
+    CR 710.1b: the bottom half's "alternative name, text box, type line,
+    power, and toughness" are "used only if the permanent is on the
+    battlefield and only if the permanent is flipped", so `up_face` reads
+    `Card.back_face` while this is set. CR 710.1c keeps colour and mana cost
+    unchanged, which `mana_cost` honours (the bottom half prints none).
+    CR 710.4: one-way - `flip` never clears it - and a flipped permanent that
+    leaves the battlefield "retains no memory of its status", which is why
+    `move_to` clears it on the way out.
+    """
     times_transformed: int = 0
     """How many times `transform` has actually turned this object over - the
     count CR 701.27f compares: "If a delayed triggered ability of a permanent
@@ -1803,7 +1815,7 @@ class CardState(EngineModel):
         land_face = self._land_face
         if land_face is not None:
             return land_face
-        if self.transformed:
+        if self.transformed or (self.flipped and self.zone is Zone.BATTLEFIELD):
             back_face = self.card.back_face
             if back_face is not None:
                 return back_face
@@ -2164,6 +2176,9 @@ class CardState(EngineModel):
             return None  # CR 406.3a
         if self.face_down_characteristics is not None:
             return self.face_down_characteristics.mana_cost
+        if self.flipped:
+            front_face = self.card.front_face
+            return front_face.mana_cost if front_face is not None else None  # CR 710.1c
         up_face = self.up_face
         if up_face is not None:
             return up_face.mana_cost or None
@@ -2707,6 +2722,18 @@ class CardState(EngineModel):
         self.transformed = not self.transformed
         self.times_transformed += 1
 
+    def flip(self) -> None:
+        """Flip this permanent (CR 710): its bottom half's characteristics
+        apply from now on (CR 710.1b, CR 710.2).
+
+        Only a flip card on the battlefield can flip; anything else, or a
+        permanent already flipped (CR 710.4: one-way), is left alone - the
+        same "nothing happens" CR 701.27c gives a transform of a card that
+        cannot.
+        """
+        if self.zone is Zone.BATTLEFIELD and self.card.layout is Layout.FLIP:
+            self.flipped = True
+
     def turn_face_up(self) -> None:
         """Turn this object face up, restoring the card's own characteristics.
 
@@ -3012,6 +3039,7 @@ class CardState(EngineModel):
         else:
             self.tapped = False
             self.transformed = False
+            self.flipped = False  # CR 710.4
             self.damage = 0
             if not (zone is Zone.STACK and self.face_down_characteristics is not None):
                 # CR 708.9: a face-down object leaving the stack or the

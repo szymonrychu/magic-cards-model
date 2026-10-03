@@ -31660,6 +31660,15 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     condition_instead = _parse_condition_instead_clause_for_ability(effect_text)
     if condition_instead is not None:
         return condition_instead
+    # Source damage whose later words point back at the target ("that
+    # creature's controller", "each other creature that shares a color with
+    # it", "that creature deals damage ... to this creature", "<it> deals N
+    # damage instead") - `machines/damage_backrefs.py`.
+    from .damage_backrefs import damage_backref_ability_effect
+
+    damage_backref = damage_backref_ability_effect(effect_text)
+    if damage_backref is not None:
+        return damage_backref
     composed = _compose_layer_effect_with_remainder_for_ability(effect_text)
     if composed is not None:
         return composed

@@ -1943,11 +1943,14 @@ class ThatCreatureDiesConsequence(DelayedEffectSpecBase):
     event the ability carries."""
 
     kind: Literal["that_creature_dies_consequence"] = "that_creature_dies_consequence"
+    source_stamp: UUID | None = None
+    """The creating ability's source as it was then, for a consequence about
+    "this creature" (Initiate of Blood's flip) - see `dies_consequence_effect`."""
 
     def __call__(self, game: "Game", ability: AbilityOnStack, trigger: "DelayedTrigger") -> None:
         from .dies_this_turn import dies_consequence_effect
 
-        effect = dies_consequence_effect(trigger.text)
+        effect = dies_consequence_effect(trigger.text, source_stamp=self.source_stamp)
         if effect is not None:
             effect(game, ability)
 

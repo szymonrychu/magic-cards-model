@@ -68,7 +68,7 @@ _SELF_NOUN = (
     r"this (?:creature|permanent|artifact|enchantment|card|land|aura|equipment|vehicle"
     r"|planeswalker|spell|battle|mount)"
 )
-_EVENT_PRONOUN = r"it|he|she|they|that creature|that permanent|that spell|that card"
+_EVENT_PRONOUN = r"it|he|she|they|that creature|that permanent|that spell|that card|that land"
 _ATTACHED_TO = (
     r"(?:enchanted|equipped) (?:creature|permanent|artifact|land|equipment|planeswalker|vehicle)"
 )
