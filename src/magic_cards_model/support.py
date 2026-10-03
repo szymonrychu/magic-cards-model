@@ -68,6 +68,7 @@ from magic_cards_model.machines.casting import (
     reads_granted_zone_keyword_line,
     reads_linked_exile_static_cast_line,
     reads_mandatory_additional_cost_line,
+    reads_optional_exile_reduction_line,
     reads_optional_sacrifice_reduction_line,
     reads_or_pay_additional_cost_line,
     reads_play_cards_exiled_with_line,
@@ -2157,6 +2158,10 @@ def _static_ability_category(
     if reads_optional_sacrifice_reduction_line(text):
         # CR 118.8b / CR 118.7a: `Casting.sacrifice_for_cost_reduction` pays
         # it and applies the linked per-object reduction (Rottenmouth Viper).
+        return HANDLED
+    if reads_optional_exile_reduction_line(text):
+        # CR 118.8b / CR 118.7a: `Casting.exile_for_cost_reduction` pays it
+        # and applies the linked per-card reduction (March of Wretched Sorrow).
         return HANDLED
     if static_free_cast_grant(text) is not None:
         # CR 118.9: "you may cast ... without paying its mana cost" off a

@@ -582,7 +582,12 @@ def _cast_action(
     # unpayable at every X, and one payable at X=0 is a castable spell.
     x_value = 0 if announces_x else None
     try:
-        extras = mandatory_additional_costs(card, player, x_value)
+        extras = mandatory_additional_costs(
+            card,
+            player,
+            x_value,
+            primary_alternatives=game.or_cost_choices_for_judging(card, player),
+        )
     except ValueError as refusal:
         extras, unpayable = [], unpayable or str(refusal)
     # `judged_total` is the X=0 stand-in `_cost_affordability` is asked about

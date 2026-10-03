@@ -5148,6 +5148,14 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
     return offers
 
 
+def _per_object_reduction_re(verb: str) -> re.Pattern[str]:
+    return re.compile(
+        r"this spell costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) less to cast for each "
+        rf"(?P<noun>[a-z]+) {verb} this way\.?",
+        re.IGNORECASE,
+    )
+
+
 #: Rottenmouth Viper's own second sentence of its own additional cost
 #: paragraph: "As an additional cost to cast this spell, you may sacrifice
 #: any number of nonland permanents. This spell costs {1} less to cast for
@@ -5161,11 +5169,18 @@ def alternative_cost_offers(card: Card) -> list[AlternativeCostOffer]:
 #: how many objects the payer chose to sacrifice for *this* announced
 #: additional cost (CR 601.2b), so it is read by `Casting.
 #: sacrifice_for_cost_reduction` itself rather than by that generic reader.
-_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE = re.compile(
-    r"this spell costs (?P<amount>\{[^}]+\}(?:\{[^}]+\})*) less to cast for each "
-    r"(?P<noun>[a-z]+) sacrificed this way\.?",
-    re.IGNORECASE,
-)
+_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE = _per_object_reduction_re("sacrificed")
+#: March of Wretched Sorrow's and its siblings' own linked sentence, the exile
+#: twin of the one above: "As an additional cost to cast this spell, you may
+#: exile any number of black cards from your hand. This spell costs {2} less
+#: to cast for each card exiled this way." Read by `Casting.
+#: exile_for_cost_reduction`, again only ever as a generic `{N}` (CR 118.7a).
+_PER_OBJECT_EXILE_COST_REDUCTION_RE = _per_object_reduction_re("exiled")
+
+
+def _per_object_reduction(pattern: re.Pattern[str], text: str, *, whole: bool) -> ManaCost | None:
+    match = pattern.fullmatch(text.strip()) if whole else pattern.search(text)
+    return None if match is None else ManaCost.try_parse(match.group("amount"))
 
 
 def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
@@ -5174,17 +5189,29 @@ def per_object_sacrifice_cost_reduction(card: Card) -> ManaCost | None:
     to printing one this engine cannot read, which `Casting.
     sacrifice_for_cost_reduction` tells apart by trying to parse the amount
     and raising when that fails rather than silently reducing nothing."""
-    match = _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE.search(card.oracle_text or "")
-    if match is None:
-        return None
-    return ManaCost.try_parse(match.group("amount"))
+    return _per_object_reduction(
+        _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, card.oracle_text or "", whole=False
+    )
 
 
 def per_object_sacrifice_reduction_of_sentence(sentence: str) -> ManaCost | None:
     """`per_object_sacrifice_cost_reduction`'s amount when `sentence` is
     wholly that reduction sentence, else None."""
-    match = _PER_OBJECT_SACRIFICE_COST_REDUCTION_RE.fullmatch(sentence.strip())
-    return None if match is None else ManaCost.try_parse(match.group("amount"))
+    return _per_object_reduction(_PER_OBJECT_SACRIFICE_COST_REDUCTION_RE, sentence, whole=True)
+
+
+def per_object_exile_cost_reduction(card: Card) -> ManaCost | None:
+    """`per_object_sacrifice_cost_reduction`'s exile twin: the per-card amount
+    of "This spell costs {N} less to cast for each card exiled this way."."""
+    return _per_object_reduction(
+        _PER_OBJECT_EXILE_COST_REDUCTION_RE, card.oracle_text or "", whole=False
+    )
+
+
+def per_object_exile_reduction_of_sentence(sentence: str) -> ManaCost | None:
+    """`per_object_exile_cost_reduction`'s amount when `sentence` is wholly
+    that reduction sentence, else None."""
+    return _per_object_reduction(_PER_OBJECT_EXILE_COST_REDUCTION_RE, sentence, whole=True)
 
 
 def alternative_cost_phrase_of_line(text: str) -> str | None:

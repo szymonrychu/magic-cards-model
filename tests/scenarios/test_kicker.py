@@ -378,15 +378,14 @@ def test_a_card_with_no_optional_additional_cost_offers_none():
     assert _cast_action(scenario, "Lightning Bolt").additional_cost_options == ()
 
 
-def test_an_optional_printed_cost_this_engine_cannot_charge_says_so_out_loud():
+def test_an_optional_exile_from_hand_cost_is_enumerated_as_understood():
     """CR 118.8b's optional additional cost is not always a keyword: March of
     Otherworldly Light prints "As an additional cost to cast this spell, you
-    may exile any number of white cards from your hand", and nothing in
-    `Casting` can charge that. It is still a printed, optional announcement a
-    seat is entitled to know about (CR 601.2b), so the row is enumerated with
-    `understood=False` - the same loud fail-closed shape CR 106.6's
-    `Action.restriction_understood` already uses - rather than silently
-    omitted, which is what would leave a seat to find out by experiment."""
+    may exile any number of white cards from your hand". `Casting.
+    exile_for_cost_reduction` charges it (and applies the linked "{2} less for
+    each card exiled this way"), so the row is enumerated under its own
+    announcement name, understood (R0b-T4; before that it was the loud
+    `understood=False` fail-closed row)."""
     scenario = (
         Scenario()
         .manual_turn_based_actions()
@@ -398,9 +397,9 @@ def test_an_optional_printed_cost_this_engine_cannot_charge_says_so_out_loud():
 
     (option,) = _cast_action(scenario, "March of Otherworldly Light").additional_cost_options
 
-    assert option.keyword is None
+    assert option.keyword == "exile any number"
     assert option.cost == "you may exile any number of white cards from your hand"
-    assert option.understood is False
+    assert option.understood is True
 
 
 #: Every optional additional cost the pool prints that `Casting` has no way to
@@ -408,7 +407,7 @@ def test_an_optional_printed_cost_this_engine_cannot_charge_says_so_out_loud():
 #: shape fails the sweep below rather than quietly failing closed in a game,
 #: and one the enumerator has since learned to charge fails it too rather than
 #: outliving its reason.
-KNOWN_UNCHARGEABLE_OPTIONAL_COSTS = {"March of Otherworldly Light"}
+KNOWN_UNCHARGEABLE_OPTIONAL_COSTS: set[str] = set()
 
 
 def test_every_optional_additional_cost_in_the_pool_is_enumerated():
@@ -475,7 +474,9 @@ def test_every_optional_additional_cost_in_the_pool_is_enumerated():
         # Celestial Reunion's "you may choose a creature type and behold two
         # creatures of that type" (CR 701.4a, `behold_chosen_type_for_cost`).
         ("behold", "CR 701.4a", False),
-        (None, "CR 118.8b", False),
+        # March of Wretched Sorrow's "you may exile any number of black cards from
+        # your hand" (`Casting.exile_for_cost_reduction`, R0b-T4).
+        ("exile any number", "CR 118.8b", False),
         # Rottenmouth Viper's "you may sacrifice any number of nonland
         # permanents" (CR 118.8b's optional additional cost, R0a-T4).
         ("sacrifice any number", "CR 118.8b", False),
