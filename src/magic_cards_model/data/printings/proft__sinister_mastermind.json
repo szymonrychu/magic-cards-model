@@ -3,6 +3,8 @@
   "id": "d36b0e06-cb82-4c48-bf35-e76f109116f6",
   "oracle_id": "a350856c-87f2-4605-999f-4e26aa362a55",
   "multiverse_ids": [],
+  "resource_id": "EA8BC4D8A9A2B42B0D4529FDA06D40816FF7BB655AA40F82E2A439730E585286",
+  "mtgo_id": 155616,
   "tcgplayer_id": 716654,
   "cardmarket_id": 908444,
   "name": "Proft, Sinister Mastermind",
@@ -44,29 +46,29 @@
     "Menace"
   ],
   "legalities": {
-    "standard": "not_legal",
-    "future": "not_legal",
-    "historic": "not_legal",
-    "timeless": "not_legal",
-    "gladiator": "not_legal",
-    "pioneer": "not_legal",
-    "modern": "not_legal",
-    "legacy": "not_legal",
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
     "pauper": "not_legal",
-    "vintage": "not_legal",
+    "vintage": "legal",
     "penny": "not_legal",
-    "commander": "not_legal",
-    "oathbreaker": "not_legal",
-    "standardbrawl": "not_legal",
-    "brawl": "not_legal",
-    "competitivebrawl": "not_legal",
-    "alchemy": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
     "paupercommander": "not_legal",
-    "duel": "not_legal",
+    "duel": "legal",
     "oldschool": "not_legal",
     "premodern": "not_legal",
     "predh": "not_legal",
-    "tlr": "not_legal"
+    "tlr": "legal"
   },
   "games": [
     "paper",
@@ -114,19 +116,19 @@
   "textless": false,
   "booster": false,
   "story_spotlight": false,
-  "edhrec_rank": 32114,
+  "edhrec_rank": 29583,
   "preview": {
     "source": "MagicMujerES",
     "source_uri": "https://www.instagram.com/p/DdGpq40IdSj/",
     "previewed_at": "2026-09-10"
   },
   "prices": {
-    "usd": "1.99",
-    "usd_foil": null,
+    "usd": "0.28",
+    "usd_foil": "0.41",
     "usd_etched": null,
-    "eur": "0.79",
-    "eur_foil": null,
-    "tix": null
+    "eur": "0.05",
+    "eur_foil": "0.20",
+    "tix": "0.02"
   },
   "related_uris": {
     "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DProft%252C%2BSinister%2BMastermind",
@@ -136,6 +138,6 @@
   "purchase_uris": {
     "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F716654%3Fpage%3D1",
     "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=908444&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
-    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id=scryfall&data%5Bsearch%5D=Proft%2C+Sinister+Mastermind&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+    "cardhoarder": "https://www.cardhoarder.com/cards/155616?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
   }
 }

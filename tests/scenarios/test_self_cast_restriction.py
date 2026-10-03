@@ -16,7 +16,10 @@ itself on Bayou Groff - the underlying condition reader's own generality is
 what other, unrelated tests already establish.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
+from magic_cards_model.models import Zone
 from tests.scenarios.harness import Scenario
 
 
@@ -71,3 +74,49 @@ def test_proft_becomes_castable_once_the_graveyard_reaches_the_threshold():
     proft = scenario.cast_and_resolve("Proft, Sinister Mastermind", *sources, username="alice")
 
     assert proft.name == "Proft, Sinister Mastermind"
+
+
+def test_proft_has_menace_and_its_discard_ability_ignores_the_cast_restriction():
+    """CR 702.111b: menace. The "{B}, Discard this card" ability works from
+    the hand (CR 113.6b) with fewer than seven cards in the graveyard; the
+    cast restriction (CR 601.3) is about casting only."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Proft, Sinister Mastermind"],
+            battlefield=["Swamp"],
+            graveyard=["Grizzly Bears"] * 2,
+        )
+        .player("bob", battlefield=["Grizzly Bears"])
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    proft = scenario.find("Proft, Sinister Mastermind", Zone.HAND, "alice")
+    bears = scenario.creature("Grizzly Bears", "bob")
+    (swamp,) = scenario.untapped_sources("Swamp", username="alice")
+
+    scenario.activate(proft, swamp, index=0, username="alice", discarding=[proft], targets=[bears])
+    scenario.pass_until_resolved()
+
+    assert proft.zone is Zone.GRAVEYARD
+    assert scenario.game.power_of(bears) == 2 - 3
+    assert scenario.game.toughness_of(bears) == 2 - 1
+
+
+def test_proft_on_the_battlefield_has_menace():
+    """CR 702.111b: one blocker is illegal, two are fine."""
+    scenario = (
+        Scenario()
+        .player("alice", battlefield=["Proft, Sinister Mastermind"])
+        .player("bob", battlefield=["Grizzly Bears", "Grizzly Bears"])
+    ).build()
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    proft = scenario.creature("Proft, Sinister Mastermind", "alice")
+    first, second = scenario.creatures("Grizzly Bears", "Grizzly Bears", username="bob")
+    scenario.attack_with(proft)
+    scenario.advance("alice")
+
+    with pytest.raises(ValueError):
+        scenario.block(proft, first)
+    scenario.block(proft, first, second)
+    assert scenario.game.is_blocked(proft)

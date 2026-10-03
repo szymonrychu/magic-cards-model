@@ -14,8 +14,10 @@ generically off whatever sibling static line the exiling permanent prints
 the triggered ability that does the exiling.
 """
 
+import pytest
+
 from magic_cards_model.machines import Step
-from magic_cards_model.machines.casting import play_permissions_on
+from magic_cards_model.machines.casting import once_per_turn_key, play_permissions_on
 from magic_cards_model.models import Color, Zone
 from tests.scenarios.harness import Scenario
 
@@ -116,3 +118,126 @@ def test_the_permission_never_expires_on_its_own_only_on_the_condition():
     scenario.turn_based_actions()
 
     assert scenario.game.play_permission_for(bolt, "alice") is not None
+
+
+def _usable(scenario: Scenario, card) -> bool:
+    return scenario.game.play_permission_for(card, "alice") is not None
+
+
+def test_dropping_below_threshold_mid_turn_removes_the_permission_and_regaining_restores_it():
+    """CR 604.1 / CR 113.6: "as long as" is re-read each time it is asked."""
+    scenario = _board(alice_graveyard=["Grizzly Bears"] * 7).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = _cast_and_exile(scenario)
+    assert _usable(scenario, bolt)
+
+    alice = scenario.game.player("alice")
+    removed = alice.graveyard.pop()
+    assert not _usable(scenario, bolt)
+    refusal = _permission_for(scenario, bolt).why_not(bolt, "alice", scenario.game)
+    assert refusal is not None and "seven or more cards in your graveyard" in refusal
+
+    alice.graveyard.append(removed)
+    assert _usable(scenario, bolt)
+
+
+def test_the_permission_ends_when_null_summoner_leaves_the_battlefield():
+    """CR 113.6 / CR 611.3b: a static ability's effect lasts only while the
+    permanent that has it is on the battlefield."""
+    scenario = _board(alice_graveyard=["Grizzly Bears"] * 7).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = _cast_and_exile(scenario)
+    assert _usable(scenario, bolt)
+
+    scenario.game.destroy(scenario.find("Null Summoner", Zone.BATTLEFIELD, "alice"))
+
+    assert bolt.zone is Zone.EXILE
+    assert not _usable(scenario, bolt)
+    refusal = _permission_for(scenario, bolt).why_not(bolt, "alice", scenario.game)
+    assert refusal is not None and "Null Summoner" in refusal
+
+
+def test_entering_without_being_cast_exiles_nothing_and_grants_nothing():
+    """CR 603.4: "if you cast it" is an intervening 'if'; a Summoner put onto
+    the battlefield any other way never triggers."""
+    scenario = _board(alice_graveyard=["Grizzly Bears"] * 7).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+
+    scenario.put_onto_battlefield("Null Summoner", "alice")
+
+    assert not scenario.pending_triggers
+    assert bolt.zone is Zone.HAND
+    assert play_permissions_on(scenario.game, bolt) == []
+
+
+def test_each_summoner_permission_is_linked_to_its_own_exiled_card_only():
+    """CR 607.2a: the exiled card is linked to the ability that exiled it,
+    so a second Summoner's card keeps its permission when the first leaves."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Null Summoner", "Null Summoner"],
+            battlefield=["Island", "Island", "Swamp", "Forest"] * 2,
+            graveyard=["Grizzly Bears"] * 7,
+        )
+        .player("bob", hand=["Lightning Bolt", "Counterspell"])
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt = scenario.find("Lightning Bolt", Zone.HAND, "bob")
+    counterspell = scenario.find("Counterspell", Zone.HAND, "bob")
+
+    for victim in (bolt, counterspell):
+        sources = scenario.untapped_sources("Island", "Island", "Swamp", "Forest", username="alice")
+        scenario.choose_trigger_targets("Null Summoner", ["bob"])
+        scenario.will_discard(victim, username="alice")
+        scenario.cast_and_resolve("Null Summoner", *sources, username="alice")
+        scenario.pass_until_resolved()
+    assert bolt.zone is Zone.EXILE and counterspell.zone is Zone.EXILE
+    assert _usable(scenario, bolt) and _usable(scenario, counterspell)
+
+    first_permission = _permission_for(scenario, bolt)
+    assert first_permission.while_controlling != (
+        _permission_for(scenario, counterspell).while_controlling
+    )
+    owners = {card.id: card for card in scenario.game.permanents_controlled_by("alice")}
+    summoner_of_bolt = next(
+        card
+        for card in owners.values()
+        if once_per_turn_key(card) == first_permission.while_controlling
+    )
+    scenario.game.destroy(summoner_of_bolt)
+
+    assert not _usable(scenario, bolt)
+    assert _usable(scenario, counterspell)
+
+
+def test_the_exiled_card_keeps_its_own_timing():
+    """CR 117.1a / CR 307.1: the permission does not make a creature castable
+    at instant speed."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Null Summoner"],
+            battlefield=["Island", "Island", "Swamp", "Forest", "Forest"],
+            graveyard=["Grizzly Bears"] * 7,
+        )
+        .player("bob", hand=["Grizzly Bears"])
+    ).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Island", "Island", "Swamp", "Forest", username="alice")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+    scenario.choose_trigger_targets("Null Summoner", ["bob"])
+    scenario.will_discard(bears, username="alice")
+    scenario.cast_and_resolve("Null Summoner", *sources, username="alice")
+    scenario.pass_until_resolved()
+    assert bears.zone is Zone.EXILE
+
+    scenario.advance("alice")  # out of the main phase
+    assert scenario.step is not Step.PRECOMBAT_MAIN
+    with pytest.raises(ValueError, match="117.1a|sorcery|main phase|timing"):
+        casting = scenario.cast("Grizzly Bears", username="alice", from_zone=Zone.EXILE)
+        casting.use_permission()
+        casting.begin_paying()
