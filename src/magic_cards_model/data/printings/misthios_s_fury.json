@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "e34a45ab-793e-4198-8327-e13287e0b74c",
+  "oracle_id": "e99c088e-1326-4844-b932-fb51802656f5",
+  "multiverse_ids": [
+    668416
+  ],
+  "mtgo_id": 127612,
+  "tcgplayer_id": 556196,
+  "cardmarket_id": 775496,
+  "name": "Misthios's Fury",
+  "lang": "en",
+  "released_at": "2024-07-05",
+  "uri": "https://api.scryfall.com/cards/e34a45ab-793e-4198-8327-e13287e0b74c",
+  "scryfall_uri": "https://scryfall.com/card/acr/291/misthioss-fury?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T02:48:12Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.jpg?1783910892",
+    "normal": "https://cards.scryfall.io/normal/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.jpg?1783910892",
+    "large": "https://cards.scryfall.io/large/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.jpg?1783910892",
+    "png": "https://cards.scryfall.io/png/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.png?1783910892",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.jpg?1783910892",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.jpg?1783910892",
+    "thumb": "https://cards.scryfall.io/thumb/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.webp?1783910892",
+    "grid": "https://cards.scryfall.io/grid/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.webp?1783910892",
+    "display": "https://cards.scryfall.io/display/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.webp?1783910892",
+    "art": "https://cards.scryfall.io/art/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.webp?1783910892",
+    "crop": "https://cards.scryfall.io/crop/front/e/3/e34a45ab-793e-4198-8327-e13287e0b74c.webp?1783910892"
+  },
+  "mana_cost": "{1}{R}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Misthios's Fury deals 3 damage to target creature. If you control an Equipment, Misthios's Fury also deals 2 damage to that creature's controller.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set": "acr",
+  "set_name": "Assassin's Creed",
+  "set_type": "draft_innovation",
+  "set_uri": "https://api.scryfall.com/sets/54b67b0b-cd3f-4e0d-ac25-fef5d966409b",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aacr&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/acr?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/e34a45ab-793e-4198-8327-e13287e0b74c/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae99c088e-1326-4844-b932-fb51802656f5&unique=prints",
+  "collector_number": "291",
+  "digital": false,
+  "rarity": "common",
+  "flavor_text": "\"I'm tired of all this sneaking. Come out and face me!\"\n\u2014Kassandra, Eagle Bearer",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Allen Morris",
+  "artist_ids": [
+    "5d65ec8f-0c70-41f0-8585-5c91bd7f6f2e"
+  ],
+  "illustration_id": "0b061a70-8e12-456a-9d48-212126dece7d",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 20810,
+  "prices": {
+    "usd": "0.10",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.09",
+    "eur_foil": null,
+    "tix": "0.04"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=668416&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DMisthios%2527s%2BFury",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DMisthios%2527s%2BFury",
+    "edhrec": "https://edhrec.com/route/?cc=Misthios%27s+Fury"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F556196%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=775496&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/127612?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
