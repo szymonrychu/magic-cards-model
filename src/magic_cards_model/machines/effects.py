@@ -193,6 +193,11 @@ from .delayed import (
     sacrificed_by_its_controller,
 )
 from .designations import designation_holds, split_if
+from .land_animation import (
+    choose_and_animate_mode,
+    retained_animation_effect,
+    retained_animation_sentence,
+)
 from .layers import (
     BASIC_LAND_TYPES,
     CLOSED_SUBTYPE_LISTS,
@@ -23823,6 +23828,9 @@ def parse_mode_effect(mode: Mode, x_value: int) -> Effect | None:
     # mode) as the bare `create_continuous_effect` sentinel, which builds its
     # effect off the *whole* card's text - for a modal card, a bulleted list
     # `LAYER_EFFECTS` does not read, so the mode silently did nothing.
+    animate_chosen = choose_and_animate_mode(text)
+    if animate_chosen is not None:
+        return animate_chosen
     layer_mode = _compose_layer_effect_with_remainder_for_mode(text)
     if layer_mode is not None:
         return layer_mode
@@ -25735,6 +25743,14 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
 
     remainder_effect = _layer_remainder_or_composed(remainder_text, for_spell=False)
     if remainder_effect is not None:
+        # An animation that ends in its own "It's still a land." sentence
+        # carries that clause in the closure (`machines/land_animation.py`).
+        animation = retained_animation_sentence(sentences)
+        layer_effect = (
+            retained_animation_effect(animation)
+            if animation is not None
+            else create_continuous_effect_of_ability
+        )
         if _layer_sentences_come_last(sentences):
             # CR 608.2c: "The controller of the spell or ability follows its
             # instructions in the order written." Nissa, Who Shakes the
@@ -25745,12 +25761,12 @@ def _compose_layer_effect_with_remainder_for_ability(effect_text: str) -> Abilit
             # 0/0 (CR 704.5f).
             def remainder_then_layer_effect(game: "Game", ability: AbilityOnStack) -> None:
                 remainder_effect(game, ability)
-                create_continuous_effect_of_ability(game, ability)
+                layer_effect(game, ability)
 
             return remainder_then_layer_effect
 
         def layer_and_remainder_effect(game: "Game", ability: AbilityOnStack) -> None:
-            create_continuous_effect_of_ability(game, ability)
+            layer_effect(game, ability)
             remainder_effect(game, ability)
 
         return layer_and_remainder_effect

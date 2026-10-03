@@ -1,0 +1,141 @@
+{
+  "object": "card",
+  "id": "02c9396d-28f2-40b7-908e-51db51da57a7",
+  "oracle_id": "edc6db57-3519-4649-9c4a-5cf264cce26f",
+  "multiverse_ids": [
+    466956
+  ],
+  "mtgo_id": 73303,
+  "arena_id": 69987,
+  "tcgplayer_id": 192561,
+  "cardmarket_id": 378102,
+  "name": "Wakeroot Elemental",
+  "lang": "en",
+  "released_at": "2019-07-12",
+  "uri": "https://api.scryfall.com/cards/02c9396d-28f2-40b7-908e-51db51da57a7",
+  "scryfall_uri": "https://scryfall.com/card/m20/202/wakeroot-elemental?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T08:55:55Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.jpg?1783932955",
+    "normal": "https://cards.scryfall.io/normal/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.jpg?1783932955",
+    "large": "https://cards.scryfall.io/large/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.jpg?1783932955",
+    "png": "https://cards.scryfall.io/png/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.png?1783932955",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.jpg?1783932955",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.jpg?1783932955",
+    "thumb": "https://cards.scryfall.io/thumb/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.webp?1783932955",
+    "grid": "https://cards.scryfall.io/grid/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.webp?1783932955",
+    "display": "https://cards.scryfall.io/display/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.webp?1783932955",
+    "art": "https://cards.scryfall.io/art/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.webp?1783932955",
+    "crop": "https://cards.scryfall.io/crop/front/0/2/02c9396d-28f2-40b7-908e-51db51da57a7.webp?1783932955"
+  },
+  "mana_cost": "{4}{G}{G}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Elemental",
+  "oracle_text": "{G}{G}{G}{G}{G}: Untap target land you control. It becomes a 5/5 Elemental creature with haste. It's still a land. (This effect lasts as long as that land remains on the battlefield.)",
+  "power": "5",
+  "toughness": "5",
+  "colors": [
+    "G"
+  ],
+  "color_identity": [
+    "G"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "arena",
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set": "m20",
+  "set_name": "Core Set 2020",
+  "set_type": "core",
+  "set_uri": "https://api.scryfall.com/sets/4a787360-9767-4f44-80b1-2405dc5e39c7",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Am20&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/m20?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/02c9396d-28f2-40b7-908e-51db51da57a7/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Aedc6db57-3519-4649-9c4a-5cf264cce26f&unique=prints",
+  "collector_number": "202",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"When the forest walks, it's too late to run.\"\n\u2014Horent, Khalni druid",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Filip Burburan",
+  "artist_ids": [
+    "66082c3b-a623-4d34-be51-2475214b85d3"
+  ],
+  "illustration_id": "a3854062-eed3-48fe-af24-242fe764eb99",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 19843,
+  "penny_rank": 13840,
+  "preview": {
+    "source": "GameStar",
+    "source_uri": "https://www.gamestar.de/artikel/spoiler-magic-core-set-2020-wachwurzel-elementar,3345401.html",
+    "previewed_at": "2019-06-17"
+  },
+  "prices": {
+    "usd": "0.24",
+    "usd_foil": "0.29",
+    "usd_etched": null,
+    "eur": "0.15",
+    "eur_foil": "0.37",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=466956&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DWakeroot%2BElemental",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DWakeroot%2BElemental",
+    "edhrec": "https://edhrec.com/route/?cc=Wakeroot+Elemental"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F192561%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=378102&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/73303?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

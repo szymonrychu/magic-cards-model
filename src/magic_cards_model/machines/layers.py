@@ -6107,7 +6107,7 @@ def _self_becomes_type_until_next_turn_builder(
 #: ... where X is the number of cards in your hand. It's still a land." would
 #: have produced the retention and nothing else, which is half an ability
 #: (CR 608.2c has no notion of running half an instruction).
-_RETENTION_CLAUSE_RE = re.compile(r"^[Ii]t's still an? [a-z]+\.?$")
+_RETENTION_CLAUSE_RE = re.compile(r"^[Ii]t's still an? (?:[A-Z][A-Za-z]+ )*[a-z]+\.?$")
 
 
 def is_retention_clause(sentence: str) -> bool:
@@ -6228,9 +6228,9 @@ _ANIMATION_RE = re.compile(
     r"(?P<types>(?:artifact |enchantment |land )*creature)"
     r"(?: with (?:(?:(?P<quoted_keywords>[^\"]+?) and )?\"(?P<granted>[^\"]+?)\.?\""
     r"|(?P<keywords>[^\"]+?)))?"
-    r"(?: that's still an? (?P<retained_inline>[a-z]+))?"
+    r"(?: that's still an? (?P<retained_inline>(?:[A-Z][A-Za-z]+ )*[a-z]+))?"
     r"(?P<until_eot> until end of turn)?\.?"
-    r"(?:\s+[Ii]t's still an? (?P<retained>[a-z]+)\.?)?$"
+    r"(?:\s+[Ii]t's still an? (?P<retained>(?:[A-Z][A-Za-z]+ )*[a-z]+)\.?)?$"
 )
 
 
@@ -6434,7 +6434,11 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     if any(card_type is None for card_type in types):
         return None
     retained_word = match.group("retained") or match.group("retained_inline")
-    retained = _card_type_word(retained_word) if retained_word is not None else None
+    # "It's still a Cave land." names a subtype before the card type; CR 205.1b
+    # keeps every prior subtype anyway, so only the card type word matters.
+    retained = (
+        _card_type_word(retained_word.split()[-1]) if retained_word is not None else None
+    )
     if retained_word is not None and retained is None:
         return None
     keywords: list[str] = []
@@ -7110,7 +7114,9 @@ _LEADING_THEN_RE = re.compile(r"^then,?\s+", re.IGNORECASE)
 #: The period may sit inside a closing quote - Den of the Bugbear's granted
 #: `"Whenever this creature attacks, ... tapped and attacking." It's still a
 #: land.` - which `quote` keeps so the quoted ability stays whole.
-_TRAILING_RETENTION_RE = re.compile(r"\.(?P<quote>[\"”]?)\s+(?P<clause>[Ii]t's still an? [a-z]+)$")
+_TRAILING_RETENTION_RE = re.compile(
+    r"\.(?P<quote>[\"”]?)\s+(?P<clause>[Ii]t's still an? (?:[A-Z][A-Za-z]+ )*[a-z]+)$"
+)
 
 
 def _normalize_duration_first(sentence: str) -> str:
