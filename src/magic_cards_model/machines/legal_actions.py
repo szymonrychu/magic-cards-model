@@ -803,8 +803,8 @@ def _base_cost_options(card: CardState) -> list[tuple[str | None, ManaCost]]:
             options.append((inset.name, ManaCost.parse(inset.mana_cost or "")))
         return options
     if card.card.layout is Layout.MODAL_DFC and faces:
-        # CR 712.11b: the front face by default, or an instant/sorcery back
-        # face the caster names (`casting.modal_dfc_spell_back_faces`).
+        # CR 712.11b: the front face by default, or a nonland back face the
+        # caster names (`casting.modal_dfc_spell_back_faces`).
         return [
             (None, ManaCost.parse(faces[0].mana_cost or "")),
             *(

@@ -3401,7 +3401,7 @@ def face_being_cast(card: Card, face_name: str | None) -> Any:
     rules with the same shape (CR 709.3 for a split card's half, CR 715.3 for
     an adventurer card's Adventure), and `Casting.face` already carries both -
     the name is the discriminator, not the layout; a modal double-faced
-    card's instant or sorcery back face (CR 712.11b) is named the same way. A
+    card's nonland back face (CR 712.11b) is named the same way. A
     card whose face is never named (a transforming card, an Omen, a modal
     double-faced card cast as its front) reaches here with `face_name=None`
     and gets the card's own characteristics.
@@ -3424,8 +3424,8 @@ def castable_faces(card: Card) -> tuple[str | None, ...]:
     card offers its own creature half, cast the ordinary way with no face
     named, plus the Adventure (CR 715.3: "the player chooses whether they
     play the card normally or as an Adventure"). A modal double-faced card
-    offers its front face the same way, plus an instant or sorcery back face
-    (CR 712.11b, `modal_dfc_spell_back_faces`). Every other layout offers
+    offers its front face the same way, plus a nonland back face (CR
+    712.11b, `modal_dfc_spell_back_faces`). Every other layout offers
     only `None`: a transforming card is cast as its front face (CR 712.11)
     and an Omen half is not castable by this engine at all.
 
@@ -3446,26 +3446,24 @@ def castable_faces(card: Card) -> tuple[str | None, ...]:
 
 
 def modal_dfc_spell_back_faces(card: Card) -> tuple[Any, ...]:
-    """The instant or sorcery back face(s) a modal double-faced card may be
-    cast as (CR 712.11b: "A player casting a modal double-faced card or a
-    copy of a modal double-faced card as a spell chooses which face they are
-    casting before putting it onto the stack.").
+    """The back face(s) a modal double-faced card may be cast as (CR
+    712.11b: "A player casting a modal double-faced card or a copy of a
+    modal double-faced card as a spell chooses which face they are casting
+    before putting it onto the stack.").
 
     The front face is the default cast (CR 712.11: "A double-faced spell is
     cast with its front face up by default"), named by no face at all, the
     same way an adventurer card's creature half is. A land back face is
     played, never cast (CR 712.12). A permanent back face (Esika, God of the
-    Tree // The Prismatic Bridge) is not offered: casting it is legal, but it
-    would have to enter the battlefield with that face up (CR 712.8f), which
-    nothing here records yet - left out rather than cast and put onto the
-    battlefield as the wrong face.
+    Tree // The Prismatic Bridge) is offered too: CR 712.13 puts it onto the
+    battlefield with that face up, which `CardState.move_to` records.
     """
     if card.layout is not Layout.MODAL_DFC:
         return ()
     return tuple(
         face
         for face in (card.card_faces or [])[1:]
-        if {Type.INSTANT, Type.SORCERY} & set(types_of(face.type_line or ""))
+        if Type.LAND not in types_of(face.type_line or "")
     )
 
 
@@ -4804,8 +4802,8 @@ class Casting(EngineModel):
         # CR 712.11b: a modal double-faced card's caster chooses its face the
         # same way, before it goes on the stack - "Only the face that will be
         # face up on the stack is evaluated to determine if it can be cast"
-        # (CR 712.11c) is CR 709.3a's own test. Only a back face that is an
-        # instant or sorcery is named here (`modal_dfc_spell_back_faces`);
+        # (CR 712.11c) is CR 709.3a's own test. Only a back face that is not a
+        # land is named here (`modal_dfc_spell_back_faces`);
         # the front is the default cast, with no face named at all.
         if self.spell.card.layout is Layout.MODAL_DFC:
             faces = list(modal_dfc_spell_back_faces(self.spell.card))
