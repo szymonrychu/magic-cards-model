@@ -3484,6 +3484,10 @@ def condition_matches(
             condition = lowered
         elif not _target_subject_matches(condition):
             return False
+        elif (targeted_spell := game.find_by_id(event.subject_id)) is not None and (
+            targeted_spell.zone is Zone.STACK
+        ):
+            return False  # "a player or permanent": a spell on the stack is neither
         if not _targeting_object_matches(game, condition, event):
             return False
         if "an opponent controls" in lowered:
@@ -3764,10 +3768,14 @@ _ANY_TARGET_SUBJECT = re.compile(r"^(?:a player or permanent|a permanent or play
 #: affect"): "a creature you control", "another permanent an opponent
 #: controls". `by` is the rest - "a spell", "a spell or ability an opponent
 #: controls" - which is about the targeting object, not the targeted one.
-_OBJECT_TARGET_SUBJECT = re.compile(
-    r"^(?P<subject>(?:a|an|another) (?:[a-z]+ )*?"
+_TARGETED_OBJECT = (
+    r"(?:a|an|another) (?:[a-z]+ )*?"
     r"(?:creature|permanent|artifact|enchantment|land|planeswalker)"
-    r"(?: you control| an opponent controls)?) becomes the target of (?P<by>.+)$"
+    r"(?: spell)?(?: you control| an opponent controls)?"
+)
+_OBJECT_TARGET_SUBJECT = re.compile(
+    rf"^(?P<subject>{_TARGETED_OBJECT}(?: or {_TARGETED_OBJECT})*)"
+    r" becomes the target of (?P<by>.+)$"
 )
 
 
@@ -3777,22 +3785,37 @@ def _targeted_object_matches(
     """Whether the object a becomes-target event names fits `subject`'s type
     and controller words, read off the computed board (CR 613.5) - the
     targeted object is a permanent, so an animated land is a creature there
-    and nowhere else."""
+    and nowhere else.
+
+    `subject` may join several objects with "or" (Surrak, Elusive Hunter's "a
+    creature you control or a creature spell you control"); the event matches
+    when any one of them fits. An alternative that says "spell" names an
+    object on the stack (CR 601.2c lets a spell be targeted there) and one
+    that does not names a permanent on the battlefield (CR 110.1), so a
+    creature spell is never a "creature you control" and the reverse."""
     if event.subject_id is None:
-        return False
-    if subject.startswith("another ") and event.subject_id == source.id:
         return False
     targeted = game.find_by_id(event.subject_id)
     if targeted is None:
         return False
-    types = (
-        game.characteristics_of(targeted).types
-        if targeted.zone is Zone.BATTLEFIELD
-        else targeted.types
-    )
-    return _types_match(tuple(types), subject) and _controller_clause_holds(
-        subject, controller, event.subject_controller
-    )
+    for alternative in subject.split(" or "):
+        if alternative.startswith("another ") and event.subject_id == source.id:
+            continue
+        names_spell = " spell" in alternative
+        if names_spell != (targeted.zone is Zone.STACK):
+            continue
+        if not names_spell and targeted.zone is not Zone.BATTLEFIELD:
+            continue
+        types = (
+            game.characteristics_of(targeted).types
+            if targeted.zone is Zone.BATTLEFIELD
+            else targeted.types
+        )
+        if _types_match(tuple(types), alternative) and _controller_clause_holds(
+            alternative, controller, event.subject_controller
+        ):
+            return True
+    return False
 
 
 def _target_subject_matches(condition: str) -> bool:

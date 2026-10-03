@@ -11195,14 +11195,18 @@ class Game(EngineModel):
             if not target.is_card or target.card_id is None:
                 continue
             targeted = self.find_by_id(target.card_id)
-            if targeted is None or targeted.zone is not Zone.BATTLEFIELD:
+            if targeted is None or targeted.zone not in (Zone.BATTLEFIELD, Zone.STACK):
                 continue
             self.emit(
                 GameEvent(
                     event=TriggerEvent.BECOMES_TARGET,
                     subject_id=targeted.id,
                     subject_name=targeted.name,
-                    subject_controller=targeted.controller,
+                    subject_controller=(
+                        targeted.controller
+                        if targeted.zone is Zone.BATTLEFIELD
+                        else self.controller_of(targeted).username
+                    ),
                     subject_card=targeted.card,
                     targeted_by=ability.id,
                     player=ability.controller,

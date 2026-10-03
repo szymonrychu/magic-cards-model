@@ -571,6 +571,20 @@ MUTAGEN = TokenDefinition(
     ),
 )
 
+#: CR 111.10u: "A Lander token is a colorless Lander artifact token with
+#: '{2}, {T}, Sacrifice this token: Search your library for a basic land card,
+#: put it onto the battlefield tapped, then shuffle.'" - a data row like every
+#: other CR 111.10 entry, so the token carries the Lander artifact type
+#: (CR 205.3g) wherever a card prints "create a Lander token".
+LANDER = TokenDefinition(
+    types=(Type.ARTIFACT,),
+    subtypes=("Lander",),
+    rules_text=(
+        "{2}, {T}, Sacrifice this token: Search your library for a basic land card, "
+        "put it onto the battlefield tapped, then shuffle."
+    ),
+)
+
 #: CR 111.10x: "A Heartwood token is a red and green Heartwood artifact token
 #: with '{T}: Add {R} or {G}.'" - Reality Fracture's own addition to CR 111.10,
 #: read the same way every other predefined token is: as a data row, not a
@@ -618,6 +632,7 @@ PREDEFINED: dict[str, TokenDefinition] = {
     "Powerstone": POWERSTONE,
     "Mutagen": MUTAGEN,
     "Heartwood": HEARTWOOD,
+    "Lander": LANDER,
     "Jace": JACE,
     "Monster": MONSTER_ROLE,
     "Cursed": CURSED_ROLE,

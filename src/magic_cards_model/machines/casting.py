@@ -8055,22 +8055,28 @@ class Casting(EngineModel):
         `Game.put_on_stack` then flushes it alongside the cast triggers, which
         is CR 603.3's "the next time a player would receive priority".
 
-        Only permanents are asked: CR 702.21a says "whenever **this permanent**
-        becomes the target", and an object that is not on the battlefield is not
-        a permanent (CR 110.1).
+        Permanents and spells on the stack are asked: CR 702.21a says
+        "whenever **this permanent** becomes the target" (an object that is
+        not on the battlefield is not a permanent, CR 110.1), and a spell
+        targeted by a counterspell is an object a "creature spell you control
+        becomes the target of ..." condition (Surrak, Elusive Hunter) watches.
         """
         for target in self.targets:
             if not target.is_card or target.card_id is None:
                 continue
             targeted = self.game.find_by_id(target.card_id)
-            if targeted is None or targeted.zone is not Zone.BATTLEFIELD:
+            if targeted is None or targeted.zone not in (Zone.BATTLEFIELD, Zone.STACK):
                 continue
             self.game.emit(
                 GameEvent(
                     event=TriggerEvent.BECOMES_TARGET,
                     subject_id=targeted.id,
                     subject_name=targeted.name,
-                    subject_controller=targeted.controller,
+                    subject_controller=(
+                        targeted.controller
+                        if targeted.zone is Zone.BATTLEFIELD
+                        else self.game.controller_of(targeted).username
+                    ),
                     subject_card=targeted.card,
                     targeted_by=self.spell.id,
                     player=self.caster,
