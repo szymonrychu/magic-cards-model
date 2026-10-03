@@ -4497,7 +4497,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 108
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 109
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4694,6 +4694,13 @@ class Game(EngineModel):
     #: permanent for as long as it stays the same object - CR 614.1a,
     #: CR 400.7), reachable from `Game.created_replacements`; `Duration`
     #: gained `UNTIL_END_OF_COMBAT` ("can't block this combat", CR 500.5a/511.2).
+    #: 109 (stream E5, one bump): the turn-history record gained
+    #: `cast_mana_spent` and the "left_battlefield"/"spell_warped" kinds
+    #: (intervening ifs, CR 603.4); `CreatedReplacementSpec` gained
+    #: `DieToExileReplacement` ("if a creature would die this turn, exile it
+    #: instead", CR 614.1a); `CardState` gained `flipped` (CR 710);
+    #: `TargetRequirement` gained `object_dealt_damage_clause` and
+    #: `ThatCreatureDiesConsequence` gained `source_stamp` (CR 400.7).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a

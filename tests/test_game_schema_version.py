@@ -1906,3 +1906,29 @@ def test_a_snapshot_written_before_the_s7c_last_known_shapes_is_refused() -> Non
         match=f"schema_version={_SCHEMA_VERSION_BEFORE_S7C_LAST_KNOWN_SHAPES}",
     ):
         Game.model_validate(dumped)
+
+
+#: The version stamped before stream E5's one shared bump: the turn-history
+#: record gained `cast_mana_spent` and the "left_battlefield"/"spell_warped"
+#: kinds (intervening ifs, CR 603.4), `CreatedReplacementSpec` gained
+#: `DieToExileReplacement` (CR 614.1a), `CardState` gained `flipped` (CR 710),
+#: `TargetRequirement` gained `object_dealt_damage_clause` and
+#: `ThatCreatureDiesConsequence` gained `source_stamp` (CR 400.7).
+_SCHEMA_VERSION_BEFORE_E5_SHAPES = 108
+
+
+def test_a_snapshot_written_before_the_e5_shapes_is_refused() -> None:
+    """A version-108 dump's card states carry no `flipped`: decoded as
+    current a flipped Goka the Unjust would default to its unflipped top half
+    and lose the bottom half's ability with no signal. Refused instead."""
+    assert Game.CURRENT_SCHEMA_VERSION > _SCHEMA_VERSION_BEFORE_E5_SHAPES
+    dumped = _a_played_game().model_dump(mode="json")
+    assert dumped["shared_zones"]["battlefield"]
+    assert all("flipped" in state for state in dumped["shared_zones"]["battlefield"])
+    dumped["schema_version"] = _SCHEMA_VERSION_BEFORE_E5_SHAPES
+
+    with pytest.raises(
+        SchemaVersionMismatch,
+        match=f"schema_version={_SCHEMA_VERSION_BEFORE_E5_SHAPES}",
+    ):
+        Game.model_validate(dumped)
