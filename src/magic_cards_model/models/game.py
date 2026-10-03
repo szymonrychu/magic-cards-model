@@ -418,6 +418,11 @@ _PLAYER_PROTECTION_FROM_CHOSEN_NAME = re.compile(
 _SELF_REFERENCE = re.compile(r"\bthis\b", re.IGNORECASE)
 
 
+_SACRIFICE_OR_DISCARD = re.compile(
+    r"^sacrifice (?P<sacrifice>[\w ,]+?) or discard (?P<discard>[\w ,]+)$", re.IGNORECASE
+)
+
+
 def _cost_refers_to_self(text: str, permanent: CardState) -> bool:
     """Whether a printed cost sentence names *this* permanent (CR 602.1a).
 
@@ -24289,14 +24294,17 @@ class Game(EngineModel):
         word "this", not a number, so `cost_component_for_phrase` cannot read
         it as one).
         """
-        component = cost_component_for_phrase(text, payer=controller)
+        # Kozilek's "Discard a card with mana value X": the X is the discarded
+        # card's own mana value (the target spell is matched to it), so the
+        # payment itself asks only for "a card".
+        reading = re.sub(r" with mana value X$", "", text, flags=re.IGNORECASE)
+        component = cost_component_for_phrase(reading, payer=controller)
         if component is None:
-            if pool:
-                chosen = [pool.pop(0)]
-            elif _cost_refers_to_self(text, permanent):
-                chosen = [permanent]
-            else:
-                chosen = []
+            if not _cost_refers_to_self(text, permanent):
+                # CR 602.5: a quality word nobody taught the reader must not
+                # make the cost "sacrifice/discard anything" - refuse instead.
+                raise ValueError(f"cannot build a cost for {text!r}")
+            chosen = [pool.pop(0)] if pool else [permanent]
             return builder(*chosen, payer=controller, required=1, description=text)
 
         # "Sacrifice X Goats" / "Sacrifice one or more artifacts": the count is
@@ -24380,6 +24388,33 @@ class Game(EngineModel):
                 # read. CR 602.5a gates both symbols the same way for a
                 # creature, and `why_cannot_activate` already checks that pair.
                 components.append(untap_cost(permanent, payer=controller, description=piece.text))
+            elif piece.kind is CostKind.SACRIFICE and (
+                either := _SACRIFICE_OR_DISCARD.match(piece.text)
+            ):
+                # CR 118.1: "Sacrifice an artifact or discard a nonland card"
+                # is one cost paid either way; the nominated cards pick which.
+                if discards and not sacrifices:
+                    components.append(
+                        self._choice_cost(
+                            "Discard " + either.group("discard"),
+                            permanent,
+                            discards,
+                            controller,
+                            discard_cost,
+                            x_value,
+                        )
+                    )
+                else:
+                    components.append(
+                        self._choice_cost(
+                            "Sacrifice " + either.group("sacrifice"),
+                            permanent,
+                            sacrifices,
+                            controller,
+                            sacrifice_cost,
+                            x_value,
+                        )
+                    )
             elif piece.kind is CostKind.SACRIFICE:
                 components.append(
                     self._choice_cost(
