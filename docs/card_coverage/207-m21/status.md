@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 8.8% |
-| Works (untested) | 95 | 52.2% |
+| Tested | 18 | 9.9% |
+| Works (untested) | 94 | 51.6% |
 | Partial (unaudited) | 10 | 5.5% |
-| Not working | 61 | 33.5% |
+| Not working | 60 | 33.0% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Terror of the Peaks | silent | Whenever another creature you control enters, this creature deals damage equal to that creature's power to any target. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Thieves' Guild Enforcer | silent | Whenever this creature or another Rogue you control enters, each opponent mills two cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Unleash Fury | silent | Double the power of target creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Vito, Thorn of the Dusk Rose | silent | Whenever you gain life, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Warded Battlements | silent | Attacking creatures you control get +1/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Alchemist's Gift | notice | Target creature gets +1/+1 and gains your choice of deathtouch or lifelink until end of turn. (Any amount of damage a creature with deathtouch deals to a creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Basri's Aegis | notice | Put a +1/+1 counter on each of up to two target creatures. You may search your library and/or graveyard for a card named Basri, Devoted Paladin, reveal it, and  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -160,7 +159,6 @@
 | Sabertooth Mauler | handled | At the beginning of your end step, if a creature died this turn, put a +1/+1 counter on this creature and untap it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanctum of Shattered Heights | handled | {1}, Discard a land card or Shrine card: Sanctum of Shattered Heights deals X damage to target creature or planeswalker, where X is the number of Shrines you co | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanctum of Stone Fangs | handled | At the beginning of your first main phase, each opponent loses X life and you gain X life, where X is the number of Shrines you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Sanctum of Tranquil Light | handled | {5}{W}: Tap target creature. This ability costs {1} less to activate for each Shrine you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sanguine Indulgence | handled | This spell costs {3} less to cast if you've gained 3 or more life this turn. Return up to two target creature cards from your graveyard to your hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Secure the Scene | handled | Exile target nonland permanent. Its controller creates a 1/1 white Soldier creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selfless Savior | handled | Sacrifice this creature: Another target creature you control gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,7 +194,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>18 cards</summary>
 
 - Archfiend's Vessel
 - Barrin, Tolarian Archmage
@@ -210,9 +208,11 @@
 - Mazemind Tome
 - Peer into the Abyss
 - Sanctum of Fruitful Harvest
+- Sanctum of Tranquil Light
 - Speaker of the Heavens
 - Teferi, Master of Time
 - Track Down
+- Vito, Thorn of the Dusk Rose
 - Waker of Waves
 
 </details>
@@ -268,7 +268,6 @@
 | whenever a source you control deals noncombat damage to an opponent, ~ deals that much damage to target creature or planeswalker that player controls. | 1 | Chandra's Incinerator | m21 |
 | whenever a source you control deals noncombat damage to an opponent, ~ gets +N/+N and gains double strike until end of turn. | 1 | Chandra's Pyreling | m21 |
 | whenever another creature you control enters, ~ deals damage equal to that creature's power to any target. | 1 | Terror of the Peaks | m21 |
-| whenever you gain life, target opponent loses that much life. | 1 | Vito, Thorn of the Dusk Rose | m21 |
 | whenever ~ attacks, prevent all combat damage that would be dealt ~ to dogs you control. | 1 | Pack Leader | m21 |
 | whenever ~ attacks, you may tap any number of untapped creatures you control. ~ gets +N/+N until end of turn for each creature tapped ~. | 1 | Siege Striker | m21 |
 | whenever ~ becomes blocked by a creature, that creature's controller loses N life and you gain N life. | 1 | Gloom Sower | m21 |

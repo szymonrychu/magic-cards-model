@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 8.1% |
-| Works (untested) | 57 | 38.5% |
+| Tested | 13 | 8.8% |
+| Works (untested) | 56 | 37.8% |
 | Partial (unaudited) | 7 | 4.7% |
 | Not working | 72 | 48.6% |
 
@@ -136,7 +136,6 @@
 | Mothdust Changeling | handled | Tap an untapped creature you control: This creature gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Murmuring Bosk | handled | As this land enters, you may reveal a Treefolk card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Nevermaker | handled | When this creature leaves the battlefield, put target nonland permanent on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Obsidian Battle-Axe | handled | Equipped creature gets +2/+1 and has haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Offalsnout | handled | When this creature leaves the battlefield, exile target card from a graveyard. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Order of the Golden Cricket | handled | Whenever this creature attacks, you may pay {W}. If you do, it gains flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Primal Beyond | handled | As this land enters, you may reveal an Elemental card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -166,7 +165,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Deglamer
 - Distant Melody
@@ -177,6 +176,7 @@
 - Morsel Theft
 - Mutavault
 - Negate
+- Obsidian Battle-Axe
 - Scapeshift
 - Stenchskipper
 - Thieves' Fortune

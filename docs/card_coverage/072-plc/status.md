@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 16 | 9.9% |
-| Works (untested) | 65 | 40.1% |
+| Tested | 17 | 10.5% |
+| Works (untested) | 64 | 39.5% |
 | Partial (unaudited) | 12 | 7.4% |
 | Not working | 69 | 42.6% |
 
@@ -140,7 +140,6 @@
 | Magus of the Bazaar | handled | {T}: Draw two cards, then discard three cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Magus of the Coffers | handled |  |  | Y/-/- | not_tested |
 | Malach of the Dawn | handled | {W}{W}{W}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Mana Tithe | handled | Counter target spell unless its controller pays {1}. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mesa Enchantress | handled | Whenever you cast an enchantment spell, you may draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Midnight Charm | handled | Choose one — • Midnight Charm deals 1 damage to target creature and you gain 1 life. • Target creature gains first strike until end of turn. • Tap target creatu | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mire Boa | handled | {G}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -176,7 +175,7 @@
 ## Fully supported
 
 <details>
-<summary>16 cards</summary>
+<summary>17 cards</summary>
 
 - Aether Membrane
 - Ana Battlemage
@@ -188,6 +187,7 @@
 - Dunerider Outlaw
 - Harmonize
 - Magus of the Library
+- Mana Tithe
 - Phantasmagorian
 - Pyrohemia
 - Rough // Tumble

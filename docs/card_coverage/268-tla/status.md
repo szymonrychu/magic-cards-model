@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 52 | 18.8% |
-| Works (untested) | 128 | 46.2% |
+| Tested | 56 | 20.2% |
+| Works (untested) | 124 | 44.8% |
 | Partial (unaudited) | 13 | 4.7% |
 | Not working | 84 | 30.3% |
 
@@ -138,16 +138,13 @@
 | Boar-q-pine | handled | Whenever you cast a noncreature spell, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Boiling Rock Prison | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bumi Bash | handled | Choose one — • Bumi Bash deals damage equal to the number of lands you control to target creature. • Destroy target land creature or nonbasic land. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Callous Inspector | handled | When this creature dies, it deals 1 damage to you. Create a Clue token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Canyon Crawler | handled | When this creature enters, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cat-Gator | handled | When this creature enters, it deals damage equal to the number of Swamps you control to any target. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cat-Owl | handled | Whenever this creature attacks, untap target artifact or creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Combustion Man | handled | Whenever Combustion Man attacks, destroy target permanent unless its controller has Combustion Man deal damage to them equal to his power. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Compassionate Healer | handled | Whenever this creature becomes tapped, you gain 1 life and scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cunning Maneuver | handled | Target creature gets +3/+1 until end of turn. Create a Clue token. (It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Curious Farm Animals | handled | When this creature dies, you gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dai Li Indoctrination | handled | Choose one — • Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card. • Earthbend 2. (Target land you  | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Deadly Precision | handled | As an additional cost to cast this spell, pay {4} or sacrifice an artifact or creature. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Deserter's Disciple | handled | {T}: Another target creature you control with power 2 or less can't be blocked this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Earth Kingdom Jailer | handled | When this creature enters, exile up to one target artifact, creature, or enchantment an opponent controls with mana value 3 or greater until this creature leave | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Earth Kingdom Protectors | handled | Sacrifice this creature: Another target Ally you control gains indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -243,7 +240,6 @@
 | War Balloon | handled | {1}: Put a fire counter on this Vehicle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Water Tribe Captain | handled | {5}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Waterbender Ascension | handled | Whenever a creature you control deals combat damage to a player, put a quest counter on this enchantment. Then if it has four or more quest counters on it, draw | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Waterbending Scroll | handled | {6}, {T}: Draw a card. This ability costs {1} less to activate for each Island you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | White Lotus Hideout | handled |  |  | Y/Y/Y | not_tested |
 | White Lotus Reinforcements | handled | Other Allies you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wolfbat | handled | Whenever you draw your second card each turn, you may pay {B}. If you do, return this card from your graveyard to the battlefield with a finality counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -255,7 +251,7 @@
 ## Fully supported
 
 <details>
-<summary>52 cards</summary>
+<summary>56 cards</summary>
 
 - Aang, Swift Savior // Aang and La, Ocean's Fury
 - Aang, at the Crossroads // Aang, Destined Savior
@@ -269,8 +265,11 @@
 - Badgermole Cub
 - Boiling Rock Rioter
 - Boomerang Basics
+- Callous Inspector
 - Combustion Technique
+- Curious Farm Animals
 - Day of Black Sun
+- Deadly Precision
 - Earthbender Ascension
 - Earthen Ally
 - Ember Island Production
@@ -309,6 +308,7 @@
 - Walltop Sentries
 - Wan Shi Tong, Librarian
 - Wartime Protestors
+- Waterbending Scroll
 
 </details>
 

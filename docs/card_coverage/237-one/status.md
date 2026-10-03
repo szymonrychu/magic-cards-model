@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 30 | 11.9% |
-| Works (untested) | 107 | 42.5% |
+| Tested | 31 | 12.3% |
+| Works (untested) | 106 | 42.1% |
 | Partial (unaudited) | 9 | 3.6% |
 | Not working | 106 | 42.1% |
 
@@ -144,7 +144,6 @@
 | Adaptive Sporesinger | handled | When this creature enters, choose one — • Target creature gets +2/+2 and gains vigilance until end of turn. • Proliferate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Against All Odds | handled | Choose one or both — • Exile target artifact or creature you control, then return it to the battlefield under its owner's control. • Return target artifact or c | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Annex Sentry | handled | When this creature enters, exile target artifact or creature an opponent controls with mana value 3 or less until this creature leaves the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Annihilating Glare | handled | As an additional cost to cast this spell, pay {4} or sacrifice an artifact or creature. Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Atmosphere Surgeon | handled | Whenever you cast a noncreature spell, put an oil counter on this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Axiom Engraver | handled | This creature enters with two oil counters on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Basilica Skullbomb | handled | {1}, Sacrifice this artifact: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -252,9 +251,10 @@
 ## Fully supported
 
 <details>
-<summary>30 cards</summary>
+<summary>31 cards</summary>
 
 - Ambulatory Edifice
+- Annihilating Glare
 - Atraxa, Grand Unifier
 - Bilious Skulldweller
 - Blazing Crescendo

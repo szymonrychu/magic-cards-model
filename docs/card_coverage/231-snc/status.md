@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 24 | 9.5% |
-| Works (untested) | 133 | 52.6% |
-| Partial (unaudited) | 11 | 4.3% |
-| Not working | 85 | 33.6% |
+| Tested | 25 | 9.9% |
+| Works (untested) | 134 | 53.0% |
+| Partial (unaudited) | 10 | 4.0% |
+| Not working | 84 | 33.2% |
 
 ## Cards needing work
 
@@ -53,7 +53,6 @@
 | Freelance Muscle | silent | Whenever this creature attacks or blocks, it gets +X/+X until end of turn, where X is the greatest power and/or toughness among other creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Gathering Throng | silent | When this creature enters, you may search your library for any number of cards named Gathering Throng, reveal them, put them into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Girder Goons | silent | Blitz | no machine in the engine executes this keyword | Y/Y/- | not_working |
-| Glamorous Outlaw | silent | When this creature enters, it deals 2 damage to each opponent and you scry 2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Graveyard Shift | silent | This spell has flash as long as there are five or more mana values among cards in your graveyard. Return target creature card from your graveyard to the battlef | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Grisly Sigil | silent | Casualty 1 (As you cast this spell, you may sacrifice a creature with power 1 or greater. When you do, copy this spell and you may choose a new target for the c | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Incandescent Aria | silent | Incandescent Aria deals 3 damage to each nontoken creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -111,7 +110,6 @@
 | Unleash the Inferno | notice | Unleash the Inferno deals 7 damage to target creature or planeswalker. When it deals excess damage this way, destroy target artifact or enchantment an opponent  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Venom Connoisseur | notice | Alliance — Whenever another creature you control enters, this creature gains deathtouch until end of turn. If this is the second time this ability has resolved  | unparsed remainder: If this is the second time this ability has resolved this turn, all creatures you control gain deathtouch until end of turn. | Y/Y/Y | not_working |
 | Ziatora, the Incinerator | notice | At the beginning of your end step, you may sacrifice another creature. When you do, Ziatora deals damage equal to that creature's power to any target and you cr | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Dusk Mangler | unaudited | As an additional cost to cast this spell, sacrifice a creature, discard a card, or pay 4 life. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Falco Spara, Pactweaver | unaudited | You may cast spells from the top of your library by removing a counter from a creature you control in addition to paying their other costs. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Giada, Font of Hope | unaudited | Each other Angel you control enters with an additional +1/+1 counter on it for each Angel you already control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hold for Ransom | unaudited | Enchanted creature can't attack or block and has "{7}: Hold for Ransom's controller sacrifices it and draws a card. Activate only as a sorcery." | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -174,6 +172,7 @@
 | Fleetfoot Dancer | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
 | Forge Boss | handled | Whenever you sacrifice one or more other creatures, this creature deals 2 damage to each opponent. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gilded Pinions | handled | When this Equipment enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Glamorous Outlaw | handled | When this creature enters, it deals 2 damage to each opponent and you scry 2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Glittering Stockpile | handled |  |  | Y/Y/- | not_tested |
 | Glittermonger | handled | {T}: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goldhound | handled | First strike | machines/combat.py | Y/Y/- | not_tested |
@@ -259,11 +258,12 @@
 ## Fully supported
 
 <details>
-<summary>24 cards</summary>
+<summary>25 cards</summary>
 
 - An Offer You Can't Refuse
 - Angel of Suffering
 - Bouncer's Beatdown
+- Dusk Mangler
 - Expendable Lackey
 - Fight Rigging
 - For the Family
@@ -299,7 +299,6 @@
 | +N: each opponent loses N life unless they discard a card. if you control a demon or devil, you gain N life. | 1 | Ob Nixilis, the Adversary | snc |
 | all creatures attack enchanted creature's controller each combat if able. | 1 | Public Enemy | snc |
 | as an additional cost to cast ~, exile a creature card from your graveyard. ~ deals damage equal to the exiled card's power to each creature and each planeswalk | 1 | Corpse Explosion | snc |
-| as an additional cost to cast ~, sacrifice a creature, discard a card, or pay N life. | 1 | Dusk Mangler | snc |
 | as an additional cost to cast ~, sacrifice a nonland permanent. each opponent chooses a permanent they control that shares a card type with the sacrificed perma | 1 | Fatal Grudge | snc |
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N and has deathtouch. | 1 | Aven Heartstabber | snc |
 | as long as there are five or more mana values among cards in your graveyard, ~ gets +N/+N and has lifelink. | 1 | Snooping Newsie | snc |
@@ -343,7 +342,6 @@
 | when ~ enters, exile up to one target creature card from a graveyard. if a card is put into exile ~, look at the top three cards of your library, then put one o | 1 | Corpse Appraiser | snc |
 | when ~ enters, it connives. when it connives ~, return up to one target nonland permanent to its owner's hand. | 1 | Psychic Pickpocket | snc |
 | when ~ enters, it connives. when it connives ~, return up to one target spell to its owner's hand. | 1 | Obscura Interceptor | snc |
-| when ~ enters, it deals N damage to each opponent and you scry N. | 1 | Glamorous Outlaw | snc |
 | when ~ enters, return target creature card with mana value N or less from your graveyard to the battlefield. that creature can't attack or block for as long as  | 1 | Extraction Specialist | snc |
 | when ~ enters, you may search your library for any number of cards named ~, reveal them, put them into your hand, then shuffle. | 1 | Gathering Throng | snc |
 | whenever evelyn or another vampire you control enters, exile the top card of each player's library with a collection counter on it. | 1 | Evelyn, the Covetous | snc |

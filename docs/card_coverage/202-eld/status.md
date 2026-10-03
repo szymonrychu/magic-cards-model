@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 12.6% |
-| Works (untested) | 136 | 50.6% |
+| Tested | 35 | 13.0% |
+| Works (untested) | 135 | 50.2% |
 | Partial (unaudited) | 24 | 8.9% |
 | Not working | 75 | 27.9% |
 
@@ -141,7 +141,6 @@
 | Burning-Yard Trainer | handled | When this creature enters, another target Knight you control gets +2/+2 and gains trample and haste until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Embereth | handled | This land enters tapped unless you control a Mountain. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Garenbrig | handled | This land enters tapped unless you control a Forest. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Castle Locthwain | handled | This land enters tapped unless you control a Swamp. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Castle Vantress | handled | This land enters tapped unless you control an Island. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chulane, Teller of Tales | handled | Whenever you cast a creature spell, draw a card, then you may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Command Tower | handled |  |  | Y/Y/- | not_tested |
@@ -265,12 +264,13 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>35 cards</summary>
 
 - Banish into Fable
 - Bartered Cow
 - Bonecrusher Giant // Stomp
 - Castle Ardenvale
+- Castle Locthwain
 - Cauldron Familiar
 - Charmed Sleep
 - Claim the Firstborn

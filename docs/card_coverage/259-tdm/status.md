@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 46 | 18.3% |
-| Works (untested) | 132 | 52.4% |
+| Tested | 49 | 19.4% |
+| Works (untested) | 129 | 51.2% |
 | Partial (unaudited) | 12 | 4.8% |
 | Not working | 62 | 24.6% |
 
@@ -144,7 +144,6 @@
 | Glacial Dragonhunt | handled | Draw a card, then you may discard a card. When you discard a nonland card this way, Glacial Dragonhunt deals 3 damage to target creature. Harmonize {4}{U}{R} (Y | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Great Arashin City | handled | This land enters tapped unless you control a Forest or a Plains. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gurmag Nightwatch | handled | When this creature enters, look at the top three cards of your library. You may put one of those cards back on top of your library. Put the rest into your grave | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Hardened Tactician | handled | {1}, Sacrifice a token: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Host of the Hereafter | handled | This creature enters with two +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Humbling Elder | handled | When this creature enters, target creature an opponent controls gets -2/-0 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Iceridge Serpent | handled | When this creature enters, return target creature an opponent controls to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -210,7 +209,6 @@
 | Summit Intimidator | handled | When this creature enters, target creature can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sunpearl Kirin | handled | When this creature enters, return up to one other target nonland permanent you control to its owner's hand. If it was a token, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sunset Strikemaster | handled | {2}{R}, {T}, Sacrifice this creature: It deals 6 damage to target creature with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Surrak, Elusive Hunter | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Teeming Dragonstorm | handled | When this enchantment enters, create two 2/2 white Soldier creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Temur Devotee | handled | Defender | machines/combat.py | Y/Y/Y | not_tested |
 | Temur Monument | handled | When this artifact enters, search your library for a basic Forest, Island, or Mountain card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -230,13 +228,12 @@
 | Wild Ride | handled | Target creature gets +3/+0 and gains haste until end of turn. Harmonize {4}{R} (You may cast this card from your graveyard for its harmonize cost. You may tap a | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wingblade Disciple | handled | Flurry — Whenever you cast your second spell each turn, create a 1/1 white Bird creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Worthy Cost | handled | As an additional cost to cast this spell, sacrifice a creature. Exile target creature or planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Yathan Roadwatcher | handled | When this creature enters, if you cast it, mill four cards. When you do, return target creature card with mana value 3 or less from your graveyard to the battle | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Zurgo's Vanguard | handled | Zurgo's Vanguard's power is equal to the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>46 cards</summary>
+<summary>49 cards</summary>
 
 - Aegis Sculptor
 - Agent of Kotis
@@ -256,6 +253,7 @@
 - Flamehold Grappler
 - Fortress Kin-Guard
 - Frontline Rush
+- Hardened Tactician
 - Heritage Reclamation
 - Inevitable Defeat
 - Jeskai Revelation
@@ -275,6 +273,7 @@
 - Starry-Eyed Skyrider
 - Stormscale Scion
 - Strategic Betrayal
+- Surrak, Elusive Hunter
 - Tersa Lightshatter
 - Twinmaw Stormbrood // Charring Bite
 - Ugin, Eye of the Storms
@@ -283,6 +282,7 @@
 - Voice of Victory
 - Wail of War
 - Winternight Stories
+- Yathan Roadwatcher
 - Yathan Tombguard
 
 </details>

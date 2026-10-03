@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 34 | 13.2% |
-| Works (untested) | 123 | 47.7% |
+| Tested | 39 | 15.1% |
+| Works (untested) | 118 | 45.7% |
 | Partial (unaudited) | 7 | 2.7% |
 | Not working | 94 | 36.4% |
 
@@ -149,13 +149,11 @@
 | Dire Downdraft | handled | This spell costs {1} less to cast if it targets an attacking or tapped creature. Target creature's owner puts it on their choice of the top or bottom of their l | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Diresight | handled | Surveil 2, then draw two cards. You lose 2 life. (To surveil 2, look at the top two cards of your library, then put any number of them into your graveyard and t | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Downwind Ambusher | handled | When this creature enters, choose one — • Target creature an opponent controls gets -1/-1 until end of turn. • Destroy target creature an opponent controls that | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Emberheart Challenger | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, exile the top card of your library. Until en | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Feather of Flight | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fell | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Finch Formation | handled | When this creature enters, target creature you control gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flamecache Gecko | handled | When this creature enters, if an opponent lost life this turn, add {B}{R}. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flowerfoot Swordmaster | handled | Valiant — Whenever this creature becomes the target of a spell or ability you control for the first time each turn, Mice you control get +1/+0 until end of turn | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Fountainport | handled | {2}, {T}, Sacrifice a token: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fountainport Bell | handled | When this artifact enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Galewind Moose | handled | Reach | machines/combat.py | Y/Y/Y | not_tested |
 | Glarb, Calamity's Augur | handled | You may look at the top card of your library any time. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -170,7 +168,6 @@
 | High Stride | handled | Target creature gets +1/+3 and gains reach until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hired Claw | handled | Whenever you attack with one or more Lizards, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hivespine Wolverine | handled | When this creature enters, choose one — • Put a +1/+1 counter on target creature you control. • This creature fights target creature token. • Destroy target art | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Hop to It | handled | Create three 1/1 white Rabbit creature tokens. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hugs, Grisly Guardian | handled | When Hugs enters, exile the top X cards of your library. Until the end of your next turn, you may play those cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hunter's Talent | handled | When this Class enters, target creature you control deals damage equal to its power to target creature you don't control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Intrepid Rabbit | handled | When this creature enters, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -226,7 +223,6 @@
 | Sonar Strike | handled | Sonar Strike deals 4 damage to target attacking, blocking, or tapped creature. You gain 3 life if you control a Bat. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Spellgyre | handled | Choose one — • Counter target spell. • Surveil 2, then draw two cards. (To surveil 2, look at the top two cards of your library, then put any number of them int | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Splash Lasher | handled | When this creature enters, tap up to one target creature and put a stun counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Starscape Cleric | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Steampath Charger | handled | When this creature dies, it deals 1 damage to target player. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stickytongue Sentinel | handled | When this creature enters, return up to one other target permanent you control to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stormcatch Mentor | handled | Instant and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -243,7 +239,6 @@
 | Tidecaller Mentor | handled | Threshold — When this creature enters, if there are seven or more cards in your graveyard, return up to one target nonland permanent to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Treeguard Duo | handled | When this creature enters, until end of turn, target creature you control gains vigilance and gets +X/+X, where X is the number of creatures you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Valley Rally | handled | Gift a Food (You may promise an opponent a gift as you cast this spell. If you do, they create a Food token before its other effects. It's an artifact with "{2} | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Vinereap Mentor | handled | When this creature enters or dies, create a Food token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | War Squeak | handled | When this Aura enters, target creature an opponent controls can't block this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Warren Elder | handled | {3}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Waterspout Warden | handled | Whenever this creature attacks, if another creature entered the battlefield under your control this turn, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -254,7 +249,7 @@
 ## Fully supported
 
 <details>
-<summary>34 cards</summary>
+<summary>39 cards</summary>
 
 - Alania, Divergent Storm
 - Artist's Talent
@@ -269,9 +264,12 @@
 - Dazzling Denial
 - Eddymurk Crab
 - Eluge, the Shoreless Sea
+- Emberheart Challenger
 - Essence Channeler
 - Fecund Greenshell
+- Fountainport
 - Helga, Skittish Seer
+- Hop to It
 - Innkeeper's Talent
 - Into the Flood Maw
 - Keen-Eyed Curator
@@ -285,9 +283,11 @@
 - Scavenger's Talent
 - Seasoned Warrenguard
 - Starlit Soothsayer
+- Starscape Cleric
 - Stocking the Pantry
 - Stormchaser's Talent
 - Thundertrap Trainer
+- Vinereap Mentor
 - Ygra, Eater of All
 - Zoraline, Cosmos Caller
 

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 8.3% |
-| Works (untested) | 84 | 33.2% |
+| Tested | 24 | 9.5% |
+| Works (untested) | 81 | 32.0% |
 | Partial (unaudited) | 10 | 4.0% |
 | Not working | 138 | 54.5% |
 
@@ -235,14 +235,11 @@
 | Sanctify | handled | Destroy target artifact or enchantment. You gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Scattered Thoughts | handled | Look at the top four cards of your library. Put two of those cards into your hand and the rest into your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Selhoff Entomber | handled | {T}, Discard a creature card: Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Shattered Sanctum | handled | This land enters tapped unless you control two or more other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Sheltering Boughs | handled | When this Aura enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skywarp Skaab | handled | When this creature enters, you may exile two creature cards from your graveyard. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spore Crawler | handled | When this creature dies, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Stensia Uprising | handled | At the beginning of your end step, create a 1/1 red Human creature token. Then if you control exactly thirteen permanents, you may sacrifice this enchantment. W | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Stormcarved Coast | handled | This land enters tapped unless you control two or more other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stormchaser Drake | handled | Whenever this creature becomes the target of a spell you control, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Sundown Pass | handled | This land enters tapped unless you control two or more other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Toxic Scorpion | handled | When this creature enters, another target creature you control gains deathtouch until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Traveling Minister | handled | {T}: Target creature gets +1/+0 until end of turn. You gain 1 life. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ulvenwald Oddity // Ulvenwald Behemoth | handled | {5}{G}{G}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -262,7 +259,7 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>24 cards</summary>
 
 - Aim for the Head
 - Ancient Lumberknot
@@ -284,6 +281,9 @@
 - Sawblade Slinger
 - Screaming Swarm
 - Serpentine Ambush
+- Shattered Sanctum
+- Stormcarved Coast
+- Sundown Pass
 - Voltaic Visionary // Volt-Charged Berserker
 
 </details>

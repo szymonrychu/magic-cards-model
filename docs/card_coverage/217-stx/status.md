@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 33 | 12.0% |
-| Works (untested) | 151 | 55.1% |
+| Tested | 35 | 12.8% |
+| Works (untested) | 149 | 54.4% |
 | Partial (unaudited) | 5 | 1.8% |
 | Not working | 85 | 31.0% |
 
@@ -208,7 +208,6 @@
 | Poet's Quill | handled | When this Equipment enters, learn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pop Quiz | handled | Draw a card. Learn. (You may reveal a Lesson card you own from outside the game and put it into your hand, or discard a card to draw a card.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Prismari Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Professor of Symbology | handled | When this creature enters, learn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Professor of Zoomancy | handled | When this creature enters, create a 1/1 black and green Pest creature token with "When this token dies, you gain 1 life." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Professor's Warning | handled | Choose one — • Put a +1/+1 counter on target creature. • Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't de | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Quandrix Campus | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,7 +257,6 @@
 | Twinscroll Shaman | handled | Double strike | machines/combat.py | Y/Y/- | not_tested |
 | Umbral Juke | handled | Choose one — • Target player sacrifices a creature or planeswalker of their choice. • Create a 2/1 white and black Inkling creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Unwilling Ingredient | handled | {2}{B}, Exile this card from your graveyard: You draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Vanishing Verse | handled | Exile target monocolored permanent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Venerable Warsinger | handled | Whenever this creature deals combat damage to a player, you may return target creature card with mana value X or less from your graveyard to the battlefield, wh | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Vineglimmer Snarl | handled | As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Waterfall Aerialist | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
@@ -271,7 +269,7 @@
 ## Fully supported
 
 <details>
-<summary>33 cards</summary>
+<summary>35 cards</summary>
 
 - Academic Dispute
 - Bayou Groff
@@ -300,10 +298,12 @@
 - Make Your Mark
 - Mascot Exhibition
 - Prismari Command
+- Professor of Symbology
 - Promising Duskmage
 - Secret Rendezvous
 - Show of Confidence
 - Thrilling Discovery
+- Vanishing Verse
 - Witherbloom Command
 - Zimone, Quandrix Prodigy
 

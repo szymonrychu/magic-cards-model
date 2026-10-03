@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 21 | 7.3% |
-| Works (untested) | 138 | 48.1% |
+| Tested | 25 | 8.7% |
+| Works (untested) | 134 | 46.7% |
 | Partial (unaudited) | 15 | 5.2% |
 | Not working | 113 | 39.4% |
 
@@ -162,7 +162,6 @@
 | Axgard Cavalry | handled | {T}: Target creature gains haste until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Barkchannel Pathway // Tidechannel Pathway | handled |  |  | Y/Y/- | not_tested |
 | Battershield Warrior | handled | Boast — {1}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Battle Mammoth | handled | Whenever a permanent you control becomes the target of a spell or ability an opponent controls, you may draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Battlefield Raptor | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Behold the Multiverse | handled | Scry 2, then draw two cards. Foretell {1}{U} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on a later turn for its fo | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Beskir Shieldmate | handled | When this creature dies, create a 1/1 white Human Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -178,7 +177,6 @@
 | Canopy Tactician | handled | Other Elves you control get +1/+1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Clarion Spirit | handled | Whenever you cast your second spell each turn, create a 1/1 white Spirit creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Crush the Weak | handled | Crush the Weak deals 2 damage to each creature. If a creature dealt damage this way would die this turn, exile it instead. Foretell {R} (During your turn, you m | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Darkbore Pathway // Slitherbore Pathway | handled |  |  | Y/Y/- | not_tested |
 | Demon Bolt | handled | Demon Bolt deals 4 damage to target creature or planeswalker. Foretell {R} (During your turn, you may pay {2} and exile this card from your hand face down. Cast | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Demonic Gifts | handled | Until end of turn, target creature gets +2/+0 and gains "When this creature dies, return it to the battlefield under its owner's control." | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Depart the Realm | handled | Return target nonland permanent to its owner's hand. Foretell {U} (During your turn, you may pay {2} and exile this card from your hand face down. Cast it on a  | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -194,7 +192,6 @@
 | Elderleaf Mentor | handled | When this creature enters, create a 1/1 green Elf Warrior creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elven Ambush | handled | Create a 1/1 green Elf Warrior creature token for each Elf you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Elvish Warmaster | handled | Whenever one or more other Elves you control enter, create a 1/1 green Elf Warrior creature token. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Esika's Chariot | handled | When Esika's Chariot enters, create two 2/2 green Cat creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearless Liberator | handled | Boast — {2}{R}: Create a 2/1 red Dwarf Berserker creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fearless Pup | handled | Boast — {2}{R}: This creature gets +2/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Feed the Serpent | handled | Exile target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -267,7 +264,6 @@
 | Shimmerdrift Vale | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Showdown of the Skalds | handled | I — Exile the top four cards of your library. Until the end of your next turn, you may play those cards. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Skemfar Avenger | handled | Whenever another nontoken Elf or Berserker you control dies, you draw a card and you lose 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Snakeskin Veil | handled | Put a +1/+1 counter on target creature you control. It gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Snowfield Sinkhole | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Spectral Steel | handled | Enchanted creature gets +2/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Squash | handled | This spell costs {3} less to cast if you control a Giant. Squash deals 6 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -296,16 +292,19 @@
 ## Fully supported
 
 <details>
-<summary>21 cards</summary>
+<summary>25 cards</summary>
 
 - Axgard Braggart
+- Battle Mammoth
 - Cleaving Reaper
 - Codespell Cleric
 - Cosmos Elixir
 - Craven Hulk
+- Darkbore Pathway // Slitherbore Pathway
 - Deathknell Berserker
 - Dual Strike
 - Duskwielder
+- Esika's Chariot
 - Esika, God of the Tree // The Prismatic Bridge
 - Faceless Haven
 - Littjara Kinseekers
@@ -314,6 +313,7 @@
 - Raven Wings
 - Righteous Valkyrie
 - Saw It Coming
+- Snakeskin Veil
 - The Trickster-God's Heist
 - Vega, the Watcher
 - Vorinclex, Monstrous Raider

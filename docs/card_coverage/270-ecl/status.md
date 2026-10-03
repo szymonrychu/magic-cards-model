@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 138 | 54.8% |
-| Works (untested) | 112 | 44.4% |
+| Tested | 143 | 56.7% |
+| Works (untested) | 107 | 42.5% |
 | Partial (unaudited) | 1 | 0.4% |
 | Not working | 1 | 0.4% |
 
@@ -54,12 +54,10 @@
 | Eclipsed Kithkin | handled | When this creature enters, look at the top four cards of your library. You may reveal a Kithkin, Forest, or Plains card from among them and put it into your han | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eclipsed Merrow | handled | When this creature enters, look at the top four cards of your library. You may reveal a Merfolk, Plains, or Island card from among them and put it into your han | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elder Auntie | handled | When this creature enters, create a 1/1 black and red Goblin creature token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Emptiness | handled | When this creature enters, if {W}{W} was spent to cast it, return target creature card with mana value 3 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Enraged Flamecaster | handled | Whenever you cast a spell with mana value 4 or greater, this creature deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Evershrike's Gift | handled | Enchanted creature gets +1/+0 and has flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Feed the Flames | handled | Feed the Flames deals 5 damage to target creature. If that creature would die this turn, exile it instead. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Feisty Spikeling | handled | During your turn, this creature has first strike. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Firdoch Core | handled | {4}: This artifact becomes a 4/4 artifact creature until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flame-Chain Mauler | handled | {1}{R}: This creature gets +1/+0 and gains menace until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flamebraider | handled |  |  | Y/Y/Y | not_tested |
 | Flamekin Gildweaver | handled | When this creature enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -78,7 +76,6 @@
 | Gristle Glutton | handled | {T}, Blight 1: Discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hovel Hurler | handled | This creature enters with two -1/-1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Impolite Entrance | handled | Target creature gains trample and haste until end of turn. Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Iron-Shield Elf | handled | Discard a card: This creature gains indestructible until end of turn. Tap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Keep Out | handled | Choose one — • Keep Out deals 4 damage to target tapped creature. • Destroy target enchantment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kirol, Attentive First-Year | handled | Tap two untapped creatures you control: Copy target triggered ability you control. You may choose new targets for the copy. Activate only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kulrath Mystic | handled | Whenever you cast a spell with mana value 4 or greater, this creature gets +2/+0 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -107,9 +104,7 @@
 | Rimekin Recluse | handled | When this creature enters, return up to one other target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Riverguard's Reflexes | handled | Target creature gets +2/+2 and gains first strike until end of turn. Untap it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rooftop Percher | handled | When this creature enters, exile up to two target cards from graveyards. You gain 3 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Sapling Nursery | handled | Landfall — Whenever a land you control enters, create a 3/4 green Treefolk creature token with reach. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Scarblade Scout | handled | When this creature enters, mill two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Sear | handled | Sear deals 4 damage to target creature or planeswalker. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Shore Lurker | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Silvergill Mentor | handled | As an additional cost to cast this spell, behold a Merfolk or pay {2}. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Silvergill Peddler | handled | Whenever this creature becomes tapped, draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -144,7 +139,7 @@
 ## Fully supported
 
 <details>
-<summary>138 cards</summary>
+<summary>143 cards</summary>
 
 - Abigale, Eloquent First-Year
 - Adept Watershaper
@@ -193,10 +188,12 @@
 - Eclipsed Boggart
 - Eclipsed Realms
 - Eirdu, Carrier of Dawn // Isilu, Carrier of Twilight
+- Emptiness
 - Encumbered Reejerey
 - End-Blaze Epiphany
 - Explosive Prodigy
 - Figure of Fable
+- Firdoch Core
 - Formidable Speaker
 - Gathering Stone
 - Glamer Gifter
@@ -213,6 +210,7 @@
 - Hexing Squelcher
 - High Perfect Morcant
 - Illusion Spinners
+- Iron-Shield Elf
 - Kinbinding
 - Kindle the Inner Flame
 - Kinsbaile Aspirant
@@ -252,8 +250,10 @@
 - Rimefire Torque
 - Safewright Cavalry
 - Sanar, Innovative First-Year
+- Sapling Nursery
 - Scarblade's Malice
 - Scuzzback Scrounger
+- Sear
 - Selfless Safewright
 - Shadow Urchin
 - Shimmercreep

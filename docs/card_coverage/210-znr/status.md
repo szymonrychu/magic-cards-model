@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.6% |
-| Works (untested) | 121 | 47.5% |
+| Tested | 31 | 12.2% |
+| Works (untested) | 117 | 45.9% |
 | Partial (unaudited) | 22 | 8.6% |
 | Not working | 85 | 33.3% |
 
@@ -142,8 +142,6 @@
 | Blood Beckoning | handled | Kicker {3} (You may pay an additional {3} as you cast this spell.) Return target creature card from your graveyard to your hand. If this spell was kicked, inste | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Blood Price | handled | Look at the top four cards of your library. Put two of them into your hand and the rest on the bottom of your library in any order. You lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bloodchief's Thirst | handled | Kicker {2}{B} (You may pay an additional {2}{B} as you cast this spell.) Destroy target creature or planeswalker with mana value 2 or less. If this spell was ki | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Branchloft Pathway // Boulderloft Pathway | handled |  |  | Y/Y/- | not_tested |
-| Brightclimb Pathway // Grimclimb Pathway | handled |  |  | Y/Y/- | not_tested |
 | Broken Wings | handled | Destroy target artifact, enchantment, or creature with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brushfire Elemental | handled | This creature can't be blocked by creatures with power 2 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bubble Snare | handled | When this Aura enters, if it was kicked, tap enchanted creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -151,7 +149,6 @@
 | Canyon Jerboa | handled | Landfall — Whenever a land you control enters, creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Chilling Trap | handled | Target creature gets -4/-0 until end of turn. If you control a Wizard, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cinderclasm | handled | Kicker {R} (You may pay an additional {R} as you cast this spell.) Cinderclasm deals 1 damage to each creature. If it was kicked, it deals 2 damage to each crea | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Clearwater Pathway // Murkwater Pathway | handled |  |  | Y/Y/- | not_tested |
 | Cleric of Chill Depths | handled | Whenever this creature blocks a creature, that creature doesn't untap during its controller's next untap step. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cleric of Life's Bond | handled | Whenever another Cleric you control enters, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cliffhaven Kitesail | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -212,7 +209,6 @@
 | Relic Amulet | handled | Whenever you cast an instant, sorcery, or Wizard spell, put a charge counter on this artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Relic Axe | handled | When this Equipment enters, attach it to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Risen Riptide | handled | Whenever you cast a kicked spell, this creature has base power and toughness 5/5 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Riverglide Pathway // Lavaglide Pathway | handled |  |  | Y/Y/- | not_tested |
 | Rockslide Sorcerer | handled | Whenever you cast an instant, sorcery, or Wizard spell, this creature deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roil Eruption | handled | Kicker {5} (You may pay an additional {5} as you cast this spell.) Roil Eruption deals 3 damage to any target. If this spell was kicked, it deals 5 damage inste | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Roost of Drakes | handled | When this enchantment enters, if it was kicked, create a 2/2 blue Drake creature token with flying. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -258,7 +254,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>31 cards</summary>
 
 - Agadeem's Awakening // Agadeem, the Undercrypt
 - Akoum Hellhound
@@ -266,7 +262,10 @@
 - Angel of Destiny
 - Beyeen Veil // Beyeen Coast
 - Blackbloom Rogue // Blackbloom Bog
+- Branchloft Pathway // Boulderloft Pathway
+- Brightclimb Pathway // Grimclimb Pathway
 - Cleansing Wildfire
+- Clearwater Pathway // Murkwater Pathway
 - Dauntless Unity
 - Farsight Adept
 - Inscription of Abundance
@@ -279,6 +278,7 @@
 - Nimble Trapfinder
 - Omnath, Locus of Creation
 - Resolute Strike
+- Riverglide Pathway // Lavaglide Pathway
 - Roiling Vortex
 - Scale the Heights
 - Scute Swarm

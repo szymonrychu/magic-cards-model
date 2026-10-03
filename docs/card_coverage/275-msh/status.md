@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 172 | 63.7% |
-| Works (untested) | 98 | 36.3% |
+| Tested | 176 | 65.2% |
+| Works (untested) | 94 | 34.8% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 0 | 0.0% |
 
@@ -44,7 +44,6 @@
 | Bold Biochemist | handled | Power-up — {5}{U}: Put a +1/+1 counter on this creature and draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Borough Backup | handled | Create two 3/2 white Hero creature tokens with vigilance. Basic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, p | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Captain America's Shield | handled | Equipped creature gets +0/+8 and has vigilance. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Castle Doom | handled | {3}, {T}, Sacrifice an artifact: Create a 3/3 colorless Robot Villain artifact creature token named Doombot. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Colleen Wing, Street Samurai | handled | Whenever you cast a spell that targets a creature you control, put a +1/+1 counter on Colleen Wing. Scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Crimson Operative | handled | When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Crossbones, Malicious Mercenary | handled | Whenever another Villain you control enters, put a +1/+1 counter on Crossbones. He deals 2 damage to each opponent. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -58,19 +57,16 @@
 | Fisk Tower | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Futurist Forge | handled | When this artifact enters, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Giant-Sized Flying Ant | handled | When this creature enters, choose one — • Tap target nonland permanent. • Untap target nonland permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Gleaming Bastion | handled |  |  | Y/Y/Y | not_tested |
 | H.E.R.B.I.E. Scout Unit | handled | When this creature enters, draw a card, then you may put a land card from your hand onto the battlefield tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | HYDRA Assault Robot | handled | Whenever another Villain and/or artifact you control enters, this creature deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | HYDRA Infiltration | handled | When this enchantment enters, target opponent discards two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hell's Kitchen | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hercules, Prince of Power | handled | Power-up — {4}{G}: Put a +1/+1 counter on Hercules. He gains vigilance, indestructible, and haste until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hero in Training | handled | When this creature enters, draw a card. If you control another Hero, you gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Hidden Lair | handled |  |  | Y/Y/Y | not_tested |
 | Hire a Crew | handled | Create a 2/1 black Villain creature token with menace, then creatures you control get +1/+0 until end of turn. (A creature with menace can't be blocked except b | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hour of Defeat | handled | Destroy target creature. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Human Torch, Johnny Storm | handled | Whenever you draw a card, if you control another Hero, Human Torch deals 1 damage to target opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Hydraulic Helper | handled | Defender | machines/combat.py | Y/Y/Y | not_tested |
-| Jennifer Walters // The Sensational She-Hulk | handled | Your opponents can't cast spells during your turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | K'un-Lun Warrior | handled | When this creature enters, you may sacrifice an artifact or discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kingpin's Enforcers | handled | {2}{B}, Sacrifice an artifact or creature: Draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kree Commandos | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
@@ -128,7 +124,7 @@
 ## Fully supported
 
 <details>
-<summary>172 cards</summary>
+<summary>176 cards</summary>
 
 - A.I.M. Scientists
 - Abomination, Terrifying Titan
@@ -160,6 +156,7 @@
 - Captain America, Wings of Freedom
 - Captain Mar-Vell, Space-Born
 - Captain Marvel, Earth's Protector
+- Castle Doom
 - Claim the Kingdom
 - Cloak and Dagger, Entwined
 - Construct a Cosmic Cube
@@ -180,6 +177,7 @@
 - Frozen in Ice
 - Gathering Place
 - Ghost, Spectral Saboteur
+- Gleaming Bastion
 - Go Nuts!
 - Grim Reaper, Lethal Legionnaire
 - Guerrilla Gorilla
@@ -192,6 +190,7 @@
 - Hellcat, Undying Vigilante
 - Heroic Feast
 - Hex Magic
+- Hidden Lair
 - Hulk, Gamma Goliath
 - Hulkling, Burgeoning Bruiser
 - I Am Iron Man
@@ -201,6 +200,7 @@
 - Iron Man Armor
 - Iron Man, Master of Machines
 - Ironheart, Clever Champion
+- Jennifer Walters // The Sensational She-Hulk
 - Jessica Jones, Private Eye
 - Justice, Vance Astrovik
 - Ka-Zar of the Savage Land

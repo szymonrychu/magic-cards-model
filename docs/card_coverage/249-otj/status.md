@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 10.4% |
-| Works (untested) | 129 | 49.8% |
+| Tested | 28 | 10.8% |
+| Works (untested) | 128 | 49.4% |
 | Partial (unaudited) | 7 | 2.7% |
 | Not working | 96 | 37.1% |
 
@@ -190,7 +190,6 @@
 | Jolene, Plundering Pugilist | handled | Whenever you attack with one or more creatures with power 4 or greater, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Kraum, Violent Cacophony | handled | Whenever you cast your second spell each turn, put a +1/+1 counter on Kraum and draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lassoed by the Law | handled | When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Lavaspur Boots | handled | Equipped creature gets +1/+0 and has haste and ward {1}. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lonely Arroyo | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Lush Oasis | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Malcolm, the Eyes | handled | Whenever you cast your second spell each turn, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -262,7 +261,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Armored Armadillo
 - Drover Grizzly
@@ -274,6 +273,7 @@
 - Highway Robbery
 - Insatiable Avarice
 - Kambal, Profiteering Mayor
+- Lavaspur Boots
 - Lilah, Undefeated Slickshot
 - Lively Dirge
 - Loan Shark

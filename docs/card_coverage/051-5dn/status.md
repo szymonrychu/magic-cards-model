@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 7.4% |
-| Works (untested) | 98 | 60.5% |
+| Tested | 13 | 8.0% |
+| Works (untested) | 97 | 59.9% |
 | Partial (unaudited) | 12 | 7.4% |
 | Not working | 40 | 24.7% |
 
@@ -147,7 +147,6 @@
 | Qumulox | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Rain of Rust | handled | Choose one — • Destroy target artifact. • Destroy target land. Entwine {3}{R} (Choose both if you pay the entwine cost.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Razormane Masticore | handled | At the beginning of your upkeep, sacrifice this creature unless you discard a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Rite of Passage | handled | Whenever a creature you control is dealt damage, put a +1/+1 counter on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Salvaging Station | handled | {T}: Return target noncreature artifact card with mana value 1 or less from your graveyard to the battlefield. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sawtooth Thresher | handled | Remove two +1/+1 counters from this creature: It gets +4/+4 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Screaming Fury | handled | Target creature gets +5/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -180,7 +179,7 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Beacon of Unrest
 - Cranial Plating
@@ -191,6 +190,7 @@
 - Magma Jet
 - Opaline Bracers
 - Paradise Mantle
+- Rite of Passage
 - Solarion
 - Trinket Mage
 - Viridian Lorebearers

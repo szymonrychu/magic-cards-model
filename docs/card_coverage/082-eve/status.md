@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 5.0% |
-| Works (untested) | 92 | 51.4% |
+| Tested | 11 | 6.1% |
+| Works (untested) | 90 | 50.3% |
 | Partial (unaudited) | 4 | 2.2% |
 | Not working | 74 | 41.3% |
 
@@ -122,13 +122,11 @@
 | Dream Thief | handled | When this creature enters, draw a card if you've cast another blue spell this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Assailant | handled | Sacrifice this creature: It deals 1 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duergar Cave-Guard | handled | {R/W}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Duergar Hedge-Mage | handled | When this creature enters, if you control two or more Mountains, you may destroy target artifact. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Duskdale Wurm | handled | Trample | machines/combat.py | Y/-/- | not_tested |
 | Fable of Wolf and Owl | handled | Whenever you cast a green spell, you may create a 2/2 green Wolf creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fang Skulkin | handled | {2}: Target black creature gains wither until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fetid Heath | handled |  |  | Y/-/- | not_tested |
 | Fire at Will | handled | Fire at Will deals 3 damage divided as you choose among one, two, or three target attacking or blocking creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Flooded Grove | handled |  |  | Y/-/- | not_tested |
 | Glen Elendra Archmage | handled | {U}, Sacrifice this creature: Counter target noncreature spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Grazing Kelpie | handled | {G/U}, Sacrifice this creature: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Groundling Pouncer | handled | {G/U}: This creature gets +1/+3 and gains flying until end of turn. Activate only once each turn and only if an opponent controls a creature with flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -200,13 +198,15 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>11 cards</summary>
 
 - Antler Skulkin
 - Belligerent Hatchling
 - Divinity of Pride
+- Duergar Hedge-Mage
 - Figure of Destiny
 - Flickerwisp
+- Flooded Grove
 - Helix Pinnacle
 - Merrow Bonegnawer
 - Shorecrasher Mimic

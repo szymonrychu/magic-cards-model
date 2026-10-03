@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 14.1% |
+| Tested | 27 | 14.6% |
 | Works (untested) | 109 | 58.9% |
 | Partial (unaudited) | 4 | 2.2% |
-| Not working | 46 | 24.9% |
+| Not working | 45 | 24.3% |
 
 ## Cards needing work
 
@@ -64,7 +64,6 @@
 | Trophy Mage | silent | When this creature enters, you may search your library for an artifact card with mana value 3, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Call for Unity | notice | Creatures you control get +1/+1 for each unity counter on this enchantment. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chandra's Revolution | notice | Chandra's Revolution deals 4 damage to target creature. Tap target land. That land doesn't untap during its controller's next untap step. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Cogwork Assembler | notice | {7}: Create a token that's a copy of target artifact. That token gains haste. Exile it at the beginning of the next end step. | unparsed remainder: That token gains haste. | Y/Y/- | not_working |
 | Destructive Tampering | notice | Choose one — • Destroy target artifact. • Creatures without flying can't block this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Kari Zev, Skyship Raider | notice | Whenever Kari Zev attacks, create Ragavan, a legendary 2/1 red Monkey creature token. Ragavan enters tapped and attacking. Exile that token at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Lifecraft Awakening | notice | Put X +1/+1 counters on target artifact you control. If it isn't a creature or Vehicle, it becomes a 0/0 Construct artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -189,7 +188,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Aether Chaser
 - Aether Swooper
@@ -197,6 +196,7 @@
 - Aid from the Cowl
 - Audacious Infiltrator
 - Bastion Enforcer
+- Cogwork Assembler
 - Consulate Crackdown
 - Consulate Dreadnought
 - Daredevil Dragster
@@ -265,7 +265,6 @@
 | whenever ~ enters or attacks, you get {M} for each creature you control. | 1 | Aetherwind Basker | aer |
 | you may remove a loyalty counter from a planeswalker you control rather than pay ~'s crew cost. | 1 | Heart of Kiran | aer |
 | {M}, sacrifice ~: return up to one target artifact card and up to one target enchantment card from your graveyard to your hand. | 1 | Restoration Specialist | aer |
-| {M}: create a token that's a copy of target artifact. that token gains haste. exile it at the beginning of the next end step. | 1 | Cogwork Assembler | aer |
 | {M}{M}: another target vehicle you control becomes an artifact creature until end of turn. | 1 | Peacewalker Colossus | aer |
 | ~ can block an additional creature each combat. | 1 | Night Market Guard | aer |
 | ~ deals N damage divided as you choose among any number of target creatures, where N is the greatest power among creatures you control as you cast ~. | 1 | Monstrous Onslaught | aer |

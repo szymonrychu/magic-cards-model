@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 32 | 10.5% |
-| Works (untested) | 130 | 42.8% |
+| Tested | 35 | 11.5% |
+| Works (untested) | 128 | 42.1% |
 | Partial (unaudited) | 15 | 4.9% |
-| Not working | 127 | 41.8% |
+| Not working | 126 | 41.4% |
 
 ## Cards needing work
 
@@ -146,7 +146,6 @@
 | Prishe's Wanderings | notice | Search your library for a basic land card or Town card, put it onto the battlefield tapped, then shuffle. When you search your library this way, put a +1/+1 cou | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Random Encounter | notice | Shuffle your library, then mill four cards. Put each creature card milled this way onto the battlefield. They gain haste. At the beginning of the next end step, | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Sazh Katzroy | notice | When Sazh Katzroy enters, you may search your library for a Bird or basic land card, reveal it, put it into your hand, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| The Fire Crystal | notice | {4}{R}{R}, {T}: Create a token that's a copy of target creature you control. Sacrifice it at the beginning of the next end step. | unparsed remainder: Sacrifice it at the beginning of the next end step. | Y/Y/Y | not_working |
 | Unexpected Request | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. You may attach an Equipment you control to that creatu | unparsed remainder: Untap that creature. It gains haste until end of turn. You may attach an Equipment you control to that creature. If you do, unattach it at the beginning of the next end step. | Y/Y/Y | not_working |
 | Venat, Heart of Hydaelyn // Hydaelyn, the Mothercrystal | notice | Blessing of Light — At the beginning of combat on your turn, put a +1/+1 counter on another target creature you control. Until your next turn, it gains indestru | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Weapons Vendor | notice | At the beginning of combat on your turn, if you control an Equipment, you may pay {1}. When you do, attach target Equipment you control to target creature you c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -208,7 +207,6 @@
 | G'raha Tia | handled | The Allagan Eye — Whenever one or more other creatures and/or artifacts you control die, draw a card. This ability triggers only once each turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gaius van Baelsar | handled | When Gaius van Baelsar enters, choose one — • Each player sacrifices a creature token of their choice. • Each player sacrifices a nontoken creature of their cho | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Galuf's Final Act | handled | Until end of turn, target creature gets +1/+0 and gains "When this creature dies, put a number of +1/+1 counters equal to its power on up to one target creature | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Giott, King of the Dwarves | handled | Whenever Giott or another Dwarf you control enters and whenever an Equipment you control enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gladiolus Amicitia | handled | When Gladiolus Amicitia enters, search your library for a land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gohn, Town of Ruin | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gongaga, Reactor Town | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -243,7 +241,6 @@
 | Overkill | handled | Target creature gets -0/-9999 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Phoenix Down | handled | {1}{W}, {T}, Exile this artifact: Choose one — • Return target creature card with mana value 4 or less from your graveyard to the battlefield tapped. • Exile ta | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Poison the Waters | handled | Choose one — • All creatures get -1/-1 until end of turn. • Target player reveals their hand. You choose an artifact or creature card from it. That player disca | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Qiqirn Merchant | handled | {1}, {T}: Draw a card, then discard a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Queen Brahne | handled | Whenever Queen Brahne attacks, create a 0/1 black Wizard creature token with "Whenever you cast a noncreature spell, this token deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Qutrub Forayer | handled | When this creature enters, choose one — • Destroy target creature that was dealt damage this turn. • Exile up to two target cards from a single graveyard. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rabanastre, Royal City | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -302,7 +299,7 @@
 ## Fully supported
 
 <details>
-<summary>32 cards</summary>
+<summary>35 cards</summary>
 
 - Blitzball
 - Cactuar
@@ -312,12 +309,14 @@
 - Coliseum Behemoth
 - Esper Origins // Summon: Esper Maduin
 - Fire Magic
+- Giott, King of the Dwarves
 - Haste Magic
 - Jill, Shiva's Dominant // Shiva, Warden of Ice
 - Joshua, Phoenix's Dominant // Phoenix, Warden of Fire
 - Matoya, Archon Elder
 - Noctis, Prince of Lucis
 - Prompto Argentum
+- Qiqirn Merchant
 - Quina, Qu Gourmet
 - Raubahn, Bull of Ala Mhigo
 - Retrieve the Esper
@@ -332,6 +331,7 @@
 - Summon: Fat Chocobo
 - Summon: Knights of Round
 - Summon: Primal Garuda
+- The Fire Crystal
 - Thunder Magic
 - Traveling Chocobo
 - Vivi Ornitier
@@ -470,7 +470,6 @@
 | {M}: until end of turn, ~ gets +N/+N for each permanent card in your graveyard. | 1 | Gran Pulse Ochu | fin |
 | {M}{M}, {M}: copy target activated or triggered ability you control N times. you may choose new targets for the copies. ~ can"..."t be N. | 1 | Gogo, Master of Mimicry | fin |
 | {M}{M}: search your library for a card named ~, put it onto the battlefield tapped, then shuffle. | 1 | Magitek Infantry | fin |
-| {M}{M}{M}, {M}: create a token that's a copy of target creature you control. sacrifice it at the beginning of the next end step. | 1 | The Fire Crystal | fin |
 | {M}{M}{M}, {M}: each opponent mills cards equal to the number of cards in your hand. | 1 | The Water Crystal | fin |
 | {M}{M}{M}: ~ becomes a N/N beast creature in addition to its other types. | 1 | Ride the Shoopuf | fin |
 | {M}{M}{M}{M}{M}: return ~ from your graveyard to the battlefield transformed. activate only as a sorcery. | 1 | Garland, Knight of Cornelia // Chaos, the Endless | fin |

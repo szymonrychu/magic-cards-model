@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 3 | 13.6% |
-| Works (untested) | 15 | 68.2% |
+| Tested | 5 | 22.7% |
+| Works (untested) | 13 | 59.1% |
 | Partial (unaudited) | 2 | 9.1% |
 | Not working | 2 | 9.1% |
 
@@ -32,11 +32,9 @@
 | Legacy Weapon | unaudited | If Legacy Weapon would be put into a graveyard from anywhere, reveal Legacy Weapon and shuffle it into its owner's library instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Battlefield Forge | handled |  |  | Y/Y/- | not_tested |
 | Bloodfire Colossus | handled | {R}, Sacrifice this creature: It deals 6 damage to each creature and each player. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Caves of Koilos | handled |  |  | Y/Y/- | not_tested |
 | Goblin Ringleader | handled | When this creature enters, reveal the top four cards of your library. Put all Goblin cards revealed this way into your hand and the rest on the bottom of your l | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lay of the Land | handled | Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Lightning Angel | handled | Flying | machines/combat.py | Y/-/- | not_tested |
-| Llanowar Wastes | handled |  |  | Y/Y/- | not_tested |
 | Mystic Snake | handled | When this creature enters, counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Phyrexian Arena | handled | At the beginning of your upkeep, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Phyrexian Gargantua | handled | When this creature enters, you draw two cards and you lose 2 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -49,10 +47,12 @@
 ## Fully supported
 
 <details>
-<summary>3 cards</summary>
+<summary>5 cards</summary>
 
+- Caves of Koilos
 - Fire // Ice
 - Index
+- Llanowar Wastes
 - Shivan Reef
 
 </details>

@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 70 | 26.7% |
-| Works (untested) | 91 | 34.7% |
+| Tested | 71 | 27.1% |
+| Works (untested) | 90 | 34.4% |
 | Partial (unaudited) | 19 | 7.3% |
 | Not working | 82 | 31.3% |
 
@@ -151,7 +151,6 @@
 | Evolution Witness | handled | {1}{G}: Adapt 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Faithful Watchdog | handled | This creature enters with three +1/+1 counters on it. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fanged Flames | handled | Devoid (This card has no color.) Fanged Flames deals 4 damage to target creature or planeswalker. If that creature or planeswalker would die this turn, exile it | the engine reads this text and performs it | Y/-/- | not_tested |
-| Fell the Profane // Fell Mire | handled | Destroy target creature or planeswalker. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fetid Gargantua | handled | {2}{B}: Adapt 2. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flare of Denial | handled | You may sacrifice a nontoken blue creature rather than pay this spell's mana cost. Counter target spell. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flare of Duplication | handled | You may sacrifice a nontoken red creature rather than pay this spell's mana cost. Copy target instant or sorcery spell. You may choose new targets for the copy. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -222,7 +221,7 @@
 ## Fully supported
 
 <details>
-<summary>70 cards</summary>
+<summary>71 cards</summary>
 
 - Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
 - Archway of Innovation
@@ -245,6 +244,7 @@
 - Emperor of Bones
 - Emrakul, the World Anew
 - Fanatic of Rhonas
+- Fell the Profane // Fell Mire
 - Galvanic Discharge
 - Glaring Fleshraker
 - Guide of Souls

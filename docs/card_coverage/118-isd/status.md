@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 25 | 10.5% |
-| Works (untested) | 146 | 61.1% |
+| Tested | 26 | 10.9% |
+| Works (untested) | 145 | 60.7% |
 | Partial (unaudited) | 14 | 5.9% |
 | Not working | 54 | 22.6% |
 
@@ -208,7 +208,6 @@
 | Skirsdag Cultist | handled | {R}, {T}, Sacrifice a creature: This creature deals 2 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Skirsdag High Priest | handled | Morbid — {T}, Tap two untapped creatures you control: Create a 5/5 black Demon creature token with flying. Activate only if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Smite the Monstrous | handled | Destroy target creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Snapcaster Mage | handled | When this creature enters, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to its mana cost. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Somberwald Spider | handled | Morbid — This creature enters with two +1/+1 counters on it if a creature died this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spare from Evil | handled | Creatures you control gain protection from non-Human creatures until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Spectral Flight | handled | Enchanted creature gets +2/+2 and has flying. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -244,7 +243,7 @@
 ## Fully supported
 
 <details>
-<summary>25 cards</summary>
+<summary>26 cards</summary>
 
 - Ambush Viper
 - Army of the Damned
@@ -270,6 +269,7 @@
 - Past in Flames
 - Prey Upon
 - Slayer of the Wicked
+- Snapcaster Mage
 - Stony Silence
 
 </details>

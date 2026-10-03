@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 41 | 15.3% |
-| Works (untested) | 112 | 41.8% |
+| Tested | 44 | 16.4% |
+| Works (untested) | 110 | 41.0% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 105 | 39.2% |
+| Not working | 104 | 38.8% |
 
 ## Cards needing work
 
@@ -35,7 +35,6 @@
 | Audience with Trostani | silent | Create a 0/1 green Plant creature token, then draw cards equal to the number of differently named creature tokens you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aurelia's Vindicator | silent | When this creature leaves the battlefield, return the exiled cards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Aurelia, the Law Above | silent | Whenever a player attacks with five or more creatures, Aurelia deals 3 damage to each of your opponents and you gain 3 life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
-| Barbed Servitor | silent | Whenever this creature is dealt damage, target opponent loses that much life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Burden of Proof | silent | Enchanted creature gets +2/+2 as long as it's a Detective you control. Otherwise, it has base power and toughness 1/1 and can't block Detectives. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Call a Surprise Witness | silent | Return target creature card with mana value 3 or less from your graveyard to the battlefield. Put a flying counter on it. It's a Spirit in addition to its other | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Case File Auditor | silent | When this creature enters and whenever you solve a Case, look at the top six cards of your library. You may reveal an enchantment card from among them and put i | the engine does not recognise this trigger's condition - it never triggers | Y/Y/Y | not_working |
@@ -170,7 +169,6 @@
 | Doorkeeper Thrull | handled | Artifacts and creatures entering don't cause abilities to trigger. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Drag the Canal | handled | Create a 2/2 white and blue Detective creature token. If a creature died this turn, you gain 2 life, surveil 2, then investigate. (Create a Clue token. It's an  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Due Diligence | handled | When this Aura enters, target creature you control other than enchanted creature gets +2/+2 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Escape Tunnel | handled | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Exit Specialist | handled | This creature can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ezrim, Agency Chief | handled | When Ezrim enters, investigate twice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fae Flight | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -250,18 +248,18 @@
 | Unscrupulous Agent | handled | When this creature enters, target opponent exiles a card from their hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vengeful Creeper | handled | When this creature is turned face up, destroy target artifact or enchantment an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Vengeful Tracker | handled | Whenever an opponent sacrifices an artifact, this creature deals 2 damage to them. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Warleader's Call | handled | Creatures you control get +1/+1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wispdrinker Vampire | handled | Whenever another creature you control with power 2 or less enters, each opponent loses 1 life and you gain 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Wrench | handled | Equipped creature gets +1/+1 and has vigilance and "{3}, {T}: Tap target creature." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 
 ## Fully supported
 
 <details>
-<summary>41 cards</summary>
+<summary>44 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
 - Alley Assailant
+- Barbed Servitor
 - Bolrac-Clan Basher
 - Break Out
 - Case of the Crimson Pulse
@@ -272,6 +270,7 @@
 - Deadly Cover-Up
 - Detective's Satchel
 - Elegant Parlor
+- Escape Tunnel
 - Forensic Gadgeteer
 - Forensic Researcher
 - Hedge Maze
@@ -300,6 +299,7 @@
 - Undercity Sewers
 - Underground Mortuary
 - Vein Ripper
+- Warleader's Call
 
 </details>
 
@@ -400,7 +400,6 @@
 | whenever ~ attacks, you may collect evidence N. when you do, put a +N/+N counter on target creature you control. | 1 | Sample Collector | mkm |
 | whenever ~ deals combat damage to a player, you may collect evidence N. when you do, ~ deals N damage to each creature and planeswalker that player controls. | 1 | Incinerator of the Guilty | mkm |
 | whenever ~ is dealt N or more damage, investigate. | 1 | Innocent Bystander | mkm |
-| whenever ~ is dealt damage, target opponent loses that much life. | 1 | Barbed Servitor | mkm |
 | whenever ~ or another creature you control is turned face up, that creature deals damage equal to its power to each opponent. | 1 | Pyrotechnic Performer | mkm |
 | you may collect evidence N rather than pay the mana cost for spells you cast. | 1 | Conspiracy Unraveler | mkm |
 | {M}, {M}, collect evidence N: each opponent loses N life unless they discard a card or sacrifice a creature. | 1 | Polygraph Orb | mkm |

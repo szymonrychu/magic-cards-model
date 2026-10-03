@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 12.4% |
-| Works (untested) | 93 | 52.2% |
+| Tested | 23 | 12.9% |
+| Works (untested) | 92 | 51.7% |
 | Partial (unaudited) | 10 | 5.6% |
 | Not working | 53 | 29.8% |
 
@@ -148,7 +148,6 @@
 | Radiant Destiny | handled | As this enchantment enters, choose a creature type. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Raging Regisaur | handled | Whenever this creature attacks, it deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Reaver Ambush | handled | Exile target creature with power 3 or less. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Reckless Rage | handled | Reckless Rage deals 4 damage to target creature you don't control and 2 damage to target creature you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rekindling Phoenix | handled | When this creature dies, create a 0/1 red Elemental creature token with "At the beginning of your upkeep, sacrifice this token and return target card named Reki | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Darter | handled | This creature can't be blocked by Dinosaurs. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Riverwise Augur | handled | When this creature enters, draw three cards, then put two cards from your hand on top of your library in any order. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -186,7 +185,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Arch of Orazca
 - Crafty Cutpurse
@@ -204,6 +203,7 @@
 - Paladin of Atonement
 - Pride of Conquerors
 - Ravenous Chupacabra
+- Reckless Rage
 - Release to the Wind
 - Resplendent Griffin
 - Secrets of the Golden City

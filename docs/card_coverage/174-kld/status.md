@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 8.9% |
-| Works (untested) | 149 | 60.6% |
+| Tested | 25 | 10.2% |
+| Works (untested) | 148 | 60.2% |
 | Partial (unaudited) | 7 | 2.8% |
-| Not working | 68 | 27.6% |
+| Not working | 66 | 26.8% |
 
 ## Cards needing work
 
@@ -92,8 +92,6 @@
 | Insidious Will | notice | Choose one — • Counter target spell. • You may choose new targets for target spell. • Copy target instant or sorcery spell. You may choose new targets for the c | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Liberating Combustion | notice | Liberating Combustion deals 6 damage to target creature. You may search your library and/or graveyard for a card named Chandra, Pyrogenius, reveal it, and put i | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Nissa, Vital Force | notice | +1: Untap target land you control. Until your next turn, it becomes a 5/5 Elemental creature with haste. It's still a land. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Saheeli Rai | notice | −2: Create a token that's a copy of target artifact or creature you control, except it's an artifact in addition to its other types. That token gains haste. Exi | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Saheeli's Artistry | notice | Choose one or both — • Create a token that's a copy of target artifact. • Create a token that's a copy of target creature, except it's an artifact in addition t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Demolition Stomper | unaudited | This Vehicle can't be blocked by creatures with power 2 or less. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Ghirapur Orrery | unaudited | Each player may play an additional land on each of their turns. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
 | Long-Finned Skywhale | unaudited | This creature can block only creatures with flying. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -115,7 +113,6 @@
 | Authority of the Consuls | handled | Creatures your opponents control enter tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ballista Charger | handled | Whenever this Vehicle attacks, it deals 1 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bastion Mastodon | handled | {W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Blooming Marsh | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Bomat Bazaar Barge | handled | When this Vehicle enters, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Botanical Sanctum | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Brazen Scourge | handled | Haste | machines/combat.py | Y/Y/Y | not_tested |
@@ -125,7 +122,6 @@
 | Chandra, Pyrogenius | handled | +2: Chandra deals 2 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cloudblazer | handled | When this creature enters, you gain 2 life and draw two cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cogworker's Puzzleknot | handled | When this artifact enters, create a 1/1 colorless Servo artifact creature token. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Concealed Courtyard | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Consulate Skygate | handled | Reach | machines/combat.py | Y/Y/- | not_tested |
 | Contraband Kingpin | handled | Whenever an artifact you control enters, scry 1. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Cowl Prowler | handled |  |  | Y/Y/- | not_tested |
@@ -164,7 +160,6 @@
 | Herald of the Fair | handled | When this creature enters, target creature you control gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Impeccable Timing | handled | Impeccable Timing deals 3 damage to target attacking or blocking creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Incendiary Sabotage | handled | As an additional cost to cast this spell, sacrifice an artifact. Incendiary Sabotage deals 3 damage to each creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Inspiring Vantage | handled | This land enters tapped unless you control two or fewer other lands. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Inventor's Apprentice | handled | This creature gets +1/+1 as long as you control an artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inventor's Goggles | handled | Equipped creature gets +1/+2. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Inventors' Fair | handled | At the beginning of your upkeep, if you control three or more artifacts, you gain 1 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -205,6 +200,8 @@
 | Ruinous Gremlin | handled | {2}{R}, Sacrifice this creature: Destroy target artifact. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Rush of Vitality | handled | Target creature gets +1/+0 and gains lifelink and indestructible until end of turn. (Damage dealt by that creature also causes its controller to gain that much  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Sage of Shaila's Claim | handled | When this creature enters, you get {E}{E}{E} . | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Saheeli Rai | handled | +1: Scry 1. Saheeli Rai deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Saheeli's Artistry | handled | Choose one or both — • Create a token that's a copy of target artifact. • Create a token that's a copy of target creature, except it's an artifact in addition t | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Salivating Gremlins | handled | Whenever an artifact you control enters, this creature gets +2/+0 and gains trample until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Select for Inspection | handled | Return target tapped creature to its owner's hand. Scry 1. (Look at the top card of your library. You may put that card on the bottom.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Self-Assembler | handled | When this creature enters, you may search your library for an Assembly-Worker creature card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -254,13 +251,15 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>25 cards</summary>
 
 - Aetherstorm Roc
 - Armorcraft Judge
+- Blooming Marsh
 - Blossoming Defense
 - Cathartic Reunion
 - Chandra, Torch of Defiance
+- Concealed Courtyard
 - Consul's Shieldguard
 - Cultivator's Caravan
 - Dramatic Reversal
@@ -268,6 +267,7 @@
 - Fabrication Module
 - Fairgrounds Trumpeter
 - Hijack
+- Inspiring Vantage
 - Maulfist Doorbuster
 - Panharmonicon
 - Riparian Tiger
@@ -287,7 +287,6 @@
 |---|---|---|---|
 | fabricate | 13 | Accomplished Automaton, Ambitious Aetherborn, Angel of Invention, Elegant Edgecrafters, Glint-Sleeve Artisan | kld |
 | Choose one | 1 | Insidious Will | kld |
-| Choose one or both | 1 | Saheeli's Artistry | kld |
 | +N: untap target land you control. until your next turn, it becomes a N/N elemental creature with haste. it's still a land. | 1 | Nissa, Vital Force | kld |
 | +N: until your next turn, up to one target creature gets -N/-N and its activated abilities can't be activated. | 1 | Dovin Baan | kld |
 | artifacts you control have hexproof. | 1 | Padeem, Consul of Innovation | kld |
@@ -346,7 +345,6 @@
 | ~ costs {M} less to cast, where N is the total mana value of noncreature artifacts you control. | 1 | Metalwork Colossus | kld |
 | ~ deals N damage to target creature. you may search your library and/or graveyard for a card named chandra, pyrogenius, reveal it, and put it into your hand. if | 1 | Liberating Combustion | kld |
 | ~ deals damage to any target equal to the number of cards in your hand. discard all the cards in your hand, then draw that many cards. | 1 | Fateful Showdown | kld |
-| −N: create a token that"..."s an artifact in addition to its other types. that token gains haste. exile it at the beginning of the next end step. | 1 | Saheeli Rai | kld |
 | −N: reveal the top two cards of your library. put all land cards from among them onto the battlefield and the rest into your hand. | 1 | Nissa, Nature's Artisan | kld |
 
 ## Notes

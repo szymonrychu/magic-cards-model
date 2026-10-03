@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 26 | 12.4% |
-| Works (untested) | 98 | 46.7% |
+| Tested | 27 | 12.9% |
+| Works (untested) | 97 | 46.2% |
 | Partial (unaudited) | 15 | 7.1% |
 | Not working | 71 | 33.8% |
 
@@ -191,7 +191,6 @@
 | Springbloom Druid | handled | When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then s | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Talisman of Conviction | handled |  |  | Y/-/- | not_tested |
 | Talisman of Creativity | handled |  |  | Y/-/- | not_tested |
-| Talisman of Curiosity | handled |  |  | Y/-/- | not_tested |
 | Talisman of Hierarchy | handled |  |  | Y/-/- | not_tested |
 | Thornado | handled | Destroy target creature with flying. Cycling {1}{G} ({1}{G}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Thundering Djinn | handled | Whenever this creature attacks, it deals damage to any target equal to the number of cards you've drawn this turn. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -214,7 +213,7 @@
 ## Fully supported
 
 <details>
-<summary>26 cards</summary>
+<summary>27 cards</summary>
 
 - Changeling Outcast
 - Collector Ouphe
@@ -236,6 +235,7 @@
 - Silent Clearing
 - Sisay, Weatherlight Captain
 - Sunbaked Canyon
+- Talisman of Curiosity
 - Talisman of Resilience
 - The First Sliver
 - Watcher for Tomorrow

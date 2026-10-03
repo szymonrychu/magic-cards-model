@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 117 | 62.9% |
-| Works (untested) | 68 | 36.6% |
+| Tested | 121 | 65.1% |
+| Works (untested) | 64 | 34.4% |
 | Partial (unaudited) | 0 | 0.0% |
 | Not working | 1 | 0.5% |
 
@@ -41,7 +41,6 @@
 | Dori, Bearer of Friends | handled | When Dori enters, create a Treasure token. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Down in the Valley | handled | I — Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Down, Down to Goblin-town | handled | I — Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Dwalin, Weaponmaster | handled | Whenever Dwalin enters or attacks, put a hone counter on each Equipment you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Dwarven Provisioner | handled | {3}{W}: Creatures you control get +1/+1 until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elven Raft-Steerer | handled | Landfall — Whenever a land you control enters, choose one — • Tap target creature an opponent controls. • Untap target creature you control. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Elvenking's Halls | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -52,7 +51,6 @@
 | Gandalf, Spark Starter | handled | When Gandalf enters, he deals 3 damage divided as you choose among one, two, or three targets. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gandalf, Wandering Wizard | handled | {6}: Gandalf's owner shuffles him into their library and draws three cards. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gathering of Darkness | handled | Return up to one target creature card from your graveyard to your hand. Amass Goblins 3. (Put three +1/+1 counters on an Army you control. It's also a Goblin. I | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Giant's Boulder | handled | When this artifact enters, scry 2. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin-town | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Goblin-town Flunkies | handled | When this creature enters, amass Goblins 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Great Fierce Bee | handled | Whenever one or more other creatures die, scry 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -83,10 +81,8 @@
 | Reverent Howl | handled | Choose one — • Target player draws two cards and loses 2 life. • Target creature gets +2/+2 and gains lifelink until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rhovanion Rampager | handled | Whenever this creature attacks, you may sacrifice another creature. If you do, put a number of +1/+1 counters on this creature equal to the sacrificed creature' | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Smaug's Fury | handled | Target creature gets +3/+0 and gains reach and first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Stir Up Trouble | handled | As an additional cost to cast this spell, sacrifice an artifact or creature or pay {4}. Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Stony-Voiced Goblins | handled | When this creature enters, each opponent discards a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Chief Warg | handled | Ferocious — Whenever you attack while you control a creature with power 4 or greater, you draw a card and lose 1 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| The Lonely Mountain | handled | This land enters tapped unless you control an Equipment. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | The Mountain-king's Return | handled | I — Recruit. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thorin's Last Stand | handled | Choose one — • Creatures you control get +2/+1 until end of turn. • Destroy target artifact or enchantment. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thrór's Map | handled | When Thrór's Map enters, search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -99,7 +95,7 @@
 ## Fully supported
 
 <details>
-<summary>117 cards</summary>
+<summary>121 cards</summary>
 
 - Along the Crooked Way
 - An Unexpected Party // At the Door
@@ -126,6 +122,7 @@
 - Desolation of Smaug
 - Dreaded Bat-Cloud
 - Duskwatch Hunter
+- Dwalin, Weaponmaster
 - Dwarven Mattock
 - Dwarven Mauler
 - Dwarven Shortsword
@@ -142,6 +139,7 @@
 - Galion, Elvenking's Butler
 - Gandalf, Goblins' Bane // Flameshape
 - Getaway Barrel
+- Giant's Boulder
 - Gigantic Big Bear
 - Glamdring, Foe-hammer // Gleam of Death
 - Gleaming Splendor
@@ -188,6 +186,7 @@
 - Snowslope Hunter
 - Sound the Trumpets
 - Sting, Bilbo's Sword
+- Stir Up Trouble
 - Stone by Sunlight
 - Stone-Giant of High Pass
 - Supper for Spiders
@@ -195,6 +194,7 @@
 - The Black Arrow
 - The Eagles Are Coming!
 - The Great Goblin
+- The Lonely Mountain
 - The Lord of the Eagles
 - The Master of Lake-town
 - The Misty Mountains Cold
