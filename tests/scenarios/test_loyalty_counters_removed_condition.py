@@ -160,3 +160,57 @@ def test_an_opponents_activation_does_not_trigger_the_way():
     scenario.game.put_triggers_on_stack()
 
     assert "Way of the Mind Sculptor's triggered ability" not in scenario.stack_names()
+
+
+def _granted_ability_index(scenario, planeswalker, text: str) -> int:
+    return next(
+        i for i, a in enumerate(scenario.game.activated_abilities(planeswalker)) if a.raw == text
+    )
+
+
+def _granted_board(granting_way: str):
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Way of the Mind Sculptor", granting_way, "Jace, Reality Sculptor"],
+            library=["Island"] * 10,
+        )
+        .player("bob", library=["Island"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.game.computed_board()
+    return scenario, scenario.find("Jace, Reality Sculptor", Zone.BATTLEFIELD, "alice")
+
+
+def test_a_granted_minus_three_from_a_way_enchantment_counts_toward_the_condition():
+    """Way of the Cryomancer grants "[-3]: When you next cast an instant or
+    sorcery..." - a loyalty cost the planeswalker never printed, still three
+    counters removed, so Way of the Mind Sculptor draws."""
+    scenario, jace = _granted_board("Way of the Cryomancer")
+    granted = (
+        "[−3]: When you next cast an instant or sorcery spell this turn, copy that spell. "
+        "You may choose new targets for the copy."
+    )
+    index = _granted_ability_index(scenario, jace, granted)
+    hand = len(scenario.player("alice").hand)
+
+    scenario.activate(jace, index=index)
+    scenario.game.put_triggers_on_stack()
+
+    assert _activated_events(scenario) == {"Jace, Reality Sculptor": 3}
+    _resolve_all(scenario)
+    assert jace.loyalty == 2
+    assert len(scenario.player("alice").hand) == hand + 1
+
+
+def test_a_granted_plus_one_never_draws():
+    scenario, jace = _granted_board("Way of the Pyromancer")
+    index = _granted_ability_index(scenario, jace, "[+1]: Add {R}.")
+    hand = len(scenario.player("alice").hand)
+
+    scenario.activate(jace, index=index)
+    _resolve_all(scenario)
+
+    assert len(scenario.player("alice").hand) == hand
