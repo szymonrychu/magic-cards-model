@@ -1110,6 +1110,11 @@ def token_copy_of(
     addition to" keeps every other type), so the copy is an artifact even
     though its original is not.
 
+    `tapped` and `attacking` (options) are Flamerush Rider's and Thousand-Faced
+    Shadow's "tapped and attacking" (CR 508.4): the copies enter tapped and, with
+    `attacking` naming the defender (`TargetRef | str`), already in combat
+    without having been declared.
+
     `colors` and `creature_types` are CR 707.9b's *replacing* exception -
     Croaking Counterpart's "except it's a 1/1 green Frog": the copiable colour
     is set to exactly `colors` and the creature types to exactly
@@ -1262,6 +1267,13 @@ def token_copy_of(
                 )
                 game.put_onto_battlefield(addition, controller)
                 created.append(addition)
+        attacking = options.get("attacking")
+        if attacking is not None:
+            # CR 508.4: put onto the battlefield attacking, never declared. A
+            # token a replacement effect sent elsewhere is not attacking.
+            for copy in created:
+                if copy.zone is Zone.BATTLEFIELD:
+                    _put_onto_the_battlefield_attacking(game, copy, attacking)
         return created
 
 

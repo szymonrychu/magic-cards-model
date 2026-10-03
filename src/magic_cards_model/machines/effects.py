@@ -46301,17 +46301,20 @@ def _parse_put_creature_from_hand_attacking_then_return(text: str) -> AbilityEff
             return
         by_id = {state.id: state for state in candidates}
         chosen = by_id[chosen_ids[0]]
-        permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
-        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
-            return
-        defender = _defender_of_controllers_attack(game, controller.username)
-        if defender is not None:
-            # CR 508.4, via `models/token.py`'s own primitive: it is annotated
-            # for a `TokenState` because the token half was written first, but
-            # everything it reads - `is_creature`, `controller`, `id` - is
-            # `CardState`'s, and CR 508.4 draws no distinction between a token
-            # and a card put onto the battlefield attacking.
-            _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
+        # Attacking before the enters event is raised (CR 508.4, CR 603.6a).
+        with game.entering_together():
+            permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
+            if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+                return
+            defender = _defender_of_controllers_attack(game, controller.username)
+            if defender is not None:
+                # CR 508.4, via `models/token.py`'s own primitive: it is
+                # annotated for a `TokenState` because the token half was
+                # written first, but everything it reads - `is_creature`,
+                # `controller`, `id` - is `CardState`'s, and CR 508.4 draws no
+                # distinction between a token and a card put onto the
+                # battlefield attacking.
+                _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
         trigger = anaphoric_delayed_trigger(
             delayed_clause,
             subject=permanent,
@@ -46393,12 +46396,13 @@ def _parse_put_creature_mv_x_from_hand_attacking(text: str) -> AbilityEffect | N
             return
         by_id = {state.id: state for state in candidates}
         chosen = by_id[chosen_ids[0]]
-        permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
-        if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
-            return
-        defender = _defender_of_controllers_attack(game, controller.username)
-        if defender is not None:
-            _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
+        with game.entering_together():
+            permanent = game.put_onto_battlefield(chosen, controller.username, tapped=True)
+            if permanent is None or permanent.zone is not Zone.BATTLEFIELD:
+                return
+            defender = _defender_of_controllers_attack(game, controller.username)
+            if defender is not None:
+                _put_onto_the_battlefield_attacking(game, permanent, defender)  # type: ignore[arg-type]
 
     return effect
 
@@ -52547,12 +52551,27 @@ def _parse_self_copy_token_clause(clause: str, *, for_spell: bool) -> TargetedCl
 #: The target's "you control" is optional too: Cogwork Assembler's bare
 #: "target artifact" may name an opponent's artifact, and the token is still
 #: created under the ability's controller (CR 111.2).
+#:
+#: Widened again (E5-U8) with the "tapped and attacking" family and
+#: "another" (Chrome Dome's "another target artifact you control", Flamerush
+#: Rider's "another target attacking creature"), each part optional:
+#:
+#: - ", and that's tapped and attacking" / "The token enters tapped and
+#:   attacking." (CR 508.4): the token enters tapped and already attacking
+#:   whatever its original attacks, never declared as an attacker (CR 508.4c),
+#:   so no "whenever this creature attacks" ability of the copy triggers;
+#: - "Exile the token at end of combat." (Flamerush Rider): the same CR 603.7a
+#:   delayed trigger, at CR 511.2's end of combat step.
 _CREATE_TOKEN_COPY_OF_TARGET_RE = re.compile(
     r"^create a token that['’]?s a copy of "
-    r"(?P<phrase>target [a-z]+(?: or [a-z]+)?(?: you control)?)"
-    r"(?:, except (?P<except>[^.]+?))?\.?"
+    r"(?P<phrase>(?:another )?target (?:(?:attacking|blocking|nonlegendary|nontoken) )?"
+    r"[a-z]+(?: or [a-z]+)?(?: you control)?)"
+    r"(?:, except (?P<except>[^.]+?))?"
+    r"(?P<attacking>,? and that['’]?s tapped and attacking)?\.?"
     r"(?P<haste>\s*(?:it|that token) gains haste(?P<eot> until end of turn)?\.)?"
-    r"(?P<end_step>\s*(?:exile|sacrifice) it at the beginning of the next end step\.?)?\s*$",
+    r"(?P<enters_attacking>\s*the token enters tapped and attacking\.?)?"
+    r"(?P<end_step>\s*(?:(?:exile|sacrifice) it at the beginning of the next end step"
+    r"|exile the token at end of combat)\.?)?\s*$",
     re.IGNORECASE,
 )
 
@@ -52613,6 +52632,9 @@ def _parse_create_token_copy_of_target_clause(
         Duration.UNTIL_END_OF_TURN if match.group("eot") is not None else Duration.INDEFINITE
     )
     end_step = match.group("end_step")
+    tapped_and_attacking = (
+        match.group("attacking") is not None or match.group("enters_attacking") is not None
+    )
 
     def effect(game: "Game", stack_object: "StackObject") -> None:
         from .dies_this_turn import source_id_of_object
@@ -52624,6 +52646,21 @@ def _parse_create_token_copy_of_target_clause(
         for target in game.resolve_targets(stack_object):
             if not isinstance(target, CardState):
                 continue
+            options: dict[str, Any] = {}
+            if tapped_and_attacking:
+                # CR 508.4: the copy attacks whatever its original attacks, or
+                # else whatever the controller's attack already names.
+                original_attack = game.combat.attack_by(target.id)
+                options = {
+                    "tapped": True,
+                    "attacking": (
+                        original_attack.defender
+                        if original_attack is not None
+                        else _defender_of_controllers_attack(game, controller.username)
+                    ),
+                }
+                if options["attacking"] is None:
+                    del options["attacking"]
             created = token_copy_of(
                 game,
                 target,
@@ -52636,6 +52673,7 @@ def _parse_create_token_copy_of_target_clause(
                 colors=colors,
                 creature_types=creature_types,
                 not_legendary=not_legendary,
+                **options,
             )
             store = continuous_effects(game)
             for token in created:
