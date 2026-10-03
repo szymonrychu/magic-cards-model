@@ -6968,3 +6968,38 @@ documented exception" rule rather than left silently asserted.
   description` rather than pinned to "artifact"/"enchantment"; Mentor's
   Guidance prints a related but genuinely different single-condition,
   multi-type-list "or" shape the regex correctly does not match).
+
+## R0b-T7: landfall and counter doubling, sacrifice and discard payoffs, protection tricks, becomes-target triggers
+
+Twelve cards, each proven through the engine (`test_r0b_landfall_and_counter_doubling.py`,
+`test_r0b_sacrifice_and_discard_payoffs.py`,
+`test_r0b_protection_tricks_and_target_triggers.py`): Mossborn Hydra, Sapling
+Nursery, Sakura-Tribe Scout, Gene Pollinator; Biotech Specialist, Cryogen
+Relic, Iron-Shield Elf, Monument to Endurance; Kami of False Hope, Snakeskin
+Veil, Surrak, Elusive Hunter, Emberheart Challenger. Three real gaps were
+found by the proofs and closed:
+
+- **A subtype subject names every permanent with that subtype, not only
+  creatures** - Sapling Nursery's "Treefolk and Forests you control gain
+  indestructible" (`effects` mass-subtype subject reader) now reaches the
+  Forests (CR 205.3i land types) as well as the Treefolk (CR 205.3m); it used
+  to filter on `is_creature` first and silently skipped every land. No second
+  Modern/Pioneer/Standard printing carries a land- or artifact-type subject
+  list (searched on Scryfall); the existing creature-subtype subjects
+  (Along the Crooked Way) are the unchanged regression proof.
+- **A Lander token is a Lander artifact** - CR 111.10u is now a
+  `models/token.PREDEFINED` row (`LANDER`), so the token carries the Lander
+  subtype (CR 205.3g); proven on Biotech Specialist and on Sami's Curiosity
+  (a spell that creates it rather than an enters trigger).
+- **Becomes-the-target triggers with an "or" subject, and spells on the
+  stack as targets** - Surrak, Elusive Hunter's "a creature you control or a
+  creature spell you control becomes the target of a spell or ability an
+  opponent controls" was classed handled but never fired
+  (`triggers._OBJECT_TARGET_SUBJECT` read exactly one object). The subject
+  now joins alternatives with "or", an alternative saying "spell" names an
+  object on the stack and one that does not names a permanent, and
+  `Casting._emit_becomes_target`/`Game._emit_ability_becomes_target` raise
+  the event for a spell on the stack too (a counterspell's target). The
+  general "a player or permanent" condition (Loki) ignores a stack object.
+  Battle Mammoth ("a permanent you control") is the second-printing proof
+  that a permanent-only condition does not see a countered creature spell.

@@ -2990,16 +2990,21 @@ def _mass_creature_group_targets(
             for part in re.split(r",\s*|\s+and\s+", subtype_match.group("subtypes"))
             if part.strip()
         }
-        base_selector = (
-            creatures_controlled_by(controller)
-            if subtype_match.group("whose") == "you control"
-            else creatures_controlled_by_opponents_of(controller)
-        )
+        # A subtype word names every permanent carrying it, not only
+        # creatures: Sapling Nursery's "Treefolk and Forests you control"
+        # reaches the Forests (a CR 205.3i land type) as well as the Treefolk
+        # (a CR 205.3m creature type), so the controller check carries no
+        # creature requirement.
+        you = subtype_match.group("whose") == "you control"
         board = game.computed_board()
         return [
             permanent
             for permanent in game.battlefield
-            if base_selector(board.of(permanent), board.characteristics)
+            if (
+                board.of(permanent).controller == controller
+                if you
+                else board.of(permanent).controller not in (None, controller)
+            )
             and subtypes & {word.lower() for word in board.of(permanent).subtypes}
         ]
     color_filter_match = _MASS_COLOR_FILTER_RE.match(text.strip())
