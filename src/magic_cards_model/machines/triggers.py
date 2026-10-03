@@ -986,6 +986,16 @@ class AbilityOnStack(EngineModel):
     token has ceased to exist (CR 704.5d), which happens before this ability
     resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
 
+    cost_sacrificed_powers: tuple[int | None, ...] = ()
+    """`cost_sacrificed_card_ids`' powers, aligned by position and taken by
+    `Game.activate_ability` as this object is created - CR 608.2h's last known
+    information for "the sacrificed creature's power". Pumps, counters and
+    anthems are in it, and it survives a sacrificed token ceasing to exist
+    (CR 704.5d). `None` where the creature's power was not a number."""
+
+    cost_sacrificed_toughnesses: tuple[int | None, ...] = ()
+    """`cost_sacrificed_powers`' toughness twin."""
+
     mana_spent: dict[Color, int] = Field(default_factory=dict)
     """How much mana of each colour paid this ability's own activation cost
     (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/

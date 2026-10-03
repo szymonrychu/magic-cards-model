@@ -4365,7 +4365,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 106
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 107
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4541,6 +4541,9 @@ class Game(EngineModel):
     #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
     #: the cast spell has left the stack - CR 608.2h - rather than lost the
     #: moment a countered spell's zone change stamps it fresh).
+    #: 107: `machines/triggers.AbilityOnStack` gained `cost_sacrificed_powers`/
+    #: `cost_sacrificed_toughnesses` (CR 608.2h last known information for
+    #: "the sacrificed creature's power/toughness").
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -16222,6 +16225,14 @@ class Game(EngineModel):
                         return state
         return None
 
+    def _last_known_stat(self, card_id: UUID, stat: str) -> int | None:
+        """A departed permanent's power or toughness as CR 608.2h reads it:
+        `CardState.power`/`.toughness` already fall back to the snapshot taken
+        as it left the battlefield. `None` for an id nothing finds or a
+        non-numeric (`*`) value."""
+        state = self.find_by_id(card_id)
+        return None if state is None else getattr(state, stat)
+
     def last_known_mana_value(self, card: "CardState | UUID") -> float:
         """An object's mana value as CR 608.2h reads it (CR 202.3): the
         computed one while it is still on the battlefield (a copy has the
@@ -25849,6 +25860,14 @@ class Game(EngineModel):
             # exist (CR 704.5d) before this ability resolves.
             on_stack.cost_sacrificed_mana_values = tuple(
                 self.last_known_mana_value(card_id) for card_id in on_stack.cost_sacrificed_card_ids
+            )
+            on_stack.cost_sacrificed_powers = tuple(
+                self._last_known_stat(card_id, "power")
+                for card_id in on_stack.cost_sacrificed_card_ids
+            )
+            on_stack.cost_sacrificed_toughnesses = tuple(
+                self._last_known_stat(card_id, "toughness")
+                for card_id in on_stack.cost_sacrificed_card_ids
             )
             self.stack.append(on_stack)
             # CR 602.2b's target announcement has settled (CR 601.2c, imported
