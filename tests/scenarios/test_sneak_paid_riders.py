@@ -173,6 +173,35 @@ def test_a_sneak_paid_karai_falls_back_to_hand_on_a_later_turn():
     assert hill_giant.zone is Zone.HAND, "sneak was paid turn 1, not this (turn 3) turn"
 
 
+def test_a_sneak_paid_on_a_later_own_turn_still_counts_as_this_turn():
+    """Karai sneaks in on alice's *second* turn (the game's third turn, round
+    two): "this turn" is that turn whatever the round counter says, so the
+    instead branch puts the card onto the battlefield. `CardState.turn_entered`
+    is stamped in `TurnMachine.turns_taken`, so the reader must compare
+    against that, not the round number."""
+    scenario = _karai_board().build()
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    scenario.turn.advance_to(Step.CLEANUP)
+    scenario.advance()
+    assert scenario.turn.active_player == "alice"
+    assert scenario.turn.turns_taken != scenario.turn.turn_number
+
+    bears = scenario.creature("Grizzly Bears", "alice")
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    scenario.attack_with(bears)
+    scenario.start_at(Step.DECLARE_BLOCKERS)
+    scenario.no_blocks()
+    _sneak_cast(scenario, "Karai, Future of the Foot", bears)
+    scenario.pass_until_resolved()
+    hill_giant = scenario.find("Hill Giant", Zone.GRAVEYARD, "alice")
+    scenario.choose_trigger_targets("Karai, Future of the Foot", [hill_giant])
+    scenario.combat_damage()
+    scenario.pass_until_resolved()
+
+    assert hill_giant.zone is Zone.BATTLEFIELD
+
+
 # -- Turncoat Kunoichi --------------------------------------------------------
 
 
