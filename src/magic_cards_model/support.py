@@ -92,6 +92,7 @@ from magic_cards_model.machines.combat import (
     is_group_attack_restriction_line,
     is_self_card_count_restriction_line,
     is_self_control_count_restriction_line,
+    reads_self_attack_alone_line,
     reads_self_combat_restriction_line,
 )
 from magic_cards_model.machines.combat_statics import (
@@ -1954,6 +1955,10 @@ def _static_ability_category(
     if reads_self_combat_restriction_line(text, effective_name):
         # CR 509.1b: `combat.evasion_restriction_refusal` and
         # `combat.self_block_restriction_refusal` refuse the block.
+        return HANDLED
+    if reads_self_attack_alone_line(text, effective_name):
+        # CR 508.1c: `Game._refuse_attack_alone_violations` refuses a
+        # declaration that sends this creature in with others.
         return HANDLED
     if keyword_machine.is_equip_discount_for_this_line(text):
         # CR 601.2f via CR 602.2b: `keywords._equip_cost_reduction_for_target`

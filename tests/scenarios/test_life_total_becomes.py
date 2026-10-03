@@ -71,13 +71,14 @@ def test_resolute_archangel_raises_a_lower_total_to_your_starting_life_total():
     parsed; "it" is read as "your life total" unconditionally (CR 607.1)."""
     scenario = (
         Scenario()
-        .player("alice", life=12, hand=["Resolute Archangel"], battlefield=["Plains"] * 5)
+        .player("alice", hand=["Resolute Archangel"], battlefield=["Plains"] * 7)
         .player("bob")
         .build()
     )
+    scenario.player("alice").life = 12  # starting life total stays 20 (CR 103.4)
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Resolute Archangel", *scenario.untapped_sources(*(["Plains"] * 5)))
+    scenario.cast_and_resolve("Resolute Archangel", *scenario.untapped_sources(*(["Plains"] * 7)))
     scenario.resolve_top()  # the ETB trigger
 
     assert scenario.player("alice").life == 20
@@ -92,13 +93,13 @@ def test_resolute_archangel_does_nothing_at_or_above_starting_life_total():
     stack."""
     scenario = (
         Scenario()
-        .player("alice", life=20, hand=["Resolute Archangel"], battlefield=["Plains"] * 5)
+        .player("alice", life=20, hand=["Resolute Archangel"], battlefield=["Plains"] * 7)
         .player("bob")
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Resolute Archangel", *scenario.untapped_sources(*(["Plains"] * 5)))
+    scenario.cast_and_resolve("Resolute Archangel", *scenario.untapped_sources(*(["Plains"] * 7)))
 
     assert scenario.stack_names() == []
     assert scenario.player("alice").life == 20
@@ -111,10 +112,11 @@ def test_elderscale_wurm_etb_raises_a_lower_total_to_a_flat_number():
     and is not touched here."""
     scenario = (
         Scenario()
-        .player("alice", life=3, hand=["Elderscale Wurm"], battlefield=["Forest"] * 7)
+        .player("alice", hand=["Elderscale Wurm"], battlefield=["Forest"] * 7)
         .player("bob")
         .build()
     )
+    scenario.player("alice").life = 3
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
     scenario.cast_and_resolve("Elderscale Wurm", *scenario.untapped_sources(*(["Forest"] * 7)))
@@ -158,11 +160,11 @@ def test_form_of_the_dragon_end_step_trigger_sets_the_total_every_end_step():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve("Form of the Dragon", *scenario.untapped_sources(*(["Mountain"] * 7)))
-    scenario.start_at(Step.END_STEP)
-    scenario.resolve_top()  # the upkeep-shaped damage trigger already fired on a later turn
-    # not relevant here; drain whatever the end step put up.
-    while scenario.stack_names():
-        scenario.resolve_top()
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()  # the end step: "each end step" triggers on entry
+    assert scenario.step is Step.END_STEP
+    assert scenario.stack_names() == ["Form of the Dragon's triggered ability"]
+    scenario.resolve_top()
 
     assert scenario.player("alice").life == 5
 
@@ -178,15 +180,15 @@ def test_oketra_s_last_mercy_raises_the_total_and_exerts_every_land_you_control(
         Scenario()
         .player(
             "alice",
-            life=5,
             hand=["Oketra's Last Mercy"],
-            battlefield=["Plains"] * 4 + ["Forest"],
+            battlefield=["Plains"] * 3 + ["Forest"],
         )
         .player("bob")
         .build()
     )
+    scenario.player("alice").life = 5
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    lands = scenario.untapped_sources(*(["Plains"] * 4))
+    lands = scenario.untapped_sources(*(["Plains"] * 3))
     forest = scenario.untapped_sources("Forest")[0]
 
     scenario.cast_and_resolve("Oketra's Last Mercy", *lands)
@@ -208,13 +210,15 @@ def test_the_endstone_end_step_trigger_halves_the_starting_total_rounded_up():
     lands on the *starting* total, not the current one."""
     scenario = (
         Scenario()
-        .player("alice", life=3, hand=["The Endstone"], battlefield=["Wastes"] * 7)
+        .player("alice", hand=["The Endstone"], battlefield=["Wastes"] * 7)
         .player("bob")
         .build()
     )
+    scenario.player("alice").life = 3
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve("The Endstone", *scenario.untapped_sources(*(["Wastes"] * 7)))
-    scenario.start_at(Step.END_STEP)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    scenario.advance()  # the end step
     scenario.resolve_top()
 
     assert scenario.player("alice").life == 10
@@ -229,16 +233,16 @@ def test_cosmos_elixir_end_step_draws_when_above_starting_life_otherwise_gains()
     clause handled" bar."""
     scenario = (
         Scenario()
-        .player(
-            "alice", life=15, hand=["Cosmos Elixir"], battlefield=["Wastes"] * 4, library=["Wastes"]
-        )
+        .player("alice", hand=["Cosmos Elixir"], battlefield=["Wastes"] * 4, library=["Wastes"])
         .player("bob")
         .build()
     )
+    scenario.player("alice").life = 15
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve("Cosmos Elixir", *scenario.untapped_sources(*(["Wastes"] * 4)))
-    scenario.start_at(Step.END_STEP)
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
     hand_before = len(scenario.player("alice").hand)
+    scenario.advance()  # the end step
     scenario.resolve_top()
 
     assert scenario.player("alice").life == 17
@@ -256,7 +260,7 @@ def test_double_your_life_total_doubles_the_current_total_cr_701_10d():
         Scenario().player("alice", life=7, battlefield=["Enduring Angel"]).player("bob").build()
     )
     angel = scenario.find("Enduring Angel", Zone.BATTLEFIELD, "alice")
-    scenario.game.transform(angel)
+    angel.transform()
     scenario.start_at(Step.DECLARE_ATTACKERS)
 
     scenario.attack_with(angel, defending="bob")
@@ -272,7 +276,7 @@ def test_angelic_enforcers_power_and_toughness_equal_your_life_total():
     613.4a) - live, not fixed at the moment it transformed."""
     scenario = Scenario().player("alice", life=11, battlefield=["Enduring Angel"]).build()
     angel = scenario.find("Enduring Angel", Zone.BATTLEFIELD, "alice")
-    scenario.game.transform(angel)
+    angel.transform()
 
     board = scenario.game.computed_board()
     assert (board.of(angel).power, board.of(angel).toughness) == (11, 11)
@@ -291,14 +295,20 @@ def test_angelic_enforcers_power_and_toughness_equal_your_life_total():
 def test_magister_sphinx_etb_sets_a_targeted_players_total_to_a_flat_number():
     scenario = (
         Scenario()
-        .player("alice", hand=["Magister Sphinx"], battlefield=["Swamp"] * 6)
+        .player(
+            "alice",
+            hand=["Magister Sphinx"],
+            battlefield=["Plains", "Island", "Swamp", "Swamp", "Swamp", "Swamp", "Swamp"],
+        )
         .player("bob", life=20)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
+    scenario.choose_trigger_targets("Magister Sphinx", ["bob"])
     scenario.cast_and_resolve(
-        "Magister Sphinx", *scenario.untapped_sources(*(["Swamp"] * 6)), targets=["bob"]
+        "Magister Sphinx",
+        *scenario.untapped_sources("Plains", "Island", *(["Swamp"] * 5)),
     )
     scenario.resolve_top()
 
@@ -306,9 +316,14 @@ def test_magister_sphinx_etb_sets_a_targeted_players_total_to_a_flat_number():
 
 
 def test_sorin_markov_minus_three_sets_target_opponents_total():
-    scenario = Scenario().player("alice", hand=["Sorin Markov"]).player("bob", life=20).build()
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Sorin Markov"], battlefield=["Swamp"] * 6)
+        .player("bob", life=20)
+        .build()
+    )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Sorin Markov")
+    scenario.cast_and_resolve("Sorin Markov", *scenario.untapped_sources(*(["Swamp"] * 6)))
     sorin = scenario.find("Sorin Markov", Zone.BATTLEFIELD, "alice")
 
     index = next(
@@ -324,10 +339,15 @@ def test_sorin_markov_minus_three_sets_target_opponents_total():
 
 def test_vraska_relic_seeker_minus_ten_sets_a_target_players_total_to_one():
     scenario = (
-        Scenario().player("alice", hand=["Vraska, Relic Seeker"]).player("bob", life=20).build()
+        Scenario()
+        .player("alice", hand=["Vraska, Relic Seeker"], battlefield=["Swamp"] * 5 + ["Forest"])
+        .player("bob", life=20)
+        .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
-    scenario.cast_and_resolve("Vraska, Relic Seeker")
+    scenario.cast_and_resolve(
+        "Vraska, Relic Seeker", *scenario.untapped_sources(*(["Swamp"] * 5), "Forest")
+    )
     vraska = scenario.find("Vraska, Relic Seeker", Zone.BATTLEFIELD, "alice")
     vraska.add_counters(Counter.LOYALTY, 4)  # 6 printed + 4 = 10, CR 606.6
 
@@ -347,16 +367,17 @@ def test_torgaar_famine_incarnate_etb_halves_a_targeted_players_starting_total()
     total proves the amount is read off the right player."""
     scenario = (
         Scenario()
-        .player("alice", hand=["Torgaar, Famine Incarnate"], battlefield=["Swamp"] * 10)
+        .player("alice", hand=["Torgaar, Famine Incarnate"], battlefield=["Swamp"] * 8)
         .player("bob", life=15)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     bob = scenario.player("bob")
-    bob.starting_life = 15
+    assert bob.starting_life == 15
 
+    scenario.choose_trigger_targets("Torgaar, Famine Incarnate", ["bob"])
     scenario.cast_and_resolve(
-        "Torgaar, Famine Incarnate", *scenario.untapped_sources(*(["Swamp"] * 10)), targets=["bob"]
+        "Torgaar, Famine Incarnate", *scenario.untapped_sources(*(["Swamp"] * 8))
     )
     scenario.resolve_top()
 
@@ -369,14 +390,15 @@ def test_torgaar_famine_incarnate_etb_with_no_target_chosen_changes_nothing():
     error."""
     scenario = (
         Scenario()
-        .player("alice", hand=["Torgaar, Famine Incarnate"], battlefield=["Swamp"] * 10)
+        .player("alice", hand=["Torgaar, Famine Incarnate"], battlefield=["Swamp"] * 8)
         .player("bob", life=15)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
+    scenario.choose_trigger_targets("Torgaar, Famine Incarnate", [])
     scenario.cast_and_resolve(
-        "Torgaar, Famine Incarnate", *scenario.untapped_sources(*(["Swamp"] * 10)), targets=[]
+        "Torgaar, Famine Incarnate", *scenario.untapped_sources(*(["Swamp"] * 8))
     )
     scenario.resolve_top()
 
@@ -412,13 +434,13 @@ def test_arbiter_of_knollridge_etb_raises_every_player_to_the_highest_total():
 def test_repay_in_kind_sets_every_player_to_the_lowest_total():
     scenario = (
         Scenario()
-        .player("alice", life=5, hand=["Repay in Kind"], battlefield=["Island"] * 5)
+        .player("alice", life=5, hand=["Repay in Kind"], battlefield=["Swamp"] * 7)
         .player("bob", life=17)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Repay in Kind", *scenario.untapped_sources(*(["Island"] * 5)))
+    scenario.cast_and_resolve("Repay in Kind", *scenario.untapped_sources(*(["Swamp"] * 7)))
 
     assert scenario.player("alice").life == 5
     assert scenario.player("bob").life == 5
@@ -427,13 +449,13 @@ def test_repay_in_kind_sets_every_player_to_the_lowest_total():
 def test_worldfire_sets_every_player_to_one():
     scenario = (
         Scenario()
-        .player("alice", life=20, hand=["Worldfire"], battlefield=["Mountain"] * 8)
+        .player("alice", life=20, hand=["Worldfire"], battlefield=["Mountain"] * 9)
         .player("bob", life=3)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Worldfire", *scenario.untapped_sources(*(["Mountain"] * 8)))
+    scenario.cast_and_resolve("Worldfire", *scenario.untapped_sources(*(["Mountain"] * 9)))
 
     assert scenario.player("alice").life == 1
     assert scenario.player("bob").life == 1
@@ -443,14 +465,19 @@ def test_worldfire_sets_every_player_to_one():
 def test_sway_of_the_stars_sets_every_player_to_seven():
     scenario = (
         Scenario()
-        .player("alice", life=20, hand=["Sway of the Stars"], battlefield=["Plains"] * 5)
+        .player(
+            "alice",
+            life=20,
+            hand=["Sway of the Stars"],
+            battlefield=["Island"] * 10,
+            library=["Wastes"] * 10,
+        )
         .player("bob", life=3, library=["Wastes"] * 10)
         .build()
     )
-    scenario.player("alice").library.extend(scenario.find_all("Wastes", Zone.LIBRARY))
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Sway of the Stars", *scenario.untapped_sources(*(["Plains"] * 5)))
+    scenario.cast_and_resolve("Sway of the Stars", *scenario.untapped_sources(*(["Island"] * 10)))
 
     assert scenario.player("alice").life == 7
     assert scenario.player("bob").life == 7
@@ -463,14 +490,14 @@ def test_biorhythm_sets_each_players_total_to_their_own_creature_count():
             "alice",
             life=20,
             hand=["Biorhythm"],
-            battlefield=["Plains"] * 5 + ["Grizzly Bears", "Grizzly Bears"],
+            battlefield=["Forest"] * 8 + ["Grizzly Bears", "Grizzly Bears"],
         )
         .player("bob", life=20, battlefield=["Runeclaw Bear"])
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Biorhythm", *scenario.untapped_sources(*(["Plains"] * 5)))
+    scenario.cast_and_resolve("Biorhythm", *scenario.untapped_sources(*(["Forest"] * 8)))
 
     assert scenario.player("alice").life == 2
     assert scenario.player("bob").life == 1
@@ -530,12 +557,17 @@ def test_master_of_cruelties_unblocked_attack_sets_the_defending_players_life_to
 
     scenario.attack_with(master, defending="bob")
     scenario.game.put_triggers_on_stack()
+    # CR 508.3f: it does not trigger at declare attackers; blocking is not known yet.
+    assert scenario.stack_names() == []
+
+    scenario.no_blocks()
+    scenario.game.put_triggers_on_stack()
+    assert scenario.stack_names() == ["Master of Cruelties's triggered ability"]
     scenario.resolve_top()  # the life-total trigger, before any damage step
 
     assert scenario.player("bob").life == 1
     assert master.assigns_no_combat_damage_this_combat is True
 
-    scenario.no_blocks()
     scenario.combat_damage()
 
     # Still 1, not 0: the trigger's own rider held even though Master has
@@ -610,7 +642,7 @@ def test_invincible_hymn_sets_your_life_total_to_your_library_size():
             "alice",
             life=20,
             hand=["Invincible Hymn"],
-            battlefield=["Plains"] * 6,
+            battlefield=["Plains"] * 8,
             library=["Wastes"] * 4,
         )
         .player("bob")
@@ -618,7 +650,7 @@ def test_invincible_hymn_sets_your_life_total_to_your_library_size():
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
 
-    scenario.cast_and_resolve("Invincible Hymn", *scenario.untapped_sources(*(["Plains"] * 6)))
+    scenario.cast_and_resolve("Invincible Hymn", *scenario.untapped_sources(*(["Plains"] * 8)))
 
     assert scenario.player("alice").life == 4
 
@@ -631,15 +663,160 @@ def test_touch_of_the_eternal_upkeep_trigger_sets_your_life_total_to_permanents_
             life=20,
             hand=["Touch of the Eternal"],
             battlefield=["Plains"] * 7 + ["Grizzly Bears"],
+            library=["Wastes"] * 5,
         )
-        .player("bob")
+        .player("bob", library=["Wastes"] * 5)
         .build()
     )
     scenario.start_at(Step.PRECOMBAT_MAIN)
     scenario.cast_and_resolve("Touch of the Eternal", *scenario.untapped_sources(*(["Plains"] * 7)))
-    scenario.start_at(Step.UPKEEP)
+    for _ in range(2):  # bob's turn, then alice's: "your upkeep" is her next one
+        scenario.turn.advance_to(Step.CLEANUP)
+        scenario.advance()  # the new turn's untap step
+        scenario.advance()  # its upkeep
+    assert scenario.player().username == "alice"
     scenario.resolve_top()
 
-    # 6 untapped Plains + 1 tapped Plains + the Bears + Touch of the Eternal
-    # itself = 9 permanents alice controls when the upkeep trigger counts.
+    # 7 Plains + the Bears + Touch of the Eternal itself = 9 permanents alice
+    # controls when the upkeep trigger counts.
     assert scenario.player("alice").life == 9
+
+
+# --------------------------------------------------------------------------
+# The other clauses printed on the same cards, proven so no card in this file
+# is only half-read.
+# --------------------------------------------------------------------------
+
+
+def test_cosmos_elixir_end_step_draws_when_above_starting_life():
+    """The "draw a card if ..." half of the same instruction: above the
+    starting life total the controller draws and the "Otherwise" gain does
+    not happen (CR 608.2c)."""
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Cosmos Elixir"], battlefield=["Wastes"] * 4, library=["Wastes"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.cast_and_resolve("Cosmos Elixir", *scenario.untapped_sources(*(["Wastes"] * 4)))
+    scenario.player("alice").life = 25
+    scenario.start_at(Step.POSTCOMBAT_MAIN)
+    hand_before = len(scenario.player("alice").hand)
+    scenario.advance()  # the end step
+    scenario.resolve_top()
+
+    assert scenario.player("alice").life == 25
+    assert len(scenario.player("alice").hand) == hand_before + 1
+
+
+def test_form_of_the_dragon_stops_creatures_without_flying_from_attacking_its_controller():
+    """ "Creatures without flying can't attack you." (CR 508.1c) - a group
+    restriction negating a keyword, read for whoever controls the attacker."""
+    scenario = (
+        Scenario()
+        .player("bob", battlefield=["Grizzly Bears", "Wind Drake"])
+        .player("alice", battlefield=["Form of the Dragon"])
+        .build()
+    )
+    scenario.start_at(Step.DECLARE_ATTACKERS)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    drake = scenario.creature("Wind Drake", "bob")
+
+    assert scenario.can_attack(bears, defending="alice") is False
+    assert scenario.can_attack(drake, defending="alice") is True
+    with pytest.raises(ValueError, match="flying"):
+        scenario.attack_with(bears, defending="alice")
+
+
+def test_form_of_the_dinosaur_upkeep_trigger_fights_one_way_and_hits_you_back():
+    """ "At the beginning of your upkeep, this enchantment deals 15 damage to
+    target creature an opponent controls and that creature deals damage equal
+    to its power to you." - the creature is still on the battlefield when it
+    deals its damage (CR 704.3: state-based actions wait for the resolution)."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            battlefield=["Form of the Dinosaur"],
+            library=["Wastes"] * 5,
+        )
+        .player("bob", battlefield=["Grizzly Bears"], library=["Wastes"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears = scenario.creature("Grizzly Bears", "bob")
+    scenario.choose_trigger_targets("Form of the Dinosaur", [bears])
+    for _ in range(2):  # bob's turn, then alice's own next upkeep
+        scenario.turn.advance_to(Step.CLEANUP)
+        scenario.advance()
+        scenario.advance()
+    assert scenario.player().username == "alice"
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.GRAVEYARD
+    assert scenario.player("alice").life == 18
+
+
+def test_worldfire_exiles_every_hand_and_graveyard_too():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Worldfire", "Lightning Bolt"],
+            graveyard=["Shock"],
+            battlefield=["Mountain"] * 9,
+        )
+        .player("bob", life=3, hand=["Giant Growth"], graveyard=["Island"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_and_resolve("Worldfire", *scenario.untapped_sources(*(["Mountain"] * 9)))
+
+    assert scenario.player("alice").hand == []
+    assert scenario.player("bob").hand == []
+    assert scenario.player("bob").graveyard == []
+    assert [card.name for card in scenario.player("alice").graveyard] == ["Worldfire"]
+    assert sorted(card.name for card in scenario.game.exile) == [
+        "Giant Growth",
+        "Island",
+        "Lightning Bolt",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Mountain",
+        "Shock",
+    ]
+
+
+def test_sway_of_the_stars_shuffles_hand_graveyard_and_permanents_then_draws_seven():
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Sway of the Stars", "Lightning Bolt"],
+            graveyard=["Shock"],
+            battlefield=["Island"] * 10 + ["Grizzly Bears"],
+            library=["Wastes"] * 10,
+        )
+        .player("bob", life=3, battlefield=["Runeclaw Bear"], library=["Wastes"] * 10)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+
+    scenario.cast_and_resolve("Sway of the Stars", *scenario.untapped_sources(*(["Island"] * 10)))
+
+    for username in ("alice", "bob"):
+        assert len(scenario.player(username).hand) == 7
+        assert scenario.player(username).life == 7
+    assert scenario.game.battlefield == []
+    assert [card.name for card in scenario.player("alice").graveyard] == ["Sway of the Stars"]
+    assert (
+        len(scenario.player("alice").library) == 10 + 13 - 7
+    )  # library + Bolt + Shock + 11 permanents, minus the seven drawn

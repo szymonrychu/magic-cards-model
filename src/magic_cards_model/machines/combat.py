@@ -1046,6 +1046,18 @@ def self_attack_alone_only_sentence(creature: CardState, game: "Game") -> str | 
     return None
 
 
+def reads_self_attack_alone_line(line: str, name: str) -> bool:
+    """Whether one printed static line of a creature named `name` is its own
+    "can only attack alone" (CR 508.1c) - the restriction
+    `self_attack_alone_only_sentence` finds and
+    `Game._refuse_attack_alone_violations` enforces on every declaration;
+    `support.py`'s credit for it."""
+    subjects = "|".join(re.escape(subject) for subject in _self_reference_names(name))
+    pattern = re.compile(rf"^(?:{subjects}) can only attack alone\.?$", re.IGNORECASE)
+    sentences = [strip_ability_word(sentence) for sentence in layer_readable_sentences(line)]
+    return bool(sentences) and all(pattern.match(sentence.strip()) for sentence in sentences)
+
+
 def group_attack_restriction_refusal(
     game: "Game", creature: CardState, defender: TargetRef
 ) -> str | None:

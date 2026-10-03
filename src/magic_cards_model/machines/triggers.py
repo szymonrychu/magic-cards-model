@@ -3019,9 +3019,9 @@ def condition_matches(
         # `event.defender`/`is_player` this event carries for that reason.
         if event.subject_id != source.id:
             return False
-        if "a player" in lowered and not (event.defender is not None and event.defender.is_player):
-            return False
-        return True
+        return "a player" not in lowered or (
+            event.defender is not None and event.defender.is_player
+        )
 
     if ability.event is TriggerEvent.ATTACKS:
         threshold = total_power_attack_threshold(condition)

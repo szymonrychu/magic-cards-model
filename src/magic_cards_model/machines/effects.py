@@ -1420,7 +1420,7 @@ _COLOR_NAME: dict[Color, str] = {
 _COUNT_YOU_CONTROL_RE = re.compile(
     r"^(?:the )?(?:number of )?(?:(?P<status>tapped|untapped|attacking) )?"
     r"(?:(?P<nontoken>nontoken) )?"
-    r"(?P<qualifier>[a-z]+) (?P<whose>you control|your opponents control)$"
+    r"(?P<qualifier>[a-z]+) (?P<whose>you control|they control|your opponents control)$"
     # CR 508.1k: every attacking creature, whoever controls it - Path of
     # Bravery's "the number of attacking creatures", with no "you control".
     r"|^(?:the )?number of (?P<attacking_any>attacking) (?P<attacking_qualifier>[a-z]+)$",
@@ -1747,7 +1747,24 @@ def count_expression(phrase: str) -> Callable[["Game", str], int] | None:
                 return board_controller is not None and board_controller != controller
             return board_controller == controller
 
+        # "permanents" is every card type at once (CR 110.1): Touch of the
+        # Eternal's "the number of permanents you control".
+        counts_any_permanent = qualifier.lower() in ("permanent", "permanents")
         card_type = _singular_card_type(qualifier)
+        if card_type is None and counts_any_permanent:
+
+            def count_permanents_on_board(game: "Game", controller: str) -> int:
+                board = game.computed_board()
+                return sum(
+                    1
+                    for permanent in game.battlefield
+                    if _belongs_to_group(board.of(permanent).controller, controller)
+                    and (wants_tapped is None or permanent.tapped == wants_tapped)
+                    and (not wants_attacking or permanent.id in game.combat.attacker_ids)
+                    and (not wants_nontoken or not is_token(permanent))
+                )
+
+            return count_permanents_on_board
         if card_type is None:
             subtype = _singular_subtype_for_count_expression(qualifier)
             if subtype is None:
@@ -6485,6 +6502,22 @@ def exile_all_graveyards(game: "Game", stack_object: "StackObject") -> None:
             game.exile_permanent(card_state)
 
 
+#: "Exile all cards from all hands and graveyards." (Worldfire) - every
+#: player's hand and graveyard (CR 402.1, CR 404.1), no target.
+_EXILE_ALL_CARDS_FROM_ALL_HANDS_AND_GRAVEYARDS_RE = re.compile(
+    r"^exile all cards from all hands and graveyards\.?$", re.IGNORECASE
+)
+
+
+def exile_all_hands_and_graveyards(game: "Game", stack_object: "StackObject") -> None:
+    """Worldfire: "Exile all cards from all hands and graveyards." Every
+    player's hand and graveyard (CR 402.1, CR 404.1) is exiled as one
+    instruction (CR 406.2)."""
+    for player in game.players_in_game:
+        game.exile_cards(list(player.hand))
+        game.exile_cards(list(player.graveyard))
+
+
 def exile_each_opponents_graveyard(game: "Game", stack_object: "StackObject") -> None:
     """Soul-Guide Lantern / Ashiok, Dream Render: "exile each opponent's
     graveyard."
@@ -10683,7 +10716,7 @@ def _parse_count_the_number_of_clause(clause: str) -> ClauseEffect | None:
     match = _COUNT_THE_NUMBER_OF_RE.fullmatch(clause.strip().rstrip("."))
     if match is None:
         return None
-    reader = count_expression(match.group("expr"))
+    reader = count_expression("the number of " + match.group("expr"))
     if reader is None:
         return None
 
@@ -12732,6 +12765,14 @@ _YOU_AND_TARGET_PLAYER_SUBJECT_AND_RE = re.compile(
 #: unrelated later instruction.
 _QUALITY_LIST_AND_FROM_RE = re.compile(r"\bfrom\s+[^.\n]*?\s+and\s+from\b", re.IGNORECASE)
 
+#: "all hands and graveyards" (Worldfire's "Exile all cards from all hands and
+#: graveyards.") - a list of zones one instruction acts on (CR 400.1), not two
+#: instructions. Bounded to a plural zone pair so a trailing "and draw ..."
+#: after "hand" still splits.
+_ZONE_PAIR_AND_RE = re.compile(
+    r"\b(?:hands|graveyards|libraries) and (?:hands|graveyards|libraries)\b", re.IGNORECASE
+)
+
 #: A "then" standing at the **head** of its own sentence - "Look at the top
 #: five cards ... Then put the rest on the bottom of your library." (Ancient
 #: Stirrings), "earthbend 2. Then search your library ..." (Earthbender
@@ -12863,6 +12904,7 @@ def split_effect_clauses(text: str) -> list[str]:
     masked = _QUALITY_LIST_AND_FROM_RE.sub(
         lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked
     )
+    masked = _ZONE_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     # "blue and red Elemental creature token" - one colour phrase.
     masked = _COLOUR_PAIR_AND_RE.sub(lambda m: m.group(0).replace(" and ", _AND_SENTINEL), masked)
     # "instant and sorcery cards" / "artifact and creature card" - one card
@@ -22025,6 +22067,9 @@ def _parse_targeted_clause(clause: str, *, for_spell: bool) -> TargetedClause | 
 
     if _EXILE_EACH_OPPONENTS_GRAVEYARD_RE.fullmatch(clause):
         return exile_each_opponents_graveyard  # type: ignore[return-value]
+
+    if _EXILE_ALL_CARDS_FROM_ALL_HANDS_AND_GRAVEYARDS_RE.fullmatch(clause):
+        return exile_all_hands_and_graveyards  # type: ignore[return-value]
 
     exile_all_but_bottom = _parse_exile_all_but_bottom_of_library_clause(
         clause, for_spell=for_spell
@@ -33862,6 +33907,17 @@ _SHUFFLE_HAND_AND_GRAVEYARD_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "shuffles their hand, graveyard, and all permanents they own into their
+#: library" - Sway of the Stars. CR 701.24a's shuffle after CR 400.3's owner
+#: rule: each card goes to its owner's library, so "permanents they own" is
+#: every battlefield object whose owner is this player, token or not (a token
+#: ceases to exist, CR 111.8).
+_SHUFFLE_HAND_GRAVEYARD_PERMANENTS_RE = re.compile(
+    r"^shuffles? (?:their|his or her) hand, graveyard, and all permanents they own "
+    r"into (?:their|his or her) library$",
+    re.IGNORECASE,
+)
+
 #: "discards all the cards in their hand" / "discards their hand" (Awaken
 #: the Erstwhile, Dark Deal) - CR 701.9a, every card, no choice.
 _DISCARD_WHOLE_HAND_RE = re.compile(
@@ -34213,6 +34269,21 @@ def _parse_each_player_step(text: str) -> ClauseEffect | None:
             game.shuffle_library(player)
 
         return shuffle_hand_and_graveyard
+
+    if _SHUFFLE_HAND_GRAVEYARD_PERMANENTS_RE.fullmatch(clause):
+
+        def shuffle_hand_graveyard_and_permanents(
+            game: "Game", player: Player, source: str, source_id: str | None
+        ) -> None:
+            owned_permanents = [
+                permanent for permanent in game.battlefield if permanent.owner == player.username
+            ]
+            game.put_cards_into_library(
+                list(player.hand) + list(player.graveyard) + owned_permanents
+            )
+            game.shuffle_library(player)
+
+        return shuffle_hand_graveyard_and_permanents
 
     if _BARE_SHUFFLES_RE.fullmatch(clause):
         return lambda game, player, source, source_id: game.shuffle_library(player)
@@ -36818,6 +36889,11 @@ ReferentReader = Callable[["Game", "StackObject"], list[CardState]]
 _SELF_SUBJECT_RE = re.compile(
     r"\bthis (?:creature|permanent|artifact|enchantment|land|card)\b", re.IGNORECASE
 )
+#: The "this `<noun>` deals" that opens a damage clause: the source of the
+#: damage, not the thing it is dealt to.
+_DAMAGE_SOURCE_PREFIX_RE = re.compile(
+    r"^this (?:creature|permanent|artifact|enchantment|land|card) deals\b", re.IGNORECASE
+)
 #: "all creatures", "each creature" - the antecedent acted on a whole group.
 _MASS_CREATURE_SUBJECT_RE = re.compile(r"\b(?:all|each) creatures?\b", re.IGNORECASE)
 
@@ -36848,10 +36924,17 @@ def _referent_reader(first: str) -> ReferentReader | None:
     card's wave, not a coin to flip here.
     """
     lowered = first.lower()
+    # "this enchantment deals 15 damage to target creature ..." (Form of the
+    # Dinosaur): when the clause also names a target, the self-reference is
+    # only the damage's *source* (CR 120.1), not an object "it"/"that
+    # creature" could mean - the target is the referent.
+    self_text = (
+        _DAMAGE_SOURCE_PREFIX_RE.sub("", lowered, count=1) if "target" in lowered else lowered
+    )
     matches = [
         "target" in lowered,
         bool(_MASS_CREATURE_SUBJECT_RE.search(lowered)),
-        bool(_SELF_SUBJECT_RE.search(lowered)),
+        bool(_SELF_SUBJECT_RE.search(self_text)),
     ]
     if sum(matches) == 0 and _ATTACHED_SUBJECT_RE.search(lowered):
         # "tap enchanted creature and remove all counters from it" - the
@@ -37142,6 +37225,12 @@ _RIDER_BECOMES_TYPE_IN_ADDITION_RE = re.compile(
 #: source of that damage"), one-sided - not a fight (CR 701.14a) - and the amount is its
 #: power as the rider runs (CR 608.2h). The target phrase is the resolving
 #: object's own target, rechecked on resolution (CR 608.2b).
+#: "That creature deals damage equal to its power to you." - Form of the
+#: Dinosaur's rider after its 15 damage: the same one-sided damage (CR 120.1)
+#: with the resolving ability's controller as the recipient (CR 119.2).
+_RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_TO_YOU_RE = re.compile(
+    rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to you$", re.IGNORECASE
+)
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to (?P<phrase>.*\btarget\b.+)$",
     re.IGNORECASE,
@@ -37714,6 +37803,20 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
                 )
 
         return becomes_type_in_addition
+
+    if _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_TO_YOU_RE.fullmatch(rider):
+
+        def deals_damage_equal_to_its_power_to_you(
+            game: "Game", referents: list[CardState], stack_object: "StackObject"
+        ) -> None:
+            dealers = [referent for referent in referents if referent.zone is Zone.BATTLEFIELD]
+            if not dealers:
+                return
+            amount = game.power_of(dealers[0]) or 0
+            if amount > 0:
+                game.deal_damage(game.controller_of(stack_object), amount, source=dealers[0])
+
+        return deals_damage_equal_to_its_power_to_you
 
     if match := _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE.fullmatch(rider):
         phrase = match.group("phrase").strip()
@@ -59198,6 +59301,17 @@ _LEADING_THEN_IF_OTHERWISE_RE = re.compile(
 )
 
 
+#: "`<consequence>` if `<condition>`. Otherwise, `<otherwise>`." - the
+#: trailing-"if" spelling of the same CR 608.2c instruction (Cosmos Elixir:
+#: "draw a card if your life total is greater than your starting life total.
+#: Otherwise, you gain 2 life."). The condition has no comma to end it, so it
+#: runs to the sentence's period.
+_TRAILING_IF_OTHERWISE_RE = re.compile(
+    r"^(?P<consequence>[^.]+?) if (?P<condition>[^.,]+)\.\s*otherwise,\s*(?P<otherwise>.+?)\.?$",
+    re.IGNORECASE | re.DOTALL,
+)
+
+
 def _parse_leading_then_if_otherwise_clause(text: str, *, for_spell: bool) -> AbilityEffect | None:
     """`_LEADING_THEN_IF_OTHERWISE_RE`'s shape - see its own docstring.
 
@@ -59210,14 +59324,16 @@ def _parse_leading_then_if_otherwise_clause(text: str, *, for_spell: bool) -> Ab
     `_effect_condition_is_readable` gate - leaves the *whole* clause unread
     rather than guessed at.
     """
-    match = _LEADING_THEN_IF_OTHERWISE_RE.fullmatch(text.strip())
+    match = _LEADING_THEN_IF_OTHERWISE_RE.fullmatch(
+        text.strip()
+    ) or _TRAILING_IF_OTHERWISE_RE.fullmatch(text.strip())
     if match is None:
         return None
     condition_text = match.group("condition").strip()
     if not _effect_condition_is_readable(condition_text, allow_anaphor=not for_spell):
         return None
     parser = parse_mixed_effect_for_spell if for_spell else parse_mixed_effect
-    leading_text = match.group("leading")
+    leading_text = match.groupdict().get("leading")
     leading_effect = parser(leading_text.strip()) if leading_text else None
     if leading_text and leading_effect is None:
         return None
