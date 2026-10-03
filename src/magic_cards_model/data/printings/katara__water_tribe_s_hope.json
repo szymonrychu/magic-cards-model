@@ -1,0 +1,162 @@
+{
+  "object": "card",
+  "id": "9ec03308-59a2-417a-938f-bdda75080e43",
+  "oracle_id": "234fb291-0b62-4092-9071-81311c71bd53",
+  "multiverse_ids": [],
+  "resource_id": "4638B4999E843686B13BFEB224577EE537726D29ED69EDAF4222FEA6AEA20A13",
+  "mtgo_id": 144954,
+  "arena_id": 97512,
+  "tcgplayer_id": 648736,
+  "cardmarket_id": 842859,
+  "name": "Katara, Water Tribe's Hope",
+  "lang": "en",
+  "released_at": "2025-11-21",
+  "uri": "https://api.scryfall.com/cards/9ec03308-59a2-417a-938f-bdda75080e43",
+  "scryfall_uri": "https://scryfall.com/card/tla/231/katara-water-tribes-hope?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T01:08:45Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.jpg?1783904925",
+    "normal": "https://cards.scryfall.io/normal/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.jpg?1783904925",
+    "large": "https://cards.scryfall.io/large/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.jpg?1783904925",
+    "png": "https://cards.scryfall.io/png/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.png?1783904925",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.jpg?1783904925",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.jpg?1783904925",
+    "thumb": "https://cards.scryfall.io/thumb/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.webp?1783904925",
+    "grid": "https://cards.scryfall.io/grid/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.webp?1783904925",
+    "display": "https://cards.scryfall.io/display/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.webp?1783904925",
+    "art": "https://cards.scryfall.io/art/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.webp?1783904925",
+    "crop": "https://cards.scryfall.io/crop/front/9/e/9ec03308-59a2-417a-938f-bdda75080e43.webp?1783904925"
+  },
+  "mana_cost": "{2}{W}{U}{U}",
+  "cmc": 5.0,
+  "type_line": "Legendary Creature \u2014 Human Warrior Ally",
+  "oracle_text": "Vigilance\nWhen Katara enters, create a 1/1 white Ally creature token.\nWaterbend {X}: Creatures you control have base power and toughness X/X until end of turn. X can't be 0. Activate only during your turn. (While paying a waterbend cost, you can tap your artifacts and creatures to help. Each one pays for {1}.)",
+  "power": "3",
+  "toughness": "3",
+  "colors": [
+    "U",
+    "W"
+  ],
+  "color_identity": [
+    "U",
+    "W"
+  ],
+  "keywords": [
+    "Vigilance",
+    "Waterbend"
+  ],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "95547532-c056-44a5-9d80-4f6b729b6e0c",
+      "component": "combo_piece",
+      "name": "Katara, Water Tribe's Hope",
+      "type_line": "Legendary Creature \u2014 Human Warrior Ally",
+      "uri": "https://api.scryfall.com/cards/95547532-c056-44a5-9d80-4f6b729b6e0c"
+    },
+    {
+      "object": "related_card",
+      "id": "01439983-8394-4a0c-9e9e-92a3f1927fe3",
+      "component": "token",
+      "name": "Ally",
+      "type_line": "Token Creature \u2014 Ally",
+      "uri": "https://api.scryfall.com/cards/01439983-8394-4a0c-9e9e-92a3f1927fe3"
+    }
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "arena",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set": "tla",
+  "set_name": "Avatar: The Last Airbender",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/118f7e64-5caa-4cb7-99a8-184f4d3a7422",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Atla&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/tla?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/9ec03308-59a2-417a-938f-bdda75080e43/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A234fb291-0b62-4092-9071-81311c71bd53&unique=prints",
+  "collector_number": "231",
+  "digital": false,
+  "rarity": "rare",
+  "watermark": "watertribe",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Toraji",
+  "artist_ids": [
+    "1a1ad55f-b00b-4571-b241-26e2523694f9"
+  ],
+  "illustration_id": "0c99b262-6468-48c5-ae80-3ef354fa4ed5",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 4563,
+  "prices": {
+    "usd": "0.48",
+    "usd_foil": "0.74",
+    "usd_etched": null,
+    "eur": "0.35",
+    "eur_foil": "0.54",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKatara%252C%2BWater%2BTribe%2527s%2BHope",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKatara%252C%2BWater%2BTribe%2527s%2BHope",
+    "edhrec": "https://edhrec.com/route/?cc=Katara%2C+Water+Tribe%27s+Hope"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F648736%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=842859&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/144954?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

@@ -3649,6 +3649,13 @@ def _parse(oracle_text: str, spell_only: bool = True) -> TargetingProfile:
                     update={"if_gift_promised": requirement}
                 )
             continue
+        if spell_only and requirement.excludes_source and requirements:
+            # A spell can never target itself (CR 115.5), so "up to one *other*
+            # target creature" printed after an earlier "target" can only mean
+            # a different object than that one (CR 115.3, Hostile Takeover).
+            requirement = requirement.model_copy(
+                update={"excludes_source": False, "distinct_from_prior_requirement": True}
+            )
         requirements.append(requirement)
 
     return TargetingProfile(requirements=tuple(requirements), division=division)

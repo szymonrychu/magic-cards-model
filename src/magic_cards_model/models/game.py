@@ -240,7 +240,13 @@ from ..machines.layers import (
     plays_lands_from_graveyard_line,
     spend_effect_effects,
 )
-from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
+from ..machines.modes import (
+    ModalProfile,
+    Mode,
+    modal_profile,
+    substitute_x,
+    x_restriction_refusal,
+)
 from ..machines.monarch import inherent_triggers_for as monarch_inherent_triggers_for
 from ..machines.monarch import monarch_effect_for
 from ..machines.next_spell import (
@@ -24867,6 +24873,9 @@ class Game(EngineModel):
         activated ability in the pool is unaffected.
         """
         ability = self.activated_abilities(permanent)[index]
+        refusal = x_restriction_refusal(ability.text, x_value)
+        if refusal is not None:
+            raise ValueError(f"{permanent.name}: {refusal}")
         controller = controller or self.controller_of(permanent).username
         sacrifices = list(sacrificing or [])
         discards = list(discarding or [])
@@ -25380,7 +25389,7 @@ class Game(EngineModel):
             and all(t in board.of(state).types for t in types)
             and all(s in board.of(state).supertypes for s in supertypes)
         )
-        amount = reduction.amount * count
+        amount = reduction.amount * (min(count, 1) if reduction.if_you_control else count)
         return ManaCost.parse(f"{{{amount}}}") if amount else ManaCost()
 
     def mana_color_options(

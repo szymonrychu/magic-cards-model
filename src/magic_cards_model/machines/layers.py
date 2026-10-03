@@ -5847,6 +5847,29 @@ _BASE_PT_SET_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Creatures you control have base power and toughness N/N until end of
+#: turn." (Katara, Water Tribe's Hope; Oko's Hospitality) - the mass-subject
+#: twin of `_BASE_PT_SET_RE`: the same sublayer 7b set (CR 613.4b), over a
+#: group `machines/effects.py`'s `_run_mass_pump` has already fixed (CR 611.2c).
+_MASS_BASE_PT_SET_RE = re.compile(
+    r"^(?:creatures (?:you control|your opponents control)|all creatures) "
+    r"have base power and toughness (?P<power>\d+)/(?P<toughness>\d+)"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
+#: "Vehicles you control become artifact creatures until end of turn." (Armed
+#: and Armored) - `machines/effects.py` has already fixed the group (CR 611.2c)
+#: and rewritten the Vehicle subject to the plain "creatures" one. CR 205.1b:
+#: "artifact creature" adds both card types and keeps every prior card type and
+#: subtype, so the Vehicle stays a Vehicle; its printed power and toughness
+#: become the creature's (CR 301.7).
+_MASS_BECOMES_ARTIFACT_CREATURES_RE = re.compile(
+    r"^creatures (?:you control|your opponents control) become artifact creatures"
+    r" until end of turn\.?$",
+    re.IGNORECASE,
+)
+
 #: "[Subject] has base power and toughness N/N and becomes a[n] <creature
 #: type(s)> in addition to its other types until end of turn." (Minsc, Beloved
 #: Ranger's {X} ability, X already substituted) and its group twin "Creatures
@@ -14298,7 +14321,11 @@ def _parse_layer_sentence(sentence: str) -> EffectBuilder | None:
             whose=match.group("whose").lower(),
             line=sentence,
         )
-    if match := _BASE_PT_SET_RE.fullmatch(sentence):
+    if _MASS_BECOMES_ARTIFACT_CREATURES_RE.fullmatch(sentence):
+        return _becomes_creature_type_with_base_pt_builder(
+            (), (), None, None, loses_abilities=False, artifact_creature=True
+        )
+    if match := _BASE_PT_SET_RE.fullmatch(sentence) or _MASS_BASE_PT_SET_RE.fullmatch(sentence):
         return _base_pt_set_builder(int(match.group("power")), int(match.group("toughness")))
     if match := _BASE_PT_SET_AND_TYPE_RE.fullmatch(sentence):
         subtypes: list[str] = []

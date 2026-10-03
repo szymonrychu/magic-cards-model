@@ -87,7 +87,7 @@ from .keywords import (
     why_cannot_enchant,
 )
 from .layers import ContinuousEffect, Layer, grant_ability, only_this_incarnation
-from .modes import ModalProfile, Mode, modal_profile, substitute_x
+from .modes import ModalProfile, Mode, modal_profile, substitute_x, x_restriction_refusal
 from .objects_as_costs import power_of
 from .spell_grants import casualty_numbers, conspire_count, granted_affinity_reductions
 from .targeting import (
@@ -7367,6 +7367,9 @@ class Casting(EngineModel):
         self._advance_to(CastingStep.COST_DETERMINED)
         if x_value is not None:
             self.x_value = x_value
+        x_refusal = x_restriction_refusal(self.spell.oracle_text or "", self.x_value)
+        if x_refusal is not None:
+            raise ValueError(f"{self.spell.name}: {x_refusal}")
         if additional is not None:
             self.additional_costs.append(TotalCost.of(additional).assign_payer(self.caster))
         self._charge_printed_additional_costs()

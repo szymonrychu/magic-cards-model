@@ -348,7 +348,28 @@ def substitute_x(text: str, x_value: int | None) -> str:
     """
     if x_value is None:
         return text
-    return _X.sub(str(x_value), text)
+    return _X.sub(str(x_value), strip_x_restrictions(text))
+
+
+#: "X can't be 0." - a restriction on the value announced for X (CR 107.3a),
+#: not an instruction to carry out. Left in the text it would be substituted
+#: into nonsense ("3 can't be 0.") and read as an unparsed remainder.
+_X_CANT_BE_ZERO = re.compile(r"(?<![\w])X can[\u2019']t be 0\.?[ \t]*", re.IGNORECASE)
+
+
+def strip_x_restrictions(text: str) -> str:
+    """`text` without its "X can't be 0." sentence - read at the announcement
+    of X (`x_restriction_refusal`), never part of what resolves."""
+    return _X_CANT_BE_ZERO.sub("", text)
+
+
+def x_restriction_refusal(text: str, x_value: int) -> str | None:
+    """Why the announced `x_value` breaks a restriction the text itself states
+    on X (CR 107.3a: X is chosen as the spell is cast or the ability is
+    activated, and "X can't be 0" bounds that choice), or `None`."""
+    if x_value == 0 and _X_CANT_BE_ZERO.search(text):
+        return "X can't be 0 (CR 107.3a)"
+    return None
 
 
 def mode_rules_text(mode: Mode, x_value: int | None = None) -> str:

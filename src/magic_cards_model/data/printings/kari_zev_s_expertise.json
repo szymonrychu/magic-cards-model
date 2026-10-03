@@ -1,0 +1,133 @@
+{
+  "object": "card",
+  "id": "ab5c7400-6307-4c51-88b8-9c0232110714",
+  "oracle_id": "e0de0121-6185-45c5-9d88-a415b07347e0",
+  "multiverse_ids": [
+    423755
+  ],
+  "mtgo_id": 62919,
+  "mtgo_foil_id": 62920,
+  "tcgplayer_id": 126497,
+  "cardmarket_id": 294842,
+  "name": "Kari Zev's Expertise",
+  "lang": "en",
+  "released_at": "2017-01-20",
+  "uri": "https://api.scryfall.com/cards/ab5c7400-6307-4c51-88b8-9c0232110714",
+  "scryfall_uri": "https://scryfall.com/card/aer/88/kari-zevs-expertise?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T09:59:12Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.jpg?1783936752",
+    "normal": "https://cards.scryfall.io/normal/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.jpg?1783936752",
+    "large": "https://cards.scryfall.io/large/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.jpg?1783936752",
+    "png": "https://cards.scryfall.io/png/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.png?1783936752",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.jpg?1783936752",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.jpg?1783936752",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.webp?1783936752",
+    "grid": "https://cards.scryfall.io/grid/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.webp?1783936752",
+    "display": "https://cards.scryfall.io/display/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.webp?1783936752",
+    "art": "https://cards.scryfall.io/art/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.webp?1783936752",
+    "crop": "https://cards.scryfall.io/crop/front/a/b/ab5c7400-6307-4c51-88b8-9c0232110714.webp?1783936752"
+  },
+  "mana_cost": "{1}{R}{R}",
+  "cmc": 3.0,
+  "type_line": "Sorcery",
+  "oracle_text": "Gain control of target creature or Vehicle until end of turn. Untap it. It gains haste until end of turn.\nYou may cast a spell with mana value 2 or less from your hand without paying its mana cost.",
+  "colors": [
+    "R"
+  ],
+  "color_identity": [
+    "R"
+  ],
+  "keywords": [],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "a4a0db50-8826-4e73-833c-3fd934375f96",
+  "set": "aer",
+  "set_name": "Aether Revolt",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/a4a0db50-8826-4e73-833c-3fd934375f96",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aaer&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/aer?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/ab5c7400-6307-4c51-88b8-9c0232110714/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3Ae0de0121-6185-45c5-9d88-a415b07347e0&unique=prints",
+  "collector_number": "88",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"I was made for this!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Jason Rainville",
+  "artist_ids": [
+    "6ed7e669-579b-443d-b223-e5cbcb2a7483"
+  ],
+  "illustration_id": "a8d0201b-86c8-44a2-a81c-4397587839df",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 6906,
+  "penny_rank": 6284,
+  "prices": {
+    "usd": "1.46",
+    "usd_foil": "2.61",
+    "usd_etched": null,
+    "eur": "0.65",
+    "eur_foil": "3.14",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=423755&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DKari%2BZev%2527s%2BExpertise",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DKari%2BZev%2527s%2BExpertise",
+    "edhrec": "https://edhrec.com/route/?cc=Kari+Zev%27s+Expertise"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F126497%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=294842&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/62919?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}
