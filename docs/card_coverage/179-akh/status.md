@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 16 | 6.6% |
-| Works (untested) | 130 | 53.9% |
+| Works (untested) | 131 | 54.4% |
 | Partial (unaudited) | 19 | 7.9% |
-| Not working | 76 | 31.5% |
+| Not working | 75 | 31.1% |
 
 ## Cards needing work
 
@@ -80,7 +80,6 @@
 | Quarry Hauler | silent | When this creature enters, for each kind of counter on target permanent, put another counter of that kind on it or remove one from it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rags // Riches | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Each opponent chooses a creature they control. You gain control of those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Reduce // Rubble | silent | Aftermath (Cast this spell only from your graveyard. Then exile it.) Up to three target lands don't untap during their controller's next untap step. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Regal Caracal | silent | Other Cats you control get +1/+1 and have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Rhet-Crop Spearmaster | silent | You may exert this creature as it attacks. When you do, it gets +1/+0 and gains first strike until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sacred Cat | silent | Embalm | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Shadow of the Grave | silent | Return to your hand all cards in your graveyard that you cycled or discarded this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -99,7 +98,7 @@
 | Djeru's Resolve | notice | Untap target creature. Prevent all damage that would be dealt to it this turn. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grim Strider | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Hazoret's Favor | notice | At the beginning of combat on your turn, you may have target creature you control get +2/+0 and gain haste until end of turn. If you do, sacrifice it at the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Shed Weakness | notice | Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Shed Weakness | notice | Target creature gets +2/+2 until end of turn. You may remove a -1/-1 counter from it. | unparsed remainder: You may remove a -1/-1 counter from it. | Y/Y/- | not_working |
 | Thresher Lizard | notice | This creature gets +1/+2 as long as you have one or fewer cards in hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Vizier of Deferment | notice | When this creature enters, you may exile target creature if it attacked or blocked this turn. Return that card to the battlefield under its owner's control at t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ahn-Crop Champion | unaudited | You may exert this creature as it attacks. When you do, untap all other creatures you control. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -210,6 +209,7 @@
 | Prowling Serpopard | handled | This spell can't be countered. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pull from Tomorrow | handled | Draw X cards, then discard a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Pyramid of the Pantheon | handled |  |  | Y/Y/- | not_tested |
+| Regal Caracal | handled | Other Cats you control get +1/+1 and have lifelink. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Rhonas's Monument | handled | Green creature spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | River Serpent | handled | This creature can't attack unless there are five or more cards in your graveyard. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ruthless Sniper | handled | Whenever you cycle or discard a card, you may pay {1}. If you do, put a -1/-1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -312,7 +312,6 @@
 | if ~ was cast from your hand and you"..."s library seventh from the top and you gain N life. | 1 | Approach of the Second Sun | akh |
 | oketra can't attack or block unless you control at least three other creatures. | 1 | Oketra the True | akh |
 | once each turn, you may pay {M} rather than pay the mana cost for a spell you cast with mana value N or less, where N is the number of time counters on ~. | 1 | As Foretold | akh |
-| other cats you control get +N/+N and have lifelink. | 1 | Regal Caracal | akh |
 | put a -N/-N counter on each creature you don't control. you may search your library and/or graveyard for a card named liliana, death wielder, reveal it, and put | 1 | Liliana's Influence | akh |
 | put target spell or nonland permanent into its owner's library second from the top. | 1 | Commit // Memory | akh |
 | return to your hand all cards in your graveyard that you cycled or discarded ~. | 1 | Shadow of the Grave | akh |

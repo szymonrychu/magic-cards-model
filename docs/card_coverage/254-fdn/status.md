@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 12 | 8.3% |
+| Tested | 13 | 9.0% |
 | Works (untested) | 91 | 63.2% |
 | Partial (unaudited) | 3 | 2.1% |
-| Not working | 38 | 26.4% |
+| Not working | 37 | 25.7% |
 
 ## Cards needing work
 
@@ -58,11 +58,10 @@
 | Zimone, Paradox Sculptor | silent | {G}{U}, {T}: Double the number of each kind of counter on up to two target creatures and/or artifacts you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Abyssal Harvester | notice | {T}: Exile target creature card from a graveyard that was put there this turn. Create a token that's a copy of it, except it's a Nightmare in addition to its ot | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Chandra, Flameshaper | notice | +2: Add {R}{R}{R}. Exile the top three cards of your library. Choose one. You may play that card this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Divine Resilience | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gains indestructible until end of turn. If this spell was k | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Elenda, Saint of Dusk | notice | As long as your life total is greater than your starting life total, Elenda gets +1/+1 and has menace. Elenda gets an additional +5/+5 as long as your life tota | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Divine Resilience | notice | Kicker {2}{W} (You may pay an additional {2}{W} as you cast this spell.) Target creature you control gains indestructible until end of turn. If this spell was k | unparsed remainder: If this spell was kicked, instead any number of target creatures you control gain indestructible until end of turn. | Y/Y/Y | not_working |
 | Goblin Negotiation | notice | Goblin Negotiation deals X damage to target creature. Create a number of 1/1 red Goblin creature tokens equal to the amount of excess damage dealt to that creat | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Strongbox Raider | notice | Raid — When this creature enters, if you attacked this turn, exile the top two cards of your library. Choose one of them. Until the end of your next turn, you m | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Tragic Banshee | notice | Morbid — When this creature enters, target creature an opponent controls gets -1/-1 until end of turn. If a creature died this turn, that creature gets -13/-13  | unparsed remainder: If a creature died this turn, that creature gets -13/-13 until end of turn instead. | Y/Y/Y | not_working |
 | Vampire Gourmand | notice | Whenever this creature attacks, you may sacrifice another creature. If you do, draw a card and this creature can't be blocked this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Goblin Boarders | unaudited | Raid — This creature enters with a +1/+1 counter on it if you attacked this turn. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Herald of Eternal Dawn | unaudited | You can't lose the game and your opponents can't win the game. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -162,12 +161,13 @@
 ## Fully supported
 
 <details>
-<summary>12 cards</summary>
+<summary>13 cards</summary>
 
 - Arbiter of Woe
 - Crossway Troublemakers
 - Crystal Barricade
 - Curator of Destinies
+- Elenda, Saint of Dusk
 - High Fae Trickster
 - Inspiration from Beyond
 - Perforating Artist
@@ -186,7 +186,6 @@
 | Raid | 3 | Alesha, Who Laughs at Fate, Goblin Boarders, Strongbox Raider | fdn |
 | Morbid | 1 | Tragic Banshee | fdn |
 | +N: add {M}{M}{M}. exile the top three cards of your library. choose one. you may play that card ~. | 1 | Chandra, Flameshaper | fdn |
-| as long as your life total is greater than your starting life total, elenda gets +N/+N and has menace. elenda gets an additional +N/+N as long as your life tota | 1 | Elenda, Saint of Dusk | fdn |
 | as long as ~ has three or more +N/+N counters on it, it has flying and is a knight in addition to its other types. | 1 | Skyknight Squire | fdn |
 | create a token that's a copy of target creature you control, except it has haste and "..." flashback {M}{M}{M} (you may cast ~ from your graveyard for its flash | 1 | Electroduplicate | fdn |
 | create two N/N blue faerie creature tokens with flying. when you do, tap target creature an opponent controls. | 1 | Faebloom Trick | fdn |

@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 9 | 6.3% |
-| Works (untested) | 68 | 47.6% |
+| Tested | 10 | 7.0% |
+| Works (untested) | 70 | 49.0% |
 | Partial (unaudited) | 10 | 7.0% |
-| Not working | 56 | 39.2% |
+| Not working | 53 | 37.1% |
 
 ## Cards needing work
 
@@ -40,12 +40,10 @@
 | Ethersworn Shieldmage | silent | When this creature enters, prevent all damage that would be dealt to artifact creatures this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Fight to the Death | silent | Destroy all blocking creatures and all blocked creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Finest Hour | silent | Whenever a creature you control attacks alone, if it's the first combat phase of the turn, untap that creature. After this phase, there is an additional combat  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Flurry of Wings | silent | Create X 1/1 white Bird Soldier creature tokens with flying, where X is the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Giant Ambush Beetle | silent | When this creature enters, you may have target creature block it this turn if able. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glassdust Hulk | silent | Whenever another artifact you control enters, this creature gets +1/+1 until end of turn and can't be blocked this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Glory of Warfare | silent | During your turn, creatures you control get +2/+0. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Grixis Grimblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has deathtouch. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Identity Crisis | silent | Exile all cards from target player's hand and graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Intimidation Bolt | silent | Intimidation Bolt deals 3 damage to target creature. Other creatures can't attack this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Jhessian Zombies | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Jund Hackblade | silent | As long as you control another multicolored permanent, this creature gets +1/+1 and has haste. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -71,7 +69,6 @@
 | Soulquake | silent | Return all creatures on the battlefield and all creature cards in graveyards to their owners' hands. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sovereigns of Lost Alara | silent | Whenever a creature you control attacks alone, you may search your library for an Aura card that could enchant that creature, put it onto the battlefield attach | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Spellbound Dragon | silent | Whenever this creature attacks, draw a card, then discard a card. This creature gets +X/+0 until end of turn, where X is the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Stun Sniper | silent | {1}, {T}: This creature deals 1 damage to target creature. Tap that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tainted Sigil | silent | {T}, Sacrifice this artifact: You gain life equal to the total life lost by all players this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thought Hemorrhage | silent | Choose a nonland card name. Target player reveals their hand. Thought Hemorrhage deals 3 damage to that player for each card with the chosen name revealed this  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thraximundar | silent | Whenever Thraximundar attacks, defending player sacrifices a creature of their choice. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -113,6 +110,7 @@
 | Etherium Abomination | handled | Unearth | machines/keywords.py (off_zone_abilities: unearth) | Y/-/- | not_tested |
 | Etherwrought Page | handled | At the beginning of your upkeep, choose one — • You gain 2 life. • Surveil 1. • Each opponent loses 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Filigree Angel | handled | When this creature enters, you gain 3 life for each artifact you control. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Flurry of Wings | handled | Create X 1/1 white Bird Soldier creature tokens with flying, where X is the number of attacking creatures. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gloryscale Viashino | handled | Whenever you cast a multicolored spell, this creature gets +3/+3 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Godtracker of Jund | handled | Whenever a creature you control with power 5 or greater enters, you may put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gorger Wurm | handled | Devour | machines/replacement.py (_expand_devour, CR 702.82) | Y/-/- | not_tested |
@@ -149,6 +147,7 @@
 | Soul Manipulation | handled | Choose one or both — • Counter target creature spell. • Return target creature card from your graveyard to your hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sphinx of the Steel Wind | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Stormcaller's Boon | handled | Sacrifice this enchantment: Creatures you control gain flying until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Stun Sniper | handled | {1}, {T}: This creature deals 1 damage to target creature. Tap that creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Talon Trooper | handled | Flying | machines/combat.py | Y/-/- | not_tested |
 | Thopter Foundry | handled | {1}, Sacrifice a nontoken artifact: Create a 1/1 blue Thopter artifact creature token with flying. You gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Time Sieve | handled | {T}, Sacrifice five artifacts: Take an extra turn after this one. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -164,11 +163,12 @@
 ## Fully supported
 
 <details>
-<summary>9 cards</summary>
+<summary>10 cards</summary>
 
 - Architects of Will
 - Bloodbraid Elf
 - Dragon Appeasement
+- Identity Crisis
 - Maelstrom Nexus
 - Maelstrom Pulse
 - Predatory Advantage
@@ -196,7 +196,6 @@
 | at the beginning of your upkeep, you may put a feather counter on target creature. if you do, that creature has base power and toughness N/N and has flying for  | 1 | Aven Mimeomancer | arb |
 | choose a nonland card name. target player reveals their hand. ~ deals N damage to that player for each card with the chosen name revealed ~. search that player' | 1 | Thought Hemorrhage | arb |
 | counter up to two target spells. | 1 | Double Negative | arb |
-| create N N/N white bird soldier creature tokens with flying, where N is the number of attacking creatures. | 1 | Flurry of Wings | arb |
 | creature spells you control with power N or greater can't be countered. | 1 | Spellbreaker Behemoth | arb |
 | destroy all blocking creatures and all blocked creatures. | 1 | Fight to the Death | arb |
 | discard your hand. draw seven cards, then discard three cards at random. | 1 | Drastic Revelation | arb |
@@ -204,7 +203,6 @@
 | each other multicolored creature you control gets +N/+N for each of its colors. | 1 | Knight of New Alara | arb |
 | enchanted land has shroud. | 1 | Trace of Abundance | arb |
 | equipped creature has fear. | 1 | Mask of Riddles | arb |
-| exile all cards from target player's hand and graveyard. | 1 | Identity Crisis | arb |
 | exile target creature card from a graveyard, then create N N/N green saproling creature tokens, where N is the exiled card's toughness. | 1 | Morbid Bloom | arb |
 | gain control of target creature. untap that creature. it gains haste until end of turn. sacrifice it at the beginning of the next end step. | 1 | Slave of Bolas | arb |
 | if you would draw a card, instead reveal the top three cards of your library. put all creature cards revealed ~ into your hand and the rest on the bottom of you | 1 | Sages of the Anima | arb |
@@ -235,7 +233,6 @@
 | whenever ~ attacks, flip a coin. if you win the flip, ~ gets +N/+N and gains flying until end of turn. | 1 | Skyclaw Thrash | arb |
 | whenever ~ becomes blocked, defending player loses N life. | 1 | Vedalken Ghoul | arb |
 | {M}, sacrifice ~: you gain life equal to the total life lost by all players ~. | 1 | Tainted Sigil | arb |
-| {M}, {M}: ~ deals N damage to target creature. tap that creature. | 1 | Stun Sniper | arb |
 | {M}: equipped creature gets +N/+N until end of turn. | 1 | Demonspine Whip | arb |
 | {M}{M}{M}{M}: target player loses N life and mills N cards, where N is the number of zombies you control. | 1 | Lich Lord of Unx | arb |
 | ~ deals N damage to target creature. other creatures can't attack ~. | 1 | Intimidation Bolt | arb |

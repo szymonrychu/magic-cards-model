@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 5 | 4.7% |
-| Works (untested) | 58 | 54.2% |
+| Tested | 8 | 7.5% |
+| Works (untested) | 57 | 53.3% |
 | Partial (unaudited) | 2 | 1.9% |
-| Not working | 42 | 39.3% |
+| Not working | 40 | 37.4% |
 
 ## Cards needing work
 
@@ -33,7 +33,6 @@
 | Disciple of Bolas | silent | When this creature enters, sacrifice another creature. You gain X life and draw X cards, where X is that creature's power. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Duskmantle Prowler | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Duty-Bound Dead | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Elderscale Wurm | silent | When this creature enters, if your life total is less than 7, your life total becomes 7. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gem of Becoming | silent | {3}, {T}, Sacrifice this artifact: Search your library for an Island card, a Swamp card, and a Mountain card. Reveal those cards, put them into your hand, then  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Knight of Glory | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Knight of Infamy | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
@@ -56,15 +55,14 @@
 | Spelltwine | silent | Exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. Copy those cards. Cast the copies if a | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sublime Archangel | silent | Exalted | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Thundermaw Hellkite | silent | When this creature enters, it deals 1 damage to each creature with flying your opponents control. Tap those creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Touch of the Eternal | silent | At the beginning of your upkeep, count the number of permanents you control. Your life total becomes that number. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tricks of the Trade | silent | Enchanted creature gets +2/+0 and can't be blocked. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Void Stalker | silent | {2}{U}, {T}: Put this creature and target creature on top of their owners' libraries, then those players shuffle their libraries. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Worldfire | silent | Exile all permanents. Exile all cards from all hands and graveyards. Each player's life total becomes 1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Arctic Aven | notice | This creature gets +1/+1 as long as you control a Plains. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Crimson Muckwader | notice | This creature gets +1/+1 as long as you control a Swamp. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Flinthoof Boar | notice | This creature gets +1/+1 as long as you control a Mountain. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Harbor Bandit | notice | This creature gets +1/+1 as long as you control an Island. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Jace's Phantasm | notice | This creature gets +4/+4 as long as an opponent has ten or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Predatory Rampage | notice | Creatures you control get +3/+3 until end of turn. Each creature your opponents control blocks this turn if able. | unparsed remainder: Each creature your opponents control blocks this turn if able. | Y/-/- | not_working |
 | Prized Elephant | notice | This creature gets +1/+1 as long as you control a Forest. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Timberpack Wolf | notice | This creature gets +1/+1 for each other creature you control named Timberpack Wolf. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Xathrid Gorgon | notice | {2}{B}, {T}: Put a petrification counter on target creature. It gains defender and becomes a colorless artifact in addition to its other types. Its activated ab | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -103,7 +101,6 @@
 | Liliana's Shade | handled | When this creature enters, you may search your library for a Swamp card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mark of the Vampire | handled | Enchanted creature gets +2/+2 and has lifelink. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Murder | handled | Destroy target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Predatory Rampage | handled | Creatures you control get +3/+3 until end of turn. Each creature your opponents control blocks this turn if able. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Primal Huntbeast | handled | Hexproof | machines/casting.py (target legality) | Y/-/- | not_tested |
 | Ranger's Path | handled | Search your library for up to two Forest cards, put them onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Reckless Brute | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -132,13 +129,16 @@
 ## Fully supported
 
 <details>
-<summary>5 cards</summary>
+<summary>8 cards</summary>
 
 - Augur of Bolas
+- Elderscale Wurm
 - Faith's Reward
 - Mind Sculpt
 - Omniscience
 - Switcheroo
+- Touch of the Eternal
+- Worldfire
 
 </details>
 
@@ -147,20 +147,18 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | exalted | 7 | Cathedral of War, Duskmantle Prowler, Duty-Bound Dead, Knight of Glory, Knight of Infamy | m13 |
-| at the beginning of your upkeep, count the number of permanents you control. your life total becomes that number. | 1 | Touch of the Eternal | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's blue. | 1 | Ring of Evos Isle | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's green. | 1 | Ring of Kalonia | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's red. | 1 | Ring of Valkas | m13 |
 | at the beginning of your upkeep, put a +N/+N counter on equipped creature if it's white. | 1 | Ring of Thune | m13 |
 | at the beginning of your upkeep, return a creature you control to its owner's hand. | 1 | Roaring Primadox | m13 |
+| creatures you control get +N/+N until end of turn. each creature your opponents control blocks ~ if able. | 1 | Predatory Rampage | m13 |
 | destroy target creature an opponent controls. each other creature that player controls gets -N/-N until end of turn. | 1 | Public Execution | m13 |
 | enchanted creature gets +N/+N and can't be blocked. | 1 | Tricks of the Trade | m13 |
 | enchanted creature gets -N/-N and can't block. | 1 | Crippling Blight | m13 |
 | enchanted permanent doesn"..."s untap step and its activated abilities can't be activated. | 1 | Encrust | m13 |
-| exile all permanents. exile all cards from all hands and graveyards. each player's life total becomes N. | 1 | Worldfire | m13 |
 | exile target instant or sorcery card from your graveyard and target instant or sorcery card from an opponent's graveyard. copy those cards. cast the copies if a | 1 | Spelltwine | m13 |
 | other merfolk creatures you control get +N/+N and have islandwalk. | 1 | Master of the Pearl Trident | m13 |
-| when ~ enters, if your life total is less than N, your life total becomes N. | 1 | Elderscale Wurm | m13 |
 | when ~ enters, it deals N damage to each creature with flying your opponents control. tap those creatures. | 1 | Thundermaw Hellkite | m13 |
 | when ~ enters, sacrifice another creature. you gain N life and draw N cards, where N is that creature's power. | 1 | Disciple of Bolas | m13 |
 | when ~ enters, search your library for a creature card with deathtouch, hexproof, reach, or trample and reveal it. shuffle and put that card on top. | 1 | Mwonvuli Beast Tracker | m13 |

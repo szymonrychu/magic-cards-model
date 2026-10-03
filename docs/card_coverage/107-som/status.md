@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 22 | 10.2% |
-| Works (untested) | 124 | 57.7% |
+| Tested | 23 | 10.7% |
+| Works (untested) | 123 | 57.2% |
 | Partial (unaudited) | 8 | 3.7% |
 | Not working | 61 | 28.4% |
 
@@ -74,7 +74,6 @@
 | Relic Putrescence | silent | Whenever enchanted artifact becomes tapped, its controller gets a poison counter. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Shape Anew | silent | The controller of target artifact sacrifices it, then reveals cards from the top of their library until they reveal an artifact card. That player puts that card | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Soul Parry | silent | Prevent all damage one or two target creatures would deal this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Steel Hellkite | silent | {X}: Destroy each nonland permanent with mana value X whose controller was dealt combat damage by this creature this turn. Activate only once each turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Strata Scythe | silent | Equipped creature gets +1/+1 for each land on the battlefield with the same name as the exiled card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunblast Angel | silent | When this creature enters, destroy all tapped creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sunspear Shikari | silent | As long as this creature is equipped, it has first strike and lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -85,6 +84,7 @@
 | Vigil for the Lost | silent | Whenever a creature you control dies, you may pay {X}. If you do, you gain X life. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Viridian Revel | silent | Whenever an artifact is put into an opponent's graveyard from the battlefield, you may draw a card. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Flesh Allergy | notice | As an additional cost to cast this spell, sacrifice a creature. Destroy target creature. Its controller loses life equal to the number of creatures that died th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Koth of the Hammer | notice | +1: Untap target Mountain. It becomes a 4/4 red Elemental creature until end of turn. It's still a land. | unparsed remainder: It's still a land. | Y/-/- | not_working |
 | Quicksilver Gargantuan | notice | You may have this creature enter as a copy of any creature on the battlefield, except it's 7/7. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Turn to Slag | notice | Turn to Slag deals 5 damage to target creature. Destroy all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Echo Circlet | unaudited | Equipped creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -145,7 +145,6 @@
 | Ichorclaw Myr | handled | Whenever this creature becomes blocked, it gets +2/+2 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Inexorable Tide | handled | Whenever you cast a spell, proliferate. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Instill Infection | handled | Put a -1/-1 counter on target creature. Draw a card. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Koth of the Hammer | handled | +1: Untap target Mountain. It becomes a 4/4 red Elemental creature until end of turn. It's still a land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kuldotha Forgemaster | handled | {T}, Sacrifice three artifacts: Search your library for an artifact card, put it onto the battlefield, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Kuldotha Rebirth | handled | As an additional cost to cast this spell, sacrifice an artifact. Create three 1/1 red Goblin creature tokens. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Lifesmith | handled | Whenever you cast an artifact spell, you may pay {1}. If you do, you gain 3 life. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -223,7 +222,7 @@
 ## Fully supported
 
 <details>
-<summary>22 cards</summary>
+<summary>23 cards</summary>
 
 - Arc Trail
 - Argent Sphinx
@@ -241,6 +240,7 @@
 - Nihil Spellbomb
 - Riddlesmith
 - Spikeshot Elder
+- Steel Hellkite
 - Tainted Strike
 - Tangle Angler
 - True Conviction
@@ -256,6 +256,7 @@
 |---|---|---|---|
 | Metalcraft | 8 | Auriok Sunchaser, Carapace Forger, Chrome Steed, Etched Champion, Ezuri's Brigade | som |
 | Imprint | 1 | Clone Shell | som |
+| +N: untap target mountain. it becomes a N/N red elemental creature until end of turn. it's still a land. | 1 | Koth of the Hammer | som |
 | as an additional cost to cast ~, sacrifice a creature. destroy target creature. its controller loses life equal to the number of creatures that died ~. | 1 | Flesh Allergy | som |
 | as long as ~ is equipped, it has first strike and lifelink. | 1 | Sunspear Shikari | som |
 | at the beginning of your upkeep, create a N/N white cat creature token for each equipment attached to kemba. | 1 | Kemba, Kha Regent | som |
@@ -307,7 +308,6 @@
 | {M}, {M}: create a token that's a copy of the exiled card. N is the mana value of that card. | 1 | Prototype Portal | som |
 | {M}, {M}: proliferate twice. | 1 | Contagion Engine | som |
 | {M}, {M}: untap each other myr you control. | 1 | Myr Galvanizer | som |
-| {M}: destroy each nonland permanent with mana value N whose controller was dealt combat damage by ~ ~. activate only once each turn. | 1 | Steel Hellkite | som |
 | {M}: target player mills N cards, where N is the number of charge counters on ~. | 1 | Grindclock | som |
 | {M}: until end of turn, ~ becomes a construct artifact creature with "..." | 1 | Chimeric Mass | som |
 | {M}{M}: destroy target artifact. ~ gets +N/+N until end of turn, where N is that artifact's mana value. | 1 | Hoard-Smelter Dragon | som |

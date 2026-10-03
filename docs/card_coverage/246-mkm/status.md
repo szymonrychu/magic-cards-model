@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 40 | 14.9% |
-| Works (untested) | 115 | 42.9% |
+| Tested | 41 | 15.3% |
+| Works (untested) | 112 | 41.8% |
 | Partial (unaudited) | 10 | 3.7% |
-| Not working | 103 | 38.4% |
+| Not working | 105 | 39.2% |
 
 ## Cards needing work
 
@@ -111,13 +111,15 @@
 | Yarus, Roar of the Old Gods | silent | Whenever a face-down creature you control dies, return it to the battlefield face down under its owner's control if it's a permanent card, then turn it face up. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Anzrag's Rampage | notice | Destroy all artifacts you don't control, then exile the top X cards of your library, where X is the number of artifacts that were put into graveyards from the b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Archdruid's Charm | notice | Choose one — • Search your library for a creature or land card and reveal it. Put it onto the battlefield tapped if it's a land card. Otherwise, put it into you | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Behind the Mask | notice | As an additional cost to cast this spell, you may collect evidence 6. (Exile cards with total mana value 6 or greater from your graveyard.) Until end of turn, t | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Behind the Mask | notice | As an additional cost to cast this spell, you may collect evidence 6. (Exile cards with total mana value 6 or greater from your graveyard.) Until end of turn, t | unparsed remainder: As an additional cost to cast this spell, you may collect evidence 6. If evidence was collected, it has base power and toughness 1/1 until end of turn instead. | Y/Y/Y | not_working |
 | Blood Spatter Analysis | notice | Whenever one or more creatures die, mill a card and put a bloodstain counter on this enchantment. Then sacrifice it if it has five or more bloodstain counters o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Case of the Burning Masks | notice | Solved — Sacrifice this Case: Exile the top three cards of your library. Choose one of them. You may play that card this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Case of the Filched Falcon | notice | Solved — {2}{U}, Sacrifice this Case: Put four +1/+1 counters on target noncreature artifact. It becomes a 0/0 Bird creature with flying in addition to its othe | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Caught Red-Handed | notice | This spell can't be countered. (This includes by the ward ability.) Gain control of target creature until end of turn. Untap that creature. It gains haste until | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Case of the Stashed Skeleton | notice | To solve — You control no suspected Skeletons. | unread intervening "if": "you control no suspected Skeletons" - the engine records an InterveningIfNotice and the ability never triggers (CR 603.4) | Y/Y/Y | not_working |
+| Caught Red-Handed | notice | This spell can't be countered. (This includes by the ward ability.) Gain control of target creature until end of turn. Untap that creature. It gains haste until | unparsed remainder: This spell can't be countered. Untap that creature. It gains haste until end of turn. Suspect it. | Y/Y/Y | not_working |
 | Deadly Complication | notice | Choose one or both — • Destroy target creature. • Put a +1/+1 counter on target suspected creature you control. You may have it become no longer suspected. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Eliminate the Impossible | notice | Investigate. Creatures your opponents control get -2/-0 until end of turn. If any of them are suspected, they're no longer suspected. (To investigate, create a  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Eliminate the Impossible | notice | Investigate. Creatures your opponents control get -2/-0 until end of turn. If any of them are suspected, they're no longer suspected. (To investigate, create a  | unparsed remainder: Investigate. If any of them are suspected, they're no longer suspected. | Y/Y/Y | not_working |
+| Essence of Antiquity | notice | When this creature is turned face up, creatures you control gain hexproof until end of turn. Untap them. | unparsed remainder: Untap them. | Y/Y/Y | not_working |
 | Gearbane Orangutan | notice | When this creature enters, choose one — • Destroy up to one target artifact. • Sacrifice an artifact. If you do, put two +1/+1 counters on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Get a Leg Up | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains reach. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Hotshot Investigators | notice | When this creature enters, return up to one other target creature to its owner's hand. If you controlled it, investigate. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
@@ -151,7 +153,6 @@
 | Candlestick | handled | Equipped creature gets +1/+1 and has "Whenever this creature attacks, surveil 2." | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Case of the Ransacked Lab | handled | Instant and sorcery spells you cast cost {1} less to cast. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Case of the Shattered Pact | handled | When this Case enters, search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Case of the Stashed Skeleton | handled | When this Case enters, create a 2/1 black Skeleton creature token and suspect it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cease // Desist | handled | Exile up to two target cards from a single graveyard. Target player gains 2 life and draws a card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cerebral Confiscation | handled | Choose one — • Target opponent discards two cards. • Target opponent reveals their hand. You choose a nonland card from it. That player discards that card. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cold Case Cracker | handled | When this creature dies, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -170,7 +171,6 @@
 | Drag the Canal | handled | Create a 2/2 white and blue Detective creature token. If a creature died this turn, you gain 2 life, surveil 2, then investigate. (Create a Clue token. It's an  | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Due Diligence | handled | When this Aura enters, target creature you control other than enchanted creature gets +2/+2 and gains vigilance until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Escape Tunnel | handled | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Essence of Antiquity | handled | When this creature is turned face up, creatures you control gain hexproof until end of turn. Untap them. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Exit Specialist | handled | This creature can't be blocked by creatures with power 3 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Ezrim, Agency Chief | handled | When Ezrim enters, investigate twice. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fae Flight | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -200,7 +200,6 @@
 | Leering Onlooker | handled | {2}{B}{B}, Exile this card from your graveyard: Create two tapped 1/1 black Bat creature tokens with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Long Goodbye | handled | This spell can't be countered. (This includes by the ward ability.) Destroy target creature or planeswalker with mana value 3 or less. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Loxodon Eavesdropper | handled | When this creature enters, investigate. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Macabre Reconstruction | handled | This spell costs {2} less to cast if a creature card was put into your graveyard from anywhere this turn. Return up to two target creature cards from your grave | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Make Your Move | handled | Destroy target artifact, enchantment, or creature with power 4 or greater. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Makeshift Binding | handled | When this enchantment enters, exile target creature an opponent controls until this enchantment leaves the battlefield. You gain 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Marketwatch Phantom | handled | Whenever another creature you control with power 2 or less enters, this creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -258,7 +257,7 @@
 ## Fully supported
 
 <details>
-<summary>40 cards</summary>
+<summary>41 cards</summary>
 
 - Absolving Lammasu
 - Aftermath Analyst
@@ -280,6 +279,7 @@
 - Karlov Watchdog
 - Leyline of the Guildpact
 - Lush Portico
+- Macabre Reconstruction
 - Massacre Girl, Known Killer
 - Melek, Reforged Researcher
 - Meticulous Archive
@@ -312,6 +312,7 @@
 | cloak | 2 | Expose the Culprit, Vannifar, Evolved Enigma | mkm |
 | Choose one | 1 | Archdruid's Charm | mkm |
 | Choose one or both | 1 | Deadly Complication | mkm |
+| To solve | 1 | Case of the Stashed Skeleton | mkm |
 | as an additional cost to cast ~, collect evidence N, where N is the total mana value of the permanents ~ targets. destroy up to one target artifact, up to one t | 1 | Urgent Necropsy | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) each opponent sacrifices a cr | 1 | Extract a Confession | mkm |
 | as an additional cost to cast ~, you may collect evidence N. (exile cards with total mana value N or greater from your graveyard.) search your library for a bas | 1 | Analyze the Pollen | mkm |
@@ -367,6 +368,7 @@
 | when ~ enters, untap enchanted creature. it gains hexproof until end of turn. if it"..."s no longer suspected. | 1 | Airtight Alibi | mkm |
 | when ~ enters, you may collect evidence N. | 1 | Surveillance Monitor | mkm |
 | when ~ enters, you may search your graveyard, hand and/or library for a card named magnifying glass and/or a card named thinking cap and put them onto the battl | 1 | Agency Outfitter | mkm |
+| when ~ is turned face up, creatures you control gain hexproof until end of turn. untap them. | 1 | Essence of Antiquity | mkm |
 | when ~ is turned face up, exile another target nonland permanent. if you controlled it, return it to the battlefield tapped. otherwise, its controller creates a | 1 | Unyielding Gatekeeper | mkm |
 | when ~ is turned face up, search your library for up to two forest cards and reveal them. put one of them onto the battlefield tapped and the other into your ha | 1 | Flourishing Bloom-Kin | mkm |
 | when ~ is turned face up, target opponent gains control of any number of target permanents you control. draw a card for each one they gained control of ~. | 1 | Coveted Falcon | mkm |

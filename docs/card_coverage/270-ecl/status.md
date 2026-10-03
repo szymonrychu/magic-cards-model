@@ -18,14 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 138 | 54.8% |
-| Works (untested) | 113 | 44.8% |
+| Works (untested) | 112 | 44.4% |
 | Partial (unaudited) | 1 | 0.4% |
-| Not working | 0 | 0.0% |
+| Not working | 1 | 0.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
+| Gallant Fowlknight | notice | When this creature enters, creatures you control get +1/+0 until end of turn. Kithkin creatures you control also gain first strike until end of turn. | unparsed remainder: Kithkin creatures you control also gain first strike until end of turn. | Y/Y/Y | not_working |
 | Wildvine Pummeler | unaudited | Vivid — This spell costs {1} less to cast for each color among permanents you control. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Aquitect's Defenses | handled | When this Aura enters, enchanted creature gains hexproof until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Assert Perfection | handled | Target creature you control gets +1/+0 until end of turn. It deals damage equal to its power to up to one target creature an opponent controls. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -66,7 +67,6 @@
 | Flitterwing Nuisance | handled | This creature enters with a -1/-1 counter on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flock Impostor | handled | When this creature enters, return up to one other target creature you control to its owner's hand. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Foraging Wickermaw | handled | When this creature enters, surveil 1. | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Gallant Fowlknight | handled | When this creature enters, creatures you control get +1/+0 until end of turn. Kithkin creatures you control also gain first strike until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gangly Stompling | handled | Trample | machines/combat.py | Y/Y/Y | not_tested |
 | Giantfall | handled | Choose one — • Target creature you control deals damage equal to its power to target creature an opponent controls. • Destroy target artifact. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gilt-Leaf's Embrace | handled | When this Aura enters, enchanted creature gains trample and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -292,6 +292,7 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | Vivid | 1 | Wildvine Pummeler | ecl |
+| when ~ enters, creatures you control get +N/+N until end of turn. kithkin creatures you control also gain first strike until end of turn. | 1 | Gallant Fowlknight | ecl |
 
 ## Notes
 

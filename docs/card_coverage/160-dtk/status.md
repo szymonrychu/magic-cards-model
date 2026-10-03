@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 6.0% |
+| Tested | 15 | 6.4% |
 | Works (untested) | 125 | 53.6% |
 | Partial (unaudited) | 11 | 4.7% |
-| Not working | 83 | 35.6% |
+| Not working | 82 | 35.2% |
 
 ## Cards needing work
 
@@ -77,7 +77,6 @@
 | Sarkhan's Rage | silent | Sarkhan's Rage deals 5 damage to any target. If you control no Dragons, Sarkhan's Rage deals 2 damage to you. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Savage Ventmaw | silent | Whenever this creature attacks, add {R}{R}{R}{G}{G}{G}. Until end of turn, you don't lose this mana as steps and phases end. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Scale Blessing | silent | Bolster 1, then put a +1/+1 counter on each creature you control with a +1/+1 counter on it. (To bolster 1, choose a creature with the least toughness among cre | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Shaman of Forgotten Ways | silent | Formidable — {9}{G}{G}, {T}: Each player's life total becomes the number of creatures they control. Activate only if creatures you control have total power 8 or | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shieldhide Dragon | silent | When this creature is turned face up, put a +1/+1 counter on each other Dragon creature you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Shorecrasher Elemental | silent | {U}: Exile this creature, then return it to the battlefield face down under its owner's control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Sidisi's Faithful | silent | When this creature exploits a creature, return target creature to its owner's hand. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
@@ -93,7 +92,7 @@
 | Ainok Artillerist | notice | This creature has reach as long as it has a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blessed Reincarnation | notice | Exile target creature an opponent controls. That player reveals cards from the top of their library until a creature card is revealed. The player puts that card | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Blood-Chin Fanatic | notice | {1}{B}, Sacrifice another Warrior creature: Target player loses X life and you gain X life, where X is the sacrificed creature's power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Butcher's Glee | notice | Target creature gets +3/+0 and gains lifelink until end of turn. Regenerate it. (Damage dealt by a creature with lifelink also causes its controller to gain tha | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Butcher's Glee | notice | Target creature gets +3/+0 and gains lifelink until end of turn. Regenerate it. (Damage dealt by a creature with lifelink also causes its controller to gain tha | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Center Soul | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Display of Dominance | notice | Choose one — • Destroy target blue or black noncreature permanent. • Permanents you control can't be the targets of blue or black spells your opponents control  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Draconic Roar | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand. Draconic Roar deals 3 damage to target creature. If you revealed a Dragon | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -249,7 +248,7 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Ambuscade Shaman
 - Anticipate
@@ -263,6 +262,7 @@
 - Kolaghan's Command
 - Marang River Skeleton
 - Myth Realized
+- Shaman of Forgotten Ways
 - Stampeding Elk Herd
 - Zurgo Bellstriker
 
@@ -273,8 +273,8 @@
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
 | when ~ is turned face up, put a +N/+N counter on each other dragon creature you control. | 5 | Acid-Spewer Dragon, Belltoll Dragon, Herdchaser Dragon, Shieldhide Dragon, Stormwing Dragon | dtk |
-| Formidable | 3 | Crater Elemental, Glade Watcher, Shaman of Forgotten Ways | dtk |
 | when ~ enters, bolster N. | 3 | Aven Tactician, Sandcrafter Mage, Sandsteppe Scavenger | dtk |
+| Formidable | 2 | Crater Elemental, Glade Watcher | dtk |
 | as an additional cost to cast ~, you may reveal a dragon card from your hand. | 2 | Orator of Ojutai, Scaleguard Sentinels | dtk |
 | Choose one | 1 | Display of Dominance | dtk |
 | Choose two | 1 | Dromoka's Command | dtk |

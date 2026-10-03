@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 2 | 2.5% |
-| Works (untested) | 48 | 60.8% |
+| Works (untested) | 49 | 62.0% |
 | Partial (unaudited) | 4 | 5.1% |
-| Not working | 25 | 31.6% |
+| Not working | 24 | 30.4% |
 
 ## Cards needing work
 
@@ -45,7 +45,6 @@
 | Thelonite Hermit | silent | All Saprolings get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tolsimir Wolfblood | silent | Other green creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Undying Rage | silent | Enchanted creature gets +2/+2 and can't block. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vedalken Dismisser | silent | When this creature enters, put target creature on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Whitemane Lion | silent | When this creature enters, return a creature you control to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wojek Apothecary | silent | Radiance — {T}: Prevent the next 1 damage that would be dealt to target creature and each other creature that shares a color with it this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Helldozer | notice | {B}{B}{B}, {T}: Destroy target land. If that land was nonbasic, untap this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -101,6 +100,7 @@
 | Twilight Drover | handled | Whenever a creature token leaves the battlefield, put a +1/+1 counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ursapine | handled | {G}: Target creature gets +1/+1 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vacuumelt | handled | Replicate {2}{U} (When you cast this spell, copy it for each time you paid its replicate cost. You may choose new targets for the copies.) Return target creatur | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vedalken Dismisser | handled | When this creature enters, put target creature on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vedalken Entrancer | handled | {U}, {T}: Target player mills two cards. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vesper Ghoul | handled |  |  | Y/-/- | not_tested |
 
@@ -133,7 +133,6 @@
 | other green creatures you control get +N/+N. | 1 | Tolsimir Wolfblood | psal |
 | return target permanent to its owner's hand. its controller loses N life. transmute {M}{M}{M} ({M}{M}{M}, discard ~: search your library for a card with the sam | 1 | Clutch of the Undercity | psal |
 | until end of turn, target creature gains trample and gets +N/+N, where N is the number of attacking creatures. | 1 | Strength in Numbers | psal |
-| when ~ enters, put target creature on top of its owner's library. | 1 | Vedalken Dismisser | psal |
 | when ~ enters, return a creature you control to its owner's hand. | 1 | Whitemane Lion | psal |
 | when ~ enters, search your library for an aura card that could enchant it. if ~ is still on the battlefield, put that aura card onto the battlefield attached to | 1 | Auratouched Mage | psal |
 | when ~ enters, you gain protection from the color of your choice until end of turn. | 1 | Seht's Tiger | psal |

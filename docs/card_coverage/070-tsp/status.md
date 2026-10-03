@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 23 | 8.6% |
-| Works (untested) | 103 | 38.4% |
-| Partial (unaudited) | 28 | 10.4% |
-| Not working | 114 | 42.5% |
+| Works (untested) | 105 | 39.2% |
+| Partial (unaudited) | 27 | 10.1% |
+| Not working | 113 | 42.2% |
 
 ## Cards needing work
 
@@ -115,7 +115,6 @@
 | Subterranean Shambler | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Sulfurous Blast | silent | Sulfurous Blast deals 2 damage to each creature and each player. If you cast this spell during your main phase, Sulfurous Blast deals 3 damage to each creature  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Tectonic Fiend | silent | Echo | no machine in the engine executes this keyword | Y/-/- | not_working |
-| Temporal Eddy | silent | Put target creature or land on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thelon of Havenwood | silent | Each Fungus creature gets +1/+1 for each spore counter on it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Thick-Skinned Goblin | silent | {R}: This creature gains protection from red until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Truth or Tale | silent | Reveal the top five cards of your library and separate them into two piles. An opponent chooses one of those piles. Put a card from the chosen pile into your ha | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -129,7 +128,7 @@
 | Yavimaya Dryad | silent | When this creature enters, you may search your library for a Forest card, put it onto the battlefield tapped under target player's control, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Zealot il-Vec | silent | Whenever this creature attacks and isn't blocked, you may have it deal 1 damage to target creature. If you do, prevent all combat damage this creature would dea | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Amrou Scout | notice | {4}, {T}: Search your library for a Rebel permanent card with mana value 3 or less, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Chronatog Totem | notice | {0}: This creature gets +3/+3 until end of turn. You skip your next turn. Activate only once each turn and only if this permanent is a creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Chronatog Totem | notice | {0}: This creature gets +3/+3 until end of turn. You skip your next turn. Activate only once each turn and only if this permanent is a creature. | unparsed remainder: You skip your next turn. | Y/-/- | not_working |
 | Goblin Skycutter | notice | Sacrifice this creature: It deals 2 damage to target creature with flying. That creature loses flying until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gorgon Recluse | notice | Whenever this creature blocks or becomes blocked by a nonblack creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Gustcloak Cavalier | notice | Whenever this creature becomes blocked, you may untap this creature and remove it from combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -146,7 +145,6 @@
 | Dementia Sliver | unaudited | All Slivers have "{T}: Choose a card name. Target opponent reveals a card at random from their hand. If that card has the chosen name, that player discards it.  | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Dralnu, Lich Lord | unaudited | If damage would be dealt to Dralnu, sacrifice that many permanents instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Foriysian Interceptor | unaudited | This creature can block an additional creature each combat. | a static ability no support check audits - not verified either way | Y/-/- | partial |
-| Fortune Thief | unaudited | Damage that would reduce your life total to less than 1 reduces it to 1 instead. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fungus Sliver | unaudited | All Sliver creatures have "Whenever this creature is dealt damage, put a +1/+1 counter on it." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Gemhide Sliver | unaudited | All Slivers have "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Harmonic Sliver | unaudited | All Slivers have "When this permanent enters, destroy target artifact or enchantment." | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -207,6 +205,7 @@
 | Flowstone Channeler | handled | {1}{R}, {T}, Discard a card: Target creature gets +1/-1 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fool's Demise | handled | When enchanted creature dies, return that card to the battlefield under your control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fortify | handled | Choose one — • Creatures you control get +2/+0 until end of turn. • Creatures you control get +0/+2 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Fortune Thief | handled | Damage that would reduce your life total to less than 1 reduces it to 1 instead. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Fungal Reaches | handled | {1}, {T}: Put a storage counter on this land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Gaze of Justice | handled | As an additional cost to cast this spell, tap three untapped white creatures you control. Exile target creature. Flashback {5}{W} (You may cast this card from y | the engine reads this text and performs it | Y/-/- | not_tested |
 | Greenseeker | handled | {G}, {T}, Discard a card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -253,6 +252,7 @@
 | Strangling Soot | handled | Destroy target creature with toughness 3 or less. Flashback {5}{R} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sudden Death | handled | Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Target creature gets -4/-4 unt | the engine reads this text and performs it | Y/-/- | not_tested |
 | Swarmyard | handled | {T}: Regenerate target Insect, Rat, Spider, or Squirrel. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Temporal Eddy | handled | Put target creature or land on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Tendrils of Corruption | handled | Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Think Twice | handled | Draw a card. Flashback {2}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Thrill of the Hunt | handled | Target creature gets +1/+2 until end of turn. Flashback {W} (You may cast this card from your graveyard for its flashback cost. Then exile it.) | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -334,7 +334,6 @@
 | creature cards you own that aren't on the battlefield have flash. | 1 | Teferi, Mage of Zhalfir | tsp |
 | creatures of the chosen color get +N/+N. | 1 | Gauntlet of Power | tsp |
 | creatures you control are slivers in addition to their other creature types. | 1 | Hivestone | tsp |
-| damage that would reduce your life total to less than N reduces it to N instead. | 1 | Fortune Thief | tsp |
 | destroy target creature. its controller loses life equal to its power plus its toughness. suspend N—{M}{M} (rather than cast ~ from your hand, you may pay {M}{M | 1 | Phthisis | tsp |
 | each fungus creature gets +N/+N for each spore counter on it. | 1 | Thelon of Havenwood | tsp |
 | each player loses N life, discards a card, sacrifices a creature of their choice, then sacrifices a land of their choice. | 1 | Smallpox | tsp |
@@ -350,7 +349,6 @@
 | other white creatures get +N/+N. | 1 | Celestial Crusader | tsp |
 | prevent all damage that creatures would deal to players ~. | 1 | Chameleon Blur | tsp |
 | prevent all damage that would be dealt by enchanted creature. | 1 | Temporal Isolation | tsp |
-| put target creature or land on top of its owner's library. | 1 | Temporal Eddy | tsp |
 | put target face-up exiled card into its owner's graveyard. | 1 | Pull from Eternity | tsp |
 | reveal the top five cards of your library and separate them into two piles. an opponent chooses one of those piles. put a card from the chosen pile into your ha | 1 | Truth or Tale | tsp |
 | sacrifice ~: counter target spell unless its controller pays {M}. | 1 | Spiketail Drakeling | tsp |

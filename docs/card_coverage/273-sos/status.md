@@ -18,14 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 114 | 44.7% |
-| Works (untested) | 141 | 55.3% |
+| Works (untested) | 140 | 54.9% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 0 | 0.0% |
+| Not working | 1 | 0.4% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
+| Dissection Practice | notice | Target opponent loses 1 life and you gain 1 life. Up to one target creature gets +1/+1 until end of turn. Up to one target creature gets -1/-1 until end of turn | unparsed remainder: Up to one target creature gets +1/+1 until end of turn. | Y/Y/Y | not_working |
 | Abigale, Poet Laureate // Heroic Stanza | handled | Put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Abstract Paintmage | handled | At the beginning of your first main phase, add {U}{R}. Spend this mana only to cast instant and sorcery spells. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Additive Evolution | handled | When this enchantment enters, create a 0/0 green and blue Fractal creature token. Put three +1/+1 counters on it. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -50,7 +51,6 @@
 | Cost of Brilliance | handled | Target player draws two cards and loses 2 life. Put a +1/+1 counter on up to one target creature. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Cuboid Colony | handled | Flying | machines/combat.py | Y/Y/Y | not_tested |
 | Dig Site Inventory | handled | Put a +1/+1 counter on target creature you control. It gains vigilance until end of turn. Flashback {W} (You may cast this card from your graveyard for its flas | the engine reads this text and performs it | Y/Y/Y | not_tested |
-| Dissection Practice | handled | Target opponent loses 1 life and you gain 1 life. Up to one target creature gets +1/+1 until end of turn. Up to one target creature gets -1/-1 until end of turn | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Divergent Equation | handled | Return up to X target instant and/or sorcery cards from your graveyard to your hand. Exile Divergent Equation. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Eager Glyphmage | handled | When this creature enters, create a 1/1 white and black Inkling creature token with flying. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Efflorescence | handled | Put two +1/+1 counters on target creature. Infusion — If you gained life this turn, that creature also gains trample and indestructible until end of turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -292,7 +292,9 @@
 
 ## Missing mechanics
 
-None.
+| Mechanic (label / template) | Count | Example cards | Sets |
+|---|---|---|---|
+| target opponent loses N life and you gain N life. up to one target creature gets +N/+N until end of turn. up to one target creature gets -N/-N until end of turn | 1 | Dissection Practice | sos |
 
 ## Notes
 

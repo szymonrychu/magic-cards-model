@@ -7,9 +7,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 0 | 0.0% |
-| Works (untested) | 100 | 100.0% |
+| Works (untested) | 99 | 99.0% |
 | Partial (unaudited) | 0 | 0.0% |
-| Not working | 0 | 0.0% |
+| Not working | 1 | 1.0% |
 
 ## Cards
 
@@ -92,7 +92,7 @@
 | Cryogen Relic | handled | not_tested | standard/uw control 0.36 |
 | Repurposing Bay | handled | not_tested | standard/uw control 0.36 |
 | Simulacrum Synthesizer | handled | not_tested | standard/uw control 0.36 |
-| The Fire Crystal | handled | not_tested | standard/uw control 0.36 |
+| The Fire Crystal | notice | not_working | standard/uw control 0.36 |
 | Jadzi, Steward of Fate // Oracle's Gift | handled | not_tested | pioneer/ur aggro 0.35 |
 | Candy Trail | handled | not_tested | standard/uw control 0.33 |
 | Castle Doom | handled | not_tested | standard/uw control 0.33 |

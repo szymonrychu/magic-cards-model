@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 20 | 7.8% |
-| Works (untested) | 116 | 45.1% |
+| Works (untested) | 117 | 45.5% |
 | Partial (unaudited) | 17 | 6.6% |
-| Not working | 104 | 40.5% |
+| Not working | 103 | 40.1% |
 
 ## Cards needing work
 
@@ -113,15 +113,14 @@
 | Divine Smite | notice | Target creature or planeswalker an opponent controls phases out. If that permanent is black, exile it instead. (If it phases out, treat it and anything attached | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dragon's Fire | notice | As an additional cost to cast this spell, you may reveal a Dragon card from your hand or choose a Dragon you control. Dragon's Fire deals 3 damage to target cre | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Feign Death | notice | Until end of turn, target creature gains "When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it." | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Forsworn Paladin | notice | {2}{B}: Target creature gets +2/+0 until end of turn. If mana from a Treasure was spent to activate this ability, that creature also gains deathtouch until end  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Iymrith, Desert Doom | notice | Iymrith has ward {4} as long as it's untapped. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Lair of the Hydra | notice | {X}{G}: Until end of turn, this land becomes an X/X green Hydra creature. It's still a land. X can't be 0. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Lair of the Hydra | notice | {X}{G}: Until end of turn, this land becomes an X/X green Hydra creature. It's still a land. X can't be 0. | unparsed remainder: 0 can't be 0. | Y/Y/- | not_working |
 | Nadaar, Selfless Paladin | notice | Other creatures you control get +1/+1 as long as you've completed a dungeon. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Ochre Jelly | notice | Split — When this creature dies, if it had two or more +1/+1 counters on it, create a token that's a copy of it at the beginning of the next end step. The token | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Orcus, Prince of Undeath | notice | When Orcus enters, choose one — • Each other creature gets -X/-X until end of turn. You lose X life. • Return up to X target creature cards with total mana valu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Paladin Class | notice | Spells your opponents cast during your turn cost {1} more to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Price of Loyalty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell,  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Ray of Enfeeblement | notice | Target creature gets -4/-1 until end of turn. If that creature is white, it gets -4/-4 until end of turn instead. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Price of Loyalty | notice | Gain control of target creature until end of turn. Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell,  | unparsed remainder: Untap that creature. It gains haste until end of turn. If mana from a Treasure was spent to cast this spell, that creature gets +2/+0 until end of turn. | Y/Y/- | not_working |
+| Ray of Enfeeblement | notice | Target creature gets -4/-1 until end of turn. If that creature is white, it gets -4/-4 until end of turn instead. | unparsed remainder: If that creature is white, it gets -4/-4 until end of turn instead. | Y/Y/- | not_working |
 | Spoils of the Hunt | notice | Target creature you control gets +1/+0 until end of turn for each mana from a Treasure that was spent to cast this spell. Then that creature deals damage equal  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Book of Exalted Deeds | notice | {W}{W}{W}, {T}, Exile The Book of Exalted Deeds: Put an enlightened counter on target Angel. It gains "You can't lose the game and your opponents can't win the  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | The Tarrasque | notice | The Tarrasque has haste and ward {10} as long as it was cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -178,6 +177,7 @@
 | Eyes of the Beholder | handled | Target creature gets -11/-11 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fates' Reversal | handled | Return up to one target creature card from your graveyard to your hand. Venture into the dungeon. (Enter the first room or advance to the next room.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Flumph | handled | Whenever this creature is dealt damage, you and target opponent each draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Forsworn Paladin | handled | {1}{B}, {T}, Pay 1 life: Create a Treasure token. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Goblin Javelineer | handled | Whenever this creature becomes blocked, it deals 1 damage to target creature blocking it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Greataxe | handled | Equipped creature gets +4/+0. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gretchen Titchwillow | handled | {2}{G}{U}: Draw a card. You may put a land card from your hand onto the battlefield. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -397,7 +397,6 @@
 | {M}: ~ becomes a shapeshifter artifact creature with base power and toughness N/N until end of turn. | 1 | Mimic | afr |
 | {M}{M}, {M}: search your library for a creature card with mana value equal to the number of harmony counters on ~, reveal it, and put it into your hand. if that | 1 | Instrument of the Bards | afr |
 | {M}{M}: roll a dN. activate only if ~ is in your graveyard. | 1 | Loathsome Troll | afr |
-| {M}{M}: target creature gets +N/+N until end of turn. if mana from a treasure was spent to activate ~, that creature also gains deathtouch until end of turn. | 1 | Forsworn Paladin | afr |
 | {M}{M}: until end of turn, ~ becomes an N/N green hydra creature. it"..."t be N. | 1 | Lair of the Hydra | afr |
 | {M}{M}: until end of turn, ~ has base power and toughness N/N, gains trample, and isn't a human. | 1 | Werewolf Pack Leader | afr |
 | {M}{M}{M}, {M}, exile ~: put an enlightened counter on target angel. it gains "..." activate only as a sorcery. | 1 | The Book of Exalted Deeds | afr |

@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 6.5% |
-| Works (untested) | 168 | 64.4% |
+| Works (untested) | 166 | 63.6% |
 | Partial (unaudited) | 11 | 4.2% |
-| Not working | 65 | 24.9% |
+| Not working | 67 | 25.7% |
 
 ## Cards needing work
 
@@ -40,12 +40,12 @@
 | Equestrian Skill | silent | As long as enchanted creature is a Human, it has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Erdwal Illuminator | silent | Whenever you investigate for the first time each turn, investigate an additional time. | the engine does not recognise this trigger's condition - it never triggers | Y/Y/- | not_working |
 | Ever After | silent | Return up to two target creature cards from your graveyard to the battlefield. Each of those creatures is a black Zombie in addition to its other colors and typ | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Fevered Visions | silent | At the beginning of each player's end step, that player draws a card. If the player is your opponent and has four or more cards in hand, this enchantment deals  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Flameblade Angel | silent | Whenever a source an opponent controls deals damage to you or a permanent you control, you may have this creature deal 1 damage to that source's controller. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Forgotten Creation | silent | At the beginning of your upkeep, you may discard all the cards in your hand. If you do, draw that many cards. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Fork in the Road | silent | Search your library for up to two basic land cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | From Under the Floorboards | silent | Madness {X}{B}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put it into your graveyard.) Create three tappe | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Geier Reach Bandit // Vildin-Pack Alpha | silent | Whenever a Werewolf you control enters, you may transform it. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Gone Missing | silent | Put target permanent on top of its owner's library. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harness the Storm | silent | Whenever you cast an instant or sorcery spell from your hand, you may cast target card with the same name as that spell from your graveyard. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Harvest Hand // Scrounged Scythe | silent | As long as equipped creature is a Human, it has menace. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Hope Against Hope | silent | As long as enchanted creature is a Human, it has first strike. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -87,8 +87,10 @@
 | Declaration in Stone | notice | Exile target creature and all other creatures its controller controls with the same name as that creature. That player investigates for each nontoken creature e | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Essence Flux | notice | Exile target creature you control, then return that card to the battlefield under its owner's control. If it's a Spirit, put a +1/+1 counter on it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Geralf's Masterpiece | notice | This creature gets -1/-1 for each card in your hand. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Malevolent Whispers | notice | Gain control of target creature until end of turn. Untap that creature. It gets +2/+0 and gains haste until end of turn. Madness {3}{R} (If you discard this car | unparsed remainder: Untap that creature. It gets +2/+0 and gains haste until end of turn. | Y/Y/- | not_working |
+| Odric, Lunarch Marshal | notice | At the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. The same is true for flyi | unparsed remainder: The same is true for flying, deathtouch, double strike, haste, hexproof, indestructible, lifelink, menace, reach, skulk, trample, and vigilance. | Y/Y/- | not_working |
 | Structural Distortion | notice | Exile target artifact or land. Structural Distortion deals 2 damage to that permanent's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Tenacity | notice | Creatures you control get +1/+1 and gain lifelink until end of turn. Untap those creatures. (Damage dealt by those creatures also causes you to gain that much l | unparsed remainder: Untap those creatures. | Y/Y/- | not_working |
 | Thing in the Ice // Awoken Horror | notice | Whenever you cast an instant or sorcery spell, remove an ice counter from this creature. Then if it has no ice counters on it, transform it. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Triskaidekaphobia | notice | At the beginning of your upkeep, choose one — • Each player with exactly 13 life loses the game, then each player gains 1 life. • Each player with exactly 13 li | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Bound by Moonsilver | unaudited | Enchanted creature can't attack, block, or transform. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -144,7 +146,6 @@
 | Explosive Apparatus | handled | {3}, {T}, Sacrifice this artifact: It deals 2 damage to any target. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Expose Evil | handled | Tap up to two target creatures. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Farbog Revenant | handled | Lifelink | machines/combat.py | Y/Y/- | not_tested |
-| Fevered Visions | handled | At the beginning of each player's end step, that player draws a card. If the player is your opponent and has four or more cards in hand, this enchantment deals  | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Fleeting Memories | handled | When this enchantment enters, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Foreboding Ruins | handled | As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Forsaken Sanctuary | handled | This land enters tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -158,6 +159,7 @@
 | Ghoulsteed | handled | {2}{B}, Discard two cards: Return this card from your graveyard to the battlefield tapped. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gibbering Fiend | handled | When this creature enters, it deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Gisa's Bidding | handled | Create two 2/2 black Zombie creature tokens. Madness {2}{B} (If you discard this card, discard it into exile. When you do, cast it for its madness cost or put i | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Gone Missing | handled | Put target permanent on top of its owner's library. Investigate. (Create a Clue token. It's an artifact with "{2}, Sacrifice this token: Draw a card.") | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Graf Mole | handled | Whenever you sacrifice a Clue, you gain 3 life. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Grotesque Mutation | handled | Target creature gets +3/+1 and gains lifelink until end of turn. (Damage dealt by the creature also causes its controller to gain that much life.) | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Hanweir Militia Captain // Westvale Cult Leader | handled | At the beginning of your upkeep, if you control four or more creatures, transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -196,7 +198,6 @@
 | Nephalia Moondrakes | handled | When this creature enters, target creature gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Niblis of Dusk | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Obsessive Skinner | handled | When this creature enters, put a +1/+1 counter on target creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Odric, Lunarch Marshal | handled | At the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. The same is true for flyi | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Olivia's Bloodsworn | handled | This creature can't block. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ongoing Investigation | handled | Whenever one or more creatures you control deal combat damage to a player, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Open the Armory | handled | Search your library for an Aura or Equipment card, reveal it, put it into your hand, then shuffle. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -243,7 +244,6 @@
 | Stromkirk Mentor | handled | When this creature enters, put a +1/+1 counter on another target Vampire you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Survive the Night | handled | Target creature gets +1/+0 and gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.) Investigate. (Create a Clue tok | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Tamiyo's Journal | handled | At the beginning of your upkeep, investigate. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Tenacity | handled | Creatures you control get +1/+1 and gain lifelink until end of turn. Untap those creatures. (Damage dealt by those creatures also causes you to gain that much l | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thalia's Lieutenant | handled | When this creature enters, put a +1/+1 counter on each other Human you control. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Thornhide Wolves | handled |  |  | Y/Y/- | not_tested |
 | Thraben Gargoyle // Stonewing Antagonizer | handled | {6}: Transform this creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -306,6 +306,8 @@
 | as long as enchanted creature is a human, it has trample. | 1 | Equestrian Skill | soi |
 | as long as equipped creature is a human, it gets an additional +N/+N. | 1 | True-Faith Censer | soi |
 | as long as equipped creature is a human, it has menace. | 1 | Harvest Hand // Scrounged Scythe | soi |
+| at the beginning of each combat, creatures you control gain first strike until end of turn if a creature you control has first strike. the same is true for flyi | 1 | Odric, Lunarch Marshal | soi |
+| at the beginning of each player's end step, that player draws a card. if the player is your opponent and has four or more cards in hand, ~ deals N damage to tha | 1 | Fevered Visions | soi |
 | at the beginning of your upkeep, choose one — • each player with exactly N life loses the game, then each player gains N life. • each player with exactly N life | 1 | Triskaidekaphobia | soi |
 | at the beginning of your upkeep, each player discards a card. each opponent who discarded a card that shares a card type with the card you discarded loses N lif | 1 | Creeping Dread | soi |
 | at the beginning of your upkeep, reveal the top card of your library. any opponent may have you put that card into your graveyard. if a player does, ~ deals dam | 1 | Sin Prodder | soi |
@@ -314,6 +316,7 @@
 | attacking creatures you control get +N/+N and have trample. | 1 | Breakneck Rider // Neck Breaker | soi |
 | choose target creature you don"..."s a wolf or a werewolf deals damage equal to its power to that creature. | 1 | Moonlight Hunt | soi |
 | counter target sorcery spell. delirium — if there are four or more card types among cards in your graveyard, search the graveyard, hand, and library of that spe | 1 | Invasive Surgery | soi |
+| creatures you control get +N/+N and gain lifelink until end of turn. untap those creatures. (damage dealt by those creatures also causes you to gain that much l | 1 | Tenacity | soi |
 | creatures you control have skulk. | 1 | Behind the Scenes | soi |
 | each vampire creature card you own that isn't on the battlefield has madness. the madness cost is equal to its mana cost. | 1 | Falkenrath Gorger | soi |
 | enchanted creature can't attack, block, or transform. | 1 | Bound by Moonsilver | soi |
@@ -331,7 +334,6 @@
 | madness {M}{M}{M} (if you discard ~, discard it into exile. when you do, cast it for its madness cost or put it into your graveyard.) gain control of target cre | 1 | Welcome to the Fold | soi |
 | mill N cards. target player loses N life for each creature card put into your graveyard ~. | 1 | Liliana's Indignation | soi |
 | put target card from a graveyard on your choice of the top or bottom of its owner's library. create a N/N white spirit creature token with flying. | 1 | Not Forgotten | soi |
-| put target permanent on top of its owner"..."s an artifact with "...") | 1 | Gone Missing | soi |
 | return any number of cards with different mana values from your graveyard to your hand. put ~ on the bottom of its owner's library. | 1 | Seasons Past | soi |
 | return to their owners' hands all creatures with toughness less than or equal to the number of islands you control. | 1 | Engulf the Shore | soi |
 | return up to two target creature cards from your graveyard to the battlefield. each of those creatures is a black zombie in addition to its other colors and typ | 1 | Ever After | soi |

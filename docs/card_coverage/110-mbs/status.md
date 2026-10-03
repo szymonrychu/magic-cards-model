@@ -18,16 +18,15 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 11 | 7.7% |
-| Works (untested) | 88 | 62.0% |
+| Works (untested) | 89 | 62.7% |
 | Partial (unaudited) | 7 | 4.9% |
-| Not working | 36 | 25.4% |
+| Not working | 35 | 24.6% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Ardent Recruit | silent | Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Banishment Decree | silent | Put target artifact, creature, or enchantment on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Bonehoard | silent | Living weapon | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Choking Fumes | silent | Put a -1/-1 counter on each attacking creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Concussive Bolt | silent | Concussive Bolt deals 4 damage to target player or planeswalker. Metalcraft — If you control three or more artifacts, creatures controlled by that player or by  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -69,6 +68,7 @@
 | Signal Pest | unaudited | This creature can't be blocked except by creatures with flying or reach. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Sphere of the Suns | unaudited | This artifact enters tapped and with three charge counters on it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Training Drone | unaudited | This creature can't attack or block unless it's equipped. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Banishment Decree | handled | Put target artifact, creature, or enchantment on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Black Sun's Zenith | handled | Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Bladed Sentinel | handled | {W}: This creature gains vigilance until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Blightwidow | handled | Reach | machines/combat.py | Y/-/- | not_tested |
@@ -195,7 +195,6 @@
 | look at the top seven cards of your library. you may put one of those cards onto the battlefield if it has the same name as a permanent. put the rest on the bot | 1 | Mitotic Manipulation | mbs |
 | put a -N/-N counter on each attacking creature. | 1 | Choking Fumes | mbs |
 | put a -N/-N counter on target creature. when that creature dies ~, its controller gets a poison counter. | 1 | Virulent Wound | mbs |
-| put target artifact, creature, or enchantment on top of its owner's library. | 1 | Banishment Decree | mbs |
 | put target creature card from an opponent's graveyard onto the battlefield under your control. it gains haste. exile it at the beginning of the next end step. i | 1 | Gruesome Encore | mbs |
 | return all cards from your graveyard to your hand. exile ~. you have no maximum hand size for the rest of the game. | 1 | Praetor's Counsel | mbs |
 | sacrifice ~: put a -N/-N counter on target creature. then if that creature's toughness is N or greater, regenerate it. | 1 | Gore Vassal | mbs |

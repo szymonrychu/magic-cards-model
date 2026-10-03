@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 55 | 20.2% |
-| Works (untested) | 99 | 36.4% |
+| Tested | 56 | 20.6% |
+| Works (untested) | 97 | 35.7% |
 | Partial (unaudited) | 6 | 2.2% |
-| Not working | 112 | 41.2% |
+| Not working | 113 | 41.5% |
 
 ## Cards needing work
 
@@ -118,7 +118,7 @@
 | Ayara, Widow of the Realm // Ayara, Furnace Queen | notice | {T}, Sacrifice another creature or artifact: Ayara deals X damage to target opponent or battle and you gain X life, where X is the sacrificed permanent's mana v | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Etched Host Doombringer | notice | When this creature enters, choose one — • Target opponent loses 2 life and you gain 2 life. • Choose target battle. If an opponent protects it, remove three def | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Flitting Guerrilla | notice | When this creature dies, each player mills two cards. Then you may exile this card. When you do, put target creature or battle card from your graveyard on top o | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Furnace Reins | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals combat damage to a p | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Furnace Reins | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals combat damage to a p | unparsed remainder: Untap that creature. Until end of turn, it gains haste and "Whenever this creature deals combat damage to a player or battle, create a Treasure token." | Y/Y/- | not_working |
 | Ghalta and Mavren | notice | Whenever you attack, choose one — • Create a tapped and attacking X/X green Dinosaur creature token with trample, where X is the greatest power among other atta | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Halo Forager | notice | When this creature enters, you may pay {X}. When you do, you may cast target instant or sorcery card with mana value X from a graveyard without paying its mana  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Heliod, the Radiant Dawn // Heliod, the Warped Eclipse | notice | Spells you cast cost {1} less to cast for each card your opponents have drawn this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -129,11 +129,12 @@
 | Lithomantic Barrage | notice | This spell can't be countered. Lithomantic Barrage deals 1 damage to target creature or planeswalker. It deals 5 damage instead if that target is white and/or b | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Mutagen Connoisseur | notice | This creature gets +1/+0 for each transformed permanent you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Oracle of Tragedy | notice | When this creature enters or dies, choose one — • Draw a card, then discard a card. • Shuffle up to four target cards with mana value 3 or greater from your gra | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Orthion, Hero of Lavabrink | notice | {1}{R}, {T}: Create a token that's a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate o | unparsed remainder: It gains haste. | Y/Y/- | not_working |
 | Rampaging Raptor | notice | Whenever this creature deals combat damage to an opponent, it deals that much damage to target planeswalker that player controls or battle that player protects. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Seedpod Caretaker | notice | When this creature enters, choose one — • Put a +1/+1 counter on target artifact or creature you control. • Transform target Incubator token you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Sun-Blessed Guardian // Furnace-Blessed Conqueror | notice | Whenever this creature attacks, create a tapped and attacking token that's a copy of it. Put a +1/+1 counter on that token for each +1/+1 counter on this creatu | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Swordsworn Cavalier | notice | This creature has first strike as long as another Knight entered the battlefield under your control this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Tandem Takedown | notice | Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Tandem Takedown | notice | Up to two target creatures you control each get +1/+0 until end of turn. They each deal damage equal to their power to another target creature, planeswalker, or | unparsed remainder: They each deal damage equal to their power to another target creature, planeswalker, or battle. | Y/Y/- | not_working |
 | Tenured Oilcaster | notice | This creature gets +3/+0 as long as an opponent has eight or more cards in their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Terror of Towashi | notice | Whenever this creature attacks, you may pay {3}{B}. When you do, return target creature card from your graveyard to the battlefield. It's a Phyrexian in additio | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | War Historian | notice | This creature has indestructible as long as it attacked a battle this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
@@ -200,7 +201,6 @@
 | Omen Hawker | handled |  |  | Y/Y/- | not_tested |
 | Onakke Javelineer | handled | {T}: This creature deals 2 damage to target player or battle. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Order of the Mirror // Order of the Alabaster Host | handled | {3}{W/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Orthion, Hero of Lavabrink | handled | {1}{R}, {T}: Create a token that's a copy of another target creature you control. It gains haste. Sacrifice it at the beginning of the next end step. Activate o | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ozolith, the Shattered Spire | handled | If one or more +1/+1 counters would be put on an artifact or creature you control, that many plus one +1/+1 counters are put on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Archivist | handled | {2}, {T}: Put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Phyrexian Pegasus | handled | Whenever this creature attacks, another target attacking creature without flying gains flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -212,7 +212,6 @@
 | Pyretic Prankster // Glistening Goremonger | handled | {3}{B/P}: Transform this creature. Activate only as a sorcery. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ral's Reinforcements | handled | Create two 1/1 blue and red Elemental creature tokens. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ramosian Greatsword | handled | Equipped creature gets +3/+1 and has trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
-| Rampaging Geoderm | handled | Whenever you attack, target attacking creature gets +1/+1 until end of turn. If it's attacking a battle, put a +1/+1 counter on it instead. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Ravenous Sailback | handled | When this creature enters, choose one — • This creature gains haste until end of turn. • Destroy target artifact or enchantment. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Referee Squad | handled | When this creature enters, tap target creature an opponent controls and put a stun counter on it. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Render Inert | handled | Remove up to five counters from target permanent. Draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -247,7 +246,7 @@
 ## Fully supported
 
 <details>
-<summary>55 cards</summary>
+<summary>56 cards</summary>
 
 - Archangel Elspeth
 - Borborygmos and Fblthp
@@ -295,6 +294,7 @@
 - Invasion of Xerex // Vertex Paladin
 - Invasion of Zendikar // Awakened Skyclave
 - Kami of Whispered Hopes
+- Rampaging Geoderm
 - Sandstalker Moloch
 - See Double
 - Seed of Hope
@@ -390,6 +390,7 @@
 | {M}, {M}, sacrifice another creature or artifact: incubate N. | 1 | Compleated Huntmaster | mom |
 | {M}, {M}: target opponent mills three cards. put a land card from their graveyard onto the battlefield tapped under your control. it gains "..." | 1 | Realmbreaker, the Invasion Tree | mom |
 | {M}: choose target battle. if an opponent protects it, remove a defense counter from it. otherwise, put a defense counter on it. activate only as a sorcery. | 1 | Portent Tracker | mom |
+| {M}{M}, {M}: create a token that's a copy of another target creature you control. it gains haste. sacrifice it at the beginning of the next end step. activate o | 1 | Orthion, Hero of Lavabrink | mom |
 | {M}{M}{M}, discard ~: destroy up to one target artifact or enchantment. shuffle ~ into your library from your graveyard, then draw a card. | 1 | Kogla and Yidaro | mom |
 | {M}{M}{M}, {M}, sacrifice a spirit: choose target card exiled with quintorius. you may cast that card ~ without paying its mana cost. if that spell would be put | 1 | Quintorius, Loremaster | mom |
 | ~ can't be countered. ~ deals N damage to target creature or planeswalker. it deals N damage instead if that target is white and/or blue. | 1 | Lithomantic Barrage | mom |

@@ -17,16 +17,15 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 14 | 24.1% |
+| Tested | 15 | 25.9% |
 | Works (untested) | 31 | 53.4% |
 | Partial (unaudited) | 3 | 5.2% |
-| Not working | 10 | 17.2% |
+| Not working | 9 | 15.5% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
-| Biorhythm | silent | Each player's life total becomes the number of creatures they control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Blackmail | silent | Target player reveals three cards from their hand and you choose one of them. That player discards that card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Gluttonous Zombie | silent | Fear | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Goblin Piledriver | silent | Whenever this creature attacks, it gets +2/+0 until end of turn for each other attacking Goblin. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -74,9 +73,10 @@
 ## Fully supported
 
 <details>
-<summary>14 cards</summary>
+<summary>15 cards</summary>
 
 - Annex
+- Biorhythm
 - Bloodstained Mire
 - Choking Tethers
 - Demystify
@@ -100,7 +100,6 @@
 | fear | 2 | Gluttonous Zombie, Severed Legion | ons |
 | creatures of the chosen type have fear. | 1 | Cover of Darkness | ons |
 | each player chooses a creature type. each player returns all creature cards of a type chosen ~ from their graveyard to the battlefield. | 1 | Patriarch's Bidding | ons |
-| each player's life total becomes the number of creatures they control. | 1 | Biorhythm | ons |
 | enchanted land is an island. | 1 | Sea's Claim | ons |
 | if a creature you control would deal damage to a permanent or player, it deals double that damage instead. | 1 | Gratuitous Violence | ons |
 | play with the top card of your library revealed. | 1 | Future Sight | ons |

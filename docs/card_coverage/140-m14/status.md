@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 3.5% |
+| Tested | 5 | 4.4% |
 | Works (untested) | 60 | 53.1% |
 | Partial (unaudited) | 8 | 7.1% |
-| Not working | 41 | 36.3% |
+| Not working | 40 | 35.4% |
 
 ## Cards needing work
 
@@ -48,7 +48,6 @@
 | Haunted Plate Mail | silent | {0}: Until end of turn, this permanent becomes a 4/4 Spirit artifact creature that's no longer an Equipment. Activate only if you control no creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Lifebane Zombie | silent | Intimidate | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Molten Birth | silent | Create two 1/1 red Elemental creature tokens, then flip a coin. If you win the flip, return Molten Birth to its owner's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Path of Bravery | silent | Whenever one or more creatures you control attack, you gain life equal to the number of attacking creatures. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Rise of the Dark Realms | silent | Put all creature cards from all graveyards onto the battlefield under your control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/Y | not_working |
 | Savage Summoning | silent | This spell can't be countered. The next creature spell you cast this turn can be cast as though it had flash. That spell can't be countered. That creature enter | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Seismic Stomp | silent | Creatures without flying can't block this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -63,8 +62,8 @@
 | Syphon Sliver | silent | Sliver creatures you control have lifelink. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vastwood Hydra | silent | When this creature dies, you may distribute a number of +1/+1 counters equal to the number of +1/+1 counters on this creature among any number of creatures you  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Woodborn Behemoth | silent | As long as you control eight or more lands, this creature gets +4/+4 and has trample. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Enlarge | notice | Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able. (A creature with trample can deal excess combat damage to  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Festering Newt | notice | When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. That creature gets -4/-4 instead if you control a creature named Bog | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Enlarge | notice | Target creature gets +7/+7 and gains trample until end of turn. It must be blocked this turn if able. (A creature with trample can deal excess combat damage to  | unparsed remainder: It must be blocked this turn if able. | Y/Y/- | not_working |
+| Festering Newt | notice | When this creature dies, target creature an opponent controls gets -1/-1 until end of turn. That creature gets -4/-4 instead if you control a creature named Bog | unparsed remainder: That creature gets -4/-4 instead if you control a creature named Bogbrew Witch. | Y/Y/- | not_working |
 | Jace's Mindseeker | notice | When this creature enters, target opponent mills five cards. You may cast an instant or sorcery spell from among them without paying its mana cost. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Scavenging Ooze | notice | {G}: Exile target card from a graveyard. If it was a creature card, put a +1/+1 counter on this creature and you gain 1 life. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Awaken the Ancient | unaudited | Enchanted Mountain is a 7/7 red Giant creature with haste. It's still a land. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -139,11 +138,12 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Angelic Accord
 - Elvish Mystic
 - Kalonian Hydra
+- Path of Bravery
 - Sliver Construct
 
 </details>
@@ -181,7 +181,6 @@
 | when ~ dies, you may distribute a number of +N/+N counters equal to the number of +N/+N counters on ~ among any number of creatures you control. | 1 | Vastwood Hydra | m14 |
 | when ~ enters, target opponent mills five cards. you may cast an instant or sorcery spell from among them without paying its mana cost. | 1 | Jace's Mindseeker | m14 |
 | whenever an enchantment you control enters, create a N/N white cat creature token. if that enchantment is an aura, you may attach it to the token. | 1 | Ajani's Chosen | m14 |
-| whenever one or more creatures you control attack, you gain life equal to the number of attacking creatures. | 1 | Path of Bravery | m14 |
 | whenever you cast a black spell or a swamp you control enters, you gain N life. | 1 | Staff of the Death Magus | m14 |
 | whenever you cast a blue spell or an island you control enters, you gain N life. | 1 | Staff of the Mind Magus | m14 |
 | whenever you cast a green spell or a forest you control enters, you gain N life. | 1 | Staff of the Wild Magus | m14 |

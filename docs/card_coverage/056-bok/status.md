@@ -17,10 +17,10 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 4 | 2.5% |
-| Works (untested) | 72 | 45.3% |
+| Tested | 5 | 3.1% |
+| Works (untested) | 73 | 45.9% |
 | Partial (unaudited) | 10 | 6.3% |
-| Not working | 73 | 45.9% |
+| Not working | 71 | 44.7% |
 
 ## Cards needing work
 
@@ -84,12 +84,10 @@
 | Silverstorm Samurai | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Slumbering Tora | silent | {2}, Discard a Spirit or Arcane card: This artifact becomes an X/X Cat artifact creature until end of turn, where X is the discarded card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Stream of Consciousness | silent | Target player shuffles up to four target cards from their graveyard into their library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Sway of the Stars | silent | Each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. Each player's life total becomes 7. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Takeno's Cavalry | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Tallowisp | silent | Whenever you cast a Spirit or Arcane spell, you may search your library for an Aura card with enchant creature, reveal it, put it into your hand, then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Toshiro Umezawa | silent | Bushido | no machine in the engine executes this keyword | Y/-/- | not_working |
 | Twist Allegiance | silent | You and target opponent each gain control of all creatures the other controls until end of turn. Untap those creatures. Those creatures gain haste until end of  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Uproot | silent | Put target land on top of its owner's library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Walker of Secret Ways | silent | Whenever this creature deals combat damage to a player, look at that player's hand. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ward of Piety | silent | {1}{W}: The next 1 damage that would be dealt to enchanted creature this turn is dealt to any target instead. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Yukora, the Prisoner | silent | When Yukora leaves the battlefield, sacrifice all non-Ogre creatures you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -98,7 +96,7 @@
 | First Volley | notice | First Volley deals 1 damage to target creature and 1 damage to that creature's controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Kodama of the Center Tree | notice | Kodama of the Center Tree has soulshift X, where X is the number of Spirits you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Lifespinner | notice | {T}, Sacrifice three Spirits: Search your library for a legendary Spirit permanent card, put it onto the battlefield, then shuffle. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Unchecked Growth | notice | Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Unchecked Growth | notice | Target creature gets +4/+4 until end of turn. If it's a Spirit, it gains trample until end of turn. | unparsed remainder: If it's a Spirit, it gains trample until end of turn. | Y/-/- | not_working |
 | Clash of Realities | unaudited | All Spirits have "When this permanent enters, you may have it deal 3 damage to target non-Spirit creature." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Fumiko the Lowblood | unaudited | Creatures your opponents control attack each combat if able. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Goblin Cohort | unaudited | This creature can't attack unless you've cast a creature spell this turn. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -177,6 +175,7 @@
 | Toils of Night and Day | handled | You may tap or untap target permanent, then you may tap or untap another target permanent. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Torrent of Stone | handled | Torrent of Stone deals 4 damage to target creature. Splice onto Arcane—Sacrifice two Mountains. (As you cast an Arcane spell, you may reveal this card from your | the engine reads this text and performs it | Y/-/- | not_tested |
 | Umezawa's Jitte | handled | Whenever equipped creature deals combat damage, put two charge counters on Umezawa's Jitte. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Uproot | handled | Put target land on top of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Veil of Secrecy | handled | Target creature gains shroud until end of turn and can't be blocked this turn. (A creature with shroud can't be the target of spells or abilities.) Splice onto  | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vital Surge | handled | You gain 3 life. Splice onto Arcane {1}{G} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. If you do, add this ca | the engine reads this text and performs it | Y/-/- | not_tested |
 | Waxmane Baku | handled | Whenever you cast a Spirit or Arcane spell, you may put a ki counter on this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -185,12 +184,13 @@
 ## Fully supported
 
 <details>
-<summary>4 cards</summary>
+<summary>5 cards</summary>
 
 - Bile Urchin
 - Disrupting Shoal
 - Goryo's Vengeance
 - Sakiko, Mother of Summer
+- Sway of the Stars
 
 </details>
 
@@ -213,7 +213,6 @@
 | creatures your opponents control attack each combat if able. | 1 | Fumiko the Lowblood | bok |
 | each enchantment deals N damage to its controller, then each aura attached to a creature deals N damage to the creature it's attached to. | 1 | Aura Barbs | bok |
 | each permanent with a divinity counter on it has indestructible. | 1 | That Which Was Taken | bok |
-| each player shuffles their hand, graveyard, and all permanents they own into their library, then draws seven cards. each player's life total becomes N. | 1 | Sway of the Stars | bok |
 | each time target permanent would deal damage to a permanent or player ~, it deals double that damage to that permanent or player instead. splice onto arcane {M} | 1 | Overblaze | bok |
 | fear | 1 | Crawling Filth | bok |
 | if a creature dealt damage by enchanted creature ~ would die, exile it instead. | 1 | Kumano's Blessing | bok |
@@ -221,7 +220,6 @@
 | mill a card, then draw cards equal to the milled card's mana value. | 1 | Heed the Mists | bok |
 | permanents enter tapped. | 1 | Orb of Dreams | bok |
 | prevent all damage that would be dealt to and dealt by enchanted creature. | 1 | Heart of Light | bok |
-| put target land on top of its owner's library. | 1 | Uproot | bok |
 | return all artifacts and enchantments to their owners' hands. | 1 | Reduce to Dreams | bok |
 | target creature gets +N/+N until end of turn. if it's a spirit, it gains trample until end of turn. | 1 | Unchecked Growth | bok |
 | target player shuffles up to four target cards from their graveyard into their library. | 1 | Stream of Consciousness | bok |

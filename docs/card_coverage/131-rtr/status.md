@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 19 | 8.5% |
-| Works (untested) | 98 | 43.8% |
+| Works (untested) | 100 | 44.6% |
 | Partial (unaudited) | 10 | 4.5% |
-| Not working | 97 | 43.3% |
+| Not working | 95 | 42.4% |
 
 ## Cards needing work
 
@@ -70,7 +70,6 @@
 | Inaction Injunction | silent | Detain target creature an opponent controls. (Until your next turn, that creature can't attack or block and its activated abilities can't be activated.) Draw a  | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Isperia's Skywatch | silent | When this creature enters, detain target creature an opponent controls. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Isperia, Supreme Judge | silent | Whenever a creature attacks you or a planeswalker you control, you may draw a card. | this trigger's condition can never be satisfied - it never triggers | Y/Y/- | not_working |
-| Izzet Staticaster | silent | {T}: This creature deals 1 damage to target creature and each other creature with the same name as that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jace, Architect of Thought | silent | +1: Until your next turn, whenever a creature an opponent controls attacks, it gets -1/-0 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Jarad's Orders | silent | Search your library for up to two creature cards and reveal them. Put one into your hand and the other into your graveyard. Then shuffle. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Judge's Familiar | silent | Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
@@ -109,19 +108,18 @@
 | Thrill-Kill Assassin | silent | Unleash | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Transguild Promenade | silent | When this land enters, sacrifice it unless you pay {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Trostani's Judgment | silent | Exile target creature, then populate. (Create a token that's a copy of a creature token you control.) | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Trostani, Selesnya's Voice | silent | Whenever another creature you control enters, you gain life equal to that creature's toughness. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
+| Trostani, Selesnya's Voice | silent | {1}{G}{W}, {T}: Populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vandalblast | silent | Overload | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Vitu-Ghazi Guildmage | silent | {2}{G}{W}: Populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
-| Volatile Rig | silent | When this creature dies, flip a coin. If you lose the flip, it deals 4 damage to each creature and each player. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Vraska the Unseen | silent | +1: Until your next turn, whenever a creature deals combat damage to Vraska, destroy that creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Wayfaring Temple | silent | Whenever this creature deals combat damage to a player, populate. | nothing in the engine reads this text - it would do nothing and log nothing | Y/Y/- | not_working |
 | Zanikev Locust | silent | Scavenge | no machine in the engine executes this keyword | Y/Y/- | not_working |
 | Assassin's Strike | notice | Destroy target creature. Its controller discards a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Azorius Charm | notice | Choose one — • Creatures you control gain lifelink until end of turn. • Draw a card. • Put target attacking or blocking creature on top of its owner's library. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Chorus of Might | notice | Until end of turn, target creature gets +1/+1 for each creature you control and gains trample. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Destroy the Evidence | notice | Destroy target land. Its controller reveals cards from the top of their library until they reveal a land card, then puts those cards into their graveyard. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Golgari Charm | notice | Choose one — • All creatures get -1/-1 until end of turn. • Destroy target enchantment. • Regenerate each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Grave Betrayal | notice | Whenever a creature you don't control dies, return it to the battlefield under your control with an additional +1/+1 counter on it at the beginning of the next  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Izzet Staticaster | notice | {T}: This creature deals 1 damage to target creature and each other creature with the same name as that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Rakdos Charm | notice | Choose one — • Exile target player's graveyard. • Destroy target artifact. • Each creature deals 1 damage to its controller. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
 | Dryad Militant | unaudited | If an instant or sorcery card would be put into a graveyard from anywhere, exile it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hypersonic Dragon | unaudited | You may cast sorcery spells as though they had flash. | a static ability no support check audits - not verified either way | Y/Y/- | partial |
@@ -144,6 +142,7 @@
 | Avenging Arrow | handled | Destroy target creature that dealt damage this turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Axebane Stag | handled |  |  | Y/Y/- | not_tested |
 | Azor's Elocutors | handled | At the beginning of your upkeep, put a filibuster counter on this creature. Then if this creature has five or more filibuster counters on it, you win the game. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Azorius Charm | handled | Choose one — • Creatures you control gain lifelink until end of turn. • Draw a card. • Put target attacking or blocking creature on top of its owner's library. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Azorius Keyrune | handled | {W}{U}: This artifact becomes a 2/2 white and blue Bird artifact creature with flying until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bazaar Krovod | handled | Whenever this creature attacks, another target attacking creature gets +0/+2 until end of turn. Untap that creature. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Bellows Lizard | handled | {1}{R}: This creature gets +1/+0 until end of turn. | the engine reads this text and performs it | Y/Y/- | not_tested |
@@ -230,6 +229,7 @@
 | Vassal Soul | handled | Flying | machines/combat.py | Y/Y/- | not_tested |
 | Viashino Racketeer | handled | When this creature enters, you may discard a card. If you do, draw a card. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Voidwielder | handled | When this creature enters, you may return target creature to its owner's hand. | the engine reads this text and performs it | Y/Y/- | not_tested |
+| Volatile Rig | handled | This creature attacks each combat if able. | the engine reads this text and performs it | Y/Y/- | not_tested |
 | Worldspine Wurm | handled | When this creature dies, create three 5/5 green Wurm creature tokens with trample. | the engine reads this text and performs it | Y/Y/- | not_tested |
 
 ## Fully supported
@@ -267,8 +267,8 @@
 | overload | 9 | Blustersquall, Counterflux, Cyclonic Rift, Dynacharge, Electrickery | rtr |
 | scavenge | 9 | Deadbridge Goliath, Drudge Beetle, Golgari Decoy, Korozda Monitor, Sewer Shambler | rtr |
 | enchanted land has "..." | 4 | Racecourse Fury, Security Blockade, Underworld Connections, Urban Burgeoning | rtr |
-| Choose one | 3 | Azorius Charm, Golgari Charm, Rakdos Charm | rtr |
 | when ~ enters, detain target creature an opponent controls. | 3 | Azorius Arrester, Isperia's Skywatch, Soulsworn Spirit | rtr |
+| Choose one | 2 | Golgari Charm, Rakdos Charm | rtr |
 | +N: until your next turn, whenever a creature an opponent controls attacks, it gets -N/-N until end of turn. | 1 | Jace, Architect of Thought | rtr |
 | +N: until your next turn, whenever a creature deals combat damage to vraska, destroy that creature. | 1 | Vraska the Unseen | rtr |
 | all damage that would be dealt to you and other permanents you control is dealt to ~ instead. | 1 | Palisade Giant | rtr |
@@ -305,7 +305,6 @@
 | target creature you don't control gets -N/-N until end of turn. overload {M}{M} (you may cast ~ for its overload cost. if you do, change "..." in its text to ". | 1 | Downsize | rtr |
 | target player reveals their hand. you gain life equal to the number of cards in that player's hand. | 1 | Search Warrant | rtr |
 | until end of turn, target creature gets +N/+N for each creature you control and gains trample. | 1 | Chorus of Might | rtr |
-| when ~ dies, flip a coin. if you lose the flip, it deals N damage to each creature and each player. | 1 | Volatile Rig | rtr |
 | when ~ enters, detain target nonland permanent an opponent controls. | 1 | Lyev Skyknight | rtr |
 | when ~ enters, detain up to two target creatures your opponents control. | 1 | Azorius Justiciar | rtr |
 | when ~ enters, sacrifice it unless you pay {M}. | 1 | Transguild Promenade | rtr |
@@ -315,7 +314,6 @@
 | whenever a creature attacks you or a planeswalker you control, you may draw a card. | 1 | Isperia, Supreme Judge | rtr |
 | whenever a creature you control dies, put N +N/+N counters on target creature you control, where N is the power of the creature that died. | 1 | Death's Presence | rtr |
 | whenever a creature you don't control dies, return it to the battlefield under your control with an additional +N/+N counter on it at the beginning of the next  | 1 | Grave Betrayal | rtr |
-| whenever another creature you control enters, you gain life equal to that creature's toughness. | 1 | Trostani, Selesnya's Voice | rtr |
 | whenever enchanted land becomes tapped, its controller mills three cards. | 1 | Chronic Flooding | rtr |
 | whenever you cast a spell, if it's at least one of the chosen colors, you gain N life for each of the chosen colors it is. | 1 | Tablet of the Guilds | rtr |
 | whenever you play a card with the same name as one of the exiled cards, you may put one of those cards with that name into its owner's hand. then if there are n | 1 | Search the City | rtr |
@@ -332,6 +330,7 @@
 | {M}{M}, {M}: target player mills N cards, where N is the number of creatures you control with defender. | 1 | Doorkeeper | rtr |
 | {M}{M}: target player who lost life ~ loses N life. | 1 | Rix Maadi Guildmage | rtr |
 | {M}{M}{M}, sacrifice ~: it deals damage equal to its power to target player or planeswalker. | 1 | Hellhole Flailer | rtr |
+| {M}{M}{M}, {M}: populate. | 1 | Trostani, Selesnya's Voice | rtr |
 | {M}{M}{M}: detain target nonland permanent an opponent controls. | 1 | New Prahv Guildmage | rtr |
 | {M}{M}{M}: populate. | 1 | Vitu-Ghazi Guildmage | rtr |
 | ~ can attack as though it didn't have defender as long as you control a gate. | 1 | Ogre Jailbreaker | rtr |

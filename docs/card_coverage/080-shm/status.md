@@ -17,17 +17,16 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 27 | 9.9% |
-| Works (untested) | 124 | 45.3% |
+| Tested | 28 | 10.2% |
+| Works (untested) | 125 | 45.6% |
 | Partial (unaudited) | 12 | 4.4% |
-| Not working | 111 | 40.5% |
+| Not working | 109 | 39.8% |
 
 ## Cards needing work
 
 | Card | Status | Worst clause | Reason | Legal (M/P/S) | Bucket |
 |---|---|---|---|---|---|
 | Advice from the Fae | silent | ({2/U} can be paid with any two mana or with {U}. This card's mana value is 6.) Look at the top five cards of your library. If you control more creatures than e | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Aethertow | silent | Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Aphotic Wisps | silent | Target creature becomes black and gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Armored Ascension | silent | Enchanted creature gets +1/+1 for each Plains you control and has flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Ashenmoor Liege | silent | Other black creatures you control get +1/+1. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -44,7 +43,6 @@
 | Crimson Wisps | silent | Target creature becomes red and gains haste until end of turn. (It can attack and {T} this turn.) Draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Crowd of Cinders | silent | Crowd of Cinders's power and toughness are each equal to the number of black permanents you control. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Cursecatcher | silent | Sacrifice this creature: Counter target instant or sorcery spell unless its controller pays {1}. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Demigod of Revenge | silent | When you cast this spell, return all cards named Demigod of Revenge from your graveyard to the battlefield. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Deus of Calamity | silent | Whenever this creature deals 6 or more damage to an opponent, destroy target land that player controls. | the engine does not recognise this trigger's condition - it never triggers | Y/-/- | not_working |
 | Din of the Fireherd | silent | Create a 5/5 black and red Elemental creature token. Target opponent sacrifices a creature of their choice for each black creature you control, then sacrifices  | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Dire Undercurrents | silent | Whenever a blue creature you control enters, you may have target player draw a card. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -149,6 +147,7 @@
 | Swans of Bryn Argoll | unaudited | If a source would deal damage to this creature, prevent that damage. The source's controller draws cards equal to the damage prevented this way. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Wheel of Sun and Moon | unaudited | If a card would be put into enchanted player's graveyard from anywhere, instead that card is revealed and put on the bottom of that player's library. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Whimwader | unaudited | This creature can't attack unless defending player controls a blue permanent. | a static ability no support check audits - not verified either way | Y/-/- | partial |
+| Aethertow | handled | Put target attacking or blocking creature on top of its owner's library. Conspire (As you cast this spell, you may tap two untapped creatures you control that s | the engine reads this text and performs it | Y/-/- | not_tested |
 | Apothecary Initiate | handled | Whenever a player casts a white spell, you may pay {1}. If you do, you gain 1 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ashenmoor Gouger | handled | This creature can't block. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Barkshell Blessing | handled | Target creature gets +2/+2 until end of turn. Conspire (As you cast this spell, you may tap two untapped creatures you control that share a color with it. When  | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -277,7 +276,7 @@
 ## Fully supported
 
 <details>
-<summary>27 cards</summary>
+<summary>28 cards</summary>
 
 - Beseech the Queen
 - Blowfly Infestation
@@ -286,6 +285,7 @@
 - Burn Trail
 - Dawnglow Infusion
 - Deepchannel Mentor
+- Demigod of Revenge
 - Devoted Druid
 - Faerie Macabre
 - Hollowborn Barghest
@@ -360,7 +360,6 @@
 | prevent all damage target attacking or blocking creature would deal ~. if that creature is black or red, destroy it. | 1 | Inquisitor's Snare | shm |
 | protection from blue, from black, and from red | 1 | Oversoul of Dusk | shm |
 | put a -N/-N counter on target creature, two -N/-N counters on another target creature, and three -N/-N counters on a third target creature. | 1 | Incremental Blight | shm |
-| put target attacking or blocking creature on top of its owner's library. conspire (as you cast ~, you may tap two untapped creatures you control that share a co | 1 | Aethertow | shm |
 | red creatures you control have first strike. | 1 | Bloodmark Mentor | shm |
 | return a card at random from your graveyard to your hand, then reorder your graveyard as you choose. | 1 | Fossil Find | shm |
 | return all permanents to their owners' hands. each player chooses up to seven cards in their hand, then shuffles the rest into their library. each player loses  | 1 | Worldpurge | shm |
@@ -375,7 +374,6 @@
 | target creature becomes red and gains haste until end of turn. (it can attack and {M} ~.) draw a card. | 1 | Crimson Wisps | shm |
 | target creature"..."s power. | 1 | Mercy Killing | shm |
 | target player discards their hand unless they pay N life. | 1 | Tyrannize | shm |
-| when you cast ~, return all cards named ~ from your graveyard to the battlefield. | 1 | Demigod of Revenge | shm |
 | when you control no permanents of the chosen color, sacrifice ~. | 1 | Lurebound Scarecrow | shm |
 | when ~ dies, put a -N/-N counter on each creature with a -N/-N counter on it. | 1 | Lockjaw Snapper | shm |
 | when ~ dies, put a -N/-N counter on target creature for each -N/-N counter on ~. | 1 | Grief Tyrant | shm |

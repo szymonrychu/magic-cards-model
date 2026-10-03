@@ -17,8 +17,8 @@
 
 | Bucket | Count | % |
 |---|---|---|
-| Tested | 19 | 8.6% |
-| Works (untested) | 108 | 49.1% |
+| Tested | 20 | 9.1% |
+| Works (untested) | 107 | 48.6% |
 | Partial (unaudited) | 8 | 3.6% |
 | Not working | 85 | 38.6% |
 
@@ -81,7 +81,6 @@
 | Realms Uncharted | silent | Search your library for up to four land cards with different names and reveal them. An opponent chooses two of those cards. Put the chosen cards into your grave | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Reinforced Bulwark | silent | {T}: Prevent the next 1 damage that would be dealt to you this turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Renegade Doppelganger | silent | Whenever another creature you control enters, you may have this creature become a copy of that creature until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Repay in Kind | silent | Each player's life total becomes the lowest life total among all players. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Sarkhan the Mad | silent | 0: Reveal the top card of your library and put it into your hand. Sarkhan deals damage to himself equal to that card's mana value. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | See Beyond | silent | Draw two cards, then shuffle a card from your hand into your library. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Skywatcher Adept | silent | Level up {3} ({3}: Put a level counter on this. Level up only as a sorcery.) LEVEL 1-2 2/2 Flying LEVEL 3+ 4/2 Flying | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -108,9 +107,10 @@
 | Distortion Strike | notice | Target creature gets +1/+0 until end of turn and can't be blocked this turn. Rebound (If you cast this spell from your hand, exile it as it resolves. At the beg | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Drana, Kalastria Bloodchief | notice | {X}{B}{B}: Target creature gets -0/-X until end of turn and Drana gets +X/+0 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Emerge Unscathed | notice | Target creature you control gains protection from the color of your choice until end of turn. Rebound (If you cast this spell from your hand, exile it as it res | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Essence Feed | notice | Target player loses 3 life. You gain 3 life and create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | unparsed remainder: They have "Sacrifice this token: Add {C}." | Y/-/- | not_working |
 | Induce Despair | notice | As an additional cost to cast this spell, reveal a creature card from your hand. Target creature gets -X/-X until end of turn, where X is the revealed card's ma | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Might of the Masses | notice | Target creature gets +1/+1 until end of turn for each creature you control. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
-| Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Traitorous Instinct | notice | Gain control of target creature until end of turn. Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | unparsed remainder: Untap that creature. Until end of turn, it gets +2/+0 and gains haste. | Y/Y/- | not_working |
 | Aura Gnarlid | unaudited | Creatures with power less than this creature's power can't block it. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Cast Through Time | unaudited | Instant and sorcery spells you control have rebound. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Hedron Matrix | unaudited | Equipped creature gets +X/+X, where X is its mana value. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -147,7 +147,6 @@
 | Emrakul's Hatcher | handled | When this creature enters, create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Enatu Golem | handled | When this creature dies, you gain 4 life. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Escaped Null | handled | Whenever this creature blocks or becomes blocked, it gets +5/+0 until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Essence Feed | handled | Target player loses 3 life. You gain 3 life and create three 0/1 colorless Eldrazi Spawn creature tokens. They have "Sacrifice this token: Add {C}." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Evolving Wilds | handled | {T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fissure Vent | handled | Choose one or both — • Destroy target artifact. • Destroy target nonbasic land. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Flame Slash | handled | Flame Slash deals 4 damage to target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -231,7 +230,7 @@
 ## Fully supported
 
 <details>
-<summary>19 cards</summary>
+<summary>20 cards</summary>
 
 - All Is Dust
 - Ancient Stirrings
@@ -248,6 +247,7 @@
 - Nirkana Revenant
 - Prophetic Prism
 - Recurring Insight
+- Repay in Kind
 - Spawning Breath
 - Ulamog's Crusher
 - Vengevine
@@ -281,7 +281,6 @@
 | creatures with power less than ~ power can't block it. | 1 | Aura Gnarlid | roe |
 | draw two cards, then shuffle a card from your hand into your library. | 1 | See Beyond | roe |
 | each creature you control with a level counter on it gets +N/+N. | 1 | Time of Heroes | roe |
-| each player's life total becomes the lowest life total among all players. | 1 | Repay in Kind | roe |
 | eldrazi spawn creatures you control get +N/+N. | 1 | Broodwarden | roe |
 | enchanted creature attacks each combat if able. | 1 | Lust for War | roe |
 | enchanted creature gets +N/+N and has trample and annihilator N. | 1 | Eldrazi Conscription | roe |
@@ -312,6 +311,7 @@
 | target creature must be blocked ~ if able. draw a card. | 1 | Irresistible Prey | roe |
 | target creature you control gains protection from the color of your choice until end of turn. rebound (if you cast ~ from your hand, exile it as it resolves. at | 1 | Emerge Unscathed | roe |
 | target opponent reveals their hand. you choose a card from it. that player shuffles that card into their library. | 1 | Perish the Thought | roe |
+| target player loses N life. you gain N life and create three N/N colorless eldrazi spawn creature tokens. they have "..." | 1 | Essence Feed | roe |
 | target player sacrifices a creature of their choice. you gain life equal to that creature's toughness. rebound (if you cast ~ from your hand, exile it as it res | 1 | Consuming Vapors | roe |
 | when ~ enters, prevent all combat damage that other creatures would deal ~. | 1 | Haze Frog | roe |
 | when ~ enters, put a +N/+N counter on it for each card in your hand. if you do, discard your hand. | 1 | Thought Gorger | roe |

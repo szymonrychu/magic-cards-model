@@ -18,9 +18,9 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 8 | 5.6% |
-| Works (untested) | 60 | 42.0% |
+| Works (untested) | 59 | 41.3% |
 | Partial (unaudited) | 12 | 8.4% |
-| Not working | 63 | 44.1% |
+| Not working | 64 | 44.8% |
 
 ## Cards needing work
 
@@ -86,6 +86,7 @@
 | Kjeldoran War Cry | notice | Creatures you control get +X/+X until end of turn, where X is 1 plus the number of cards named Kjeldoran War Cry in all graveyards. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Mystic Melting | notice | Destroy target artifact or enchantment. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Ohran Viper | notice | Whenever this creature deals combat damage to a creature, destroy that creature at end of combat. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Ronom Hulk | notice | Protection | protection from a quality the engine does not read: snow | Y/-/- | not_working |
 | Swift Maneuver | notice | Prevent the next 2 damage that would be dealt to any target this turn. Draw a card at the beginning of the next turn's upkeep. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Thermal Flux | notice | Choose one — • Target nonsnow permanent becomes snow until end of turn. • Target snow permanent isn't snow until end of turn. Draw a card at the beginning of th | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Vanish into Memory | notice | Exile target creature. You draw cards equal to that creature's power. At the beginning of your next upkeep, return that card to the battlefield under its owner' | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
@@ -143,7 +144,6 @@
 | Rime Transfusion | handled | Enchanted creature gets +2/+1 and has "{S}: This creature can't be blocked this turn except by snow creatures." | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rimebound Dead | handled | {S}: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Rimewind Taskmage | handled | {1}, {T}: You may tap or untap target permanent. Activate only if you control four or more snow permanents. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Ronom Hulk | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Ronom Unicorn | handled | Sacrifice this creature: Destroy target enchantment. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sek'Kuar, Deathkeeper | handled | Whenever another nontoken creature you control dies, create a 3/1 black and red Graveborn creature token with haste. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Sheltering Ancient | handled | Trample | machines/combat.py | Y/-/- | not_tested |
@@ -206,6 +206,7 @@
 | prevent all damage that would be dealt to ~ by creatures with first strike. | 1 | Tresserhorn Skyknight | csp |
 | prevent all damage that ~ would deal to snow creatures. | 1 | Goblin Furrier | csp |
 | prevent the next N damage that would be dealt to any target ~. draw a card at the beginning of the next turn's upkeep. | 1 | Swift Maneuver | csp |
+| protection | 1 | Ronom Hulk | csp |
 | remove a healing counter from ~: prevent the next N damage that would be dealt to ~ ~. | 1 | Ursine Fylgja | csp |
 | snow permanents don"..." untap steps. | 1 | Freyalise's Radiance | csp |
 | spells you cast have ripple N. | 1 | Thrumming Stone | csp |

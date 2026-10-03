@@ -95,7 +95,6 @@
 | Tyrant of Discord | silent | When this creature enters, target opponent chooses a permanent they control at random and sacrifices it. If a nonland permanent is sacrificed this way, repeat t | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Undead Executioner | silent | When this creature dies, you may have target creature get -2/-2 until end of turn. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vanguard's Shield | silent | Equipped creature gets +0/+3 and can block an additional creature each combat. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
-| Vanishment | silent | Put target nonland permanent on top of its owner's library. Miracle {U} (You may cast this card for its miracle cost when you draw it if it's the first card you | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Vexing Devil | silent | When this creature enters, any opponent may have it deal 4 damage to them. If a player does, sacrifice this creature. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wildwood Geist | silent | During your turn, this creature gets +2/+2. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
 | Wingcrafter | silent | As long as this creature is paired with another creature, both creatures have flying. | nothing in the engine reads this text - it would do nothing and log nothing | Y/-/- | not_working |
@@ -104,12 +103,13 @@
 | Descent into Madness | notice | At the beginning of your upkeep, put a despair counter on this enchantment, then each player exiles X permanents they control and/or cards from their hand, wher | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Eaten by Spiders | notice | Destroy target creature with flying and all Equipment attached to that creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Herald of War | notice | Angel spells and Human spells you cast cost {1} less to cast for each +1/+1 counter on this creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Leap of Faith | notice | Target creature gains flying until end of turn. Prevent all damage that would be dealt to that creature this turn. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/- | not_working |
+| Joint Assault | notice | Target creature gets +2/+2 until end of turn. If it's paired with a creature, that creature also gets +2/+2 until end of turn. | unparsed remainder: If it's paired with a creature, that creature also gets +2/+2 until end of turn. | Y/-/- | not_working |
+| Leap of Faith | notice | Target creature gains flying until end of turn. Prevent all damage that would be dealt to that creature this turn. | unparsed remainder: Prevent all damage that would be dealt to that creature this turn. | Y/-/- | not_working |
+| Midnight Duelist | notice | Protection | protection from a quality the engine does not read: Vampires | Y/-/- | not_working |
+| Necrobite | notice | Target creature gains deathtouch until end of turn. Regenerate it. (The next time that creature would be destroyed this turn, instead tap it, remove it from com | unparsed remainder: Regenerate it. | Y/Y/- | not_working |
 | Revenge of the Hunted | notice | Until end of turn, target creature gets +6/+6 and gains trample, and all creatures able to block it this turn do so. Miracle {G} (You may cast this card for its | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
 | Rush of Blood | notice | Target creature gets +X/+0 until end of turn, where X is its power. | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
-| Sheltering Word | notice | Target creature you control gains hexproof until end of turn. You gain life equal to that creature's toughness. (A creature with hexproof can't be the target of | the engine recognises this text but fails closed with a notice instead of performing it | Y/-/- | not_working |
+| Sheltering Word | notice | Target creature you control gains hexproof until end of turn. You gain life equal to that creature's toughness. (A creature with hexproof can't be the target of | unparsed remainder: You gain life equal to that creature's toughness. | Y/-/- | not_working |
 | Abundant Growth | unaudited | Enchanted land has "{T}: Add one mana of any color." | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Angel of Jubilation | unaudited | Players can't pay life or sacrifice creatures to cast spells or activate abilities. | a static ability no support check audits - not verified either way | Y/-/- | partial |
 | Arcane Melee | unaudited | Instant and sorcery spells cost {2} less to cast. | a static ability no support check audits - not verified either way | Y/-/- | partial |
@@ -182,7 +182,6 @@
 | Marrow Bats | handled | Pay 4 life: Regenerate this creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mass Appeal | handled | Draw a card for each Human you control. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mental Agony | handled | Target player discards two cards and loses 2 life. | the engine reads this text and performs it | Y/-/- | not_tested |
-| Midnight Duelist | handled | Protection | models/game.py | Y/-/- | not_tested |
 | Midvast Protector | handled | When this creature enters, target creature you control gains protection from the color of your choice until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Mist Raven | handled | When this creature enters, return target creature to its owner's hand. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Moonsilver Spear | handled | Equipped creature has first strike. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -222,6 +221,7 @@
 | Triumph of Ferocity | handled | At the beginning of your upkeep, draw a card if you control the creature with the greatest power or tied for the greatest power. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Ulvenwald Tracker | handled | {1}{G}, {T}: Target creature you control fights another target creature. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Uncanny Speed | handled | Target creature gets +3/+0 and gains haste until end of turn. | the engine reads this text and performs it | Y/-/- | not_tested |
+| Vanishment | handled | Put target nonland permanent on top of its owner's library. Miracle {U} (You may cast this card for its miracle cost when you draw it if it's the first card you | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vessel of Endless Rest | handled | When this artifact enters, put target card from a graveyard on the bottom of its owner's library. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Vigilante Justice | handled | Whenever a Human you control enters, this enchantment deals 1 damage to any target. | the engine reads this text and performs it | Y/-/- | not_tested |
 | Voice of the Provinces | handled | When this creature enters, create a 1/1 white Human creature token. | the engine reads this text and performs it | Y/-/- | not_tested |
@@ -308,8 +308,8 @@
 | prevent all combat damage that would be dealt by creatures other than target creature ~. | 1 | Terrifying Presence | avr |
 | prevent all damage that would be dealt by enchanted creature. | 1 | Defang | avr |
 | prevent the next N damage that would be dealt to you and/or permanents you control ~. if damage is prevented ~, ~ deals that much damage to any target. | 1 | Divine Deflection | avr |
+| protection | 1 | Midnight Duelist | avr |
 | put target artifact, creature, or enchantment on the bottom of its owner"..."s the first card you drew ~.) | 1 | Banishing Stroke | avr |
-| put target nonland permanent on top of its owner"..."s the first card you drew ~.) | 1 | Vanishment | avr |
 | return target creature card from your graveyard to the battlefield. if it's an angel, put two +N/+N counters on it. | 1 | Defy Death | avr |
 | reveal the top two cards of your library. put all creature and land cards revealed ~ into your hand and the rest on the bottom of your library in any order. | 1 | Lair Delve | avr |
 | spells and abilities your opponents control can't cause you to sacrifice permanents. | 1 | Sigarda, Host of Herons | avr |

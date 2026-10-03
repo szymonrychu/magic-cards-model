@@ -18,8 +18,8 @@
 | Bucket | Count | % |
 |---|---|---|
 | Tested | 17 | 6.6% |
-| Works (untested) | 132 | 51.6% |
-| Partial (unaudited) | 20 | 7.8% |
+| Works (untested) | 133 | 52.0% |
+| Partial (unaudited) | 19 | 7.4% |
 | Not working | 87 | 34.0% |
 
 ## Cards needing work
@@ -103,14 +103,14 @@
 | Crash and Burn | notice | Choose one — • Destroy target Vehicle. • Crash and Burn deals 6 damage to target creature or planeswalker. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Demonic Junker | notice | When this Vehicle enters, for each player, destroy up to one target creature that player controls. If a creature you controlled was destroyed this way, put two  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Gastal Blockbuster | notice | When this creature enters, you may sacrifice a creature or Vehicle. When you do, destroy target artifact an opponent controls. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Grim Javelineer | notice | Whenever you attack, target attacking creature gets +1/+0 until end of turn. When that creature dies this turn, surveil 1. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Grim Javelineer | notice | Whenever you attack, target attacking creature gets +1/+0 until end of turn. When that creature dies this turn, surveil 1. | unparsed remainder: When that creature dies this turn, surveil 1. | Y/Y/Y | not_working |
 | Guardian Sunmare | notice | Whenever this creature attacks while saddled, search your library for a nonland permanent card with mana value 3 or less, put it onto the battlefield, then shuf | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | March of the World Ooze | notice | Creatures you control have base power and toughness 6/6 and are Oozes in addition to their other types. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Oildeep Gearhulk | notice | When this creature enters, look at target player's hand. You may choose a card from it. If you do, that player discards that card, then draws a card. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Push the Limit | notice | Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become art | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Push the Limit | notice | Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become art | unparsed remainder: Return all Mount and Vehicle cards from your graveyard to the battlefield. Sacrifice them at the beginning of the next end step. Vehicles you control become artifact creatures until end of turn. | Y/Y/Y | not_working |
 | Racers' Scoreboard | notice | Max speed — Spells you cast cost {1} less to cast. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Riptide Gearhulk | notice | When this creature enters, for each opponent, put up to one target nonland permanent that player controls into its owner's library third from the top. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
-| Spire Mechcycle | notice | Exhaust — Tap another untapped Mount or Vehicle you control: This Vehicle becomes an artifact creature. Put a +1/+1 counter on it for each Mount and/or Vehicle  | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
+| Spire Mechcycle | notice | Exhaust — Tap another untapped Mount or Vehicle you control: This Vehicle becomes an artifact creature. Put a +1/+1 counter on it for each Mount and/or Vehicle  | unparsed remainder: Put a +1/+1 counter on it for each Mount and/or Vehicle you control other than this Vehicle. | Y/Y/Y | not_working |
 | The Last Ride | notice | The Last Ride gets -X/-X, where X is your life total. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Tune Up | notice | Return target artifact card from your graveyard to the battlefield. If it's a Vehicle, it becomes an artifact creature. | the engine recognises this text but fails closed with a notice instead of performing it | Y/Y/Y | not_working |
 | Caradora, Heart of Alacria | unaudited | If one or more +1/+1 counters would be put on a creature or Vehicle you control, that many plus one +1/+1 counters are put on it instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -120,7 +120,6 @@
 | Deathless Pilot | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Dynamite Diver | unaudited | This creature saddles Mounts and crews Vehicles as though its power were 2 greater. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Elvish Refueler | unaudited | During your turn, as long as you haven't activated an exhaust ability this turn, you may activate exhaust abilities as though they haven't been activated. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
-| Far Fortune, End Boss | unaudited | Max speed — If a source you control would deal damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Foul Roads | unaudited | This land enters tapped unless you control a Mount or Vehicle. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Hazoret, Godseeker | unaudited | Hazoret can't attack or block unless you have max speed. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
 | Interface Ace | unaudited | This creature saddles Mounts and crews Vehicles using its toughness rather than its power. | a static ability no support check audits - not verified either way | Y/Y/Y | partial |
@@ -172,6 +171,7 @@
 | Endrider Spikespitter | handled | Max speed — At the beginning of your upkeep, exile the top card of your library. You may play that card this turn. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Engine Rat | handled | {5}{B}: Each opponent loses 2 life. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Explosive Getaway | handled | Exile up to one target artifact or creature. Return it to the battlefield under its owner's control at the beginning of the next end step. Explosive Getaway dea | the engine reads this text and performs it | Y/Y/Y | not_tested |
+| Far Fortune, End Boss | handled | Whenever you attack, Far Fortune deals 1 damage to each opponent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Flood the Engine | handled | When this Aura enters, tap enchanted permanent. | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Fuel the Flames | handled | Fuel the Flames deals 2 damage to each creature. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
 | Gallant Strike | handled | Destroy target creature with toughness 4 or greater. Cycling {2} ({2}, Discard this card: Draw a card.) | the engine reads this text and performs it | Y/Y/Y | not_tested |
@@ -295,7 +295,7 @@
 
 | Mechanic (label / template) | Count | Example cards | Sets |
 |---|---|---|---|
-| Max speed | 12 | Aether Syphon, Burnout Bashtronaut, Far Fortune, End Boss, Gastal Raider, Gastal Thrillseeker | dft |
+| Max speed | 11 | Aether Syphon, Burnout Bashtronaut, Gastal Raider, Gastal Thrillseeker, Kickoff Celebrations | dft |
 | Exhaust | 5 | Boom Scholar, Mindspring Merfolk, Sita Varma, Masked Racer, Spire Mechcycle, Winter, Cursed Rider | dft |
 | ~ enters tapped unless you control a mount or vehicle. | 5 | Country Roads, Foul Roads, Reef Roads, Rocky Roads, Wild Roads | dft |
 | ~ saddles mounts and crews vehicles as though its power were N greater. | 3 | Cloudspire Captain, Deathless Pilot, Dynamite Diver | dft |
