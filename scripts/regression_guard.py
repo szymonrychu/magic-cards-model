@@ -2,7 +2,8 @@
 """Regression guard: catch a fix silently touching an already-passing test or
 already-fixed card, rather than trusting an agent's own summary of its diff.
 
-    uv run python scripts/regression_guard.py --repo <path> --base <sha> [--head HEAD] [--ratchet]
+    uv run python scripts/regression_guard.py --repo <path> --base <sha> [--head HEAD] \
+        [--ratchet [--bulk <oracle-cards file>] [--workers N]]
 
 Two independent checks, both against `git diff base..head` on `--repo`
 (any repo, engine or api):
@@ -23,17 +24,41 @@ regression. That judgment is for the human or reviewer agent who reads the
 sure every such change gets read by someone, not to auto-approve or
 auto-reject any of them.
 
-**B. Card-status ratchet** (`--ratchet`, engine repo only). Classifies every
-printing that exists at base under `src/magic_cards_model/data/printings/`
-with the engine's own support oracle (`magic_cards_model.support.card_support`),
-once with the base commit's engine code and once with head's, in isolated
-git worktrees so the two never share a Python import. A card whose status
-gets worse (handled -> unaudited/notice/silent/error/removed, and so on) or
-that was tested at base and is untested at head is a hard failure. "Tested"
-here means the card's name is quoted somewhere under `tests/*.py` or it has
-a `tests/golden/<slug>/` directory - being one of the probe printings in
-`data/printings/` is not itself evidence a test exercises it, since that
-directory *is* the ratchet's own candidate pool.
+**B. Card-status ratchet** (`--ratchet`, engine repo only). Classifies two
+sets of cards with the engine's own support oracle, once with the base
+commit's code and once with head's, in isolated git worktrees so the two
+never share a Python import:
+
+- *pool* - every printing that exists at base under
+  `src/magic_cards_model/data/printings/` (`card_support` directly);
+- *oracle* - every Modern/Pioneer/Standard-legal card in Scryfall's
+  `oracle-cards` bulk (~22,700 cards), selected and classified exactly the
+  way `scripts/card_coverage.py` does it: one shared parse of the cached
+  bulk (`--bulk`, else `$REGRESSION_GUARD_BULK`, else
+  `<repo>/.scryfall-cache/oracle-cards.jsonl.gz`, downloaded if missing),
+  `target_format_pool`, then each worktree's *own*
+  `scripts/card_coverage.py` `classify_card_raw` (so `support.status` is
+  the worst of the rules-text *and* keyword clauses).
+
+A card whose status gets worse at head than at base (handled ->
+unaudited/notice/silent/error/removed, and so on) is a hard failure, and a
+pool card tested at base but untested at head is too. An oracle card is also
+held to the committed floor `docs/card_coverage/support-baseline.json` as it
+stands at base (`git show base:<path>`; written by `card_coverage.py`, and
+by `mise run coverage:baseline`): head reading it worse than the baseline
+fails unless Scryfall re-worded it (its oracle-text+keywords hash changed),
+which is reported under `oracle_changed` instead. Cards absent from the
+baseline (`new_cards`), cards the engine now beats the baseline on
+(`improved_vs_baseline`, with a hint to regenerate it) and baseline cards
+gone from the bulk (`left_pool`) are reported, never failed. Each offender
+names its `source` (`pool` or `oracle`). A missing or unreadable bulk fails
+closed (exit 2), never a silent pass. At most 6 workers per side (the
+suite-lock budget).
+
+"Tested" here means the card's name is quoted somewhere under `tests/*.py`
+or it has a `tests/golden/<slug>/` directory - being one of the probe
+printings in `data/printings/` is not itself evidence a test exercises it,
+since that directory *is* the pool's own candidate set.
 
 Both checks are read-only: nothing under `--repo` is ever modified. The
 temporary worktrees this makes for `--ratchet` are removed before the
@@ -44,12 +69,14 @@ from __future__ import annotations
 
 import argparse
 import ast
+import importlib.util
 import json
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -419,10 +446,16 @@ def _printing_stems(printings_dir: Path) -> dict[str, str]:
 #: propagated through the environment rather than argv, so a spawned
 #: `ProcessPoolExecutor` worker - which re-imports this file fresh rather
 #: than inheriting the parent's already-mutated `sys.path` - sees the same
-#: value). A card whose printing does not exist in this worktree at all
-#: classifies as `"removed"`; one whose `Card`/`card_support` call raises
-#: classifies as `"error"` - never crashes the sweep.
+#: value) and *that worktree's* `scripts/card_coverage.py`, whose
+#: `classify_card_raw` classifies the oracle cards (falling back to
+#: `card_support` directly for a commit that predates it). Two job kinds go
+#: through one process pool: a pool printing (by stem; `"removed"` when the
+#: printing does not exist in this worktree) and an oracle card (by index
+#: into the shared `REGRESSION_GUARD_ORACLE_FILE`, written once by the
+#: parent from its single bulk parse). A card whose classification raises
+#: is `"error"` - never crashes the sweep.
 _CLASSIFY_WORKER_SCRIPT = """
+import importlib.util
 import json
 import os
 import sys
@@ -436,43 +469,83 @@ from magic_cards_model.models.card import Card  # noqa: E402
 from magic_cards_model.support import card_support  # noqa: E402
 
 
-def _classify_one(job):
-    stem, printing_path = job
-    if printing_path is None:
-        return stem, "removed"
+def _load_classifier():
+    path = Path(os.environ["REGRESSION_GUARD_WORKTREE"]) / "scripts" / "card_coverage.py"
+    if not path.exists():
+        return None, "card_support"
+    spec = importlib.util.spec_from_file_location("_regression_guard_card_coverage", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module  # dataclasses look their module up here
+    spec.loader.exec_module(module)
+    classify = getattr(module, "classify_card_raw", None)
+    if classify is None:
+        return None, "card_support"
+    return classify, "card_coverage.classify_card_raw"
+
+
+_CLASSIFY_RAW, CLASSIFIER = _load_classifier()
+_ORACLE_CARDS = None
+
+
+def _oracle_cards():
+    global _ORACLE_CARDS
+    if _ORACLE_CARDS is None:
+        _ORACLE_CARDS = json.loads(Path(os.environ["REGRESSION_GUARD_ORACLE_FILE"]).read_text())
+    return _ORACLE_CARDS
+
+
+def _status_of(raw):
     try:
-        data = json.loads(Path(printing_path).read_text())
-        card = Card.model_validate(data)
-        support = card_support(card)
-        return stem, support.status
+        if _CLASSIFY_RAW is not None:
+            return _CLASSIFY_RAW(raw).status
+        return card_support(Card.model_validate(raw)).status
     except Exception:
-        return stem, "error"
+        return "error"
+
+
+def _classify_job(job):
+    kind, value = job
+    if kind == "oracle":
+        return _status_of(_oracle_cards()[value])
+    if value is None:
+        return "removed"
+    try:
+        data = json.loads(Path(value).read_text())
+        return card_support(Card.model_validate(data)).status
+    except Exception:
+        return "error"
 
 
 def main():
     printings_dir = Path(os.environ["REGRESSION_GUARD_PRINTINGS_DIR"])
     stems = json.loads(Path(os.environ["REGRESSION_GUARD_STEMS_FILE"]).read_text())
+    oracle_count = int(os.environ.get("REGRESSION_GUARD_ORACLE_COUNT", "0"))
     workers = int(os.environ.get("REGRESSION_GUARD_WORKERS", "1"))
 
     jobs = [
-        (stem, str(p) if (p := printings_dir / f"{stem}.json").exists() else None)
+        ("pool", str(p) if (p := printings_dir / f"{stem}.json").exists() else None)
         for stem in stems
     ]
+    jobs.extend(("oracle", i) for i in range(oracle_count))
 
-    results = {}
     if workers <= 1 or len(jobs) < 2:
-        for job in jobs:
-            stem, status = _classify_one(job)
-            results[stem] = status
+        statuses = [_classify_job(job) for job in jobs]
     else:
         from concurrent.futures import ProcessPoolExecutor
 
         chunksize = max(1, len(jobs) // (workers * 8))
         with ProcessPoolExecutor(max_workers=workers) as pool:
-            for stem, status in pool.map(_classify_one, jobs, chunksize=chunksize):
-                results[stem] = status
+            statuses = list(pool.map(_classify_job, jobs, chunksize=chunksize))
 
-    print(json.dumps(results))
+    print(
+        json.dumps(
+            {
+                "pool": dict(zip(stems, statuses[: len(stems)])),
+                "oracle": statuses[len(stems) :],
+                "classifier": CLASSIFIER,
+            }
+        )
+    )
 
 
 if __name__ == "__main__":
@@ -481,8 +554,16 @@ if __name__ == "__main__":
 
 
 def _classify_worktree(
-    worktree_dir: Path, stems: list[str], *, workers: int, tmp_dir: Path
-) -> dict[str, str]:
+    worktree_dir: Path,
+    stems: list[str],
+    *,
+    workers: int,
+    tmp_dir: Path,
+    oracle_file: Path | None = None,
+    oracle_count: int = 0,
+) -> dict[str, Any]:
+    """`{"pool": {stem: status}, "oracle": [status per oracle card],
+    "classifier": ...}` for one worktree."""
     script_path = tmp_dir / f"classify-worker-{uuid.uuid4().hex}.py"
     script_path.write_text(_CLASSIFY_WORKER_SCRIPT)
     stems_file = tmp_dir / f"stems-{uuid.uuid4().hex}.json"
@@ -490,9 +571,13 @@ def _classify_worktree(
 
     env = dict(os.environ)
     env["REGRESSION_GUARD_SRC_DIR"] = str(worktree_dir / "src")
+    env["REGRESSION_GUARD_WORKTREE"] = str(worktree_dir)
     env["REGRESSION_GUARD_PRINTINGS_DIR"] = str(_printings_dir(worktree_dir))
     env["REGRESSION_GUARD_STEMS_FILE"] = str(stems_file)
     env["REGRESSION_GUARD_WORKERS"] = str(max(1, workers))
+    env["REGRESSION_GUARD_ORACLE_COUNT"] = str(oracle_count)
+    if oracle_file is not None:
+        env["REGRESSION_GUARD_ORACLE_FILE"] = str(oracle_file)
 
     result = subprocess.run(
         [sys.executable, str(script_path)],
@@ -548,6 +633,7 @@ def ratchet_offenders(
         if reasons:
             offenders.append(
                 {
+                    "source": "pool",
                     "stem": stem,
                     "name": name,
                     "base_status": b_status,
@@ -560,6 +646,139 @@ def ratchet_offenders(
     return offenders
 
 
+#: How many cards each informational list (`oracle_changed`, `new_cards`,
+#: `improved_vs_baseline`, `left_pool`) shows; its `count` is always exact.
+_REPORT_SAMPLE = 50
+
+_BASELINE_HINT = (
+    "the engine now beats the committed baseline: run `mise run coverage:baseline` "
+    "and commit docs/card_coverage/support-baseline.json to raise the floor"
+)
+
+
+def _capped(entries: list[dict], **extra: Any) -> dict:
+    return {
+        "count": len(entries),
+        "cards": entries[:_REPORT_SAMPLE],
+        "truncated": len(entries) > _REPORT_SAMPLE,
+        **extra,
+    }
+
+
+def oracle_ratchet(
+    cards: list[tuple[str, str, str]],
+    base_status: dict[str, str],
+    head_status: dict[str, str],
+    baseline: dict[str, dict] | None,
+) -> dict:
+    """The oracle-wide ratchet over `cards` (`(oracle_id, name, text_hash)`
+    for every target-format card in the bulk). A card fails when head reads
+    it worse than base, or worse than the committed `baseline` floor while
+    its oracle text is unchanged. A floor drop on a card Scryfall re-worded
+    (`text_hash` differs) is reported under `oracle_changed`, not failed; a
+    card the baseline has never seen is reported under `new_cards`; one the
+    engine now beats the baseline on under `improved_vs_baseline`, with a
+    hint to regenerate it; a baseline card no longer in the bulk's target
+    formats under `left_pool`."""
+    offenders: list[dict] = []
+    oracle_changed: list[dict] = []
+    new_cards: list[dict] = []
+    improved: list[dict] = []
+    seen: set[str] = set()
+    for key, name, text_hash in cards:
+        seen.add(key)
+        b_status = base_status.get(key, "error")
+        h_status = head_status.get(key, "error")
+        reasons = []
+        if _severity(h_status) < _severity(b_status):
+            reasons.append(f"status regressed: {b_status} -> {h_status}")
+        entry = baseline.get(key) if baseline is not None else None
+        floor = entry["status"] if entry is not None else None
+        card = {"oracle_id": key, "name": name, "head_status": h_status}
+        if baseline is not None and entry is None:
+            new_cards.append(card)
+        elif entry is not None:
+            if _severity(h_status) > _severity(floor):
+                improved.append({**card, "baseline_status": floor})
+            elif _severity(h_status) < _severity(floor):
+                if entry.get("text_hash") != text_hash:
+                    oracle_changed.append({**card, "baseline_status": floor})
+                else:
+                    reasons.append(f"below baseline floor: {floor} -> {h_status}")
+        if reasons:
+            offenders.append(
+                {
+                    "source": "oracle",
+                    "oracle_id": key,
+                    "name": name,
+                    "base_status": b_status,
+                    "head_status": h_status,
+                    "baseline_status": floor,
+                    "reasons": reasons,
+                }
+            )
+    left_pool = [
+        {"oracle_id": key, "name": entry.get("name"), "baseline_status": entry.get("status")}
+        for key, entry in (baseline or {}).items()
+        if key not in seen
+    ]
+    return {
+        "offenders": offenders,
+        "oracle_changed": _capped(oracle_changed),
+        "new_cards": _capped(new_cards),
+        "improved_vs_baseline": _capped(improved, hint=_BASELINE_HINT),
+        "left_pool": _capped(left_pool),
+    }
+
+
+_CARD_COVERAGE_MODULE: Any = None
+
+
+def _card_coverage() -> Any:
+    """This checkout's own `scripts/card_coverage.py` - the one bulk loader,
+    target-format filter, text hash and baseline parser, so the guard reads
+    the bulk exactly the way the coverage report and baseline writer do."""
+    global _CARD_COVERAGE_MODULE
+    if _CARD_COVERAGE_MODULE is None:
+        path = Path(__file__).resolve().parent / "card_coverage.py"
+        spec = importlib.util.spec_from_file_location("_regression_guard_cc", path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module  # dataclasses look their module up here
+        spec.loader.exec_module(module)
+        _CARD_COVERAGE_MODULE = module
+    return _CARD_COVERAGE_MODULE
+
+
+BULK_ENV = "REGRESSION_GUARD_BULK"
+_FAIL_CLOSED = "the ratchet fails closed rather than skip the oracle-wide check"
+
+
+def resolve_bulk_path(repo: Path, override: Path | str | None, *, download: Any = None) -> Path:
+    """The oracle-cards bulk to ratchet over: `override` when given (it must
+    exist), else `<repo>/.scryfall-cache/oracle-cards.jsonl.gz` (the
+    coverage report's own gitignored cache), downloading it there first if
+    it is missing. Any failure raises - never a silent pass."""
+    if override is not None:
+        path = Path(override)
+        if not path.exists():
+            raise RegressionGuardError(f"oracle bulk {path} does not exist; {_FAIL_CLOSED}")
+        return path
+    cache_dir = repo / ".scryfall-cache"
+    cached = cache_dir / "oracle-cards.jsonl.gz"
+    if cached.exists():
+        return cached
+    if download is None:
+        download = _card_coverage().download_bulk
+    try:
+        return Path(download("oracle-cards", cache_dir=cache_dir))
+    except Exception as exc:  # noqa: BLE001 - any download failure is fail-closed
+        raise RegressionGuardError(
+            f"no cached oracle bulk at {cached} and downloading it failed ({exc}); "
+            f"{_FAIL_CLOSED}. Pass --bulk <path> or set {BULK_ENV} to a local "
+            "oracle-cards file."
+        ) from exc
+
+
 def _add_worktree(repo: Path, sha: str, dest: Path) -> None:
     _run_git(repo, "worktree", "add", "--detach", str(dest), sha)
 
@@ -568,22 +787,57 @@ def _remove_worktree(repo: Path, dest: Path) -> None:
     _run_git(repo, "worktree", "remove", "--force", str(dest), check=False)
 
 
-def run_ratchet(repo: Path, base: str, head: str, *, workers: int | None = None) -> dict:
-    """Classify every printing that exists at base with base's and head's
-    own engine code, in isolated worktrees, and report offenders. Raises
-    `RegressionGuardError` when `repo` is not the engine (no
-    `magic_cards_model.support` module) - the ratchet is engine-only."""
+#: The suite-lock budget: two full gates share the machine, six workers each.
+MAX_WORKERS = 6
+
+
+def run_ratchet(
+    repo: Path,
+    base: str,
+    head: str,
+    *,
+    workers: int | None = None,
+    bulk_path: Path | str | None = None,
+) -> dict:
+    """Classify every printing that exists at base, and every
+    Modern/Pioneer/Standard-legal card in the oracle-cards bulk, with base's
+    and head's own engine code in isolated worktrees, and report offenders
+    (`source` `pool` or `oracle`). Raises `RegressionGuardError` when `repo`
+    is not the engine (no `magic_cards_model.support` module) - the ratchet
+    is engine-only - or when the bulk cannot be read (fail closed)."""
     if not (repo / "src" / "magic_cards_model" / "support.py").exists():
         raise RegressionGuardError(
             f"--ratchet is engine-only: no src/magic_cards_model/support.py under {repo}"
         )
 
+    started = time.monotonic()
     base_sha = resolve_sha(repo, base)
     head_sha = resolve_sha(repo, head)
-    workers = workers or os.cpu_count() or 1
+    workers = max(1, min(workers or os.cpu_count() or 1, MAX_WORKERS))
+
+    cc = _card_coverage()
+    bulk = resolve_bulk_path(repo, bulk_path if bulk_path is not None else os.environ.get(BULK_ENV))
+    try:
+        oracle_pool = cc.target_format_pool(cc.load_bulk_json(bulk))
+    except Exception as exc:  # noqa: BLE001 - an unreadable bulk is fail-closed
+        raise RegressionGuardError(
+            f"could not read oracle bulk {bulk} ({exc}); {_FAIL_CLOSED}"
+        ) from exc
+    if not oracle_pool:
+        raise RegressionGuardError(
+            f"oracle bulk {bulk} holds no Modern/Pioneer/Standard-legal card; {_FAIL_CLOSED}"
+        )
+    oracle_cards = [
+        (cc.card_key(raw), raw.get("name", ""), cc.card_text_hash(raw)) for raw in oracle_pool
+    ]
+    baseline_text = file_at(repo, base_sha, cc.SUPPORT_BASELINE_PATH)
+    baseline = cc.parse_support_baseline(baseline_text) if baseline_text is not None else None
+    bulk_seconds = time.monotonic() - started
 
     with tempfile.TemporaryDirectory(prefix="regression-guard-") as tmp:
         tmp_path = Path(tmp)
+        oracle_file = tmp_path / "oracle-pool.json"
+        oracle_file.write_text(json.dumps(oracle_pool))
         base_dir = tmp_path / "base"
         head_dir = tmp_path / "head"
         _add_worktree(repo, base_sha, base_dir)
@@ -592,22 +846,53 @@ def run_ratchet(repo: Path, base: str, head: str, *, workers: int | None = None)
             stems = _printing_stems(_printings_dir(base_dir))
             base_index = build_tested_index(base_dir)
             head_index = build_tested_index(head_dir)
-            base_status = _classify_worktree(
-                base_dir, list(stems), workers=workers, tmp_dir=tmp_path
-            )
-            head_status = _classify_worktree(
-                head_dir, list(stems), workers=workers, tmp_dir=tmp_path
-            )
+            sides = {}
+            side_seconds = {}
+            for side, side_dir in (("base", base_dir), ("head", head_dir)):
+                t0 = time.monotonic()
+                sides[side] = _classify_worktree(
+                    side_dir,
+                    list(stems),
+                    workers=workers,
+                    tmp_dir=tmp_path,
+                    oracle_file=oracle_file,
+                    oracle_count=len(oracle_pool),
+                )
+                side_seconds[side] = round(time.monotonic() - t0, 1)
         finally:
             _remove_worktree(repo, base_dir)
             _remove_worktree(repo, head_dir)
 
-    offenders = ratchet_offenders(stems, base_status, head_status, base_index, head_index)
+    keys = [key for key, _name, _hash in oracle_cards]
+    oracle = oracle_ratchet(
+        oracle_cards,
+        dict(zip(keys, sides["base"]["oracle"], strict=True)),
+        dict(zip(keys, sides["head"]["oracle"], strict=True)),
+        baseline,
+    )
+    offenders = ratchet_offenders(
+        stems, sides["base"]["pool"], sides["head"]["pool"], base_index, head_index
+    )
     return {
         "base": base_sha,
         "head": head_sha,
+        "bulk": str(bulk),
         "cards_checked": len(stems),
-        "offenders": offenders,
+        "cards_checked_oracle": len(oracle_cards),
+        "classifier": {"base": sides["base"]["classifier"], "head": sides["head"]["classifier"]},
+        "baseline": {
+            "path": cc.SUPPORT_BASELINE_PATH,
+            "present": baseline is not None,
+            "cards": len(baseline or {}),
+        },
+        "offenders": offenders + oracle.pop("offenders"),
+        **oracle,
+        "workers": workers,
+        "timing_seconds": {
+            "bulk": round(bulk_seconds, 1),
+            **side_seconds,
+            "total": round(time.monotonic() - started, 1),
+        },
     }
 
 
@@ -628,6 +913,21 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also run the card-status ratchet (engine repos only)",
     )
+    parser.add_argument(
+        "--bulk",
+        type=Path,
+        default=None,
+        help=(
+            f"oracle-cards bulk for the ratchet (default: ${BULK_ENV}, else "
+            "<repo>/.scryfall-cache/oracle-cards.jsonl.gz, downloaded if missing)"
+        ),
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help=f"classification workers per side (default and cap: {MAX_WORKERS})",
+    )
     args = parser.parse_args(argv)
 
     repo = args.repo.resolve()
@@ -645,7 +945,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.ratchet:
         try:
-            ratchet_result = run_ratchet(repo, args.base, args.head)
+            ratchet_result = run_ratchet(
+                repo, args.base, args.head, workers=args.workers, bulk_path=args.bulk
+            )
         except RegressionGuardError as exc:
             print(f"regression_guard: {exc}", file=sys.stderr)
             return 2

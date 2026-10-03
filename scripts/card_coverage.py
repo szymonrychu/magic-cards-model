@@ -4,6 +4,7 @@
     mise exec -- uv run python scripts/card_coverage.py                # full run
     mise exec -- uv run python scripts/card_coverage.py --set fdn      # one set (spoilers included)
     mise exec -- uv run python scripts/card_coverage.py --refresh-bulk # force re-download bulk data
+    mise run coverage:baseline                                         # just support-baseline.json
 
 Reads Scryfall's `oracle-cards` bulk data (cached under a gitignored
 directory), classifies every Modern/Pioneer/Standard-legal card's first
@@ -12,6 +13,11 @@ printing with the engine's own support oracle
 `docs/card_coverage/<NNN>-<code>/status.md` per Modern-legal expansion plus
 a campaign-wide `docs/card_coverage/plan.md`. See the three
 `.claude/skills/card-coverage-*` skills for how this is driven.
+
+The same run writes `docs/card_coverage/support-baseline.json`: one line per
+target-format card (`oracle_id`, `name`, `status`, oracle-text+keywords
+`text_hash`), the committed floor `scripts/regression_guard.py --ratchet`
+holds every one of those cards to. `--baseline-only` writes just that file.
 
 Deterministic: given the same bulk-data snapshot and the same engine, two
 runs produce byte-identical output, except for the `## Notes` sections
@@ -30,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import re
 import shutil
@@ -52,6 +59,10 @@ BULK_DATA_INDEX_URL = "https://api.scryfall.com/bulk-data"
 SEARCH_URL = "https://api.scryfall.com/cards/search"
 DEFAULT_CACHE_DIR = Path(".scryfall-cache")
 DEFAULT_OUT_DIR = Path("docs/card_coverage")
+#: The committed per-card support floor `scripts/regression_guard.py
+#: --ratchet` holds every target-format card to (see `render_support_baseline`).
+SUPPORT_BASELINE_FILENAME = "support-baseline.json"
+SUPPORT_BASELINE_PATH = f"{DEFAULT_OUT_DIR.as_posix()}/{SUPPORT_BASELINE_FILENAME}"
 DEFAULT_PRINTINGS_DIR = Path("src/magic_cards_model/data/printings")
 DEFAULT_TESTS_DIR = Path("tests")
 DEFAULT_GOLDEN_DIR = Path("tests/golden")
@@ -569,6 +580,77 @@ def classify_many(cards: Sequence[dict], *, workers: int = 1) -> list[Classifica
     chunksize = max(1, len(cards) // (workers * 8))
     with ProcessPoolExecutor(max_workers=workers) as pool:
         return list(pool.map(classify_card_raw, cards, chunksize=chunksize))
+
+
+# ---------------------------------------------------------------------------
+# Support baseline
+# ---------------------------------------------------------------------------
+
+
+def card_key(raw: dict) -> str:
+    """A card's identity across printings and bulk snapshots: its oracle id,
+    or its name for the rare card Scryfall gives none."""
+    return raw.get("oracle_id") or raw.get("name") or "<unknown>"
+
+
+def card_text_hash(raw: dict) -> str:
+    """A short digest of what the support oracle reads off a card: its
+    oracle text (every face's, for a multi-face card) and its keywords. A
+    change here means Scryfall re-worded the card, so a status drop against
+    the committed baseline is an oracle change, not an engine regression."""
+    payload = {
+        "oracle_text": raw.get("oracle_text"),
+        "faces": [face.get("oracle_text") for face in raw.get("card_faces") or []],
+        "keywords": sorted(raw.get("keywords") or []),
+    }
+    digest = hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8"))
+    return digest.hexdigest()[:16]
+
+
+def target_format_pool(raw_cards: Iterable[dict]) -> list[dict]:
+    """Every eligible (`is_eligible_printing`) Modern/Pioneer/Standard card
+    (`_in_target_formats`) in an `oracle-cards` snapshot, once per
+    `card_key` - the set the support baseline and the regression guard's
+    oracle ratchet both cover."""
+    seen: dict[str, dict] = {}
+    for raw in raw_cards:
+        if is_eligible_printing(raw) and _in_target_formats(raw):
+            seen.setdefault(card_key(raw), raw)
+    return list(seen.values())
+
+
+def render_support_baseline(cards: Sequence[dict], results: Sequence[ClassificationResult]) -> str:
+    """The committed baseline: a JSON array with one card object per line
+    (`oracle_id`, `name`, `status`, `text_hash`), sorted by name then oracle
+    id so a regeneration's diff shows exactly the cards whose status moved."""
+    entries = [
+        {
+            "oracle_id": card_key(raw),
+            "name": raw.get("name", "<unknown>"),
+            "status": result.status,
+            "text_hash": card_text_hash(raw),
+        }
+        for raw, result in zip(cards, results, strict=True)
+    ]
+    entries.sort(key=lambda e: (e["name"], e["oracle_id"]))
+    lines = [json.dumps(e, ensure_ascii=False) for e in entries]
+    return "[\n" + ",\n".join(lines) + "\n]\n"
+
+
+def parse_support_baseline(text: str) -> dict[str, dict]:
+    """A baseline's entries keyed by `oracle_id`."""
+    return {entry["oracle_id"]: entry for entry in json.loads(text)}
+
+
+def generate_support_baseline(*, bulk_path: Path, out_path: Path, workers: int = 1) -> int:
+    """The `--baseline-only` path: classify the target-format pool of an
+    `oracle-cards` snapshot and write just the baseline. Returns the card
+    count."""
+    pool = target_format_pool(load_bulk_json(bulk_path))
+    results = classify_many(pool, workers=workers)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(render_support_baseline(pool, results))
+    return len(pool)
 
 
 # ---------------------------------------------------------------------------
@@ -1416,6 +1498,10 @@ def generate_all(
     output) - Round 0's other input alongside `decks_dirs`.
     """
     raw_cards = load_bulk_json(bulk_path)
+    # The baseline pool is taken from the oracle snapshot itself, before the
+    # first-printing merge rewrites `digital`/`games`, so it is exactly the
+    # set `regression_guard.py --ratchet` selects from the same file.
+    baseline_pool = target_format_pool(raw_cards)
     if default_bulk_path is not None:
         default_cards = load_bulk_json(default_bulk_path)
         first_printings_by_key = group_first_printings(default_cards)
@@ -1459,7 +1545,20 @@ def generate_all(
             if _in_target_formats(raw):
                 all_target_cards.append(raw)
                 card_set_codes.append(code)
-    all_results = classify_many(all_target_cards, workers=workers)
+    # The baseline pool and the per-set cards share one classification pass.
+    unique_cards = {card_key(raw): raw for raw in baseline_pool}
+    for raw in all_target_cards:
+        unique_cards.setdefault(card_key(raw), raw)
+    unique_keys = list(unique_cards)
+    unique_results = classify_many([unique_cards[k] for k in unique_keys], workers=workers)
+    results_by_key = dict(zip(unique_keys, unique_results, strict=True))
+    all_results = [results_by_key[card_key(raw)] for raw in all_target_cards]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / SUPPORT_BASELINE_FILENAME).write_text(
+        render_support_baseline(
+            baseline_pool, [results_by_key[card_key(raw)] for raw in baseline_pool]
+        )
+    )
 
     classifications_by_set: dict[str, dict[str, ClassificationResult]] = {
         code: {} for code in ordered_codes
@@ -1607,6 +1706,11 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument(
+        "--baseline-only",
+        action="store_true",
+        help=f"write only <out-dir>/{SUPPORT_BASELINE_FILENAME} (the regression guard's floor)",
+    )
+    parser.add_argument(
         "--no-first-print-detection",
         action="store_true",
         help=(
@@ -1638,6 +1742,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     bulk_path = download_bulk("oracle-cards", cache_dir=args.cache_dir, force=args.refresh_bulk)
+    if args.baseline_only:
+        count = generate_support_baseline(
+            bulk_path=bulk_path,
+            out_path=args.out_dir / SUPPORT_BASELINE_FILENAME,
+            workers=args.workers,
+        )
+        print(f"{count} cards written to {args.out_dir / SUPPORT_BASELINE_FILENAME}")
+        return 0
     default_bulk_path = None
     if not args.no_first_print_detection:
         default_bulk_path = download_bulk(
