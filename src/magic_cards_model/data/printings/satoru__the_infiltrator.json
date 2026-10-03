@@ -1,0 +1,143 @@
+{
+  "object": "card",
+  "id": "acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5",
+  "oracle_id": "7555c429-5f2d-4171-b6b0-8e3c8da7f314",
+  "multiverse_ids": [
+    655171
+  ],
+  "mtgo_id": 124371,
+  "arena_id": 90576,
+  "tcgplayer_id": 544322,
+  "cardmarket_id": 763890,
+  "name": "Satoru, the Infiltrator",
+  "lang": "en",
+  "released_at": "2024-04-19",
+  "uri": "https://api.scryfall.com/cards/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5",
+  "scryfall_uri": "https://scryfall.com/card/otj/230/satoru-the-infiltrator?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T03:03:06Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.jpg?1783911786",
+    "normal": "https://cards.scryfall.io/normal/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.jpg?1783911786",
+    "large": "https://cards.scryfall.io/large/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.jpg?1783911786",
+    "png": "https://cards.scryfall.io/png/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.png?1783911786",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.jpg?1783911786",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.jpg?1783911786",
+    "thumb": "https://cards.scryfall.io/thumb/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.webp?1783911786",
+    "grid": "https://cards.scryfall.io/grid/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.webp?1783911786",
+    "display": "https://cards.scryfall.io/display/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.webp?1783911786",
+    "art": "https://cards.scryfall.io/art/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.webp?1783911786",
+    "crop": "https://cards.scryfall.io/crop/front/a/c/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5.webp?1783911786"
+  },
+  "mana_cost": "{U}{B}",
+  "cmc": 2.0,
+  "type_line": "Legendary Creature \u2014 Human Ninja Rogue",
+  "oracle_text": "Menace\nWhenever Satoru and/or one or more other nontoken creatures you control enter, if none of them were cast or no mana was spent to cast them, draw a card.",
+  "power": "2",
+  "toughness": "3",
+  "colors": [
+    "B",
+    "U"
+  ],
+  "color_identity": [
+    "B",
+    "U"
+  ],
+  "keywords": [
+    "Menace"
+  ],
+  "legalities": {
+    "standard": "legal",
+    "future": "legal",
+    "historic": "legal",
+    "timeless": "legal",
+    "gladiator": "legal",
+    "pioneer": "legal",
+    "modern": "legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "legal",
+    "brawl": "legal",
+    "competitivebrawl": "legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo",
+    "arena"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": true,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil",
+    "foil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set": "otj",
+  "set_name": "Outlaws of Thunder Junction",
+  "set_type": "expansion",
+  "set_uri": "https://api.scryfall.com/sets/55a85ebe-644e-4bef-8be8-5290408be3d1",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Aotj&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/otj?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/acc9a5cc-2b3c-4c2f-8176-4a2d86265cc5/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A7555c429-5f2d-4171-b6b0-8e3c8da7f314&unique=prints",
+  "collector_number": "230",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"This backwater doesn't have a single wall, ward, or guard that could keep me out.\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Heonhwa",
+  "artist_ids": [
+    "ce415f9e-8a20-4d64-bcba-2b1b7e94012e"
+  ],
+  "illustration_id": "26c2c124-97e6-49be-90b8-c7a22eb84cf1",
+  "border_color": "black",
+  "frame": "2015",
+  "frame_effects": [
+    "legendary"
+  ],
+  "security_stamp": "oval",
+  "full_art": false,
+  "textless": false,
+  "booster": true,
+  "story_spotlight": false,
+  "edhrec_rank": 3275,
+  "penny_rank": 1500,
+  "prices": {
+    "usd": "1.00",
+    "usd_foil": "1.59",
+    "usd_etched": null,
+    "eur": "0.95",
+    "eur_foil": "1.41",
+    "tix": "0.02"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=655171&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DSatoru%252C%2Bthe%2BInfiltrator",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DSatoru%252C%2Bthe%2BInfiltrator",
+    "edhrec": "https://edhrec.com/route/?cc=Satoru%2C+the+Infiltrator"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F544322%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=763890&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/124371?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

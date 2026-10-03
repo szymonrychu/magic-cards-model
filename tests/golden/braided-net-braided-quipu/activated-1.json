@@ -36,7 +36,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["cards_drawn_this_turn", "permanents_left_battlefield_this_turn", "reveals"],
+    "fields_changed": ["cards_drawn_this_turn", "permanents_left_battlefield_this_turn", "reveals", "turn_history"],
     "notices": {},
     "objects": {
       "Braided Quipu@alice#1": {

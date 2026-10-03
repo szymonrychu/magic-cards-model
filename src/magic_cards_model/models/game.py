@@ -3041,7 +3041,8 @@ class TurnHistoryEntry(EngineModel):
     kind: str
     """What happened: "entered", "to_graveyard" (CR 700.4's put into a
     graveyard from the battlefield), "to_hand", "sacrificed", "attacked",
-    "crewed"."""
+    "crewed", "left_battlefield" (any route off the battlefield, written by
+    `Game._note_left_battlefield`)."""
     player: str | None = None
     """Whose it was: the controller of the permanent (entered, to_graveyard,
     to_hand, attacked), the player who sacrificed it (CR 701.21a) or crewed
@@ -3056,6 +3057,14 @@ class TurnHistoryEntry(EngineModel):
     combat: int = 0
     """For "attacked", which combat phase of the turn (CR 500.8 can add more
     than one), counted by `Game.turn_count("combat_phases", ...)`."""
+    cast_mana_spent: int | None = None
+    """For "entered", how much mana was spent to cast the spell that became
+    this permanent (CR 601.2h, read off its `CastRecord` through CR 400.7d as
+    it entered), or None when it was not cast at all (put onto the
+    battlefield, or a copy that was never cast). Fixed at the event, so CR
+    603.4's recheck reads the same answer after the permanent has left -
+    Satoru, the Infiltrator's "if none of them were cast or no mana was spent
+    to cast them"."""
 
 
 #: CR 701.54c: "they get an emblem named The Ring".
@@ -12030,6 +12039,23 @@ class Game(EngineModel):
             permanent.monstrous = False
             permanent.monstrous_x = None
         controller = permanent.controller
+        # Void's "a nonland permanent left the battlefield this turn" asks
+        # what the permanent *was* as it left (CR 603.10a), whoever
+        # controlled it and wherever it went - exile and a library included,
+        # which the graveyard/hand entries `machines/conditions/history`
+        # writes from events never see. Read by that module's
+        # "left the battlefield" reader.
+        self.turn_history.append(
+            TurnHistoryEntry(
+                kind="left_battlefield",
+                player=controller,
+                owner=permanent.owner,
+                object_id=permanent.id,
+                characteristics=self._left_battlefield_characteristics.get(permanent.id)
+                or self.characteristics_of(permanent),
+                face_down=permanent.face_down,
+            )
+        )
         if controller is None:
             return
         self.permanents_left_battlefield_this_turn[controller] = (

@@ -153,6 +153,10 @@ def _state_word(word: str) -> ObjectTest | None:
     if word in ("blocking", "nonblocking"):
         wanted = word == "blocking"
         return lambda ctx, state, chars: (state.id in ctx.game.combat.blocker_ids) == wanted
+    if word == "suspected":
+        # CR 701.60b: a designation of the permanent (Case of the Stashed
+        # Skeleton's "you control no suspected Skeletons").
+        return lambda ctx, state, chars: bool(state.suspected)
     if word == "modified":
         return _is_modified
     if word in ("enchanted", "equipped"):

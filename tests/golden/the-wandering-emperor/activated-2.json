@@ -38,7 +38,7 @@
   "delta": {
     "created": {},
     "decisions": [],
-    "fields_changed": ["exile_residents_seen", "life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn", "turn_counts"],
+    "fields_changed": ["exile_residents_seen", "life_gained_amount_this_turn", "life_gained_this_turn", "permanents_left_battlefield_this_turn", "turn_counts", "turn_history"],
     "notices": {},
     "objects": {
       "A.I.M. Scientists@bob#1": {

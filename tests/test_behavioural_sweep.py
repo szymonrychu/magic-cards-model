@@ -2359,9 +2359,10 @@ def _self_entering(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
 
         yield put
 
-    if "from your graveyard" in lowered:
-        # "if it entered from your graveyard" (CR 603.4, CR 603.6a): the card
-        # is put onto the battlefield from its owner's graveyard.
+    if "from your graveyard" in lowered or "from a graveyard" in lowered:
+        # "if it entered from your graveyard" (CR 603.4, CR 603.6a), and
+        # Breathless Knight's "that creature entered from a graveyard": the
+        # card is put onto the battlefield from its owner's graveyard.
 
         def from_graveyard() -> tuple[PlayedScenario, Any]:
             scenario = _board(graveyard=(card.name,))

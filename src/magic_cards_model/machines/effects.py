@@ -63793,6 +63793,14 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(effect)
                 index += consumed
                 continue
+            merged = _merge_create_token_then_suspect_it_clauses(
+                clauses, index, for_spell=for_spell
+            )
+            if merged is not None:
+                consumed, effect = merged
+                parsed.append(effect)
+                index += consumed
+                continue
             merged = _merge_return_target_from_graveyard_tapped_then_attacking_clauses(
                 clauses, index, for_spell=for_spell
             )
@@ -66574,6 +66582,39 @@ def _parse_return_target_from_graveyard_tapped_and_attacking_clause(
             _put_onto_the_battlefield_attacking(game, permanent, current_attack.defender)
 
     return effect
+
+
+#: The second half of "create `<token>` and suspect it" (Case of the Stashed
+#: Skeleton's own enters trigger) once `split_effect_clauses` has cut it at
+#: the bare "and".
+_SUSPECT_THE_CREATED_TOKEN_RE = re.compile(r"^suspect (?:it|them)\.?$", re.IGNORECASE)
+
+
+def _merge_create_token_then_suspect_it_clauses(
+    clauses: list[str], index: int, *, for_spell: bool
+) -> tuple[int, TargetedClause] | None:
+    """ "create `<token>` and suspect it": "it" is the token just created (CR
+    608.2c reads the sentence as one instruction), not the trigger event's
+    subject `_parse_suspect_clause`'s own "suspect it" would read - so the
+    two clauses are rejoined here. Every token the creation clause made is
+    suspected (CR 701.60a), any token description `_parse_token_clause`
+    reads."""
+    if index + 1 >= len(clauses):
+        return None
+    if _SUSPECT_THE_CREATED_TOKEN_RE.fullmatch(clauses[index + 1].strip()) is None:
+        return None
+    token_clause = _parse_token_clause(clauses[index], for_spell=for_spell)
+    if token_clause is None:
+        return None
+
+    def create_then_suspect(game: "Game", stack_object: "StackObject") -> None:
+        before = {permanent.id for permanent in game.battlefield}
+        token_clause(game, stack_object)
+        for permanent in list(game.battlefield):
+            if permanent.id not in before and permanent.token:
+                suspect(game, permanent)
+
+    return 2, create_then_suspect
 
 
 def _merge_return_target_from_graveyard_tapped_then_attacking_clauses(
