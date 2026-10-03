@@ -2075,6 +2075,12 @@ class TargetingProfile(EngineModel):
         layer 6, so it is not on the printed card) and a `source_card` to
         compare them against; without either, protection stays unchecked here
         and the resolution recheck is still the backstop.
+
+        `source_card` is only ever set by `targeting_profile`/`modal_targeting_
+        profile` ("What this card's *spell* may target") - `profile_for_text`,
+        the reader for a triggered or activated ability's own words, sets no
+        card at all, so this method never runs for one, and `is_spell=True`
+        is always correct when it does (CR 112.1's "a card on the stack").
         """
         if game is None or self.source_card is None:
             return
@@ -2085,7 +2091,7 @@ class TargetingProfile(EngineModel):
             # `source_controller`: CR 702.16k's protection from a player is
             # decided by who controls the spell or ability, not by any
             # quality printed on its source (Figure of Fable's Avatar).
-            refusal = refusal_of(target, self.source_card, source_controller=caster)
+            refusal = refusal_of(target, self.source_card, source_controller=caster, is_spell=True)
             if refusal is not None:
                 raise ValueError(refusal)
 

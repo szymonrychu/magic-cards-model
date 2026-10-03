@@ -129,6 +129,62 @@ def test_angel_of_jubilation_does_not_pump_an_opponents_creature():
 
 
 # --------------------------------------------------------------------------
+# "Other colorless creatures you control" (Kozilek, the Broken Reality)
+# --------------------------------------------------------------------------
+
+
+def test_kozilek_pumps_a_colorless_creature_you_control():
+    """CR 105.2c: "A colorless object has no color" - not the negation of one
+    named colour (`without_color`'s own "nonblack"), a predicate on there
+    being no colour at all. Ornithopter has none, so the +3/+2 (CR 613.4c)
+    applies."""
+    kozilek = permanent("Kozilek, the Broken Reality")
+    thopter = permanent("Ornithopter")
+
+    assert board_of(kozilek, thopter).of(thopter).power_toughness == (3, 4)
+
+
+def test_kozilek_leaves_a_colored_creature_alone():
+    """Wall of Omens is white, so it has a colour and is outside "colorless
+    creatures you control" even though it is a creature the same controller
+    controls."""
+    kozilek = permanent("Kozilek, the Broken Reality")
+    wall = permanent("Wall of Omens")
+
+    board = board_of(kozilek, wall)
+    assert board.of(wall).power_toughness == (0, 4), "a coloured creature is not colorless"
+
+
+def test_kozilek_does_not_pump_itself():
+    """ "Other" excludes Kozilek's own 9/9 even though it is itself colorless
+    (an Eldrazi with no mana symbols in its cost, CR 105.2c)."""
+    kozilek = permanent("Kozilek, the Broken Reality")
+
+    assert board_of(kozilek).of(kozilek).power_toughness == (9, 9)
+
+
+def test_kozilek_does_not_pump_an_opponents_colorless_creature():
+    """ "you control" survives "colorless" being added in front of it."""
+    kozilek = permanent("Kozilek, the Broken Reality")
+    theirs = permanent("Ornithopter", controller="bob")
+
+    assert board_of(kozilek, theirs).of(theirs).power_toughness == (0, 2)
+
+
+def test_tide_drifter_generalises_off_a_differently_worded_colorless_anthem():
+    """Not Kozilek's own +3/+2: Tide Drifter's "Other colorless creatures you
+    control get +0/+1." (Devoid, CR 702.114a: "This object is colorless." - a
+    characteristic-defining ability, so Tide Drifter's own {1}{U} mana cost
+    never puts it back into blue), proving the reader is not fitted to
+    Kozilek's own numbers or to a card that is colorless by having no mana
+    symbols in its cost at all."""
+    drifter = permanent("Tide Drifter")
+    thopter = permanent("Ornithopter")
+
+    assert board_of(drifter, thopter).of(thopter).power_toughness == (0, 3)
+
+
+# --------------------------------------------------------------------------
 # "As long as you control ten or more lands" (Fecund Greenshell)
 # --------------------------------------------------------------------------
 

@@ -1856,7 +1856,11 @@ def decision_answers(decision: Decision, game: Any = None) -> list[Action]:
             for option in legal_options(decision)
         ]
 
-    if decision.kind in (DecisionKind.PAY_ENERGY_AMOUNT, DecisionKind.PAY_LIFE_AMOUNT):
+    if decision.kind in (
+        DecisionKind.PAY_ENERGY_AMOUNT,
+        DecisionKind.PAY_LIFE_AMOUNT,
+        DecisionKind.CHOOSE_AN_AMOUNT,
+    ):
         return [build(x_range=(0, decision.amount))]
 
     if decision.kind is DecisionKind.CHOOSE_A_QUALITY:
@@ -1967,6 +1971,7 @@ _DECISION_ANSWER_KINDS = frozenset(
         *_BOOLEAN_DECISION_KINDS,
         DecisionKind.PAY_ENERGY_AMOUNT,
         DecisionKind.PAY_LIFE_AMOUNT,
+        DecisionKind.CHOOSE_AN_AMOUNT,
         DecisionKind.CHOOSE_A_QUALITY,
         DecisionKind.CHOOSE_A_MODE,
         DecisionKind.CHOOSE_CARDS,

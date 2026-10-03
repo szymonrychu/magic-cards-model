@@ -1109,6 +1109,22 @@ _GRANTED_KEYWORD_AS_YOU_CAST = re.compile(
     re.IGNORECASE,
 )
 
+#: Herigast, Erupting Nullkite: "Each creature spell you cast has emerge. The
+#: emerge cost is equal to its mana cost." CR 611.3d's own "grant an ability
+#: to a permanent spell ... that allows it to be cast" shape, worded with
+#: "has" rather than `_GRANTED_KEYWORD_AS_YOU_CAST`'s one-shot "gain ... as
+#: you cast them" - and, unlike that shape, printed with no "from your
+#: hand"/"from your graveyard" clause at all, so nothing here narrows which
+#: zone the cast comes from beyond what the granted keyword's own rule
+#: already casts from (CR 702.119a: emerge, the hand) - `_granted_option`'s
+#: own zone check is what enforces that, exactly as it does for every other
+#: grant here.
+_GRANTED_KEYWORD_SPELL_YOU_CAST_HAS = re.compile(
+    r"^each (?P<what>[\w' -]+?) spell you cast has "
+    r"(?P<keyword>[A-Za-z]+)(?P<cost>[^.]*)\.(?P<tail>.*)$",
+    re.IGNORECASE | re.DOTALL,
+)
+
 #: CR 110.4: "There are six permanent types: artifact, battle, creature,
 #: enchantment, land, and planeswalker." CR 110.4b's "permanent spell" is a
 #: spell with one of them, which is what "Elemental **permanent** spells"
@@ -1229,10 +1245,18 @@ def _rezoned_by_using(
     return None
 
 
-#: The second sentence Iroh prints under the first: the granted cost is the
-#: card's own mana cost rather than a printed one.
+#: The second sentence a granted-keyword line's own cost completion prints
+#: under the first: the granted cost is the *object's* own mana cost rather
+#: than a printed one - Iroh, Grand Lotus's "The flashback cost is equal to
+#: that card's mana cost." (a card sitting in a zone, `_grant_on_a_card_in_
+#: a_zone`) and Herigast, Erupting Nullkite's "The emerge cost is equal to
+#: its mana cost." (a spell being cast, `_grant_spell_you_cast_has_keyword`) -
+#: the same rule (CR 611.3d) read off two different antecedent words, "that
+#: card's" for one and "its" for the other, English grammar rather than a
+#: rules difference.
 _COST_IS_THE_CARDS_MANA_COST = re.compile(
-    r"The (?P<keyword>[A-Za-z]+) cost is equal to that card's mana cost\.", re.IGNORECASE
+    r"The (?P<keyword>[A-Za-z]+) cost is equal to (?:that card's|its) mana cost\.",
+    re.IGNORECASE,
 )
 
 
@@ -1368,6 +1392,10 @@ def granted_cast_options(
                 continue
             text = (ability.text or "").strip()
             option = _grant_as_you_cast(text, spell, origin_zone, up_face_name, ability.raw)
+            if option is None:
+                option = _grant_spell_you_cast_has_keyword(
+                    text, spell, origin_zone, up_face_name, ability.raw
+                )
             if option is None:
                 option = _grant_on_a_card_in_a_zone(
                     text, game, spell, caster, origin_zone, up_face_name, ability.raw
@@ -2129,6 +2157,35 @@ def _grant_as_you_cast(
     )
 
 
+def _grant_spell_you_cast_has_keyword(
+    text: str, spell: CardState, origin_zone: Zone, face: str, raw: str
+) -> KeywordCastOption | None:
+    """CR 611.3d's shape: "Each creature spell you cast has emerge. The
+    emerge cost is equal to its mana cost." (Herigast, Erupting Nullkite) -
+    `_grant_on_a_card_in_a_zone`'s own cost-completion tail (Iroh's "The
+    flashback cost is equal to that card's mana cost."), read for a spell
+    being cast rather than a card sitting in a zone, so there is no zone word
+    in the sentence to match against `origin_zone` - the keyword's own rule
+    (CR 702.119a: emerge casts from the hand) is what `_granted_option`'s
+    own zone check narrows this to, exactly as it does for every grant here.
+    """
+    match = _GRANTED_KEYWORD_SPELL_YOU_CAST_HAS.match(text)
+    if match is None:
+        return None
+    if not _spell_matches_grant_filter(spell, match.group("what")):
+        return None
+    keyword = match.group("keyword")
+    printed = match.group("cost").strip() or None
+    if printed is None:
+        tail = _COST_IS_THE_CARDS_MANA_COST.search(match.group("tail") or "")
+        if tail is None or tail.group("keyword").lower() != keyword.lower():
+            return None
+        printed = spell.mana_cost or spell.card.mana_cost or None
+        if printed is None:
+            return None
+    return _granted_option(keyword, printed, origin_zone, face, raw, "CR 611.3d")
+
+
 def _grant_on_a_card_in_a_zone(
     text: str,
     game: Any,
@@ -2224,6 +2281,34 @@ def reads_granted_zone_keyword_line(card: Card, text: str) -> bool:
         for ability in parse_abilities(card)
         if ability.kind is AbilityKind.STATIC
     )
+
+
+def reads_granted_cast_spell_keyword_line(text: str) -> bool:
+    """What `support.py` asks before crediting a `_GRANTED_KEYWORD_SPELL_YOU_
+    CAST_HAS` line: the keyword expands to a cast option `_option_from_
+    keyword` really builds, its cost either printed inline or completed by a
+    second sentence naming the spell's own mana cost (Herigast, Erupting
+    Nullkite's "The emerge cost is equal to its mana cost."), with nothing
+    else left unread after it. There is no zone word in this shape to check
+    against a live spell's `origin_zone` the way `reads_granted_zone_keyword_
+    line` does, so this only confirms the keyword itself builds an
+    understood option - `granted_cast_options` is what narrows it to the
+    keyword's own casting zone at runtime."""
+    match = _GRANTED_KEYWORD_SPELL_YOU_CAST_HAS.match(_REMINDER_TEXT_RE.sub("", text).strip())
+    if match is None:
+        return False
+    keyword = match.group("keyword")
+    printed = match.group("cost").strip() or None
+    tail = (match.group("tail") or "").strip()
+    if printed is None:
+        cost_tail = _COST_IS_THE_CARDS_MANA_COST.fullmatch(tail)
+        if cost_tail is None or cost_tail.group("keyword").lower() != keyword.lower():
+            return False
+        printed = "{0}"
+    elif tail:
+        return False
+    option = _granted_option(keyword, printed, Zone.HAND, "", text, "CR 611.3d", any_zone=True)
+    return option is not None and option.understood
 
 
 def reads_using_keyword_permission_line(text: str) -> bool:

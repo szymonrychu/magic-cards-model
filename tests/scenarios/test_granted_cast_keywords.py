@@ -328,6 +328,116 @@ def test_a_creature_card_in_the_graveyard_gets_nothing():
         casting.use_keyword("flashback")
 
 
+# -- Herigast, Erupting Nullkite: "Each creature spell you cast has emerge.
+# The emerge cost is equal to its mana cost." (confirmed with `resolve_cards`)
+#
+# CR 611.3d's own shape again ("grant an ability to a permanent spell ... that
+# allows it to be cast"), Iroh's own cost-completion sentence read for a spell
+# being cast rather than a card sitting in a zone: no "from your hand"/"from
+# your graveyard" clause printed at all - CR 702.119a (emerge casts from the
+# hand) is what narrows the grant, not the sentence's own words.
+
+
+def _herigast(hand: list[str], battlefield: list[str] | None = None) -> Scenario:
+    return (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=hand,
+            battlefield=["Herigast, Erupting Nullkite", *(battlefield or [])],
+        )
+        .player("bob")
+    )
+
+
+def test_herigast_grants_emerge_equal_to_the_spells_own_mana_cost():
+    """Grizzly Bears' own printed {1}{G} becomes its granted emerge cost
+    (CR 611.3d) - Grizzly Bears prints no emerge of its own. Sacrificing
+    Elvish Mystic (mana value 1) reduces the {1} generic to {0} (CR
+    702.119a), leaving {G}."""
+    scenario = _herigast(["Grizzly Bears"], ["Elvish Mystic", "Forest"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mystic = scenario.creature("Elvish Mystic", "alice")
+    bears_card = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+    (forest,) = scenario.untapped_sources("Forest")
+
+    bears = scenario.game.cast(
+        bears_card, "alice", keyword="emerge", choosing=[mystic], mana_sources=[forest]
+    )
+
+    assert bears.zone is Zone.STACK
+    assert mystic.zone is Zone.GRAVEYARD
+
+
+def test_a_second_creature_spell_reads_its_own_different_mana_cost():
+    """Not Grizzly Bears' own {1}{G}: Watchwolf's {G}{W} becomes its own
+    granted emerge cost, proving the grant is read per spell rather than
+    fitted to one card's numbers - and, having no generic mana in it at all,
+    unreduced by sacrificing Elvish Mystic (CR 601.2f/CR 118.7d: the
+    reduction only ever touches generic mana, and there is none here to
+    take)."""
+    scenario = _herigast(["Watchwolf"], ["Elvish Mystic", "Forest", "Plains"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    mystic = scenario.creature("Elvish Mystic", "alice")
+    wolf_card = scenario.find("Watchwolf", Zone.HAND, "alice")
+    sources = scenario.untapped_sources("Forest", "Plains")
+
+    wolf = scenario.game.cast(
+        wolf_card, "alice", keyword="emerge", choosing=[mystic], mana_sources=sources
+    )
+
+    assert wolf.zone is Zone.STACK
+    assert mystic.zone is Zone.GRAVEYARD
+
+
+def test_the_grant_needs_herigast_on_the_battlefield():
+    """CR 604.2: the static ability is active while its permanent is on the
+    battlefield. Without her, Grizzly Bears has no emerge of its own."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears_card = scenario.find("Grizzly Bears", Zone.HAND, "alice")
+
+    with pytest.raises(ValueError, match="no emerge ability"):
+        scenario.game.cast(bears_card, "alice", keyword="emerge")
+
+
+def test_the_grant_only_covers_creature_spells():
+    """ "Each creature spell you cast" is a filter, not a flourish: Lightning
+    Bolt is an instant, so Herigast hands it nothing."""
+    scenario = _herigast(["Lightning Bolt"], ["Mountain"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bolt_card = scenario.find("Lightning Bolt", Zone.HAND, "alice")
+
+    with pytest.raises(ValueError, match="no emerge ability"):
+        scenario.game.cast(bolt_card, "alice", keyword="emerge", targets=["bob"])
+
+
+def test_herigasts_grant_is_read_from_the_casters_own_board():
+    """ "spells **you** cast": Herigast grants nothing to her controller's
+    opponent."""
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player("alice", battlefield=["Herigast, Erupting Nullkite"])
+        .player("bob", hand=["Grizzly Bears"], battlefield=["Forest", "Forest"])
+        .build()
+    )
+    while scenario.game.turn.active_player != "bob":
+        scenario.advance()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bears_card = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+
+    with pytest.raises(ValueError, match="no emerge ability"):
+        scenario.game.cast(bears_card, "bob", keyword="emerge")
+
+
 def test_the_phoenix_cannot_be_cast_from_the_graveyard_without_announcing_bestow():
     """The `test_flashback.py` live-game defect, generalized to a printed
     CR 604.6 zone permission: "you may cast this card from your graveyard

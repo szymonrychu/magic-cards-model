@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from ..models.card import Color
 from ..models.card_state import CANT_BECOME_UNTAPPED_TEXT, CardState
+from ..models.player import Player
 from ..models.zone import Zone
 from .layers import (
     CANT_ACTIVATE_ABILITIES_TEXT,
@@ -236,6 +237,82 @@ def _parse_gain_control_for_as_long_clause(effect_text: str) -> AbilityEffect | 
                 )
         if rest is not None:
             rest(game, ability)
+
+    return effect
+
+
+#: "Gain control of all `<description>` target player/opponent controls." -
+#: Emrakul, the World Anew's own cast trigger, Ashiok, Sculptor of Fears'
+#: -11 ("... target opponent controls."), Gilt-Leaf Archdruid's own tap
+#: ability ("... target player controls."), and the compound-description
+#: form on Tezzeret, Master of Metal's -8 ("all artifacts and creatures
+#: target opponent controls."). No stated duration, so CR 611.2a's default
+#: applies (lasts until the end of the game - `Duration.INDEFINITE`), the
+#: same as `parse_gain_control_untimed_clause` below, except the
+#: object here is never itself a target: CR 115.10a's untargeted "all
+#: `<description>`" among one *targeted player's* own permanents, read with
+#: `machines/targeting.permanent_description` the same way `_parse_all_of_
+#: target_player_then_referent_pair` (Settle the Wreckage) already reads an
+#: identical "all `<description>` target player controls" grammar for a
+#: destroy/exile effect instead of a control change.
+_GAIN_CONTROL_OF_ALL_TARGET_PLAYERS_RE = re.compile(
+    r"^gain control of all (?P<description>.+?) target (?P<who>player|opponent) controls\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_gain_control_of_all_target_players_clause(effect_text: str) -> AbilityEffect | None:
+    """`_GAIN_CONTROL_OF_ALL_TARGET_PLAYERS_RE`'s shape, or `None`.
+
+    The group is read off the computed board (CR 613.5) once, as the ability
+    resolves - CR 611.2c: the set a control-changing continuous effect
+    affects "is determined when that continuous effect begins" - so a
+    permanent the target player already lost control of (or that left the
+    battlefield) by then is correctly excluded, the same "fixed set now"
+    reading `_parse_mass_gain_control_untap` uses for an untargeted "all
+    `<description>` until end of turn" group.
+    """
+    from .effects import _targets_understood
+    from .targeting import permanent_description
+
+    match = _GAIN_CONTROL_OF_ALL_TARGET_PLAYERS_RE.fullmatch(" ".join(effect_text.split()))
+    if match is None:
+        return None
+    if not _targets_understood(f"target {match.group('who')}", allow_player_targets=True):
+        return None
+    requirement = permanent_description(match.group("description"))
+    if requirement is None:
+        return None
+
+    def effect(game: Game, ability: AbilityOnStack) -> None:
+        players = [target for target in game.resolve_targets(ability) if isinstance(target, Player)]
+        if not players:
+            return
+        player = players[0]
+        group = [
+            permanent
+            for permanent in game.permanents_controlled_by(player.username)
+            if requirement.rejects(permanent, player.username, game) is None
+        ]
+        if not group:
+            return
+        store = game.continuous_effects
+        timestamp = store.tick()
+        for target in group:
+            store.add(
+                ContinuousEffect(
+                    description=(
+                        f"{ability.source_name}: {ability.controller} gains control of "
+                        f"{target.name}"
+                    ),
+                    layer=Layer.CONTROL,
+                    timestamp=timestamp,
+                    duration=Duration.INDEFINITE,
+                    selector=only_this_incarnation(target, target.zone_change_stamp),
+                    modification=set_controller(ability.controller),
+                ),
+                game=game,
+            )
 
     return effect
 
@@ -508,6 +585,7 @@ def control_change_ability_effect(effect_text: str) -> AbilityEffect | None:
     for reader in (
         _parse_tap_then_lock_clause,
         _parse_gain_control_for_as_long_clause,
+        _parse_gain_control_of_all_target_players_clause,
     ):
         effect = reader(effect_text)
         if effect is not None:
