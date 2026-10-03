@@ -190,3 +190,14 @@ def test_a_compound_put_is_the_sequence_of_its_simple_puts(printed, expanded):
 )
 def test_text_it_cannot_say_twice_without_guessing_is_left_alone(text):
     assert expand_compound_counter_puts(text) == text
+
+
+@pytest.mark.parametrize("kind", ["first strike", "double strike", "flying"])
+def test_a_split_off_keyword_counter_on_that_creature_is_read_two_word_kinds_too(kind):
+    """CR 122.1b names "first strike" and "double strike" counters; once a
+    compound put is split, each single put must still be read whole."""
+    from magic_cards_model.machines.effects import _parse_counter_on_trigger_subject_clause
+
+    assert _parse_counter_on_trigger_subject_clause(f"Put a {kind} counter on that creature")
+    not_a_keyword = "Put a big strike counter on that creature"
+    assert _parse_counter_on_trigger_subject_clause(not_a_keyword) is None

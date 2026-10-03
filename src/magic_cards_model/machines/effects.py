@@ -16692,7 +16692,8 @@ def _parse_untap_trigger_subject_and_scry_clause(text: str) -> AbilityEffect | N
 #: own "this `<noun>`" (CR 700.7) either - `that <noun>` is always whichever
 #: object the trigger's condition already named.
 _COUNTER_ON_TRIGGER_SUBJECT_RE = re.compile(
-    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on that [a-z]+"
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|(?:first|double) strike|[a-z]+) "
+    rf"counters? on that [a-z]+"
     rf"(?: for each (?P<each>.+))?\.?$",
     re.IGNORECASE,
 )
