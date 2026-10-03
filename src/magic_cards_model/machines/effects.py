@@ -18758,7 +18758,10 @@ _DAMAGE_TARGET_RE = re.compile(
     # "target") cannot match at all.
     rf"(?P<phrase>any target|any other target|.*?target.+?)"
     rf"(?: for each (?P<each>[^.]+?))?"
-    rf"{where_x_pattern()}$",
+    # The sentence's own closing period is optional: an anaphor pair hands
+    # its antecedent over with it still on, and without `\.?` the lazy
+    # `phrase` swallowed ", where X is ...", leaving X unread.
+    rf"{where_x_pattern()}\.?$",
     re.IGNORECASE,
 )
 #: Fling: "<Source> deals damage equal to the sacrificed creature's power to
@@ -18834,10 +18837,16 @@ _DAMAGE_TARGET_KICKED_INSTEAD_RE = re.compile(
 #: `_parse_referent_object_clause`'s "referent" shapes do not read. Read by
 #: `condition_is_readable`/`Game.condition_holds` generically, the same as
 #: every other printed condition, not pinned to "cast using teamwork".
+#: The rider's subject is the spell itself however it is printed: "it", "this
+#: spell", or the same name the first sentence's subject used (Blooming
+#: Blast's "If the gift was promised, Blooming Blast also deals 3 damage to
+#: that creature's controller.", Misthios's Fury's "If you control an
+#: Equipment, Misthios's Fury also deals 2 damage ..."; CR 201.5, a card
+#: naming itself means that object).
 _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
-    r"^.*\bdeals? (?P<n>\d+) damage to (?P<phrase>.*?target creature.*?)\.\s*"
-    r"if (?P<condition>[^,]+), it also deals (?P<extra_n>\d+) damage to "
-    r"that creature'?s controller\.?$",
+    r"^(?P<subject>[^.]*?) deals? (?P<n>\d+) damage to (?P<phrase>[^.]*?target creature[^.]*?)\.\s*"
+    r"if (?P<condition>[^,]+), (?:it|this spell|(?P=subject)) also deals (?P<extra_n>\d+) "
+    r"damage to that creature'?s controller\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -36298,9 +36307,16 @@ _LOOKS_LIKE_RETURN_TO_BATTLEFIELD_RE = re.compile(
 #: the same referent, not a different antecedent shape; `_parse_object_
 #: anaphor_clause_pair`'s per-referent rider loop already applies every
 #: rider to each object in the list one at a time; either wording runs it.
+#:
+#: "That creature or planeswalker" is the two-noun form a "target creature or
+#: planeswalker" antecedent is referred back with (Scorching Dragonfire's and
+#: Bouncer's Beatdown's "If that creature or planeswalker would die this
+#: turn, exile it instead.") - one object, named by the same noun list its
+#: own target phrase printed.
+_ANAPHOR_NOUN = r"(?:creature|planeswalker|permanent|artifact|enchantment|land|battle|token|card)"
 _OBJECT_ANAPHOR = (
     r"(?:it|they|them|each of them|he|she|him|her|"
-    r"that (?:creature|permanent|artifact|enchantment|land|token|card))"
+    rf"that {_ANAPHOR_NOUN}(?: or {_ANAPHOR_NOUN})?)"
 )
 _OBJECT_ANAPHOR_RE = re.compile(rf"\b{_OBJECT_ANAPHOR}\b", re.IGNORECASE)
 

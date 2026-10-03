@@ -482,6 +482,10 @@ class TargetRequirement(EngineModel):
     ability" (CR 113.3c), `{ACTIVATED}` for Rimewind Cryomancer's "target
     activated ability" (CR 113.3b), both for "activated or triggered". Empty
     means the phrase named no category, and any ability is accepted."""
+    loyalty_abilities_only: bool = False
+    """True for "target loyalty ability" (Verdant Command): CR 606.2's
+    loyalty abilities only - an activated ability with a loyalty symbol in its
+    cost - narrower than `ability_kinds`'s `{ACTIVATED}`."""
     opponent_only: bool = False
     zones: SortedFrozenSet[Zone] = frozenset({Zone.BATTLEFIELD})
     controller: ControllerRestriction = ControllerRestriction.ANY
@@ -867,6 +871,11 @@ class TargetRequirement(EngineModel):
         if self.ability_kinds and kind not in self.ability_kinds:
             category = "an activated" if kind is AbilityKind.ACTIVATED else "a triggered"
             return f"{self.phrase} cannot target {target.name}, which is {category} ability"
+        if self.loyalty_abilities_only and getattr(target.ability, "loyalty", None) is None:
+            return (
+                f"{self.phrase} cannot target {target.name}, which is not a loyalty ability "
+                "(CR 606.2: only an activated ability with a loyalty symbol in its cost is one)"
+            )
         target_count = self._rejects_target_count(target)
         if target_count is not None:
             return target_count
@@ -2582,9 +2591,14 @@ _ABILITY_PHRASE = re.compile(
 
 
 #: The tail after "target activated or triggered ability": "you control",
-#: "from a[n] <card type> source", or both (Echo, Perceptive Prodigy).
+#: "from a[n] <card type> source", or both (Echo, Perceptive Prodigy). "Of
+#: a[n] <card type>" (Verdant Command's "loyalty ability of a planeswalker")
+#: is the same restriction on the ability's source (CR 113.7) worded the
+#: other way round.
 _ABILITY_YOU_CONTROL_FROM_SOURCE_RE = re.compile(
-    r"^(?P<you>you control)?\s*(?:from an? (?P<type>[a-z]+) source)?$", re.IGNORECASE
+    r"^(?P<you>you control)?\s*"
+    r"(?:from an? (?P<type>[a-z]+) source|of an? (?P<of_type>[a-z]+))?$",
+    re.IGNORECASE,
 )
 
 
@@ -2621,6 +2635,13 @@ def _ability_kinds_named(words: str) -> frozenset[AbilityKind]:
     if named & {"activated", "loyalty"}:
         kinds.add(AbilityKind.ACTIVATED)
     return frozenset(kinds)
+
+
+def _names_only_loyalty(words: str) -> bool:
+    """Whether `_ABILITY_PHRASE`'s words name loyalty abilities and nothing
+    wider - "loyalty ability", not "activated or loyalty ability"."""
+    named = {word.lower() for word in re.findall(r"activated|triggered|loyalty", words, re.I)}
+    return named == {"loyalty"}
 
 
 #: "... or colorless spell" (Consign to Memory's "target triggered ability or
@@ -4179,7 +4200,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
             # "... ability you control[ from a[n] <type> source]" (Lithoform
             # Engine; Echo, Perceptive Prodigy): the controller and the
             # source's card type (CR 113.7).
-            source_type = source_restricted.group("type")
+            source_type = source_restricted.group("type") or source_restricted.group("of_type")
             source_card_type = _TYPE_NOUNS.get(source_type.lower()) if source_type else None
             if source_type and source_card_type is None:
                 return None
@@ -4192,6 +4213,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 allows_cards=False,
                 allows_abilities=True,
                 ability_kinds=_ability_kinds_named(ability.group(0)),
+                loyalty_abilities_only=_names_only_loyalty(ability.group(0)),
                 ability_source_types=(
                     frozenset({source_card_type}) if source_card_type is not None else frozenset()
                 ),
@@ -4216,6 +4238,7 @@ def _read_phrase(prefix: str, suffix: str, *, strict: bool = False) -> TargetReq
                 allows_cards=False,
                 allows_abilities=True,
                 ability_kinds=_ability_kinds_named(ability.group(0)),
+                loyalty_abilities_only=_names_only_loyalty(ability.group(0)),
                 zones=frozenset({Zone.STACK}),
                 excludes_source=excludes_source,
             )
@@ -4823,6 +4846,27 @@ def permanent_description(text: str) -> TargetRequirement | None:
         or requirement.excludes_source
         or requirement.exiled_with_source
         or requirement.or_any_spell
+    ):
+        return None
+    return requirement
+
+
+def chosen_target_description(text: str) -> TargetRequirement | None:
+    """Read the description a spell's *already chosen* target is tested
+    against - "if it targets a black permanent" (Bouncer's Beatdown), "a
+    tapped creature" (Ajani's Response), "a blue permanent you don't control"
+    (Hunter's Mark) - with the same grammar a "target ..." phrase uses.
+
+    Unlike `permanent_description`, "you control"/"you don't control" is
+    kept: it is relative to the spell's caster, which `rejects` is always
+    handed. Returns None when any word is left unread, or when the
+    description could name a player or an ability."""
+    requirement = _read_phrase("", " " + text.strip(), strict=True)
+    if (
+        requirement is None
+        or not requirement.allows_cards
+        or requirement.allows_players
+        or requirement.allows_abilities
     ):
         return None
     return requirement

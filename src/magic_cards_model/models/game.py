@@ -530,6 +530,19 @@ _COSTS_LESS_IF_TARGETS_SPELL_RE = re.compile(
     re.IGNORECASE,
 )
 
+#: The permanent twin of `_COSTS_LESS_IF_TARGETS_SPELL_RE`: "This spell
+#: costs `<mana>` less to cast if it targets a(n) `<description>`." with any
+#: description the target grammar reads - Bouncer's Beatdown's "a black
+#: permanent", Ajani's Response's "a tapped creature", Hunter's Mark's "a blue
+#: permanent you don't control". Read against `Casting.targets`, which CR
+#: 601.2c fixes before CR 601.2f determines the cost. Tried only when the
+#: spell shape above did not match.
+_COSTS_LESS_IF_TARGETS_DESCRIPTION_RE = re.compile(
+    r"costs (?P<amount>(?:\{[^{}]+\})+) less to cast if it targets an? "
+    r"(?P<description>[^.]+?)\.",
+    re.IGNORECASE,
+)
+
 #: CR 601.2f's general "if <board condition>" self reduction: "This spell
 #: costs {1} less to cast if you control a legendary creature." (Wrath of the
 #: Bloodmane) and "This spell costs {2} less to cast if you've cast a
@@ -22063,10 +22076,26 @@ class Game(EngineModel):
                     )
                 )
 
+        described_match = (
+            _COSTS_LESS_IF_TARGETS_DESCRIPTION_RE.search(text) if target_match is None else None
+        )
+        if described_match is not None and targets:
+            reduction = self._target_description_reduction(described_match, targets, owner)
+            if reduction is not None:
+                amount += reduction.generic
+                colored_reduction = ManaCost(
+                    symbols=tuple(
+                        symbol
+                        for symbol in reduction.symbols
+                        if symbol.kind is not SymbolKind.GENERIC
+                    )
+                )
+
         condition_match = _COSTS_LESS_IF_CONDITION_RE.search(text)
-        # Out of Air's "if it targets a creature spell" is the target shape
-        # above, not an open board condition - read once, never twice.
-        if condition_match is not None and target_match is None:
+        # Out of Air's "if it targets a creature spell" and Bouncer's
+        # Beatdown's "if it targets a black permanent" are the target shapes
+        # above, not open board conditions - read once, never twice.
+        if condition_match is not None and target_match is None and described_match is None:
             held = self.condition_holds(owner, condition_match.group("condition"), source=spell)
             if held:
                 amount += int(condition_match.group("amount"))
@@ -22133,6 +22162,27 @@ class Game(EngineModel):
             if target is None or target.zone is not Zone.STACK:
                 continue
             if spell_has_quality(target, quality):
+                return reduction
+        return None
+
+    def _target_description_reduction(
+        self, match: re.Match[str], targets: Sequence[TargetRef], caster: str
+    ) -> ManaCost | None:
+        """`_COSTS_LESS_IF_TARGETS_DESCRIPTION_RE`'s reduction when one of
+        `targets` fits the description, or None - also None when the
+        description is not one the target grammar reads, so an unread
+        condition never discounts a spell."""
+        from ..machines.targeting import chosen_target_description
+
+        reduction = ManaCost.try_parse(match.group("amount"))
+        requirement = chosen_target_description(match.group("description"))
+        if reduction is None or requirement is None:
+            return None
+        for ref in targets:
+            if ref.is_player:
+                continue
+            target = self.find_by_id(ref.card_id)
+            if target is not None and requirement.rejects(target, caster, self) is None:
                 return reduction
         return None
 
