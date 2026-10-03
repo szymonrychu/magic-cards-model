@@ -19353,16 +19353,31 @@ _DAMAGE_TARGET_KICKED_INSTEAD_RE = re.compile(
 #: that creature's controller.", Misthios's Fury's "If you control an
 #: Equipment, Misthios's Fury also deals 2 damage ..."; CR 201.5, a card
 #: naming itself means that object).
+#: The same instruction printed unconditionally, in one sentence: "`<source>`
+#: deals N damage to target creature and M damage to that creature's
+#: controller." (Chandra, Flame's Fury's -2) - the rider's player is read off
+#: the same resolved target the same way, just with no condition gating it.
+#: The target noun may be any permanent type the anaphor repeats ("that
+#: permanent's controller").
 _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE = re.compile(
-    r"^(?P<subject>[^.]*?) deals? (?P<n>\d+) damage to (?P<phrase>[^.]*?target creature[^.]*?)\.\s*"
-    r"if (?P<condition>[^,]+), (?:it|this spell|(?P=subject)) also deals (?P<extra_n>\d+) "
-    r"damage to that creature'?s controller\.?$",
+    rf"^(?P<subject>[^.]*?) deals? (?P<n>{COUNT}) damage to "
+    r"(?P<phrase>[^.]*?target (?P<noun>creature|permanent|planeswalker|artifact|enchantment|land)"
+    r"[^.]*?)"
+    r"(?:\.\s*if (?P<condition>[^,]+), (?:it|this spell|(?P=subject)) also deals|\s+and) "
+    rf"(?P<extra_n>{COUNT}) damage to that (?P=noun)'?s controller\.?$",
     re.IGNORECASE | re.DOTALL,
 )
 
 
-def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Effect | None:
-    """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape."""
+def _parse_damage_target_also_damages_controller_clause(
+    effect_text: str, *, for_spell: bool = True
+) -> Any:
+    """`_DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE`'s shape, on a spell or (with
+    `for_spell=False`) an activated or triggered ability, whose damage source
+    is the ability's source or its last known information (CR 608.2h).
+
+    CR 608.2b: the target is the only one, so with it illegal nothing - not
+    even the controller's share - happens."""
 
     whole = _strip_non_effect_preamble(effect_text).strip()
     match = _DAMAGE_TARGET_ALSO_DAMAGES_CONTROLLER_RE.fullmatch(whole)
@@ -19370,23 +19385,35 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Eff
         return None
     if not _targets_understood(match.group("phrase")):
         return None
-    condition_text = match.group("condition").strip()
-    if not _effect_condition_is_readable(condition_text):
+    condition_text = (match.group("condition") or "").strip() or None
+    if condition_text is not None and not _effect_condition_is_readable(condition_text):
         return None
-    base_amount = int(match.group("n"))
-    extra_amount = int(match.group("extra_n"))
+    base_amount = parse_count(match.group("n"))
+    extra_amount = parse_count(match.group("extra_n"))
+    if base_amount is None or extra_amount is None:
+        return None
 
-    def effect(game: "Game", spell: CardState) -> None:
-        controller = game.controller_of(spell).username
-        held = game.condition_holds(controller, condition_text, spell)
-        if held is None:
-            notice = ConditionalClauseNotice(
-                source_id=spell.id, source_name=spell.card.name, text=whole
-            )
-            if notice not in game.conditional_clause_notices:
-                game.conditional_clause_notices.append(notice)
-            held = False
-        for target in game.resolve_targets(spell):
+    def effect(game: "Game", stack_object: "StackObject") -> None:
+        source: CardState | None
+        if isinstance(stack_object, AbilityOnStack):
+            source = stack_object.source_or_last_known(game)
+            condition_source = stack_object.source(game)
+            source_id, source_name = stack_object.source_id, stack_object.source_name
+        else:
+            source = condition_source = stack_object
+            source_id, source_name = stack_object.id, stack_object.card.name
+        held: bool | None = True
+        if condition_text is not None:
+            controller = game.controller_of(stack_object).username
+            held = game.condition_holds(controller, condition_text, condition_source)
+            if held is None:
+                notice = ConditionalClauseNotice(
+                    source_id=source_id, source_name=source_name, text=whole
+                )
+                if notice not in game.conditional_clause_notices:
+                    game.conditional_clause_notices.append(notice)
+                held = False
+        for target in game.resolve_targets(stack_object):
             if not isinstance(target, CardState):
                 continue
             # CR 608.2h: "that creature's controller" is read from last
@@ -19394,10 +19421,10 @@ def _parse_damage_target_also_damages_controller_clause(effect_text: str) -> Eff
             # the controller is captured before the base damage - not
             # re-derived, and never re-gated on the target's zone - after.
             controller_of_target = game.controller_of(target)
-            game.deal_damage(target, base_amount, source=spell)
+            game.deal_damage(target, base_amount, source=source)
             if held:
                 game.deal_damage(
-                    game.player(controller_of_target.username), extra_amount, source=spell
+                    game.player(controller_of_target.username), extra_amount, source=source
                 )
 
     return effect
@@ -31865,10 +31892,14 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     condition_instead = _parse_condition_instead_clause_for_ability(effect_text)
     if condition_instead is not None:
         return condition_instead
-    # Source damage whose later words point back at the target ("that
-    # creature's controller", "each other creature that shares a color with
-    # it", "that creature deals damage ... to this creature", "<it> deals N
-    # damage instead") - `machines/damage_backrefs.py`.
+    damage_target_and_controller = _parse_damage_target_also_damages_controller_clause(
+        effect_text, for_spell=False
+    )
+    if damage_target_and_controller is not None:
+        return damage_target_and_controller
+    # "... deals N damage to target creature and each other creature that
+    # shares a color with it / with the same name as that creature" -
+    # `machines/damage_backrefs.py`.
     from .damage_backrefs import damage_backref_ability_effect
 
     damage_backref = damage_backref_ability_effect(effect_text)
@@ -37673,12 +37704,18 @@ _RIDER_DAMAGE_HOLDER_PHRASE = (
 #: "That creature deals damage equal to its power to you." - Form of the
 #: Dinosaur's rider after its 15 damage: the same one-sided damage (CR 120.1)
 #: with the resolving ability's controller as the recipient (CR 119.2).
+#: "That creature deals damage equal to its power to this creature." -
+#: Karplusan Yeti / Vein Drinker, after "This creature deals damage equal to
+#: its power to target creature.": the same one-sided damage back to the
+#: ability's source. Not fight (CR 701.14b): the antecedent's damage still
+#: happens off the source's last known power (CR 608.2h) if it has left, and
+#: then "this creature" names nothing to damage (CR 400.7).
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_TO_YOU_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to you$", re.IGNORECASE
 )
 _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE = re.compile(
     rf"^{_OBJECT_ANAPHOR} deals damage equal to its power to "
-    rf"(?:(?P<phrase>.*\btarget\b.+)|{_RIDER_DAMAGE_HOLDER_PHRASE})$",
+    rf"(?:(?P<phrase>.*\btarget\b.+)|{_RIDER_DAMAGE_HOLDER_PHRASE}|(?P<self>this creature))$",
     re.IGNORECASE,
 )
 
@@ -38267,6 +38304,29 @@ def _parse_referent_object_clause(rider: str) -> ReferentObjectClause | None:
         return deals_damage_equal_to_its_power_to_you
 
     if match := _RIDER_DEALS_DAMAGE_EQUAL_TO_ITS_POWER_RE.fullmatch(rider):
+        if match.group("self") is not None:
+
+            def deals_damage_to_this_creature(
+                game: "Game", referents: list[CardState], stack_object: "StackObject"
+            ) -> None:
+                if not isinstance(stack_object, AbilityOnStack):
+                    return  # a spell is not "this creature" on the battlefield
+                this_creature = stack_object.source(game)
+                stamp = stack_object.source_stamp
+                if (
+                    this_creature is None
+                    or this_creature.zone is not Zone.BATTLEFIELD
+                    or (stamp is not None and this_creature.zone_change_stamp != stamp)
+                ):
+                    return  # CR 400.7: the source left; nothing to damage
+                dealers = [r for r in referents if r.zone is Zone.BATTLEFIELD]
+                if not dealers:
+                    return
+                amount = game.power_of(dealers[0]) or 0
+                if amount > 0:
+                    game.deal_damage(this_creature, amount, source=dealers[0])
+
+            return deals_damage_to_this_creature
         holder = match.group("holder")
         if holder is not None:
 
@@ -55325,6 +55385,53 @@ def _parse_condition_instead_clause(effect_text: str) -> Effect | None:
     return effect
 
 
+#: An ability alternative's elided or back-referring wording, read off the
+#: base instruction: "`<subject>` deals M damage" (Akoum Hellkite's "this
+#: creature deals 2 damage instead", Scepter of Empires' "It deals 3 damage
+#: instead") is the base with only its amount changed; "Create N of those
+#: tokens" (Throne of Empires) is the base's own token N times over.
+_ABILITY_ELIDED_DAMAGE_ALTERNATIVE_RE = re.compile(
+    rf"^(?P<subject>[^.]+?) deals (?P<m>{COUNT}) damage$", re.IGNORECASE
+)
+_ABILITY_BASE_DAMAGE_AMOUNT_RE = re.compile(rf"\bdeals (?P<n>{COUNT}) damage\b", re.IGNORECASE)
+_ABILITY_THOSE_TOKENS_ALTERNATIVE_RE = re.compile(
+    rf"^create (?P<count>{COUNT}) of those tokens$", re.IGNORECASE
+)
+_ABILITY_BASE_TOKEN_RE = re.compile(
+    rf"^create (?P<count>{COUNT}) (?P<desc>.+?) tokens?(?P<tail>\b.*)$", re.IGNORECASE
+)
+
+
+def _ability_instead_alternative_text(base: str, alternative: str) -> str | None:
+    """The alternative rewritten to say in full what it elides or names by
+    back-reference to `base` (CR 614.1a replaces the base instruction; the
+    target stays the one announced, CR 601.2c/603.3c), or None when it is
+    none of the shapes read."""
+    alternative = alternative.strip()
+    if elided := _ABILITY_ELIDED_DAMAGE_ALTERNATIVE_RE.fullmatch(alternative):
+        amounts = list(_ABILITY_BASE_DAMAGE_AMOUNT_RE.finditer(base))
+        if len(amounts) != 1:
+            return None
+        found = amounts[0]
+        return f"{base[: found.start('n')]}{elided.group('m')}{base[found.end('n') :]}"
+    if those := _ABILITY_THOSE_TOKENS_ALTERNATIVE_RE.fullmatch(alternative):
+        token = _ABILITY_BASE_TOKEN_RE.fullmatch(base.strip())
+        if token is None or token.group("tail").strip():
+            return None
+        return f"create {those.group('count')} {token.group('desc')} tokens"
+    return _anaphoric_target_substitution(base, alternative)
+
+
+def _ability_instead_branch_effect(text: str) -> AbilityEffect | None:
+    """One branch of an ability's base-or-alternative pair as its own
+    instruction: the ordinary clause reader, or the untimed control change
+    ("Gain control of target creature", CR 611.2a's indefinite duration) it
+    does not read."""
+    from .control_change import parse_gain_control_untimed_clause
+
+    return parse_mixed_effect(text) or parse_gain_control_untimed_clause(text)
+
+
 def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffect | None:
     """`_parse_condition_instead_clause`'s shape on an activated or triggered
     ability: "`<base>`. If `<condition>`, `<alternative>` instead." - Mine
@@ -55341,15 +55448,29 @@ def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffe
     effect (Power Plant Worker's "+2/+2 until end of turn") is left to
     `_compose_layer_effect_with_remainder_for_ability`, which already reads
     its counter upgrade.
+
+    An alternative that does not read on its own is read with what it elides
+    or back-references filled in from the base (`_ability_instead_
+    alternative_text`): Akoum Hellkite's "this creature deals 2 damage
+    instead", Scepter of Empires' "It deals 3 damage instead", Crown of
+    Empires' "Gain control of that creature instead", Throne of Empires'
+    "Create five of those tokens instead". A condition naming an anaphor
+    (Akoum Hellkite's "If that land is a Mountain") is read off the trigger's
+    own event; with no event to name, it is a `ConditionalClauseNotice` and
+    the base runs. CR 608.2b: with the one target illegal, neither branch
+    resolves.
     """
+
+    from .conditions.objects import names_an_anaphor
 
     whole = " ".join(_strip_non_effect_preamble(effect_text).split())
     match = _CONDITION_INSTEAD_RE.fullmatch(whole)
     if match is None:
         return None
     condition_text = (match.group("condition_leading") or match.group("condition_elided")).strip()
-    if not _effect_condition_is_readable(condition_text):
+    if not _effect_condition_is_readable(condition_text, allow_anaphor=True):
         return None
+    anaphoric = not _effect_condition_is_readable(condition_text)
     base_text = match.group("base").strip()
     if is_genuine_resolution_layer_sentence(_as_sentence(base_text)):
         return None
@@ -55359,15 +55480,37 @@ def _parse_condition_instead_clause_for_ability(effect_text: str) -> AbilityEffe
         or match.group("alternative_elided")
     )
     assert alternative_text is not None
+    alternative_text = alternative_text.strip()
     base = parse_mixed_effect(base_text)
-    alternative = parse_mixed_effect(alternative_text.strip())
-    if base is None or alternative is None:
-        return None
+    alternative = parse_mixed_effect(alternative_text)
+    if base is None or alternative is None or anaphoric:
+        rewritten = _ability_instead_alternative_text(base_text, alternative_text)
+        if rewritten is None:
+            return None
+        base = _ability_instead_branch_effect(base_text)
+        alternative = _ability_instead_branch_effect(rewritten)
+        if base is None or alternative is None:
+            return None
+        resolves_anaphor = names_an_anaphor(condition_text)
+    else:
+        # Read whole on its own: the condition is asked exactly as before,
+        # with no trigger context.
+        resolves_anaphor = None
 
     def effect(game: "Game", ability: AbilityOnStack) -> None:
         source = ability.source(game)
         controller = game.controller_of(ability).username
-        held = game.condition_holds(controller, condition_text, source)
+        held: bool | None
+        if resolves_anaphor is None:
+            held = game.condition_holds(controller, condition_text, source)
+        else:
+            event = getattr(ability, "event", None)
+            if resolves_anaphor and event is None:
+                held = None  # an anaphor with no trigger event to name
+            else:
+                held = game.condition_holds(
+                    controller, condition_text, source, ability=ability, event=event
+                )
         if held is None:
             notice = ConditionalClauseNotice(
                 source_id=ability.source_id, source_name=ability.source_name, text=whole
