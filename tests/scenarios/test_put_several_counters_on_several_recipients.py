@@ -186,6 +186,13 @@ def test_a_compound_put_is_the_sequence_of_its_simple_puts(printed, expanded):
         "Put a +1/+1 counter and a flying counter on target creature or planeswalker.",
         "Put a +1/+1 counter and a flying counter on each of two target creatures.",
         'Create a token with "Put a +1/+1 counter and a flying counter on this token."',
+        # One recipient that is already an anaphor for an earlier sentence's
+        # object (Abigale, Eloquent First-Year): the list is one instruction
+        # on that object (CR 608.2c) with its own reader,
+        # `becomes.counter_list_on_anaphor`; split, the later puts would lose
+        # the antecedent the sentence before them chose.
+        "Put a flying counter, a first strike counter, and a lifelink counter on that creature.",
+        "Put a +1/+1 counter and a flying counter on it.",
     ],
 )
 def test_text_it_cannot_say_twice_without_guessing_is_left_alone(text):

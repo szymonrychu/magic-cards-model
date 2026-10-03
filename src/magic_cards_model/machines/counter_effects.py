@@ -1661,6 +1661,13 @@ def expand_compound_counter_puts(text: str) -> str:
         if all(len(_ONE_COUNTER_RE.findall(counters)) == 1 for counters, _ in groups):
             out.append(sentence)
             continue
+        if len(groups) == 1 and (groups[0][1] == "it" or groups[0][1].startswith("that ")):
+            # One list on an earlier sentence's object is already one
+            # instruction (CR 608.2c) with its own reader
+            # (`becomes.counter_list_on_anaphor`); split, the later puts would
+            # lose the antecedent that sentence chose.
+            out.append(sentence)
+            continue
         expanded: list[str] = []
         for counters, recipient in groups:
             later = _later_mention(recipient)
