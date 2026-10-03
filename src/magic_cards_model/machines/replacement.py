@@ -2205,6 +2205,54 @@ def _to_graveyard(event: ReplaceableEvent) -> bool:
     return event.kind is EventKind.ZONE_CHANGE and event.destination is Zone.GRAVEYARD
 
 
+def leaves_the_battlefield_not_to_exile(event: ReplaceableEvent) -> bool:
+    """A permanent about to leave the battlefield for somewhere other than
+    exile - the event "exile it instead of putting it anywhere else" replaces
+    (an exile-bound move has nothing left to replace, CR 614.1a)."""
+    return (
+        event.kind is EventKind.ZONE_CHANGE
+        and event.origin is Zone.BATTLEFIELD
+        and event.destination is not None
+        and event.destination is not Zone.EXILE
+    )
+
+
+#: "If this creature would leave the battlefield, exile it instead of putting
+#: it anywhere else." - the line a permanent is granted (Geth, Thane of
+#: Contracts) or prints. The subject is the permanent itself, in either of the
+#: two ways a granted line names it: "this <type>" or "it".
+_LEAVE_EXILE_LINE_RE = re.compile(
+    r"^if (?:this [a-z]+|it) would leave the battlefield, "
+    r"exile (?:it|this [a-z]+) instead of putting it anywhere else\.?$",
+    re.IGNORECASE,
+)
+
+
+def is_leave_exile_line(text: str) -> bool:
+    """Whether `text` is the self "would leave the battlefield, exile it
+    instead of putting it anywhere else" replacement this module performs."""
+    return _LEAVE_EXILE_LINE_RE.fullmatch(text.strip()) is not None
+
+
+def _leave_exile_line_replacements(lines: Iterable[str]) -> list[CardReplacement]:
+    """Every such line among a permanent's computed abilities (CR 613.1f), so
+    a layer 6 removal of it takes the replacement away with it."""
+    found: list[CardReplacement] = []
+    for line in lines:
+        if not is_leave_exile_line(line):
+            continue
+
+        def applies(game: "Game", source: CardState, event: ReplaceableEvent) -> bool:
+            return (
+                leaves_the_battlefield_not_to_exile(event)
+                and event.card is not None
+                and event.card.id == source.id
+            )
+
+        found.append(CardReplacement(label=line.strip(), applies=applies, apply=_exile_instead))
+    return found
+
+
 def _exile_instead(game: "Game", source: CardState, event: ReplaceableEvent) -> None:
     """ "...exile it instead" - the card goes to exile and never reaches a graveyard.
 
@@ -4776,6 +4824,7 @@ def replacements_of_state(
         # CR 613.1f: read off the computed ability list, so a layer-6 removal
         # takes the doubling away with the rest of the permanent's text.
         + _double_all_damage_replacements(_rules_lines("\n".join(chars.abilities)))
+        + _leave_exile_line_replacements(chars.abilities)
     )
     if "Class" not in chars.subtypes:
         for effect in parse_replacement_effects(card):
@@ -8100,10 +8149,71 @@ class EnterUncastExile(EngineModel):
         event.destination = Zone.EXILE
 
 
+class LeaveBattlefieldExile(EngineModel):
+    """ "If it would leave the battlefield, exile it instead of putting it
+    anywhere else." - the rider a resolving ability gives the one permanent it
+    just returned (Whip of Erebos; CR 702.84a spells the same sentence out for
+    unearth). CR 614.1a makes it a replacement effect.
+
+    Bound to one object: `stamp` is its `zone_change_stamp` when the rider was
+    created, so a permanent that left and came back is a new object the rider
+    no longer names (CR 400.7). No duration is printed, so it lasts as long as
+    that object stays on the battlefield (CR 611.2a); the source ability
+    leaving changes nothing, which is why this is a stored record and not
+    read off a permanent.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    kind: Literal["leave_battlefield_exile"] = "leave_battlefield_exile"
+    object_id: UUID
+    stamp: UUID
+
+    def applies(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> bool:
+        card = event.card
+        return (
+            leaves_the_battlefield_not_to_exile(event)
+            and card is not None
+            and card.id == self.object_id
+            and card.zone_change_stamp == self.stamp
+        )
+
+    def apply(self, game: "Game", controller: str | None, event: "ReplaceableEvent") -> None:
+        event.destination = Zone.EXILE
+
+
+def exile_instead_of_leaving(
+    game: "Game",
+    permanent: CardState,
+    *,
+    controller: str,
+    source_id: UUID | None,
+    source_name: str,
+) -> None:
+    """Give `permanent`, as the object it is now, CR 702.84a's "If it would
+    leave the battlefield, exile it instead of putting it anywhere else."
+    Stored on `Game.created_replacements` with no end of turn, because it
+    lasts as long as the object does (CR 611.2a)."""
+    game.created_replacements.append(
+        CreatedReplacement(
+            spec=LeaveBattlefieldExile(object_id=permanent.id, stamp=permanent.zone_change_stamp),
+            label="if it would leave the battlefield, exile it instead",
+            controller=controller,
+            source_id=source_id,
+            source_name=source_name,
+            until_end_of_turn=False,
+        )
+    )
+
+
 #: What a `CreatedReplacement` does - a `kind`-tagged union, refused at decode
 #: for an unknown tag rather than silently doing nothing.
 CreatedReplacementSpec = Annotated[
-    DrawSkipReplacement | CounterAmountReplacement | EnterUnderYourControl | EnterUncastExile,
+    DrawSkipReplacement
+    | CounterAmountReplacement
+    | EnterUnderYourControl
+    | EnterUncastExile
+    | LeaveBattlefieldExile,
     Field(discriminator="kind"),
 ]
 

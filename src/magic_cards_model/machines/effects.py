@@ -148,6 +148,7 @@ from .cost import (
     removes_announced_number_of_counters,
     spend_restriction,
 )
+from .counter_effects import expand_compound_counter_puts
 from .counter_effects import parse_resolution_text as _parse_counter_resolution_text
 from .decisions import Decision, DecisionKind, source_id_of
 from .delayed import (
@@ -253,6 +254,8 @@ from .replacement import (
     DrawSkipReplacement,
     NextTimeDrawReplacement,
     created_replacement_spec,
+    exile_instead_of_leaving,
+    is_leave_exile_line,
     strip_reminder_text,
 )
 from .targeting import (
@@ -12637,7 +12640,7 @@ def split_effect_clauses(text: str) -> list[str]:
         if stripped == text:
             break
         text = stripped
-    text = text.rstrip(".")
+    text = expand_compound_counter_puts(text).rstrip(".")
     # CR 111.3: a token's (or a granted object's) own quoted ability is that
     # object's *stated text*, never part of the outer spell's own CR 608.2c
     # instruction sequence - Valor's Reach Tag Team's own "Create two 3/2 red
@@ -16709,7 +16712,8 @@ def _parse_untap_trigger_subject_and_scry_clause(text: str) -> AbilityEffect | N
 #: own "this `<noun>`" (CR 700.7) either - `that <noun>` is always whichever
 #: object the trigger's condition already named.
 _COUNTER_ON_TRIGGER_SUBJECT_RE = re.compile(
-    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|[a-z]+) counters? on that [a-z]+"
+    rf"^put (?P<n>{COUNT}) (?P<kind>\+1/\+1|-1/-1|(?:first|double) strike|[a-z]+) "
+    rf"counters? on that [a-z]+"
     rf"(?: for each (?P<each>.+))?\.?$",
     re.IGNORECASE,
 )
@@ -62718,6 +62722,21 @@ def _parse_mixed_clauses(text: str, *, for_spell: bool) -> list[TargetedClause] 
                 parsed.append(paired)
                 index += 2
                 continue
+            # CR 608.2c: a run of riders that all name the antecedent's object
+            # ("Put a +1/+1 counter on that creature. Put a lifelink counter on
+            # that creature.") is one antecedent with several riders, not a
+            # pair followed by a rider with no antecedent of its own.
+            run_end = index + 1
+            while run_end < len(clauses) and _OBJECT_ANAPHOR_RE.search(clauses[run_end]):
+                run_end += 1
+            if run_end - index > 2:
+                series = _parse_object_anaphor_clause_series(
+                    clauses[index], clauses[index + 1 : run_end], for_spell=for_spell
+                )
+                if series is not None:
+                    parsed.append(series)
+                    index = run_end
+                    continue
             paired = _parse_object_anaphor_clause_pair(
                 clauses[index], clauses[index + 1], for_spell=for_spell
             )
@@ -69710,14 +69729,43 @@ def _parse_attached_subject_gains_keywords_until_clause(text: str) -> AbilityEff
     return effect
 
 
+#: "If it would leave the battlefield, exile it instead of putting it
+#: anywhere else." as a sentence of its own after the clause that put the
+#: object onto the battlefield - Whip of Erebos, Kheru Lich Lord, and CR
+#: 702.84a's unearth. "It"/"that creature" is the object that clause put
+#: there (CR 608.2c), so the replacement is bound to that one object.
+_ANAPHOR_LEAVE_EXILE_RE = re.compile(
+    r"^if (?:it|that creature|that card|that permanent|that token) would leave the battlefield, "
+    r"exile (?:it|that creature|that card|that permanent|that token) "
+    r"instead of putting it anywhere else$",
+    re.IGNORECASE,
+)
+
+#: "<pronoun> gains "<quoted ability>"" - the grant sentence whose payload is
+#: a quoted ability (Geth, Thane of Contracts). The quoted text is swapped for
+#: a placeholder before the paragraph is split into sentences, so a period
+#: inside the quote never ends the sentence.
+_ANAPHOR_GAINS_QUOTED_RE = re.compile(
+    r"^(?P<anaphor>it|that creature|that card|that permanent|that token) "
+    r"(?:gains|has) \x00(?P<index>\d+)\x00$",
+    re.IGNORECASE,
+)
+
+_QUOTED_ABILITY_RE = re.compile(r'"([^"]+)"')
+
+
 def _parse_put_then_grant_then_delayed_whole_text(
     text: str, *, for_spell: bool
 ) -> TargetedClause | None:
     """The whole paragraph above as one CR 608.2c instruction, or `None`.
 
-    At least one of the two trailing sentences (the grant, the delayed
-    clause) must be there - an antecedent alone is somebody else's shape.
-    The antecedent is read by the ordinary dispatcher for its side
+    At least one of the trailing sentences (the grant, the delayed clause, the
+    leave-the-battlefield rider) must be there - an antecedent alone is
+    somebody else's shape. They read in the order printed: grant, delayed
+    clause, rider. The grant is either keywords or a quoted ability, and a
+    quoted ability is read only when this engine performs it as a replacement
+    (`is_leave_exile_line`) - any other quoted payload fails the paragraph
+    closed. The antecedent is read by the ordinary dispatcher for its side
     (`_spell_effect_or_notice` / `_ability_effect_or_notice`) and must come
     back a real effect, never a notice stand-in: an antecedent this file
     cannot run fails the whole paragraph closed (CR 608.2c).
@@ -69726,13 +69774,26 @@ def _parse_put_then_grant_then_delayed_whole_text(
     card from your graveyard ...", Prized Amalgam) needs no antecedent at
     all: the source is the referent.
     """
-    if '"' in text or "“" in text:
-        return None
+    quoted: list[str] = []
+
+    def stash(match: re.Match[str]) -> str:
+        quoted.append(match.group(1).strip())
+        return f"\x00{len(quoted) - 1}\x00"
+
     normalized = " ".join(_strip_non_effect_preamble(text).split())
+    if "“" in normalized or "”" in normalized:
+        return None
+    normalized = _QUOTED_ABILITY_RE.sub(stash, normalized)
+    if '"' in normalized:
+        return None
     sentences = [part for part in _SIMPLE_SENTENCE_SPLIT_RE.split(normalized) if part]
     if not sentences:
         return None
-    delayed = parse_anaphoric_delayed_clause(sentences[-1])
+    leave_exile = False
+    if sentences and _ANAPHOR_LEAVE_EXILE_RE.fullmatch(sentences[-1].rstrip(".")):
+        leave_exile = True
+        sentences.pop()
+    delayed = parse_anaphoric_delayed_clause(sentences[-1]) if sentences else None
     delayed_text: str | None = None
     if delayed is not None:
         delayed_text = sentences.pop()
@@ -69740,24 +69801,34 @@ def _parse_put_then_grant_then_delayed_whole_text(
     grant_duration: str | None = None
     grant_plural = False
     if sentences:
-        grant_match = _ANAPHOR_GAINS_KEYWORDS_RE.fullmatch(sentences[-1].rstrip("."))
-        if grant_match is not None:
-            keywords = split_and_validate_keywords(grant_match.group("keywords"))
-            if keywords is None:
+        quoted_match = _ANAPHOR_GAINS_QUOTED_RE.fullmatch(sentences[-1].rstrip("."))
+        if quoted_match is not None:
+            line = quoted[int(quoted_match.group("index"))]
+            if not is_leave_exile_line(line):
                 return None
-            grant_keywords = list(keywords)
-            grant_duration = (grant_match.group("duration") or "").lower() or None
-            grant_plural = grant_match.group("anaphor").lower() in _PLURAL_GRANT_ANAPHORS
+            grant_keywords = [line]
             sentences.pop()
-    if delayed is None and grant_keywords is None:
+        else:
+            grant_match = _ANAPHOR_GAINS_KEYWORDS_RE.fullmatch(sentences[-1].rstrip("."))
+            if grant_match is not None:
+                keywords = split_and_validate_keywords(grant_match.group("keywords"))
+                if keywords is None:
+                    return None
+                grant_keywords = list(keywords)
+                grant_duration = (grant_match.group("duration") or "").lower() or None
+                grant_plural = grant_match.group("anaphor").lower() in _PLURAL_GRANT_ANAPHORS
+                sentences.pop()
+    if delayed is None and grant_keywords is None and not leave_exile:
         return None
     if delayed is not None and delayed.self_referential:
-        if for_spell or sentences or grant_keywords is not None:
+        if for_spell or sentences or grant_keywords is not None or leave_exile:
             return None
         return _self_referential_delayed_effect(delayed_text or "")
     if not sentences:
         return None
     head_text = " ".join(sentences)
+    if "\x00" in head_text:
+        return None
     head = _spell_effect_or_notice(head_text) if for_spell else _ability_effect_or_notice(head_text)
     if not _is_readable_head(head):
         return None
@@ -69789,6 +69860,15 @@ def _parse_put_then_grant_then_delayed_whole_text(
                     controller=controller,
                     source_name=source_name,
                 )
+        if leave_exile and len(entered) == 1:
+            permanent = entered[0]
+            exile_instead_of_leaving(
+                game,
+                permanent,
+                controller=controller,
+                source_id=source_id,
+                source_name=source_name,
+            )
         if delayed is None:
             return
         triggers = delayed.triggers_for_all(

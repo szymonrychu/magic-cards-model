@@ -4555,7 +4555,12 @@ class Game(EngineModel):
     #: effect kind (Ochre Jelly's Split) and `CardState` gained
     #: `last_known_copiable` (CR 707.2 as it last existed); a counter-count
     #: intervening "if" now reads the past tense ("it had") off the last
-    #: known counters, and a returning Aura chooses its host (CR 303.4f/g).
+    #: known counters, and a returning Aura chooses its host (CR 303.4f/g);
+    #: `machines/replacement.CreatedReplacementSpec` gained
+    #: `LeaveBattlefieldExile` (Whip of Erebos' "If it would leave the
+    #: battlefield, exile it instead of putting it anywhere else", one
+    #: permanent for as long as it stays the same object - CR 614.1a,
+    #: CR 400.7), reachable from `Game.created_replacements`.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -16032,6 +16037,21 @@ class Game(EngineModel):
         finally:
             self._returned_to_hand_batch = ()
 
+    def _left_battlefield_for(self, permanent: CardState, destination: Zone) -> Zone:
+        """Where `permanent` really goes when it would leave the battlefield
+        for `destination`, after every replacement effect (CR 614.1a) has had
+        its say - the same `ZONE_CHANGE` event `put_into_graveyard` raises,
+        for the hand and library routes that had none ("If it would leave the
+        battlefield, exile it instead")."""
+        event = ReplaceableEvent(
+            kind=EventKind.ZONE_CHANGE,
+            card=permanent,
+            origin=Zone.BATTLEFIELD,
+            destination=destination,
+        )
+        apply_replacements(self, event)
+        return event.destination or destination
+
     def return_to_hand(self, permanent: CardState) -> CardState:
         """Return a permanent to its owner's hand (CR 701.19a is "return").
 
@@ -16052,6 +16072,11 @@ class Game(EngineModel):
             if move_refused(permanent, Zone.HAND) is not None:
                 return permanent
             was_on_battlefield = permanent in self.battlefield
+            if was_on_battlefield and self._left_battlefield_for(permanent, Zone.HAND) is (
+                Zone.EXILE
+            ):
+                # CR 614.6: "exile it instead of putting it anywhere else".
+                return self.exile_permanent(permanent)
             # CR 603.10a: who controlled it as it last existed on the
             # battlefield - "another nonland permanent you control is
             # returned" asks about then, not about the hand it lands in.
@@ -16144,6 +16169,9 @@ class Game(EngineModel):
                     seen_going_in[card_state.id] = card_state.zone
                 graveyard_owner = self._graveyard_owner_of(card_state)
                 if card_state in self.battlefield:
+                    if self._left_battlefield_for(card_state, Zone.LIBRARY) is Zone.EXILE:
+                        self.exile_permanent(card_state)  # CR 614.6
+                        continue
                     self._note_left_battlefield(card_state)
                     self._detach_dependents(card_state)
                     left_battlefield.append(card_state)
@@ -23196,6 +23224,24 @@ class Game(EngineModel):
                 f"{self.player(controller).life}, so {permanent.name}'s ability "
                 "cannot be activated (CR 119.4)"
             )
+
+        for piece in ability.costs:
+            # CR 118.3: "Remove an indestructible counter from Arwen" cannot be
+            # paid by a permanent without one, so the ability is not offered -
+            # the same check `CostPayment.pay` makes, made before announcing.
+            removal = cost_component_for_phrase(piece.text, payer=controller)
+            if (
+                removal is None
+                or removal.kind is not ComponentKind.REMOVE_COUNTERS
+                or removal.from_among
+                or removal.cards
+                or removal.amount < 1
+                or not _cost_refers_to_self(piece.text, permanent)
+            ):
+                continue
+            refused = removal.model_copy(update={"cards": [permanent]}).why_not(self)
+            if refused is not None:
+                return f"{permanent.name}'s ability cannot be activated: {refused}"
 
         needs_tapping = any(piece.kind in {CostKind.TAP, CostKind.UNTAP} for piece in ability.costs)
         if needs_tapping and not self.can_activate_tap_ability(permanent):

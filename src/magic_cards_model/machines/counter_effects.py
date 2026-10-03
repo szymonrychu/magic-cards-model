@@ -1574,3 +1574,105 @@ def parse_resolution_text(text: str, *, for_spell: bool = False):  # noqa: ANN20
         if effect is not None:
             return effect
     return None
+
+
+# ---------------------------------------------------------------------------
+# A "put" that names several counters or several recipients
+# ---------------------------------------------------------------------------
+#
+# "Put a +1/+1 counter and a lifelink counter on that creature and a +1/+1
+# counter and a lifelink counter on this permanent." (Arwen, Mortal Queen),
+# "Put two +1/+1 counters and a flying counter on target attacking creature."
+# (Guide of Souls' reflexive trigger). CR 608.2c has the controller follow the
+# instructions in the order written, and every counter named is the same
+# instruction "put a <kind> counter on <recipient>" (CR 122.1) done once more,
+# so the compound sentence is the sequence of its simple ones, in the order
+# printed, which every simple-put reader already performs.
+#
+# A recipient is named once however many counters it gets. When it is a
+# *target* the later counters go on "that <noun>", not on a second "target
+# ..." - a second "target" would be a second target (CR 115.1) the printed
+# sentence never chose. Only recipients whose later mentions are unambiguous
+# are expanded (a target phrase with an "or", say, is left alone and fails
+# closed in the dispatcher exactly as before).
+
+_COUNTER_NUMBER = r"(?:an?|one|two|three|four|five|six|seven|eight|nine|ten|X|\d+)"
+_ONE_COUNTER = rf"{_COUNTER_NUMBER} (?:[+\-]\d+/[+\-]\d+|[a-z]+(?: [a-z]+)?) counters?"
+_COUNTER_LIST = rf"{_ONE_COUNTER}(?:(?:, and |, | and ){_ONE_COUNTER})*"
+_PUT_RECIPIENT = (
+    r"(?:that (?:creature|permanent|artifact|land|token|player)|it|this [a-z]+"
+    r"|(?:up to (?:one|two|three) )?(?:another )?target [a-z]+(?: [a-z]+)*?)"
+)
+_COMPOUND_PUT_RE = re.compile(
+    rf"^[Pp]ut (?P<first>{_COUNTER_LIST}) on (?P<first_to>{_PUT_RECIPIENT})"
+    rf"(?: and (?P<second>{_COUNTER_LIST}) on (?P<second_to>{_PUT_RECIPIENT}))?$"
+)
+_ONE_COUNTER_RE = re.compile(_ONE_COUNTER)
+#: Words that end the noun phrase of a "target <noun phrase>" for the purpose
+#: of naming it again as "that <noun>".
+_TARGET_PHRASE_STOP = frozenset({"you", "an", "opponent", "that", "with", "without", "of"})
+
+
+def _later_mention(recipient: str) -> str | None:
+    """How a later counter names a recipient that is already chosen, or
+    `None` when it cannot be said without guessing."""
+    if recipient.startswith(("that ", "this ")) or recipient == "it":
+        return recipient
+    match = re.fullmatch(
+        r"(?:up to (?:one|two|three) )?(?:another )?target (?P<phrase>.+)", recipient
+    )
+    if match is None:
+        return None
+    words = match.group("phrase").split()
+    if "or" in words or "and" in words:
+        return None  # "target creature or planeswalker": "that creature" would guess the type
+    noun = ""
+    for word in words:
+        if word in _TARGET_PHRASE_STOP:
+            break
+        noun = word
+    if not noun or noun.endswith("s"):
+        return None  # a plural recipient ("two target creatures") has no singular anaphor
+    return f"that {noun}"
+
+
+def expand_compound_counter_puts(text: str) -> str:
+    """`text` with every compound "put" sentence written out as the simple
+    ones it stands for (see the banner above), else `text` unchanged.
+
+    A sentence is compound when a counter list names more than one counter;
+    "put a +1/+1 counter on X and a +1/+1 counter on Y" (one counter each)
+    already has its own readers and is left alone.
+    """
+    if '"' in text:
+        return text
+    sentences = re.split(r"(?<=\.)\s+", text.strip())
+    changed = False
+    out: list[str] = []
+    for sentence in sentences:
+        body = sentence.rstrip(".")
+        match = _COMPOUND_PUT_RE.fullmatch(body)
+        if match is None:
+            out.append(sentence)
+            continue
+        groups = [(match.group("first"), match.group("first_to"))]
+        if match.group("second") is not None:
+            groups.append((match.group("second"), match.group("second_to")))
+        if all(len(_ONE_COUNTER_RE.findall(counters)) == 1 for counters, _ in groups):
+            out.append(sentence)
+            continue
+        expanded: list[str] = []
+        for counters, recipient in groups:
+            later = _later_mention(recipient)
+            items = _ONE_COUNTER_RE.findall(counters)
+            if later is None and len(items) > 1:
+                expanded = []
+                break
+            expanded.append(f"Put {items[0]} on {recipient}.")
+            expanded.extend(f"Put {item} on {later}." for item in items[1:])
+        if not expanded:
+            out.append(sentence)
+            continue
+        changed = True
+        out.extend(expanded)
+    return " ".join(out) if changed else text

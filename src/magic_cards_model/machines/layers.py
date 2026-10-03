@@ -6186,7 +6186,14 @@ def _self_becomes_type_until_next_turn_builder(
 #: ... where X is the number of cards in your hand. It's still a land." would
 #: have produced the retention and nothing else, which is half an ability
 #: (CR 608.2c has no notion of running half an instruction).
-_RETENTION_CLAUSE_RE = re.compile(r"^[Ii]t's still an? [a-z]+\.?$")
+#:
+#: The noun phrase is up to four plain words - supertypes, subtypes and the
+#: card type, in any case ("It's still a Cave land." - Cavernous Maw) - and
+#: never a word that would make it a clause of its own.
+_RETENTION_CLAUSE_RE = re.compile(
+    r"^[Ii]t's still an? (?!(?:\w+ ){0,3}(?:until|this|that|with|and|or|has|have|gains?)\b)"
+    r"[A-Za-z-]+(?: [A-Za-z-]+){0,3}\.?$"
+)
 
 
 def is_retention_clause(sentence: str) -> bool:
@@ -6307,9 +6314,9 @@ _ANIMATION_RE = re.compile(
     r"(?P<types>(?:artifact |enchantment |land )*creature)"
     r"(?: with (?:(?:(?P<quoted_keywords>[^\"]+?) and )?\"(?P<granted>[^\"]+?)\.?\""
     r"|(?P<keywords>[^\"]+?)))?"
-    r"(?: that's still an? (?P<retained_inline>[a-z]+))?"
+    r"(?: that's still an? (?P<retained_inline>(?:[A-Za-z-]+ ){0,3}[a-z]+))?"
     r"(?P<until_eot> until end of turn)?\.?"
-    r"(?:\s+[Ii]t's still an? (?P<retained>[a-z]+)\.?)?$"
+    r"(?:\s+[Ii]t's still an? (?P<retained>(?:[A-Za-z-]+ ){0,3}[a-z]+)\.?)?$"
 )
 
 
@@ -6512,7 +6519,10 @@ def _parse_animation_sentence(sentence: str) -> EffectBuilder | None:
     types = [_card_type_word(word) for word in match.group("types").split()]
     if any(card_type is None for card_type in types):
         return None
-    retained_word = match.group("retained") or match.group("retained_inline")
+    retained_phrase = match.group("retained") or match.group("retained_inline")
+    # "It's still a Cave land": the phrase's last word is the card type; the
+    # words before it are subtypes or supertypes CR 205.1b already keeps.
+    retained_word = retained_phrase.split()[-1] if retained_phrase is not None else None
     retained = _card_type_word(retained_word) if retained_word is not None else None
     if retained_word is not None and retained is None:
         return None
