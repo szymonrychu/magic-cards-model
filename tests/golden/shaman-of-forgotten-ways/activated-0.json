@@ -1,0 +1,89 @@
+{
+  "ability": "Formidable — {9}{G}{G}, {T}: Each player's life total becomes the number of creatures they control. Activate only if creatures you control have total power 8 or greater.",
+  "action": {
+    "controller": "alice",
+    "modes": [],
+    "on_stack": true,
+    "source": "Shaman of Forgotten Ways@alice#1",
+    "targets": [],
+    "x": 0
+  },
+  "board": {
+    "busy_turn": false,
+    "entering": [],
+    "order": ["alice", "bob"],
+    "players": {
+      "alice": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Wastes", "Memnite", "Icehide Golem", "Bonesplitter", "Icy Manipulator", "Shaman of Forgotten Ways", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      },
+      "bob": {
+        "battlefield": ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes", "Kaito, Bane of Nightmares", "Fleecemane Lion", "Icehide Golem", "Shadowspear", "Dragonfire Blade", "Grizzly Bears", "Grizzly Bears", "Grizzly Bears"],
+        "graveyard": ["Grizzly Bears", "Lightning Bolt", "Forest", "Bonesplitter", "Opt", "Memnite", "Island", "Llanowar Elves", "Swamp", "Serra Angel"],
+        "hand": ["Forest", "Grizzly Bears", "Lightning Bolt", "Opt"],
+        "library": ["Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt", "Forest", "Grizzly Bears", "Island", "Lightning Bolt", "Swamp", "Opt"]
+      }
+    },
+    "step": "precombat_main",
+    "tapped": [],
+    "tokens": [],
+    "variant": "war",
+    "war_turn": true
+  },
+  "card": "Shaman of Forgotten Ways",
+  "delta": {
+    "created": {},
+    "decisions": [],
+    "fields_changed": ["losers", "turn", "winner"],
+    "notices": {},
+    "objects": {
+      "Dragonfire Blade@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Forest@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Island@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Kaito, Bane of Nightmares@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Mountain@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Plains@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Shadowspear@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Swamp@bob#1": {
+        "zone": ["battlefield", null]
+      },
+      "Wastes@bob#1": {
+        "zone": ["battlefield", null]
+      }
+    },
+    "players": {
+      "alice": {
+        "life": [20, 6]
+      },
+      "bob": {
+        "life": [11, 0]
+      }
+    },
+    "stack": []
+  },
+  "family": "activated",
+  "format": 1,
+  "kind": "activated",
+  "number": 0,
+  "recipe": {
+    "enters": false,
+    "off_zone": false,
+    "variant": "war"
+  }
+}

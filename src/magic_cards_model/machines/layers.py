@@ -10597,6 +10597,55 @@ def _basic_land_type_count_cda_builder(line: str) -> EffectBuilder:
     return builder
 
 
+#: "This creature's/permanent's/token's power and toughness are each equal
+#: to your life total." - Angelic Enforcer's own CDA (Enduring Angel's back
+#: face, its own printed name already rewritten to "this creature" by
+#: `self_normalized_effect_text`). CR 604.3a/604.3: a characteristic-
+#: defining ability that "defines an object's ... power[/toughness]" and "is
+#: printed on the card it affects", in sublayer 7a (CR 613.4a), like every
+#: other CDA in this file.
+_LIFE_TOTAL_POWER_TOUGHNESS_CDA_RE = re.compile(
+    r"^this (?:creature|permanent|token)'s power and toughness are each equal to "
+    r"your life total\.?$",
+    re.IGNORECASE,
+)
+
+
+def _life_total_power_toughness_cda_builder(line: str) -> EffectBuilder:
+    """`_LIFE_TOTAL_POWER_TOUGHNESS_CDA_RE`'s shape.
+
+    `context.life_by_player` (CR 119.1) is read at build time, not applied
+    time - the identical convention `_boneyard_wurm`'s own graveyard count
+    already uses through `FixedCount` - and the whole board is recomputed on
+    every `computed_board()` call (CR 613.5), so this tracks the life total
+    live: it grows and shrinks with it rather than freezing at whatever it
+    was when the permanent entered.
+    """
+
+    def builder(
+        source: CardState,
+        timestamp: int,
+        targets: Sequence[CardState],
+        context: LayerContext,
+    ) -> list[ContinuousEffect]:
+        life = context.life_by_player.get(source.controller, 0)
+        return [
+            ContinuousEffect(
+                description=f"{source.name}: {life}/{life} from its controller's life total",
+                layer=Layer.POWER_TOUGHNESS,
+                sublayer=Sublayer.CHARACTERISTIC_DEFINING,
+                characteristic_defining=True,
+                timestamp=timestamp,
+                source_id=source.id,
+                source_ability=_source_line_for(source, line),
+                selector=_only(source.id),
+                modification=define_power_toughness(FixedCount(value=life), 0, 0),
+            )
+        ]
+
+    return builder
+
+
 def _basic_land_type_count_power_only_cda_builder(line: str) -> EffectBuilder:
     """`_BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE`'s shape - Fblthp, Knows the
     Way's and Nishoba Brawler's power-only *domain* characteristic-defining
@@ -14522,6 +14571,8 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
         )
     if _BASIC_LAND_TYPE_COUNT_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_cda_builder(sentence)
+    if _LIFE_TOTAL_POWER_TOUGHNESS_CDA_RE.fullmatch(sentence):
+        return _life_total_power_toughness_cda_builder(sentence)
     if _BASIC_LAND_TYPE_COUNT_POWER_ONLY_CDA_RE.fullmatch(sentence):
         return _basic_land_type_count_power_only_cda_builder(sentence)
     if match := _QUALIFIER_COUNT_CDA_RE.fullmatch(sentence):

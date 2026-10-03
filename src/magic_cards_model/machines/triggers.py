@@ -3008,6 +3008,21 @@ def condition_matches(
             and _excluded_subtype_absent(event.subject_subtypes, condition)
         )
 
+    if ability.event is TriggerEvent.ATTACKS_UNBLOCKED:
+        # CR 508.3f/509.3g: only the self-referential form is in the pool
+        # ("Whenever this creature attacks a player and isn't blocked, ...",
+        # Master of Cruelties) - a future "another creature you control
+        # attacks and isn't blocked" would need the same "another"/"other"
+        # widening `DIES` already gets, not built here since nothing prints
+        # it yet. "a player" narrows to CR 508.3f's own attack: an attack on
+        # a planeswalker or battle never satisfies it, read off the same
+        # `event.defender`/`is_player` this event carries for that reason.
+        if event.subject_id != source.id:
+            return False
+        return "a player" not in lowered or (
+            event.defender is not None and event.defender.is_player
+        )
+
     if ability.event is TriggerEvent.ATTACKS:
         threshold = total_power_attack_threshold(condition)
         if threshold is not None:

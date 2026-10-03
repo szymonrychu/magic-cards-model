@@ -4100,6 +4100,7 @@ def _attempts(case: Case) -> Iterator[Attempt]:
             yield from _teamwork_tapping(case, ability)
         elif kind in (
             "attacks",
+            "attacks_unblocked",
             "blocks",
             "combat_damage_to_players",
             "becomes_tapped",
