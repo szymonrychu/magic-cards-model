@@ -48402,7 +48402,13 @@ def _parse_delayed_token_copy_of_it_clauses(
                 source_id=ability.source_id,
                 source_name=ability.source_name,
                 effect=CreateTokenCopyOfLastKnown(
-                    copiable=copiable_card_of(game, subject),
+                    # CR 707.2 as it last existed (CR 603.10a): a copy
+                    # effect on the dying object is part of what is copied.
+                    copiable=(
+                        subject.last_known_copiable or subject.card
+                        if subject.zone is not Zone.BATTLEFIELD
+                        else copiable_card_of(game, subject)
+                    ),
                     subject_id=subject.id,
                     enters_with_counters=enters_with,
                 ),

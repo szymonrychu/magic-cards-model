@@ -345,7 +345,14 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
-from .token import TokenDefinition, TokenState, is_token, move_refused, tokens_that_cease_to_exist
+from .token import (
+    TokenDefinition,
+    TokenState,
+    copiable_card_of,
+    is_token,
+    move_refused,
+    tokens_that_cease_to_exist,
+)
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -4352,7 +4359,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 106
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 107
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4528,6 +4535,11 @@ class Game(EngineModel):
     #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
     #: the cast spell has left the stack - CR 608.2h - rather than lost the
     #: moment a countered spell's zone change stamps it fresh).
+    #: 107: `machines/delayed` gained the `create_token_copy_of_last_known`
+    #: effect kind (Ochre Jelly's Split, s7c) and `CardState` gained
+    #: `last_known_copiable` (CR 707.2 as it last existed); a counter-count
+    #: intervening "if" now reads the past tense ("it had") off the last
+    #: known counters, and a returning Aura chooses its host (CR 303.4f/g).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -11834,6 +11846,10 @@ class Game(EngineModel):
         # the stack - has nothing left to read once the continuous effects
         # stop applying. This is the last instant they still do.
         permanent.remember_last_known_power_toughness()
+        # CR 707.2 for a look-back copy ("a copy of it", Ochre Jelly's Split):
+        # a copy effect stops applying once it is not a permanent.
+        copiable = copiable_card_of(self, permanent)
+        permanent.last_known_copiable = None if copiable is permanent.card else copiable
         permanent.note_departure_epoch(self._departure_epoch)
         if permanent in self.battlefield:
             self._left_battlefield_characteristics[permanent.id] = self.characteristics_of(

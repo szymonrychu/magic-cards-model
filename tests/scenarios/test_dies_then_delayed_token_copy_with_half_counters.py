@@ -180,3 +180,44 @@ def test_dying_during_the_end_step_waits_for_the_next_one():
     _to_end_step(scenario)
     (token,) = _jelly_tokens(scenario)
     assert token.counter_count(Counter.PLUS_ONE) == 1
+
+
+def test_a_clone_copying_the_jelly_splits_into_a_jelly_not_a_clone():
+    """CR 707.2: the copiable values of the object "it" names include the
+    copy effect that made it - a Clone that entered as a copy of Ochre Jelly
+    *was* Ochre Jelly on the battlefield (it had Split, which is why it
+    triggered), so the token copies Ochre Jelly as it last existed (CR
+    603.10a, 608.2h), never the Clone card in the graveyard - which would
+    enter as a 0/0 Clone asking for its own copy choice."""
+    scenario = (
+        Scenario()
+        .player(
+            "alice",
+            hand=["Clone"],
+            battlefield=[JELLY, "Island", "Island", "Island", "Island"],
+            library=["Forest"] * 5,
+        )
+        .player("bob", library=["Forest"] * 5)
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    jelly = _jelly_with(scenario, 1)  # an X=0 Jelly would die before it is copied
+    scenario.will_take_the_may(True, username="alice", source="Clone")
+    scenario.will_choose_targets(jelly, username="alice", source="Clone")
+    scenario.will_choose_cards(jelly, username="alice", source="Clone")
+    # Put onto the battlefield with four +1/+1 counters (CR 614.1c), as the
+    # copy of an X=0 Jelly would otherwise die to CR 704.5f on arrival.
+    (clone,) = [c for c in scenario.player("alice").hand if c.name == "Clone"]
+    scenario.game.put_onto_battlefield(clone, "alice", counters={Counter.PLUS_ONE: 4})
+    _settle(scenario)
+    assert clone.zone is Zone.BATTLEFIELD
+    assert scenario.game.characteristics_of(clone).name == JELLY
+    scenario.game.destroy(clone)
+    _settle(scenario)
+    assert clone.zone is Zone.GRAVEYARD
+    assert len(scenario.game.delayed_triggers.triggers) == 1
+    _to_end_step(scenario)
+    (token,) = _jelly_tokens(scenario)
+    assert token.counter_count(Counter.PLUS_ONE) == 2
+    assert token.oracle_text == jelly.oracle_text
+    assert not [c for c in scenario.game.battlefield if c.name == "Clone"]

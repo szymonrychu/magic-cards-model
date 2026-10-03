@@ -1289,6 +1289,19 @@ class CardState(EngineModel):
     own card prints. `None` when the card's own `mana_value` already is the
     answer, taken with `last_known_power`."""
 
+    last_known_copiable: Card | None = None
+    """This object's copiable values (CR 707.2) the last time it left the
+    battlefield, when a copy effect made them differ from its own card - a
+    Clone that entered as a copy of Ochre Jelly *was* Ochre Jelly there, so
+    Split's "create a token that's a copy of it" (CR 603.10a's look-back,
+    CR 608.2h) copies Ochre Jelly, not the Clone card in the graveyard.
+    Stamped by `Game._note_left_battlefield` (the layer engine is gone by
+    `move_to`) on every departure from the battlefield, and kept across later
+    moves exactly as `last_known_counters` is, so a dies trigger still on the
+    stack reads the same answer after the card was exiled from the graveyard
+    in response. Only a look-back reads it; a card in a graveyard copied as
+    a card is its own printing. `None` when the card is the answer."""
+
     last_known_colors: tuple[Color, ...] | None = None
     """The colours this object had the last time it left the battlefield
     (CR 608.2h), when a continuous effect made them differ from the printing.
