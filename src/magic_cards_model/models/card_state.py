@@ -2802,15 +2802,8 @@ class CardState(EngineModel):
         self._abilities_as_it_left = None if computed is None else tuple(computed.abilities)
         power = None if computed is None else computed.power
         toughness = None if computed is None else computed.toughness
-        # Counters are part of `printed_power`/`printed_toughness` but do not
-        # outlive the move (CR 122.2), so a creature whose only modifier was
-        # +1/+1 counters still needs its snapshot - otherwise it reads back
-        # the bare printing once the counters are gone.
-        has_counters = bool(self.counters.power_toughness_modifier)
-        self.last_known_power = None if power == self.printed_power and not has_counters else power
-        self.last_known_toughness = (
-            None if toughness == self.printed_toughness and not has_counters else toughness
-        )
+        self.last_known_power = None if power == self.printed_power else power
+        self.last_known_toughness = None if toughness == self.printed_toughness else toughness
         # The same snapshot for the qualities an ability's source is judged by
         # once it has gone (CR 608.2b, CR 702.11d) - recorded only where a
         # continuous effect made them differ from the printing.

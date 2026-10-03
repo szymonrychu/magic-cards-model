@@ -16283,11 +16283,23 @@ class Game(EngineModel):
 
     def _last_known_stat(self, card_id: UUID, stat: str) -> int | None:
         """A departed permanent's power or toughness as CR 608.2h reads it:
-        `CardState.power`/`.toughness` already fall back to the snapshot taken
-        as it left the battlefield. `None` for an id nothing finds or a
-        non-numeric (`*`) value."""
+        the snapshot taken as it left the battlefield when a continuous effect
+        made it differ, otherwise the printing plus the counters it left with
+        (CR 122.1a via `last_known_counters` - CR 122.2 took the counters
+        themselves, so the object's own `power` no longer has them). `None`
+        for an id nothing finds or a non-numeric (`*`) value."""
         state = self.find_by_id(card_id)
-        return None if state is None else getattr(state, stat)
+        if state is None:
+            return None
+        if state.zone is Zone.BATTLEFIELD:
+            return getattr(state, stat)
+        snapshot = getattr(state, f"last_known_{stat}")
+        if snapshot is not None:
+            return snapshot
+        printed = getattr(state, f"printed_{stat}")
+        if printed is None:
+            return None
+        return printed + state.last_known_counters.power_toughness_modifier
 
     def last_known_mana_value(self, card: "CardState | UUID") -> float:
         """An object's mana value as CR 608.2h reads it (CR 202.3): the
