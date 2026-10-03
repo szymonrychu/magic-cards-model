@@ -2,7 +2,7 @@
 
 import itertools
 import re
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -13,7 +13,9 @@ from uuid import NAMESPACE_OID, UUID, uuid4, uuid5
 
 from pydantic import ConfigDict, Field, PrivateAttr, model_validator
 
+from ..data.card_names import is_card_name
 from ..data.creature_types import creature_types
+from ..data.printing_pool import resolve_printing
 from ..data.subtypes import canonical_subtype
 from ..ids import install_id_allocator, new_id, reset_id_allocator
 from ..machines import combat as combat_rules
@@ -239,6 +241,8 @@ from ..machines.layers import (
     spend_effect_effects,
 )
 from ..machines.modes import ModalProfile, Mode, modal_profile, substitute_x
+from ..machines.monarch import inherent_triggers_for as monarch_inherent_triggers_for
+from ..machines.monarch import monarch_effect_for
 from ..machines.next_spell import (
     NextSpellFreeCastGrant,
     NextSpellKeywordGrant,
@@ -341,7 +345,7 @@ from .card_state import (
 )
 from .mana import ManaCost, ManaPool, ManaRetentionScope, ManaSpend, ManaSpendEffect, SymbolKind
 from .player import Player, PlayerTargetingGrant
-from .token import TokenDefinition, TokenState, move_refused, tokens_that_cease_to_exist
+from .token import TokenDefinition, TokenState, is_token, move_refused, tokens_that_cease_to_exist
 from .zone import Zone
 
 #: Anything a spell can point at and then affect (CR 115.1).
@@ -778,7 +782,16 @@ def _qualities_from_text(text: str | None) -> list[str]:
     """
     qualities: list[str] = []
     for match in _PROTECTION.finditer(text or ""):
-        for part in match.group(1).split(" and from "):
+        # A comma ends the phrase unless another "from" follows it: Emrakul,
+        # the Aeons Torn's "protection from spells that are one or more
+        # colors, annihilator 6" names one quality, then another keyword.
+        pieces = match.group(1).split(", ")
+        phrase = pieces[0]
+        for piece in pieces[1:]:
+            if not piece.lower().startswith(("from ", "and from ")):
+                break
+            phrase += " and from " + piece.split("from ", 1)[1]
+        for part in phrase.split(" and from "):
             quality = part.strip().rstrip(",").strip()
             if not quality or _UNRESOLVED_PROTECTION_QUALITY.match(quality):
                 continue
@@ -1580,6 +1593,91 @@ def _negated_card_type_named(quality: str) -> Type | None:
     return _card_type_named(word.removeprefix("non"))
 
 
+#: CR 105.2a/105.2b: "monocolored" is exactly one of the five colors,
+#: "multicolored" two or more - each a predicate on how many colours an
+#: object has.
+_COLOR_COUNT_QUALITIES: dict[str, Callable[[int], bool]] = {
+    "monocolored": lambda count: count == 1,
+    "multicolored": lambda count: count >= 2,
+}
+
+
+def _has_color_quality(wanted: str, colors: Iterable[Color]) -> bool | None:
+    """Whether an object of `colors` has the colour quality `wanted` - a
+    colour word or a CR 105.2a/105.2b colour count - or `None` when `wanted` is
+    neither."""
+    color = _COLOR_WORDS.get(wanted)
+    if color is not None:
+        return color in colors
+    count = _COLOR_COUNT_QUALITIES.get(wanted)
+    if count is not None:
+        return count(len(set(colors)))
+    return None
+
+
+#: "spells that are one or more colors" (Emrakul, the Aeons Torn): CR 112.1's
+#: spell narrowed by a colour quality - a colour word, a CR 105.2a/105.2b
+#: colour count, or CR 105.2's "one or more colors" (anything not colorless,
+#: CR 105.2c).
+_SPELLS_THAT_ARE_QUALITY_RE = re.compile(r"^spells? that (?:are|is) (?P<colors>.+)$", re.IGNORECASE)
+
+
+def _spell_colour_quality(quality: str) -> Callable[[Iterable[Color]], bool] | None:
+    """The colour test a "spells that are `<colour quality>`" protection
+    quality narrows CR 112.1's spell by, or `None` for any other quality."""
+    match = _SPELLS_THAT_ARE_QUALITY_RE.fullmatch(quality.strip())
+    if match is None:
+        return None
+    wanted = match.group("colors").strip().lower()
+    if wanted in ("one or more colors", "one or more colours"):
+        return lambda colors: len(set(colors)) >= 1
+    if wanted in _COLOR_WORDS or wanted in _COLOR_COUNT_QUALITIES:
+        return lambda colors: bool(_has_color_quality(wanted, colors))
+    return None
+
+
+def protection_quality_readable(quality: str) -> bool:
+    """Whether the engine's protection readers (`Game.source_has_quality`,
+    `Game.source_has_quality_of_card`, `Game._player_quality_protects`) can
+    tell if a source has `quality` at all. A quality none of them reads is
+    never enforced - the support oracle scores such a Protection keyword a
+    notice rather than crediting it on presence."""
+    wanted = quality.strip().lower()
+    return (
+        _is_spell_quality(wanted)
+        or _card_type_named(wanted) is not None
+        or wanted in _COLOR_WORDS
+        or wanted in _COLOR_COUNT_QUALITIES
+        or _EACH_OPPONENT_PROTECTION_QUALITY.match(quality.strip()) is not None
+        or _CAST_THIS_TURN_QUALITY_RE.match(quality.strip()) is not None
+        or _spell_colour_quality(quality) is not None
+    )
+
+
+def _is_spell_quality(quality: str) -> bool:
+    """Whether a protection quality names CR 112.1's "spell" ("A spell is a
+    card on the stack"), singular or plural - never a CR 205.2a card type,
+    so it is checked ahead of `_card_type_named` rather than folded into it."""
+    return quality.strip().lower() in ("spell", "spells")
+
+
+#: "permanents that were cast this turn" (Emrakul, the World Anew) / the
+#: singular "permanent that was cast this turn" no printing uses yet - read
+#: by the words rather than by the card, so a future printing that phrases
+#: the singular still matches. Not a card type (CR 205.2a never lists
+#: "permanent"), a colour, or CR 112.1's "spell" - its own temporal fact,
+#: answered by `Game.was_cast_this_turn`.
+_CAST_THIS_TURN_QUALITY_RE = re.compile(
+    r"^permanents? that (?:were|was) cast this turn$", re.IGNORECASE
+)
+
+
+def _is_cast_this_turn_quality(quality: str) -> bool:
+    """Whether a protection quality names CR 400.7d's own provenance fact,
+    narrowed to the current turn - `_CAST_THIS_TURN_QUALITY_RE`'s shape."""
+    return _CAST_THIS_TURN_QUALITY_RE.fullmatch(quality.strip()) is not None
+
+
 def _activation_condition(instructions: str) -> str | None:
     """The condition of an "Activate only if <condition>" restriction (CR
     602.5b), without a trailing "and only as a sorcery"-style second
@@ -1652,20 +1750,32 @@ def _permanent_quality(phrase: str) -> Callable[[Characteristics], bool] | None:
 
 
 def _card_quality(word: str | None) -> Callable[[CardState], bool] | None:
-    """A graveyard card's one-word quality - "creature", "permanent" (CR
-    110.4a), a card type or subtype - or every card when the text prints
-    none. A "non" prefix negates it ("noncreature"), the same recursive
-    reading `_characteristic_word` gives a permanent's computed
-    characteristics. None when the word is not read."""
+    """A graveyard card's quality - "creature", "permanent" (CR 110.4a), a
+    card type or subtype, or a subtype qualifying a type ("Zombie creature",
+    Tomb Tyrant's own "at least three Zombie creature cards in your
+    graveyard") - or every card when the text prints none.
+
+    Multiple words each qualify the noun (every word ANDed), the same
+    qualifiers-then-noun reading `_permanent_quality` already gives a
+    permanent's computed characteristics - not a word list of this
+    function's own, just this same one-word reading run once per word. A
+    "non" prefix negates a single word ("noncreature"). None when any word
+    is not read."""
     if word is None:
         return lambda state: True
-    lowered = word.lower()
+    lowered = word.strip().lower()
     if " and/or " in lowered:
         # Spell mastery's "instant and/or sorcery" card: either quality.
         parts = [_card_quality(part.strip()) for part in lowered.split(" and/or ")]
         if any(part is None for part in parts):
             return None
         return lambda state: any(part(state) for part in parts)  # type: ignore[misc]
+    words = lowered.split()
+    if len(words) > 1:
+        tests = [_card_quality(each) for each in words]
+        if any(test is None for test in tests):
+            return None
+        return lambda state: all(test(state) for test in tests)  # type: ignore[misc]
     if lowered.startswith("non") and len(lowered) > 4:
         inner = _card_quality(lowered.removeprefix("non").lstrip("-"))
         if inner is None:
@@ -2698,6 +2808,20 @@ class GraveyardArrival(EngineModel):
     is the one that counts: a card that left the graveyard and came back is a
     new object (CR 400.7) whose own trip decides. `None` only on a ledger
     written before this field existed."""
+    card_types: tuple[Type, ...] = ()
+    """The card's own *printed* types (CR 613.5-free, front-face-safe - the
+    same source `is_permanent_card` already reads off `card_state.types`),
+    kept whole rather than reduced to one boolean. `is_permanent_card` only
+    answers CR 110.4a's own six-type question; a template naming one type in
+    particular - Raphael, Fiendish Savior's and Macabre Reconstruction's "a
+    **creature** card was put into your graveyard from anywhere this turn" -
+    needs the type itself, not a permanent/nonpermanent split, and needs it
+    for an arrival that skipped the battlefield exactly the way
+    `is_permanent_card` already does (a discard, a mill, a countered spell).
+    `()` only on a ledger written before this field existed, which reads as
+    "no printed types" - wrong for a real card, which is why every reader of
+    this field is an *additional* gate alongside `is_permanent_card`/
+    `permanent_types`, never the only one a card's identity depends on."""
 
 
 class CombatDamageToPlayer(EngineModel):
@@ -3577,6 +3701,23 @@ class Game(EngineModel):
     same choice `permanents_sacrificed_this_turn` makes. Cleared when a new
     turn begins."""
 
+    nontoken_creatures_died_under_control_this_turn: dict[str, int] = Field(default_factory=dict)
+    """How many nontoken creatures have died under each player's control this
+    turn, keyed by that controller.
+
+    Vile Redeemer's own cast trigger: "create a 1/1 colorless Eldrazi Scion
+    creature token for each nontoken creature that died under your control
+    this turn." CR 700.4's "dies" (put into a graveyard from the battlefield)
+    is the same event `creatures_died_this_turn` already counts, but that
+    field is global and counts every creature whoever controlled it; this is
+    the per-controller, nontoken-only twin (CR 111.1's "token" - a permanent
+    represented by something other than a card - excluded the same way
+    `count_expression`'s own "nontoken `<qualifier>` you control" branch
+    already excludes one). Counted in `put_into_graveyard` next to
+    `creatures_died_this_turn`, by the controller the creature had while
+    still on the battlefield (CR 603.10a's look-back). Cleared when a new
+    turn begins."""
+
     open_payment_pools: dict[str, ManaPool] = Field(default_factory=dict)
     """The working mana pool of each player's currently open `CostPayment`.
 
@@ -4120,6 +4261,24 @@ class Game(EngineModel):
     {coin_flips_performed}:coin"`, so a scenario asserting on the result
     stays reproducible and the second flip of a game differs from the first."""
 
+    monarch: str | None = None
+    """CR 725.1: "The monarch is a designation a player can have. There is no
+    monarch in a game until an effect instructs a player to become the
+    monarch." - `None` for exactly that state.
+
+    A single nullable username, not a per-`Player` flag like `has_citys_
+    blessing`: CR 725.3 - "Only one player can be the monarch at a time. As a
+    player becomes the monarch, the current monarch ceases to be the
+    monarch." - so the designation is a fact about the game, not about each
+    player, and a plain reassignment is the whole of CR 725.3 with no
+    invariant a setter has to maintain by hand. `Game.become_monarch` is the
+    one way this is ever set to a real username; `machines/monarch.py`'s two
+    inherent triggered abilities (CR 725.2) and `Game._player_left` (CR 725.4)
+    are its only other writers, and every condition reader ("you're the
+    monarch") and clause parser ("you become the monarch", "target player
+    becomes the monarch") reads or writes it through those, never this field
+    directly."""
+
     schema_version: int
     """The engine schema version this `Game` was built or decoded at - T9 of
     the stateless-library plan.
@@ -4205,7 +4364,7 @@ class Game(EngineModel):
     #: change qualifies, bump it: a spurious bump costs a discarded stale
     #: snapshot on the next decode; a missed one costs a wrong game nobody
     #: detects, which is the entire problem this field exists to solve.
-    CURRENT_SCHEMA_VERSION: ClassVar[int] = 101
+    CURRENT_SCHEMA_VERSION: ClassVar[int] = 106
     #: 67: `machines/cost.CostComponent` gained `link_to_permanent_id` (CR
     #: 607.2q), reachable from `Game` through a pending `AbilityOnStack.
     #: keyword_activation`/`.unless_payment`'s own `CostPayment.components`.
@@ -4352,6 +4511,35 @@ class Game(EngineModel):
     #: 101: `Player` gained `speed` and `speed_increased_on_turn` (CR 702.179's
     #: Start your engines! speed, R0a-T8; renumbered from 96 at the R0a
     #: integration).
+    #: 102: `AbilityOnStack` gained `mana_spent` and `treasure_mana_spent`
+    #: (CR 601.2h via CR 602.2b: what paid an activation's own cost, the
+    #: ability-side twin of `CastRecord`'s identical two fields) - Paragon of
+    #: Modernity's and Jetmir's Fixer's own "If `<mana condition>`, put a
+    #: +1/+1 counter on it instead" (ec7-instead).
+    #: 103: `Game` gained `monarch` (CR 725, the monarch designation), and
+    #: `machines/abilities.TriggeredAbility` gained `monarch_inherent`, the
+    #: tag `machines/monarch.py`'s two synthetic, sourceless CR 725.2
+    #: abilities carry so `Game._effect_of` can find their effect without a
+    #: card name to key off of (ec7-monarch; renumbered from 96 at
+    #: integration and again above main's 97-101).
+    #: 104: `GraveyardArrival` gained `card_types` (Raphael, Fiendish Savior's
+    #: and Macabre Reconstruction's "a creature card was put into your
+    #: graveyard from anywhere this turn", EC7; renumbered from 96 at
+    #: integration and again above main's 97-101).
+    #: 105: `Game` gained `nontoken_creatures_died_under_control_this_turn`
+    #: (ec7-cast-optional: Vile Redeemer's own cast-trigger "for each
+    #: nontoken creature that died under your control this turn").
+    #: The 101 -> 105 window also changed, under the bumps above rather than
+    #: a version of its own: `machines/layers`
+    #: `QualifiedCreatures`/`CreatureQualifiers` gained `colorless`; the
+    #: `turn_history` event kinds gained "blocked" and "fought"; generic P/T
+    #: counters joined `_counter_effects`; and protection gained CR 112.1's
+    #: "spell" quality.
+    #: 106: `machines/triggers.GameEvent` gained `subject_stamp` (ec7-rv-rules:
+    #: a cast-trigger's own X, Hydroid Krasis/Genesis Hydra/Old Stickfingers/
+    #: Geometer's Arthropod, read off `Game.cast_record_as_last_known` once
+    #: the cast spell has left the stack - CR 608.2h - rather than lost the
+    #: moment a countered spell's zone change stamps it fresh).
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
@@ -6940,6 +7128,45 @@ class Game(EngineModel):
             return None
         return self.cast_records.get(state.zone_change_stamp)
 
+    def was_cast_this_turn(self, permanent: CardState) -> bool:
+        """Whether `permanent` became a permanent this turn by resolving a
+        spell that was cast for it (CR 702.16a's "permanents that were cast
+        this turn", CR 400.7d's own provenance link, narrowed to the current
+        turn) - Emrakul, the World Anew's own second protection quality.
+
+        Two questions, both already answered elsewhere, combined:
+
+        - **Still the object that was cast, with no zone change since**
+          (CR 400.7's "new object" rule) - `cast_record_of` already refuses
+          this the moment any further move re-keys `zone_change_stamp`: a
+          permanent destroyed and later reanimated, or exiled and returned
+          (a flicker), is "a new object with no memory ... of its previous
+          existence" the instant it leaves, so its cast record from before
+          that move is unreachable off the object it becomes, whatever
+          turn any of that happened on.
+        - **This turn**, not some earlier one still undisturbed on the
+          battlefield - `spells_cast_this_turn` is reset at the start of
+          every turn (`Game.spells_cast_this_turn`'s own docstring), so a
+          permanent's card id appearing there at all already means it was
+          cast since this turn began; compared by `id` rather than object
+          identity, since a decoded `Game`'s own copies of the same logical
+          card are separate Python objects even when they share nothing but
+          a field value.
+
+        `permanent` also has to actually be a permanent right now (CR
+        110.1: on the battlefield) - a card back in hand or in a graveyard
+        is not one, whatever its history.
+        """
+        if permanent.zone is not Zone.BATTLEFIELD:
+            return False
+        if self.cast_record_of(permanent) is None:
+            return False
+        return any(
+            cast_state.id == permanent.id
+            for casters in self.spells_cast_this_turn.values()
+            for cast_state in casters
+        )
+
     def cast_record_as_last_known(self, stamp: UUID) -> "CastRecord | None":
         """The record of the object that had `stamp`, for an ability that
         remembers which object its source was (`AbilityOnStack.source_stamp`).
@@ -7116,6 +7343,7 @@ class Game(EngineModel):
                 subject_name=card_state.name,
                 subject_controller=controller,
                 subject_card=card_state.card,
+                subject_stamp=card_state.zone_change_stamp,
                 subject_types=card_state.types,
                 subject_subtypes=card_state.subtypes,
                 subject_colors=card_state.colors,
@@ -9739,7 +9967,14 @@ class Game(EngineModel):
         if not isinstance(thing, AbilityOnStack):
             if (
                 source_card is not None
-                and self.protection_refusal(thing, source_card, source_controller=owner) is not None
+                and self.protection_refusal(
+                    thing,
+                    source_card,
+                    source_controller=owner,
+                    is_spell=isinstance(subject, CardState),
+                    source_state=None if isinstance(subject, CardState) else subject.source(self),
+                )
+                is not None
             ):
                 return False
             if self.shroud_refusal(thing) is not None:
@@ -10046,6 +10281,13 @@ class Game(EngineModel):
         keyword = keyword_effect_for(ability)
         if keyword is not None:
             return keyword
+        # CR 725.2's own two abilities have no source and are printed on no
+        # card - asked here, ahead of the card-name registries, for the same
+        # reason a keyword ability is: neither could ever be keyed under a
+        # card name.
+        monarch = monarch_effect_for(ability)
+        if monarch is not None:
+            return monarch
         if isinstance(ability.ability, TriggeredAbility):
             # `event` may be None, and that is not "no effect": CR 603.8's
             # state triggers ("Some triggered abilities trigger when a game
@@ -10557,6 +10799,12 @@ class Game(EngineModel):
             # CR 603.3 puts it on the stack the next time a player would receive
             # priority, alongside these.
             triggered = triggered + self.delayed_triggers.fire(event, self)
+            # CR 725.2: the monarch's own two inherent triggered abilities are
+            # not printed on any card either - "these triggered abilities have
+            # no source" - so they watch every event directly the same way a
+            # delayed trigger does, rather than through anything on the
+            # battlefield or in a graveyard `sources` above could have offered.
+            triggered = triggered + monarch_inherent_triggers_for(self, event)
             # CR 603.8: a state trigger watches a game state, not an event, so it
             # is swept for after every event rather than matched against one. This
             # is what lets a countered state trigger fire again immediately - the
@@ -12750,6 +12998,16 @@ class Game(EngineModel):
                 )
             return value
 
+        if decision.kind is DecisionKind.CHOOSE_AN_AMOUNT:
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"{decision.prompt}: needs an integer amount")
+            if value < 0 or value > decision.amount:
+                raise ValueError(
+                    f"{decision.prompt}: cannot choose {value}, at most {decision.amount} "
+                    f"is legal (CR 608.2d)"
+                )
+            return value
+
         if decision.kind is DecisionKind.CHOOSE_CARDS:
             if not isinstance(value, tuple) or not all(isinstance(v, UUID) for v in value):
                 raise ValueError(f"{decision.prompt}: needs a tuple of chosen card ids")
@@ -12882,6 +13140,21 @@ class Game(EngineModel):
                 raise ValueError(
                     f"{decision.prompt}: {value!r} is not among the legal choices "
                     f"({', '.join(decision.options)})"
+                )
+            if decision.quality == ChoiceKind.CARD_NAME and not (
+                is_card_name(value) or resolve_printing(value) is not None
+            ):
+                # CR 201.4: "the player must choose the name of a card in the
+                # Oracle card reference" - not merely a non-empty string.
+                # `decision.options` is deliberately never enumerated for a
+                # card name (too large a universe, `machines/legal_actions.
+                # py`'s own CHOOSE_A_QUALITY branch), so this is the one
+                # place a card-name choice is checked: against Scryfall's own
+                # card-name catalog (`data/card_names.py`), and the bundled
+                # printings pool for a card newer than the bundled catalog.
+                raise ValueError(
+                    f"{decision.prompt}: {value!r} is not a card name this engine "
+                    f"recognises (CR 201.4)"
                 )
             return value
 
@@ -13506,6 +13779,46 @@ class Game(EngineModel):
         if paid > 0:
             self.lose_life(player, paid)
         return paid
+
+    def choose_an_amount(
+        self,
+        player: Player | str,
+        ceiling: int,
+        *,
+        source: str | None = None,
+        source_id: str | None = None,
+        prompt: str = "choose an amount",
+    ) -> int:
+        """ "Put up to N `<kind>` counters on `<this>`" (Clockwork Steed) and
+        any other resolution-time "choose an amount from 0 up to `ceiling`"
+        with no cost or payment attached (CR 608.2d) - `pay_any_amount_of_
+        life`/`pay_any_amount_of_energy`'s own shape, generalised past
+        paying something: a real choice from 0 up to `ceiling`, never
+        defaulted upward for an unscripted answer, since nothing here makes
+        choosing fewer worse than choosing the maximum (unlike `_parse_
+        remove_up_to_n_counters_from_target_clause`'s own "remove up to N",
+        where fewer is never better and the effect always takes the
+        maximum without asking).
+
+        Returns whatever amount was actually chosen; unlike `pay_any_amount_
+        of_life`, nothing here spends it - callers apply the chosen amount
+        themselves, since "up to N counters" has no single universal
+        payment this method could make on a caller's behalf the way losing
+        life or removing energy counters is.
+        """
+        if isinstance(player, str):
+            player = self.player(player)
+        decision = Decision(
+            kind=DecisionKind.CHOOSE_AN_AMOUNT,
+            player=player.username,
+            prompt=prompt,
+            source=source,
+            source_id=source_id,
+            amount=max(ceiling, 0),
+        )
+        chosen = self.ask(decision)
+        assert isinstance(chosen, int)
+        return chosen
 
     def _look_at_top(self, player: Player, count: int) -> list[CardState]:
         """The top `count` cards, or as many as there are (CR 701.22a, 701.25a)."""
@@ -15082,6 +15395,19 @@ class Game(EngineModel):
         assert self.turn is not None
         return self.turn.step is Step.DRAW and self.turn.active_player == player.username
 
+    def become_monarch(self, player: Player | str) -> None:
+        """`player` becomes the monarch (CR 725.1).
+
+        CR 725.3: "As a player becomes the monarch, the current monarch
+        ceases to be the monarch" - a plain reassignment already is this,
+        since `monarch` holds at most one username. Idempotent when `player`
+        already is the monarch, which is not a rules question this method
+        needs an opinion on - CR 725 never distinguishes becoming the monarch
+        from staying it.
+        """
+        username = player.username if isinstance(player, Player) else player
+        self.monarch = username
+
     def gain_life(self, player: Player | str, amount: int) -> int:
         """A player gains life, replacement effects included (CR 119.3).
 
@@ -16020,7 +16346,11 @@ class Game(EngineModel):
         if (
             source_card is not None
             and self.protection_refusal(
-                thing, source_card, source_controller=self.controller_of(spell).username
+                thing,
+                source_card,
+                source_controller=self.controller_of(spell).username,
+                is_spell=isinstance(spell, CardState),
+                source_state=None if isinstance(spell, CardState) else spell.source(self),
             )
             is not None
         ):
@@ -16428,6 +16758,8 @@ class Game(EngineModel):
         source: "Card",
         *,
         source_controller: str | None = None,
+        is_spell: bool = False,
+        source_state: CardState | None = None,
     ) -> str | None:
         """Why protection stops this source touching this target, or None (CR 702.16b).
 
@@ -16445,6 +16777,19 @@ class Game(EngineModel):
         only its damage was prevented on resolution, which is CR 702.16e doing
         CR 702.16b's job.
 
+        `is_spell` is CR 112.1's "spell" quality (Emrakul, the World Anew's
+        own "protection from spells") - true exactly when `source` is the
+        card behind a spell rather than an ability's, which every caller
+        already knows (it is what tells `source` apart from an ability's own
+        source card in the first place) and passes through.
+
+        `source_state` is the live `CardState` behind an ability's source
+        permanent, for "permanents that were cast this turn" (Emrakul's other
+        quality) - a bare `Card` cannot answer whether *this* object was cast
+        this turn, only `Game.was_cast_this_turn` can, and it needs the live
+        object. `None` for a spell (never a permanent, CR 110.1) and for any
+        caller that has not looked one up.
+
         A quality this engine cannot read is not enforced - see
         `docs/engine-coverage.md`.
 
@@ -16460,7 +16805,9 @@ class Game(EngineModel):
         for quality in self._effective_protection_qualities(target):
             if self._player_quality_protects(
                 target, quality, source_controller
-            ) or self.source_has_quality_of_card(source, quality):
+            ) or self.source_has_quality_of_card(
+                source, quality, is_spell=is_spell, source_state=source_state
+            ):
                 return (
                     f"{target.name} has protection from {quality}, so {source.name} "
                     f"cannot target it (CR 702.16b)"
@@ -16850,25 +17197,51 @@ class Game(EngineModel):
                     qualities.append(chosen.value)
         return qualities
 
-    def source_has_quality_of_card(self, source: "Card", quality: str) -> bool:
+    def source_has_quality_of_card(
+        self,
+        source: "Card",
+        quality: str,
+        *,
+        is_spell: bool = False,
+        source_state: CardState | None = None,
+    ) -> bool:
         """`source_has_quality` for a bare `Card` rather than a `CardState`.
 
         The targeting half of CR 702.16b is asked about the *card* behind a
         spell or an ability's source, while the damage half (CR 702.16e) is
-        asked about a `CardState`. Both read the same two flavours of quality,
-        so the reading lives in one place and this is the adapter.
+        asked about a `CardState`. Both read the same four flavours of
+        quality, so the reading lives in one place and this is the adapter.
+
+        `is_spell` is CR 112.1's own "spell" quality: "a card on the stack" -
+        unlike a card type (CR 702.16a's own extension reaching a source in
+        any zone), never true of a bare `Card`, so it has to be told by the
+        caller, which already knows whether the source it read this `Card`
+        off was a spell or an ability (`_source_card_of`).
+
+        `source_state` is the live `CardState` behind an *ability's* source
+        permanent, when the caller has one - needed for "permanents that were
+        cast this turn" (`Game.was_cast_this_turn`), which asks a question a
+        bare `Card` has no way to answer (it is not "on the battlefield" or
+        "off the battlefield", it is not anything - CR 110.1's permanent is a
+        live object, not a print). Never given for a spell: CR 110.1 makes a
+        spell on the stack never a permanent in the first place, so this
+        quality is always false for one regardless of what card it prints,
+        the same way it is always false for a bare `is_spell=True` here.
         """
         wanted = quality.strip().lower()
+        if _is_spell_quality(wanted):
+            return is_spell
+        if (spell_colours := _spell_colour_quality(wanted)) is not None:
+            return is_spell and spell_colours(source.colors)
+        if _is_cast_this_turn_quality(wanted):
+            return source_state is not None and self.was_cast_this_turn(source_state)
         card_type = _card_type_named(wanted)
         if card_type is not None:
             return card_type in source.types
         negated = _negated_card_type_named(wanted)
         if negated is not None:
             return negated not in source.types
-        color = _COLOR_WORDS.get(wanted)
-        if color is not None:
-            return color in source.colors
-        return False
+        return bool(_has_color_quality(wanted, source.colors))
 
     def protection_quality_against(self, target: CardState, source: CardState) -> str | None:
         """The quality `target` has protection from that `source` has, or None.
@@ -16931,7 +17304,11 @@ class Game(EngineModel):
         if source is None:
             return None
         return self.protection_refusal(
-            target, source, source_controller=self.controller_of(spell).username
+            target,
+            source,
+            source_controller=self.controller_of(spell).username,
+            is_spell=isinstance(spell, CardState),
+            source_state=None if isinstance(spell, CardState) else spell.source(self),
         )
 
     def spell_fizzles(self, spell: StackObject) -> bool:
@@ -17348,8 +17725,11 @@ class Game(EngineModel):
         and to any sources not on the battlefield that are of that card type,
         subtype, or supertype. This is an exception to rule 109.2."
 
-        Colours and card types are read; anything else returns False rather than
-        being guessed at, and is listed in `docs/engine-coverage.md`.
+        Colours, CR 105.2a/105.2b's colour counts ("monocolored",
+        "multicolored"), card types, CR 112.1's "spell" and CR 400.7d's
+        "permanents that were cast this turn" are read; anything else returns
+        False rather than being guessed at, and is listed in
+        `docs/engine-coverage.md`.
 
         A permanent's own types and colours are the ones asked about - CR
         613.5's computed board while `source` is still on the battlefield (a
@@ -17364,8 +17744,25 @@ class Game(EngineModel):
         type_filter` already gives "noncreature spells" - checked only once
         the bare card-type name comes back unrecognised, so it never shadows
         a real (if oddly spelled) positive quality.
+        "Spell" is not a card type at all (CR 205.2a never lists it), so that
+        second clause never reaches it: a source only carries this quality
+        while `source.zone` genuinely `is Zone.STACK` right now - never for
+        one sitting in a hand or graveyard the way a card-type quality would
+        still read there. Neither is "permanents that were cast this turn" -
+        `Game.was_cast_this_turn` is the one place that fact is answered,
+        used identically here (CR 702.16e's damage), by `protection_quality_
+        against` (CR 702.16c/d/f: enchanting, equipping, blocking - all three
+        share this method) and by `source_has_quality_of_card`'s targeting
+        half (CR 702.16b), which threads the live source state through
+        because a bare `Card` alone cannot answer it.
         """
         wanted = quality.strip().lower()
+        if _is_spell_quality(wanted):
+            return source.zone is Zone.STACK
+        if (spell_colours := _spell_colour_quality(wanted)) is not None:
+            return source.zone is Zone.STACK and spell_colours(source.colors)
+        if _is_cast_this_turn_quality(wanted):
+            return self.was_cast_this_turn(source)
         types, colors = source.types, source.colors
         if source.zone is Zone.BATTLEFIELD:
             chars = self.characteristics_of(source)
@@ -17376,10 +17773,7 @@ class Game(EngineModel):
         negated = _negated_card_type_named(wanted)
         if negated is not None:
             return negated not in types
-        color = _COLOR_WORDS.get(wanted)
-        if color is not None:
-            return color in colors
-        return False
+        return bool(_has_color_quality(wanted, colors))
 
     def protection_from_damage(self, event: ReplaceableEvent) -> str | None:
         """Why protection prevents this damage, or None (CR 702.16e).
@@ -17998,6 +18392,17 @@ class Game(EngineModel):
                 assert left_battlefield_chars is not None
                 if Type.CREATURE in left_battlefield_chars.types:
                     self.creatures_died_this_turn += 1
+                    if not is_token(card_state):
+                        died_controller = left_battlefield_chars.controller or card_state.controller
+                        if died_controller is not None:
+                            self.nontoken_creatures_died_under_control_this_turn[
+                                died_controller
+                            ] = (
+                                self.nontoken_creatures_died_under_control_this_turn.get(
+                                    died_controller, 0
+                                )
+                                + 1
+                            )
                 self.emit(
                     GameEvent(
                         event=TriggerEvent.DIES,
@@ -18121,6 +18526,7 @@ class Game(EngineModel):
                 is_permanent_card=bool(_PERMANENT_TYPES.intersection(card_state.types)),
                 permanent_types=permanent_types,
                 card_id=card_state.id,
+                card_types=tuple(card_state.types),
             )
         )
 
@@ -19668,6 +20074,43 @@ class Game(EngineModel):
         self.turn.leave(username)
         if self.priority is not None:
             self.priority.leave(username)
+        self._reassign_monarch_after_departure(username)
+
+    def _reassign_monarch_after_departure(self, username: str) -> None:
+        """CR 725.4: `username`, who held the monarch, has just left the game.
+
+        "If the monarch leaves the game, the active player becomes the
+        monarch at the same time as that player leaves the game. If the
+        active player is leaving the game or if there is no active player,
+        the next player in turn order who can become the monarch becomes the
+        monarch. If no player still in the game can become the monarch, the
+        game continues with no monarch."
+
+        One loop reads both sentences at once: `order` is the fixed seating
+        (CR 103.8), starting at the active player's own seat, so offset 0
+        checks the active player first (the rule's first sentence) and each
+        later offset walks forward in turn order (the second sentence) - the
+        active player is skipped automatically the moment they are not
+        `is_in_game` (already true here: `_player_left` is called only after
+        `losers`/conceded bookkeeping already dropped `username`, and this
+        runs for whichever player just left, active or not). No player found
+        at all (`order` empty, or nobody left `is_in_game`) leaves `monarch`
+        `None` - the rule's own last sentence.
+        """
+        if self.monarch != username:
+            return
+        order = self.turn.players if self.turn is not None else []
+        if not order:
+            self.monarch = None
+            return
+        active = self.turn.active_player
+        start = order.index(active) if active in order else 0
+        for offset in range(len(order)):
+            candidate = order[(start + offset) % len(order)]
+            if self.is_in_game(candidate):
+                self.monarch = candidate
+                return
+        self.monarch = None
 
     def _check_for_a_winner(self) -> None:
         """The last player left in a two-or-more player game wins (CR 104.2a).
@@ -25360,6 +25803,20 @@ class Game(EngineModel):
                     if paid is not None
                     else ((exiled_for_cost.id,) if exiled_for_cost is not None else ())
                 ),
+                # CR 601.2h via CR 602.2b: what actually paid this activation's
+                # cost, read off the settled payment the same moment the two
+                # fields just above are - `CastRecord.mana_spent`'s own twin
+                # for an ability, which was never cast and has no such record.
+                mana_spent=(
+                    dict(paid.mana_payment.spend)
+                    if paid is not None and paid.mana_payment is not None
+                    else {}
+                ),
+                treasure_mana_spent=(
+                    sum(paid.mana_payment.treasure_spent.values())
+                    if paid is not None and paid.mana_payment is not None
+                    else 0
+                ),
             )
             # CR 608.2h: what each sacrificed permanent's mana value was, taken
             # now - a sacrificed token is still in the graveyard, and ceases to
@@ -25973,6 +26430,7 @@ class Game(EngineModel):
             self.became_tapped_count_this_turn = {}
             self.permanents_sacrificed_this_turn = {}
             self.creatures_died_this_turn = 0
+            self.nontoken_creatures_died_under_control_this_turn = {}
             self.ability_resolutions_this_turn = {}
             self.cards_drawn_this_turn = {}
             self.cards_drawn_in_own_draw_step = {}

@@ -1,0 +1,153 @@
+{
+  "object": "card",
+  "id": "34301efe-7085-476b-90e6-7ecd778b2970",
+  "oracle_id": "464a930a-79d5-4436-864d-3ce9f29475ae",
+  "multiverse_ids": [
+    620696
+  ],
+  "mtgo_id": 113052,
+  "tcgplayer_id": 499761,
+  "cardmarket_id": 717181,
+  "name": "Champions of Minas Tirith",
+  "lang": "en",
+  "released_at": "2023-06-23",
+  "uri": "https://api.scryfall.com/cards/34301efe-7085-476b-90e6-7ecd778b2970",
+  "scryfall_uri": "https://scryfall.com/card/ltc/10/champions-of-minas-tirith?utm_source=api",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_updated_at": "2026-07-13T04:13:57Z",
+  "image_uris": {
+    "small": "https://cards.scryfall.io/small/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.jpg?1783916037",
+    "normal": "https://cards.scryfall.io/normal/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.jpg?1783916037",
+    "large": "https://cards.scryfall.io/large/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.jpg?1783916037",
+    "png": "https://cards.scryfall.io/png/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.png?1783916037",
+    "art_crop": "https://cards.scryfall.io/art_crop/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.jpg?1783916037",
+    "border_crop": "https://cards.scryfall.io/border_crop/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.jpg?1783916037",
+    "thumb": "https://cards.scryfall.io/thumb/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.webp?1783916037",
+    "grid": "https://cards.scryfall.io/grid/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.webp?1783916037",
+    "display": "https://cards.scryfall.io/display/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.webp?1783916037",
+    "art": "https://cards.scryfall.io/art/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.webp?1783916037",
+    "crop": "https://cards.scryfall.io/crop/front/3/4/34301efe-7085-476b-90e6-7ecd778b2970.webp?1783916037"
+  },
+  "mana_cost": "{5}{W}",
+  "cmc": 6.0,
+  "type_line": "Creature \u2014 Human Soldier",
+  "oracle_text": "When this creature enters, you become the monarch.\nAt the beginning of combat on each opponent's turn, if you're the monarch, that opponent may pay {X}, where X is the number of cards in their hand. If they don't, they can't attack you this combat.",
+  "power": "4",
+  "toughness": "6",
+  "colors": [
+    "W"
+  ],
+  "color_identity": [
+    "W"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "7ba2acdb-2c88-43f0-bacf-d9ec7bd011bb",
+      "component": "combo_piece",
+      "name": "Champions of Minas Tirith",
+      "type_line": "Creature \u2014 Human Soldier",
+      "uri": "https://api.scryfall.com/cards/7ba2acdb-2c88-43f0-bacf-d9ec7bd011bb"
+    },
+    {
+      "object": "related_card",
+      "id": "63455c28-3e53-45b1-8d0b-a5045dab1fb9",
+      "component": "combo_piece",
+      "name": "The Monarch",
+      "type_line": "Card",
+      "uri": "https://api.scryfall.com/cards/63455c28-3e53-45b1-8d0b-a5045dab1fb9"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "timeless": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "oathbreaker": "legal",
+    "standardbrawl": "not_legal",
+    "brawl": "not_legal",
+    "competitivebrawl": "not_legal",
+    "alchemy": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "not_legal",
+    "predh": "not_legal",
+    "tlr": "not_legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "game_changer": false,
+  "foil": false,
+  "nonfoil": true,
+  "finishes": [
+    "nonfoil"
+  ],
+  "oversized": false,
+  "promo": false,
+  "reprint": false,
+  "variation": false,
+  "set_id": "e567c19c-0fe4-446e-a7bf-fce8a150cd2e",
+  "set": "ltc",
+  "set_name": "Tales of Middle-earth Commander",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/e567c19c-0fe4-446e-a7bf-fce8a150cd2e",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order=set&q=e%3Altc&unique=prints",
+  "scryfall_set_uri": "https://scryfall.com/sets/ltc?utm_source=api",
+  "rulings_uri": "https://api.scryfall.com/cards/34301efe-7085-476b-90e6-7ecd778b2970/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order=released&q=oracleid%3A464a930a-79d5-4436-864d-3ce9f29475ae&unique=prints",
+  "collector_number": "10",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"The Realm of Sauron is ended forever!\"",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Tatiana Kirgetova",
+  "artist_ids": [
+    "e06c9ef7-2d68-4329-8949-009106ca5990"
+  ],
+  "illustration_id": "717252a4-b07c-49ad-b7f8-175b34d634e6",
+  "border_color": "black",
+  "frame": "2015",
+  "security_stamp": "triangle",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "promo_types": [
+    "universesbeyond"
+  ],
+  "edhrec_rank": 5241,
+  "prices": {
+    "usd": "0.36",
+    "usd_foil": null,
+    "usd_etched": null,
+    "eur": "0.61",
+    "eur_foil": null,
+    "tix": "0.45"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid=620696&printed=false",
+    "tcgplayer_infinite_articles": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Farticles&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Farticles%3FproductLineName%3Dmagic%26q%3DChampions%2Bof%2BMinas%2BTirith",
+    "tcgplayer_infinite_decks": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&trafcat=tcgplayer.com%2Fsearch%2Fdecks&u=https%3A%2F%2Fwww.tcgplayer.com%2Fsearch%2Fdecks%3FproductLineName%3Dmagic%26q%3DChampions%2Bof%2BMinas%2BTirith",
+    "edhrec": "https://edhrec.com/route/?cc=Champions+of+Minas+Tirith"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api&u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F499761%3Fpage%3D1",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products?idProduct=717181&referrer=scryfall&utm_campaign=card_prices&utm_medium=text&utm_source=scryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards/113052?affiliate_id=scryfall&ref=card-profile&utm_campaign=affiliate&utm_medium=card&utm_source=scryfall"
+  }
+}

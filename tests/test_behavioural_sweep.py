@@ -86,6 +86,7 @@ from magic_cards_model.ids import install_id_allocator, reset_id_allocator
 from magic_cards_model.machines import Step, conditions
 from magic_cards_model.machines.abilities import (
     ActivatedAbility,
+    StaticAbility,
     TriggeredAbility,
     TriggerEvent,
     has_mana_ability,
@@ -977,7 +978,21 @@ def _target_material(text: str) -> tuple[Material, ...]:
                 material.append(Material(_CREATURE_TARGETING_TOOL, ALICE, Zone.BATTLEFIELD))
                 continue
             if Zone.STACK in requirement.zones:
-                material.append(Material(_stack_probe(requirement), ALICE, Zone.STACK))
+                # "target spell an opponent controls" (Hope-Ender Coatl's own
+                # cast trigger) needs the probe staged under, and cast by,
+                # the opponent - the identical `ControllerRestriction` map
+                # `_find_material` already uses for a battlefield/graveyard
+                # requirement, not always Alice: a probe Alice herself
+                # controls is never a legal target for "an opponent
+                # controls", and would find no legal target at all
+                # (CR 603.3d) rather than the wrong owner being merely a
+                # worse choice.
+                owner = {
+                    ControllerRestriction.YOU: ALICE,
+                    ControllerRestriction.OPPONENT: BOB,
+                    ControllerRestriction.NOT_YOU: BOB,
+                }.get(requirement.controller, ALICE)
+                material.append(Material(_stack_probe(requirement, owner), owner, Zone.STACK))
                 continue
             found = _find_material(requirement)
             if found is not None:
@@ -987,20 +1002,29 @@ def _target_material(text: str) -> tuple[Material, ...]:
         _STAGING.variant, _STAGING.material = saved
 
 
-def _stack_probe(requirement: TargetRequirement) -> str:
-    """The first stock probe spell that, cast on the stock board, is a legal
-    target for a "target ... spell" requirement (CR 115.1) - "target artifact
-    spell you control", "target instant or sorcery spell with a single
-    target" - judged by the engine's own `rejects`; Opt when none is."""
+def _stack_probe(requirement: TargetRequirement, owner: str = ALICE) -> str:
+    """The first stock probe spell that, cast on the stock board under
+    `owner`, is a legal target for a "target ... spell" requirement
+    (CR 115.1) - "target artifact spell you control", "target instant or
+    sorcery spell with a single target", "target spell an opponent
+    controls" - judged by the engine's own `rejects`; Opt when none is.
+
+    `owner` matches `_target_material`'s own choice for the real staged
+    material: verifying the probe under the wrong controller would reject
+    every candidate for a controller-restricted requirement regardless of
+    its card-type fit, and always fall back to the plain "Opt" default
+    rather than a probe that actually matches the requirement's own
+    qualifier.
+    """
     for name in _PROBE_SPELLS:
         saved = _STAGING.material
-        _STAGING.material = (Material(name, ALICE, Zone.STACK),)
+        _STAGING.material = (Material(name, owner, Zone.STACK),)
         try:
             scenario = _board()
         finally:
             _STAGING.material = saved
         try:
-            spell = _cast(scenario, name)
+            spell = _cast(scenario, name, owner)
         except _Unavailable:
             continue
         if requirement.rejects(spell, ALICE, scenario.game, None) is None:
@@ -2896,6 +2920,15 @@ def _turns(case: Case, ability: TriggeredAbility) -> Iterator[Attempt]:
         def fought() -> tuple[PlayedScenario, Any]:
             scenario, source_id = _home(case, ability, step=Step.PRECOMBAT_MAIN, busy=False)
             game = scenario.game
+            source = game.find_by_id(source_id)
+            if (
+                source is not None
+                and source.zone is Zone.BATTLEFIELD
+                and crew_number(source.card) is not None
+            ):
+                # "if this Vehicle attacked or blocked this combat" (Daredevil
+                # Dragster): a Vehicle attacks only once crewed (CR 702.122a).
+                _crew(scenario, source)
             scenario.turn.advance_to(Step.DECLARE_ATTACKERS)
             game.sync_priority_with_step()
             attackers = [
@@ -4419,10 +4452,31 @@ def run_trigger_case(case: Case, only: dict[str, Any] | None = None) -> Outcome:
         if only is not None and variant != only["variant"]:
             continue
         _STAGING.variant, _STAGING.case = variant, case
+        # Dash Hopes' own second, unrelated ability - "Counter target
+        # spell." - needs a target to even be cast at all (CR 601.2c), a
+        # requirement the trigger's own clause (`ability.text`, "any player
+        # may pay 5 life. If a player does, counter Dash Hopes.") says
+        # nothing about. A "when you cast this spell" trigger's own attempts
+        # (`_self_entering`'s `cast`) genuinely cast the printing itself, so
+        # every *static* ability's own targeting requirement needs a
+        # candidate too - never an *activated* ability's (Kozilek, the Great
+        # Distortion's own "Discard a card with mana value X: Counter target
+        # spell with mana value X." is never part of casting Kozilek at all,
+        # and staging its "target spell" a `Zone.STACK` probe would ask
+        # `_stack_material` to put something on the stack before Kozilek is
+        # even cast - breaking CR 117.1a's empty-stack requirement for the
+        # sorcery-speed creature it actually is).
+        static_text = " ".join(
+            a.text for a in parse_abilities(case.printing) if isinstance(a, StaticAbility)
+        )
+        whole_card_material = (
+            _target_material(static_text) if "this spell" in ability.condition.lower() else ()
+        )
         _STAGING.material = (
             _target_material(ability.text)
             + _precondition_material(ability.intervening_if or "")
             + _board_material(case.card, ability.intervening_if or "")
+            + whole_card_material
         )
         try:
             for index, attempt in enumerate(_attempts(case)):

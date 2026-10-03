@@ -5558,6 +5558,43 @@ def waterbend_mana_cost(phrase: str) -> ManaCost | None:
     return ManaCost.try_parse(match.group("cost"))
 
 
+#: "Pay `<count>` `{symbol}`" - a spelled-out (or digit) count naming how many
+#: of one repeatable mana symbol to pay: Emrakul, the World Anew's own
+#: "Madness—Pay six {C}." (CR 107.4c's `{C}`, one colorless mana). Read by the
+#: count and the symbol, never by which symbol it is or which card prints it,
+#: so a spelled-out cost of any repeatable mana symbol reads exactly as that
+#: many bare copies of the symbol printed in a row already do -
+#: `ManaCost.try_parse` is still what says whether the symbol itself is mana
+#: at all, so CR 107.14's energy symbol `{E}` (not a mana symbol - it is its
+#: own thing, paid by removing an energy counter, a resource this engine does
+#: not yet model) is refused here exactly as a bare "`{E}`{E}{E}`" already is,
+#: rather than silently treated as three mana.
+_PHRASE_PAY_REPEATED_SYMBOL = re.compile(
+    rf"^pay {count_pattern('count', article=False)} (?P<symbol>\{{[^{{}}]+\}})$",
+    re.IGNORECASE,
+)
+
+
+def pay_repeated_symbol_mana_cost(phrase: str) -> ManaCost | None:
+    """`_PHRASE_PAY_REPEATED_SYMBOL`'s shape, or `None`.
+
+    Kept apart from `cost_component_for_phrase` for the same reason
+    `waterbend_mana_cost` is: this is mana, and a `CostComponent` has nowhere
+    to carry mana - `TotalCost` is what does, which is why `total_cost_for_
+    phrase` is where this is folded in. No other printing in this pool uses
+    this shape - Emrakul, the World Anew's own Madness cost is the only one -
+    so nothing else here changes behaviour; a future card spelling out any
+    other mana symbol's count reads the same way this one does.
+    """
+    match = _PHRASE_PAY_REPEATED_SYMBOL.fullmatch(phrase.strip().rstrip("."))
+    if match is None:
+        return None
+    count = parse_count(match.group("count"), article=False)
+    if count is None or count < 1:
+        return None
+    return ManaCost.try_parse(match.group("symbol") * count)
+
+
 #: `Exert this land`, `Exert this creature` (CR 701.43a). Only the self-
 #: referential form, which is the only one printed inside a cost.
 _PHRASE_EXERT_SELF = re.compile(
@@ -6172,6 +6209,10 @@ def total_cost_for_phrase(phrase: str, payer: str | None = None) -> TotalCost | 
             # comma-separated cost (none printed yet, but CR 602.1a allows
             # it) must not widen what the tap method may cover.
             waterbend_generic = (waterbend_generic or 0) + waterbend.generic
+            continue
+        repeated_symbol = pay_repeated_symbol_mana_cost(part)
+        if repeated_symbol is not None:
+            mana = mana.plus(repeated_symbol)
             continue
         component = cost_component_for_phrase(part, payer)
         if component is None:

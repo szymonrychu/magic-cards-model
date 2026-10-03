@@ -24,10 +24,12 @@ turns into a fail-closed notice (`InterveningIfNotice`, an activation refused
 **Where readers live.** One module per family, each exporting
 `READERS: tuple[ConditionReader, ...]`: `timing` (whose turn, which phase or
 step), `board` (what is on the battlefield), `cast_record` (how a spell was
-cast), `history` (what happened this turn), `player` (hands, graveyards, life),
-`objects` (the source and the event's own subject) and `events` (a trigger
-event's own "while <doing something>" qualifier). `READERS` below is read
-at call time, never cached, so each family fills only its own module.
+cast), `activation` (what mana paid an *activated ability's* own cost,
+`cast_record`'s twin for CR 602.2b), `history` (what happened this turn),
+`player` (hands, graveyards, life), `objects` (the source and the event's own
+subject) and `events` (a trigger event's own "while <doing something>"
+qualifier). `READERS` below is read at call time, never cached, so each
+family fills only its own module.
 """
 
 import re
@@ -88,7 +90,16 @@ class ConditionReader:
 
 # The family modules import the contract above, so they are loaded only once it
 # exists.
-from . import board, cast_record, events, history, objects, player, timing  # noqa: E402
+from . import (  # noqa: E402
+    activation,
+    board,
+    cast_record,
+    events,
+    history,
+    objects,
+    player,
+    timing,
+)
 
 
 def readers() -> tuple[ConditionReader, ...]:
@@ -97,6 +108,7 @@ def readers() -> tuple[ConditionReader, ...]:
         *timing.READERS,
         *board.READERS,
         *cast_record.READERS,
+        *activation.READERS,
         *history.READERS,
         *player.READERS,
         *objects.READERS,

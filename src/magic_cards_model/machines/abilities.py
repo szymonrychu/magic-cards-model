@@ -1909,6 +1909,16 @@ class TriggeredAbility(BaseAbility):
     #: resolution the way an intervening "if" is (CR 603.4, CR 608.2a) - by
     #: then the casting is over. `condition` holds the event without it.
     event_qualifier: str | None = None
+    #: Which of CR 725.2's two inherent, sourceless monarch triggers this is,
+    #: for an ability `machines/monarch.py` builds directly rather than one
+    #: `parse_abilities` ever reads off a card's oracle text - CR 725.2:
+    #: "These triggered abilities have no source ... This is an exception to
+    #: rule 113.8", so no printed card names either of them and there is
+    #: nothing here for the parser to find. `Game._effect_of` checks this
+    #: before falling through to the card-name registries, the same way it
+    #: already checks `keyword` for a CR 702 keyword's own unprinted ability.
+    #: `None` for every ordinary, printed `TriggeredAbility`.
+    monarch_inherent: Literal["end_step_draw", "combat_damage"] | None = None
 
 
 class StaticAbility(BaseAbility):

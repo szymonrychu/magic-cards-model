@@ -355,3 +355,106 @@ def test_drowner_of_truth_does_not_trigger_when_no_colorless_mana_was_spent():
     assert record.mana_of_color_spent(Color.COLORLESS) == 0
     assert scenario.game.intervening_if_notices == []
     assert scenario.stack_names() == ["Drowner of Truth"]
+
+
+# --------------------------------------------------------------------------
+# Wumpus Aberration: "if {C} wasn't spent to cast it" - `_MANA_NOT_SPENT_
+# CLAUSE`'s negation of `_MANA_SPENT_CLAUSE`, read off the identical
+# `CastRecord` (CR 601.2h) as every other clause in this file; only the
+# boolean flips.
+# --------------------------------------------------------------------------
+
+
+def _wumpus_board(battlefield: list[str]) -> Scenario:
+    return (
+        Scenario()
+        .player("alice", hand=["Wumpus Aberration"], battlefield=battlefield)
+        .player("bob", hand=["Grizzly Bears"])
+    )
+
+
+def test_wumpus_aberration_triggers_when_no_colorless_mana_was_spent():
+    """Paid entirely with Forests - no {C} in the payment - so the negated
+    condition is true and the trigger reaches the stack, targeting bob."""
+    scenario = _wumpus_board(["Forest"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.choose_trigger_targets("Wumpus Aberration", ["bob"])
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+
+    wumpus = scenario.cast_onto_stack("Wumpus Aberration", *sources)
+
+    record = scenario.game.cast_record(wumpus)
+    assert record.mana_of_color_spent(Color.COLORLESS) == 0
+    assert scenario.game.intervening_if_notices == []
+    assert scenario.stack_names() == [
+        "Wumpus Aberration",
+        "Wumpus Aberration's triggered ability",
+    ]
+
+
+def test_wumpus_aberration_does_not_trigger_when_colorless_mana_was_spent():
+    """One of the four generic mana paid with a Wastes: {C} was spent, the
+    negated condition is false (CR 603.4), and the ability never triggers at
+    all - the identical "condition read, ability simply does not fire" shape
+    Drowner of Truth's own positive clause proves above."""
+    scenario = _wumpus_board(["Forest", "Forest", "Forest", "Wastes"]).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Wastes")
+
+    wumpus = scenario.cast_onto_stack("Wumpus Aberration", *sources)
+
+    record = scenario.game.cast_record(wumpus)
+    assert record.mana_of_color_spent(Color.COLORLESS) == 1
+    assert scenario.game.intervening_if_notices == []
+    assert scenario.stack_names() == ["Wumpus Aberration"]
+
+
+def test_the_targeted_opponent_may_put_the_creature_card_onto_the_battlefield():
+    scenario = _wumpus_board(["Forest"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+    scenario.choose_trigger_targets("Wumpus Aberration", ["bob"])
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_onto_stack("Wumpus Aberration", *sources)
+
+    scenario.will_take_the_may(True, username="bob", source="Wumpus Aberration")
+
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.BATTLEFIELD
+    assert bears not in bob.hand
+
+
+def test_declining_leaves_the_creature_card_in_hand():
+    scenario = _wumpus_board(["Forest"] * 4).build()
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    bob = scenario.player("bob")
+    bears = scenario.find("Grizzly Bears", Zone.HAND, "bob")
+    scenario.choose_trigger_targets("Wumpus Aberration", ["bob"])
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_onto_stack("Wumpus Aberration", *sources)
+
+    scenario.will_take_the_may(False, username="bob", source="Wumpus Aberration")
+
+    scenario.resolve_top()
+
+    assert bears.zone is Zone.HAND
+    assert bears in bob.hand
+
+
+def test_an_opponent_with_no_creature_card_in_hand_is_not_offered_the_choice():
+    scenario = (
+        Scenario()
+        .player("alice", hand=["Wumpus Aberration"], battlefield=["Forest"] * 4)
+        .player("bob", hand=["Shock"])
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    scenario.choose_trigger_targets("Wumpus Aberration", ["bob"])
+    sources = scenario.untapped_sources("Forest", "Forest", "Forest", "Forest")
+    scenario.cast_onto_stack("Wumpus Aberration", *sources)
+
+    scenario.resolve_top()
+
+    assert scenario.questions_asked() == []

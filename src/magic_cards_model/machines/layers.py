@@ -1090,6 +1090,11 @@ class QualifiedCreatures(SelectorBase):
     other: bool = False
     opponents: bool = False
     without_color: Color | None = None
+    colorless: bool = False
+    """ "colorless creatures" (CR 105.2c: "A colorless object has no color.") -
+    not `without_color`'s negation of one named colour, but a predicate on
+    there being no colour at all, so a creature with two colours is excluded
+    by it exactly as one with one colour is."""
     land: bool = False
     also_artifact: bool = False
     tokens: bool = False
@@ -1126,6 +1131,8 @@ class QualifiedCreatures(SelectorBase):
         if self.other and chars.card_id == self.source_id:
             return False
         if self.without_color is not None and self.without_color in chars.colors:
+            return False
+        if self.colorless and chars.colors:
             return False
         if self.land and not chars.is_land:
             return False
@@ -3064,26 +3071,65 @@ def _sublayers_of(layer: Layer) -> tuple[Sublayer | CopySublayer | None, ...]:
     return _SUBLAYERS_BY_LAYER.get(layer, (None,))
 
 
+#: A counter kind spelled as its own printed bonus - "+1/+1", "-1/-1", or
+#: Clockwork Steed's own asymmetric "+1/+0" (CR 122.1a: "A +X/+Y counter on a
+#: creature or on a creature card in a zone other than the battlefield, where
+#: X and Y are numbers, adds X to that object's power and Y to that object's
+#: toughness. Similarly, -X/-Y counters subtract from power and toughness.").
+#: Read off the kind's own name rather than a fixed pair of enum members -
+#: CR 122.1's kinds are an open set, and CR 122.1a's own rule is not limited
+#: to the ±1/±1 pair; a named kind with no numbers at all ("charge", "hone" -
+#: the latter has its own separate CR 122.1j effect, `_hone_counter_effects`,
+#: since its bonus lands on what the counter's *permanent* is attached to,
+#: never on itself) simply carries no bonus here.
+_PT_COUNTER_KIND_RE = re.compile(r"^([+-])(\d+)/([+-])(\d+)$")
+
+
+def _pt_counter_delta(kind: str) -> tuple[int, int] | None:
+    """`kind`'s own (power, toughness) bonus (CR 122.1a), or `None` when it is
+    not a "+X/+Y"/"-X/-Y"-shaped kind at all."""
+    match = _PT_COUNTER_KIND_RE.fullmatch(kind)
+    if match is None:
+        return None
+    power_sign, power_digits, toughness_sign, toughness_digits = match.groups()
+    power = int(power_digits) * (1 if power_sign == "+" else -1)
+    toughness = int(toughness_digits) * (1 if toughness_sign == "+" else -1)
+    return power, toughness
+
+
 def _counter_effects(board: Board) -> list[ContinuousEffect]:
-    """+1/+1 and -1/-1 counters, as the 7c effects CR 613.4c says they are.
+    """Every "+X/+Y"/"-X/-Y"-named counter kind, summed per permanent, as the
+    7c effects CR 613.4c/CR 122.1a say they are - +1/+1 and -1/-1 read the
+    same general way as any other such kind (`_pt_counter_delta`), rather
+    than as the two special-cased enum members CR 122.1 merely happens to
+    name as examples.
 
     They carry timestamp 0 because counters have no timestamp of their own; 7c
     is addition, so their order among the other 7c effects cannot matter.
     """
     effects: list[ContinuousEffect] = []
     for card_id, chars in board.items():
-        amount = chars.counters.get(Counter.PLUS_ONE, 0) - chars.counters.get(Counter.MINUS_ONE, 0)
-        if amount == 0:
+        power = 0
+        toughness = 0
+        for kind, count in chars.counters.items():
+            if not count:
+                continue
+            delta = _pt_counter_delta(kind)
+            if delta is None:
+                continue
+            power += delta[0] * count
+            toughness += delta[1] * count
+        if power == 0 and toughness == 0:
             continue
         effects.append(
             ContinuousEffect(
-                description=f"{chars.name}: {amount:+}/{amount:+} from counters",
+                description=f"{chars.name}: {power:+d}/{toughness:+d} from counters",
                 layer=Layer.POWER_TOUGHNESS,
                 sublayer=Sublayer.MODIFY,
                 timestamp=0,
                 from_counters=True,
                 selector=_only(card_id),
-                modification=modify_power_toughness(amount, amount),
+                modification=modify_power_toughness(power, toughness),
             )
         )
     return effects
@@ -3468,6 +3514,7 @@ def qualified_creatures(
     other: bool = False,
     opponents: bool = False,
     without_color: Color | None = None,
+    colorless: bool = False,
     land: bool = False,
     also_artifact: bool = False,
     tokens: bool = False,
@@ -3478,10 +3525,10 @@ def qualified_creatures(
     of_chosen_color: bool = False,
     chosen_color: Color | None = None,
 ) -> Selector:
-    """ "[Other] [non<colour>] [[non]legendary] [nontoken] [land|artifact]
-    creature[ token]s [you control|your opponents control] [of the chosen
-    color]" - the anthem subject with the qualifiers the pool actually prints,
-    composed one predicate at a time.
+    """ "[Other] [non<colour>|colorless] [[non]legendary] [nontoken]
+    [land|artifact] creature[ token]s [you control|your opponents control]
+    [of the chosen color]" - the anthem subject with the qualifiers the pool
+    actually prints, composed one predicate at a time.
 
     Each qualifier is a plain question about the *computed* characteristics,
     which is what makes it correct rather than merely convenient:
@@ -3494,6 +3541,11 @@ def qualified_creatures(
       colourless creature is nonblack too, and a creature that *became* black
       in layer 5 (CR 613.1e) is excluded when layer 6 or layer 7 asks - the
       board this selector reads has already had layer 5 applied.
+    - `colorless` is the printed "colorless" (CR 105.2c: "A colorless object
+      has no color."), Kozilek, the Broken Reality's own "Other colorless
+      creatures you control" - a predicate on having *no* colour at all,
+      never the negation of one named colour the way `without_color` is, so
+      it is its own field rather than a `Color` value.
     - `land` is the "land creatures" of Aang, Destined Savior: both card types
       at once (CR 205.2b: "Some objects have more than one card type ... Such
       objects satisfy the criteria for any effect that applies to any of their
@@ -3528,6 +3580,7 @@ def qualified_creatures(
         other=other,
         opponents=opponents,
         without_color=without_color,
+        colorless=colorless,
         land=land,
         also_artifact=also_artifact,
         tokens=tokens,
@@ -5193,8 +5246,11 @@ _KEYWORD_GRANT_RE = re.compile(
 
 #: The qualifier words an anthem's subject may carry, ahead of the noun:
 #: "other" (the source itself excluded), a colour negation ("nonblack",
-#: CR 105.2), and "land" (both card types at once, CR 205.2b). The noun itself
-#: is either "creatures" or CR 111.1's "creature tokens". Every one of them is
+#: CR 105.2) or "colorless" (CR 105.2c: no colour at all, Kozilek, the Broken
+#: Reality's own "Other colorless creatures you control") - mutually
+#: exclusive, so only one of the two ever reads on a single subject - and
+#: "land" (both card types at once, CR 205.2b). The noun itself is either
+#: "creatures" or CR 111.1's "creature tokens". Every one of them is
 #: optional, so the plain "creatures you control" of Glorious Anthem reads
 #: through this fragment exactly as it did before it existed.
 #:
@@ -5205,7 +5261,7 @@ _KEYWORD_GRANT_RE = re.compile(
 #: otherwise need the qualifiers spelled out twice and kept in step by hand.
 _SUBJECT_QUALIFIERS = (
     r"(?P<other>other )?"
-    r"(?:non(?P<noncolor>white|blue|black|red|green) )?"
+    r"(?:(?:non(?P<noncolor>white|blue|black|red|green)|(?P<colorless>colorless)) )?"
     r"(?P<legendary>(?:non)?legendary )?"
     r"(?P<nontoken>nontoken )?"
     r"(?:(?P<land>land )|(?P<artifact>artifact ))?"
@@ -7008,7 +7064,8 @@ _LOOKS_LIKE_RESOLUTION_LAYER_EFFECT_RE = re.compile(
 #: "Creatures you control of the chosen color get +1/+1." are excluded from
 #: resolution routing as the static abilities they are.
 _LOOKS_LIKE_ANTHEM_RE = re.compile(
-    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?(?:non(?:white|blue|black|red|green) )?"
+    r"^(?:as long as [^,]+, )?(?:each )?(?:other )?"
+    r"(?:(?:non(?:white|blue|black|red|green)|colorless) )?"
     r"(?:(?:non)?legendary )?(?:nontoken )?(?:land |artifact )?"
     r"(?:creature tokens?|creatures?) (?:you control|your opponents control)"
     r"(?: of the chosen colou?r)? (?:get|gets|have|has)\b",
@@ -7883,6 +7940,7 @@ def _creature_group(
             other=other,
             opponents=opponents,
             without_color=qualifiers.without_color,
+            colorless=qualifiers.colorless,
             land=qualifiers.land,
             also_artifact=qualifiers.also_artifact,
             tokens=qualifiers.tokens,
@@ -8056,6 +8114,8 @@ class CreatureQualifiers(EngineModel):
 
     without_color: Color | None = None
     color_word: str | None = None
+    colorless: bool = False
+    """"colorless creatures" (CR 105.2c) - see `QualifiedCreatures.colorless`."""
     land: bool = False
     also_artifact: bool = False
     tokens: bool = False
@@ -8070,6 +8130,7 @@ class CreatureQualifiers(EngineModel):
     def is_empty(self) -> bool:
         return (
             self.without_color is None
+            and not self.colorless
             and not self.land
             and not self.also_artifact
             and not self.tokens
@@ -8084,6 +8145,8 @@ class CreatureQualifiers(EngineModel):
         prefix = ""
         if self.color_word is not None:
             prefix += f"non{self.color_word} "
+        if self.colorless:
+            prefix += "colorless "
         if self.legendary is not None:
             prefix += "legendary " if self.legendary else "nonlegendary "
         if self.nontoken:
@@ -8110,6 +8173,7 @@ def qualifiers_from_subject(
         update={
             "without_color": _COLOR_WORDS[color_word.lower()] if color_word else None,
             "color_word": color_word.lower() if color_word else None,
+            "colorless": match.group("colorless") is not None,
             "land": match.group("land") is not None,
             "also_artifact": match.group("artifact") is not None,
             "tokens": match.group("noun").lower() in ("creature tokens", "creature token"),
@@ -8909,15 +8973,32 @@ _SUBTYPE_ANTHEM_RE = re.compile(
 
 #: "Thopters you control have haste." (Saheeli, Jewel of Avishkar) - the same
 #: bare creature-type subject as `_SUBTYPE_ANTHEM_RE`, granting a keyword
-#: instead of (or, "Vigorbloom Vanguard" style, this shape stays keyword-only;
-#: the pump-and-keyword combination has no printed example yet) modifying
-#: power/toughness. Case-sensitive on the subtype for the same reason
-#: `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a creature type.
-#: Rith, Liberated Primeval's "Other Dragons you control have ward {2}." is
-#: the same subject with a costed keyword (`_KEYWORD_LIST_WITH_COSTS`).
+#: instead of modifying power/toughness. Case-sensitive on the subtype for the
+#: same reason `_SUBTYPE_ANTHEM_RE` is: Oracle text only ever capitalizes a
+#: creature type. Rith, Liberated Primeval's "Other Dragons you control have
+#: ward {2}." is the same subject with a costed keyword
+#: (`_KEYWORD_LIST_WITH_COSTS`).
 _SUBTYPE_KEYWORD_GRANT_RE = re.compile(
     rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control "
     rf"(?:have|has) (?P<keywords>{_KEYWORD_LIST_WITH_COSTS})\.?$"
+)
+
+#: "Other Demons, Devils, Imps, and Tieflings you control get +1/+1 and have
+#: lifelink." (Raphael, Fiendish Savior) - `_SUBTYPE_ANTHEM_RE` and
+#: `_SUBTYPE_KEYWORD_GRANT_RE`'s two predicates on the same subtype-list
+#: subject in one sentence, the identical "and have" join
+#: `_ANTHEM_AND_KEYWORD_GRANT_RE` already reads for the bare "creatures you
+#: control" subject. `subtypes` is any length list (CR 205.3m), Oxford comma
+#: or not, "other" or not - Gisa, the Hellraiser's "Skeletons and Zombies you
+#: control get +1/+1 and have menace." is the same shape as a two-item list
+#: with no "other" and a different keyword, proving the reader is not fitted
+#: to Raphael's own four-item list. Sublayer 7c for the pump (CR 613.4c) and
+#: layer 6 for the keyword (CR 613.1f), one ability applying in two layers
+#: (CR 613.6), the same split `_filtered_anthem_builder` already builds.
+_SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE = re.compile(
+    rf"^(?P<other>[Oo]ther )?{_SUBTYPE_LIST} you control get "
+    r"(?P<power>[+-]\d+)/(?P<toughness>[+-]\d+) and "
+    r"(?:have|has) (?P<keywords>[a-z]+(?: [a-z]+)?(?:(?:,\s*| and )[a-z]+(?: [a-z]+)?)*)\.?$"
 )
 
 #: "Each other creature you control that's a Cat, Elemental, Nightmare,
@@ -14381,6 +14462,19 @@ def _parse_static_layer_sentence(sentence: str) -> EffectBuilder | None:
             int(match.group("power")),
             int(match.group("toughness")),
             keywords=chosen_type_keywords,
+            line=sentence,
+        )
+    if match := _SUBTYPE_ANTHEM_AND_KEYWORD_GRANT_RE.fullmatch(sentence):
+        subtypes = _subtype_list_words(match.group("subtypes"))
+        keywords = _split_and_validate_keywords(match.group("keywords"))
+        if subtypes is None or keywords is None:
+            return None
+        return _filtered_anthem_builder(
+            subtypes,
+            int(match.group("power")),
+            int(match.group("toughness")),
+            keywords,
+            other=match.group("other") is not None,
             line=sentence,
         )
     if match := _SUBTYPE_ANTHEM_RE.fullmatch(sentence):

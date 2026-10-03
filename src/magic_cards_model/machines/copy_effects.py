@@ -268,8 +268,19 @@ def _parse_copy_it_n_times_clause(text: str) -> AbilityEffect | None:
 #: "this spell" and the comma, which the bare form above never anticipated;
 #: the optional group here widens the match to admit it (and its "if ..."
 #: phrasing twin) without narrowing what already matched.
+#:
+#: Banish into Fable's own trigger reads "When you cast this spell **from
+#: your hand**, copy it if ...": CR 601.2a's origin-zone qualifier
+#: (`machines/triggers._CAST_ORIGIN_ZONE_RE`'s own vocabulary - "from
+#: `<your|their|his or her>` `<hand|graveyard|library|battlefield>`", or the
+#: bare "from exile") in the identical position, so the optional group here
+#: widens once more to admit it alongside "while"/"if" rather than narrowing
+#: anything the bare and conditional forms already matched.
 _LEADING_CAST_TRIGGER_RE = re.compile(
-    r"^when you cast this spell(?: (?:while|if) [^,\n]+)?, [^\n]+\n+(?P<rest>.+)$", re.I | re.S
+    r"^when you cast this spell(?: (?:while|if) [^,\n]+"
+    r"| from (?:(?:your|their|his or her) (?:hand|graveyard|library|battlefield)|exile))?, "
+    r"[^\n]+\n+(?P<rest>.+)$",
+    re.I | re.S,
 )
 
 

@@ -381,6 +381,21 @@ class GameEvent(EngineModel):
     """The printing of the subject, kept so a cast trigger can ask what kind of
     spell it was after the card has moved on."""
 
+    subject_stamp: UUID | None = None
+    """The subject's own `CardState.zone_change_stamp` at the moment of the
+    event - CAST_SPELL's own (`Game._put_on_stack`), so `_cast_trigger_x_
+    value`/`_cast_trigger_mana_spent_x_value` can read `Game.cast_record_as_
+    last_known` off it once the cast spell has left the stack (CR 608.2h): a
+    countered spell moves to its owner's graveyard (CR 701.6a), which stamps
+    a new `zone_change_stamp` and makes `Game.cast_record_of` - keyed by the
+    *current* stamp - find nothing, even though the Oracle ruling for these
+    cast triggers (Hydroid Krasis, Genesis Hydra, Old Stickfingers,
+    Geometer's Arthropod) is that the trigger still resolves with the cast
+    X. `subject_id` alone is not enough: `Game.find_by_id` still finds the
+    same card object after it moves, so a caller that read `cast_record_of`
+    off it directly (rather than through this stamp) got `None` back with no
+    signal anything was wrong."""
+
     subject_types: tuple[Type, ...] | None = None
     """The subject's card types *as they actually are* right now (CR 712.8f,
     712.8a, 712.12), not the raw printing's front-face-only types.
@@ -970,6 +985,26 @@ class AbilityOnStack(EngineModel):
     creature's mana value". The id alone cannot answer it once a sacrificed
     token has ceased to exist (CR 704.5d), which happens before this ability
     resolves; see `CastRecord.additional_cost_mana_values`, its spell twin."""
+
+    mana_spent: dict[Color, int] = Field(default_factory=dict)
+    """How much mana of each colour paid this ability's own activation cost
+    (CR 601.2h, imported for activation by CR 602.2b), taken from `machines/
+    cost.ManaPayment.spend` the same moment `Game.activate_ability` reads
+    `cost_sacrificed_card_ids`/`cost_exiled_card_ids` off the same settled
+    payment - Paragon of Modernity's own "If exactly three colors of mana
+    were spent to activate this ability, put a +1/+1 counter on it instead."
+    `CastRecord.mana_spent` is the identical field for a *cast* spell; an
+    activated ability was never cast (CR 601.2a) and has no `CastRecord` of
+    its own, so this is where its own activation's payment is remembered.
+    Empty for a mana ability (CR 605.3b never builds an `AbilityOnStack` at
+    all) or one activated with no open `CostPayment` to read back."""
+
+    treasure_mana_spent: int = 0
+    """How much of `mana_spent` came from a Treasure (CR 106.3's source of
+    mana), from `ManaPayment.treasure_spent` - Jetmir's Fixer's own "If mana
+    from a Treasure was spent to activate this ability, put a +1/+1 counter
+    on this creature instead." `CastRecord.treasure_mana_spent`'s activation
+    twin, for the identical reason `mana_spent` is `CastRecord.mana_spent`'s."""
 
     unless_payment: "CostPayment | None" = Field(default=None, repr=False)
     """The `machines/cost.CostPayment` made for an "unless that player pays" clause.
@@ -3146,7 +3181,20 @@ def condition_matches(
             if (source.choice.value == "even") != is_even:
                 return False
         if mine and "this spell" in lowered:
-            return event.subject_id == source.id
+            # Banish into Fable's own "When you cast this spell **from your
+            # hand**, ..." carries a CR 601.2a origin-zone qualifier on top
+            # of the plain self-reference every other "this spell" cast
+            # trigger in the pool has (Ulamog, the Ceaseless Hunger, Ugin,
+            # Eye of the Storms, ...) - none of which print a "from
+            # `<zone>`"/"from anywhere other than `<zone>`" clause at all, so
+            # `_origin_zone_matches`'s own "nothing named, nothing required"
+            # default (see its docstring) leaves every one of them reading
+            # exactly as before. Checked here rather than falling through to
+            # the ordinary origin-zone check below this early `return`,
+            # which it would otherwise skip entirely.
+            return event.subject_id == source.id and _origin_zone_matches(
+                event.origin_zone, condition
+            )
         # Frontline Heroism's own "that targets only a single creature you
         # control" clause is stripped first (CR 115.3/109.4's own vocabulary,
         # read directly by the dedicated block near the end of this branch,

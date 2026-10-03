@@ -238,7 +238,7 @@ server over the CLI; they never touch the repo.
 `model: "haiku"` was tried and all six seats abandoned their game by turn 2,
 inventing limits that do not exist, and several misused `advance` and then
 reported the CLI as broken. False signal is worse than no signal in a loop that
-runs on player reports. **Use sonnet.** Haiku is fine for log summarisation.
+runs on player reports. **Use sonnet**, for log summarisation too.
 
 See Player prompts below for what each prompt must contain.
 
@@ -271,7 +271,7 @@ same wrong report again.
 
 ### 5. Adjudicate
 
-**Model: opus** (fable if genuinely hard). Read-only. It establishes the ruling
+**Model: opus** (adjudication is research). Read-only. It establishes the ruling
 from the CR, finds the root cause, scopes how many cards share the mechanic,
 and lists the ways a naive fix would produce a wrong-but-plausible board.
 

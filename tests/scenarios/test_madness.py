@@ -178,6 +178,47 @@ def test_the_madness_trigger_lets_it_be_cast_for_its_madness_cost():
     assert rootwalla.zone is Zone.BATTLEFIELD
 
 
+def test_emrakuls_spelled_out_madness_cost_is_read_and_payable():
+    """Emrakul, the World Anew's own "Madness—Pay six {C}." - a spelled-out
+    count naming how many of one mana symbol to pay (CR 107.4c's `{C}`),
+    played for real: discarded, then cast for six colorless mana rather than
+    its printed `{12}`. `machines/cost.pay_repeated_symbol_mana_cost` is what
+    now reads that cost; before it existed, `KeywordCastOption.understood`
+    was `False` and this alternative cost could not be used at all.
+    """
+    scenario = (
+        Scenario()
+        .manual_turn_based_actions()
+        .player(
+            "alice",
+            hand=["Emrakul, the World Anew"],
+            battlefield=["Wild Mongrel", *(["Wastes"] * 6)],
+        )
+        .player("bob")
+        .build()
+    )
+    scenario.start_at(Step.PRECOMBAT_MAIN)
+    emrakul = scenario.find("Emrakul, the World Anew", Zone.HAND, "alice")
+    mongrel = scenario.creature("Wild Mongrel")
+    scenario.activate(mongrel, discarding=[emrakul])
+
+    assert emrakul.zone is Zone.EXILE
+    assert emrakul.exile_annotation is not None
+    assert emrakul.exile_annotation.marker is ExileMarker.MADNESS
+
+    scenario.choose_trigger_targets("Emrakul, the World Anew", [scenario.player("bob")])
+    casting = scenario.cast("Emrakul, the World Anew", from_zone=Zone.EXILE)
+    casting.use_keyword("Madness")
+    assert casting.base_cost == ManaCost.parse("{12}")
+    assert str(casting.total_cost.mana) == "{C}{C}{C}{C}{C}{C}"
+
+    sources = scenario.untapped_sources(*(["Wastes"] * 6))
+    scenario.pay_with(casting.begin_paying(), *sources)
+    scenario.put_on_stack(casting)
+
+    assert emrakul.zone is Zone.STACK
+
+
 def test_madness_cannot_cast_a_card_that_reached_the_graveyard():
     """CR 406.4: the permission is about the pile, not about the card.
 

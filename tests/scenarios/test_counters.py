@@ -72,6 +72,36 @@ def test_minus_one_counters_subtract_from_power_and_toughness():
     assert (beast.power, beast.toughness) == (2, 2)
 
 
+def test_any_printed_plus_or_minus_pt_counter_kind_modifies_power_and_toughness():
+    """CR 122.1a's own wording is not limited to +1/+1 and -1/-1: "A +X/+Y
+    counter on a creature ... adds X to that object's power and Y to that
+    object's toughness. Similarly, -X/-Y counters subtract from power and
+    toughness." Clockwork Steed's own "+1/+0 counters" (an asymmetric,
+    non-±1/±1 kind CR 122.1 leaves open) is the printed example; a made-up
+    "+2/+3" and "-3/-1" prove the rule reads the numbers out of the kind's
+    own name rather than special-casing the one printed pair.
+    """
+    steed = board(battlefield=["Clockwork Steed"]).build().creature("Clockwork Steed")
+    assert (steed.power, steed.toughness) == (0, 3)
+
+    steed.add_counters("+1/+0", 4)
+
+    assert (steed.power, steed.toughness) == (4, 3)
+    assert steed.counter_count("+1/+0") == 4
+
+
+def test_an_asymmetric_pt_counter_kind_adds_each_amount_separately():
+    """A kind this pool has no printed example of, proving the reader off the
+    grammar (any two numbers either side of the slash) rather than off
+    Clockwork Steed's own "+1/+0"."""
+    bears = board(battlefield=["Grizzly Bears"]).build().creature("Grizzly Bears")
+
+    bears.add_counters("+2/+3", 1)
+    bears.add_counters("-3/-1", 1)
+
+    assert (bears.power, bears.toughness) == (2 + 2 - 3, 2 + 3 - 1)
+
+
 def test_a_counter_kind_is_any_name_at_all():
     """CR 122.1: counters are markers, and the set of kinds is open.
 

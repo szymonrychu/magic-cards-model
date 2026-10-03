@@ -782,6 +782,18 @@ class PlayedScenario:
         CR 608.2d) - Necrodominance's own end-step trigger."""
         self._queue(DecisionKind.PAY_LIFE_AMOUNT, amount, username, source, times)
 
+    def will_choose_an_amount(
+        self,
+        amount: int,
+        *,
+        username: str | None = None,
+        source: str | None = None,
+        times: int | None = 1,
+    ) -> None:
+        """Answer the next "choose an amount from 0 up to N" with no cost
+        attached (CR 608.2d) - Clockwork Steed's own "put up to X counters"."""
+        self._queue(DecisionKind.CHOOSE_AN_AMOUNT, amount, username, source, times)
+
     def will_choose_mode(
         self,
         text: str,
