@@ -76,7 +76,7 @@ _BLOCK_LINE = "This creature blocks each combat if able."
 _ATTACK_LINE = "This creature attacks each combat if able."
 
 
-def _controller(game: "Game", stack_object: Any) -> str:
+def _controller(game: Game, stack_object: Any) -> str:
     return game.controller_of(stack_object).username
 
 
@@ -88,7 +88,7 @@ def _source_id(stack_object: Any) -> UUID | None:
     return stack_object.id if isinstance(stack_object, CardState) else stack_object.source_id
 
 
-def _source_card(game: "Game", stack_object: Any) -> CardState | None:
+def _source_card(game: Game, stack_object: Any) -> CardState | None:
     if isinstance(stack_object, CardState):
         return stack_object
     if stack_object.source_id is None:
@@ -110,7 +110,7 @@ def _antecedent(objects: tuple[tuple[UUID, UUID], ...]) -> Iterator[None]:
 
 
 def run_with_antecedent(
-    game: "Game", stack_object: Any, rider: Rider, affected: Iterable[CardState]
+    game: Game, stack_object: Any, rider: Rider, affected: Iterable[CardState]
 ) -> None:
     """Run `rider` with `affected` - the objects the layer sentence beside it
     just changed - as its "those creatures" (CR 611.2c's locked set)."""
@@ -119,9 +119,7 @@ def run_with_antecedent(
         rider(game, stack_object)
 
 
-def run_layer_then_rider(
-    game: "Game", stack_object: Any, layer: Rider, rider: Rider
-) -> None:
+def run_layer_then_rider(game: Game, stack_object: Any, layer: Rider, rider: Rider) -> None:
     """Run the layer sentence, then the rider, with the objects the layer
     sentence's own new continuous effects lock (CR 611.2c) available to a
     "those creatures" rider (`_those_creatures_requirement`)."""
@@ -157,7 +155,7 @@ def _kicked_rider(sentence: str, *, for_spell: bool) -> Rider | None:
     if inner is None:
         return None
 
-    def kicked(game: "Game", spell: Any) -> None:
+    def kicked(game: Game, spell: Any) -> None:
         if isinstance(spell, CardState) and game.cast_record(spell).kicked > 0:
             inner(game, spell)
 
@@ -176,7 +174,7 @@ def _created_replacement_rider(sentence: str) -> Rider | None:
     if not isinstance(created_replacement_spec(sentence), DieToExileReplacement):
         return None
 
-    def replacement(game: "Game", stack_object: Any) -> None:
+    def replacement(game: Game, stack_object: Any) -> None:
         record = _created_replacement_record(
             sentence,
             controller=_controller(game, stack_object),
@@ -194,7 +192,7 @@ def _created_replacement_rider(sentence: str) -> Rider | None:
 
 
 def _created_trigger_rider(sentence: str) -> Rider | None:
-    """"Whenever `<condition>` this turn, `<effect>`." read by the created-
+    """ "Whenever `<condition>` this turn, `<effect>`." read by the created-
     trigger template, the whole sentence being the trigger (no trailing
     instruction of the spell's own)."""
     from .effects import _create_turn_scoped_trigger, _split_created_trigger_paragraph
@@ -207,7 +205,7 @@ def _created_trigger_rider(sentence: str) -> Rider | None:
         return None
     event = ability.event
 
-    def trigger(game: "Game", stack_object: Any) -> None:
+    def trigger(game: Game, stack_object: Any) -> None:
         _create_turn_scoped_trigger(
             game,
             line,
@@ -258,13 +256,12 @@ def _exile_cards_that_died_this_turn_rider(sentence: str) -> Rider | None:
     wanted = _QUALITY_TYPES[match.group("quality").lower()]
     whose = match.group("whose").lower()
 
-    def exile(game: "Game", stack_object: Any) -> None:
+    def exile(game: Game, stack_object: Any) -> None:
         controller = _controller(game, stack_object)
         owners = [
             player.username
             for player in game.players_in_game
-            if whose == "all"
-            or (whose == "your") == (player.username == controller)
+            if whose == "all" or (whose == "your") == (player.username == controller)
         ]
         cards = [
             card
@@ -295,9 +292,7 @@ def _requirement_line(verb: str) -> str:
     return _BLOCK_LINE if verb.lower().startswith("block") else _ATTACK_LINE
 
 
-def _grant_until_end_of_turn(
-    game: "Game", selector: Selector, line: str, description: str
-) -> None:
+def _grant_until_end_of_turn(game: Game, selector: Selector, line: str, description: str) -> None:
     from .effects import continuous_effects
 
     store = continuous_effects(game)
@@ -314,7 +309,7 @@ def _grant_until_end_of_turn(
 
 
 def _group_requirement_rider(sentence: str) -> Rider | None:
-    """"Each creature your opponents control blocks this turn if able." - CR
+    """ "Each creature your opponents control blocks this turn if able." - CR
     611.2c: a rules-modifying effect, so the group is read live (a creature
     entering, or changing control, later this turn is bound too - Predatory
     Rampage's ruling), never locked on resolution."""
@@ -324,7 +319,7 @@ def _group_requirement_rider(sentence: str) -> Rider | None:
     whose = (match.group("whose") or "").lower()
     line = _requirement_line(match.group("verb"))
 
-    def requirement(game: "Game", stack_object: Any) -> None:
+    def requirement(game: Game, stack_object: Any) -> None:
         controller = _controller(game, stack_object)
         selector: Selector
         if whose == "you control":
@@ -341,7 +336,7 @@ def _group_requirement_rider(sentence: str) -> Rider | None:
 
 
 def _those_creatures_requirement(sentence: str) -> Rider | None:
-    """"Those creatures attack this turn if able." - the creatures the layer
+    """ "Those creatures attack this turn if able." - the creatures the layer
     sentence beside it affected (CR 611.2c's locked set, Suicidal Charge's
     ruling: a creature that comes under an opponent's control later is not
     one of them)."""
@@ -350,7 +345,7 @@ def _those_creatures_requirement(sentence: str) -> Rider | None:
         return None
     line = _requirement_line(match.group("verb"))
 
-    def requirement(game: "Game", stack_object: Any) -> None:
+    def requirement(game: Game, stack_object: Any) -> None:
         for card_id, stamp in _LAYER_ANTECEDENT.get() or ():
             found = game.find_by_id(card_id)
             if not isinstance(found, CardState) or found.zone is not Zone.BATTLEFIELD:
@@ -401,7 +396,7 @@ def turn_scoped_rider(text: str, *, for_spell: bool) -> Rider | None:
             return None
         riders.append(rider)
 
-    def riders_in_order(game: "Game", stack_object: Any) -> None:
+    def riders_in_order(game: Game, stack_object: Any) -> None:
         for rider in riders:
             rider(game, stack_object)
 
@@ -420,9 +415,7 @@ _EVENT_SUBJECT_CONTROLLER_POISON_RE = re.compile(
 )
 
 
-def parse_event_subject_controller_poison_clause(
-    clause: str, *, for_spell: bool
-) -> Rider | None:
+def parse_event_subject_controller_poison_clause(clause: str, *, for_spell: bool) -> Rider | None:
     """Noxious Assault's created "Whenever a creature blocks, its controller
     gets a poison counter." (CR 122.1f). Ability-only: "its" is the
     triggering event's own object."""
@@ -435,7 +428,7 @@ def parse_event_subject_controller_poison_clause(
     if amount is None or amount <= 0:
         return None
 
-    def poison(game: "Game", ability: Any) -> None:
+    def poison(game: Game, ability: Any) -> None:
         event = getattr(ability, "event", None)
         if event is None:
             return

@@ -128,7 +128,11 @@ def _crescendo_board(*, alice=(), bob=()):
 
 
 def _rats(scenario):
-    return [card for card in scenario.game.permanents_controlled_by("alice") if card.name.startswith("Rat")]
+    return [
+        card
+        for card in scenario.game.permanents_controlled_by("alice")
+        if card.name.startswith("Rat")
+    ]
 
 
 def test_crescendo_makes_a_rat_that_cannot_block_when_a_nontoken_creature_dies():
@@ -147,7 +151,9 @@ def test_crescendo_makes_no_rat_for_a_token_or_an_opponents_creature():
     scenario = _crescendo_board(bob=["Grizzly Bears"])
     _cast(scenario, "Raise the Alarm", "Plains", "Plains")
     _cast(scenario, "Gnawing Crescendo", "Mountain", "Mountain", "Mountain")
-    soldier = next(c for c in scenario.game.permanents_controlled_by("alice") if c.name.startswith("Soldier"))
+    soldier = next(
+        c for c in scenario.game.permanents_controlled_by("alice") if c.name.startswith("Soldier")
+    )
 
     _bolt(scenario, soldier)
     _bolt(scenario, scenario.creature("Grizzly Bears", "bob"))
@@ -180,7 +186,8 @@ def test_kicked_warhosts_frenzy_draws_when_a_creature_you_control_dies():
     casting = scenario.cast("Warhost's Frenzy")
     casting.pay_kicker()
     scenario.pay_with(
-        casting.begin_paying(), *scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Swamp")
+        casting.begin_paying(),
+        *scenario.untapped_sources("Mountain", "Mountain", "Mountain", "Swamp"),
     )
     scenario.put_on_stack(casting)
     scenario.pass_until_resolved()

@@ -95,7 +95,10 @@ def test_rampage_also_binds_a_creature_that_entered_after_it_resolved():
         scenario.block(bears, scenario.creature("Hill Giant", "bob"))
 
     scenario.block(bears, scenario.creature("Hill Giant", "bob"), elves)
-    assert {c.id for c in scenario.blockers()} == {scenario.creature("Hill Giant", "bob").id, elves.id}
+    assert {c.id for c in scenario.blockers()} == {
+        scenario.creature("Hill Giant", "bob").id,
+        elves.id,
+    }
 
 
 def test_rampage_does_not_force_the_casters_own_creatures_to_do_anything():

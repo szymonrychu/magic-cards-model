@@ -262,12 +262,6 @@ from .targeting import (
     profile_for_text,
     spell_profile_for_text,
 )
-from .turn_scoped_riders import (
-    parse_event_subject_controller_poison_clause,
-    run_layer_then_rider,
-    run_with_antecedent,
-    turn_scoped_rider,
-)
 from .triggers import (
     AbilityOnStack,
     ExtraTriggerEvent,
@@ -282,6 +276,12 @@ from .triggers import (
     triggers_only_off_the_stack,
 )
 from .turn import COMBAT_PHASE_STEPS, Step
+from .turn_scoped_riders import (
+    parse_event_subject_controller_poison_clause,
+    run_layer_then_rider,
+    run_with_antecedent,
+    turn_scoped_rider,
+)
 from .zone_resets import (
     merge_each_player_may_shuffle_hand_graveyard_then_draw_clauses,
     parse_each_player_may_shuffle_hand_graveyard_then_draw_clause,
