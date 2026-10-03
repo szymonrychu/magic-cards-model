@@ -4405,6 +4405,14 @@ class CostModifierKind(StrEnum):
     controller *is* the caster, this only when they are not
     (`Game.static_cost_modifiers_for`)."""
 
+    TARGETING_THIS_INCREASE = "targeting_this_increase"
+    """"Spells your opponents cast that target this creature cost `{N}` more to
+    cast." - Pursued Whale. Keyed on the targets announced at CR 601.2c, which
+    is why it can be priced at CR 601.2f at all: it taxes a spell only when
+    one of the spell's chosen targets is the permanent carrying the line, and
+    only when the caster is not that permanent's controller
+    (`Game.static_cost_modifiers_for`, which is handed `Casting.targets`)."""
+
 
 class CostModifierEffect(EngineModel):
     """One static cost-modifying ability, read off a permanent's oracle text."""
@@ -4586,6 +4594,12 @@ _CHOSEN_TYPE_COST_DECREASE = re.compile(
 _OPPONENT_COST_INCREASE = re.compile(
     r"(?:(?P<qualifier>Noncreature|Nonartifact|Nonland|Noninstant|Nonsorcery|"
     r"Nonenchantment|Nonplaneswalker) )?[Ss]pells your opponents cast cost "
+    r"\{(?P<amount>\d+)\} more to cast\."
+)
+#: Pursued Whale's own tax: `OPPONENT_TYPE_INCREASE`'s sentence with a "that
+#: target this <noun>" relative clause between "cast" and "cost".
+_TARGETING_THIS_COST_INCREASE = re.compile(
+    r"[Ss]pells your opponents cast that target this \w+ cost "
     r"\{(?P<amount>\d+)\} more to cast\."
 )
 _PER_SPELL_COST_INCREASE = re.compile(
@@ -4805,6 +4819,11 @@ def _unconditional_cost_modifier_effect(text: str) -> CostModifierEffect | None:
             amount=int(match.group("amount")),
             creature_only=match.group("creature_only") is not None,
             scoped_to_caster=match.group("scoped") is not None,
+        )
+    match = _TARGETING_THIS_COST_INCREASE.search(text)
+    if match is not None:
+        return CostModifierEffect(
+            kind=CostModifierKind.TARGETING_THIS_INCREASE, amount=int(match.group("amount"))
         )
     match = _OPPONENT_COST_INCREASE.search(text)
     if match is not None:

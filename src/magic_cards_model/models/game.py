@@ -22819,7 +22819,12 @@ class Game(EngineModel):
         return counted
 
     def static_cost_modifiers_for(
-        self, spell: CardState, caster: str | None = None, *, origin_zone: Zone | None = None
+        self,
+        spell: CardState,
+        caster: str | None = None,
+        *,
+        origin_zone: Zone | None = None,
+        targets: Sequence[TargetRef] | None = None,
     ) -> tuple[list[ManaCost], list[ManaCost], int | None]:
         """Board-wide static cost increases, decreases, and the floor in play
         right now (CR 601.2f, 611.3).
@@ -22985,6 +22990,15 @@ class Game(EngineModel):
                     ):
                         continue
                     increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
+                elif effect.kind is CostModifierKind.TARGETING_THIS_INCREASE:
+                    # Pursued Whale: "Spells your opponents cast that target
+                    # this creature cost {3} more" - CR 601.2c's announced
+                    # targets are what the tax is keyed on, and a caster
+                    # who controls the permanent is not "your opponents".
+                    if permanent.controller == caster:
+                        continue
+                    if any(target.card_id == permanent.id for target in targets or ()):
+                        increases.append(ManaCost.parse(f"{{{effect.amount}}}"))
                 elif effect.kind is CostModifierKind.NAMED_INCREASE:
                     # Disruptor Flute: "Spells with the chosen name cost {3}
                     # more to cast." The name is CR 614.12a's choice, made as

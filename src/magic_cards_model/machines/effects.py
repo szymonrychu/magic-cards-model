@@ -28700,6 +28700,43 @@ _ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE = re.compile(
 )
 
 
+#: "Attach it to target <description>. When you do, <consequence>." - Novel
+#: Nunchaku's enters trigger. CR 603.12: the second sentence is a reflexive
+#: trigger, so it exists only if the attach actually happened and chooses its
+#: own targets as it goes on the stack (CR 603.3d), which is why
+#: `targeting.profile_for_text` already stops at "when you do".
+_ATTACH_SELF_THEN_WHEN_YOU_DO_RE = re.compile(
+    r"^(?P<attach>attach (?:it|this (?:aura|equipment|fortification|permanent)) to target\b[^.]*)\."
+    r"\s*when you do,\s*(?P<consequence>[^.]+)\.?$",
+    re.IGNORECASE,
+)
+
+
+def _parse_attach_self_then_when_you_do_clause(text: str) -> AbilityEffect | None:
+    """`_ATTACH_SELF_THEN_WHEN_YOU_DO_RE`'s shape, or `None`. Read only when
+    the reflexive consequence is itself readable, so the pair is never half
+    run."""
+    match = _ATTACH_SELF_THEN_WHEN_YOU_DO_RE.fullmatch(" ".join(text.strip().split()))
+    if match is None:
+        return None
+    consequence_text = _as_capitalized_sentence(match.group("consequence"))
+    if reflexive_consequence_effect(consequence_text) is None:
+        return None
+
+    def effect(game: "Game", ability: AbilityOnStack) -> None:
+        if _attach_self_to_announced_target(game, ability) is None:
+            return
+        game.create_reflexive_trigger(
+            text=consequence_text,
+            controller=game.controller_of(ability).username,
+            source_id=ability.source_id,
+            source_name=ability.source_name,
+            callback=ReflexiveConsequence(),
+        )
+
+    return effect
+
+
 def _parse_attach_self_then_conditional_rider_clause(text: str) -> AbilityEffect | None:
     """`_ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE`'s shape, or `None`."""
     match = _ATTACH_SELF_THEN_CONDITIONAL_RIDER_RE.fullmatch(" ".join(text.strip().split()))
@@ -31176,6 +31213,9 @@ def _ability_effect_or_notice(effect_text: str) -> AbilityEffect | None:
     named_equipment_token = _parse_named_equipment_token_clause(effect_text)
     if named_equipment_token is not None:
         return named_equipment_token
+    attach_then_when_you_do = _parse_attach_self_then_when_you_do_clause(effect_text)
+    if attach_then_when_you_do is not None:
+        return attach_then_when_you_do
     attach_self_to_target = _attach_self_to_target_effect(effect_text)
     if attach_self_to_target is not None:
         return attach_self_to_target
@@ -40648,7 +40688,9 @@ class _SacrificeRestriction(NamedTuple):
     quantity: Quantity
 
 
-def _sacrifice_restriction(restriction: str) -> _SacrificeRestriction | None:
+def _sacrifice_restriction(
+    restriction: str, *, allow_it: bool = False
+) -> _SacrificeRestriction | None:
     """`restriction` - the text between "sacrifice" and the following period -
     read as "this `<type>`" (the permanent bearing the ability itself,
     Sanctum of Ugin) or a counted description of permanents the player
@@ -40678,9 +40720,13 @@ def _sacrifice_restriction(restriction: str) -> _SacrificeRestriction | None:
     """
     printed = restriction.strip()
     restriction = printed.lower()
-    if restriction.startswith("this "):
+    if (allow_it and restriction == "it") or restriction.startswith("this "):
+        # Furnace Scamp's "you may sacrifice it": in an ability's own "you may
+        # sacrifice <it>. If you do, ..." the pronoun is the source itself.
+        # Only `allow_it` callers may read it so: elsewhere "it" is some
+        # earlier sentence's object (a token just created, say).
         noun = restriction.removeprefix("this ").strip()
-        if noun not in _SACRIFICE_SELF_NOUNS:
+        if restriction != "it" and noun not in _SACRIFICE_SELF_NOUNS:
             return None
 
         def self_candidates(game: "Game", player: Player, source_id: UUID) -> list[CardState]:
@@ -41338,7 +41384,9 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
     match = _MAY_SACRIFICE_IF_YOU_DO_RE.fullmatch(_strip_non_effect_preamble(text).strip())
     if match is None:
         return None
-    restriction = _sacrifice_restriction(match.group("restriction"))
+    if for_spell and match.group("restriction").strip().lower() == "it":
+        return None
+    restriction = _sacrifice_restriction(match.group("restriction"), allow_it=True)
     if restriction is None:
         return None
     consequence_text = match.group("consequence")
@@ -41366,7 +41414,13 @@ def _parse_conditional_sacrifice_clause(text: str, *, for_spell: bool) -> Target
         # "copy that spell and you may choose new targets for the copy"
         # (Mica, Reader of Ruins) is one CR 707.10c instruction the
         # clause splitter's bare "and" cut would slice in two.
-        clause = _parse_copy_that_spell_clause(consequence_text, for_spell=for_spell) or (
+        # "this creature deals 3 damage to that player" (Furnace Scamp) is
+        # CR 607.1 anaphora back to the trigger's own event, read here
+        # because the ordinary clause parser has no event to resolve it from.
+        clause = _parse_copy_that_spell_clause(
+            consequence_text, for_spell=for_spell
+        ) or _parse_damage_that_player_clause(consequence_text, for_spell=for_spell)
+        clause = clause or (
             parse_mixed_effect_for_spell(consequence_text)  # type: ignore[assignment]
             if for_spell
             else parse_mixed_effect(consequence_text)
@@ -44839,11 +44893,12 @@ def _parse_self_fights_target_clause(clause: str, *, for_spell: bool) -> Targete
 
 #: "Enchanted creature fights up to one target creature an opponent
 #: controls." (Pitiless Fists, CR 701.14a) - `_SELF_FIGHTS_TARGET_RE`'s
-#: Aura-attachment twin: CR 303.4b's "enchanted" names whatever the Aura
-#: (`source.attached_to`) is attached to, never the Aura itself (which is
+#: Aura-attachment twin ("equipped creature", Novel Nunchaku, is the same
+#: sentence for an Equipment, CR 301.5): CR 303.4b's "enchanted" names
+#: whatever the Aura (`source.attached_to`) is attached to, never the Aura itself (which is
 #: never a creature able to fight in the first place, CR 701.14b).
 _ENCHANTED_CREATURE_FIGHTS_TARGET_RE = re.compile(
-    r"^enchanted creature fights "
+    r"^(?:enchanted|equipped) creature fights "
     r"(?P<phrase>(?:up to \S+ )?(?:other )?target .+|another target .+)$",
     re.IGNORECASE,
 )
@@ -65871,6 +65926,23 @@ _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE = re.compile(
 )
 
 
+#: Legion Angel's template: "You may reveal a card you own named <name> from
+#: outside the game and put it into your hand." The Burning Wish family's
+#: sentence with a name where the quality was.
+_REVEAL_NAMED_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE = re.compile(
+    r"^you may reveal a card you own named (?P<name>.+?) from outside the game "
+    r"and put (?:it|that card) into your hand\.?$",
+    re.IGNORECASE,
+)
+
+
+def _outside_the_game_card_phrase(quality: str) -> str:
+    """ "a creature card", or "a card named Legion Angel" for a name quality."""
+    if quality.startswith("named "):
+        return f"a card {quality}"
+    return with_indefinite_article(f"{quality} card")
+
+
 def _read_reveal_from_outside_the_game(
     effect_text: str,
 ) -> tuple[str, Callable[[CardState], bool], str | None] | None:
@@ -65879,7 +65951,20 @@ def _read_reveal_from_outside_the_game(
     not that shape or its quality cannot be read."""
     match = _REVEAL_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(" ".join(effect_text.split()))
     if match is None:
-        return None
+        named_card = _REVEAL_NAMED_FROM_OUTSIDE_THE_GAME_INTO_HAND_RE.fullmatch(
+            " ".join(effect_text.split())
+        )
+        if named_card is None:
+            return None
+        # Legion Angel: "a card you own named <name>" - CR 201.2 names are
+        # compared whole, ignoring case; the name is whatever the sentence
+        # prints (this card's own, for the one printing that has the clause).
+        wanted = named_card.group("name").strip().lower()
+        return (
+            f"named {named_card.group('name').strip()}",
+            lambda state: (state.name or "").lower() == wanted,
+            None,
+        )
     quality = match.group("quality")
     if not _search_quality_is_readable(quality):
         return None
@@ -65903,7 +65988,7 @@ def _reveal_a_quality_card_from_outside_the_game(
     candidates = controller.owned_outside_the_game(matches)
     if not candidates or not game.may(
         controller,
-        f"reveal {with_indefinite_article(f'{quality} card')} you own from outside the game "
+        f"reveal {_outside_the_game_card_phrase(quality)} you own from outside the game "
         f"and put it into your hand",
         source=source,
         source_id=source_id,
@@ -65914,7 +65999,7 @@ def _reveal_a_quality_card_from_outside_the_game(
             kind=DecisionKind.CHOOSE_CARDS,
             player=controller.username,
             prompt=(
-                f"choose {with_indefinite_article(f'{quality} card')} you own from outside the game"
+                f"choose {_outside_the_game_card_phrase(quality)} you own from outside the game"
             ),
             source=source,
             source_id=source_id,
