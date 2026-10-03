@@ -4708,7 +4708,10 @@ class Game(EngineModel):
     #: `DieToExileReplacement` ("if a creature would die this turn, exile it
     #: instead", CR 614.1a); `CardState` gained `flipped` (CR 710);
     #: `TargetRequirement` gained `object_dealt_damage_clause` and
-    #: `ThatCreatureDiesConsequence` gained `source_stamp` (CR 400.7).
+    #: `ThatCreatureDiesConsequence` gained `source_stamp` (CR 400.7);
+    #: combat's `Attack` gained `blocked_by` (CR 509.1h); the layer selector
+    #: union gained `SelfIfAttachedCount`, `SelfIfControlsCounted` gained
+    #: `of_its_controller` and `ControlledQuality` gained `color`.
     """Bumped 1 -> 2: `CardState` gained `state_class` (defect 2, the
     `engine-stateless-library` review) - a field added to `CardState`, per the
     bump rule above, and one whose absence would change what a decode of a
